@@ -1,0 +1,28 @@
+From ca4d85abd104d1ba40a5a0fe224edef4f8277ef7 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Fri, 29 May 2015 15:23:48 +0300
+Subject: [PATCH] usb: xhci-rcar: Change RCar-Gen2 usb3 firmware to upstream name
+
+Change R-Car-Gen2 usb3 firmware name to match linux-firmware.git
+
+signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/usb/host/xhci-rcar.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/host/xhci-rcar.c b/drivers/usb/host/xhci-rcar.c
+index fb9a441..ff0d1b4 100644
+--- a/drivers/usb/host/xhci-rcar.c
++++ b/drivers/usb/host/xhci-rcar.c
+@@ -16,7 +16,7 @@
+ #include "xhci.h"
+ #include "xhci-rcar.h"
+ 
+-#define FIRMWARE_NAME		"UU3DRD1FW_2005L.dlmem"
++#define FIRMWARE_NAME		"r8a779x_usb3_v1.dlmem"
+ MODULE_FIRMWARE(FIRMWARE_NAME);
+ 
+ /*** Register Offset ***/
+-- 
+1.9.1
+

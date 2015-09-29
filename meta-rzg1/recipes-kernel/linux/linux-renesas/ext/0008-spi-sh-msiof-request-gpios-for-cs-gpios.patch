@@ -1,0 +1,62 @@
+From 3a6cfee9a8a633e79aa345696618f4e6b1c4eebb Mon Sep 17 00:00:00 2001
+From: Andrey Dolnikov <andrey.dolnikov@cogentembedded.com>
+Date: Tue, 26 May 2015 19:07:43 +0300
+Subject: [PATCH] spi: spi-sh-msiof: request gpios for 'cs-gpios'
+
+The 'cs-gpio' feature needs gpio_request in spi glue driver
+
+signed-off-by: Andrey Dolnikov <andrey.dolnikov@cogentembedded.com>
+---
+ drivers/spi/spi-sh-msiof.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index 3aaed2c..2cae98e 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -28,6 +28,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
++#include <linux/of_gpio.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #ifdef CONFIG_SPI_SH_MSIOF_DMA
+@@ -570,8 +571,7 @@ static int sh_msiof_spi_setup(struct spi_device *spi)
+ 				  !!(spi->mode & SPI_CS_HIGH));
+ 
+ 	if (spi->cs_gpio >= 0)
+-		gpio_set_value(spi->cs_gpio, !(spi->mode & SPI_CS_HIGH));
+-
++		gpio_direction_output(spi->cs_gpio, !(spi->mode & SPI_CS_HIGH));
+ 
+ 	pm_runtime_put_sync(&p->pdev->dev);
+ 
+@@ -1043,6 +1043,7 @@ static struct sh_msiof_spi_info *sh_msiof_spi_parse_dt(struct device *dev)
+ 	struct sh_msiof_spi_info *info;
+ 	struct device_node *np = dev->of_node;
+ 	u32 num_cs = 1;
++	int i;
+ 
+ 	info = devm_kzalloc(dev, sizeof(struct sh_msiof_spi_info), GFP_KERNEL);
+ 	if (!info) {
+@@ -1066,6 +1067,16 @@ static struct sh_msiof_spi_info *sh_msiof_spi_parse_dt(struct device *dev)
+ 
+ 	info->num_chipselect = num_cs;
+ 
++	for (i = 0; i < num_cs; i++) {
++		int cs_gpio = of_get_named_gpio(np, "cs-gpios", i);
++
++		if (gpio_is_valid(cs_gpio)) {
++			if (devm_gpio_request(dev, cs_gpio, "msiof-cs-gpio")) {
++				dev_err(dev, "Can't get CS GPIO %i\n", i);
++				return NULL;
++			}
++		}
++	}
+ 	return info;
+ }
+ #else
+-- 
+1.9.1
+

@@ -1,0 +1,11 @@
+--- a/init	2015-05-20 12:34:05.472932579 +0900
++++ b/init	2015-05-20 12:35:22.384932291 +0900
+@@ -103,7 +103,7 @@
+     udevadm control --env=STARTUP=1
+     if [ "$not_first_boot" != "" ];then
+             udevadm trigger --action=add --subsystem-nomatch=tty --subsystem-nomatch=mem --subsystem-nomatch=vc --subsystem-nomatch=vtconsole --subsystem-nomatch=misc --subsystem-nomatch=dcon --subsystem-nomatch=pci_bus  --subsystem-nomatch=graphics	 --subsystem-nomatch=backlight --subsystem-nomatch=video4linux	--subsystem-nomatch=platform
+-            (udevadm settle --timeout=3; udevadm control --env=STARTUP=)&
++            (udevadm settle --timeout=6; udevadm control --env=STARTUP=)&
+     else
+             udevadm trigger --action=add
+             udevadm settle

@@ -1,0 +1,26 @@
+From 07f8b542090be42232e7d4329997c39809d6805c Mon Sep 17 00:00:00 2001
+From: Andrey Dolnikov <andrey.dolnikov@cogentembedded.com>
+Date: Thu, 7 May 2015 18:36:56 +0300
+Subject: [PATCH] evdev: notify touch frame on EV_SYN event.
+
+This is needed for Qt5.
+---
+ src/evdev.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 888dfbd..d090bae 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -377,6 +377,8 @@ fallback_process(struct evdev_dispatch *dispatch,
+ 		break;
+ 	case EV_SYN:
+ 		evdev_flush_pending_event(device, time);
++		if (device->seat_caps & EVDEV_SEAT_TOUCH)
++			notify_touch_frame(device->seat);
+ 		break;
+ 	}
+ }
+-- 
+1.9.1
+

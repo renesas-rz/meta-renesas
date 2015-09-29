@@ -1,0 +1,27 @@
+From e245da48fdf353d453511de8163f7a4900511c20 Mon Sep 17 00:00:00 2001
+From: Petr Nechaev <petr.nechaev@cogentembedded.com>
+Date: Tue, 23 Dec 2014 16:09:31 +0300
+Subject: [PATCH] Removed CXX11 flags that confuzed Linaro GCC
+
+This has been fixed in linaro gcc 4.8. See
+https://bugs.linaro.org/show_bug.cgi?id=534
+---
+ src/tools/qdoc/qdoc.pro | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/tools/qdoc/qdoc.pro b/src/tools/qdoc/qdoc.pro
+index 7ec4b4f..164b7d0 100644
+--- a/src/tools/qdoc/qdoc.pro
++++ b/src/tools/qdoc/qdoc.pro
+@@ -7,6 +7,8 @@
+ option(host_build)
+ QT = core xml
+ 
++QMAKE_CXXFLAGS_CXX11 = 
++
+ DEFINES += \
+     QT_QMLDEVTOOLS_LIB \   # force static exports even if not bootstrapping
+     QDOC2_COMPAT
+-- 
+1.9.3
+

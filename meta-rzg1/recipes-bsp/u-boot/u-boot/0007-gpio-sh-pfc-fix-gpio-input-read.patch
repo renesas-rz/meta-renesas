@@ -1,0 +1,29 @@
+From 1d97707edb43725804683d3eefbe28ca3ef34ab0 Mon Sep 17 00:00:00 2001
+From: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Date: Fri, 15 May 2015 22:20:39 +0300
+Subject: [PATCH] gpio: sh-pfc: fix gpio input read
+
+Fix gpio_read: gpio input (INDT) and gpio output (OUTDT) registers
+have different offset. gpio_read must be performed from INDT.
+
+Signed-off-by: Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+---
+ drivers/gpio/sh_pfc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/sh_pfc.c b/drivers/gpio/sh_pfc.c
+index 7a5af20..95f5b2a 100644
+--- a/drivers/gpio/sh_pfc.c
++++ b/drivers/gpio/sh_pfc.c
+@@ -75,7 +75,7 @@ static int gpio_read_bit(struct pinmux_data_reg *dr,
+ 	debug("read_bit: addr = %lx, pos = %ld, "
+ 		 "r_width = %ld\n", dr->reg, pos, dr->reg_width);
+ 
+-	return (gpio_read_raw_reg(dr->mapped_reg, dr->reg_width) >> pos) & 1;
++	return (gpio_read_raw_reg(dr->mapped_reg + 0x4, dr->reg_width) >> pos) & 1;
+ }
+ 
+ static void gpio_write_bit(struct pinmux_data_reg *dr,
+-- 
+1.9.1
+
