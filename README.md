@@ -8,7 +8,7 @@ The recipes and scripts in this layer refer to the name of the public repository
 
 Option 1 - Clone the repository using the original name and create a symbolic link to it named meta-rzg-demos:
 
-$ git clone https://github.com/renesas-rz/meta-renesas-private
+$ git clone https://github.com/renesas-rz/meta-renesas-private<br>
 $ ln -s ./meta-renesas-private ./meta-renesas
 
 Option 2 - rename the repository during cloning:
