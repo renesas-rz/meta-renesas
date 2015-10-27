@@ -14,11 +14,11 @@ SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-1.9.4;pr
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(highland|islay)"
+COMPATIBLE_MACHINE = "(skrzg1m|skrzg1e)"
 
 SRC_URI_append_lcb = " \
 	file://0001-add-r8a7743-and-r8a7745-support.patch \
-	file://0002-add-islay-and-highland-support.patch \
+	file://0002-add-skrzg1e-and-skrzg1m-support.patch \
 	file://0004-ARM-cpu-Add-ARMv7-barrier-operations-support.patch \
 	file://0007-gpio-sh-pfc-fix-gpio-input-read.patch \
 	file://0008-serial-sh-interface-for-rzg1.patch \
