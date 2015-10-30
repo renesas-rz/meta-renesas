@@ -1,7 +1,7 @@
-From 18a48f68103bd6f927d845bf152d7eac6d0964f3 Mon Sep 17 00:00:00 2001
+From e49ed2666531a778e9a45e66283f8e2a8083cc0f Mon Sep 17 00:00:00 2001
 From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
-Date: Wed, 16 Sep 2015 19:44:27 +0300
-Subject: [PATCH] add r8a7743 and r8a7745 support
+Date: Tue, 27 Oct 2015 17:54:12 +0300
+Subject: [PATCH 1/2] add r8a7743 and r8a7745 support
 
 ---
  arch/arm/cpu/armv7/rmobile/Makefile              |    4 +
@@ -7929,7 +7929,7 @@ index 1c64950..26f78b7 100644
  unsigned long long get_ticks(void)
  {
 diff --git a/drivers/mmc/sh_sdhi.c b/drivers/mmc/sh_sdhi.c
-index ef40f70..a4c5c7c 100644
+index ef40f70..1f31aac 100644
 --- a/drivers/mmc/sh_sdhi.c
 +++ b/drivers/mmc/sh_sdhi.c
 @@ -197,7 +197,7 @@ static void sdhi_sync_reset(struct sdhi_host *host)
@@ -7937,7 +7937,7 @@ index ef40f70..a4c5c7c 100644
  		sdhi_writew(host, SDHI_HOST_MODE, 1);	/* 16bit access */
  #elif defined(KOELSCH_SDRAM_BASE) || defined(GOSE_SDRAM_BASE) || \
 -	defined(ALT_SDRAM_BASE)
-+	defined(ALT_SDRAM_BASE) || defined(HIGHLAND_SDRAM_BASE) || defined(ISLAY_SDRAM_BASE)
++	defined(ALT_SDRAM_BASE) || defined(SKRZG1M_SDRAM_BASE) || defined(SKRZG1E_SDRAM_BASE)
  	if (host->ch == 0)
  		sdhi_writew(host, SDHI_HOST_MODE, 1);	/* 16bit access */
  #else
@@ -7946,7 +7946,7 @@ index ef40f70..a4c5c7c 100644
  		host->bus_shift = 0;
  #elif defined(KOELSCH_SDRAM_BASE) || defined(GOSE_SDRAM_BASE) || \
 -	defined(ALT_SDRAM_BASE)
-+	defined(ALT_SDRAM_BASE) || defined(ISLAY_SDRAM_BASE) || defined(HIGHLAND_SDRAM_BASE)
++	defined(ALT_SDRAM_BASE) || defined(SKRZG1E_SDRAM_BASE) || defined(SKRZG1M_SDRAM_BASE)
  	if (ch == 0)
  		host->bus_shift = 1;
  	else
@@ -8056,17 +8056,17 @@ index ac0ba2a..ceb32c9 100644
  #else /* Generic SH */
  #define SCBRR_VALUE(bps, clk) ((clk+16*bps)/(32*bps)-1)
 diff --git a/drivers/usb/host/ehci-r8a779x.c b/drivers/usb/host/ehci-r8a779x.c
-index 344ef1d..9a6f066 100644
+index 344ef1d..8b8c9f1 100644
 --- a/drivers/usb/host/ehci-r8a779x.c
 +++ b/drivers/usb/host/ehci-r8a779x.c
 @@ -30,6 +30,10 @@
  #define PHYS_OFFSET	GOSE_SDRAM_BASE
  #elif defined(ALT_SDRAM_BASE)
  #define PHYS_OFFSET	ALT_SDRAM_BASE
-+#elif defined(ISLAY_SDRAM_BASE)
-+#define PHYS_OFFSET	ISLAY_SDRAM_BASE
-+#elif defined(HIGHLAND_SDRAM_BASE)
-+#define PHYS_OFFSET	HIGHLAND_SDRAM_BASE
++#elif defined(SKRZG1E_SDRAM_BASE)
++#define PHYS_OFFSET	SKRZG1E_SDRAM_BASE
++#elif defined(SKRZG1M_SDRAM_BASE)
++#define PHYS_OFFSET	SKRZG1M_SDRAM_BASE
  #else
  #error
  #endif

@@ -5,7 +5,7 @@ require ../../include/gles-control.inc
 require ../../include/multimedia-control.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(islay|highland)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m)"
 
 PV_append = "+git${SRCREV}"
 
@@ -15,7 +15,7 @@ SRC_URI = " \
 	${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.4 \
 	file://0001-add-support-of-r8a7743-and-r8a7745.patch \
 	file://0002-add-can-to-r8a7743-DT.patch \
-	file://0002-add-support-of-hihgland-and-islay.patch \
+	file://0002-add-SKRZG1M-and-SKRZG1E.patch \
 	file://0003-can-add-Renesas-R-Car-CAN-driver.patch \
 	file://0006-can-rcar_can-support-all-input-clocks.patch \
 	file://0007-can-rcar_can-document-device-tree-bindings.patch \
@@ -45,7 +45,7 @@ SRC_URI_append = " \
     if '${USE_MULTIMEDIA}' == '0' or '${USE_GLES_WAYLAND}' == '0' else ''} \
 "
 
-SRC_URI_append_highland = " file://highland.cfg"
+SRC_URI_append_skrzg1m = " file://skrzg1m.cfg"
 
 PATCHTOOL_rzg1 = "git"
 

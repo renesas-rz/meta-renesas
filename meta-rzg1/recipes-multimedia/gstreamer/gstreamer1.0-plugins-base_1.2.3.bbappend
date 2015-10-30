@@ -16,8 +16,8 @@ do_configure() {
 # For Common
 FILESEXTRAPATHS_prepend_rzg1 := '${THISDIR}/${PN}:'
 VSPFILTER_CONFIGS = " \
-    file://gstvspfilter-highland.conf \
-    file://gstvspfilter-islay.conf \
+    file://gstvspfilter-skrzg1m.conf \
+    file://gstvspfilter-skrzg1e.conf \
 "
 
 # For wayland
