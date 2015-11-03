@@ -1,0 +1,2 @@
+
+DEPENDS_remove = "leveldb"
