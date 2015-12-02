@@ -37,6 +37,10 @@ SRC_URI = " \
     	file://ext/0006-usb-xhci-rcar-Change-RCar-Gen2-usb3-firmware-to-upstream-name.patch \
     	file://ext/0007-xhci-rcar-add-firmware-for-R-Car-H2-M2-USB-3.0-host-.patch \
     	file://ext/0008-spi-sh-msiof-request-gpios-for-cs-gpios.patch \
+    	file://0027-add-ravb-compatible-for-r8a7743.patch \
+    	file://0028-added-avb-pins-for-r8a7743.patch \
+    	file://0029-added-avb-to-r8a7743.dtsi.patch \
+    	file://0030-created-avb-dts.patch \
 "
 
 
@@ -46,6 +50,10 @@ SRC_URI_append = " \
 "
 
 SRC_URI_append_skrzg1m = " file://skrzg1m.cfg"
+
+KERNEL_DEVICETREE_append_skrzg1m = '${@ \
+	" ${S}/arch/arm/boot/dts/r8a7743-skrzg1m-eavb.dts " if 'skrzg1m-tse' in '${MACHINE_FEATURES}' else \
+	""}'
 
 PATCHTOOL_rzg1 = "git"
 
