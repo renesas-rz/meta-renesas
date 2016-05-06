@@ -42,6 +42,7 @@ SRC_URI_append = " \
 	file://0028-added-avb-pins-for-r8a7743.patch \
 	file://0029-added-avb-to-r8a7743.dtsi.patch \
 	file://0030-created-avb-dts.patch \
+	file://0031-r8a7743-Update-clock-and-pin-control-settings.patch \
 "
 
 
