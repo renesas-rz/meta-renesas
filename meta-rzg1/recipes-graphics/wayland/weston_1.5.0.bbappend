@@ -14,7 +14,7 @@ EXTRA_OECONF_append_rzg1 = " \
     ${@base_conditional('USE_GLES', '1', '--enable-v4l2', \
     '--disable-xwayland-test WESTON_NATIVE_BACKEND=fbdev-backend.so', d)}"
 
-SRCREV_rzg1 = "${@'e9bb380affc8eaaf2fb9e52d04f128978d1aec8f' \
+SRCREV_rzg1 = "${@'5d3b6db3a44aa8b1bc5f5ae31f7bfbcf2d92d17a' \
     if '1' in '${USE_GLES}' else '00781bcf518f6bab0d08e6962630b0994e8bf632'}"
 SRC_URI_rzg1 = " \
     git://github.com/renesas-devel/weston.git;protocol=git;branch=RCAR-GEN2/1.5.0/gl-fallback \

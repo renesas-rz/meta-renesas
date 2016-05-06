@@ -10,7 +10,7 @@ DEPENDS = "linux-renesas vspm-kernel-module"
 PN = "vsp2-kernel-module"
 PR = "r0"
 
-SRCREV = "8cc362a6c961661e4655904f8d7731e501529d6c"
+SRCREV = "8c172771d0fdec0ab7afb69a05f611370bd96489"
 SRC_URI = " \
     git://github.com/renesas-devel/vsp2driver.git;protocol=git;branch=RCAR-GEN2/1.0.0 \
     file://vsp2drv-init \

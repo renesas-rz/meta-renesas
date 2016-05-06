@@ -287,7 +287,7 @@ diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platfo
 index fb68ed0..5ebb1d5 100644
 --- a/drivers/media/platform/soc_camera/rcar_vin.c
 +++ b/drivers/media/platform/soc_camera/rcar_vin.c
-@@ -1896,6 +1896,8 @@ static struct soc_camera_host_ops rcar_vin_host_ops = {
+@@ -1874,6 +1874,8 @@ static struct soc_camera_host_ops rcar_vin_host_ops = {
  };
  
  static struct platform_device_id rcar_vin_id_table[] = {
@@ -428,9 +428,9 @@ index 46024fb..8265c05 100644
 +++ b/drivers/pci/host/pcie-rcar.c
 @@ -914,6 +914,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
  	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
- 	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
- 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-r8a7743", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init_gen2 },
++	{ .compatible = "renesas,pcie-r8a7743", .data = rcar_pcie_hw_init_gen2 },
  	{},
  };
  MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
@@ -10020,7 +10020,7 @@ diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
 index 2588f81..44bde31 100644
 --- a/drivers/spi/spi-sh-msiof.c
 +++ b/drivers/spi/spi-sh-msiof.c
-@@ -1037,6 +1037,12 @@ static const struct sh_msiof_chipdata r8a779x_data = {
+@@ -1050,6 +1050,12 @@ static const struct sh_msiof_chipdata r8a779x_data = {
  	.master_flags = SPI_MASTER_MUST_TX,
  };
  
@@ -10033,7 +10033,7 @@ index 2588f81..44bde31 100644
  static const struct of_device_id sh_msiof_match[] = {
  	{ .compatible = "renesas,sh-msiof",        .data = &sh_data },
  	{ .compatible = "renesas,sh-mobile-msiof", .data = &sh_data },
-@@ -1044,6 +1050,8 @@ static const struct of_device_id sh_msiof_match[] = {
+@@ -1057,6 +1063,8 @@ static const struct of_device_id sh_msiof_match[] = {
  	{ .compatible = "renesas,msiof-r8a7791",   .data = &r8a779x_data },
  	{ .compatible = "renesas,msiof-r8a7793",   .data = &r8a779x_data },
  	{ .compatible = "renesas,msiof-r8a7794",   .data = &r8a779x_data },
@@ -10042,7 +10042,7 @@ index 2588f81..44bde31 100644
  	{},
  };
  MODULE_DEVICE_TABLE(of, sh_msiof_match);
-@@ -1348,6 +1356,8 @@ static struct platform_device_id spi_driver_ids[] = {
+@@ -1350,6 +1358,8 @@ static struct platform_device_id spi_driver_ids[] = {
  	{ "spi_r8a7791_msiof",	(kernel_ulong_t)&r8a779x_data },
  	{ "spi_r8a7793_msiof",	(kernel_ulong_t)&r8a779x_data },
  	{ "spi_r8a7794_msiof",	(kernel_ulong_t)&r8a779x_data },

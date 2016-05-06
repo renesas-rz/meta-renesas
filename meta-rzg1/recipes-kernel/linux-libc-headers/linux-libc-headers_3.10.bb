@@ -5,9 +5,9 @@ COMPATIBLE_MACHINE = "(skrzg1m|skrzg1e)"
 PV_append = "+git${SRCREV}"
 
 RENESAS_BACKPORTS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git"
-SRCREV = "ef3cb04de0d01178a64fea73ffa4c5e21e79f310"
+SRCREV = "165e12ce2d7839e755debbec78dfa43b54345275"
 SRC_URI = " \
-    ${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.4 \
+    ${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.7 \
     file://scripts-Makefile.headersinst-install-headers-from-sc.patch \
 "
 S = "${WORKDIR}/git"
