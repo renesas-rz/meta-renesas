@@ -5,7 +5,7 @@ require ../../include/gles-control.inc
 require ../../include/multimedia-control.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m)"
 
 PV_append = "+git${SRCREV}"
 
@@ -53,6 +53,11 @@ SRC_URI_append = " \
 
 SRC_URI_append_skrzg1m = " file://skrzg1m.cfg"
 
+SRC_URI_append_iwg20m = " \
+	file://0032-iwg20m-Add-support-for-iWave-iwg20m-board.patch \
+"
+
+
 KERNEL_DEVICETREE_append_skrzg1m = '${@ \
 	" ${S}/arch/arm/boot/dts/r8a7743-skrzg1m-eavb.dts " if 'skrzg1m-tse' in '${MACHINE_FEATURES}' else \
 	""}'
@@ -62,6 +67,7 @@ PATCHTOOL_rzg1 = "git"
 S = "${WORKDIR}/git"
 
 KERNEL_DEFCONFIG = "shmobile_defconfig"
+KERNEL_DEFCONFIG_iwg20m = "iw_rainbowg20m_defconfig"
 
 do_configure_prepend() {
     install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."

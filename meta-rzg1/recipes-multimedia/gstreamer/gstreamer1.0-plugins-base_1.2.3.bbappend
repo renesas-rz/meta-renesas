@@ -18,6 +18,7 @@ FILESEXTRAPATHS_prepend_rzg1 := '${THISDIR}/${PN}:'
 VSPFILTER_CONFIGS = " \
     file://gstvspfilter-skrzg1m.conf \
     file://gstvspfilter-skrzg1e.conf \
+    file://gstvspfilter-iwg20m.conf \
 "
 
 # For wayland
