@@ -2,8 +2,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 # workaround linaro gcc bug
 #  https://bugs.linaro.org/show_bug.cgi?id=534
-SRC_URI_append = " file://0001-Removed-CXX11-flags-that-confuzed-Linaro-GCC.patch \
-		   file://0001-add-request-of-technologies.patch "
+SRC_URI_append = " file://0001-add-request-of-technologies.patch \
+                 "
 
 
 # switch to GLES 2 support
