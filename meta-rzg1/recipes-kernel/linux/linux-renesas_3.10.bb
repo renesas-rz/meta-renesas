@@ -56,6 +56,7 @@ SRC_URI_append_skrzg1m = " file://skrzg1m.cfg"
 SRC_URI_append_iwg20m = " \
 	file://0032-iwg20m-Add-support-for-iWave-iwg20m-board.patch \
 	file://0033-iwg20m-Fix-issue-HDMI-output-is-clone-from-LVDS.patch \
+	file://0034-i2c-Revert-commit-Move-pm_runtime-to-fix-iWave-VIN2.patch \
 "
 
 
