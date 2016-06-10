@@ -46,13 +46,38 @@ change_names() {
 }
 
 
+TMPDIRS=
+
+trap 'delete_tmp_dirs' QUIT TERM HUP EXIT
+
+delete_tmp_dirs()
+{
+	if [ -n "$TMPDIRS" ] ; then
+		echo deleting temp dirs...
+		echo $TMPDIRS
+		rm -rf $TMPDIRS
+	else
+		echo no tmp dirs
+	fi
+}
+
 TMP=`mktemp -d`
+TMPDIRS="$TMPDIRS $TMP"
 
-
-MM_DRVs=`find $1 -name RCH2M2MMPRDL001 | tail -1`
+MM_DRVs=`find $1 -type d -name RCH2M2MMPRDL001 | tail -1`
+if [ -z "$MM_DRVs" ]
+then
+	echo "Could not find directory RCH2M2MMPRDL001" >&2
+	exit 1
+fi
 cp -rf $MM_DRVs $TMP
 
-MM_LIBs=`find $1 -name RCH2M2MMPRLL001 | tail -1`
+MM_LIBs=`find $1 -type d -name RCH2M2MMPRLL001 | tail -1`
+if [ -z "$MM_LIBs" ]
+then
+	echo "Could not find directory RCH2M2MMPRLL001" >&2
+	exit 1
+fi
 cp -rf $MM_LIBs $TMP
 
 KERNEL_MODULES="$TMP/RCH2M2MMPRDL001"
@@ -85,6 +110,8 @@ mv vspm.tar.bz2 recipes-multimedia/vspm-module/files/vspm-user.tar.bz2
 
 ###
 OMXTMP=`mktemp -d`
+TMPDIRS="$TMPDIRS $OMXTMP"
+
 #cp -a $1/R-Car_Series_Evaluation_Software_Package_for_Linux/omx_video_m2e2_v160_eva/* $OMXTMP
 #cp -a $1/R-Car_Series_Evaluation_Software_Package_of_Linux_Drivers/omx_video_v160_eva/* $OMXTMP
 OMX_LIBs=`find $1 -name omx_video_m2e2_v* | tail -1`
