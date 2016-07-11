@@ -22,3 +22,6 @@ PACKAGECONFIG_append_rzg1 = " faad ${@base_contains('USE_GLES_WAYLAND', '1', 'wa
 # for lcb
 DEPENDS_append_lcb = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
 PACKAGECONFIG_append_lcb = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
+
+DEPENDS_append_iwg20m = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
+PACKAGECONFIG_append_iwg20m = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
