@@ -72,6 +72,7 @@ SRC_URI = " \
 	file://0027-add-for-clk-driver-RZG-support.patch \
 	file://0028-media-media-adv7180-increase-delay-after-reset-to-5m.patch \
 	file://0029-add-gpio-keys-to-skrzg1m.patch \
+	file://0030-edit-defconfig-to-support-cma.patch \
 "
 
 
