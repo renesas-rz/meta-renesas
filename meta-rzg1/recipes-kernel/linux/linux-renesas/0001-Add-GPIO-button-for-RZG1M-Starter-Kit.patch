@@ -1,0 +1,66 @@
+From 712c4f438d13435d96be4c0703b250beeb877ef3 Mon Sep 17 00:00:00 2001
+From: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+Date: Mon, 7 Mar 2016 17:20:41 +0700
+Subject: [PATCH] Add GPIO button for RZG1M Starter Kit
+
+Add GP7_0, GP7_1, GP7_2 into device tree for GPIO button of RZG1M Starter Kit
+Fix issue: 
+  + Failed create compositor weston with error "failed to create input devices".
+  + The virtual keyboard does not appear when the input email panel is clicked.
+Reason:  RZ/G1M Starter Kit lacks off GPIO event
+This patch add GPIO button into the device tree for making GPIO event to solve this issue
+
+Signed-off-by: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+Update by: Tung Dang <tung.dang.jy@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-skrzg1m.dts | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-skrzg1m.dts b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+index bb01350..66b9f1b 100644
+--- a/arch/arm/boot/dts/r8a7743-skrzg1m.dts
++++ b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+@@ -27,6 +27,7 @@
+ /dts-v1/;
+ #include "r8a7743.dtsi"
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
+ 
+ / {
+ 	model = "Skrzg1m";
+@@ -58,6 +59,32 @@
+ 		};
+ 	};
+ 
++        gpio-keys {
++                compatible = "gpio-keys";
++
++                key-a {
++                        gpios = <&gpio7 0 GPIO_ACTIVE_LOW>;
++                        linux,code = <KEY_A>;
++                        label = "SW30";
++                        gpio-key,wakeup;
++                        debounce-interval = <20>;
++                };
++                key-b {
++                        gpios = <&gpio7 1 GPIO_ACTIVE_LOW>;
++                        linux,code = <KEY_B>;
++                        label = "SW31";
++                        gpio-key,wakeup;
++                        debounce-interval = <20>;
++                };
++                key-c {
++                        gpios = <&gpio7 2 GPIO_ACTIVE_LOW>;
++                        linux,code = <KEY_C>;
++                        label = "SW32";
++                        gpio-key,wakeup;
++                        debounce-interval = <20>;
++                };
++        };
++
+ 	vcc_sdhi0: regulator@0 {
+ 		compatible = "regulator-fixed";
+ 
+-- 
+1.9.1
+

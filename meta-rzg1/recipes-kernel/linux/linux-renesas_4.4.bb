@@ -78,7 +78,9 @@ SRC_URI = " \
 S = "${WORKDIR}/git"
 
 
-SRC_URI_append_skrzg1m = " file://skrzg1m.cfg"
+SRC_URI_append_skrzg1m = " file://skrzg1m.cfg \
+						   file://0001-Add-GPIO-button-for-RZG1M-Starter-Kit.patch \
+"
 
 PATCHTOOL_rzg1 = "git"
 
