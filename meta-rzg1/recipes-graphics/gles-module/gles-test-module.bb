@@ -1,6 +1,6 @@
 DESCRIPTION = "RGX/SGX unit test module"
 LICENSE = "CLOSED"
-DEPENDS += "gles-kernel-module gles-user-module"
+DEPENDS += "kernel-module-gles gles-user-module"
 PN = "gles-test-module"
 PR = "r0"
 OPENGLES3 ?= "0"

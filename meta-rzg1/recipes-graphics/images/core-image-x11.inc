@@ -13,3 +13,12 @@ IMAGE_INSTALL_append_lcb = " \
     can-utils \
     libsocketcan \
 "
+
+
+#### temperary ######
+
+IMAGE_INSTALL += " \
+	xf86-video-modesetting \
+	xserver-xorg-extension-glx \
+	mesa-megadriver \
+"

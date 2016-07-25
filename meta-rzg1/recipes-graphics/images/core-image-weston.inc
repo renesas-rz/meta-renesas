@@ -13,5 +13,5 @@ IMAGE_INSTALL_append_lcb = ' ${@base_conditional("USE_MULTIMEDIA", "1", " \
 IMAGE_INSTALL_append_lcb = " \
     can-utils \
     libsocketcan \
+    weston-bin \
 "
-DISTRO_FEATURES_remove="x11"

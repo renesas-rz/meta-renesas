@@ -8,14 +8,12 @@ python __anonymous () {
 do_install_append() {
     if test -n "${KERNEL_DEVICETREE}"; then
         for DTB in ${KERNEL_DEVICETREE}; do
-            if echo ${DTB} | grep -q '/dts/'; then
-                bbwarn "${DTB} contains the full path to the the dts file, but only the dtb name should be used."
-                DTB=`basename ${DTB} | sed 's,\.dts$,.dtb,g'`
-            fi
+            DTB=`basename ${DTB} | sed 's,\.dts$,.dtb,g'`
             DTB_BASE_NAME=`basename ${DTB} .dtb`
             DTB_NAME=`echo ${KERNEL_IMAGE_BASE_NAME} | sed "s/${MACHINE}/${DTB_BASE_NAME}/g"`
             DTB_SYMLINK_NAME=`echo ${KERNEL_IMAGE_SYMLINK_NAME} | sed "s/${MACHINE}/${DTB_BASE_NAME}/g"`
             DTB_PATH="${B}/arch/${ARCH}/boot/dts/${DTB}"
+	    echo ${DTB}
             oe_runmake ${DTB}
             if [ ! -e "${DTB_PATH}" ]; then
                 DTB_PATH="${B}/arch/${ARCH}/boot/${DTB}"
@@ -28,10 +26,8 @@ do_install_append() {
 do_deploy_append() {
     if test -n "${KERNEL_DEVICETREE}"; then
         for DTB in ${KERNEL_DEVICETREE}; do
-            if echo ${DTB} | grep -q '/dts/'; then
-                bbwarn "${DTB} contains the full path to the the dts file, but only the dtb name should be used."
-                DTB=`basename ${DTB} | sed 's,\.dts$,.dtb,g'`
-            fi
+            DTB=`basename ${DTB}`
+	    DTB=`echo ${DTB} | sed 's,\.dts$,.dtb,g'`
             DTB_BASE_NAME=`basename ${DTB} .dtb`
             DTB_NAME=`echo ${KERNEL_IMAGE_BASE_NAME} | sed "s/${MACHINE}/${DTB_BASE_NAME}/g"`
             DTB_SYMLINK_NAME=`echo ${KERNEL_IMAGE_SYMLINK_NAME} | sed "s/${MACHINE}/${DTB_BASE_NAME}/g"`

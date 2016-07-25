@@ -1,0 +1,96 @@
+From 311a81d60171f125a78878e8d51496d7182e18df Mon Sep 17 00:00:00 2001
+From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Date: Fri, 3 Jun 2016 15:48:20 +0300
+Subject: [PATCH 3/3] add sgx to dtsi
+
+---
+ arch/arm/boot/dts/r8a7791.dtsi            | 36 ++++++++++++++++++++++++++++---
+ include/dt-bindings/clock/r8a7791-clock.h |  2 ++
+ 2 files changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
+index 328f48b..3b538ce 100644
+--- a/arch/arm/boot/dts/r8a7791.dtsi
++++ b/arch/arm/boot/dts/r8a7791.dtsi
+@@ -185,6 +185,36 @@
+ 		power-domains = <&cpg_clocks>;
+ 	};
+ 
++	sysc: system-controller@e6180000 {
++		compatible = "renesas,rcar-gen2-sysc";
++		reg = <0 0xe6180000 0 0x0400>;
++
++		pm-domains {
++			pd_always_on: always_on {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				#power-domain-cells = <0>;
++
++				pd_gsx: gsx {
++					reg = <0xC0>;
++					#power-domain-cells = <0>;
++				};
++
++			};
++		};
++	};
++
++	sgx@fd800000 {
++		compatible = "renesas,sgx";
++		reg = <0 0xfd800000 0 0x10000>;
++		interrupts = <0 119 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "irq_sgx";
++		clocks = <&mstp1_clks R8A7791_CLK_3DG>, 
++			 <&mstp8_clks R8A7791_CLK_IPMMU_SGX>;
++		clock-names = "sgx_clk", "ipmmu_clk";
++		power-domains = <&pd_gsx>;
++	};
++
+ 	thermal@e61f0000 {
+ 		compatible = "renesas,thermal-r8a7791", "renesas,rcar-thermal";
+ 		reg = <0 0xe61f0000 0 0x14>, <0 0xe61f0100 0 0x38>;
+@@ -1041,10 +1071,9 @@
+ 			#clock-cells = <1>;
+ 			clock-output-names = "main", "pll0", "pll1", "pll3",
+ 					     "lb", "qspi", "sdh", "sd0", "z",
+-					     "rcan", "adsp";
++					     "rcan", "adsp", "gpu";
+ 			#power-domain-cells = <0>;
+ 		};
+-
+ 		/* Variable factor clocks */
+ 		sd2_clk: sd2_clk@e6150078 {
+ 			compatible = "renesas,r8a7791-div6-clock", "renesas,cpg-div6-clock";
+@@ -1228,6 +1257,7 @@
+ 			clock-output-names = "cp";
+ 		};
+ 
++
+ 		/* Gate clocks */
+ 		mstp0_clks: mstp0_clks@e6150130 {
+ 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
+@@ -1241,7 +1271,7 @@
+ 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe6150134 0 4>, <0 0xe6150038 0 4>;
+ 			clocks = <&zs_clk>, <&zs_clk>, <&m2_clk>, <&zs_clk>, <&p_clk>,
+-				 <&zg_clk>, <&zs_clk>, <&zs_clk>, <&zs_clk>, <&p_clk>,
++				 <&cpg_clocks R8A7791_CLK_SGX>, <&zs_clk>, <&zs_clk>, <&zs_clk>, <&p_clk>,
+ 				 <&p_clk>, <&rclk_clk>, <&cp_clk>, <&zs_clk>, <&zs_clk>,
+ 				 <&zs_clk>;
+ 			#clock-cells = <1>;
+diff --git a/include/dt-bindings/clock/r8a7791-clock.h b/include/dt-bindings/clock/r8a7791-clock.h
+index dd09b73..8b3699c 100644
+--- a/include/dt-bindings/clock/r8a7791-clock.h
++++ b/include/dt-bindings/clock/r8a7791-clock.h
+@@ -22,6 +22,8 @@
+ #define R8A7791_CLK_Z			8
+ #define R8A7791_CLK_RCAN		9
+ #define R8A7791_CLK_ADSP		10
++#define R8A7791_CLK_SGX			11
++
+ 
+ /* MSTP0 */
+ #define R8A7791_CLK_MSIOF0		0
+-- 
+1.9.1
+

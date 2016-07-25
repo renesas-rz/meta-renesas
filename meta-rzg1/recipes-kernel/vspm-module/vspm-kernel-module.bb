@@ -8,7 +8,11 @@ LIC_FILES_CHKSUM = " \
 DEPENDS = "linux-renesas"
 PN = "vspm-kernel-module"
 PR = "r0"
-SRC_URI = "file://vspm-kernel.tar.bz2"
+
+SRC_URI = "file://vspm-kernel.tar.bz2 \
+	   file://add-wno-error-day-time.patch \
+	   file://0001-rename-clks-vspm.patch "
+
 S = "${WORKDIR}"
 
 VSPM_CFG_r8a7743 = "M2CONFIG"

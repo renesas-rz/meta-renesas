@@ -1,4 +1,6 @@
 SRC_URI_append = " \
+    file://keymap_input_file.patch \
+    file://add_stdint.patch \
     file://Change-udevadm-settle-timeout-3-seconds-to-6-seconds-in-etc-init.d-udev.patch;apply=no \
 "
 

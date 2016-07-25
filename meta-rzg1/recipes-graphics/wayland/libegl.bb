@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://egl.c;beginline=5;endline=15;md5=3677623633a6e459b1f6
 COMPATIBLE_MACHINE = "(r8a7743|r8a7745)"
 
 PROVIDES = "${@base_contains("DISTRO_FEATURES", "wayland", "virtual/egl", "", d)}"
-SRCREV = "ee4bce93878d02a144ae6ebfba1eff28fe9b4442"
+SRCREV = "7b09cce97e8658ba927e71f1af43360c4cc392b7"
 SRC_URI = " \
     git://github.com/thayama/libegl;protocol=git;branch=master \
     file://0001-libegl-Remove-duplicate-header-files-of-gles-user-mo.patch \

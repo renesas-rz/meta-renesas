@@ -24,31 +24,8 @@ IMAGE_INSTALL_append_rzg1 = " \
     gstreamer1.0-plugins-bad-videoparsersbad \
 "
 
-IMAGE_INSTALL_append_iwg20m = " \
-    dosfstools \
-    evtest \
-    e2fsprogs-mke2fs \
-    i2c-tools \
-    iproute2 \
-    memtester \
-    python-subprocess \
-    python-datetime \
-    python-json \
-    ethtool \
-    mtd-utils \
-    mtd-utils-ubifs \
-    iperf \
-    can-utils \
-    pciutils \
-    libsocketcan \
-    minicom \
-    lttng-tools \
-    lttng-modules \
-    lttng-ust \
-"
-
 IMAGE_INSTALL_append_rzg1 = '${@base_conditional("USE_GLES", "1", \
-    "gles-kernel-module gles-user-module", "", d)}'
+    "kernel-module-gles gles-user-module", "", d)}'
 
 # pkg groups for multimedia
 IMAGE_INSTALL_append_rzg1 = ' ${@base_contains("USE_MULTIMEDIA", "1", " \
@@ -66,3 +43,9 @@ IMAGE_INSTALL_append_rzg1 = ' ${@base_contains("USE_DTV", "1", " \
 IMAGE_INSTALL_append_rzg1 = ' ${@base_contains("USE_GLES_TEST", "1", " \
     gles-test-module \
     ", "", d)}'
+
+
+#### temperary ####
+
+IMAGE_INSTALL_remove_rzg1 = "gstreamer1.0-plugins-bad-faad"
+IMAGE_INSTALL_append_rzg1 = " kernel-module-vsp2 "

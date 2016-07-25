@@ -1,0 +1,74 @@
+From 4e1a4917697d2d4e31b680c93215e0f4d0742743 Mon Sep 17 00:00:00 2001
+From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Date: Fri, 3 Jun 2016 15:42:02 +0300
+Subject: [PATCH 2/3] add gpu clock node
+
+---
+ drivers/clk/shmobile/clk-rcar-gen2.c | 37 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 745496f..32b261e 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -34,6 +34,7 @@ struct rcar_gen2_cpg {
+ #define CPG_FRQCRC_ZFC_MASK		(0x1f << 8)
+ #define CPG_FRQCRC_ZFC_SHIFT		8
+ #define CPG_ADSPCKCR			0x0000025c
++#define CPG_GPUCKCR			0x00000234
+ #define CPG_RCANCKCR			0x00000270
+ 
+ /* -----------------------------------------------------------------------------
+@@ -245,6 +246,40 @@ static struct clk * __init cpg_adsp_clk_register(struct rcar_gen2_cpg *cpg)
+ 	return clk;
+ }
+ 
++
++/* GPU divisors */
++static const struct clk_div_table cpg_gpu_div_table[] = {
++	{ .val = 0, .div = 3 },
++        { .val = 1, .div = 5 },
++        { /* sentinel */ }
++};
++
++static struct clk * __init cpg_gpu_clk_register(struct rcar_gen2_cpg *cpg, const char* name)
++{
++	const char *parent_name = "pll1";
++	struct clk_divider *div;
++	struct clk *clk;
++
++	div = kzalloc(sizeof(*div), GFP_KERNEL);
++	if (!div)
++		return ERR_PTR(-ENOMEM);
++
++	div->reg = cpg->reg + CPG_GPUCKCR;
++	div->width = 1;
++	div->shift = 15;
++	div->table = cpg_gpu_div_table;
++	div->lock = &cpg->lock;
++
++	clk = clk_register_composite(NULL, name, &parent_name, 1, NULL, NULL,
++				     &div->hw, &clk_divider_ops,
++				     NULL, NULL, 0);
++	if (IS_ERR(clk)) {
++		kfree(div);
++	}
++
++	return clk;
++}
++
+ /* -----------------------------------------------------------------------------
+  * CPG Clock Data
+  */
+@@ -351,6 +386,8 @@ rcar_gen2_cpg_register_clock(struct device_node *np, struct rcar_gen2_cpg *cpg,
+ 		return cpg_rcan_clk_register(cpg, np);
+ 	} else if (!strcmp(name, "adsp")) {
+ 		return cpg_adsp_clk_register(cpg);
++	} else if (!strcmp(name, "gpu")) {
++		return cpg_gpu_clk_register(cpg, "gpu");
+ 	} else {
+ 		return ERR_PTR(-EINVAL);
+ 	}
+-- 
+1.9.1
+
