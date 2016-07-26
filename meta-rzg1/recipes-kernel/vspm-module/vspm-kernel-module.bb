@@ -11,7 +11,8 @@ PR = "r0"
 
 SRC_URI = "file://vspm-kernel.tar.bz2 \
 	   file://add-wno-error-day-time.patch \
-	   file://0001-rename-clks-vspm.patch "
+	   file://0001-rename-clks-vspm.patch \
+	   file://0002-vspm-Update-from-kernel-3.10-to-kernel-4.4.patch "
 
 S = "${WORKDIR}"
 

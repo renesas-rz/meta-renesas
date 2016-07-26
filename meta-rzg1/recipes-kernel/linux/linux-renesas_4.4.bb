@@ -73,6 +73,7 @@ SRC_URI = " \
 	file://0028-media-media-adv7180-increase-delay-after-reset-to-5m.patch \
 	file://0029-add-gpio-keys-to-skrzg1m.patch \
 	file://0030-edit-defconfig-to-support-cma.patch \
+	file://0031-r8a7743.dtsi-register-for-2ddmac-change-the-compatib.patch \
 "
 
 
