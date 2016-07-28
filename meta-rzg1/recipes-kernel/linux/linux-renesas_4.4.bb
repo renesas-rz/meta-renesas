@@ -67,6 +67,9 @@ SRC_URI = " \
 	file://0022-pinctrl-sh-pfc-r8a7745-add-EtherAVB-and-DU-pin-group.patch \
 	file://0023-skrzg1e-enable-PFC-DU.patch \
 	file://0024-drm-rcar-du-Output-the-DISP-signal-on-the-DISP-pin.patch \
+	file://0025-fix-z-and-z2-clk-for-r8a7793-and-r8a7794.patch \
+	file://0026-app-operation-points-for-cpufreq-working.patch \
+	file://0027-add-for-clk-driver-RZG-support.patch \
 "
 
 
