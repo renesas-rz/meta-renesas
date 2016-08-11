@@ -75,6 +75,7 @@ SRC_URI = " \
 	file://0030-edit-defconfig-to-support-cma.patch \
 	file://0031-r8a7743.dtsi-register-for-2ddmac-change-the-compatib.patch \
 	file://0032-Add-FDPM-into-device-tree-of-RZG1M.patch \
+	file://0033-linux-renesas-r8a7743-dtsi-add-vcp0-vpc0-prr-vpc1-vp.patch \
 "
 
 
