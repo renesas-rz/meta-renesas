@@ -12,8 +12,9 @@ PR = "r0"
 SRC_URI = "file://fdpm-kernel.tar.bz2"
 S = "${WORKDIR}/fdpm"
 
-SRC_URI_append = " \
+SRC_URI_append += " \
 	file://0001-FDPM-port-to-LTS4.4-on-RZG1M.patch \
+	file://0002-FDPM-kernel-module-update-version-to-1.5.0.patch \
 "
 
 FDPM_CFG_r8a7743 = "M2CONFIG"
