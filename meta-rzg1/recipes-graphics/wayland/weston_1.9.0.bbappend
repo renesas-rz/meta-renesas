@@ -1,5 +1,8 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-SRC_URI_append = " file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-clie.patch"
+SRC_URI_append = " file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-clie.patch \
+                   file://0002-Weston-add-support-set-position-from-client.patch \
+                   file://0003-Weston-add-support-set-scaling-from-client.patch \
+                 "
 
 do_install_append() {
     # install xml for client applications
