@@ -1,0 +1,44 @@
+From 7c912c8986f7b42e4b00f510cc39bf09fe8cb0d7 Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Sat, 13 Aug 2016 08:54:07 +0700
+Subject: [PATCH] waylandsink: Don't wait for the wl_surface_frame callback to
+ notify the compositor of a wl_buffer
+
+When the frame rendering delays, the weston compositor can drop frames
+and catch up with the on-time processing by itself.
+
+Porting from a patch in Linux 3.10 environment made by Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ ext/wayland/gstwaylandsink.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 0fffb1d..78b335a 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -770,7 +770,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+   GstBuffer *to_render;
+   GstWlBuffer *wlbuffer;
+   GstFlowReturn ret = GST_FLOW_OK;
+-  gint redraw_flag;
+
+   g_mutex_lock (&sink->render_lock);
+
+@@ -810,13 +809,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+
+   wl_display_dispatch_queue_pending (sink->display->display, sink->frame_queue);
+
+-  /* drop buffers until we get a frame callback */
+-  redraw_flag = g_atomic_int_get (&sink->redraw_pending);
+-  while (redraw_flag == TRUE) {
+-    wl_display_dispatch_queue (sink->display->display, sink->frame_queue);
+-    redraw_flag = g_atomic_int_get (&sink->redraw_pending);
+-  }
+-
+   if (G_UNLIKELY (sink->video_info_changed)) {
+     gst_wl_window_set_video_info (sink->window, &sink->video_info);
+     sink->video_info_changed = FALSE;
+--
+1.9.1

@@ -1,0 +1,58 @@
+From a6083ffa73658f992fb757e079e0b7443d568650 Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Thu, 11 Aug 2016 08:50:10 +0700
+Subject:  waylandsink: Restrict the number of buffers in the pool
+ to be allocated
+
+This patch sets the maximum number of buffers to be allocated in
+the buffer pool waylandsink has.
+
+Porting from a patch in Linux 3.10 environment made by Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ ext/wayland/gstwaylandsink.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index f98bfd3..0fffb1d 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -595,7 +595,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+     goto pool_failed;
+
+   structure = gst_buffer_pool_get_config (newpool);
+-  gst_buffer_pool_config_set_params (structure, caps, info.size, 2, 0);
++  gst_buffer_pool_config_set_params (structure, caps, info.size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+   gst_buffer_pool_config_set_allocator (structure, NULL, &params);
+   if (!gst_buffer_pool_set_config (newpool, structure))
+     goto config_failed;
+@@ -681,12 +681,12 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+     size = info.size;
+
+     config = gst_buffer_pool_get_config (pool);
+-    gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
++    gst_buffer_pool_config_set_params (config, caps, size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+     if (!gst_buffer_pool_set_config (pool, config))
+       goto config_failed;
+   }
+   if (pool) {
+-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
++    gst_query_add_allocation_pool (query, pool, size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+     /*
+      * Add the default allocator for the plugins that can't use dmabuf
+      * descriptors.
+diff --git a/ext/wayland/waylandpool.h b/ext/wayland/waylandpool.h
+index e0944d0..3523d24 100644
+--- a/ext/wayland/waylandpool.h
++++ b/ext/wayland/waylandpool.h
+@@ -32,6 +32,7 @@ G_BEGIN_DECLS
+ #define GST_IS_WAYLAND_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WAYLAND_BUFFER_POOL))
+ #define GST_WAYLAND_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WAYLAND_BUFFER_POOL, GstWaylandBufferPool))
+ #define GST_WAYLAND_BUFFER_POOL_CAST(obj) ((GstWaylandBufferPool*)(obj))
++#define GST_WAYLAND_BUFFER_POOL_NUM 3
+
+ typedef struct _GstWaylandBufferPool GstWaylandBufferPool;
+ typedef struct _GstWaylandBufferPoolClass GstWaylandBufferPoolClass;
+--
+1.9.1
