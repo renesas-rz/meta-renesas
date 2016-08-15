@@ -1,7 +1,7 @@
 require ../../include/rzg-modules-common.inc
 
 LICENSE = "CLOSED"
-DEPENDS = "fdpm-kernel-module mmngr-user-module"
+DEPENDS = "kernel-module-fdpm mmngr-user-module"
 PN = "fdpm-user-module"
 SRC_URI = "file://fdpm.tar.bz2"
 

@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = " \
     file://drv/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 DEPENDS = "linux-renesas"
-PN = "s3ctl-kernel-module"
+PN = "kernel-module-s3ctl"
 PR = "r0"
 SRC_URI = "file://s3ctl-kernel.tar.bz2"
 
@@ -56,7 +56,7 @@ FILES_${PN}-dev = " \
     /usr/src/kernel/include/s3ctl.symvers \
 "
 
-RPROVIDES_${PN} += "s3ctl-kernel-module"
+RPROVIDES_${PN} += "kernel-module-s3ctl"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 do_configure[noexec] = "1"

@@ -1,7 +1,7 @@
 require ../../include/rzg-modules-common.inc
 
 LICENSE = "CLOSED"
-DEPENDS = "vspm-kernel-module"
+DEPENDS = "kernel-module-vspm"
 PN = "vspm-user-module"
 PR = "r0"
 SRC_URI = "file://vspm-user.tar.bz2"

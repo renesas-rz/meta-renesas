@@ -3,11 +3,11 @@ require ../../include/omx-components-control.inc
 
 LICENSE = "CLOSED"
 DEPENDS = " \
-    mmngr-kernel-module mmngr-user-module \
-    vspm-kernel-module vspm-user-module \
-    s3ctl-kernel-module s3ctl-user-module \
-    fdpm-kernel-module fdpm-user-module \
-    uvcs-kernel-module \
+    kernel-module-mmngr mmngr-user-module \
+    kernel-module-vspm vspm-user-module \
+    kernel-module-s3ctl s3ctl-user-module \
+    kernel-module-fdpm fdpm-user-module \
+    kernel-module-uvcs \
 "
 
 PR = "r0"

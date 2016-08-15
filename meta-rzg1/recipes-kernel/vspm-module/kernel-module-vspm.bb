@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = " \
     file://vspm/drv/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 DEPENDS = "linux-renesas"
-PN = "vspm-kernel-module"
+PN = "kernel-module-vspm"
 PR = "r0"
 
 SRC_URI = "file://vspm-kernel.tar.bz2 \
@@ -73,7 +73,7 @@ FILES_${PN}-dev = " \
     /usr/src/kernel/include/vspm.symvers \
 "
 
-RPROVIDES_${PN} += "vspm-kernel-module"
+RPROVIDES_${PN} += "kernel-module-vspm"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 do_configure[noexec] = "1"

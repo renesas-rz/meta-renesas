@@ -14,18 +14,18 @@ PACKAGES = "\
 PACKAGES_append_lcb = " packagegroup-lcb-oss-codecs"
 
 MULTIMEDIA_PACKAGES ="\
-    mmngr-kernel-module mmngr-user-module \
-    mmngrbuf-kernel-module mmngrbuf-user-module \
+    kernel-module-mmngr mmngr-user-module \
+    kernel-module-mmngrbuf mmngrbuf-user-module \
     mmngrbuf-user-module-dev \
-    fdpm-kernel-module fdpm-user-module \
-    vspm-kernel-module vspm-user-module \
-    s3ctl-kernel-module s3ctl-user-module \
-    uvcs-kernel-module omx-user-module \
+    kernel-module-fdpm fdpm-user-module \
+    kernel-module-vspm vspm-user-module \
+    kernel-module-s3ctl s3ctl-user-module \
+    kernel-module-uvcs omx-user-module \
     libmemcpy \
 "
 
 MULTIMEDIA_PACKAGES_append = " \
-    ${@ "vsp2-kernel-module" if "${USE_GLES_WAYLAND}" == "1" else "" } \
+    ${@ "kernel-module-vsp2" if "${USE_GLES_WAYLAND}" == "1" else "" } \
 "
 
 RDEPENDS_packagegroup-rzg-multimedia = "\
@@ -47,8 +47,8 @@ RDEPENDS_packagegroup-rzg-multimedia = "\
     gstreamer1.0-plugins-bad-mpegtsdemux \
     gstreamer1.0-plugins-bad-debugutilsbad \
     ${@base_contains("LICENSE_FLAGS_WHITELIST", "commercial", "gstreamer1.0-omx gstreamer1.0-plugins-ugly-asf", "", d )} \
-    ${@base_conditional("USE_GLES_WAYLAND", "1", "gstreamer1.0-plugins-base-vspfilter", "", d )} \
 "
+#${@base_conditional("USE_GLES_WAYLAND", "1", "gstreamer1.0-plugins-base-vspfilter", "", d )} 
 
 MULTIMEDIA_TEST_PACKAGES = "\
     ${MULTIMEDIA_PACKAGES} \

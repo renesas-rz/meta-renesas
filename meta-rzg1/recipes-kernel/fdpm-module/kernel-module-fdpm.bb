@@ -6,8 +6,8 @@ LIC_FILES_CHKSUM = " \
     file://drv/MIT-COPYING;md5=5526ef6e21dc96a1dd89fac4bde9f995 \
 "
 
-DEPENDS = "linux-renesas mmngr-kernel-module"
-PN = "fdpm-kernel-module"
+DEPENDS = "linux-renesas kernel-module-mmngr"
+PN = "kernel-module-fdpm"
 PR = "r0"
 SRC_URI = "file://fdpm-kernel.tar.bz2"
 S = "${WORKDIR}/fdpm"
@@ -78,7 +78,7 @@ FILES_${PN}-dev = " \
     /usr/src/kernel/include/fdpm.symvers \
 "
 
-RPROVIDES_${PN} += "fdpm-kernel-module"
+RPROVIDES_${PN} += "kernel-module-fdpm"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 do_configure[noexec] = "1"

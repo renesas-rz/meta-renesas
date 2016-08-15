@@ -1,7 +1,7 @@
 require ../../include/rzg-modules-common.inc
 
 LICENSE = "CLOSED"
-DEPENDS = "mmngr-kernel-module mmngr-user-module"
+DEPENDS = "kernel-module-mmngr mmngr-user-module"
 SRC_URI = "file://mmngr-tp-user.tar.bz2"
 
 S = "${WORKDIR}/mmngr"

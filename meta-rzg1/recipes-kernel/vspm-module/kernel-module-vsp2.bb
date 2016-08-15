@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = " \
     file://MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 
-DEPENDS = "linux-renesas vspm-kernel-module"
+DEPENDS = "linux-renesas kernel-module-vspm"
 PN = "kernel-module-vsp2"
 PR = "r0"
 
@@ -56,7 +56,7 @@ FILES_${PN} = " \
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/vsp2.symvers \
 "
-RPROVIDES_${PN} += "vsp2-kernel-module"
+RPROVIDES_${PN} += "kernel-module-vsp2"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 python do_package_ipk_prepend () {

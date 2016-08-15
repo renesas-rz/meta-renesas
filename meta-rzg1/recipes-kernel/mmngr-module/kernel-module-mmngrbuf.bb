@@ -2,7 +2,7 @@ require ../../include/rzg-modules-common.inc
 
 LICENSE = "GPLv2&MIT"
 DEPENDS = "linux-renesas"
-PN = "mmngrbuf-kernel-module"
+PN = "kernel-module-mmngrbuf"
 PR = "r0"
 
 SRC_URI = "file://mmngrbuf.tar.bz2 \
@@ -59,7 +59,7 @@ FILES_${PN}-dev = " \
     /usr/src/kernel/include/*.h \
 "
 
-RPROVIDES_${PN} += "mmngrbuf-kernel-module"
+RPROVIDES_${PN} += "kernel-module-mmngrbuf"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 do_configure[noexec] = "1"

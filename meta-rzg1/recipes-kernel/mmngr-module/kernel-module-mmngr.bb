@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = " \
     file://include/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 DEPENDS = "linux-renesas"
-PN = "mmngr-kernel-module"
+PN = "kernel-module-mmngr"
 SRC_URI = "file://mmngr.tar.bz2"
 S = "${WORKDIR}/mmngr"
 
@@ -68,7 +68,7 @@ FILES_${PN}-dev = " \
     /usr/src/kernel/include/*.h \
 "
 
-RPROVIDES_${PN} += "mmngr-kernel-module"
+RPROVIDES_${PN} += "kernel-module-mmngr"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 do_configure[noexec] = "1"

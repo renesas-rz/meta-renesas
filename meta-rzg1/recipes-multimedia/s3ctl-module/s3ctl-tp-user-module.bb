@@ -1,7 +1,7 @@
 require ../../include/rzg-modules-common.inc
 
 LICENSE = "CLOSED"
-DEPENDS = "s3ctl-kernel-module s3ctl-user-module"
+DEPENDS = "kernel-module-s3ctl s3ctl-user-module"
 SRC_URI = "file://s3ctl-tp-user.tar.bz2"
 S = "${WORKDIR}/s3ctl"
 

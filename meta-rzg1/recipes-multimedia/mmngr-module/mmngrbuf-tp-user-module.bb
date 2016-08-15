@@ -1,7 +1,7 @@
 require ../../include/rzg-modules-common.inc
 
 LICENSE = "CLOSED"
-DEPENDS = "mmngrbuf-kernel-module mmngrbuf-user-module"
+DEPENDS = "kernel-module-mmngrbuf mmngrbuf-user-module"
 SRC_URI = "file://mmngrbuf-tp-user.tar.bz2"
 
 S = "${WORKDIR}/mmngrbuf"

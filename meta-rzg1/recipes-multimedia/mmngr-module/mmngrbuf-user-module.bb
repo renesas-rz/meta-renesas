@@ -1,7 +1,7 @@
 require ../../include/rzg-modules-common.inc
 
 LICENSE = "CLOSED"
-DEPENDS = "mmngrbuf-kernel-module"
+DEPENDS = "kernel-module-mmngrbuf"
 PN = "mmngrbuf-user-module"
 PR = "r0"
 S = "${WORKDIR}/mmngrbuf"

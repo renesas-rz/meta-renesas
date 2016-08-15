@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = " \
     file://uvcs/include/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 DEPENDS = "linux-renesas"
-PN = "uvcs-kernel-module"
+PN = "kernel-module-uvcs"
 PR = "r0"
 SRC_URI = "file://uvcs-kernel.tar.bz2"
 S = "${WORKDIR}"
@@ -57,19 +57,21 @@ do_clean_source() {
 
 PACKAGES = "\
     ${PN} \
+    ${PN}-cmn \
     ${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES_${PN}-cmn = " \
     /lib/modules/${KERNEL_VERSION}/extra/uvcs_cmn.ko \
 "
+
 FILES_${PN}-dev = " \
     /usr/src/kernel/include \
     /usr/src/kernel/include/*.h \
     /usr/src/kernel/include/uvcs.symvers \
 "
 
-RPROVIDES_${PN} += "uvcs-kernel-module"
+RPROVIDES_${PN} += "kernel-module-uvcs"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 python do_package_ipk_prepend () {
