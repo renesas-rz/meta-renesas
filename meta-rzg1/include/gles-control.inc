@@ -4,3 +4,4 @@ USE_GLES_WAYLAND = "${@'1' if '${USE_GLES}' == '1' and '${USE_WAYLAND}' == '1' e
 USE_X11 = "${@'1' if 'x11' in '${DISTRO_FEATURES}' else '0'}"
 USE_GLES_X11 = "${@'1' if '1' in '${USE_GLES}' and '${USE_X11}' == '1' and '${USE_WAYLAND}' == '0' else '0'}"
 USE_GLES_TEST = "${@'1' if '${USE_GLES}' == '1' and 'gles-test' in '${DISTRO_FEATURES}' else '0'}"
+USE_GLES_MULTIMEDIA = "${@'1' if '${USE_GLES}' == '1' and 'multimedia' in '${MACHINE_FEATURES}' else '0'}"
