@@ -40,13 +40,9 @@ RDEPENDS_packagegroup-rzg-multimedia = "\
     gstreamer1.0-plugins-base-videoconvert \
     gstreamer1.0-plugins-base-typefindfunctions \
     gstreamer1.0-plugins-base-videoscale \
-    gstreamer1.0-plugins-good-avi \
     gstreamer1.0-plugins-good-audioparsers \
     gstreamer1.0-plugins-good-id3demux \
-    gstreamer1.0-plugins-bad-faad \
-    gstreamer1.0-plugins-bad-mpegtsdemux \
     gstreamer1.0-plugins-bad-debugutilsbad \
-    ${@base_contains("LICENSE_FLAGS_WHITELIST", "commercial", "gstreamer1.0-omx gstreamer1.0-plugins-ugly-asf", "", d )} \
 "
 #${@base_conditional("USE_GLES_WAYLAND", "1", "gstreamer1.0-plugins-base-vspfilter", "", d )} 
 
@@ -74,16 +70,8 @@ RDEPENDS_packagegroup-rzg-dtv = "\
 "
 
 RDEPENDS_packagegroup-lcb-oss-codecs = "\
-    libmad \
-    lame \
-    faac \
-    faad2 \
     libvorbis \
     libogg \
-    gstreamer1.0-plugins-ugly-mad \
-    gstreamer1.0-plugins-ugly-lame \
-    gstreamer1.0-plugins-bad-faac \
-    gstreamer1.0-plugins-bad-faad \
     gstreamer1.0-plugins-base-ogg \
     gstreamer1.0-plugins-base-vorbis \
 "
