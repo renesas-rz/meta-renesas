@@ -43,7 +43,7 @@ INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 ###do_patch[noexec] = "1"
 do_configure[noexec] = "1"
-do_populate_lic[noexec] = "1"
+#do_populate_lic[noexec] = "1"
 
 
 export LANG = "C"

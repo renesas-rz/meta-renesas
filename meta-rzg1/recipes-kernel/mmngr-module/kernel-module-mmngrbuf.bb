@@ -1,6 +1,6 @@
 require ../../include/rzg-modules-common.inc
 
-LICENSE = "GPLv2&MIT"
+LICENSE = "GPLv2 & MIT"
 DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngrbuf"
 PR = "r0"

@@ -17,7 +17,7 @@ S = '${@base_conditional( "OPENGLES3", "1", \
 
 do_patch[noexec] = "1"
 do_configure[noexec] = "1"
-do_populate_lic[noexec] = "1"
+#do_populate_lic[noexec] = "1"
 
 do_compile() {
     cd ${S}

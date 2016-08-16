@@ -33,7 +33,7 @@ SRC_URI_append_r8a7745 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
     file://EGL_headers_for_wayland.patch \
     ", "", d)}"
 
-do_populate_lic[noexec] = "1"
+#do_populate_lic[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install() {
