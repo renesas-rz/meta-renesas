@@ -25,5 +25,4 @@ do_configure_prepend() {
     ./autogen.sh --noconfigure
     cd ${B}
 }
-PACKAGECONFIG_append = " faac faad"
 RDEPENDS_${PN} = "libwayland-egl"
