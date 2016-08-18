@@ -43,6 +43,8 @@ RDEPENDS_packagegroup-rzg-multimedia = "\
     gstreamer1.0-plugins-good-audioparsers \
     gstreamer1.0-plugins-good-id3demux \
     gstreamer1.0-plugins-bad-debugutilsbad \
+    gstreamer1.0-omx \
+    libgstgl-1.0 \
 "
 #${@base_conditional("USE_GLES_WAYLAND", "1", "gstreamer1.0-plugins-base-vspfilter", "", d )} 
 
