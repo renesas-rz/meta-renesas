@@ -1,5 +1,10 @@
+require ../../include/gles-control.inc
+
 DEPENDS_append_rzg1 = " omx-user-module mmngrbuf-user-module"
-EXTRA_OECONF_append_rzg1 = " --with-omx-target=rcar --enable-experimental"
+EXTRA_OECONF_append_rzg1 = " \
+    --with-omx-target=rcar --enable-experimental \
+    '${@'--enable-nv12-page-alignment' if '${USE_GLES_WAYLAND}' == '1' else ''}' \
+    '${@'--disable-dmabuf' if '${USE_GLES}' == '0' and '${USE_WAYLAND}' == '1' else ''}'"
 
 # Overwrite do_install[postfuncs] += " set_omx_core_name "
 # because it will force the plugin to use bellagio instead of our config
@@ -45,6 +50,16 @@ SRC_URI += " \
 	file://0030-omxvideodec-Add-hacks-to-choose-default-mode-for.patch \
 	file://0031-omxvideodec-Add-hack-to-skip-querying-drain-from-dow.patch \
 	file://0032-omxh264dec-Correct-size-of-buffer-when-malloc.patch \
+	file://0033-gst145-omxvideoenc-Support-omxh264enc-for-RCarGen2.patch \
+	file://0034-gst145-omxvideoenc-Support-NV16.patch \
+	file://0035-gst145-gstomx-Workaround-a-restriction-when-nBufferS.patch \
+	file://0036-gst145-omxvideodec-Fix-an-incorrect-plane-size-calcu.patch \
+	file://0037-gst145-omxvideodec-Align-a-memory-size-specified-whe.patch \
+	file://0038-gst145-Revert-omxvideodec-Set-the-already_acquired-f.patch \
+	file://0039-gst145-omxvideodec-Drop-frames-which-are-not-keyfram.patch \
+	file://0040-gst145-omxvideodec-Avoid-detaching-buffer-metadata-w.patch \
+	file://0041-gst145-omxvideodec-Add-a-support-for-the-page-alignm.patch \
+	file://0042-gst145-omxvideodec-Export-a-first-dmabuf-file-descri.patch \
 	"
 
 LIC_FILES_CHKSUM_remove_rzg1 = " file://omx/gstomx.h;beginline=1;endline=21;md5=5c8e1fca32704488e76d2ba9ddfa935f"
