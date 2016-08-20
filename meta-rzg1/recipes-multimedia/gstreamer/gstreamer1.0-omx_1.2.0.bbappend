@@ -60,6 +60,8 @@ SRC_URI += " \
 	file://0040-gst145-omxvideodec-Avoid-detaching-buffer-metadata-w.patch \
 	file://0041-gst145-omxvideodec-Add-a-support-for-the-page-alignm.patch \
 	file://0042-gst145-omxvideodec-Export-a-first-dmabuf-file-descri.patch \
+	file://0043-gst145-omxbufferpool-fix-memory-leak-in-gst_omx_buff.patch \
+	file://0044-gst145-gstomx-fix-memory-leak-in-_class_init-functio.patch \
 	"
 
 LIC_FILES_CHKSUM_remove_rzg1 = " file://omx/gstomx.h;beginline=1;endline=21;md5=5c8e1fca32704488e76d2ba9ddfa935f"
