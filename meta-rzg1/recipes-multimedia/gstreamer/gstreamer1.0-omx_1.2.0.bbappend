@@ -63,6 +63,8 @@ SRC_URI += " \
 	file://0043-gst145-omxbufferpool-fix-memory-leak-in-gst_omx_buff.patch \
 	file://0044-gst145-gstomx-fix-memory-leak-in-_class_init-functio.patch \
 	file://0045-gst145-omxvideoenc-add-nPFrames-for-AVCINTRAPERIOD-c.patch \
+	file://0046-gst145-omxvideoenc-Handle-for-valid-output-frames-on.patch \
+	file://0047-gst145-omxh264enc-Support-periodicty_idr-and-interva.patch \
 	"
 
 LIC_FILES_CHKSUM_remove_rzg1 = " file://omx/gstomx.h;beginline=1;endline=21;md5=5c8e1fca32704488e76d2ba9ddfa935f"
