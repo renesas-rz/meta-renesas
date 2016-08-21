@@ -1,8 +1,8 @@
-From a6083ffa73658f992fb757e079e0b7443d568650 Mon Sep 17 00:00:00 2001
+From 96207cac60ddf5e77d2cca2022d89ae7857b1fc7 Mon Sep 17 00:00:00 2001
 From: TungDang <tung.dang.jy@rvc.renesas.com>
-Date: Thu, 11 Aug 2016 08:50:10 +0700
-Subject:  waylandsink: Restrict the number of buffers in the pool
- to be allocated
+Date: Sun, 21 Aug 2016 07:20:23 +0700
+Subject: [PATCH 4/9]
+ gst145-waylandsink-Restrict-the-number-of-buffers-in-the-pool to be allocated
 
 This patch sets the maximum number of buffers to be allocated in
 the buffer pool waylandsink has.
@@ -12,28 +12,32 @@ Porting from a patch in Linux 3.10 environment made by Kazunori Kobayashi <kkoba
 Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
 ---
  ext/wayland/gstwaylandsink.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ ext/wayland/waylandpool.h    | 1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
-index f98bfd3..0fffb1d 100644
+index a40b7e0..211bb6a 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
-@@ -595,7 +595,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+@@ -592,7 +592,7 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
      goto pool_failed;
 
    structure = gst_buffer_pool_get_config (newpool);
 -  gst_buffer_pool_config_set_params (structure, caps, info.size, 2, 0);
 +  gst_buffer_pool_config_set_params (structure, caps, info.size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
-   gst_buffer_pool_config_set_allocator (structure, NULL, &params);
-   if (!gst_buffer_pool_set_config (newpool, structure))
-     goto config_failed;
-@@ -681,12 +681,12 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+ #ifdef HAVE_WAYLAND_KMS
+   gst_structure_set (structure, "videosink_buffer_creation_request_supported",
+       G_TYPE_BOOLEAN, TRUE, NULL);
+@@ -686,7 +686,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
      size = info.size;
 
      config = gst_buffer_pool_get_config (pool);
 -    gst_buffer_pool_config_set_params (config, caps, size, 2, 0);
 +    gst_buffer_pool_config_set_params (config, caps, size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
-     if (!gst_buffer_pool_set_config (pool, config))
+ #ifdef HAVE_WAYLAND_KMS
+     gst_structure_set (config, "videosink_buffer_creation_request_supported",
+         G_TYPE_BOOLEAN, TRUE, NULL);
+@@ -696,7 +696,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
        goto config_failed;
    }
    if (pool) {

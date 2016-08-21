@@ -1,12 +1,7 @@
-From 1a8fb21444f71e791859c15a38606358b025c754 Mon Sep 17 00:00:00 2001
+From 84912584b8109a53f918093737058139da2dcf04 Mon Sep 17 00:00:00 2001
 From: TungDang <tung.dang.jy@rvc.renesas.com>
-Date: Thu, 11 Aug 2016 08:34:00 +0700
-Subject: [PATCH] gst-plugins-bad-waylandsink-set-window-fullscreen
-
-Set fullscreen as one of property of waylandsink.
-This patch support display fullscreen on top of weston bar.
-
-Porting from a patch in Linux 3.10 environment made by Damian Hobson-Garcia <dhobsong@igel.co.jp>
+Date: Sun, 21 Aug 2016 07:01:29 +0700
+Subject: [PATCH 3/9] gst145-waylandsink-Set-window-fullscreen
 
 Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
 ---
@@ -17,10 +12,10 @@ Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
  4 files changed, 43 insertions(+), 1 deletion(-)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
-index 1190120..8895f63 100644
+index 1d16229..a40b7e0 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
-@@ -66,7 +66,8 @@ enum
+@@ -65,7 +65,8 @@ enum
    PROP_WAYLAND_POSITION_X,    /* add property (position_x) */
    PROP_WAYLAND_POSITION_Y,    /* add property (position_y) */
    PROP_WAYLAND_OUT_WIDTH,     /* add property (out_width)  */
@@ -29,8 +24,8 @@ index 1190120..8895f63 100644
 +  PROP_FULLSCREEN             /* add property (fullscreen) */
  };
 
- #define DEFAULT_USE_SUBSURFACE          TRUE
-@@ -211,6 +212,13 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+ GST_DEBUG_CATEGORY (gstwayland_debug);
+@@ -208,6 +209,13 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
                          G_MAXINT,
                          0,
                          G_PARAM_READWRITE));
@@ -44,7 +39,7 @@ index 1190120..8895f63 100644
  }
 
  static void
-@@ -226,6 +234,7 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+@@ -221,6 +229,7 @@ gst_wayland_sink_init (GstWaylandSink * sink)
    sink->scale = 0;
    sink->out_width = 0;
    sink->out_height = 0;
@@ -52,18 +47,18 @@ index 1190120..8895f63 100644
  }
 
  static void
-@@ -259,6 +268,10 @@ gst_wayland_sink_get_property (GObject * object,
+@@ -251,6 +260,10 @@ gst_wayland_sink_get_property (GObject * object,
        /* set out_height property */
        g_value_set_int (value, sink->out_height);
        break;
 +    case PROP_FULLSCREEN:
-+	  /* set fullscreen property */
++     /* set fullscreen property */
 +      g_value_set_boolean (value, sink->fullscreen);
 +      break;
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -296,6 +309,9 @@ gst_wayland_sink_set_property (GObject * object,
+@@ -285,6 +298,9 @@ gst_wayland_sink_set_property (GObject * object,
        /* get out_height property */
        sink->out_height = g_value_get_int (value);
        break;
@@ -73,7 +68,7 @@ index 1190120..8895f63 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -788,6 +804,8 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+@@ -803,6 +819,8 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
        }
      }
      sink->video_info_changed = FALSE;
@@ -83,10 +78,10 @@ index 1190120..8895f63 100644
 
    wl_display_dispatch_queue_pending (sink->display->display, sink->frame_queue);
 diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
-index 2e6f61f..025237d 100644
+index 70ac3ca..54b0549 100644
 --- a/ext/wayland/gstwaylandsink.h
 +++ b/ext/wayland/gstwaylandsink.h
-@@ -73,6 +73,7 @@ struct _GstWaylandSink
+@@ -72,6 +72,7 @@ struct _GstWaylandSink
    gint out_width;   /* property out_width */
    gint out_height;  /* property out_height */
    uint32_t scale;
@@ -95,10 +90,10 @@ index 2e6f61f..025237d 100644
    struct wl_event_queue *frame_queue;
  };
 diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
-index 499dc78..8534975 100644
+index 623a7b4..ea6c5ef 100644
 --- a/ext/wayland/wlwindow.c
 +++ b/ext/wayland/wlwindow.c
-@@ -152,6 +152,26 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, GstVideoInfo * video_info, g
+@@ -147,6 +147,26 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, GstVideoInfo * video_info, g
    return window;
  }
 
@@ -124,9 +119,9 @@ index 499dc78..8534975 100644
 +
  GstWlWindow *
  gst_wl_window_new_in_surface (GstWlDisplay * display,
-     struct wl_surface * parent, gboolean use_subsurface)
+     struct wl_surface * parent)
 diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
-index 901c4f9..de19cd5 100644
+index 472576e..454a007 100644
 --- a/ext/wayland/wlwindow.h
 +++ b/ext/wayland/wlwindow.h
 @@ -75,6 +75,9 @@ void gst_wl_window_set_video_info (GstWlWindow * window, GstVideoInfo * info);

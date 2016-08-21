@@ -1,8 +1,8 @@
-From 7c912c8986f7b42e4b00f510cc39bf09fe8cb0d7 Mon Sep 17 00:00:00 2001
+From 10a19dea64ead8fa18aab4d1fb047c43112d1409 Mon Sep 17 00:00:00 2001
 From: TungDang <tung.dang.jy@rvc.renesas.com>
-Date: Sat, 13 Aug 2016 08:54:07 +0700
-Subject: [PATCH] waylandsink: Don't wait for the wl_surface_frame callback to
- notify the compositor of a wl_buffer
+Date: Sun, 21 Aug 2016 07:24:34 +0700
+Subject: [PATCH 6/9] waylandsink: Don't wait for the wl_surface_frame callback
+ to notify the compositor of a wl_buffer
 
 When the frame rendering delays, the weston compositor can drop frames
 and catch up with the on-time processing by itself.
@@ -15,10 +15,10 @@ Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
  1 file changed, 8 deletions(-)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
-index 0fffb1d..78b335a 100644
+index 211bb6a..30064eb 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
-@@ -770,7 +770,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+@@ -785,7 +785,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
    GstBuffer *to_render;
    GstWlBuffer *wlbuffer;
    GstFlowReturn ret = GST_FLOW_OK;
@@ -26,7 +26,7 @@ index 0fffb1d..78b335a 100644
 
    g_mutex_lock (&sink->render_lock);
 
-@@ -810,13 +809,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+@@ -825,13 +824,6 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
    wl_display_dispatch_queue_pending (sink->display->display, sink->frame_queue);
 
