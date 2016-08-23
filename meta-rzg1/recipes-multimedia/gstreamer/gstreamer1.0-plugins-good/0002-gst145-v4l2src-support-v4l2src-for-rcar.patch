@@ -1,7 +1,7 @@
-From 3f5fb1f9866b912c7c9fc96e763545de8d0048d7 Mon Sep 17 00:00:00 2001
+From 7be3cb8d6e2fec61fc661810d237a1d0f997903f Mon Sep 17 00:00:00 2001
 From: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
-Date: Wed, 17 Aug 2016 09:48:46 +0700
-Subject: [PATCH 2/6] gst145-v4l2src: support v4l2src for rcar
+Date: Tue, 23 Aug 2016 16:37:02 +0700
+Subject: [PATCH] gst145-v4l2src: support v4l2src for rcar
 
 Porting from a patch in Linux 3.10 environment made by Thao Luong <thao.luong.uw@rvc.renesas.com>
                                                        Tomohiro Komagata <tomohiro.komagata.aj@renesas.com>
@@ -18,23 +18,9 @@ gst-launch-1.0 -e v4l2src device=/dev/video1 ! videorate ! video/x-raw,width=720
 
 Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
 ---
- sys/v4l2/gstv4l2object.c |  2 +-
- sys/v4l2/gstv4l2src.c    | 27 +++++++++++++++++++++++++++
- 2 files changed, 28 insertions(+), 1 deletion(-)
+ sys/v4l2/gstv4l2src.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
-index 56fd1b1..36351b7 100644
---- a/sys/v4l2/gstv4l2object.c
-+++ b/sys/v4l2/gstv4l2object.c
-@@ -2273,7 +2273,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
-   fmt.fmt.pix.width = *width;
-   fmt.fmt.pix.height = *height;
-   fmt.fmt.pix.pixelformat = pixelformat;
--  fmt.fmt.pix.field = V4L2_FIELD_ANY;
-+  fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
- 
-   if (gst_v4l2_object_try_fmt (v4l2object, &fmt) < 0)
-     goto error;
 diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
 index bb3bf17..93e8be3 100644
 --- a/sys/v4l2/gstv4l2src.c
