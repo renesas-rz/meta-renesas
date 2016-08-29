@@ -77,6 +77,7 @@ SRC_URI = " \
 	file://0032-Add-FDPM-into-device-tree-of-RZG1M.patch \
 	file://0033-linux-renesas-r8a7743-dtsi-add-vcp0-vpc0-prr-vpc1-vp.patch \
 	file://0034-linux-renesas-r8a7745-dtsi-add-vcp0-vpc0-prr-vpc1-vp.patch \
+	file://0035-r8a7745.dtsi-register-for-2ddmac-vsp1-vspd0.patch \
 "
 
 
