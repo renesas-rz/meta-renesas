@@ -1,0 +1,385 @@
+From 10bdd5203ff08c5cb0fa0b70362666d632ff3748 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Wed, 18 Nov 2015 16:48:12 +0700
+Subject: [PATCH 1/2] vspmfilter: Rewrite implement for swap
+
+Old implement decide the swap base on input and out VSP format.
+This is not good:
+- Troublesome to add new format
+- Can not add many GStreamer formats which use same VSP format
+(but difference in swap)
+
+This patch fixes it.
+Besides, also fix mistakes in calling function set_colorspace
+(use same set_colorspace for both input and output in tranformm_frame,
+use output format with set_colorspace for input in transform_buffer)
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 189 ++++++++++++++++++++++-------------------
+ gst/vspmfilter/gstvspmfilter.h |   2 +
+ 2 files changed, 103 insertions(+), 88 deletions(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index 013fdf0..1a5582e 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -309,26 +309,34 @@ struct extensions_t
+ {
+   GstVideoFormat gst_format;
+   guint vsp_format;
++  guint vsp_swap;
+ };
+ 
++/* Note that below swap information will be reversed later (in set_colorspace)
++ *     because current system use Little Endian */
+ static const struct extensions_t exts[] = {
+-  {GST_VIDEO_FORMAT_BGRA, VSP_IN_ARGB8888},           /* output check ok! */  /* BGRA8888 non-support in VSP, Use ARGB8888, and swap set L | LL */
+-  {GST_VIDEO_FORMAT_RGBx, VSP_IN_RGBA8888},
+-  {GST_VIDEO_FORMAT_RGB, VSP_IN_RGB888},
+-  {GST_VIDEO_FORMAT_NV21, VSP_IN_YUV420_SEMI_NV21},
+-  {GST_VIDEO_FORMAT_NV12, VSP_IN_YUV420_SEMI_NV12},   /* input check ok! */
+-  {GST_VIDEO_FORMAT_YUY2, VSP_IN_YUV422_INT0_YUY2},
+-  {GST_VIDEO_FORMAT_UYVY, VSP_IN_YUV422_INT0_UYVY},
++  {GST_VIDEO_FORMAT_BGRA,  VSP_IN_ARGB8888,          VSP_SWAP_B | VSP_SWAP_W},  /* Not supported in VSP. Use ARGB8888, and swap ARGB -> RABG -> BGRA */
++  {GST_VIDEO_FORMAT_ARGB,  VSP_IN_ARGB8888,          VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_xRGB,  VSP_IN_ARGB8888,          VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_RGBx,  VSP_IN_RGBA8888,          VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_RGB,   VSP_IN_RGB888,            VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV21,  VSP_IN_YUV420_SEMI_NV21,  VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV12,  VSP_IN_YUV420_SEMI_NV12,  VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_YUY2,  VSP_IN_YUV422_INT0_YUY2,  VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_UYVY,  VSP_IN_YUV422_INT0_UYVY,  VSP_SWAP_NO},
+ };
+ 
+ static const struct extensions_t exts_out[] = {
+-  {GST_VIDEO_FORMAT_BGRA, VSP_IN_ARGB8888},
+-  {GST_VIDEO_FORMAT_NV21, VSP_OUT_YUV420_SEMI_NV21},
+-  {GST_VIDEO_FORMAT_NV12, VSP_OUT_YUV420_SEMI_NV12},
++  /* VSP_OUT_PRGB8888 is ARGB8888, maybe a mistake in define name */
++  {GST_VIDEO_FORMAT_BGRA,  VSP_OUT_PRGB8888,         VSP_SWAP_B | VSP_SWAP_W},  /* Not supported in VSP. Use ARGB8888, and swap ARGB -> RABG -> BGRA */
++  {GST_VIDEO_FORMAT_ARGB,  VSP_OUT_PRGB8888,         VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_xRGB,  VSP_OUT_PRGB8888,         VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV21,  VSP_OUT_YUV420_SEMI_NV21, VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV12,  VSP_OUT_YUV420_SEMI_NV12, VSP_SWAP_NO},
+ };
+ 
+ static gint
+-set_colorspace (GstVideoFormat vid_fmt, guint * format)
++set_colorspace (GstVideoFormat vid_fmt, guint * format, guint * fswap)
+ {
+   int nr_exts = sizeof (exts) / sizeof (exts[0]);
+   int i;
+@@ -336,6 +344,9 @@ set_colorspace (GstVideoFormat vid_fmt, guint * format)
+   for (i = 0; i < nr_exts; i++) {
+     if (vid_fmt == exts[i].gst_format) {
+       *format = exts[i].vsp_format;
++
++      /* Need to reverse swap information for Little Endian */
++      *fswap  = (VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL) ^ exts[i].vsp_swap;
+       return 0;
+     }
+   }
+@@ -343,14 +354,17 @@ set_colorspace (GstVideoFormat vid_fmt, guint * format)
+ }
+ 
+ static gint
+-set_colorspace_output (GstVideoFormat vid_fmt, guint * format)
++set_colorspace_output (GstVideoFormat vid_fmt, guint * format, guint * fswap)
+ {
+-  int nr_exts = sizeof (exts) / sizeof (exts[0]);
++  int nr_exts = sizeof (exts_out) / sizeof (exts_out[0]);
+   int i;
+ 
+   for (i = 0; i < nr_exts; i++) {
+     if (vid_fmt == exts_out[i].gst_format) {
+       *format = exts_out[i].vsp_format;
++
++      /* Need to reverse swap information for Little Endian */
++      *fswap  = (VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL) ^ exts_out[i].vsp_swap;
+       return 0;
+     }
+   }
+@@ -1243,33 +1257,34 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+ 
+ 
+   memset(&ctrl_par, 0, sizeof(T_VSP_CTRL));
+-  
++
+   if (vsp_info->format_flag == 0) {
+-    irc = set_colorspace (GST_VIDEO_FRAME_FORMAT (in_frame), &vsp_info->in_format);
++    irc = set_colorspace (GST_VIDEO_FRAME_FORMAT (in_frame), &vsp_info->in_format, &vsp_info->in_swapbit);
+     if (irc != 0) {
+       printf("input format is non-support.\n");
+       return GST_FLOW_ERROR;
+     }
+-    irc = set_colorspace (GST_VIDEO_FRAME_FORMAT (out_frame), &vsp_info->out_format);
++
++    irc = set_colorspace_output (GST_VIDEO_FRAME_FORMAT (out_frame), &vsp_info->out_format, &vsp_info->out_swapbit);
+     if (irc != 0) {
+       printf("output format is non-support.\n");
+       return GST_FLOW_ERROR;
+     }
+     vsp_info->format_flag = 1;
+   }
+-  
++
+   in_width = GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 0);
+   in_height = GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 0);
+   out_width = GST_VIDEO_FRAME_COMP_WIDTH (out_frame, 0);
+   out_height = GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, 0);
+-  
++
+   if ((in_width == out_width) && (in_height == out_height)) {
+     use_module = 0;
+   } else {
+     /* UDS scaling */
+     use_module = VSP_UDS_USE;
+   }
+-  
++
+   /* change virtual address to physical address */
+   memset(&p_adr, 0, sizeof(p_adr));
+   p_adr[0].user_virt_addr = (unsigned long)in_frame->data[0];
+@@ -1332,28 +1347,28 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+       printf("input format is non-support.\n");
+       return GST_FLOW_ERROR;
+     }
+-    src_par.addr_c1   = NULL;
+-    src_par.width     = in_width;
+-    src_par.height    = in_height;
+-    src_par.width_ex  = 0;
+-    src_par.height_ex = 0;
+-    src_par.x_offset  = 0;
+-    src_par.y_offset  = 0;
+-    src_par.format    = vsp_info->in_format;
+-    src_par.swap      = VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL;
++    src_par.addr_c1     = NULL;
++    src_par.width       = in_width;
++    src_par.height      = in_height;
++    src_par.width_ex    = 0;
++    src_par.height_ex   = 0;
++    src_par.x_offset    = 0;
++    src_par.y_offset    = 0;
++    src_par.format      = vsp_info->in_format;
++    src_par.swap        = vsp_info->in_swapbit;
+     src_par.x_position  = 0;
+     src_par.y_position  = 0;
+-    src_par.pwd       = VSP_LAYER_PARENT;
+-    src_par.cipm      = VSP_CIPM_0_HOLD;
+-    src_par.cext      = VSP_CEXT_EXPAN;
+-    src_par.iturbt    = VSP_ITURBT_709;
+-    src_par.clrcng    = VSP_ITU_COLOR;
+-    src_par.vir       = VSP_NO_VIR;
+-    src_par.vircolor  = 0x00000000;
+-    src_par.osd_lut   = NULL;
++    src_par.pwd         = VSP_LAYER_PARENT;
++    src_par.cipm        = VSP_CIPM_0_HOLD;
++    src_par.cext        = VSP_CEXT_EXPAN;
++    src_par.iturbt      = VSP_ITURBT_709;
++    src_par.clrcng      = VSP_ITU_COLOR;
++    src_par.vir         = VSP_NO_VIR;
++    src_par.vircolor    = 0x00000000;
++    src_par.osd_lut     = NULL;
+     src_par.alpha_blend = &src_alpha_par;
+-    src_par.clrcnv    = NULL;
+-    src_par.connect   = use_module;
++    src_par.clrcnv      = NULL;
++    src_par.connect     = use_module;
+   }
+   
+   {
+@@ -1366,7 +1381,6 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+       dst_par.stride 		= out_width * bpd;
+       dst_par.stride_c	= 0;
+       dst_par.csc       = VSP_CSC_OFF;
+-      dst_par.swap      = VSP_SWAP_L | VSP_SWAP_LL;
+       break;
+     case VSP_IN_RGBA8888:
+     case VSP_IN_RGB888:
+@@ -1375,7 +1389,6 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+       dst_par.stride 		= out_width * bpd;
+       dst_par.stride_c	= 0;
+       dst_par.csc       = VSP_CSC_OFF;
+-      dst_par.swap      = VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL;
+       break;
+     case VSP_OUT_YUV420_SEMI_NV12:
+     case VSP_OUT_YUV420_SEMI_NV21:
+@@ -1383,7 +1396,6 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+       dst_par.stride    = out_width;
+       dst_par.stride_c	= out_width;
+       dst_par.csc       = VSP_CSC_ON;
+-      dst_par.swap      = VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL;
+       break;
+ 
+     default:
+@@ -1407,6 +1419,7 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     dst_par.athres    = 0;
+     dst_par.clmd      = VSP_CLMD_NO;
+     dst_par.dith      = VSP_NO_DITHER;
++    dst_par.swap      = vsp_info->out_swapbit;
+   }
+ 
+   if (use_module == VSP_UDS_USE) {
+@@ -1464,7 +1477,7 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+   GstVspmFilterVspInfo *vsp_info;
+   GstVideoMeta *in_vmeta;
+   GstVideoMeta *out_vmeta;
+-  VSPM_IP_PAR vspm_ip;  
++  VSPM_IP_PAR vspm_ip;
+   VSPM_VSP_PAR vsp_par;
+   Vspm_mmng_ar *vspm_in;
+   Vspm_mmng_ar *vspm_out;
+@@ -1511,12 +1524,12 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+   memset(&ctrl_par, 0, sizeof(T_VSP_CTRL));
+ 
+   if (vsp_info->format_flag == 0) {
+-    irc = set_colorspace (vsp_info->gst_format_out, &vsp_info->in_format);
++    irc = set_colorspace (vsp_info->gst_format_in, &vsp_info->in_format, &vsp_info->in_swapbit);
+     if (irc != 0) {
+       printf("input format is non-support.\n");
+       return GST_FLOW_ERROR;
+     }
+-    irc = set_colorspace_output (vsp_info->gst_format_out, &vsp_info->out_format);
++    irc = set_colorspace_output (vsp_info->gst_format_out, &vsp_info->out_format, &vsp_info->out_swapbit);
+     if (irc != 0) {
+       printf("output format is non-support.\n");
+       return GST_FLOW_ERROR;
+@@ -1546,21 +1559,21 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+     p_adr[1].hard_addr = buffer_get_dmabuf_hard_addr(vspm_out,outbuf);
+ 
+   {
+-    src_alpha_par.addr_a  = NULL;
+-    src_alpha_par.alphan  = VSP_ALPHA_NO;
+-    src_alpha_par.alpha1  = 0;
+-    src_alpha_par.alpha2  = 0;
+-    src_alpha_par.astride = 0;
+-    src_alpha_par.aswap   = VSP_SWAP_NO;
+-    src_alpha_par.asel    = VSP_ALPHA_NUM5;
+-    src_alpha_par.aext    = VSP_AEXT_EXPAN;
+-    src_alpha_par.anum0   = 0;
+-    src_alpha_par.anum1   = 0;
+-    src_alpha_par.afix    = 0xff;
+-    src_alpha_par.irop    = VSP_IROP_NOP;
+-    src_alpha_par.msken   = VSP_MSKEN_ALPHA;
+-    src_alpha_par.bsel    = 0;
+-    src_alpha_par.mgcolor = 0;
++    src_alpha_par.addr_a    = NULL;
++    src_alpha_par.alphan    = VSP_ALPHA_NO;
++    src_alpha_par.alpha1    = 0;
++    src_alpha_par.alpha2    = 0;
++    src_alpha_par.astride   = 0;
++    src_alpha_par.aswap     = VSP_SWAP_NO;
++    src_alpha_par.asel      = VSP_ALPHA_NUM5;
++    src_alpha_par.aext      = VSP_AEXT_EXPAN;
++    src_alpha_par.anum0     = 0;
++    src_alpha_par.anum1     = 0;
++    src_alpha_par.afix      = 0xff;
++    src_alpha_par.irop      = VSP_IROP_NOP;
++    src_alpha_par.msken     = VSP_MSKEN_ALPHA;
++    src_alpha_par.bsel      = 0;
++    src_alpha_par.mgcolor   = 0;
+     src_alpha_par.mscolor0  = 0;
+     src_alpha_par.mscolor1  = 0;
+ 
+@@ -1597,28 +1610,28 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+       printf("input format is non-support.\n");
+       return GST_FLOW_ERROR;
+     }
+-    src_par.addr_c1   = NULL;
+-    src_par.width     = in_width;
+-    src_par.height    = in_height;
+-    src_par.width_ex  = 0;
+-    src_par.height_ex = 0;
+-    src_par.x_offset  = 0;
+-    src_par.y_offset  = 0;
+-    src_par.format    = vsp_info->in_format;
+-    src_par.swap      = VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL;
++    src_par.addr_c1     = NULL;
++    src_par.width       = in_width;
++    src_par.height      = in_height;
++    src_par.width_ex    = 0;
++    src_par.height_ex   = 0;
++    src_par.x_offset    = 0;
++    src_par.y_offset    = 0;
++    src_par.format      = vsp_info->in_format;
++    src_par.swap        = vsp_info->in_swapbit;
+     src_par.x_position  = 0;
+     src_par.y_position  = 0;
+-    src_par.pwd       = VSP_LAYER_PARENT;
+-    src_par.cipm      = VSP_CIPM_0_HOLD;
+-    src_par.cext      = VSP_CEXT_EXPAN;
+-    src_par.iturbt    = VSP_ITURBT_709;
+-    src_par.clrcng    = VSP_ITU_COLOR;
+-    src_par.vir       = VSP_NO_VIR;
+-    src_par.vircolor  = 0x00000000;
+-    src_par.osd_lut   = NULL;
++    src_par.pwd         = VSP_LAYER_PARENT;
++    src_par.cipm        = VSP_CIPM_0_HOLD;
++    src_par.cext        = VSP_CEXT_EXPAN;
++    src_par.iturbt      = VSP_ITURBT_709;
++    src_par.clrcng      = VSP_ITU_COLOR;
++    src_par.vir         = VSP_NO_VIR;
++    src_par.vircolor    = 0x00000000;
++    src_par.osd_lut     = NULL;
+     src_par.alpha_blend = &src_alpha_par;
+-    src_par.clrcnv    = NULL;
+-    src_par.connect   = use_module;
++    src_par.clrcnv      = NULL;
++    src_par.connect     = use_module;
+   }
+ 
+   {
+@@ -1650,7 +1663,7 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+     dst_par.x_offset  = 0;
+     dst_par.y_offset  = 0;
+     dst_par.format    = vsp_info->out_format;
+-    dst_par.swap      = VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL;
++    dst_par.swap      = vsp_info->out_swapbit;
+     dst_par.pxa       = VSP_PAD_P;
+     dst_par.pad       = 0xff;
+     dst_par.x_coffset = 0;
+@@ -1678,14 +1691,14 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+     uds_par.connect     = 0;
+   }
+ 
+-  vsp_par.rpf_num   = 1;
+-  vsp_par.use_module  = use_module;
+-  vsp_par.src1_par  = &src_par;
+-  vsp_par.src2_par  = NULL;
+-  vsp_par.src3_par  = NULL;
+-  vsp_par.src4_par  = NULL;
+-  vsp_par.dst_par   = &dst_par;
+-  vsp_par.ctrl_par  = &ctrl_par;
++  vsp_par.rpf_num    = 1;
++  vsp_par.use_module = use_module;
++  vsp_par.src1_par   = &src_par;
++  vsp_par.src2_par   = NULL;
++  vsp_par.src3_par   = NULL;
++  vsp_par.src4_par   = NULL;
++  vsp_par.dst_par    = &dst_par;
++  vsp_par.ctrl_par   = &ctrl_par;
+ 
+   memset(&vspm_ip, 0, sizeof(VSPM_IP_PAR));
+   vspm_ip.uhType    = VSPM_TYPE_VSP_AUTO;
+diff --git a/gst/vspmfilter/gstvspmfilter.h b/gst/vspmfilter/gstvspmfilter.h
+index f425e38..308b70c 100755
+--- a/gst/vspmfilter/gstvspmfilter.h
++++ b/gst/vspmfilter/gstvspmfilter.h
+@@ -106,11 +106,13 @@ struct _GstVspmFilterVspInfo {
+   guint  in_width;
+   guint  in_height;
+   guint  in_nplane;
++  guint  in_swapbit;
+   GstVideoFormat gst_format_out;
+   guint  out_format;
+   guint  out_width;
+   guint  out_height;
+   guint  out_nplane;
++  guint  out_swapbit;
+   int mmngr_fd;   /* mmngr open id */
+   
+ };
+-- 
+1.9.1
+

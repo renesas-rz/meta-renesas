@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+### BEGIN INIT INFO
+# Provides: USB-OTG
+# Required-Start: $local_fs $remote_fs
+# Required-Stop: $local_fs $remote_fs
+# Default-Start:     2 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+
+MMC=$(ls /dev/mmcblk*)
+SD=$(ls /dev/sd*)
+MMCX=""
+SDX=""
+COUNT=0
+FILE=""
+REV=""
+
+if [ -n "${MMC}" ]; then
+  for mmc_i in ${MMC}
+  do
+    len=${#mmc_i}                 # length of mmc_i
+    if [ ${len} -eq "12" ]; then
+      COUNT=$((COUNT+1))
+      if [ -n "${MMCX}" ]; then
+        MMCX=${MMCX},${mmc_i}
+      else
+        MMCX=${mmc_i}
+      fi
+    fi
+  done
+  FILE=${MMCX}
+fi
+
+if [ -n "${SD}" ]; then
+  for sd_i in ${SD}
+  do
+    len=${#sd_i}  # length of mmc_i
+    if [ ${len} -eq "8" ]; then
+      COUNT=$((COUNT+1))
+      if [ -n "${SDX}" ]; then
+        SDX=${SDX},${sd_i}
+      else
+        SDX=${sd_i}
+      fi
+    fi
+  done
+  FILE=${FILE},${SDX}
+fi
+
+co_i=0
+while [ ${co_i} -lt ${COUNT} ]; do
+  if [ -n "${REV}" ]; then
+    REV=${REV},1
+  else
+    REV=1
+  fi
+  co_i=$((co_i+1))
+done
+
+case "$1" in
+"start")
+        # insert multimedia modules
+        /sbin/modprobe -q -a configfs libcomposite
+        /sbin/modprobe -q g_mass_storage file=${FILE} removable=${REV}
+        ;;
+stop)
+        # remove multimedia modules
+        /sbin/modprobe -q -r -a g_mass_storage libcomposite configfs
+        ;;
+reload|restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+*)
+	echo "usage: $0 { start | stop | restart }"
+	;;
+esac

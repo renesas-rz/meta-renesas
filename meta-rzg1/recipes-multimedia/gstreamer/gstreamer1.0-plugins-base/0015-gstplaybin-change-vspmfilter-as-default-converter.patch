@@ -1,0 +1,17 @@
+diff --git a/configure.ac b/configure.ac
+index fa99c5b..6db2f70 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -569,11 +569,7 @@ AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
+ ])
+ 
+ dnl set default video converter
+-if test "x$gst_use_vspfilter" = xyes; then
+-  DEFAULT_CNV="vspfilter"
+-else
+-  DEFAULT_CNV="videoconvert"
+-fi
++DEFAULT_CNV="vspmfilter"
+ AC_SUBST(DEFAULT_CNV)
+ 
+ dnl *** ext plug-ins ***

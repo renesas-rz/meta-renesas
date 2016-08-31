@@ -1,0 +1,148 @@
+From 1757a9fac4ee6a9b2dbd5753866f328530826927 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.renesas.com>
+Date: Thu, 9 Jun 2016 18:13:55 +0700
+Subject: [PATCH] Fix issue ov7725 soc_cam cannot work with some small
+ resolution
+
+---
+ drivers/media/i2c/soc_camera/ov7725.c | 52 ++++++++++++++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/media/i2c/soc_camera/ov7725.c b/drivers/media/i2c/soc_camera/ov7725.c
+index b8f48e9..27725d1 100644
+--- a/drivers/media/i2c/soc_camera/ov7725.c
++++ b/drivers/media/i2c/soc_camera/ov7725.c
+@@ -272,7 +272,7 @@
+ #define SCCB_RESET      0x80	/*   0 : No change */
+ 				/*   1 : Resets all registers to default */
+ 				/* Resolution selection */
+-#define SLCT_MASK       0x40	/*   Mask of VGA or QVGA */
++#define SLCT_MASK       0x60	/*   Mask of VGA or QVGA + itu656 */
+ #define SLCT_VGA        0x00	/*   0 : VGA */
+ #define SLCT_QVGA       0x40	/*   1 : QVGA */
+ #define ITU656_ON_OFF   0x20	/* ITU656 protocol ON/OFF selection */
+@@ -526,21 +526,21 @@ static const struct ov7725_color_format ov7725_cfmts[] = {
+ 		.colorspace	= V4L2_COLORSPACE_JPEG,
+ 		.dsp3		= 0x0,
+ 		.com3		= SWAP_YUV,
+-		.com7		= OFMT_YUV,
++		.com7		= OFMT_YUV | ITU656_ON_OFF ,
+ 	},
+ 	{
+ 		.code		= V4L2_MBUS_FMT_YVYU8_2X8,
+ 		.colorspace	= V4L2_COLORSPACE_JPEG,
+ 		.dsp3		= UV_ON,
+ 		.com3		= SWAP_YUV,
+-		.com7		= OFMT_YUV,
++		.com7		= OFMT_YUV | ITU656_ON_OFF,
+ 	},
+ 	{
+ 		.code		= V4L2_MBUS_FMT_UYVY8_2X8,
+ 		.colorspace	= V4L2_COLORSPACE_JPEG,
+ 		.dsp3		= 0x0,
+ 		.com3		= 0x0,
+-		.com7		= OFMT_YUV,
++		.com7		= OFMT_YUV | ITU656_ON_OFF ,
+ 	},
+ 	{
+ 		.code		= V4L2_MBUS_FMT_RGB555_2X8_PADHI_LE,
+@@ -877,6 +877,15 @@ static int ov7725_s_register(struct v4l2_subdev *sd,
+ }
+ #endif
+ 
++static const struct ov7725_win_size *ov7725_select_win_vga(void)
++{
++	const struct ov7725_win_size *win;
++    
++    /* alway select vga */
++	win = &ov7725_win_vga;
++	return win;
++}
++
+ static const struct ov7725_win_size *ov7725_select_win(u32 width, u32 height)
+ {
+ 	__u32 diff;
+@@ -919,8 +928,9 @@ static int ov7725_set_params(struct v4l2_subdev *sd, u32 *width, u32 *height,
+ 
+ 	/*
+ 	 * select win
+-	 */
+ 	core->win = ov7725_select_win(*width, *height);
++	 */
++	core->win = ov7725_select_win_vga();
+ 
+ 	/*
+ 	 * reset hardware
+@@ -1038,6 +1048,16 @@ static int ov7725_set_params(struct v4l2_subdev *sd, u32 *width, u32 *height,
+ 			goto ov7725_set_fmt_error;
+ 	}
+ #endif
++	/*
++	 * set COM7
++	 */
++	val = core->win->com7_bit | core->cfmt->com7;
++	ret = ov7725_mask_set(sd,
++			      COM7, SLCT_MASK | FMT_MASK | OFMT_MASK,
++			      val);
++	if (ret < 0)
++		goto ov7725_set_fmt_error;
++
+ 
+ 	*width = core->win->width;
+ 	*height = core->win->height;
+@@ -1055,26 +1075,37 @@ ov7725_set_fmt_error:
+ 
+ static int ov7725_g_crop(struct v4l2_subdev *sd, struct v4l2_crop *a)
+ {
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov7725 *core = to_ov7725(sd);
++
+ 	a->c.left	= 0;
+ 	a->c.top	= 0;
+-	a->c.width	= VGA_WIDTH;
+-	a->c.height	= VGA_HEIGHT;
++	a->c.width	= core->win->width;
++	a->c.height	= core->win->height;
+ 	a->type		= V4L2_BUF_TYPE_VIDEO_CAPTURE;
+ 
++	dev_dbg(&client->dev, "In ov7725_g_crop w %d, h %d\n",
++		a->c.width, a->c.height);
++
+ 	return 0;
+ }
+ 
+ static int ov7725_cropcap(struct v4l2_subdev *sd, struct v4l2_cropcap *a)
+ {
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct ov7725 *core = to_ov7725(sd);
++
+ 	a->bounds.left			= 0;
+ 	a->bounds.top			= 0;
+-	a->bounds.width			= VGA_WIDTH;
+-	a->bounds.height		= VGA_HEIGHT;
++	a->bounds.width	= core->win->width;
++	a->bounds.height = core->win->height;
+ 	a->defrect			= a->bounds;
+ 	a->type				= V4L2_BUF_TYPE_VIDEO_CAPTURE;
+ 	a->pixelaspect.numerator	= 1;
+ 	a->pixelaspect.denominator	= 1;
+ 
++	dev_dbg(&client->dev, "In ov7725_cropcap w %d, h %d\n",
++		a->bounds.width, a->bounds.height);
+ 	return 0;
+ }
+ 
+@@ -1122,8 +1153,9 @@ static int ov7725_try_fmt(struct v4l2_subdev *sd,
+ 
+ 	/*
+ 	 * select suitable win
+-	 */
+ 	win = ov7725_select_win(mf->width, mf->height);
++	 */
++	win = ov7725_select_win_vga();
+ 
+ 	mf->width	= win->width;
+ 	mf->height	= win->height;
+-- 
+1.9.1
+

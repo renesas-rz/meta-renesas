@@ -1,0 +1,29 @@
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 36dc740..fbb10d7 100755
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -419,9 +419,9 @@ gst_wayland_sink_finalize (GObject * object)
+ {
+   GstWaylandSink *sink = GST_WAYLAND_SINK (object);
+ 
+   GST_DEBUG_OBJECT (sink, "Finalizing the sink..");
+-
++  wl_event_queue_destroy(sink->display->wl_queue);  /* Destroy queue when finalize */
+   g_free (sink->display);
+ 
+   if (sink->shm_pool)
+     shm_pool_destroy (sink->shm_pool);
+@@ -1341,10 +1341,10 @@ gst_wayland_sink_query (GstBaseSink * bsink, GstQuery * query)
+       GST_DEBUG_OBJECT (sink,
+           "videosink_buffer_creation_request query param: width:%d height:%d allocator:%p format:%s",
+           width, height, allocator, str);
+-
++      g_free(str);  /* free gchar pointer when done */
+       buffer = gst_wayland_buffer_pool_create_buffer_from_dmabuf (wpool,
+           dmabuf, allocator, width, height, stride, format, n_planes);
+       if (buffer == NULL) {
+         GST_WARNING_OBJECT (sink,
+             "failed to create a buffer from videosink_buffer_creation_request query");
+         break;
+--
+1.2.3

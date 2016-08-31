@@ -1,0 +1,854 @@
+From 1313fe4e76459906757425d8fc6e2495946812ee Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.renesas.com>
+Date: Fri, 10 Jun 2016 15:27:53 +0700
+Subject: [PATCH] Add sysfs for pwm from kernel v3.11
+
+---
+ drivers/pwm/Kconfig    |  15 +++
+ drivers/pwm/Makefile   |   2 +
+ drivers/pwm/core.c     |  29 +++-
+ drivers/pwm/pwm-rcar.c | 276 ++++++++++++++++++++++++++++++++++++++
+ drivers/pwm/sysfs.c    | 352 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pwm.h    |  29 +++-
+ 6 files changed, 698 insertions(+), 5 deletions(-)
+ create mode 100755 drivers/pwm/pwm-rcar.c
+ create mode 100644 drivers/pwm/sysfs.c
+
+diff --git a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
+index 14a9122..b887274 100644
+--- a/drivers/pwm/Kconfig
++++ b/drivers/pwm/Kconfig
+@@ -28,6 +28,11 @@ menuconfig PWM
+ 
+ if PWM
+ 
++config PWM_SYSFS
++	bool
++	default y if SYSFS
++ 
++
+ config PWM_AB8500
+ 	tristate "AB8500 PWM support"
+ 	depends on AB8500_CORE && ARCH_U8500
+@@ -125,6 +130,16 @@ config PWM_RENESAS_TPU
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called pwm-renesas-tpu.
+ 
++config PWM_RENESAS_PWM
++	tristate "Renesas PWM support"
++	depends on ARCH_SHMOBILE
++	help
++	  This driver exposes the PWM Timer Module found
++	  in Renesas chips through the PWM API.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called pwm-rcar.
++
+ config PWM_SAMSUNG
+ 	tristate "Samsung PWM support"
+ 	depends on PLAT_SAMSUNG
+diff --git a/drivers/pwm/Makefile b/drivers/pwm/Makefile
+index 5aa815f..89fc857 100644
+--- a/drivers/pwm/Makefile
++++ b/drivers/pwm/Makefile
+@@ -1,4 +1,5 @@
+ obj-$(CONFIG_PWM)		+= core.o
++obj-$(CONFIG_PWM_SYSFS)		+= sysfs.o
+ obj-$(CONFIG_PWM_AB8500)	+= pwm-ab8500.o
+ obj-$(CONFIG_PWM_ATMEL_TCB)	+= pwm-atmel-tcb.o
+ obj-$(CONFIG_PWM_BFIN)		+= pwm-bfin.o
+@@ -9,6 +10,7 @@ obj-$(CONFIG_PWM_MXS)		+= pwm-mxs.o
+ obj-$(CONFIG_PWM_PUV3)		+= pwm-puv3.o
+ obj-$(CONFIG_PWM_PXA)		+= pwm-pxa.o
+ obj-$(CONFIG_PWM_RENESAS_TPU)	+= pwm-renesas-tpu.o
++obj-$(CONFIG_PWM_RENESAS_PWM)	+= pwm-rcar.o
+ obj-$(CONFIG_PWM_SAMSUNG)	+= pwm-samsung.o
+ obj-$(CONFIG_PWM_SPEAR)		+= pwm-spear.o
+ obj-$(CONFIG_PWM_TEGRA)		+= pwm-tegra.o
+diff --git a/drivers/pwm/core.c b/drivers/pwm/core.c
+index 32221cb..dfbfbc5 100644
+--- a/drivers/pwm/core.c
++++ b/drivers/pwm/core.c
+@@ -274,6 +274,8 @@ int pwmchip_add(struct pwm_chip *chip)
+ 	if (IS_ENABLED(CONFIG_OF))
+ 		of_pwmchip_add(chip);
+ 
++	pwmchip_sysfs_export(chip);
++
+ out:
+ 	mutex_unlock(&pwm_lock);
+ 	return ret;
+@@ -310,6 +312,8 @@ int pwmchip_remove(struct pwm_chip *chip)
+ 
+ 	free_pwms(chip);
+ 
++	pwmchip_sysfs_unexport(chip);
++
+ out:
+ 	mutex_unlock(&pwm_lock);
+ 	return ret;
+@@ -402,10 +406,19 @@ EXPORT_SYMBOL_GPL(pwm_free);
+  */
+ int pwm_config(struct pwm_device *pwm, int duty_ns, int period_ns)
+ {
++	int err;
++
+ 	if (!pwm || duty_ns < 0 || period_ns <= 0 || duty_ns > period_ns)
+ 		return -EINVAL;
+ 
+-	return pwm->chip->ops->config(pwm->chip, pwm, duty_ns, period_ns);
++	err = pwm->chip->ops->config(pwm->chip, pwm, duty_ns, period_ns);
++	if (err)
++		return err;
++
++	pwm->duty_cycle = duty_ns;
++	pwm->period = period_ns;
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pwm_config);
+ 
+@@ -418,6 +431,8 @@ EXPORT_SYMBOL_GPL(pwm_config);
+  */
+ int pwm_set_polarity(struct pwm_device *pwm, enum pwm_polarity polarity)
+ {
++	int err;
++
+ 	if (!pwm || !pwm->chip->ops)
+ 		return -EINVAL;
+ 
+@@ -427,7 +442,13 @@ int pwm_set_polarity(struct pwm_device *pwm, enum pwm_polarity polarity)
+ 	if (test_bit(PWMF_ENABLED, &pwm->flags))
+ 		return -EBUSY;
+ 
+-	return pwm->chip->ops->set_polarity(pwm->chip, pwm, polarity);
++	err = pwm->chip->ops->set_polarity(pwm->chip, pwm, polarity);
++	if (err)
++		return err;
++
++	pwm->polarity = polarity;
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pwm_set_polarity);
+ 
+@@ -694,7 +715,7 @@ struct pwm_device *devm_pwm_get(struct device *dev, const char *con_id)
+ {
+ 	struct pwm_device **ptr, *pwm;
+ 
+-	ptr = devres_alloc(devm_pwm_release, sizeof(**ptr), GFP_KERNEL);
++	ptr = devres_alloc(devm_pwm_release, sizeof(*ptr), GFP_KERNEL);
+ 	if (!ptr)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -724,7 +745,7 @@ struct pwm_device *devm_of_pwm_get(struct device *dev, struct device_node *np,
+ {
+ 	struct pwm_device **ptr, *pwm;
+ 
+-	ptr = devres_alloc(devm_pwm_release, sizeof(**ptr), GFP_KERNEL);
++	ptr = devres_alloc(devm_pwm_release, sizeof(*ptr), GFP_KERNEL);
+ 	if (!ptr)
+ 		return ERR_PTR(-ENOMEM);
+ 
+diff --git a/drivers/pwm/pwm-rcar.c b/drivers/pwm/pwm-rcar.c
+new file mode 100755
+index 0000000..7a4325b
+--- /dev/null
++++ b/drivers/pwm/pwm-rcar.c
+@@ -0,0 +1,276 @@
++/*
++ * R-Car PWM Timer driver
++ *
++ * Copyright (C) 2015 Renesas Electronics Corporation
++ *
++ * This is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/clk.h>
++#include <linux/err.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/pwm.h>
++#include <linux/slab.h>
++
++#define RCAR_PWM_MAX_DIVISION	24
++#define RCAR_PWM_MAX_CYCLE	1023
++
++#define RCAR_PWMCR		0x00
++#define  RCAR_PWMCR_CC0_MASK	0x000f0000
++#define  RCAR_PWMCR_CC0_SHIFT	16
++#define  RCAR_PWMCR_CCMD	BIT(15)
++#define  RCAR_PWMCR_SYNC	BIT(11)
++#define  RCAR_PWMCR_SS0		BIT(4)
++#define  RCAR_PWMCR_EN0		BIT(0)
++
++#define RCAR_PWMCNT		0x04
++#define  RCAR_PWMCNT_CYC0_MASK	0x03ff0000
++#define  RCAR_PWMCNT_CYC0_SHIFT	16
++#define  RCAR_PWMCNT_PH0_MASK	0x000003ff
++#define  RCAR_PWMCNT_PH0_SHIFT	0
++
++struct rcar_pwm_chip {
++	struct pwm_chip chip;
++	void __iomem *base;
++	struct clk *clk;
++};
++
++static inline struct rcar_pwm_chip *to_rcar_pwm_chip(struct pwm_chip *chip)
++{
++	return container_of(chip, struct rcar_pwm_chip, chip);
++}
++
++static void rcar_pwm_write(struct rcar_pwm_chip *rp, u32 data,
++			   unsigned int offset)
++{
++	writel(data, rp->base + offset);
++}
++
++static u32 rcar_pwm_read(struct rcar_pwm_chip *rp, unsigned int offset)
++{
++	return readl(rp->base + offset);
++}
++
++static void rcar_pwm_update(struct rcar_pwm_chip *rp, u32 mask, u32 data,
++			    unsigned int offset)
++{
++	u32 value;
++
++	value = rcar_pwm_read(rp, offset);
++	value &= ~mask;
++	value |= data & mask;
++	rcar_pwm_write(rp, value, offset);
++}
++
++static int rcar_pwm_get_clock_division(struct rcar_pwm_chip *rp, int period_ns)
++{
++	unsigned long clk_rate = clk_get_rate(rp->clk);
++	unsigned long long max; /* max cycle / nanoseconds */
++	unsigned int div;
++
++	if (clk_rate == 0)
++		return -EINVAL;
++
++	for (div = 0; div <= RCAR_PWM_MAX_DIVISION; div++) {
++		max = (unsigned long long)NSEC_PER_SEC * RCAR_PWM_MAX_CYCLE *
++			(1 << div);
++		do_div(max, clk_rate);
++		if (period_ns < max)
++			break;
++	}
++
++	return (div <= RCAR_PWM_MAX_DIVISION) ? div : -ERANGE;
++}
++
++static void rcar_pwm_set_clock_control(struct rcar_pwm_chip *rp,
++				       unsigned int div)
++{
++	u32 value;
++
++	value = rcar_pwm_read(rp, RCAR_PWMCR);
++	value &= ~(RCAR_PWMCR_CCMD | RCAR_PWMCR_CC0_MASK);
++
++	if (div & 1)
++		value |= RCAR_PWMCR_CCMD;
++
++	div >>= 1;
++
++	value |= div << RCAR_PWMCR_CC0_SHIFT;
++	rcar_pwm_write(rp, value, RCAR_PWMCR);
++}
++
++static int rcar_pwm_set_counter(struct rcar_pwm_chip *rp, int div, int duty_ns,
++				int period_ns)
++{
++	unsigned long long one_cycle, tmp;	/* 0.01 nanoseconds */
++	unsigned long clk_rate = clk_get_rate(rp->clk);
++	u32 cyc, ph;
++
++	one_cycle = (unsigned long long)NSEC_PER_SEC * 100ULL * (1 << div);
++	do_div(one_cycle, clk_rate);
++
++	tmp = period_ns * 100ULL;
++	do_div(tmp, one_cycle);
++	cyc = (tmp << RCAR_PWMCNT_CYC0_SHIFT) & RCAR_PWMCNT_CYC0_MASK;
++
++	tmp = duty_ns * 100ULL;
++	do_div(tmp, one_cycle);
++	ph = tmp & RCAR_PWMCNT_PH0_MASK;
++
++	/* Avoid prohibited setting */
++	if (cyc == 0 || ph == 0)
++		return -EINVAL;
++
++	rcar_pwm_write(rp, cyc | ph, RCAR_PWMCNT);
++
++	return 0;
++}
++
++static int rcar_pwm_request(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++	struct rcar_pwm_chip *rp = to_rcar_pwm_chip(chip);
++
++	return clk_prepare_enable(rp->clk);
++}
++
++static void rcar_pwm_free(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++	struct rcar_pwm_chip *rp = to_rcar_pwm_chip(chip);
++
++	clk_disable_unprepare(rp->clk);
++}
++
++static int rcar_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
++			   int duty_ns, int period_ns)
++{
++	struct rcar_pwm_chip *rp = to_rcar_pwm_chip(chip);
++	int div, ret;
++
++	div = rcar_pwm_get_clock_division(rp, period_ns);
++	if (div < 0)
++		return div;
++
++	/* Let the core driver set pwm->period if disabled and duty_ns == 0 */
++	if (!test_bit(PWMF_ENABLED, &pwm->flags) && !duty_ns)
++		return 0;
++
++	rcar_pwm_update(rp, RCAR_PWMCR_SYNC, RCAR_PWMCR_SYNC, RCAR_PWMCR);
++
++	ret = rcar_pwm_set_counter(rp, div, duty_ns, period_ns);
++	if (!ret)
++		rcar_pwm_set_clock_control(rp, div);
++
++	/* The SYNC should be set to 0 even if rcar_pwm_set_counter failed */
++	rcar_pwm_update(rp, RCAR_PWMCR_SYNC, 0, RCAR_PWMCR);
++
++	return ret;
++}
++
++static int rcar_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++	struct rcar_pwm_chip *rp = to_rcar_pwm_chip(chip);
++	u32 value;
++
++	/* Don't enable the PWM device if CYC0 or PH0 is 0 */
++	value = rcar_pwm_read(rp, RCAR_PWMCNT);
++	if ((value & RCAR_PWMCNT_CYC0_MASK) == 0 ||
++	    (value & RCAR_PWMCNT_PH0_MASK) == 0)
++		return -EINVAL;
++
++	rcar_pwm_update(rp, RCAR_PWMCR_EN0, RCAR_PWMCR_EN0, RCAR_PWMCR);
++
++	return 0;
++}
++
++static void rcar_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++	struct rcar_pwm_chip *rp = to_rcar_pwm_chip(chip);
++
++	rcar_pwm_update(rp, RCAR_PWMCR_EN0, 0, RCAR_PWMCR);
++}
++
++static const struct pwm_ops rcar_pwm_ops = {
++	.request = rcar_pwm_request,
++	.free = rcar_pwm_free,
++	.config = rcar_pwm_config,
++	.enable = rcar_pwm_enable,
++	.disable = rcar_pwm_disable,
++	.owner = THIS_MODULE,
++};
++
++static int rcar_pwm_probe(struct platform_device *pdev)
++{
++	struct rcar_pwm_chip *rcar_pwm;
++	struct resource *res;
++	int ret;
++
++    printk(KERN_CRIT "Start probe pwm!");
++
++	rcar_pwm = devm_kzalloc(&pdev->dev, sizeof(*rcar_pwm), GFP_KERNEL);
++	if (rcar_pwm == NULL)
++		return -ENOMEM;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	rcar_pwm->base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(rcar_pwm->base))
++		return PTR_ERR(rcar_pwm->base);
++
++	rcar_pwm->clk = devm_clk_get(&pdev->dev, NULL);
++	if (IS_ERR(rcar_pwm->clk)) {
++		dev_err(&pdev->dev, "cannot get clock\n");
++		return PTR_ERR(rcar_pwm->clk);
++	}
++
++	platform_set_drvdata(pdev, rcar_pwm);
++
++	rcar_pwm->chip.dev = &pdev->dev;
++	rcar_pwm->chip.ops = &rcar_pwm_ops;
++	rcar_pwm->chip.base = -1;
++	rcar_pwm->chip.npwm = 1;
++
++	ret = pwmchip_add(&rcar_pwm->chip);
++	if (ret < 0) {
++		dev_err(&pdev->dev, "failed to register PWM chip: %d\n", ret);
++		return ret;
++	}
++
++	pm_runtime_enable(&pdev->dev);
++
++	return 0;
++}
++
++static int rcar_pwm_remove(struct platform_device *pdev)
++{
++	struct rcar_pwm_chip *rcar_pwm = platform_get_drvdata(pdev);
++
++	pm_runtime_disable(&pdev->dev);
++
++	return pwmchip_remove(&rcar_pwm->chip);
++}
++
++static const struct of_device_id rcar_pwm_of_table[] = {
++	{ .compatible = "renesas,pwm-rcar", },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, rcar_pwm_of_table);
++
++static struct platform_driver rcar_pwm_driver = {
++	.probe = rcar_pwm_probe,
++	.remove = rcar_pwm_remove,
++	.driver = {
++		.name = "pwm-rcar",
++		.of_match_table = of_match_ptr(rcar_pwm_of_table),
++	}
++};
++module_platform_driver(rcar_pwm_driver);
++
++MODULE_AUTHOR("Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>");
++MODULE_DESCRIPTION("Renesas PWM Timer Driver");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:pwm-rcar");
+diff --git a/drivers/pwm/sysfs.c b/drivers/pwm/sysfs.c
+new file mode 100644
+index 0000000..8ca5de3
+--- /dev/null
++++ b/drivers/pwm/sysfs.c
+@@ -0,0 +1,352 @@
++/*
++ * A simple sysfs interface for the generic PWM framework
++ *
++ * Copyright (C) 2013 H Hartley Sweeten <hsweeten@visionengravers.com>
++ *
++ * Based on previous work by Lars Poeschel <poeschel@lemonage.de>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/device.h>
++#include <linux/mutex.h>
++#include <linux/err.h>
++#include <linux/slab.h>
++#include <linux/kdev_t.h>
++#include <linux/pwm.h>
++
++struct pwm_export {
++	struct device child;
++	struct pwm_device *pwm;
++};
++
++static struct pwm_export *child_to_pwm_export(struct device *child)
++{
++	return container_of(child, struct pwm_export, child);
++}
++
++static struct pwm_device *child_to_pwm_device(struct device *child)
++{
++	struct pwm_export *export = child_to_pwm_export(child);
++
++	return export->pwm;
++}
++
++static ssize_t pwm_period_show(struct device *child,
++			       struct device_attribute *attr,
++			       char *buf)
++{
++	const struct pwm_device *pwm = child_to_pwm_device(child);
++
++	return sprintf(buf, "%u\n", pwm->period);
++}
++
++static ssize_t pwm_period_store(struct device *child,
++				struct device_attribute *attr,
++				const char *buf, size_t size)
++{
++	struct pwm_device *pwm = child_to_pwm_device(child);
++	unsigned int val;
++	int ret;
++
++	ret = kstrtouint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	ret = pwm_config(pwm, pwm->duty_cycle, val);
++
++	return ret ? : size;
++}
++
++static ssize_t pwm_duty_cycle_show(struct device *child,
++				   struct device_attribute *attr,
++				   char *buf)
++{
++	const struct pwm_device *pwm = child_to_pwm_device(child);
++
++	return sprintf(buf, "%u\n", pwm->duty_cycle);
++}
++
++static ssize_t pwm_duty_cycle_store(struct device *child,
++				    struct device_attribute *attr,
++				    const char *buf, size_t size)
++{
++	struct pwm_device *pwm = child_to_pwm_device(child);
++	unsigned int val;
++	int ret;
++
++	ret = kstrtouint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	ret = pwm_config(pwm, val, pwm->period);
++
++	return ret ? : size;
++}
++
++static ssize_t pwm_enable_show(struct device *child,
++			       struct device_attribute *attr,
++			       char *buf)
++{
++	const struct pwm_device *pwm = child_to_pwm_device(child);
++	int enabled = test_bit(PWMF_ENABLED, &pwm->flags);
++
++	return sprintf(buf, "%d\n", enabled);
++}
++
++static ssize_t pwm_enable_store(struct device *child,
++				struct device_attribute *attr,
++				const char *buf, size_t size)
++{
++	struct pwm_device *pwm = child_to_pwm_device(child);
++	int val, ret;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	switch (val) {
++	case 0:
++		pwm_disable(pwm);
++		break;
++	case 1:
++		ret = pwm_enable(pwm);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret ? : size;
++}
++
++static ssize_t pwm_polarity_show(struct device *child,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	const struct pwm_device *pwm = child_to_pwm_device(child);
++
++	return sprintf(buf, "%s\n", pwm->polarity ? "inversed" : "normal");
++}
++
++static ssize_t pwm_polarity_store(struct device *child,
++				  struct device_attribute *attr,
++				  const char *buf, size_t size)
++{
++	struct pwm_device *pwm = child_to_pwm_device(child);
++	enum pwm_polarity polarity;
++	int ret;
++
++	if (sysfs_streq(buf, "normal"))
++		polarity = PWM_POLARITY_NORMAL;
++	else if (sysfs_streq(buf, "inversed"))
++		polarity = PWM_POLARITY_INVERSED;
++	else
++		return -EINVAL;
++
++	ret = pwm_set_polarity(pwm, polarity);
++
++	return ret ? : size;
++}
++
++static DEVICE_ATTR(period, 0644, pwm_period_show, pwm_period_store);
++static DEVICE_ATTR(duty_cycle, 0644, pwm_duty_cycle_show, pwm_duty_cycle_store);
++static DEVICE_ATTR(enable, 0644, pwm_enable_show, pwm_enable_store);
++static DEVICE_ATTR(polarity, 0644, pwm_polarity_show, pwm_polarity_store);
++
++static struct attribute *pwm_attrs[] = {
++	&dev_attr_period.attr,
++	&dev_attr_duty_cycle.attr,
++	&dev_attr_enable.attr,
++	&dev_attr_polarity.attr,
++	NULL
++};
++
++static const struct attribute_group pwm_attr_group = {
++	.attrs		= pwm_attrs,
++};
++
++static const struct attribute_group *pwm_attr_groups[] = {
++	&pwm_attr_group,
++	NULL,
++};
++
++static void pwm_export_release(struct device *child)
++{
++	struct pwm_export *export = child_to_pwm_export(child);
++
++	kfree(export);
++}
++
++static int pwm_export_child(struct device *parent, struct pwm_device *pwm)
++{
++	struct pwm_export *export;
++	int ret;
++
++	if (test_and_set_bit(PWMF_EXPORTED, &pwm->flags))
++		return -EBUSY;
++
++	export = kzalloc(sizeof(*export), GFP_KERNEL);
++	if (!export) {
++		clear_bit(PWMF_EXPORTED, &pwm->flags);
++		return -ENOMEM;
++	}
++
++	export->pwm = pwm;
++
++	export->child.release = pwm_export_release;
++	export->child.parent = parent;
++	export->child.devt = MKDEV(0, 0);
++	export->child.groups = pwm_attr_groups;
++	dev_set_name(&export->child, "pwm%u", pwm->hwpwm);
++
++	ret = device_register(&export->child);
++	if (ret) {
++		clear_bit(PWMF_EXPORTED, &pwm->flags);
++		kfree(export);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int pwm_unexport_match(struct device *child, void *data)
++{
++	return child_to_pwm_device(child) == data;
++}
++
++static int pwm_unexport_child(struct device *parent, struct pwm_device *pwm)
++{
++	struct device *child;
++
++	if (!test_and_clear_bit(PWMF_EXPORTED, &pwm->flags))
++		return -ENODEV;
++
++	child = device_find_child(parent, pwm, pwm_unexport_match);
++	if (!child)
++		return -ENODEV;
++
++	/* for device_find_child() */
++	put_device(child);
++	device_unregister(child);
++	pwm_put(pwm);
++
++	return 0;
++}
++
++static ssize_t pwm_export_store(struct device *parent,
++				struct device_attribute *attr,
++				const char *buf, size_t len)
++{
++	struct pwm_chip *chip = dev_get_drvdata(parent);
++	struct pwm_device *pwm;
++	unsigned int hwpwm;
++	int ret;
++
++	ret = kstrtouint(buf, 0, &hwpwm);
++	if (ret < 0)
++		return ret;
++
++	if (hwpwm >= chip->npwm)
++		return -ENODEV;
++
++	pwm = pwm_request_from_chip(chip, hwpwm, "sysfs");
++	if (IS_ERR(pwm))
++		return PTR_ERR(pwm);
++
++	ret = pwm_export_child(parent, pwm);
++	if (ret < 0)
++		pwm_put(pwm);
++
++	return ret ? : len;
++}
++
++static ssize_t pwm_unexport_store(struct device *parent,
++				  struct device_attribute *attr,
++				  const char *buf, size_t len)
++{
++	struct pwm_chip *chip = dev_get_drvdata(parent);
++	unsigned int hwpwm;
++	int ret;
++
++	ret = kstrtouint(buf, 0, &hwpwm);
++	if (ret < 0)
++		return ret;
++
++	if (hwpwm >= chip->npwm)
++		return -ENODEV;
++
++	ret = pwm_unexport_child(parent, &chip->pwms[hwpwm]);
++
++	return ret ? : len;
++}
++
++static ssize_t pwm_npwm_show(struct device *parent,
++			     struct device_attribute *attr,
++			     char *buf)
++{
++	const struct pwm_chip *chip = dev_get_drvdata(parent);
++
++	return sprintf(buf, "%u\n", chip->npwm);
++}
++
++static struct device_attribute pwm_chip_attrs[] = {
++	__ATTR(export, 0200, NULL, pwm_export_store),
++	__ATTR(unexport, 0200, NULL, pwm_unexport_store),
++	__ATTR(npwm, 0444, pwm_npwm_show, NULL),
++	__ATTR_NULL,
++};
++
++static struct class pwm_class = {
++	.name		= "pwm",
++	.owner		= THIS_MODULE,
++	.dev_attrs	= pwm_chip_attrs,
++};
++
++static int pwmchip_sysfs_match(struct device *parent, const void *data)
++{
++	return dev_get_drvdata(parent) == data;
++}
++
++void pwmchip_sysfs_export(struct pwm_chip *chip)
++{
++	struct device *parent;
++
++	/*
++	 * If device_create() fails the pwm_chip is still usable by
++	 * the kernel its just not exported.
++	 */
++	parent = device_create(&pwm_class, chip->dev, MKDEV(0, 0), chip,
++			       "pwmchip%d", chip->base);
++	if (IS_ERR(parent)) {
++		dev_warn(chip->dev,
++			 "device_create failed for pwm_chip sysfs export\n");
++	}
++}
++
++void pwmchip_sysfs_unexport(struct pwm_chip *chip)
++{
++	struct device *parent;
++
++	parent = class_find_device(&pwm_class, NULL, chip,
++				   pwmchip_sysfs_match);
++	if (parent) {
++		/* for class_find_device() */
++		put_device(parent);
++		device_unregister(parent);
++	}
++}
++
++static int __init pwm_sysfs_init(void)
++{
++	return class_register(&pwm_class);
++}
++subsys_initcall(pwm_sysfs_init);
+diff --git a/include/linux/pwm.h b/include/linux/pwm.h
+index a4df204..f0feafd 100644
+--- a/include/linux/pwm.h
++++ b/include/linux/pwm.h
+@@ -76,6 +76,7 @@ enum pwm_polarity {
+ enum {
+ 	PWMF_REQUESTED = 1 << 0,
+ 	PWMF_ENABLED = 1 << 1,
++	PWMF_EXPORTED = 1 << 2,
+ };
+ 
+ struct pwm_device {
+@@ -86,7 +87,9 @@ struct pwm_device {
+ 	struct pwm_chip		*chip;
+ 	void			*chip_data;
+ 
+-	unsigned int		period; /* in nanoseconds */
++	unsigned int		period; 	/* in nanoseconds */
++	unsigned int		duty_cycle;	/* in nanoseconds */
++	enum pwm_polarity	polarity;
+ };
+ 
+ static inline void pwm_set_period(struct pwm_device *pwm, unsigned int period)
+@@ -100,6 +103,17 @@ static inline unsigned int pwm_get_period(struct pwm_device *pwm)
+ 	return pwm ? pwm->period : 0;
+ }
+ 
++static inline void pwm_set_duty_cycle(struct pwm_device *pwm, unsigned int duty)
++{
++	if (pwm)
++		pwm->duty_cycle = duty;
++}
++
++static inline unsigned int pwm_get_duty_cycle(struct pwm_device *pwm)
++{
++	return pwm ? pwm->duty_cycle : 0;
++}
++
+ /*
+  * pwm_set_polarity - configure the polarity of a PWM signal
+  */
+@@ -278,4 +292,17 @@ static inline void pwm_add_table(struct pwm_lookup *table, size_t num)
+ }
+ #endif
+ 
++#ifdef CONFIG_PWM_SYSFS
++void pwmchip_sysfs_export(struct pwm_chip *chip);
++void pwmchip_sysfs_unexport(struct pwm_chip *chip);
++#else
++static inline void pwmchip_sysfs_export(struct pwm_chip *chip)
++{
++}
++
++static inline void pwmchip_sysfs_unexport(struct pwm_chip *chip)
++{
++}
++#endif /* CONFIG_PWM_SYSFS */
++
+ #endif /* __LINUX_PWM_H */
+-- 
+1.9.1
+

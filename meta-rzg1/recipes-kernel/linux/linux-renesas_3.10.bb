@@ -43,6 +43,10 @@ SRC_URI_append = " \
 	file://0029-added-avb-to-r8a7743.dtsi.patch \
 	file://0030-created-avb-dts.patch \
 	file://0031-r8a7743-Update-clock-and-pin-control-settings.patch \
+	file://0035-audio-fix-non-audio-at-boot-up-randomly.patch \
+	file://0036-Add-GPIO-button-for-RZG1M-Starter-Kit.patch \
+	file://0039-Add-sysfs-for-pwm-from-kernel-v3.11.patch \
+	file://0040-Fix-issue-limit-setting-value-lower-2s-of-period.patch \
 "
 
 
@@ -57,6 +61,8 @@ SRC_URI_append_iwg20m = " \
 	file://0032-iwg20m-Add-support-for-iWave-iwg20m-board.patch \
 	file://0033-iwg20m-Fix-issue-HDMI-output-is-clone-from-LVDS.patch \
 	file://0034-i2c-Revert-commit-Move-pm_runtime-to-fix-iWave-VIN2.patch \
+	file://0037-USB2.0-OTG-Enable-USB2.0-OTG-Like-Connector-on-iWave.patch \
+	file://0038-Fix-issue-ov7725-soc_cam.patch \
 "
 
 
@@ -74,3 +80,39 @@ KERNEL_DEFCONFIG_iwg20m = "iw_rainbowg20m_defconfig"
 do_configure_prepend() {
     install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
 }
+
+do_configure_append_skrzg1m() {
+    kernel_configure_variable PWM=y  
+ 
+    yes '' | oe_runmake oldconfig
+}
+
+do_configure_append_skrzg1e() {
+    kernel_configure_variable PWM=y  
+ 
+    yes '' | oe_runmake oldconfig
+}
+
+do_configure_append() {
+    kernel_configure_variable PWM_SYSFS=y  
+    kernel_configure_variable PWM_RENESAS_PWM=y
+	kernel_configure_variable PWM_TIMER_SUPPORT=y  
+ 
+    yes '' | oe_runmake oldconfig
+}
+
+# Different settings for PWM
+SRC_URI_append_skrzg1m = " \
+	file://skrzg1m/0001-Add-pwm-pinfc-setting-for-r8a7743-skrzg1m.patch \
+	file://skrzg1m/0002-Add-pwm-support-on-device-tree-for-skrzg1m-board.patch \
+"
+
+SRC_URI_append_skrzg1e = " \
+	file://skrzg1e/0001-Add-pwm-pinfc-setting-for-r8a7745-skrzg1e.patch \
+	file://skrzg1e/0002-Add-pwm-support-on-device-tree-for-skrzg1e-board.patch \
+"
+
+SRC_URI_append_iwg20m = " \
+	file://iWave/0001-Add-pwm-pin-function-controller-setting-for-r8a7743-.patch \
+	file://iWave/0002-Add-pwm-support-on-device-tree-for-iWave-board.patch \
+"
