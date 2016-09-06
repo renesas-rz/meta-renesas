@@ -7,6 +7,7 @@ SRC_URI_append = " \
 	file://0003-fix-da9063-address.patch \
 	file://0004-reduce-speed-on-i2c.patch \
 	file://0005-add-skrzg1e-and-r8a7745.patch \
+	file://0006-enable-QoS.patch \
 "
 
 PATCHTOOL_rzg1 = "git"
