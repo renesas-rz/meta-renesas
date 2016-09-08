@@ -47,6 +47,7 @@ SRC_URI_append = " \
 	file://0036-Add-GPIO-button-for-RZG1M-Starter-Kit.patch \
 	file://0039-Add-sysfs-for-pwm-from-kernel-v3.11.patch \
 	file://0040-Fix-issue-limit-setting-value-lower-2s-of-period.patch \
+	file://0041-Bluetooth-btusb-Add-Realtek-8723-8761-support.patch \
 "
 
 
@@ -97,7 +98,31 @@ do_configure_append() {
     kernel_configure_variable PWM_SYSFS=y  
     kernel_configure_variable PWM_RENESAS_PWM=y
 	kernel_configure_variable PWM_TIMER_SUPPORT=y  
- 
+
+# Enable bluetooth suport
+    kernel_configure_variable   BT y
+    kernel_configure_variable   BT_RFCOMM y
+    kernel_configure_variable   BT_RFCOMM_TTY y
+    kernel_configure_variable   BT_BNEP y
+    kernel_configure_variable   BT_BNEP_MC_FILTER y
+    kernel_configure_variable   BT_BNEP_PROTO_FILTER y
+    kernel_configure_variable   BT_HIDP y
+    kernel_configure_variable   BT_HCIBTUSB y
+    kernel_configure_variable   BT_HCIBTSDIO y
+    kernel_configure_variable   BT_HCIUART y
+    kernel_configure_variable   BT_HCIUART_H4 y
+    kernel_configure_variable   BT_HCIUART_BCSP y
+    kernel_configure_variable   BT_HCIUART_ATH3K y
+    kernel_configure_variable   BT_HCIUART_LL y
+    kernel_configure_variable   BT_HCIUART_3WIRE y
+    kernel_configure_variable   BT_HCIBCM203X y
+    kernel_configure_variable   BT_HCIBPA10X y
+    kernel_configure_variable   BT_HCIBFUSB y
+    kernel_configure_variable   BT_HCIVHCI y
+    kernel_configure_variable   BT_MRVL y
+    kernel_configure_variable   BT_MRVL_SDIO y
+    kernel_configure_variable   BT_ATH3K y
+
     yes '' | oe_runmake oldconfig
 }
 
