@@ -1,0 +1,28 @@
+diff --git a/Makefile b/Makefile
+index 3eca391..b512f88 100644
+--- a/Makefile
++++ b/Makefile
+@@ -253,8 +253,8 @@ EXTRA_CFLAGS += -DCONFIG_P2P_IPS
+ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ | sed -e s/ppc/powerpc/ | sed -e s/armv.l/arm/)
+ ARCH ?= $(SUBARCH)
+ CROSS_COMPILE ?=
+-KVER  := $(shell uname -r)
+-KSRC := /lib/modules/$(KVER)/build
++KVER  := $(KERNEL_VERSION)
++KSRC := $(KERNELSRC)
+ MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/
+ INSTALL_PREFIX :=
+ endif
+diff --git a/include/rtw_debug.h b/include/rtw_debug.h
+index ed9c8d9..00a96dd 100644
+--- a/include/rtw_debug.h
++++ b/include/rtw_debug.h
+@@ -21,7 +21,7 @@
+ #define __RTW_DEBUG_H__
+ 
+ 
+-#define _drv_always_		1
++#define _drv_always_		11 /*change back to 1 for debugging*/
+ #define _drv_emerg_			2
+ #define _drv_alert_			3
+ #define _drv_crit_			4
