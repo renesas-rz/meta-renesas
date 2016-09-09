@@ -24,6 +24,12 @@ IMAGE_INSTALL_append_rzg1 = " \
     gstreamer1.0-plugins-bad-videoparsersbad \
 "
 
+IMAGE_INSTALL_append_rzg1 = " \
+    bluetooth-firmware \
+    kernel-module-8723bu \
+    rtl-modules-init \
+"
+
 IMAGE_INSTALL_append_iwg20m = " \
     dosfstools \
     evtest \
