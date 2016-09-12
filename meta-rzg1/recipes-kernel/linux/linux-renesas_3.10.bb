@@ -123,6 +123,16 @@ do_configure_append() {
     kernel_configure_variable   BT_MRVL_SDIO y
     kernel_configure_variable   BT_ATH3K y
 
+# Enable wifi suport
+    kernel_configure_variable   CFG80211=y
+    kernel_configure_variable   MAC80211=y
+    kernel_configure_variable   MAC80211_MESH=y
+    kernel_configure_variable   CFG80211_WEXT=y
+    kernel_configure_variable   LIB80211=y
+    kernel_configure_variable   LIB80211_CRYPT_WEP=y
+    kernel_configure_variable   LIB80211_CRYPT_CCMP=y
+    kernel_configure_variable   LIB80211_CRYPT_TKIP=y
+
     yes '' | oe_runmake oldconfig
 }
 
