@@ -79,6 +79,14 @@ SRC_URI = " \
 	file://0034-linux-renesas-r8a7745-dtsi-add-vcp0-vpc0-prr-vpc1-vp.patch \
 	file://0035-r8a7745.dtsi-register-for-2ddmac-vsp1-vspd0.patch \
 	file://0036-Add-FDPM-into-device-tree-of-RZG1E.patch \
+	file://vin/0032-adv7180-Add-g_std-operation.patch \
+	file://vin/0033-adv7180-Add-cropcap-operation.patch \
+	file://vin/0034-adv7180-Add-g_tvnorms-operation.patch \
+	file://vin/0035-adv7180-fix-broken-standards-handling.patch \
+	file://vin/0036-set-crop-bounds.patch \
+	file://vin/0037-Check-width-align.patch \
+	file://vin/0038-Fix-pre-clipping-size.patch \
+	file://vin/0039-add-g_crop-for-adv7180.patch \
 "
 
 
