@@ -90,7 +90,7 @@ do_collect_src() {
         rm -rf ${dir}
     done
     cp -rf ${S}/OMXR/include ${S}/UDF_Linux
-    cp -rf ${S}/OMXR/lib/linux/linaro_4_7_3/* ${S}/OMXR/lib/
+    cp -rf ${S}/OMXR/lib/linux/linaro_5_2_1/* ${S}/OMXR/lib/
     rm -rf ${S}/OMXR/lib/linux/
 
     # Colect audio midleware
