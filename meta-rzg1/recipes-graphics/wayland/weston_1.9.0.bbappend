@@ -4,6 +4,7 @@ SRC_URI_append = " file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-c
                    file://0003-Weston-add-support-set-scaling-from-client.patch \
                    file://0004-media-ctl-Separate-libmediactl-code-from-weston.patch \
                    file://0005-Revert-V4L2-renderer-workaround-for-a-bulid-error.patch \
+                   file://0006-fix-kernel-warning-for-v4l2-renderer.patch \
                  "
 
 do_install_append() {
