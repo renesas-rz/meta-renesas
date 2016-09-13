@@ -14,7 +14,6 @@ SRCREV = "8c172771d0fdec0ab7afb69a05f611370bd96489"
 SRC_URI = " \
     git://github.com/renesas-devel/vsp2driver.git;protocol=git;branch=RCAR-GEN2/1.0.0 \
     file://0001-port-vsp2-to-kernel-4.4.patch \
-    file://vsp2drv-init \
 "
 S = "${WORKDIR}/git"
 
@@ -38,9 +37,6 @@ do_install() {
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/vsp2.symvers
     cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/vsp2.symvers
 
-    # Copy init script
-    install -d ${D}/${sysconfdir}/init.d
-    install -m755 ${WORKDIR}/vsp2drv-init ${D}/${sysconfdir}/init.d/vsp2drv
 }
 
 PACKAGES = "\
@@ -56,6 +52,7 @@ FILES_${PN} = " \
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/vsp2.symvers \
 "
+
 RPROVIDES_${PN} += "kernel-module-vsp2"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
@@ -63,6 +60,4 @@ python do_package_ipk_prepend () {
     d.setVar('ALLOW_EMPTY', '1')
 }
 
-inherit update-rc.d
-INITSCRIPT_NAME = "vsp2drv"
-INITSCRIPT_PARAMS = "start 8 5 2 . stop 61 0 1 6 ."
+KERNEL_MODULE_AUTOLOAD = "vsp2"
