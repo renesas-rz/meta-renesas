@@ -65,4 +65,4 @@ python do_package_ipk_prepend () {
     d.setVar('ALLOW_EMPTY', '1')
 }
 
-KERNEL_MODULE_AUTOLOAD = "s3ctrl"
+KERNEL_MODULE_AUTOLOAD = "s3ctl"

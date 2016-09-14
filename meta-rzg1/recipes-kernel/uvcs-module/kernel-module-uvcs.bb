@@ -77,3 +77,4 @@ INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 python do_package_ipk_prepend () {
     d.setVar('ALLOW_EMPTY', '1')
 }
+KERNEL_MODULE_AUTOLOAD = "uvcs_cmn"
