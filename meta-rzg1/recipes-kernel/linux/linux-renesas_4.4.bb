@@ -81,6 +81,7 @@ SRC_URI = " \
 	file://0036-Add-FDPM-into-device-tree-of-RZG1E.patch \
 	file://0037-ARM-dts-r8a7743-multimedia-ip-blocks-use-sysc-power-domain.patch \
 	file://0038-ARM-dts-r8a7745-multimedia-ip-blocks-use-sysc-power-domain.patch \
+	file://0039-VSPM-modify-device-tree-for-adapting-with-VSPM-update.patch \
 	file://vin/0032-adv7180-Add-g_std-operation.patch \
 	file://vin/0033-adv7180-Add-cropcap-operation.patch \
 	file://vin/0034-adv7180-Add-g_tvnorms-operation.patch \
