@@ -94,6 +94,69 @@ SRC_URI = " \
 	file://vin/0040-Add-CROPCAP-ioctl.patch \
 	file://0041-Fix-adv7511-drm-driver.patch \
 	file://0042-enable-cmt0.patch \
+	file://vsp/0001-v4l-vsp1-Change-the-type-of-the-rwpf-field-in-struct.patch \
+	file://vsp/0002-v4l-vsp1-Store-the-memory-format-in-struct-vsp1_rwpf.patch \
+	file://vsp/0003-v4l-vsp1-Move-video-operations-to-vsp1_rwpf.patch \
+	file://vsp/0004-v4l-vsp1-Rename-vsp1_video_buffer-to-vsp1_vb2_buffer.patch \
+	file://vsp/0005-v4l-vsp1-Move-video-device-out-of-struct-vsp1_rwpf.patch \
+	file://vsp/0006-v4l-vsp1-Make-rwpf-operations-independent-of-video-d.patch \
+	file://vsp/0007-v4l-vsp1-Support-VSP1-instances-without-any-UDS.patch \
+	file://vsp/0008-v4l-vsp1-Move-vsp1_video-pointer-from-vsp1_entity-to.patch \
+	file://vsp/0009-v4l-vsp1-Remove-struct-vsp1_pipeline-num_video-field.patch \
+	file://vsp/0010-v4l-vsp1-Decouple-pipeline-end-of-frame-processing-f.patch \
+	file://vsp/0011-v4l-vsp1-Split-pipeline-management-code-from-vsp1_vi.patch \
+	file://vsp/0012-v4l-vsp1-Rename-video-pipeline-functions-to-use-vsp1.patch \
+	file://vsp/0013-v4l-vsp1-Extract-pipeline-initialization-code-into-a.patch \
+	file://vsp/0014-v4l-vsp1-Reuse-local-variable-instead-of-recomputing.patch \
+	file://vsp/0015-v4l-vsp1-Extract-link-creation-to-separate-function.patch \
+	file://vsp/0016-v4l-vsp1-Document-the-vsp1_pipeline-structure.patch \
+	file://vsp/0017-v4l-vsp1-Fix-typo-in-VI6_DISP_IRQ_STA_DST-register-b.patch \
+	file://vsp/0018-v4l-vsp1-Set-the-SRU-CTRL0-register-when-starting-th.patch \
+	file://vsp/0019-v4l-vsp1-Remove-unused-module-read-functions.patch \
+	file://vsp/0020-v4l-vsp1-Move-entity-route-setup-function-to-vsp1_en.patch \
+	file://vsp/0021-v4l-vsp1-Make-number-of-BRU-inputs-configurable.patch \
+	file://vsp/0022-v4l-vsp1-Make-the-BRU-optional.patch \
+	file://vsp/0023-v4l-vsp1-Move-format-info-to-vsp1_pipe.c.patch \
+	file://vsp/0024-v4l-vsp1-Make-the-userspace-API-optional.patch \
+	file://vsp/0025-v4l-vsp1-Make-pipeline-inputs-array-index-by-RPF-ind.patch \
+	file://vsp/0026-v4l-vsp1-Set-the-alpha-value-manually-in-RPF-and-WPF.patch \
+	file://vsp/0027-v4l-vsp1-Don-t-validate-links-when-the-userspace-API.patch \
+	file://vsp/0028-v4l-vsp1-Add-VSP-DU-support.patch \
+	file://vsp/0029-v4l-vsp1-Disconnect-unused-RPFs-from-the-DRM-pipelin.patch \
+	file://vsp/0030-v4l-vsp1-Implement-atomic-update-for-the-DRM-driver.patch \
+	file://vsp/0031-v4l-vsp1-Add-support-for-the-R-Car-Gen3-VSP2.patch \
+	file://vsp/0032-v4l-vsp1-Add-display-list-support.patch \
+	file://vsp/0033-v4l-vsp1-Configure-device-based-on-IP-version.patch \
+	file://vsp/0034-drm-Pass-the-user-drm_mode_fb_cmd2-as-const-to-.fb_c.patch \
+	file://vsp/0035-drm-Pass-name-to-drm_crtc_init_with_planes.patch \
+	file://vsp/0036-drm-Pass-name-to-drm_universal_plane_init.patch \
+	file://vsp/0037-drm-Pass-name-to-drm_encoder_init.patch \
+	file://vsp/0038-drm-Constify-drm_encoder_slave_funcs.patch \
+	file://vsp/0039-drm-rcar-du-Perform-initialization-cleanup-at-probe-.patch \
+	file://vsp/0040-drm-rcar-du-Add-default-modes-to-VGA-connector.patch \
+	file://vsp/0041-drm-rcar-du-Don-t-update-planes-on-disabled-CRTCs.patch \
+	file://vsp/0042-drm-rcar-du-Compute-plane-DDCR4-register-value-direc.patch \
+	file://vsp/0043-drm-rcar-du-Refactor-plane-setup.patch \
+	file://vsp/0044-drm-rcar-du-Add-VSP1-support-to-the-planes-allocator.patch \
+	file://vsp/0045-drm-rcar-du-Add-VSP1-compositor-support.patch \
+	file://vsp/0046-drm-rcar-du-Restart-the-DU-group-when-a-plane-source.patch \
+	file://vsp/0047-drm-rcar-du-Move-plane-allocator-to-rcar_du_plane.c.patch \
+	file://vsp/0048-drm-rcar-du-Expose-the-VSP1-compositor-through-KMS-p.patch \
+	file://vsp/0049-drm-rcar-du-Use-the-VSP-atomic-update-API.patch \
+	file://vsp/0050-drm-rcar-du-Fix-compile-warning-on-64-bit-platforms.patch \
+	file://vsp/0051-drm-rcar-du-Enable-compilation-on-ARM64.patch \
+	file://vsp/0052-drm-rcar-du-Drop-LVDS-double-dependency-on-OF.patch \
+	file://vsp/0053-drm-rcar-du-Support-up-to-4-CRTCs.patch \
+	file://vsp/0054-drm-rcar-du-Output-the-DISP-signal-on-the-ODDF-pin.patch \
+	file://vsp/0055-drm-rcar-du-Add-R8A7795-device-support.patch \
+	file://vsp/0056-drm-rcar-du-lvds-Avoid-duplication-of-clock-clamp-co.patch \
+	file://vsp/0057-drm-rcar-du-lvds-Fix-PLL-frequency-related-configura.patch \
+	file://vsp/0058-drm-rcar-du-lvds-Rename-PLLEN-bit-to-PLLON.patch \
+	file://vsp/0059-drm-rcar-du-Add-probe-deferral-debug-messages.patch \
+	file://vsp/0060-drm-rcar-du-lvds-Add-R-Car-Gen3-support.patch \
+	file://vsp/0061-media-v4l-vsp1-Fix-descriptions-of-Gen2-VSP-instance.patch \
+	file://vsp/0062-Revert-drm-rcar-du-Output-the-DISP-signal-on-the-ODD.patch \
+	file://vsp/0063-drm-rcar-du-r8a7743-support-control-vsp-by-DU.patch \
 "
 
 

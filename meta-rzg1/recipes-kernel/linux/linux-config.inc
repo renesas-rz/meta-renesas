@@ -101,6 +101,8 @@ configure_common(){
     kernel_configure_variable GPIO_SYSFS y
 
     kernel_configure_variable SH_SCI_DMA y
+
+    kernel_configure_variable DRM_RCAR_VSP y
 }
 
 
