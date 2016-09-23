@@ -1,0 +1,182 @@
+From 6198a1c9fb59ec1407efc7352638d6181010795f Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Wed, 29 Jun 2016 14:45:47 +0700
+Subject: [PATCH] Add-pwm-support-on-device-tree-for-skrzg1m-board
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-skrzg1m.dts | 86 +++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/r8a7743.dtsi        | 56 +++++++++++++++++++++++
+ 2 files changed, 142 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-skrzg1m.dts b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+index 6e38fee..5067d25 100644
+--- a/arch/arm/boot/dts/r8a7743-skrzg1m.dts
++++ b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+@@ -236,6 +236,42 @@
+ 		renesas,groups = "can0_data_b";
+ 		renesas,function = "can0";
+ 	};
++
++	pwm0_pins: pwm0 {
++		renesas,groups = "pwm0";
++		renesas,function = "pwm0";
++	};
++
++	pwm1_pins: pwm1 {
++		renesas,groups = "pwm1";
++		renesas,function = "pwm1";
++	};
++
++	pwm2_pins: pwm2 {
++		renesas,groups = "pwm2";
++		renesas,function = "pwm2";
++	};
++
++	pwm3_pins: pwm3 {
++		renesas,groups = "pwm3";
++		renesas,function = "pwm3";
++	};
++
++	pwm4_pins: pwm4 {
++		renesas,groups = "pwm4";
++		renesas,function = "pwm4";
++	};
++
++	pwm5_pins: pwm5 {
++		renesas,groups = "pwm5";
++		renesas,function = "pwm5";
++	};
++
++	pwm6_pins: pwm6 {
++		renesas,groups = "pwm6";
++		renesas,function = "pwm6";
++	};
++
+ };
+ 
+ &ether {
+@@ -417,3 +453,53 @@
+ &ssi1 {
+ 	shared-pin;
+ };
++
++&pwm0 {
++	pinctrl-0 = <&pwm0_pins>;
++	pinctrl-names = "default";
++
++    status = "okay";
++};
++
++&pwm1 {
++//	pinctrl-0 = <&pwm1_pins>;
++//	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm2 {
++//	pinctrl-0 = <&pwm2_pins>;
++//	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm3 {
++//	pinctrl-0 = <&pwm3_pins>;
++//	pinctrl-names = "default";
++
++    status = "okay";
++};
++
++&pwm4 {
++//	pinctrl-0 = <&pwm4_pins>;
++//	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm5 {
++//	pinctrl-0 = <&pwm5_pins>;
++//	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm6 {
++//	pinctrl-0 = <&pwm6_pins>;
++//	pinctrl-names = "default";
++
++	status = "okay";
++};
++
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index 8fe723c..39d2f82 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -527,6 +527,62 @@
+ 		status = "disabled";
+ 	};
+ 
++    pwm0: pwm@e6e30000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e30000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++        };
++
++    pwm1: pwm@e6e31000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e31000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++        };
++
++    pwm2: pwm@e6e32000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e32000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++	};
++
++    pwm3: pwm@e6e33000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e33000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++	};
++
++    pwm4: pwm@e6e34000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e34000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++	};
++
++    pwm5: pwm@e6e35000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e35000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++	};
++
++    pwm6: pwm@e6e36000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e36000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+-- 
+1.9.1
+

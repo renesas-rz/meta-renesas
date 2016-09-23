@@ -1,0 +1,30 @@
+From 3e8e0a81d103d09ebd4612bbb9d7796258abe3fb Mon Sep 17 00:00:00 2001
+From: Tam Nguyen <tamnm2@fsoft.com.vn>
+Date: Fri, 16 Oct 2015 15:20:26 +0700
+Subject: [PATCH] fix memory leak for omx
+
+Signed-off-by: Tam Nguyen <tamnm2@fsoft.com.vn>
+
+---
+ omx/gstomx.c         |    5 ++++
+ 1 files changed, 5 insertions(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index c018e72..48e966d 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -2710,6 +2710,11 @@ _class_init (gpointer g_class, gpointer data)
+ #endif
+ 
+     class_data->hacks = gst_omx_parse_hacks (hacks);
++    /* Free gchar pointer after use */
++    while (*hacks) {
++        g_free(*hacks);
++        hacks++;
++    }
+   }
+ }
+ 
+-- 
+1.7.9.5
+

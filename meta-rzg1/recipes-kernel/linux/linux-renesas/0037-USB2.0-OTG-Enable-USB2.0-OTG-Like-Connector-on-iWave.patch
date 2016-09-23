@@ -1,0 +1,562 @@
+From 430b504247d5b03d9cd89c2052adb23b78084de3 Mon Sep 17 00:00:00 2001
+From: Chuan Nguyen <chuan.nguyen.jy@rvc.renesas.com>
+Date: Tue, 28 Jun 2016 17:29:16 +0700
+Subject: [PATCH] USB2.0 OTG: Enable USB2.0 OTG Like Connector on iWave
+ - Support switch role by changing Cable/Connector
+ - Do not support protocol HNP & SRP
+
+---
+ arch/arm/configs/iw_rainbowg20m_defconfig       |  14 +-
+ arch/arm/mach-shmobile/board-r8a7743-iwg20m.c   | 101 +++++++++++--
+ drivers/usb/phy/phy-rcar-gen2-usb.c             | 188 ++++++++++++++++++------
+ include/linux/platform_data/usb-rcar-gen2-phy.h |   2 +
+ 4 files changed, 247 insertions(+), 58 deletions(-)
+
+diff --git a/arch/arm/configs/iw_rainbowg20m_defconfig b/arch/arm/configs/iw_rainbowg20m_defconfig
+index 4417dc5..4c949fe 100644
+--- a/arch/arm/configs/iw_rainbowg20m_defconfig
++++ b/arch/arm/configs/iw_rainbowg20m_defconfig
+@@ -2434,7 +2434,7 @@ CONFIG_USB=y
+ #
+ CONFIG_USB_DEFAULT_PERSIST=y
+ # CONFIG_USB_DYNAMIC_MINORS is not set
+-# CONFIG_USB_OTG is not set
++CONFIG_USB_OTG=y
+ # CONFIG_USB_OTG_WHITELIST is not set
+ # CONFIG_USB_OTG_BLACKLIST_HUB is not set
+ # CONFIG_USB_MON is not set
+@@ -2457,12 +2457,17 @@ CONFIG_USB_EHCI_PCI=y
+ # CONFIG_USB_ISP116X_HCD is not set
+ # CONFIG_USB_ISP1760_HCD is not set
+ # CONFIG_USB_ISP1362_HCD is not set
+-# CONFIG_USB_OHCI_HCD is not set
++CONFIG_USB_OHCI_HCD=y
++# CONFIG_USB_OHCI_HCD_PLATFORM is not set
++# CONFIG_USB_OHCI_BIG_ENDIAN_DESC is not set
++# CONFIG_USB_OHCI_BIG_ENDIAN_MMIO is not set
++CONFIG_USB_OHCI_LITTLE_ENDIAN=y
+ # CONFIG_USB_UHCI_HCD is not set
+ # CONFIG_USB_SL811_HCD is not set
+ # CONFIG_USB_R8A66597_HCD is not set
++# CONFIG_USB_RENESAS_USBHS_HCD is not set
+ # CONFIG_USB_MUSB_HDRC is not set
+-# CONFIG_USB_RENESAS_USBHS is not set
++CONFIG_USB_RENESAS_USBHS=y
+ 
+ #
+ # USB Device Class drivers
+@@ -2559,6 +2564,7 @@ CONFIG_USB_GADGET_STORAGE_NUM_BUFFERS=2
+ # USB Peripheral Controller
+ #
+ # CONFIG_USB_R8A66597 is not set
++CONFIG_USB_RENESAS_USBHS_UDC=y
+ # CONFIG_USB_PXA27X is not set
+ # CONFIG_USB_MV_UDC is not set
+ # CONFIG_USB_MV_U3D is not set
+@@ -2576,7 +2582,7 @@ CONFIG_USB_ETH=m
+ CONFIG_USB_ETH_RNDIS=y
+ # CONFIG_USB_ETH_EEM is not set
+ # CONFIG_USB_G_NCM is not set
+-# CONFIG_USB_GADGETFS is not set
++CONFIG_USB_GADGETFS=m
+ # CONFIG_USB_FUNCTIONFS is not set
+ CONFIG_USB_MASS_STORAGE=m
+ # CONFIG_USB_G_SERIAL is not set
+diff --git a/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c b/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
+index 8bac270..284a67f 100644
+--- a/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
++++ b/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
+@@ -32,7 +32,7 @@
+ #include <linux/spi/sh_msiof.h>
+ #include <linux/spi/spi.h>
+ #include <linux/usb/phy.h>
+-#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
++#if IS_ENABLED(CONFIG_USB_OTG)
+ #include <linux/usb/renesas_usbhs.h>
+ #endif
+ #include <media/soc_camera.h>
+@@ -162,8 +162,9 @@ static const struct clk_name clk_names[] __initconst = {
+ 	{ "fdp1", NULL, NULL },
+ 	{ "fdp0", NULL, NULL },
+ 	{ "pvrsrvkm", NULL, "pvrsrvkm" },
+-#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
++#if IS_ENABLED(CONFIG_USB_OTG)
+ 	{ "hsusb", NULL, "renesas_usbhs" },
++	{ "ehci", NULL, "pci-rcar-gen2.0" },
+ #else
+ 	{ "ehci", NULL, "pci-rcar-gen2.0" },
+ #endif
+@@ -179,7 +180,7 @@ static const struct clk_name clk_enables[] __initconst = {
+ 	{ "dmah", NULL, "sh-dma-engine.1" },
+ 	{ "sys-dmac1", NULL, "sh-dma-engine.2" },
+ 	{ "sys-dmac0", NULL, "sh-dma-engine.3" },
+-#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
++#if IS_ENABLED(CONFIG_USB_OTG)
+ 	{ "usbdmac0", NULL, "sh-dma-engine.4" },
+ 	{ "usbdmac1", NULL, "sh-dma-engine.5" },
+ #endif
+@@ -376,7 +377,7 @@ PDATA_HSCIF(11, 0xe6cd0000,  gic_spi(21), 2); /* HSCIF2 */
+ #define AUXDATA_SCIFB(index, baseaddr, irq) SCIF_AD("scifb", index, baseaddr)
+ #define AUXDATA_HSCIF(index, baseaddr, irq) SCIF_AD("hscif", index, baseaddr)
+ 
+-#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
++#if IS_ENABLED(CONFIG_USB_OTG)
+ /* USB-DMAC */
+ static const struct sh_dmae_channel usb_dmac_channels[] = {
+ 	{
+@@ -487,6 +488,7 @@ struct usbhs_private {
+ 	struct renesas_usbhs_platform_info info;
+ 	struct usb_phy *phy;
+ 	int id_gpio;
++	int pwr_gpio;
+ };
+ 
+ #define usbhs_get_priv(pdev) \
+@@ -513,6 +515,67 @@ static int usbhs_power_ctrl(struct platform_device *pdev,
+ 	return 0;
+ }
+ 
++static int usbhs_hardware_init(struct platform_device *pdev)
++{
++	struct usbhs_private *priv = usbhs_get_priv(pdev);
++	struct usb_phy *phy;
++	int ret;
++	struct device_node *np, *np1;
++
++	np = of_find_node_by_path("/gpio@e6051000");
++	if (np) {
++		priv->id_gpio = of_get_gpio(np, 11);
++		of_node_put(np);
++	} else {
++		pr_warn("Error: Unable to get USB OTG ID input\n");
++		ret = -ENOTSUPP;
++		goto error;
++	}
++
++	np1 = of_find_node_by_path("/gpio@e6055800");
++	if (np1) {
++		priv->pwr_gpio = of_get_gpio(np1, 23);
++		of_node_put(np1);
++	} else {
++		pr_warn("Error: Unable to get USB0 Power output pin\n");
++		ret = -ENOTSUPP;
++		goto error;
++	}
++
++
++	/* Check USB OTG ID pin */
++	gpio_request_one(priv->id_gpio, GPIOF_IN, NULL);
++	gpio_request_one(priv->pwr_gpio, GPIOF_DIR_OUT, NULL);
++	if (!gpio_get_value(priv->id_gpio))
++		gpio_set_value(priv->pwr_gpio, 1);
++	else
++		gpio_set_value(priv->pwr_gpio, 0);
++
++	phy = usb_get_phy_dev(&pdev->dev, 0);
++	if (IS_ERR(phy))
++		return PTR_ERR(phy);
++
++	priv->phy = phy;
++	return 0;
++
++error:
++	return ret;
++}
++
++static int usbhs_hardware_exit(struct platform_device *pdev)
++{
++	struct usbhs_private *priv = usbhs_get_priv(pdev);
++
++	if (!priv->phy)
++		return 0;
++
++	usb_put_phy(priv->phy);
++	priv->phy = NULL;
++
++	gpio_free(priv->id_gpio);
++	return 0;
++}
++
+ static int usbhs_get_id(struct platform_device *pdev)
+ {
+ 	return USBHS_GADGET;
+@@ -546,6 +609,8 @@ static struct usbhs_private usbhs_priv __initdata = {
+ 	.info = {
+ 		.platform_callback = {
+ 			.power_ctrl	= usbhs_power_ctrl,
++			.hardware_init  = usbhs_hardware_init,
++			.hardware_exit  = usbhs_hardware_exit,
+ 			.get_id		= usbhs_get_id,
+ 			.get_vbus	= usbhs_get_vbus,
+ 		},
+@@ -572,6 +637,21 @@ static void __init iwg20m_add_usb0_gadget(void)
+ 					  &usbhs_priv.info,
+ 					  sizeof(usbhs_priv.info));
+ }
++
++/* Internal PCI0 */
++static const struct resource pci0_resources[] __initconst = {
++	DEFINE_RES_MEM(0xee090000, 0x10000),	/* CFG */
++	DEFINE_RES_MEM(0xee080000, 0x10000),	/* MEM */
++	DEFINE_RES_IRQ(gic_spi(108)),
++};
++
++static void __init iwg20m_add_usb0_host(void)
++{
++	usb_bind_phy("pci-rcar-gen2.0", 0, "usb_phy_rcar_gen2");
++	platform_device_register_simple("pci-rcar-gen2",
++					0, pci0_resources,
++					ARRAY_SIZE(pci0_resources));
++}
+ #else
+ /* Internal PCI0 */
+ static const struct resource pci0_resources[] __initconst = {
+@@ -608,9 +688,11 @@ static void __init iwg20m_add_usb1_host(void)
+ 
+ /* USBHS PHY */
+ static const struct rcar_gen2_phy_platform_data usbhs_phy_pdata __initconst = {
+-#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
+-	.chan0_pci = 0,	/* Channel 0 is USBHS */
+-	.gpio_vbus = -1,
++#if IS_ENABLED(CONFIG_USB_OTG)
++	.chan0_pci = 1,	/* Initial Channel 0 is PCI USB */
++	.gpio_vbus = 798, /* The number which indicate the pin */
++	.gpio_id = 971,
++	.gpio_pwr = 797,
+ 	.wakeup = true,
+ #else
+ 	.chan0_pci = 1,	/* Channel 0 is PCI USB */
+@@ -802,8 +884,9 @@ static void __init iwg20m_add_usb_devices(void)
+ 					  ARRAY_SIZE(usbhs_phy_resources),
+ 					  &usbhs_phy_pdata,
+ 					  sizeof(usbhs_phy_pdata));
+-#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
++#if IS_ENABLED(CONFIG_USB_OTG)
+ 	iwg20m_add_usb0_gadget();
++	iwg20m_add_usb0_host();
+ #else
+ 	iwg20m_add_usb0_host();
+ #endif
+@@ -954,7 +1037,7 @@ static void __init iwg20m_add_standard_devices(void)
+ 	shmobile_clk_workaround(clk_enables, ARRAY_SIZE(clk_enables), true);
+ 	r8a7743_add_dt_devices();
+ 	iwg20m_add_dmac_prototype();
+-#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
++#if IS_ENABLED(CONFIG_USB_OTG)
+ 	iwg20m_add_usb_dmac_prototype();
+ #endif
+ 	of_platform_populate(NULL, of_default_bus_match_table,
+diff --git a/drivers/usb/phy/phy-rcar-gen2-usb.c b/drivers/usb/phy/phy-rcar-gen2-usb.c
+index 9e7205d..540d5ff 100644
+--- a/drivers/usb/phy/phy-rcar-gen2-usb.c
++++ b/drivers/usb/phy/phy-rcar-gen2-usb.c
+@@ -29,9 +29,13 @@ struct rcar_gen2_usb_phy_priv {
+ 	spinlock_t lock;
+ 	int usecount;
+ 	u32 ugctrl2;
+-	int irq;
++	int irq_id;
++	int irq_vbus;
+ 	int gpio_vbus;
+-	struct delayed_work	work;
++	int gpio_id;
++	int gpio_pwr;
++	struct delayed_work	work_vbus;
++	struct delayed_work	work_id;
+ 	struct workqueue_struct *work_queue;
+ 	struct platform_device *pdev;
+ };
+@@ -159,27 +163,22 @@ static int rcar_gen2_usb_phy_init(struct usb_phy *phy)
+ 	struct rcar_gen2_usb_phy_priv *priv = usb_phy_to_priv(phy);
+ 	unsigned long flags;
+ 
+-	/*
+-	 * Enable the clock and setup USB channels
+-	 * if it's the first user
+-	 */
+-	if (!priv->usecount++) {
+-		struct platform_device *pdev = priv->pdev;
+-		struct resource *res;
++	struct platform_device *pdev = priv->pdev;
++	struct resource *res;
+ 
+-		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-		priv->base = devm_ioremap_resource(&pdev->dev, res);
+-		if (IS_ERR(priv->base))
+-			return PTR_ERR(priv->base);
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	priv->base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(priv->base))
++		return PTR_ERR(priv->base);
+ 
+-		spin_lock_irqsave(&priv->lock, flags);
+-		__rcar_gen2_usb_phy_init(priv);
++	spin_lock_irqsave(&priv->lock, flags);
++	__rcar_gen2_usb_phy_init(priv);
++
++	devm_release_mem_region(&pdev->dev, res->start,
++						resource_size(res));
++	devm_iounmap(&pdev->dev, priv->base);
++	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+-		devm_release_mem_region(&pdev->dev, res->start,
+-							resource_size(res));
+-		devm_iounmap(&pdev->dev, priv->base);
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-	}
+ 	return 0;
+ }
+ 
+@@ -214,15 +213,48 @@ out:
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
++/* ID */
++static void rcar_gen2_usbhs_gpio_id_work(struct work_struct *work)
++{
++	struct rcar_gen2_usb_phy_priv *priv =
++		container_of(work, struct rcar_gen2_usb_phy_priv, work_id.work);
++	int id;
++
++	id = gpio_get_value(priv->gpio_id);
++
++	gpio_request_one(priv->gpio_pwr, GPIOF_DIR_OUT, NULL);
++	if (!id) {
++		priv->ugctrl2 = USBHS_UGCTRL2_USB0_PCI;
++		priv->ugctrl2 |= USBHS_UGCTRL2_USB2_SS;
++		/* Set USB channels in the USBHS UGCTRL2 register */
++		rcar_gen2_usb_phy_init(&priv->phy);
++
++		/* Turn power on pwr_gpio */
++		gpio_set_value(priv->gpio_pwr, 1);
++	} else {
++		/* Turn power of pwr_gpio */
++		gpio_set_value(priv->gpio_pwr, 0);
++	}
++}
++
+ /* VBUS */
+ static void rcar_gen2_usbhs_gpio_vbus_work(struct work_struct *work)
+ {
+ 	struct rcar_gen2_usb_phy_priv *priv =
+-		container_of(work, struct rcar_gen2_usb_phy_priv, work.work);
+-	int vbus;
++		container_of(work, struct rcar_gen2_usb_phy_priv, work_vbus.work);
++	int vbus, id;
+ 
++	id = gpio_get_value(priv->gpio_id);
+ 	vbus = gpio_get_value(priv->gpio_vbus);
+ 
++	gpio_request_one(priv->gpio_pwr, GPIOF_DIR_OUT, NULL);
++	if (id != 0) {
++		priv->ugctrl2 = USBHS_UGCTRL2_USB0_HS;
++		priv->ugctrl2 |= USBHS_UGCTRL2_USB2_SS;
++		/* Set USB channels in the USBHS UGCTRL2 register */
++		rcar_gen2_usb_phy_init(&priv->phy);
++	}
++
+ 	if (vbus) {
+ 		priv->phy.state = OTG_STATE_B_PERIPHERAL;
+ 		priv->phy.last_event = USB_EVENT_VBUS;
+@@ -235,15 +267,24 @@ static void rcar_gen2_usbhs_gpio_vbus_work(struct work_struct *work)
+ 
+ }
+ 
+-/* VBUS change IRQ handler */
++/* VBUS and ID change IRQ handler */
++/* irq on id = 417, irq on vbus = 418*/
+ static irqreturn_t rcar_gen2_usbhs_gpio_wakeup_isr(int irq, void *data)
+ {
+ 	struct rcar_gen2_usb_phy_priv *priv = data;
+ 	struct usb_otg *otg = priv->phy.otg;
+-
+-	if (otg->gadget)
+-		queue_delayed_work(priv->work_queue,
+-			&priv->work, msecs_to_jiffies(100));
++	int id;
++
++	id = gpio_get_value(priv->gpio_id);
++	if (irq == priv->irq_vbus){
++		if (id != 0)
++			if (otg->gadget)
++				queue_delayed_work(priv->work_queue,
++					&priv->work_vbus, msecs_to_jiffies(100));
++	} else {
++			queue_delayed_work(priv->work_queue,
++				&priv->work_id, msecs_to_jiffies(100));
++	}
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -274,7 +315,7 @@ static int rcar_gen2_usbhs_set_peripheral(struct usb_otg *otg,
+ 	dev_dbg(&pdev->dev, "registered gadget '%s'\n", gadget->name);
+ 
+ 	/* initialize connection state */
+-	rcar_gen2_usbhs_gpio_wakeup_isr(priv->irq, priv);
++	rcar_gen2_usbhs_gpio_wakeup_isr(priv->irq_vbus, priv);
+ 	return 0;
+ }
+ 
+@@ -285,7 +326,7 @@ static int rcar_gen2_usb_phy_probe(struct platform_device *pdev)
+ 	struct rcar_gen2_usb_phy_priv *priv;
+ 	struct clk *clk;
+ 	int retval;
+-	int gpio, irq;
++	int gpio_vbus, gpio_id, irq;
+ 	struct workqueue_struct *work_queue;
+ 
+ 	pdata = dev_get_platdata(&pdev->dev);
+@@ -331,16 +372,62 @@ static int rcar_gen2_usb_phy_probe(struct platform_device *pdev)
+ 	priv->phy.otg->phy = &priv->phy;
+ 	priv->phy.otg->set_peripheral = rcar_gen2_usbhs_set_peripheral;
+ 
++		/* pwr pin assign */
++	priv->gpio_pwr = pdata->gpio_pwr;
++
++	/* ID irq register */
++	gpio_id = pdata->gpio_id;
++	if (gpio_is_valid(gpio_id)) {
++		retval = devm_gpio_request_one(dev, gpio_id, GPIOF_IN, pdev->name);
++		if (retval < 0) {
++			dev_warn(dev, "Unable to request GPIO VBUS %d: %d\n",
++				 gpio_id, retval);
++			return retval;
++		}
++		priv->gpio_id = gpio_id;
++
++		irq = gpio_to_irq(priv->gpio_id);
++		if (irq < 0) {
++			dev_err(dev,
++				"Unable to get irq number for GPIO ID %d, error %d\n",
++				priv->gpio_id, irq);
++			return irq;
++		}
++		priv->irq_id = irq;
++
++		INIT_DELAYED_WORK(&priv->work_id, rcar_gen2_usbhs_gpio_id_work);
++		work_queue = create_singlethread_workqueue(dev_name(&pdev->dev));
++		if (!work_queue) {
++			dev_err(dev, "failed to create workqueue\n");
++			return -ENOMEM;
++		}
++		priv->work_queue = work_queue;
++
++		retval = devm_request_irq(dev, irq,
++					rcar_gen2_usbhs_gpio_wakeup_isr,
++					IRQF_TRIGGER_RISING |
++					IRQF_TRIGGER_FALLING,
++					pdev->name, priv);
++
++		if (retval) {
++			dev_err(dev, "can't request irq %i, err: %d\n",
++				irq, retval);
++			goto err_irq;
++		}
++
++		device_init_wakeup(&pdev->dev, pdata->wakeup);
++	}
++
+ 	/* VBUS irq */
+-	gpio = pdata->gpio_vbus;
+-	if (gpio_is_valid(gpio)) {
+-		retval = devm_gpio_request_one(dev, gpio, GPIOF_IN, pdev->name);
++	gpio_vbus = pdata->gpio_vbus;
++	if (gpio_is_valid(gpio_vbus)) {
++		retval = devm_gpio_request_one(dev, gpio_vbus, GPIOF_IN, pdev->name);
+ 		if (retval < 0) {
+-			dev_warn(dev, "Unable to request GPIO %d: %d\n",
+-				 gpio, retval);
++			dev_warn(dev, "Unable to request GPIO VBUS %d: %d\n",
++				 gpio_vbus, retval);
+ 			return retval;
+ 		}
+-		priv->gpio_vbus = gpio;
++		priv->gpio_vbus = gpio_vbus;
+ 
+ 		irq = gpio_to_irq(priv->gpio_vbus);
+ 		if (irq < 0) {
+@@ -349,9 +436,9 @@ static int rcar_gen2_usb_phy_probe(struct platform_device *pdev)
+ 				priv->gpio_vbus, irq);
+ 			return irq;
+ 		}
+-		priv->irq = irq;
++		priv->irq_vbus = irq;
+ 
+-		INIT_DELAYED_WORK(&priv->work, rcar_gen2_usbhs_gpio_vbus_work);
++		INIT_DELAYED_WORK(&priv->work_vbus, rcar_gen2_usbhs_gpio_vbus_work);
+ 		work_queue = create_singlethread_workqueue(dev_name(&pdev->dev));
+ 		if (!work_queue) {
+ 			dev_err(dev, "failed to create workqueue\n");
+@@ -384,11 +471,16 @@ static int rcar_gen2_usb_phy_probe(struct platform_device *pdev)
+ 	return retval;
+ 
+ err_otg:
+-	if (gpio_is_valid(gpio))
++	if (gpio_is_valid(gpio_vbus) || gpio_is_valid(gpio_vbus))
+ 		device_init_wakeup(&pdev->dev, 0);
+ err_irq:
+-	if (gpio_is_valid(gpio)) {
+-		cancel_delayed_work_sync(&priv->work);
++	if (gpio_is_valid(gpio_id) || gpio_is_valid(gpio_vbus)) {
++		if (gpio_is_valid(gpio_id))
++			cancel_delayed_work_sync(&priv->work_id);
++
++		if (gpio_is_valid(gpio_vbus))
++			cancel_delayed_work_sync(&priv->work_vbus);
++
+ 		destroy_workqueue(priv->work_queue);
+ 	}
+ 
+@@ -400,9 +492,15 @@ static int rcar_gen2_usb_phy_remove(struct platform_device *pdev)
+ 	struct rcar_gen2_usb_phy_priv *priv = platform_get_drvdata(pdev);
+ 	struct rcar_gen2_phy_platform_data *pdata = dev_get_platdata(&pdev->dev);
+ 
+-	if (gpio_is_valid(pdata->gpio_vbus)) {
+-		device_init_wakeup(&pdev->dev, 0);
+-		cancel_delayed_work_sync(&priv->work);
++	if (gpio_is_valid(pdata->gpio_id) || gpio_is_valid(pdata->gpio_vbus)) {
++		if (gpio_is_valid(pdata->gpio_id)) {
++			device_init_wakeup(&pdev->dev, 0);
++			cancel_delayed_work_sync(&priv->work_id);
++		}
++		if (gpio_is_valid(pdata->gpio_vbus)) {
++			device_init_wakeup(&pdev->dev, 0);
++			cancel_delayed_work_sync(&priv->work_vbus);
++		}
+ 		destroy_workqueue(priv->work_queue);
+ 	}
+ 	usb_remove_phy(&priv->phy);
+@@ -416,7 +514,7 @@ static int phy_rcar_gen2_pm_suspend(struct device *dev)
+ 	struct rcar_gen2_usb_phy_priv *priv = dev_get_drvdata(dev);
+ 
+ 	if (device_may_wakeup(dev))
+-		enable_irq_wake(priv->irq);
++		enable_irq_wake(priv->irq_vbus);
+ 
+ 	return 0;
+ }
+@@ -426,7 +524,7 @@ static int phy_rcar_gen2_pm_resume(struct device *dev)
+ 	struct rcar_gen2_usb_phy_priv *priv = dev_get_drvdata(dev);
+ 
+ 	if (device_may_wakeup(dev))
+-		disable_irq_wake(priv->irq);
++		disable_irq_wake(priv->irq_vbus);
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/platform_data/usb-rcar-gen2-phy.h b/include/linux/platform_data/usb-rcar-gen2-phy.h
+index 99409e5..4c1ad72 100644
+--- a/include/linux/platform_data/usb-rcar-gen2-phy.h
++++ b/include/linux/platform_data/usb-rcar-gen2-phy.h
+@@ -18,6 +18,8 @@ struct rcar_gen2_phy_platform_data {
+ 	/* USB channel 2 configuration */
+ 	bool chan2_pci:1;	/* true: PCI USB host 2, false: USBSS */
+ 	int gpio_vbus;
++	int gpio_id;
++	int gpio_pwr;
+ 	bool wakeup;
+ };
+ 
+-- 
+1.9.1
+

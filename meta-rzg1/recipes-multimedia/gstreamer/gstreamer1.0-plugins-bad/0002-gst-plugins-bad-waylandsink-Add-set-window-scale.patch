@@ -1,0 +1,114 @@
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 6884adf..2551831 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -55,7 +55,9 @@ enum
+   PROP_0,
+   PROP_WAYLAND_DISPLAY,
+   PROP_WAYLAND_POSITION_X,    /* add property (position_x) */
+-  PROP_WAYLAND_POSITION_Y     /* add property (position_y) */
++  PROP_WAYLAND_POSITION_Y,     /* add property (position_y) */
++  PROP_WAYLAND_OUT_WIDTH,     /* add property (out_width) */ 
++  PROP_WAYLAND_OUT_HEIGHT     /* add property (out_height) */
+ };
+ 
+ GST_DEBUG_CATEGORY (gstwayland_debug);
+@@ -241,6 +243,26 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+                         1080,
+                         0,
+                         G_PARAM_READWRITE));
++
++  /* install property (out_width) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_OUT_WIDTH,
++      g_param_spec_int ("out_width",
++                        "Out_width",
++                        "Wayland  Out_width value from the application",
++                        0,
++                        3840,
++                        0,
++                        G_PARAM_READWRITE));
++
++  /* install property (out_height) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_OUT_HEIGHT,
++      g_param_spec_int ("out_height",
++                        "Out_height",
++                        "Wayland  Out_height value from the application",
++                        0,
++                        1080,
++                        0,
++                        G_PARAM_READWRITE));
+ }
+ 
+ static void
+@@ -257,8 +279,12 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+   sink->pool = NULL;
+   sink->ext_display = FALSE;
+   sink->preroll_buffer = NULL;
++
+   sink->position_x = -1;
+   sink->position_y = -1;
++  sink->scale = 0;
++  sink->out_width = 0;
++  sink->out_height = 0;
+ 
+   g_mutex_init (&sink->wayland_lock);
+ }
+@@ -281,6 +307,14 @@ gst_wayland_sink_get_property (GObject * object,
+       /* set position_y property */
+       g_value_set_int (value, sink->position_y);
+       break;
++    case PROP_WAYLAND_OUT_WIDTH:
++      /* set out_width property */
++      g_value_set_int (value, sink->out_width);
++      break;
++    case PROP_WAYLAND_OUT_HEIGHT:
++      /* set out_height property */
++      g_value_set_int (value, sink->out_height);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -306,6 +340,14 @@ gst_wayland_sink_set_property (GObject * object,
+       /* get position_y property */
+       sink->position_y = g_value_get_int (value);;
+       break;
++    case PROP_WAYLAND_OUT_WIDTH:
++      /* get out_width property */
++      sink->out_width = g_value_get_int (value);;
++      break;
++    case PROP_WAYLAND_OUT_HEIGHT:
++      /* get out_height property */
++      sink->out_height = g_value_get_int (value);;
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -588,8 +630,9 @@ create_display (GstWaylandSink * sink)
+       if ( (sink->position_x == -1) || (sink->position_y == -1) ) {
+         wl_shell_surface_set_toplevel (window->shell_surface);
+       } else {
+-        /* set window position */
+-        wl_shell_surface_set_transient (window->shell_surface, window->surface, sink->position_x, sink->position_y, 0);
++        /* set window position ans scaling*/
++        sink->scale = (sink->out_width << 16) | sink->out_height;
++        wl_shell_surface_set_transient (window->shell_surface, window->surface, sink->position_x, sink->position_y, sink->scale);
+         wl_shell_surface_set_toplevel (window->shell_surface);
+       }
+     }
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index 0b442bd..1e1ce9e 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -114,8 +114,12 @@ struct _GstWaylandSink
+ 
+   gint video_width;
+   gint video_height;
++
+   gint position_x;  /* property(position_x) */
+   gint position_y;  /* property(position_y) */
++  gint out_width;   /* property out_width */
++  gint out_height;  /* property out_height */
++  uint32_t scale;
+   uint32_t format;
+ 
+   gboolean ext_display;

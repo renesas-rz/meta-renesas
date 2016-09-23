@@ -1,0 +1,119 @@
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index 89ca65d..a87ba7b 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -111,7 +111,8 @@ enum
+   PROP_TARGET_BITRATE,
+   PROP_QUANT_I_FRAMES,
+   PROP_QUANT_P_FRAMES,
+-  PROP_QUANT_B_FRAMES
++  PROP_QUANT_B_FRAMES,
++  PROP_NUM_P_FRAMES
+ };
+ 
+ GList * p_buffers = NULL;
+@@ -123,6 +124,7 @@ GstVideoCodecFrame * pre_frame;
+ #define GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT (0xffffffff)
+ #define GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT (0xffffffff)
+ #define GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT (0xffffffff)
++#define GST_OMX_VIDEO_ENC_NUM_P_FRAMES_DEFAULT (0xffffffff)
+ 
+ /* class initialization */
+ 
+@@ -181,6 +183,13 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
+           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+           GST_PARAM_MUTABLE_READY));
+ 
++  g_object_class_install_property (gobject_class, PROP_NUM_P_FRAMES,
++      g_param_spec_uint ("num-p-frames", "P-Frames between each I frame",
++          "Number of P frames between each I frame (0xffffffff=component default)",
++          0, G_MAXUINT, GST_OMX_VIDEO_ENC_NUM_P_FRAMES_DEFAULT,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
++          GST_PARAM_MUTABLE_READY));
++
+   element_class->change_state =
+       GST_DEBUG_FUNCPTR (gst_omx_video_enc_change_state);
+ 
+@@ -215,6 +224,7 @@ gst_omx_video_enc_init (GstOMXVideoEnc * self)
+   self->quant_i_frames = GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT;
+   self->quant_p_frames = GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT;
+   self->quant_b_frames = GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT;
++  self->num_p_frames = GST_OMX_VIDEO_ENC_NUM_P_FRAMES_DEFAULT;
+ 
+   g_mutex_init (&self->drain_lock);
+   g_cond_init (&self->drain_cond);
+@@ -363,6 +373,42 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
+ 
+       }
+     }
++
++    if (self->num_p_frames != 0xffffffff) {
++      OMX_VIDEO_CONFIG_AVCINTRAPERIOD avcintraperiod_config;
++
++      GST_OMX_INIT_STRUCT (&avcintraperiod_config);
++      avcintraperiod_config.nPortIndex = self->enc_out_port->index;
++
++      err = gst_omx_component_get_config (self->enc,
++          OMX_IndexConfigVideoAVCIntraPeriod, &avcintraperiod_config);
++      if (err == OMX_ErrorNone) {
++
++        if (self->num_p_frames != 0xffffffff)
++          avcintraperiod_config.nPFrames = self->num_p_frames;
++
++        err =
++            gst_omx_component_set_config (self->enc,
++            OMX_IndexConfigVideoAVCIntraPeriod, &avcintraperiod_config);
++        if (err == OMX_ErrorUnsupportedIndex) {
++          GST_WARNING_OBJECT (self,
++              "Setting AvcIntraPeriod config not supported by the component");
++        } else if (err == OMX_ErrorUnsupportedSetting) {
++          GST_WARNING_OBJECT (self,
++              "Setting AvcIntraPeriod config nPframe=%u not supported by the component",
++              self->num_p_frames );
++        } else if (err != OMX_ErrorNone) {
++          GST_ERROR_OBJECT (self,
++              "Failed to set AvcIntraPeriod config: %s (0x%08x)",
++              gst_omx_error_to_string (err), err);
++          return FALSE;
++        }
++      } else {
++        GST_ERROR_OBJECT (self,
++            "Failed to get AvcIntraPeriod config: %s (0x%08x)",
++            gst_omx_error_to_string (err), err);
++      }
++    }
+   }
+ 
+   return TRUE;
+@@ -458,6 +504,9 @@ gst_omx_video_enc_set_property (GObject * object, guint prop_id,
+     case PROP_QUANT_B_FRAMES:
+       self->quant_b_frames = g_value_get_uint (value);
+       break;
++    case PROP_NUM_P_FRAMES:
++      self->num_p_frames = g_value_get_uint (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -486,6 +535,9 @@ gst_omx_video_enc_get_property (GObject * object, guint prop_id, GValue * value,
+     case PROP_QUANT_B_FRAMES:
+       g_value_set_uint (value, self->quant_b_frames);
+       break;
++    case PROP_NUM_P_FRAMES:
++      g_value_set_uint (value, self->num_p_frames);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+diff --git a/omx/gstomxvideoenc.h b/omx/gstomxvideoenc.h
+index e266537..b1b7bee 100644
+--- a/omx/gstomxvideoenc.h
++++ b/omx/gstomxvideoenc.h
+@@ -76,6 +76,7 @@ struct _GstOMXVideoEnc
+   guint32 quant_i_frames;
+   guint32 quant_p_frames;
+   guint32 quant_b_frames;
++  guint32 num_p_frames;
+ 
+   GstFlowReturn downstream_flow_ret;
+ };

@@ -1,0 +1,201 @@
+From 442b59b17d1b1890a4f482da6fc343fcbb2fae7b Mon Sep 17 00:00:00 2001
+From: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+Date: Wed, 29 Jun 2016 13:42:36 +0700
+Subject: [PATCH] Add pwm support on device tree for RZG1E board
+
+This patch file modify device tree of RZG1E board so that the board
+can output PWM signal of PWM Timer module
+At current time, this patch file modify for channel 0 to output PWM
+signal via JP2 on RZG1E Starter Kit
+
+Signed-off-by: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7745-skrzg1e.dts | 85 +++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/r8a7745.dtsi        | 63 ++++++++++++++++++++++++--
+ 2 files changed, 144 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745-skrzg1e.dts b/arch/arm/boot/dts/r8a7745-skrzg1e.dts
+index f0d7c78..ee5731c 100644
+--- a/arch/arm/boot/dts/r8a7745-skrzg1e.dts
++++ b/arch/arm/boot/dts/r8a7745-skrzg1e.dts
+@@ -258,6 +258,41 @@
+ 		renesas,function = "du1";
+ 	};
+ 
++        pwm0_pins: pwm0 {
++                renesas,groups = "pwm0";
++                renesas,function = "pwm0";
++        };
++
++        pwm1_pins: pwm1 {
++                renesas,groups = "pwm1";
++                renesas,function = "pwm1";
++        };
++
++        pwm2_pins: pwm2 {
++                renesas,groups = "pwm2";
++                renesas,function = "pwm2";
++        };
++
++        pwm3_pins: pwm3 {
++                renesas,groups = "pwm3";
++                renesas,function = "pwm3";
++        };
++
++        pwm4_pins: pwm4 {
++                renesas,groups = "pwm4";
++                renesas,function = "pwm4";
++        };
++
++        pwm5_pins: pwm5 {
++                renesas,groups = "pwm5";
++                renesas,function = "pwm5";
++        };
++
++        pwm6_pins: pwm6 {
++                renesas,groups = "pwm6";
++                renesas,function = "pwm6";
++        };
++
+ 	i2c0_pins: i2c0 {
+ 		renesas,groups = "i2c0_d";
+ 		renesas,function = "i2c0";
+@@ -450,3 +485,53 @@
+ &ssi1 {
+ 	shared-pin;
+ };
++
++&pwm0 {
++        pinctrl-0 = <&pwm0_pins>;
++        pinctrl-names = "default";
++
++        status = "okay";
++};
++
++&pwm1 {
++//        pinctrl-0 = <&pwm1_pins>;
++//        pinctrl-names = "default";
++
++        status = "okay";
++};
++
++&pwm2 {
++//        pinctrl-0 = <&pwm2_pins>;
++//        pinctrl-names = "default";
++
++        status = "okay";
++};
++
++&pwm3 {
++//        pinctrl-0 = <&pwm3_pins>;
++//        pinctrl-names = "default";
++
++        status = "okay";
++};
++
++&pwm4 {
++//        pinctrl-0 = <&pwm4_pins>;
++//        pinctrl-names = "default";
++
++        status = "okay";
++};
++
++&pwm5 {
++//        pinctrl-0 = <&pwm5_pins>;
++//        pinctrl-names = "default";
++
++        status = "okay";
++};
++
++&pwm6 {
++//        pinctrl-0 = <&pwm6_pins>;
++//        pinctrl-names = "default";
++
++        status = "okay";
++};
++
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 86085fa..73fe01b 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -730,11 +730,11 @@
+ 		mstp5_clks: mstp5_clks@e6150144 {
+ 			compatible = "renesas,r8a7745-mstp-clocks", "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe6150144 0 4>, <0 0xe615003c 0 4>;
+-			clocks = <&zs_clk>;
++			clocks = <&zs_clk>, <&p_clk>;
+ 			#clock-cells = <1>;
+-			renesas,clock-indices = <R8A7745_CLK_AUDIO_DMAC0>;
+-			clock-indices = <R8A7745_CLK_AUDIO_DMAC0>;
+-			clock-output-names = "audmac0";
++			renesas,clock-indices = <R8A7745_CLK_AUDIO_DMAC0 R8A7745_CLK_PWM>;
++			clock-indices = <R8A7745_CLK_AUDIO_DMAC0 R8A7745_CLK_PWM>;
++			clock-output-names = "audmac0", "pwm";
+ 		};
+ 		mstp7_clks: mstp7_clks@e615014c {
+ 			compatible = "renesas,r8a7745-mstp-clocks", "renesas,cpg-mstp-clocks";
+@@ -872,6 +872,61 @@
+ 		status = "disabled";
+ 	};
+ 
++        pwm0: pwm@e6e30000 {
++                compatible = "renesas,pwm-rcar";
++                reg = <0 0xe6e30000 0 0x08>;
++                clocks = <&mstp5_clks R8A7745_CLK_PWM>;
++                status = "disabled";
++                #pwm-cells = <2>;
++        };
++
++        pwm1: pwm@e6e31000 {
++                compatible = "renesas,pwm-rcar";
++                reg = <0 0xe6e31000 0 0x08>;
++                clocks = <&mstp5_clks R8A7745_CLK_PWM>;
++                status = "disabled";
++                #pwm-cells = <2>;
++        };
++
++        pwm2: pwm@e6e32000 {
++                compatible = "renesas,pwm-rcar";
++                reg = <0 0xe6e32000 0 0x08>;
++                clocks = <&mstp5_clks R8A7745_CLK_PWM>;
++                status = "disabled";
++                #pwm-cells = <2>;
++        };
++
++        pwm3: pwm@e6e33000 {
++                compatible = "renesas,pwm-rcar";
++                reg = <0 0xe6e33000 0 0x08>;
++                clocks = <&mstp5_clks R8A7745_CLK_PWM>;
++                status = "disabled";
++                #pwm-cells = <2>;
++        };
++        pwm4: pwm@e6e34000 {
++                compatible = "renesas,pwm-rcar";
++                reg = <0 0xe6e34000 0 0x08>;
++                clocks = <&mstp5_clks R8A7745_CLK_PWM>;
++                status = "disabled";
++                #pwm-cells = <3>;
++        };
++
++        pwm5: pwm@e6e35000 {
++                compatible = "renesas,pwm-rcar";
++                reg = <0 0xe6e35000 0 0x08>;
++                clocks = <&mstp5_clks R8A7745_CLK_PWM>;
++                status = "disabled";
++                #pwm-cells = <3>;
++        };
++
++        pwm6: pwm@e6e36000 {
++                compatible = "renesas,pwm-rcar";
++                reg = <0 0xe6e36000 0 0x08>;
++                clocks = <&mstp5_clks R8A7745_CLK_PWM>;
++                status = "disabled";
++                #pwm-cells = <2>;
++        };
++
+ 	rcar_sound: rcar_sound@0xec500000 {
+ 		#sound-dai-cells = <1>;
+ 		compatible =  "renesas,rcar_sound-r8a7745", "renesas,rcar_sound-gen2", "renesas,rcar_sound";
+-- 
+1.9.1
+

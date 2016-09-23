@@ -1,0 +1,79 @@
+From 93f2fa2f46205151a802e806a595d258bcba67e6 Mon Sep 17 00:00:00 2001
+From: Tomohito Esaki <etom@igel.co.jp>
+Date: Fri, 21 Aug 2015 13:07:49 +0900
+Subject: [PATCH] v4l2-renderer: clear dmabuf fd when a kms buffer is
+ destoryed.
+
+Clear a dmabuf fd stored in the surface state when a kms buffer is
+destroyed. This prevents from referring to invalidated dmabuf fd when
+the same fd is reused for the different purpose.
+---
+ src/v4l2-renderer-device.h |  1 +
+ src/v4l2-renderer.c        | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
+
+diff --git a/src/v4l2-renderer-device.h b/src/v4l2-renderer-device.h
+index c2c8c27..1c84efd 100644
+--- a/src/v4l2-renderer-device.h
++++ b/src/v4l2-renderer-device.h
+@@ -87,6 +87,7 @@ struct v4l2_surface_state {
+ 	struct wl_listener buffer_destroy_listener;
+ 	struct wl_listener surface_destroy_listener;
+ 	struct wl_listener renderer_destroy_listener;
++	struct wl_listener kms_buffer_destroy_listener;
+ 
+ #ifdef V4L2_GL_FALLBACK
+ 	void *gl_renderer_state;
+diff --git a/src/v4l2-renderer.c b/src/v4l2-renderer.c
+index f98015f..3149643 100644
+--- a/src/v4l2-renderer.c
++++ b/src/v4l2-renderer.c
+@@ -1037,6 +1037,17 @@ error:
+ 	return -1;
+ }
+ 
++static void
++kms_buffer_state_handle_buffer_destroy(struct wl_listener *listener, void *data)
++{
++	struct v4l2_surface_state *vs;
++
++	vs = container_of(listener, struct v4l2_surface_state,
++			  kms_buffer_destroy_listener);
++	vs->planes[0].dmafd = 0;
++	vs->kms_buffer_destroy_listener.notify = NULL;
++}
++
+ static int
+ v4l2_renderer_attach_dmabuf(struct v4l2_surface_state *vs, struct weston_buffer *buffer)
+ {
+@@ -1147,6 +1158,15 @@ v4l2_renderer_attach_dmabuf(struct v4l2_surface_state *vs, struct weston_buffer
+ 	if (device_interface->attach_buffer(vs) == -1)
+ 		return -1;
+ 
++	if (vs->kms_buffer_destroy_listener.notify) {
++		wl_list_remove(&vs->kms_buffer_destroy_listener.link);
++		vs->kms_buffer_destroy_listener.notify = NULL;
++	}
++	vs->kms_buffer_destroy_listener.notify
++		= kms_buffer_state_handle_buffer_destroy;
++	wl_resource_add_destroy_listener(kbuf->resource,
++					 &vs->kms_buffer_destroy_listener);
++
+ 	DBG("%s: %dx%d buffer attached (dmabuf=%d, stride=%d).\n", __func__, kbuf->width, kbuf->height, kbuf->fd, kbuf->stride);
+ 
+ 	return 0;
+@@ -1208,6 +1228,11 @@ v4l2_renderer_surface_state_destroy(struct v4l2_surface_state *vs)
+ 		vs->buffer_destroy_listener.notify = NULL;
+ 	}
+ 
++	if (vs->kms_buffer_destroy_listener.notify) {
++		wl_list_remove(&vs->kms_buffer_destroy_listener.link);
++		vs->kms_buffer_destroy_listener.notify = NULL;
++	}
++
+ 	// TODO: Release any resources associated to the surface here.
+ 
+ 	weston_buffer_reference(&vs->buffer_ref, NULL);
+-- 
+1.8.0.1
+

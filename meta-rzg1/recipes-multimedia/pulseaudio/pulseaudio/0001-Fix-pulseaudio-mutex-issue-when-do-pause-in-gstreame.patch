@@ -1,0 +1,24 @@
+From 6cf13c2aaa50272bfc6281d2844b1f50464b3a8c Mon Sep 17 00:00:00 2001
+From: Tung Dang <tung.dang.jy@rvc.renesas.com>
+Date: Fri, 31 Jul 2015 16:52:11 +0700
+Subject: [PATCH] 0001-Fix-pulseaudio-mutex-issue-when-do-pause-in-gstreamer
+
+---
+ mutex-posix.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/pulsecore/mutex-posix.c b/src/pulsecore/mutex-posix.c
+index 088eb4a..7f83840 100644
+--- a/src/pulsecore/mutex-posix.c
++++ b/src/pulsecore/mutex-posix.c
+@@ -30,6 +30,7 @@
+ #include <pulsecore/macro.h>
+ 
+ #include "mutex.h"
++#undef HAVE_PTHREAD_PRIO_INHERIT
+ 
+ struct pa_mutex {
+     pthread_mutex_t mutex;
+-- 
+1.7.9.5
+

@@ -15,3 +15,7 @@ IMAGE_INSTALL_append_lcb = " \
     libsocketcan \
 "
 DISTRO_FEATURES_remove="x11"
+
+IMAGE_INSTALL_append = " \
+  usb-otg-init \
+"

@@ -1,0 +1,49 @@
+From dad556053798d8a851e77d1d8a1803e4d27356fd Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Tue, 8 Dec 2015 18:02:38 +0700
+Subject: [PATCH] fix memory leak for omxvideodec
+
+Signed-off-by: Tam Nguyen <tamnm2@fsoft.com.vn>
+---
+ omx/gstomxvideodec.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 837c623..3fbe1e4 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -627,6 +627,8 @@ gst_omx_buffer_pool_request_videosink_buffer_creation (GstOMXBufferPool * pool,
+ 
+   if (!gst_pad_peer_query (GST_VIDEO_DECODER_SRC_PAD (pool->element), query)) {
+     GST_ERROR_OBJECT (pool, "videosink_buffer_creation_request query failed");
++    g_array_free (dmabuf_array, TRUE);  /* free array when function error or failed */
++    g_array_free (stride_array, TRUE);  /* free array when function error or failed */
+     return NULL;
+   }
+ 
+@@ -635,6 +637,8 @@ gst_omx_buffer_pool_request_videosink_buffer_creation (GstOMXBufferPool * pool,
+   if (buffer == NULL) {
+     GST_ERROR_OBJECT (pool,
+         "could not get a buffer from videosink_buffer_creation query");
++    g_array_free (dmabuf_array, TRUE);  /* free array when function error or failed */
++    g_array_free (stride_array, TRUE);  /* free array when function error or failed */
+     return NULL;
+   }
+ 
+@@ -2479,11 +2485,12 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
+           gst_video_format_from_string (format_str)) ==
+       GST_VIDEO_FORMAT_UNKNOWN) {
+     GST_ERROR_OBJECT (self, "Invalid caps: %" GST_PTR_FORMAT, intersection);
++    gst_caps_unref (intersection);  /* free caps when function error or failed */
+     g_list_free_full (negotiation_map,
+         (GDestroyNotify) video_negotiation_map_free);
+     return FALSE;
+   }
+-
++  gst_caps_unref (intersection);  /* free caps when function error or failed */
+   GST_OMX_INIT_STRUCT (&param);
+   param.nPortIndex = self->dec_out_port->index;
+ 
+-- 
+1.9.1
+

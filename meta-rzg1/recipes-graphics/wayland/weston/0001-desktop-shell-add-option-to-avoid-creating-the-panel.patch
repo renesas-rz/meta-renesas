@@ -1,0 +1,109 @@
+From e67118c80ad411ac46b7096aae2635510c80ea6d Mon Sep 17 00:00:00 2001
+From: Jonny Lamb <jonny.lamb@collabora.co.uk>
+Date: Tue, 12 Aug 2014 15:07:51 +0200
+Subject: [PATCH] desktop-shell: add option to avoid creating the panel
+
+This option is so we can disable showing any panel at all. The default
+is to continue showing the panel and no example is added to weston.ini
+because it's an uncommon request.
+
+Tested-by: Pekka Paalanen <pekka.paalanen@collabora.co.uk>
+---
+ clients/desktop-shell.c | 38 +++++++++++++++++++++++++++++++-------
+ man/weston.ini.man      |  5 +++++
+ 2 files changed, 36 insertions(+), 7 deletions(-)
+
+diff --git a/clients/desktop-shell.c b/clients/desktop-shell.c
+index 73b2134..db4a1fd 100644
+--- a/clients/desktop-shell.c
++++ b/clients/desktop-shell.c
+@@ -1130,7 +1130,8 @@ static void
+ output_destroy(struct output *output)
+ {
+ 	background_destroy(output->background);
+-	panel_destroy(output->panel);
++	if (output->panel)
++		panel_destroy(output->panel);
+ 	wl_output_destroy(output->output);
+ 	wl_list_remove(&output->link);
+ 
+@@ -1160,7 +1161,8 @@ output_handle_geometry(void *data,
+ {
+ 	struct output *output = data;
+ 
+-	window_set_buffer_transform(output->panel->window, transform);
++	if (output->panel)
++		window_set_buffer_transform(output->panel->window, transform);
+ 	window_set_buffer_transform(output->background->window, transform);
+ }
+ 
+@@ -1187,7 +1189,8 @@ output_handle_scale(void *data,
+ {
+ 	struct output *output = data;
+ 
+-	window_set_buffer_scale(output->panel->window, scale);
++	if (output->panel)
++		window_set_buffer_scale(output->panel->window, scale);
+ 	window_set_buffer_scale(output->background->window, scale);
+ }
+ 
+@@ -1198,15 +1201,36 @@ static const struct wl_output_listener output_listener = {
+ 	output_handle_scale
+ };
+ 
++static int
++want_panel(struct desktop *desktop)
++{
++	struct weston_config_section *s;
++	char *location = NULL;
++	int ret = 1;
++
++	s = weston_config_get_section(desktop->config, "shell", NULL, NULL);
++	weston_config_section_get_string(s, "panel-location",
++					 &location, "top");
++
++	if (strcmp(location, "top") != 0)
++		ret = 0;
++
++	free(location);
++
++	return ret;
++}
++
+ static void
+ output_init(struct output *output, struct desktop *desktop)
+ {
+ 	struct wl_surface *surface;
+ 
+-	output->panel = panel_create(desktop);
+-	surface = window_get_wl_surface(output->panel->window);
+-	desktop_shell_set_panel(desktop->shell,
+-				output->output, surface);
++	if (want_panel(desktop)) {
++		output->panel = panel_create(desktop);
++		surface = window_get_wl_surface(output->panel->window);
++		desktop_shell_set_panel(desktop->shell,
++					output->output, surface);
++	}
+ 
+ 	output->background = background_create(desktop);
+ 	surface = window_get_wl_surface(output->background->window);
+diff --git a/man/weston.ini.man b/man/weston.ini.man
+index 3d8eef9..22f9f0d 100644
+--- a/man/weston.ini.man
++++ b/man/weston.ini.man
+@@ -186,6 +186,11 @@ digit pairs are in order transparency, red, green, and blue. Examples:
+ .fi
+ .RE
+ .TP 7
++.BI "panel-location=" top
++sets the location of the panel (string). Can be
++.B top,
++.B none.
++.TP 7
+ .BI "locking=" true
+ enables screen locking (boolean).
+ .TP 7
+-- 
+1.9.3
+
