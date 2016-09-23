@@ -10,6 +10,10 @@ SRC_URI_append = " file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-c
                    file://0009-v4l2-renderer-set-length-and-bytesused-of-each-plane.patch \
                    file://0010-vsp-renderer-set-bytesused-and-length-of-v4l2_surfac.patch \
                    file://0011-vsp-renderer-save-returned-length-and-bytesused-from.patch \
+                   file://0012-vsp-renderer-initialize-v4l2_mbus_framefmt-variable.patch \
+                   file://0013-Fix-memory-leaks.patch \
+                   file://0014-Fix-memory-leak-in-vsp-renderer.patch \
+                   file://0015-Fix-gl-fallback.patch \
                  "
 
 do_install_append() {
