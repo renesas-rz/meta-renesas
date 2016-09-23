@@ -31,8 +31,9 @@ REVERT_OMX_CORE_NAME = ""
 REVERT_OMX_CORE_NAME_rzg1 = "revert_omx_core_name"
 do_install[postfuncs] += "${REVERT_OMX_CORE_NAME}"
 
-SRC_URI_append_rzg1 = " \
-    file://0005-omxvideoenc-add-nPFrames-for-AVCINTRAPERIOD-config.patch \
-    file://0011-fix-memory-leak-for-omx.patch \
-    file://0012-fix-memory-leak-for-omxvideodec.patch \
-"
+SRC_URI_append_rzg1 = "${@\
+    ' file://0005-omxvideoenc-add-nPFrames-for-AVCINTRAPERIOD-config.patch \
+      file://0011-fix-memory-leak-for-omx.patch \
+      file://0012-fix-memory-leak-for-omxvideodec.patch' \
+    if '1' in '${USE_GLES_WAYLAND}' else ''}"
+
