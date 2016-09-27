@@ -90,6 +90,7 @@ SRC_URI = " \
 	file://vin/0037-Check-width-align.patch \
 	file://vin/0038-Fix-pre-clipping-size.patch \
 	file://vin/0039-add-g_crop-for-adv7180.patch \
+	file://vin/0040-Add-CROPCAP-ioctl.patch \
 "
 
 
