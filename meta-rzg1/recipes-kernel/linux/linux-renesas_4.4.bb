@@ -72,6 +72,7 @@ SRC_URI = " \
 	file://0027-add-for-clk-driver-RZG-support.patch \
 	file://0028-media-media-adv7180-increase-delay-after-reset-to-5m.patch \
 	file://0029-add-gpio-keys-to-skrzg1m.patch \
+	file://0030-revert-gpio-rcar-fine-grained-runtime-pm-support.patch \
 	file://0030-edit-defconfig-to-support-cma.patch \
 	file://0031-r8a7743.dtsi-register-for-2ddmac-change-the-compatib.patch \
 	file://0032-Add-FDPM-into-device-tree-of-RZG1M.patch \
@@ -91,6 +92,7 @@ SRC_URI = " \
 	file://vin/0038-Fix-pre-clipping-size.patch \
 	file://vin/0039-add-g_crop-for-adv7180.patch \
 	file://vin/0040-Add-CROPCAP-ioctl.patch \
+	file://0041-Fix-adv7511-drm-driver.patch \
 "
 
 
