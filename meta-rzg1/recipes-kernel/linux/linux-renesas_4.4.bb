@@ -157,6 +157,7 @@ SRC_URI = " \
 	file://vsp/0061-media-v4l-vsp1-Fix-descriptions-of-Gen2-VSP-instance.patch \
 	file://vsp/0062-Revert-drm-rcar-du-Output-the-DISP-signal-on-the-ODD.patch \
 	file://vsp/0063-drm-rcar-du-r8a7743-support-control-vsp-by-DU.patch \
+	file://vsp/0064-v4l-vsp1-Don-t-register-media-device.patch \
 "
 
 
