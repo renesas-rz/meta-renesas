@@ -15,17 +15,17 @@ PV = "1.0"
 PN = "omx-user-module"
 
 SRC_URI = " \
-    file://RTM0AC0000XCMCTL20SL32C.tar.bz2;name=file1 \
-    file://RTM0AC0000XVCMND20SL32C.tar.bz2;name=file2 \
-    file://RTM0AC0000XV264D20SL32C.tar.bz2;name=file3 \
+    file://RTM0AC0000ZMCL0100JPCL4.tar.bz2;name=file1 \
+    file://RTM0AC0000MVPL0100JPCL4.tar.bz2;name=file2 \
+    file://RTM0AC0000M264D100JPCL4.tar.bz2;name=file3 \
 "
 SRC_URI += '${@base_conditional( "USE_H263_DECODER", "1", " file://RTM0AC0000XV263D20SL32C.tar.bz2;name=file4", "", d )}'
 SRC_URI += '${@base_conditional( "USE_MPEG2_DECODER", "1", " file://RTM0AC0000XVM2VD20SL32C.tar.bz2;name=file5", "", d )}'
 SRC_URI += '${@base_conditional( "USE_MPEG4_DECODER", "1", " file://RTM0AC0000XVM4VD20SL32C.tar.bz2;name=file6", "", d )}'
 SRC_URI += '${@base_conditional( "USE_DIVX_DECODER", "1", " file://RTM0AC0000XVDVXD20SL32C.tar.bz2;name=file7", "", d )}'
 SRC_URI += '${@base_conditional( "USE_VC1_DECODER", "1", " file://RTM0AC0000XVVC1D20SL32C.tar.bz2;name=file8", "", d )}'
-SRC_URI += '${@base_conditional( "USE_H264AVC_ENCODER", "1", " file://RTM0AC0000XV264E20SL32C.tar.bz2;name=file9", "", d )}'
-SRC_URI += '${@base_conditional( "USE_VIDEO_COMMON_ENCODER", "1", " file://RTM0AC0000XVCMNE20SL32C.tar.bz2;name=file10", "", d )}'
+SRC_URI += '${@base_conditional( "USE_H264AVC_ENCODER", "1", " file://RTM0AC0000M264E100JPCL4.tar.bz2;name=file9", "", d )}'
+SRC_URI += '${@base_conditional( "USE_VIDEO_COMMON_ENCODER", "1", " file://RTM0AC0000MVRC0100JPCL4.tar.bz2;name=file10", "", d )}'
 SRC_URI += '${@base_conditional( "USE_AUDIO_COMMON", "1", " file://RTM0AC0000XACMND20SL32C.tar.bz2;name=file11", "", d )}'
 SRC_URI += '${@base_conditional( "USE_AACP2_DECODER", "1", " file://RTM0AC0000XAAAPD20SL32C.tar.bz2;name=file12", "", d )}'
 SRC_URI += '${@base_conditional( "USE_MP3_DECODER", "1", " file://RTM0AC0000XAMP3D20SL32C.tar.bz2;name=file13", "", d )}'
@@ -45,9 +45,9 @@ SRC_URI += '${@base_conditional( "USE_AACLCS_DECODER", "1", " file://RCG2XAAACD2
 SRC_URI += '${@base_conditional( "AACS_MDW_DECODER", "1", " file://RCG2ADAACMZ1SL32.tar.bz2;name=file27", "", d )}'
 
 LISTSRC = " \
-    RTM0AC0000XCMCTL20SL32C \
-    RTM0AC0000XVCMND20SL32C \
-    RTM0AC0000XV264D20SL32C \
+    RTM0AC0000ZMCL0100JPCL4 \
+    RTM0AC0000MVPL0100JPCL4 \
+    RTM0AC0000M264D100JPCL4 \
 "
 
 LISTSRC += '${@base_conditional( "USE_H263_DECODER", "1", "RTM0AC0000XV263D20SL32C", "", d )}'
@@ -55,8 +55,8 @@ LISTSRC += '${@base_conditional( "USE_MPEG2_DECODER", "1", "RTM0AC0000XVM2VD20SL
 LISTSRC += '${@base_conditional( "USE_MPEG4_DECODER", "1", "RTM0AC0000XVM4VD20SL32C", "", d )}'
 LISTSRC += '${@base_conditional( "USE_DIVX_DECODER", "1", "RTM0AC0000XVDVXD20SL32C", "", d )}'
 LISTSRC += '${@base_conditional( "USE_VC1_DECODER", "1", "RTM0AC0000XVVC1D20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "USE_H264AVC_ENCODER", "1", "RTM0AC0000XV264E20SL32C", "", d )}'
-LISTSRC += '${@base_conditional( "USE_VIDEO_COMMON_ENCODER", "1", "RTM0AC0000XVCMNE20SL32C", "", d )}'
+LISTSRC += '${@base_conditional( "USE_H264AVC_ENCODER", "1", "RTM0AC0000M264E100JPCL4", "", d )}'
+LISTSRC += '${@base_conditional( "USE_VIDEO_COMMON_ENCODER", "1", "RTM0AC0000MVRC0100JPCL4", "", d )}'
 LISTSRC += '${@base_conditional( "USE_AUDIO_COMMON", "1", "RTM0AC0000XACMND20SL32C", "", d )}'
 LISTSRC += '${@base_conditional( "USE_AACP2_DECODER", "1", "RTM0AC0000XAAAPD20SL32C", "", d )}'
 LISTSRC += '${@base_conditional( "USE_MP3_DECODER", "1", "RTM0AC0000XAMP3D20SL32C", "", d )}'
