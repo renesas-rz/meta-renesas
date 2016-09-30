@@ -76,7 +76,7 @@ mv vspm.tar.bz2 recipes-multimedia/vspm-module/files/vspm-user.tar.bz2
 OMXTMP=`mktemp -d`
 TMPDIRS="$TMPDIRS $OMXTMP"
 
-OMX_LIBs=`find $1 -name omx_video_m2e2_v* | tail -1`
+OMX_LIBs=`find $1 -name omx_video_lib_v* | tail -1`
 OMX_DRVs=`find $1 -name omx_video_v* | tail -1`
 cp -rf $OMX_LIBs/* $OMXTMP
 cp -rf $OMX_DRVs/* $OMXTMP
