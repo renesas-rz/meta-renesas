@@ -10,42 +10,6 @@ then
   tar -C $1 -zxf $1/RZG_Series_Evaluation_Software_Package_of_Linux_Drivers-*.tar.gz
 fi
 
-find_change_name(){
-    cur_path=`pwd`
-	fileP=`find . -name $1 | tail -1`
-	if [ "X${fileP}" != "X" ]; then
-		tmp_path=`dirname $fileP | tail -1`
-		cd $tmp_path
-		mv -f $1 $2
-	fi
-	cd $cur_path
-}
-change_names() {
-	if [ ! -e $1 ]; then
-		echo "Directory $1 not existed. Exit !"
-		exit
-	fi
-	current_path=`pwd`
-	cd $1
-
-	find_change_name libomxr_core.so.0.0.0 libomxr_core.so.2.0.0
-	find_change_name libomxr_mc_cmn.so.0.0.0 libomxr_mc_cmn.so.2.0.0
-	find_change_name libomxr_mc_h264d.so.0.0.0 libomxr_mc_h264d.so.2.0.0
-	find_change_name libomxr_mc_h264e.so.0.0.0 libomxr_mc_h264e.so.2.0.0
-	find_change_name libomxr_mc_vecmn.so.0.0.0 libomxr_mc_vecmn.so.2.0.0
-	find_change_name libomxr_mc_vcmn.so.0.0.0 libomxr_mc_vcmn.so.2.0.0
-	find_change_name libomxr_mc_vdcmn.so.0.0.0 libomxr_mc_vdcmn.so.2.0.0
-	find_change_name libuvcs_dec.so.0.0.0 libuvcs_dec.so.1.0.0
-	find_change_name libuvcs_enc.so.0.0.0 libuvcs_enc.so.1.0.0
-	find_change_name libvcp3_avcd.so.0.0.0 libvcp3_avcd.so.1.0.0
-	find_change_name libvcp3_avce.so.0.0.0 libvcp3_avce.so.1.0.0
-	find_change_name libvcp3_mcvd.so.0.0.0 libvcp3_mcvd.so.1.0.0
-	find_change_name libvcp3_mcve.so.0.0.0 libvcp3_mcve.so.1.0.0
-
-	cd $current_path
-}
-
-
 TMPDIRS=
 
 trap 'delete_tmp_dirs' QUIT TERM HUP EXIT
@@ -112,60 +76,53 @@ mv vspm.tar.bz2 recipes-multimedia/vspm-module/files/vspm-user.tar.bz2
 OMXTMP=`mktemp -d`
 TMPDIRS="$TMPDIRS $OMXTMP"
 
-#cp -a $1/R-Car_Series_Evaluation_Software_Package_for_Linux/omx_video_m2e2_v160_eva/* $OMXTMP
-#cp -a $1/R-Car_Series_Evaluation_Software_Package_of_Linux_Drivers/omx_video_v160_eva/* $OMXTMP
 OMX_LIBs=`find $1 -name omx_video_m2e2_v* | tail -1`
 OMX_DRVs=`find $1 -name omx_video_v* | tail -1`
 cp -rf $OMX_LIBs/* $OMXTMP
 cp -rf $OMX_DRVs/* $OMXTMP
 
-unzip -q -d $TMP $OMXTMP/EVARTM0AC0000XCMCTL20SL32C.zip
-mv $TMP/EVARTM0AC0000XCMCTL20SL32C $TMP/RTM0AC0000XCMCTL20SL32C
-tar zxf $TMP/RTM0AC0000XCMCTL20SL32C/Software.tar.gz -C $TMP/RTM0AC0000XCMCTL20SL32C/
-rm $TMP/RTM0AC0000XCMCTL20SL32C/Software.tar.gz
-change_names "$TMP/RTM0AC0000XCMCTL20SL32C"
-tar -C $TMP/ -jcf RTM0AC0000XCMCTL20SL32C.tar.bz2 .
+unzip -q -d $TMP $OMXTMP/EVARTM0AC0000M264D100JPCL4.zip
+mv $TMP/EVARTM0AC0000M264D100JPCL4 $TMP/RTM0AC0000M264D100JPCL4
+tar zxf $TMP/RTM0AC0000M264D100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000M264D100JPCL4/
+rm $TMP/RTM0AC0000M264D100JPCL4/Software.tar.gz
+tar -C $TMP/ -jcf RTM0AC0000M264D100JPCL4.tar.bz2 .
 rm -rf $TMP/*
-mv RTM0AC0000XCMCTL20SL32C.tar.bz2 recipes-multimedia/omx-module/files/
+mv RTM0AC0000M264D100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 
-unzip -q -d $TMP $OMXTMP/EVARTM0AC0000XV264D20SL32C.zip
-mv $TMP/EVARTM0AC0000XV264D20SL32C $TMP/RTM0AC0000XV264D20SL32C
-tar zxf $TMP/RTM0AC0000XV264D20SL32C/Software.tar.gz -C $TMP/RTM0AC0000XV264D20SL32C
-rm $TMP/RTM0AC0000XV264D20SL32C/Software.tar.gz
-change_names "$TMP/RTM0AC0000XV264D20SL32C"
-tar -C $TMP/ -jcf RTM0AC0000XV264D20SL32C.tar.bz2 .
+unzip -q -d $TMP $OMXTMP/EVARTM0AC0000M264E100JPCL4.zip
+mv $TMP/EVARTM0AC0000M264E100JPCL4 $TMP/RTM0AC0000M264E100JPCL4
+tar zxf $TMP/RTM0AC0000M264E100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000M264E100JPCL4/
+rm $TMP/RTM0AC0000M264E100JPCL4/Software.tar.gz
+tar -C $TMP/ -jcf RTM0AC0000M264E100JPCL4.tar.bz2 .
 rm -rf $TMP/*
-mv RTM0AC0000XV264D20SL32C.tar.bz2 recipes-multimedia/omx-module/files/
+mv RTM0AC0000M264E100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 
-unzip -q -d $TMP $OMXTMP/EVARTM0AC0000XV264E20SL32C.zip
-mv $TMP/EVARTM0AC0000XV264E20SL32C $TMP/RTM0AC0000XV264E20SL32C
-tar zxf $TMP/RTM0AC0000XV264E20SL32C/Software.tar.gz -C $TMP/RTM0AC0000XV264E20SL32C
-rm $TMP/RTM0AC0000XV264E20SL32C/Software.tar.gz
-change_names "$TMP/RTM0AC0000XV264E20SL32C"
-tar -C $TMP/ -jcf RTM0AC0000XV264E20SL32C.tar.bz2 .
+unzip -q -d $TMP $OMXTMP/EVARTM0AC0000MVPL0100JPCL4.zip
+mv $TMP/EVARTM0AC0000MVPL0100JPCL4 $TMP/RTM0AC0000MVPL0100JPCL4
+tar zxf $TMP/RTM0AC0000MVPL0100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000MVPL0100JPCL4/
+rm $TMP/RTM0AC0000MVPL0100JPCL4/Software.tar.gz
+tar -C $TMP/ -jcf RTM0AC0000MVPL0100JPCL4.tar.bz2 .
 rm -rf $TMP/*
-mv RTM0AC0000XV264E20SL32C.tar.bz2 recipes-multimedia/omx-module/files/
+mv RTM0AC0000MVPL0100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 
-unzip -q -d $TMP $OMXTMP/EVARTM0AC0000XVCMND20SL32C.zip
-mv $TMP/EVARTM0AC0000XVCMND20SL32C $TMP/RTM0AC0000XVCMND20SL32C
-tar zxf $TMP/RTM0AC0000XVCMND20SL32C/Software.tar.gz -C $TMP/RTM0AC0000XVCMND20SL32C
-rm $TMP/RTM0AC0000XVCMND20SL32C/Software.tar.gz
-change_names "$TMP/RTM0AC0000XVCMND20SL32C"
-tar -C $TMP/ -jcf RTM0AC0000XVCMND20SL32C.tar.bz2 .
+unzip -q -d $TMP $OMXTMP/EVARTM0AC0000MVRC0100JPCL4.zip
+mv $TMP/EVARTM0AC0000MVRC0100JPCL4 $TMP/RTM0AC0000MVRC0100JPCL4
+tar zxf $TMP/RTM0AC0000MVRC0100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000MVRC0100JPCL4/
+rm $TMP/RTM0AC0000MVRC0100JPCL4/Software.tar.gz
+tar -C $TMP/ -jcf RTM0AC0000MVRC0100JPCL4.tar.bz2 .
 rm -rf $TMP/*
-mv RTM0AC0000XVCMND20SL32C.tar.bz2 recipes-multimedia/omx-module/files/
+mv RTM0AC0000MVRC0100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 
-unzip -q -d $TMP $OMXTMP/EVARTM0AC0000XVCMNE20SL32C.zip
-mv $TMP/EVARTM0AC0000XVCMNE20SL32C $TMP/RTM0AC0000XVCMNE20SL32C
-tar zxf $TMP/RTM0AC0000XVCMNE20SL32C/Software.tar.gz -C $TMP/RTM0AC0000XVCMNE20SL32C
-rm $TMP/RTM0AC0000XVCMNE20SL32C/Software.tar.gz
-change_names "$TMP/RTM0AC0000XVCMNE20SL32C"
-tar -C $TMP/ -jcf RTM0AC0000XVCMNE20SL32C.tar.bz2 .
+unzip -q -d $TMP $OMXTMP/EVARTM0AC0000ZMCL0100JPCL4.zip
+mv $TMP/EVARTM0AC0000ZMCL0100JPCL4 $TMP/RTM0AC0000ZMCL0100JPCL4
+tar zxf $TMP/RTM0AC0000ZMCL0100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000ZMCL0100JPCL4/
+rm $TMP/RTM0AC0000ZMCL0100JPCL4/Software.tar.gz
+tar -C $TMP/ -jcf RTM0AC0000ZMCL0100JPCL4.tar.bz2 .
 rm -rf $TMP/*
-mv RTM0AC0000XVCMNE20SL32C.tar.bz2 recipes-multimedia/omx-module/files/
+mv RTM0AC0000ZMCL0100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 
-unzip -q -d $TMP $OMXTMP/RTM0AC0000UVCSCMN1SL32C.zip
-mv $TMP/RTM0AC0000UVCSCMN1SL32C $TMP/uvcs
+unzip -q -d $TMP $OMXTMP/RTM0AC0000ZUVC0100JPCL4.zip
+mv $TMP/RTM0AC0000ZUVC0100JPCL4 $TMP/uvcs
 tar -C $TMP/ -jcf uvcs-kernel.tar.bz2 .
 rm -rf $TMP
 mv uvcs-kernel.tar.bz2 recipes-kernel/uvcs-module/files

@@ -12,9 +12,6 @@ SRC_URI = "file://uvcs-kernel.tar.bz2"
 S = "${WORKDIR}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI_append = " \
-    file://0001-uvcs-kernel-module-modified-to-support-LTS4.4.6.patch \
-"
 inherit autotools
 
 export UVCS_DRV_SRC_DIR = "${S}/uvcs/source/uvcs_lkm"
@@ -23,7 +20,7 @@ export UVCS_CMN_INC_DIR = "${S}/uvcs/include"
 export DRV_CORE_SRC_DIR = "${S}/uvcs/source/driver_core"
 
 do_compile() {
-    cd ${S}/uvcs/source/makefile/linaro_4_7_3/
+    cd ${S}/uvcs/source/makefile/linaro_5_2_1/
     make clean ARCH=arm
     make all ARCH=arm
 }
@@ -33,16 +30,16 @@ do_install() {
     mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include
 
     # Copy kernel module
-    cp -f ${S}/uvcs/source/makefile/linaro_4_7_3/uvcs_cmn.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/uvcs_cmn.ko
+    cp -f ${S}/uvcs/source/makefile/linaro_5_2_1/uvcs_cmn.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/uvcs_cmn.ko
 
     # Copy shared header files
     cp -f ${S}/uvcs/include/uvcs_cmn.h  ${D}/usr/src/kernel/include
     cp -f ${S}/uvcs/include/uvcs_types.h  ${D}/usr/src/kernel/include
-    cp -f ${S}/uvcs/source/makefile/linaro_4_7_3/Module.symvers  ${D}/usr/src/kernel/include/uvcs.symvers
+    cp -f ${S}/uvcs/source/makefile/linaro_5_2_1/Module.symvers  ${D}/usr/src/kernel/include/uvcs.symvers
 
     cp -f ${S}/uvcs/include/uvcs_cmn.h  ${KERNELSRC}/include/
     cp -f ${S}/uvcs/include/uvcs_types.h  ${KERNELSRC}/include/
-    cp -f ${S}/uvcs/source/makefile/linaro_4_7_3/Module.symvers  ${KERNELSRC}/include/uvcs.symvers
+    cp -f ${S}/uvcs/source/makefile/linaro_5_2_1/Module.symvers  ${KERNELSRC}/include/uvcs.symvers
 }
 
 # Append function to clean extract source
