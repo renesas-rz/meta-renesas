@@ -93,6 +93,7 @@ SRC_URI = " \
 	file://vin/0039-add-g_crop-for-adv7180.patch \
 	file://vin/0040-Add-CROPCAP-ioctl.patch \
 	file://0041-Fix-adv7511-drm-driver.patch \
+	file://0042-enable-cmt0.patch \
 "
 
 
