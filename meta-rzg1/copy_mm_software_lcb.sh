@@ -28,30 +28,30 @@ delete_tmp_dirs()
 TMP=`mktemp -d`
 TMPDIRS="$TMPDIRS $TMP"
 
-MM_DRVs=`find $1 -type d -name RCH2M2MMPRDL001 | tail -1`
+MM_DRVs=`find $1 -type d -name RZGMMPRDL001 | tail -1`
 if [ -z "$MM_DRVs" ]
 then
-	echo "Could not find directory RCH2M2MMPRDL001" >&2
+	echo "Could not find directory RZGMMPRDL001" >&2
 	exit 1
 fi
 cp -rf $MM_DRVs $TMP
 
-MM_LIBs=`find $1 -type d -name RCH2M2MMPRLL001 | tail -1`
+MM_LIBs=`find $1 -type d -name RZGMMPRLL001 | tail -1`
 if [ -z "$MM_LIBs" ]
 then
-	echo "Could not find directory RCH2M2MMPRLL001" >&2
+	echo "Could not find directory RZGMMPRLL001" >&2
 	exit 1
 fi
 cp -rf $MM_LIBs $TMP
 
-KERNEL_MODULES="$TMP/RCH2M2MMPRDL001"
+KERNEL_MODULES="$TMP/RZGMMPRDL001"
 tar -C $KERNEL_MODULES/fdpm/fdpm-module/files/ -jcf fdpm-kernel.tar.bz2 .
 tar -C $KERNEL_MODULES/mmngr/mmngr-module/files/ -jcf mmngr-kernel.tar.bz2 .
 tar -C $KERNEL_MODULES/mmngrbuf/mmngrbuf-module/files/ -jcf mmngrbuf-kernel.tar.bz2 .
 tar -C $KERNEL_MODULES/s3ctl/s3ctl-module/files/ -jcf s3ctl-kernel.tar.bz2 .
 tar -C $KERNEL_MODULES/vspm/vspm-module/files/ -jcf vspm-kernel.tar.bz2 .
 
-USER_MODULES="$TMP/RCH2M2MMPRLL001"
+USER_MODULES="$TMP/RZGMMPRLL001"
 tar -C $USER_MODULES/fdpm/fdpm-module/files/ -jcf fdpm.tar.bz2 .
 tar -C $USER_MODULES/mmngr/mmngr-module/files/ -jcf mmngr.tar.bz2 .
 tar -C $USER_MODULES/mmngrbuf/mmngrbuf-module/files/ -jcf mmngrbuf.tar.bz2 .
