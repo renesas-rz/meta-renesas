@@ -20,14 +20,7 @@ do_configure() {
 
 # for wayland
 PACKAGECONFIG_remove_rzg1 = "${@'orc' if '1' in '${USE_GLES_WAYLAND}' else ''}"
-PACKAGECONFIG_append_rzg1 = " faad ${@base_contains('USE_GLES_WAYLAND', '1', 'wayland', '', d)}"
-
-# for lcb
-DEPENDS_append_lcb = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
-PACKAGECONFIG_append_lcb = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
-
-DEPENDS_append_iwg20m = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
-PACKAGECONFIG_append_iwg20m = " ${@base_conditional('USE_MULTIMEDIA', '1', 'faac', '', d)}"
+PACKAGECONFIG_append_rzg1 = " ${@base_contains('USE_GLES_WAYLAND', '1', 'wayland', '', d)}"
 
 
 SRC_URI_append_rzg1 = "${@\

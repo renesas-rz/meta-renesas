@@ -24,15 +24,11 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_0_10", "1", " \
 	gst-plugins-base-videorate \
 	gst-plugins-base-videotestsrc \
 	gst-plugins-good \
-	gst-plugins-good-isomp4 \
 	gst-plugins-good-video4linux2 \
 	gst-plugins-good-videocrop \
-	gst-plugins-good-audioparsers \
 	gst-plugins-bad \
-	gst-plugins-bad-asfmux \
 	gst-plugins-bad-fbdevsink \
 	gst-plugins-bad-h264parse \
-	gst-plugins-bad-faad \
 	gst-plugins-bad-videoparsersbad \
 	", "", d)}'
 
@@ -43,12 +39,9 @@ IMAGE_INSTALL_append = ' ${@base_contains("USE_GSTREAMER_1_00", "1", " \
 	gstreamer1.0-plugins-base-audiotestsrc \
 	gstreamer1.0-plugins-base-alsa \
 	gstreamer1.0-plugins-good-autodetect \
-	gstreamer1.0-plugins-good-isomp4 \
 	gstreamer1.0-plugins-good-video4linux2 \
 	gstreamer1.0-plugins-good-videocrop \
-	gstreamer1.0-plugins-bad-asfmux \
 	gstreamer1.0-plugins-bad-fbdevsink \
-	gstreamer1.0-plugins-bad-faad \
 	gstreamer1.0-plugins-bad-videoparsersbad \
 	", "", d)}'
 

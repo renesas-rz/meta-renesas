@@ -1,5 +1,4 @@
 PACKAGECONFIG ??= " \
-    a52dec lame mad mpeg2dec \
     "
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
