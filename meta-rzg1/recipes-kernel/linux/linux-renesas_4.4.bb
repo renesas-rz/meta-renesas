@@ -158,6 +158,9 @@ SRC_URI = " \
 	file://vsp/0062-Revert-drm-rcar-du-Output-the-DISP-signal-on-the-ODD.patch \
 	file://vsp/0063-drm-rcar-du-r8a7743-support-control-vsp-by-DU.patch \
 	file://vsp/0064-v4l-vsp1-Don-t-register-media-device.patch \
+	file://0043-Fix-warn-message.patch \
+	file://0044-add-drm-panel-support.patch \
+	file://0045-add-hann-start-panel.patch \
 "
 
 
@@ -181,6 +184,7 @@ do_configure_append() {
 	connfigure_ext4
 	configure_usb_storage
 	connfigure_touchscreen
+	config_LVDS_panel
 	configure_common
 
 	yes '' | oe_runmake oldconfig

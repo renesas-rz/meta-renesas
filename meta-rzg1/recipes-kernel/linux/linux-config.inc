@@ -177,4 +177,7 @@ config_rcar_pwm(){
 
 }
 
+config_LVDS_panel(){
+    kernel_configure_variable DRM_PANEL_SIMPLE y
+}
 

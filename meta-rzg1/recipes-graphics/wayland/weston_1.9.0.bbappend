@@ -15,6 +15,7 @@ SRC_URI_append = " file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-c
                    file://0014-Fix-memory-leak-in-vsp-renderer.patch \
                    file://0015-Fix-gl-fallback.patch \
 		   file://0016-Fix-kernel-warning.patch \
+		   file://0017-workaround-rcar-crtc.patch \
                  "
 
 do_install_append() {
