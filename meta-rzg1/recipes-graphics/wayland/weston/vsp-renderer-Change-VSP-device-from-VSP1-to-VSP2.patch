@@ -1,28 +1,29 @@
 diff --git a/Makefile.am b/Makefile.am
-index 26b1cb1..25231bc 100644
+index a7cb39e..aea992d 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -183,13 +183,13 @@ v4l2_renderer_la_SOURCES =			\
- 	src/media-ctl/tools.h			\
- 	src/media-ctl/v4l2subdev.h
+@@ -178,14 +178,14 @@ v4l2_renderer_la_SOURCES =			\
+ 	src/v4l2-renderer.h			\
+ 	src/v4l2-device.h
  
 -module_LTLIBRARIES += v4l2-vsp1-device.la
 -v4l2_vsp1_device_la_LDFLAGS = -module -avoid-version
--v4l2_vsp1_device_la_LIBADD = $(COMPOSITOR_LIBS)
+-v4l2_vsp1_device_la_LIBADD = $(COMPOSITOR_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
 -v4l2_vsp1_device_la_CFLAGS =				\
 +module_LTLIBRARIES += v4l2-vsp2-device.la
 +v4l2_vsp2_device_la_LDFLAGS = -module -avoid-version
-+v4l2_vsp2_device_la_LIBADD = $(COMPOSITOR_LIBS)
++v4l2_vsp2_device_la_LIBADD = $(COMPOSITOR_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
 +v4l2_vsp2_device_la_CFLAGS =				\
  	$(COMPOSITOR_CFLAGS)			\
+ 	$(LIBMEDIACTL_V4L2_CFLAGS)		\
  	$(GCC_CFLAGS)
 -v4l2_vsp1_device_la_SOURCES =			\
 +v4l2_vsp2_device_la_SOURCES =			\
  	src/vsp-renderer.c			\
- 	src/v4l2-device.h			\
- 	src/media-ctl/libmediactl.c		\
+ 	src/v4l2-device.h
+ endif
 diff --git a/src/vsp-renderer.c b/src/vsp-renderer.c
-index f7c9acc..d8681e6 100644
+index ac197de..d6641a0 100644
 --- a/src/vsp-renderer.c
 +++ b/src/vsp-renderer.c
 @@ -284,8 +284,8 @@ vsp_init(struct media_device *media, struct weston_config *config)
@@ -36,6 +37,3 @@ index f7c9acc..d8681e6 100644
  		goto error;
  	}
  
--- 
-1.7.9.5
-

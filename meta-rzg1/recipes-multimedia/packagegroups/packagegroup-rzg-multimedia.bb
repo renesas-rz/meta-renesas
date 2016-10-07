@@ -25,7 +25,7 @@ MULTIMEDIA_PACKAGES ="\
 "
 
 MULTIMEDIA_PACKAGES_append = " \
-    ${@ "vsp2-kernel-module" if "${USE_GLES_WAYLAND}" == "1" else "" } \
+    ${@ "vsp2-kernel-module libmediactl-v4l2" if "${USE_GLES_MULTIMEDIA}" == "1" else "" } \
 "
 
 RDEPENDS_packagegroup-rzg-multimedia = "\
