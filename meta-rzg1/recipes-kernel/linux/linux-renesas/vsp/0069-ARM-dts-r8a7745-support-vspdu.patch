@@ -1,0 +1,67 @@
+From bd599959543f4677942828ed58ccdbfdb6ace239 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Mon, 10 Oct 2016 16:47:45 +0300
+Subject: [PATCH 5/5] ARM: dts: r8a7745: support vspdu
+
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 58d1157..90bd4f0 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -901,7 +901,7 @@
+ 		};
+ 	};
+ 
+-	tddmac@fea00000 {
++	vspm@fea00000 {
+ 		compatible = "renesas,vspm-tddmac", "renesas-vspm";
+ 		reg = <0 0xfea00000 0 0x0200>;
+ 		interrupts = <0 285 IRQ_TYPE_LEVEL_HIGH>;
+@@ -909,7 +909,7 @@
+ 		power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 	};
+ 
+-	vsps@fe928000 {
++	vspm@fe928000 {
+ 		compatible = "renesas,vspm-vsps", "renesas-vspm";
+ 		reg = <0 0xfe928000 0 0x7404>;
+ 		interrupts = <0 267 IRQ_TYPE_LEVEL_HIGH>;
+@@ -917,7 +917,7 @@
+ 		power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 	};
+ 
+-	vspd0@fe930000 {
++	vspm@fe930000 {
+ 		compatible = "renesas,vspm-vspd0", "renesas-vspm";
+ 		reg = <0 0xfe930000 0 0x7404>;
+ 		interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
+@@ -925,6 +925,14 @@
+ 		power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 	};
+ 
++	vspdu0: vspdu0@fe930000 {
++		compatible = "renesas,vsp2";
++		reg = <0 0xfe930000 0 0x7404>;
++		interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7745_CLK_VSP1_DU0>;
++		power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
++	};
++
+ 	fdp0: fdpm@fe940000 {
+ 		compatible = "renesas,fdp1";
+ 		reg = <0 0xfe940000 0 0x2400>;
+@@ -944,6 +952,8 @@
+ 		clock-names = "du.0", "du.1";
+ 		status = "disabled";
+ 
++		vsps = <&vspdu0>;
++
+ 		ports {
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-- 
+2.7.4
+

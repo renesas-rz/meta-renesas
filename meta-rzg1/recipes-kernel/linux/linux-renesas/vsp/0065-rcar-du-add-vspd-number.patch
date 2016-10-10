@@ -1,0 +1,53 @@
+From ffa417dbc531f2612aba8a58dab46d2bfd0f1967 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Mon, 10 Oct 2016 16:51:05 +0300
+Subject: [PATCH 1/5] rcar-du: add vspd number
+
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 2 ++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 26f3e03..a7a6506 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -117,6 +117,7 @@ static const struct rcar_du_device_info rcar_du_r8a7743_info = {
+ 		  | RCAR_DU_FEATURE_EXT_CTRL_REGS
+ 		  | RCAR_DU_FEATURE_VSP1_SOURCE,
+ 	.num_crtcs = 2,
++	.vspd_crtcs = BIT(0) | BIT(1),
+ 	.routes = {
+ 		[RCAR_DU_OUTPUT_DPAD0] = {
+ 			.possible_crtcs = BIT(1) | BIT(0),
+@@ -159,6 +160,7 @@ static const struct rcar_du_device_info rcar_du_r8a7745_info = {
+         .features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
+                   | RCAR_DU_FEATURE_EXT_CTRL_REGS,
+         .num_crtcs = 2,
++        .vspd_crtcs = BIT(0),
+         .routes = {
+                 /* R8A7745 has two RGB outputs and one (currently unsupported)
+                  * TCON output.
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index ed35467..5527cdf 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -59,6 +59,7 @@ struct rcar_du_output_routing {
+  * @num_crtcs: total number of CRTCs
+  * @routes: array of CRTC to output routes, indexed by output (RCAR_DU_OUTPUT_*)
+  * @num_lvds: number of internal LVDS encoders
++ * @vsp_crtcs : number of vspd channel
+  */
+ struct rcar_du_device_info {
+ 	unsigned int gen;
+@@ -67,6 +68,7 @@ struct rcar_du_device_info {
+ 	unsigned int num_crtcs;
+ 	struct rcar_du_output_routing routes[RCAR_DU_OUTPUT_MAX];
+ 	unsigned int num_lvds;
++	unsigned int vspd_crtcs;
+ };
+ 
+ #define RCAR_DU_MAX_CRTCS		4
+-- 
+2.7.4
+

@@ -162,6 +162,11 @@ SRC_URI = " \
 	file://0044-add-drm-panel-support.patch \
 	file://0045-add-hann-start-panel.patch \
 	file://0046-ARM-dts-skrzg1m-remove-x16-clocks.patch \
+	file://vsp/0065-rcar-du-add-vspd-number.patch \
+	file://vsp/0066-rcar-du-store-rcar_du_group-for-vsp_device.patch \
+	file://vsp/0067-rcar-du-call-vsp-methods-only-if-device-is-present.patch \
+	file://vsp/0068-rcar-du-update-planes-which-don-t-have-vsp-device.patch \
+	file://vsp/0069-ARM-dts-r8a7745-support-vspdu.patch \
 "
 
 
