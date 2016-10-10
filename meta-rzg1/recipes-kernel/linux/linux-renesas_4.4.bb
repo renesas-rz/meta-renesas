@@ -161,6 +161,7 @@ SRC_URI = " \
 	file://0043-Fix-warn-message.patch \
 	file://0044-add-drm-panel-support.patch \
 	file://0045-add-hann-start-panel.patch \
+	file://0046-ARM-dts-skrzg1m-remove-x16-clocks.patch \
 "
 
 
