@@ -9,13 +9,7 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-vspm"
 PR = "r0"
 
-SRC_URI = "file://vspm-kernel.tar.bz2 \
-	   file://add-wno-error-day-time.patch \
-	   file://0001-rename-clks-vspm.patch \
-	   file://0002-vspm-Update-from-kernel-3.10-to-kernel-4.4.patch \
-	   file://0003-VSPM-add-device-register-method.patch \
-	   file://0004-modify-initialize-deinitilize-vspm-sub-modules.patch \
-"
+SRC_URI = "file://vspm-kernel.tar.bz2"
 
 S = "${WORKDIR}"
 

@@ -5,9 +5,7 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngrbuf"
 PR = "r0"
 
-SRC_URI = "file://mmngrbuf.tar.bz2 \
-            file://0001-Edit-dma_buf_export-with-new-prototype.patch \
-"
+SRC_URI = "file://mmngrbuf.tar.bz2"
 
 LIC_FILES_CHKSUM = " \
     file://drv/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \

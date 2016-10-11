@@ -5,10 +5,6 @@ DEPENDS = "kernel-module-fdpm mmngr-user-module"
 PN = "fdpm-user-module"
 SRC_URI = "file://fdpm.tar.bz2"
 
-SRC_URI_append = " \
-	file://0001-FDPM-user-module-update-version-to-1.5.0.patch \
-"
-
 S = "${WORKDIR}/fdpm"
 
 do_compile() {

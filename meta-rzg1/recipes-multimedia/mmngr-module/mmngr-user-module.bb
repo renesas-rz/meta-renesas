@@ -4,9 +4,7 @@ LICENSE = "CLOSED"
 DEPENDS = "kernel-module-mmngr"
 PN = "mmngr-user-module"
 S = "${WORKDIR}/mmngr"
-SRC_URI = "file://mmngr.tar.bz2 \
-            file://0001-Update-to-version-1.6.patch \
-"
+SRC_URI = "file://mmngr.tar.bz2"
 
 do_compile() {
     # Build shared library
