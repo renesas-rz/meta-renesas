@@ -11,23 +11,14 @@ PR = "r0"
 COMPATIBLE_MACHINE = "(r8a7743|r8a7745)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SRC_URI_r8a7743 = 'file://SGX_KM_M2.tar.bz2 \
-		   file://0001-adopt-rzg_m-module-to-kernel-4.4.6.patch \
-		   file://0002-make-driver-renesas-compatible.patch \
-		  '
-
-
-
+SRC_URI_r8a7743 = 'file://SGX_KM_M2.tar.bz2'
 S_r8a7743 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7743_linux/"
 KERNEL_OLD_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7791_linux/"
 TARGET_PATH_r8a7743 = "eurasia_km/eurasiacon/binary2_r8a7743_linux_release/target/kbuild"
 
 
-SRC_URI_r8a7745 = 'file://SGX_KM_E2.tar.bz2 \
-           file://0001-adopt-rzg_m-module-to-kernel-4.4.6.patch \
-           file://0002-make-driver-renesas-compatible.patch \
-          '
+SRC_URI_r8a7745 = 'file://SGX_KM_E2.tar.bz2'
 S_r8a7745 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7745 = "eurasiacon/build/linux2/r8a7745_linux/"
 KERNEL_OLD_SRC_PATH_r8a7745 = "eurasiacon/build/linux2/r8a7794_linux/"
