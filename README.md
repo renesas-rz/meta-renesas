@@ -1,16 +1,15 @@
-# meta-renesas-private
+# meta-renesas
 
-This is the private version of the public repository meta-renesas. This is a working area where all collaborators can commit features and fixes. Tested and stable updates will be periodically pushed to the public meta-renesas repository.
+This layer provides support for building OpenEmbedded/Yocto-based Linux BSPs for Renesas RZ platforms.
 
-INSTRUCTIONS:
+This layer depends on:
 
-The recipes and scripts in this layer refer to the name of the public repository, which is meta-renesas. To make them work correctly with the private repository, either create a symlink to the cloned private repository or rename it during cloning.
+URI: git://git.yoctoproject.org/poky
+revision: yocto-1.6.1
 
-Option 1 - Clone the repository using the original name and create a symbolic link to it named meta-rzg-demos:
+URI: git://git.openembedded.org/meta-openembedded
+revision: dca466c074c9a35bc0133e7e0d65cca0731e2acf
 
-$ git clone https://github.com/renesas-rz/meta-renesas-private<br>
-$ ln -s ./meta-renesas-private ./meta-renesas
+URI: git://git.linaro.org/openembedded/meta-linaro.git
+revision: 8a0601723c06fdb75e62aa0f0cf15fc9d7d90167
 
-Option 2 - rename the repository during cloning:
-
-$ git clone https://github.com/renesas-rz/meta-renesas-private meta-renesas
