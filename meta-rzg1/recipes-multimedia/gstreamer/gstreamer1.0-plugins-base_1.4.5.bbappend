@@ -15,6 +15,8 @@ SRC_URI_append += " \
     file://0012-gstvspmfilter-add-bufferpool.patch \
     file://0013-gstvspmfilter-re-add-memory_alignment.patch \
     file://0015-gstplaybin-change-vspmfilter-as-default-converter.patch \
+    file://0017-vspmfilter-Fix-mistake-in-storing-dmabuf_pid.patch \
+    file://0018-vspmfilter-Fix-crash-issue-in-dmabuf-use-mode-with-s.patch \
 "
 
 DEPENDS_append += " kernel-module-mmngr mmngr-user-module kernel-module-mmngrbuf mmngrbuf-user-module vspm-user-module kernel-module-vspm"
