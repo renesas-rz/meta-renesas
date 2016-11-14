@@ -1,4 +1,5 @@
 require ../../include/gles-control.inc
+require ../../include/multimedia-control.inc
 
 SRC_URI_rzg1 = "git://github.com/renesas-devel/gst-plugins-base.git;protocol=git;branch=RCAR-GEN2/1.2.3"
 SRCREV_rzg1 = "b3a5d9f75ed82739ecae6d866f9b268d1e13cec5"
@@ -47,8 +48,7 @@ FILES_${PN}_append_rzg1 = " \
 # None
 
 # Add vspmfilter
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-SRC_URI_append += " \
+SRC_URI_append_rzg1 += ' ${@base_contains("USE_MULTIMEDIA", "1", " \
     file://0001-gst-plugins-base-vspmfilter-Add-new-plugin-support-DMAbuf.patch \
     file://0002-gst-plugins-base-vspmfilter-add-outbuf-alloc-mode.patch \
     file://0003-gst-plugins-base-videoencoder-fix-error-w-I420-format.patch \
@@ -65,6 +65,9 @@ SRC_URI_append += " \
     file://0015-gstplaybin-change-vspmfilter-as-default-converter.patch \
     file://0017-vspmfilter-Fix-mistake-in-storing-dmabuf_pid.patch \
     file://0018-vspmfilter-Fix-crash-issue-in-dmabuf-use-mode-with-s.patch \
-"
+    ", "", d)}'
 
-DEPENDS_append += " mmngr-kernel-module mmngr-user-module mmngrbuf-kernel-module mmngrbuf-user-module vspm-user-module vspm-kernel-module"
+DEPENDS_append += ' ${@base_contains("USE_MULTIMEDIA", "1", " \
+    mmngr-kernel-module mmngr-user-module mmngrbuf-kernel-module \
+    mmngrbuf-user-module vspm-user-module vspm-kernel-module \
+    ", "", d)}'
