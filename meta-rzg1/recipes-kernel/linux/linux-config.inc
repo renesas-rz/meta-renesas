@@ -1,3 +1,8 @@
+configure_renesas_usbhs(){
+    kernel_configure_variable USB_RENESAS_USBHS y
+    kernel_configure_variable USB_RENESAS_USBHS_HCD y
+    kernel_configure_variable USB_RENESAS_USBHS_UDC y
+}
 
 configure_usb_storage(){
 	kernel_configure_variable USB_STORAGE y
