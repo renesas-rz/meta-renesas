@@ -187,11 +187,11 @@ do_configure_prepend() {
 
 do_configure_append() {
 	
-	connfigure_ext3
-	connfigure_ext4
+	configure_ext3
+	configure_ext4
 	configure_usb_storage
-	connfigure_touchscreen
-	config_LVDS_panel
+	configure_touchscreen
+	configure_LVDS_panel
 	configure_common
 
 	yes '' | oe_runmake oldconfig

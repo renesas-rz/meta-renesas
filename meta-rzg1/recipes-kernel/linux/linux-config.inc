@@ -3,17 +3,17 @@ configure_usb_storage(){
 	kernel_configure_variable USB_STORAGE y
 }
 
-connfigure_ext3(){
+configure_ext3(){
     kernel_configure_variable EXT3_FS y
 }
 
 
-connfigure_ext4(){
+configure_ext4(){
     kernel_configure_variable EXT4_FS y
     kernel_configure_variable EXT4_USE_FOR_EXT2 y
 }
 
-connfigure_touchscreen(){
+configure_touchscreen(){
     # Endable multitouch HID
     kernel_configure_variable HID_MULTITOUCH y
     kernel_configure_variable INPUT_TOUCHSCREEN y
@@ -39,7 +39,7 @@ configure_usb_to_can(){
     kernel_configure_variable CAN_KVASER_USB y
 }
 
-config_usb_to_eth(){
+configure_usb_to_eth(){
     kernel_configure_variable USB_USBNET y
 }
 
@@ -144,12 +144,12 @@ configure_direct_ov10635(){
     kernel_configure_variable SOC_CAMERA_OV10635 y
 }
 
-config_jpu(){
+configure_jpu(){
     kernel_configure_variable V4L2_MEM2MEM_DEV y
     kernel_configure_variable VIDEO_RENESAS_JPU y
 }
 
-config_DA9063(){
+configure_DA9063(){
     kernel_configure_variable WATCHDOG y
     kernel_configure_variable WATCHDOG_CORE y
     kernel_configure_variable DA9063_WATCHDOG y
@@ -159,25 +159,25 @@ config_DA9063(){
     kernel_configure_variable RTC_DRV_DA9063 y
 }
 
-config_rcar_thermal(){
+configure_rcar_thermal(){
     kernel_configure_variable THERMAL y
     kernel_configure_variable CPU_THERMAL y
     kernel_configure_variable RCAR_THERMAL y
 }
 
-config_drm(){
+configure_drm(){
     if '${USE_MULTIMEDIA}' == '0' or '${USE_GLES_WAYLAND}' == '0' ; then
 	kernel_configure_variable DRM_RCAR_DU_CONNECT_VSP n
     fi	
 }
 
-config_rcar_pwm(){
+configure_rcar_pwm(){
     kernel_configure_variable PWM y
     kernel_configure_variable PWM_RCAR y
 
 }
 
-config_LVDS_panel(){
+configure_LVDS_panel(){
     kernel_configure_variable DRM_PANEL_SIMPLE y
 }
 
