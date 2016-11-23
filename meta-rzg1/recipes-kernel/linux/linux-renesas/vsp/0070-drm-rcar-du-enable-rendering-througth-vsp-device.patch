@@ -1,0 +1,26 @@
+From a154bedf5d89eaef3356c415ee81c6c972cf0ac8 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Wed, 23 Nov 2016 23:31:28 +0300
+Subject: [PATCH] drm: rcar-du: enable rendering througth vsp device
+
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index a7a6506..f9bd910 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -158,7 +158,8 @@ static const struct rcar_du_device_info rcar_du_r8a7794_info = {
+ static const struct rcar_du_device_info rcar_du_r8a7745_info = {
+         .gen = 2,
+         .features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
+-                  | RCAR_DU_FEATURE_EXT_CTRL_REGS,
++                  | RCAR_DU_FEATURE_EXT_CTRL_REGS
++                  | RCAR_DU_FEATURE_VSP1_SOURCE,
+         .num_crtcs = 2,
+         .vspd_crtcs = BIT(0),
+         .routes = {
+-- 
+2.7.4
+
