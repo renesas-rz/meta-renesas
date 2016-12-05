@@ -22,6 +22,7 @@ SRC_URI_append_lcb = " \
 	file://0004-ARM-cpu-Add-ARMv7-barrier-operations-support.patch \
 	file://0007-gpio-sh-pfc-fix-gpio-input-read.patch \
 	file://0008-serial-sh-interface-for-rzg1.patch \
+	file://0009-INTC-workaround.patch \
 "
 
 SRC_URI_append_iwg20m = " \

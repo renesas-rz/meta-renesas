@@ -1,0 +1,171 @@
+diff --git a/board/renesas/skrzg1e/skrzg1e.c b/board/renesas/skrzg1e/skrzg1e.c
+index 15b43fa..e44fc13
+--- a/board/renesas/skrzg1e/skrzg1e.c
++++ b/board/renesas/skrzg1e/skrzg1e.c
+@@ -60,6 +60,61 @@ void s_init(void)
+ #endif
+ }
+ 
++#define SYSDMAC0_MSTP219	(1 << 19)
++
++#define SYSDMAC_L		0xE6700000
++#define SYSDMAC_OR		0x60
++#define SYSDMAC_CHCLR		0x80
++
++#define SYSDMAC_CH0		0xE6708000
++#define SYSDMAC_SAR		0x00
++#define SYSDMAC_DAR		0x04
++#define SYSDMAC_TCR		0x08
++#define SYSDMAC_CHCR		0x0C
++#define SYSDMAC_CHCRB		0x1C
++#define SYSDMAC_DPBASE		0x50
++
++#define SYSDMAC_DESC_L		0xE670A000
++#define SYSDMAC_DESC_SAR	0x0
++#define SYSDMAC_DESC_DAR	0x4
++#define SYSDMAC_DESC_TCR	0x8
++
++/* ARM-INTC work around */
++int start_dma_transfer(void)
++{
++	u32 val;
++
++	/* Enable clock of SYS-DMAC0 */
++	val = readl(MSTPSR2);
++	val &= ~SYSDMAC0_MSTP219;
++	writel(val, SMSTPCR2);
++	do {
++		val = readl(MSTPSR2) & SYSDMAC0_MSTP219;
++	} while (val);
++
++	/* Initialize ch0, Reset Descriptor */
++	writel(0x00000001, SYSDMAC_L + SYSDMAC_CHCLR);
++	writel(0x00008000, SYSDMAC_CH0 + SYSDMAC_CHCRB);
++
++	/* Enable DMA */
++	writel(0x00000001, SYSDMAC_L + SYSDMAC_OR);
++
++	/* Set first transfer */
++	writel(0xF1001FFC, SYSDMAC_CH0 + SYSDMAC_SAR);
++	writel(0xE61C0000, SYSDMAC_CH0 + SYSDMAC_DAR);
++	writel(0x00000001, SYSDMAC_CH0 + SYSDMAC_TCR);
++
++	/* Set descriptor */
++	writel(0x00000000, SYSDMAC_DESC_L + SYSDMAC_DESC_SAR);
++	writel(0x00000000, SYSDMAC_DESC_L + SYSDMAC_DESC_DAR);
++	writel(0x00200000, SYSDMAC_DESC_L + SYSDMAC_DESC_TCR);
++	writel(0x00000080, SYSDMAC_CH0 + SYSDMAC_CHCRB);
++	writel(SYSDMAC_DESC_L | 0x00000001, SYSDMAC_CH0 + SYSDMAC_DPBASE);
++
++	/* Set transfer parameter, Start transfer */
++	writel(0x32000411, SYSDMAC_CH0 + SYSDMAC_CHCR);
++}
++
+ #define TMU0_MSTP125	(1 << 25)
+ 
+ #define IIC1_MSTP323	(1 << 23)
+@@ -108,6 +163,9 @@ int board_early_init_f(void)
+ 	 */
+ 	writel(SD1_97500KHZ, SD1CKCR);
+ 
++	/* ARM-INTC work around */
++	start_dma_transfer();
++
+ 	return 0;
+ }
+ 
+@@ -270,7 +328,7 @@ struct mstp_ctl {
+ 		     RMSTPCR0,  0x00440801, 0x00000000 },
+ 	[MSTP01] = { SMSTPCR1,  0x936899DA, 0x00000000,
+ 		     RMSTPCR1,  0x936899DA, 0x00000000 },
+-	[MSTP02] = { SMSTPCR2,  0x100D21FC, 0x00002000,
++	[MSTP02] = { SMSTPCR2,  0x100D21FC, 0x00082000,
+ 		     RMSTPCR2,  0x100D21FC, 0x00000000 },
+ 	[MSTP03] = { SMSTPCR3,  0xE084D810, 0x00000000,
+ 		     RMSTPCR3,  0xE084D810, 0x00000000 },
+
+diff --git a/board/renesas/skrzg1m/skrzg1m.c b/board/renesas/skrzg1m/skrzg1m.c
+index 5d0211c..92453ac
+--- a/board/renesas/skrzg1m/skrzg1m.c
++++ b/board/renesas/skrzg1m/skrzg1m.c
+@@ -57,6 +57,61 @@ void s_init(void)
+ #endif
+ }
+ 
++#define SYSDMAC0_MSTP219	(1 << 19)
++
++#define SYSDMAC_L		0xE6700000
++#define SYSDMAC_OR		0x60
++#define SYSDMAC_CHCLR		0x80
++
++#define SYSDMAC_CH0		0xE6708000
++#define SYSDMAC_SAR		0x00
++#define SYSDMAC_DAR		0x04
++#define SYSDMAC_TCR		0x08
++#define SYSDMAC_CHCR		0x0C
++#define SYSDMAC_CHCRB		0x1C
++#define SYSDMAC_DPBASE		0x50
++
++#define SYSDMAC_DESC_L		0xE670A000
++#define SYSDMAC_DESC_SAR	0x0
++#define SYSDMAC_DESC_DAR	0x4
++#define SYSDMAC_DESC_TCR	0x8
++
++/* ARM-INTC work around */
++int start_dma_transfer(void)
++{
++	u32 val;
++
++	/* Enable clock of SYS-DMAC0 */
++	val = readl(MSTPSR2);
++	val &= ~SYSDMAC0_MSTP219;
++	writel(val, SMSTPCR2);
++	do {
++		val = readl(MSTPSR2) & SYSDMAC0_MSTP219;
++	} while (val);
++
++	/* Initialize ch0, Reset Descriptor */
++	writel(0x00000001, SYSDMAC_L + SYSDMAC_CHCLR);
++	writel(0x00008000, SYSDMAC_CH0 + SYSDMAC_CHCRB);
++
++	/* Enable DMA */
++	writel(0x00000001, SYSDMAC_L + SYSDMAC_OR);
++
++	/* Set first transfer */
++	writel(0xF1001FFC, SYSDMAC_CH0 + SYSDMAC_SAR);
++	writel(0xE61C0000, SYSDMAC_CH0 + SYSDMAC_DAR);
++	writel(0x00000001, SYSDMAC_CH0 + SYSDMAC_TCR);
++
++	/* Set descriptor */
++	writel(0x00000000, SYSDMAC_DESC_L + SYSDMAC_DESC_SAR);
++	writel(0x00000000, SYSDMAC_DESC_L + SYSDMAC_DESC_DAR);
++	writel(0x00200000, SYSDMAC_DESC_L + SYSDMAC_DESC_TCR);
++	writel(0x00000080, SYSDMAC_CH0 + SYSDMAC_CHCRB);
++	writel(SYSDMAC_DESC_L | 0x00000001, SYSDMAC_CH0 + SYSDMAC_DPBASE);
++
++	/* Set transfer parameter, Start transfer */
++	writel(0x32000411, SYSDMAC_CH0 + SYSDMAC_CHCR);
++}
++
+ #define TMU0_MSTP125	(1 << 25)
+ #define SDHI0_MSTP314	(1 << 14)
+ #define SDHI2_MSTP311	(1 << 11)
+@@ -95,6 +150,9 @@ int board_early_init_f(void)
+ 	 */
+ 	writel(SD2_97500KHZ, SD2CKCR);
+ 
++	/* ARM-INTC work around */
++	start_dma_transfer();
++
+ 	return 0;
+ }
+ 
+@@ -254,7 +312,7 @@ struct mstp_ctl {
+ 		     RMSTPCR0,  0x00640801, 0x00000000 },
+ 	[MSTP01] = { SMSTPCR1,  0x9B6C9B5A, 0x00000000,
+ 		     RMSTPCR1,  0x9B6C9B5A, 0x00000000 },
+-	[MSTP02] = { SMSTPCR2,  0x100D21FC, 0x00002000,
++	[MSTP02] = { SMSTPCR2,  0x100D21FC, 0x00082000,
+ 		     RMSTPCR2,  0x100D21FC, 0x00000000 },
+ 	[MSTP03] = { SMSTPCR3,  0xF08CD810, 0x00000000,
+ 		     RMSTPCR3,  0xF08CD810, 0x00000000 },

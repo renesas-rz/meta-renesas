@@ -48,6 +48,7 @@ SRC_URI_append = " \
 	file://0039-Add-sysfs-for-pwm-from-kernel-v3.11.patch \
 	file://0040-Fix-issue-limit-setting-value-lower-2s-of-period.patch \
 	file://0041-Bluetooth-btusb-Add-Realtek-8723-8761-support.patch \
+	file://0042-INTC-workaround.patch \
 "
 
 
