@@ -9,6 +9,7 @@ SRC_URI_append = " \
 	file://0005-add-skrzg1e-and-r8a7745.patch \
 	file://0006-enable-QoS.patch \
 	file://0007-enable-FDT-support.patch \
+	file://0008-skrzg1e-skrzg1m-Add-extra-default-environments-varia.patch \
 "
 
 PATCHTOOL_rzg1 = "git"

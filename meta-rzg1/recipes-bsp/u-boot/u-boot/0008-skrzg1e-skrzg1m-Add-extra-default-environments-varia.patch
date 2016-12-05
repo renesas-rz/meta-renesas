@@ -1,0 +1,47 @@
+From e73234aa64e73509cdbc109ba840a309be281504 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Tue, 6 Dec 2016 02:36:01 +0700
+Subject: [PATCH] skrzg1e,skrzg1m: Add extra default environments variable
+
+Without environment variables bootm_low and bootm_size,
+system may fail to boot (kernel fail to read dtb)
+
+Add these environment variables to default so they
+always appear, even afer clean with
+'env default -fa'
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ include/configs/skrzg1e.h | 4 ++++
+ include/configs/skrzg1m.h | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/include/configs/skrzg1e.h b/include/configs/skrzg1e.h
+index 12c7818..b7e6621 100644
+--- a/include/configs/skrzg1e.h
++++ b/include/configs/skrzg1e.h
+@@ -111,4 +111,8 @@
+ /* SCIF2 */
+ #define CONFIG_SMSTP7_ENA	0x00080000
+ 
++#define CONFIG_EXTRA_ENV_SETTINGS \
++       "bootm_low=0x40e00000\0" \
++       "bootm_size=0x100000\0" \
++
+ #endif /* __SKRZG1E_H */
+diff --git a/include/configs/skrzg1m.h b/include/configs/skrzg1m.h
+index 869a0e9..0ba2517 100644
+--- a/include/configs/skrzg1m.h
++++ b/include/configs/skrzg1m.h
+@@ -106,4 +106,8 @@
+ /* SCIF0 */
+ #define CONFIG_SMSTP7_ENA	0x00200000
+ 
++#define CONFIG_EXTRA_ENV_SETTINGS \
++       "bootm_low=0x40e00000\0" \
++       "bootm_size=0x100000\0" \
++
+ #endif /* __SKRZG1M_H */
+-- 
+1.9.1
+
