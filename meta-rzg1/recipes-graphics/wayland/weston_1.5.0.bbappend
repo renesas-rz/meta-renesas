@@ -61,3 +61,4 @@ do_install_append_iwg20m () {
 
 
 FILES_${PN}_append_iwg20m += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
+DEPENDS += " libmediactl-v4l2 "
