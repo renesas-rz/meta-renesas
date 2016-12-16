@@ -1,6 +1,5 @@
 # meta-renesas-private
 
-======================================================================================
 Branch yocto_2.0
 --------------------------------------------------------------------------------------
 This branch supports building a Yocto 2.0 based BSP with the following components:
@@ -35,7 +34,7 @@ revision: 12993e6bc8658ee37d303d8d59007f8dd9ab2b30
 
 
 
-The layer also requires the modified proprietary Graphics libraries and drivers.
+The layer also requires the modified proprietary Multimedia and Graphics libraries and drivers.
 
 
 
