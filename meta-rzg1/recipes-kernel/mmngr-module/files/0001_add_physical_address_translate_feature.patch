@@ -13,15 +13,6 @@ diff -bur a/drv/mmngr_drv.c b/drv/mmngr_drv.c
  #include <linux/version.h>
  #include <linux/dma-attrs.h>
  #include <linux/dma-contiguous.h>
-@@ -263,7 +265,7 @@
- 	int		ret = 0;
- 	struct MM_PARAM	tmp;
- 
--	if (copy_from_user(&tmp, in, sizeof(struct MM_PARAM))) {
-+	if (copy_from_user(&tmp, (void __user *)in, sizeof(struct MM_PARAM))) {
- 		printk(KERN_ERR "%s EFAULT\n", __func__);
- 		ret = -EFAULT;
- 		return ret;
 @@ -475,6 +477,25 @@
  	return ret;
  }
@@ -48,14 +39,6 @@ diff -bur a/drv/mmngr_drv.c b/drv/mmngr_drv.c
  static int map_register(void)
  {
  	if (!request_mem_region(MM_MXI_ADDR, MM_MXI_SIZE, DRVNAME))
-@@ -709,6 +730,7 @@
- #else
- 			if (p->kernel_virt_addr != 0) {
- 				printk(KERN_ERR "MMD close kernelheap\n");
-+				mm_dev = mm_drvdata->mm_dev;
- 				dma_free_coherent(mm_dev, p->size,
- 						(void *)p->kernel_virt_addr,
- 						(dma_addr_t)p->phy_addr);
 @@ -779,6 +801,9 @@
  			goto exit;
  		}
