@@ -1,0 +1,404 @@
+From b90ac047a0be3c62e36290aeb6c661e8f7dca155 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Fri, 21 Oct 2016 18:30:38 +0700
+Subject: [PATCH 10/15] iwg20m update source lvds,du,adv7511
+
+---
+ drivers/gpu/drm/Kconfig                   |   5 +
+ drivers/gpu/drm/Makefile                  |   1 +
+ drivers/gpu/drm/i2c/adv7511_core.c        |  36 +++--
+ drivers/gpu/drm/lvds_qseven.c             | 213 ++++++++++++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c    |   6 +
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c |  16 ++-
+ 6 files changed, 263 insertions(+), 14 deletions(-)
+ create mode 100644 drivers/gpu/drm/lvds_qseven.c
+
+diff --git a/drivers/gpu/drm/Kconfig b/drivers/gpu/drm/Kconfig
+index b2434d9..f50be81 100644
+--- a/drivers/gpu/drm/Kconfig
++++ b/drivers/gpu/drm/Kconfig
+@@ -171,6 +171,11 @@ config DRM_FBDEV_CRTC
+ 	  If you want to use FBDev every CRTC, you select y.
+ 	  If you want to not use FBDev every CRTC, you select n.
+ 
++config LVDS_Q7
++       tristate "iWave Qseven LVDS control"
++       help
++         Say yes here to control the Qseven LVDS backlight and power control in iW-RainboW-G20 platform.
++
+ source "drivers/gpu/drm/exynos/Kconfig"
+ 
+ source "drivers/gpu/drm/vmwgfx/Kconfig"
+diff --git a/drivers/gpu/drm/Makefile b/drivers/gpu/drm/Makefile
+index 85728c0..f9777a2 100644
+--- a/drivers/gpu/drm/Makefile
++++ b/drivers/gpu/drm/Makefile
+@@ -56,3 +56,4 @@ obj-$(CONFIG_DRM_TILCDC)	+= tilcdc/
+ obj-$(CONFIG_DRM_QXL) += qxl/
+ obj-y			+= i2c/
+ obj-$(CONFIG_DRM_RCAR_DU) += rcar-du/
++obj-$(CONFIG_LVDS_Q7) += lvds_qseven.o
+diff --git a/drivers/gpu/drm/i2c/adv7511_core.c b/drivers/gpu/drm/i2c/adv7511_core.c
+index 800b07f..bb82fea 100644
+--- a/drivers/gpu/drm/i2c/adv7511_core.c
++++ b/drivers/gpu/drm/i2c/adv7511_core.c
+@@ -29,6 +29,10 @@
+ #define EDID_DELAY		(250) /* ms */
+ #define HPD_DELAY		(100) /* ms */
+ 
++#ifdef  CONFIG_MACH_IWG20M
++int is_adv_connected = 0;
++#endif
++
+ static const uint8_t adv7511_register_defaults[] = {
+ 	0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 00 */
+ 	0x00, 0x00, 0x01, 0x0e, 0xbc, 0x18, 0x01, 0x13,
+@@ -930,9 +934,9 @@ static int adv7511_parse_dt(struct device_node *np, struct adv7511_link_config *
+ 
+ 	return 0;
+ }
+-static int edid_i2c_addr = 0x7e;
+-static int packet_i2c_addr = 0x70;
+-static int cec_i2c_addr = 0x78;
++static const int edid_i2c_addr = 0x7e;
++static const int packet_i2c_addr = 0x70;
++static const int cec_i2c_addr = 0x78;
+ 
+ static int adv7511_probe(struct i2c_client *i2c,
+ 	const struct i2c_device_id *id)
+@@ -940,6 +944,9 @@ static int adv7511_probe(struct i2c_client *i2c,
+ 	struct adv7511_link_config link_config;
+ 	struct adv7511 *adv7511;
+ 	unsigned int val;
++#ifdef  CONFIG_MACH_IWG20M
++	unsigned int chip;
++#endif
+ 	int ret;
+ #if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)
+ 	unsigned int timeout;
+@@ -996,18 +1003,27 @@ static int adv7511_probe(struct i2c_client *i2c,
+ 		return ret;
+ 	dev_dbg(&i2c->dev, "Rev. %d\n", val);
+ 
++#ifdef  CONFIG_MACH_IWG20M
++	regmap_read(adv7511->regmap, ADV7511_REG_CHIP_ID_HIGH, &val);
++	chip = val << 8;
++	regmap_read(adv7511->regmap, ADV7511_REG_CHIP_ID_LOW, &val);
++	chip |= val; 
++	if(chip == 0x7511)
++	{
++		is_adv_connected =1;
++	}
++	else
++	{
++		is_adv_connected =0;
++		return -ENODEV;
++	}
++#endif
++
+ 	ret = regmap_register_patch(adv7511->regmap, adv7511_fixed_registers,
+ 		ARRAY_SIZE(adv7511_fixed_registers));
+ 	if (ret)
+ 		return ret;
+ 
+-	/* possible i2c main addresses are 0x39 and 0x3d,
+-	 * to avoid conflicts add offset for subchips
+-	 */
+-	edid_i2c_addr += 4;
+-	packet_i2c_addr += 4;
+-	cec_i2c_addr += 4;
+-
+ 	regmap_write(adv7511->regmap, ADV7511_REG_EDID_I2C_ADDR, edid_i2c_addr);
+ 	regmap_write(adv7511->regmap, ADV7511_REG_PACKET_I2C_ADDR, packet_i2c_addr);
+ 	regmap_write(adv7511->regmap, ADV7511_REG_CEC_I2C_ADDR, cec_i2c_addr);
+diff --git a/drivers/gpu/drm/lvds_qseven.c b/drivers/gpu/drm/lvds_qseven.c
+new file mode 100644
+index 0000000..71f05d6
+--- /dev/null
++++ b/drivers/gpu/drm/lvds_qseven.c
+@@ -0,0 +1,213 @@
++/*
++ * Copyright (c) 2014-2015 iWave Systems Technologies Pvt. Ltd.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; If not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++ 
++/*
++ * @file lvds-qseven.c
++ *
++ * @brief Simple driver to control the LVDS port power and backlight
++ *
++ * @ingroup MXC
++ */
++
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/platform_device.h>
++#include <linux/err.h>
++#include <linux/gpio.h>
++#include <linux/of_platform.h>
++#include <linux/of_gpio.h>
++
++struct iw_lvds_qseven {
++        int                     power_on_gpio;
++        int                     backlght_on_gpio;
++};
++
++static void backlight_ctrl (struct iw_lvds_qseven *lvds_qseven, int val)
++{
++	if (gpio_is_valid(lvds_qseven->backlght_on_gpio))
++		gpio_set_value(lvds_qseven->backlght_on_gpio, val);
++}
++
++static void power_ctrl (struct iw_lvds_qseven *lvds_qseven, int val)
++{
++	if (gpio_is_valid(lvds_qseven->power_on_gpio)) 
++		gpio_set_value(lvds_qseven->power_on_gpio, val);
++
++}
++
++static ssize_t lvds_qseven_backlight_ctrl(struct device *dev,
++                struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct iw_lvds_qseven *lvds_qseven = dev_get_drvdata(dev);
++        unsigned long value;
++        int ret = 0;
++
++        ret = strict_strtoul(buf, 2, &value);
++        if (ret)
++                return ret;
++
++	backlight_ctrl(lvds_qseven, value);
++
++        return count;
++}
++
++static DEVICE_ATTR(bklight_enable, S_IWUGO, NULL, lvds_qseven_backlight_ctrl);
++
++static ssize_t lvds_qseven_power_ctrl(struct device *dev,
++                struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct iw_lvds_qseven *lvds_qseven = dev_get_drvdata(dev);
++        unsigned long value;
++        int ret = 0;
++
++        ret = strict_strtoul(buf, 2, &value);
++        if (ret)
++                return ret;
++
++	power_ctrl(lvds_qseven, value);
++
++        return count;
++}
++
++static DEVICE_ATTR(pwr_enable, S_IWUGO, NULL, lvds_qseven_power_ctrl);
++
++#ifdef CONFIG_PM
++static int lvds_qseven_suspend(struct platform_device *pdev, pm_message_t state)
++{
++	struct iw_lvds_qseven *lvds_qseven = dev_get_drvdata(&pdev->dev);
++
++	backlight_ctrl(lvds_qseven, 0);
++	power_ctrl(lvds_qseven, 0);
++
++	return 0;
++}
++
++static int lvds_qseven_resume(struct platform_device *pdev)
++{
++	struct iw_lvds_qseven *lvds_qseven = dev_get_drvdata(&pdev->dev);
++
++	backlight_ctrl(lvds_qseven, 1);
++	power_ctrl(lvds_qseven, 1);
++
++	return 0;
++}
++#endif
++
++/* 
++ * lvds_qseven_probe - Probe method for the LVDS qseven contolling GPIOs.
++ * @np: pointer to device tree node
++ *
++ * This function probes the lvds Qseven control GPIOs in the device tree. It request GPIOs
++ * as outptu. It returns 0, if the driver registered
++ * or a negative value if there is an error.
++ */
++static int lvds_qseven_probe(struct platform_device *pdev)
++{
++	struct device_node *np = pdev->dev.of_node;
++	struct iw_lvds_qseven *iw_lvds_qseven;
++	int ret=0;
++
++	iw_lvds_qseven = devm_kzalloc(&pdev->dev, sizeof(*iw_lvds_qseven), GFP_KERNEL);
++	if (!iw_lvds_qseven)
++		return -ENOMEM;
++
++	/* Fetch GPIOs */
++	iw_lvds_qseven->backlght_on_gpio = of_get_named_gpio(np, "backlgt-gpios", 0);
++	if (gpio_is_valid(iw_lvds_qseven->backlght_on_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev,
++				iw_lvds_qseven->backlght_on_gpio,
++				GPIOF_OUT_INIT_HIGH,
++				"lvds bklight");
++		if (ret) {
++			dev_err(&pdev->dev, "unable to get backlight gpio\n");
++			goto err;
++		}
++	}
++
++	iw_lvds_qseven->power_on_gpio = of_get_named_gpio(np, "poweron-gpios", 0);
++	if (gpio_is_valid(iw_lvds_qseven->power_on_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev,
++				iw_lvds_qseven->power_on_gpio,
++				GPIOF_OUT_INIT_HIGH,
++				"lvds power enable");
++		if (ret) {
++			dev_err(&pdev->dev, "unable to get power-on gpio\n");
++			goto err;
++		}
++	}
++
++	platform_set_drvdata(pdev, iw_lvds_qseven);
++
++	/* Create the device attr */
++	ret = device_create_file(&pdev->dev, &dev_attr_bklight_enable);
++	if (ret < 0)
++		dev_warn(&pdev->dev,
++				"cound not create sys node for backlight state\n");
++
++	ret = device_create_file(&pdev->dev, &dev_attr_pwr_enable);
++	if (ret < 0)
++		dev_warn(&pdev->dev,
++				"cound not create sys node for power state\n");
++
++err:
++	return ret;
++}
++
++static int lvds_qseven_remove(struct platform_device *pdev)
++{
++	/* Platform not registerd return silently */
++	return 0;
++}
++
++#ifdef CONFIG_OF
++static const struct of_device_id lvds_qseven_match[] = {
++	{.compatible = "iwave,lvds-qseven"},
++	{}
++};
++MODULE_DEVICE_TABLE(of, lvds_qseven_match);
++#else
++#define lvds_qseven_match NULL
++#endif
++
++static struct platform_driver lvds_qseven_driver = {
++	.driver = {
++		.name   = "lvds_qseven",
++		.owner  = THIS_MODULE,
++		.of_match_table = of_match_ptr(lvds_qseven_match),
++	},
++	.probe          = lvds_qseven_probe,
++	.remove         = lvds_qseven_remove,
++        .suspend 	= lvds_qseven_suspend,
++        .resume 	= lvds_qseven_resume,
++};
++
++static int __init lvds_qseven_init(void)
++{
++	return platform_driver_register(&lvds_qseven_driver);
++}
++module_init(lvds_qseven_init);
++
++static void __exit lvds_qseven_exit(void)
++{
++	platform_driver_unregister(&lvds_qseven_driver);
++}
++module_exit(lvds_qseven_exit);
++
++MODULE_AUTHOR("iWave Systems Technologies Pvt.Ltd");
++MODULE_DESCRIPTION("iWave LVDS power and backlight Driver");
++MODULE_VERSION("0.1");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 775a0f4..17f1254 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -211,9 +211,15 @@ void rcar_du_crtc_route_output(struct drm_crtc *crtc,
+ 	 */
+ 	rcrtc->outputs |= BIT(output);
+ 
++#ifdef CONFIG_MACH_IWG20M
++	/* Store LVDS routing to LVDS0 for IWG20M. */
++	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_DEFR8) &&
++	    output == RCAR_DU_OUTPUT_LVDS0)
++#else
+ 	/* Store RGB routing to DPAD0 for R8A7790. */
+ 	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_DEFR8) &&
+ 	    output == RCAR_DU_OUTPUT_DPAD0)
++#endif
+ 		rcdu->dpad0_source = rcrtc->index;
+ }
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+index aff3a74..d5ecc49 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+@@ -34,6 +34,10 @@
+  * Common connector functions
+  */
+ 
++#ifdef  CONFIG_MACH_IWG20M
++extern int is_adv_connected;
++#endif
++
+ struct drm_encoder *
+ rcar_du_connector_best_encoder(struct drm_connector *connector)
+ {
+@@ -187,7 +191,6 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	struct rcar_du_encoder *renc;
+ 	unsigned int encoder_type;
+ 	int ret;
+-	u32 val;
+ 	struct i2c_adapter *adapter;
+ 	struct i2c_board_info info[] = {
+ 		{
+@@ -210,9 +213,6 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 
+ 	info->of_node = of_find_node_by_name(NULL, "adv7511");
+ 
+-	if (of_property_read_u32(info->of_node, "adi,reg", &val) == 0)
+-		info->addr = val;
+-
+ 	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
+ 	if (renc == NULL)
+ 		return -ENOMEM;
+@@ -280,7 +280,15 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 		return rcar_du_lvds_connector_init(rcdu, renc,
+ 						&data->connector.lvds.panel);
+ 	case DRM_MODE_ENCODER_TMDS:
++#ifdef	CONFIG_MACH_IWG20M
++		if (!is_adv_connected)
++			/* IWG20M: If Camera Daughter Board is not connected Bypassing the HDMI connector init */
++			return 0;
++		else
+ 		return rcar_du_hdmi_connector_init(rcdu, renc);
++#else
++		return rcar_du_hdmi_connector_init(rcdu, renc);
++#endif
+ 
+ 	case DRM_MODE_ENCODER_DAC:
+ 		return rcar_du_vga_connector_init(rcdu, renc);
+-- 
+1.9.1
+

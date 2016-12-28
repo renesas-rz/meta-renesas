@@ -1,0 +1,54 @@
+From 83c0938e0009feb88102c06d8b8637a6d5585eb6 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Thu, 20 Oct 2016 23:39:02 +0700
+Subject: [PATCH 07/15] iwg20m config static dev mmc2 emmc mmc1 usd mmc0 sd
+
+---
+ drivers/mmc/card/block.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index ae8fbd4..9252009 100644
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -2014,7 +2014,19 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
+ 	struct mmc_blk_data *md;
+ 	int devidx, ret;
+ 
++#ifdef CONFIG_MACH_IWG20M
++	/* IWG20M: SD/MMC: Fix for static slot numbering  Normal SD - 0, Micro SD - 1, eMMC - 2*/
++	if ((!strcmp(mmc_hostname(card->host), "mmc2")) && !subname)
++		devidx = 2;
++	else if (!strcmp(mmc_hostname(card->host), "mmc1"))
++		devidx = 0;
++	else if (!strcmp(mmc_hostname(card->host), "mmc0"))
++		devidx = 1;
++	else
++		devidx = find_next_zero_bit(dev_use, max_devices, 2);
++#else
+ 	devidx = find_first_zero_bit(dev_use, max_devices);
++#endif
+ 	if (devidx >= max_devices)
+ 		return ERR_PTR(-ENOSPC);
+ 	__set_bit(devidx, dev_use);
+@@ -2032,7 +2044,17 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
+ 	 * index anymore so we keep track of a name index.
+ 	 */
+ 	if (!subname) {
++#ifdef CONFIG_MACH_IWG20M
++		/* IWG20M: SD/MMC: Fix for static slot numbering  Normal SD - 0, Micro SD - 1, eMMC - 2*/
++		if (!strcmp(mmc_hostname(card->host), "mmc2"))
++			md->name_idx = 2;
++		else if (!strcmp(mmc_hostname(card->host), "mmc1"))
++			md->name_idx = 0;
++		else if (!strcmp(mmc_hostname(card->host), "mmc0"))
++			md->name_idx = 1;
++#else
+ 		md->name_idx = find_first_zero_bit(name_use, max_devices);
++#endif
+ 		__set_bit(md->name_idx, name_use);
+ 	} else
+ 		md->name_idx = ((struct mmc_blk_data *)
+-- 
+1.9.1
+

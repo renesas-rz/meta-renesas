@@ -1,0 +1,530 @@
+From b6f18412a10d43b815b7ccc5543f75fe04487474 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Sat, 22 Oct 2016 01:04:55 +0700
+Subject: [PATCH] iwg20m g1n add dts
+
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 511 ++++++++++++++++++++++++++++++++
+ 1 file changed, 511 insertions(+)
+ create mode 100644 arch/arm/boot/dts/r8a7744-iwg20m.dts
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+new file mode 100644
+index 0000000..df03430
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -0,0 +1,511 @@
++/*
++ * Copyright (c) 2015-2016 iWave Systems Technologies Pvt. Ltd.
++ *
++ * The code contained herein is licensed under the GNU General Public
++ * License. You may obtain a copy of the GNU General Public License
++ * Version 2 or later at the following locations:
++ *
++ * http://www.opensource.org/licenses/gpl-license.html
++ * http://www.gnu.org/copyleft/gpl.html
++ */
++
++/dts-v1/;
++#include "r8a7744.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	model = "iWave RainboW-G20M-Q7 Board based on Renesas RZ/G1M, RZ/G1N";
++	compatible = "iw,iwg20m", "iw,iwg20m_q7", "renesas,r8a7743";
++
++	aliases {
++		serial0 = &scif0;
++		serial1 = &scif1;
++		serial2 = &scif4;
++		serial3 = &scifb1;
++		serial4 = &hscif1;
++		rev	= &q7_common;
++		sata0	= &sata0;
++		xhci	= &xhci;
++	};
++
++	memory@40000000 {
++		device_type = "memory";
++	reg = <0 0x40000000 0 0x40000000>;
++	};
++
++	lbsc {
++		#address-cells = <1>;
++		#size-cells = <1>;
++	};
++
++	reg_1p0v: 1p0v {
++		compatible = "regulator-fixed";
++		regulator-name = "1P0V";
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vcc_sdhi1: reg_vcc_sdhi1 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI1 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio1 16 GPIO_ACTIVE_LOW>;
++	};
++
++	vccq_sdhi1: reg_vccq_sdhi1 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI1 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio2 30 GPIO_ACTIVE_LOW>;
++		gpios-states = <1>;
++		states = <3300000 1
++		          1800000 0>;
++	};
++
++	reg_0p0v: 0p0v {
++		compatible = "regulator-fixed";
++		regulator-name = "0P0V";
++		regulator-min-microvolt = <0000000>;
++		regulator-max-microvolt = <0000000>;
++		regulator-always-on;
++	};
++
++	reg_2p5v: 2p5v {
++		compatible = "regulator-fixed";
++		regulator-name = "2P5V";
++		regulator-min-microvolt = <2500000>;
++		regulator-max-microvolt = <2500000>;
++		regulator-always-on;
++	};
++
++	reg_3p3v: 3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "3P3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	sound {
++		compatible = "simple-audio-card";
++
++		simple-audio-card,format = "i2s";
++		
++		simple-audio-card,routing =
++			"MIC_IN", "Mic Jack",
++			"Mic Jack", "Mic Bias",
++			"Headphone Jack", "HP_OUT";
++
++		sndcpu: simple-audio-card,cpu {
++			sound-dai = <&rcar_sound>;
++		};
++
++		sndcodec: simple-audio-card,codec {
++			sound-dai = <&codec>;
++			bitclock-master;
++			frame-master;
++			system-clock-frequency = <26000000>;
++		};
++	};
++
++	hdmi_transmitter: adv7511 {
++		compatible = "adi,adv7511";
++		gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
++
++		adi,input-style = <0x02>;
++		adi,input-id = <0x00>;
++		adi,input-color-depth = <0x03>;
++		adi,sync-pulse = <0x03>;
++		adi,bit-justification = <0x01>;
++		adi,up-conversion = <0x00>;
++		adi,timing-generation-sequence = <0x00>;
++		adi,vsync-polarity = <0x02>;
++		adi,hsync-polarity = <0x02>;
++		adi,clock-delay = <0x03>;
++	};
++
++        backlight {
++                compatible = "pwm-backlight";
++                pwms = <&tpu 3 5000000 GPIO_ACTIVE_HIGH>;
++                brightness-levels = <0 4 8 16 32 64 128 255>;
++                default-brightness-level = <7>;
++                pinctrl-0 = <&backlight_pins>;
++                pinctrl-names = "default";
++        };
++	
++        lvds_qseven {
++                compatible = "iwave,lvds-qseven";
++                backlgt-gpios = <&gpio5 14 GPIO_ACTIVE_HIGH>;
++                poweron-gpios = <&gpio7 25 GPIO_ACTIVE_HIGH>;
++                status = "okay";
++        };
++
++        q7_common:iwg20m_q7_common {
++                compatible = "iwave,g20m-q7-com";
++                reset-gpios = <&gpio2 13 GPIO_ACTIVE_LOW>;
++		cam-pwn = <&gpio0 3 GPIO_ACTIVE_HIGH>;
++		tv-pwn = <&gpio0 22 GPIO_ACTIVE_HIGH>;
++		vin2-ov5640 = <1>;
++        };
++
++};
++
++&q7_common {
++	status= "okay";
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&pfc {
++	pinctrl-0 = <&du_pins &du0_pins &vin0_pins &vin2_pins &usb0_pins &usb1_pins >;
++	pinctrl-names = "default";
++
++	i2c2_pins: i2c2 {
++		renesas,groups = "i2c2";
++		renesas,function = "i2c2";
++	};
++
++	du_pins: du {
++		renesas,groups = "du_rgb666", "du_sync", "du_clk_out_0";
++		renesas,function = "du";
++	};
++
++	du0_pins: du0 {
++		renesas,groups = "du0_clk_in";
++		renesas,function = "du0";
++	};
++
++	scif0_pins: serial0 {
++		renesas,groups = "scif0_data_d";
++		renesas,function = "scif0";
++	};
++
++	scif1_pins: serial1 {
++		renesas,groups = "scif1_data_d";
++		renesas,function = "scif1";
++	};
++	
++	scif4_pins: serial2 {
++		renesas,groups = "scif4_data_c";
++		renesas,function = "scif4";
++	};
++
++	scifb1_pins: serial3 {
++		renesas,groups = "scifb1_data_d", "scifb1_ctrl";
++		renesas,function = "scifb1";
++	};
++
++	hscif1_pins: serial4 {
++                renesas,groups = "hscif1_data_c", "hscif1_ctrl_c";
++                renesas,function = "hscif1";
++	};
++
++	avb_pins: avb {
++		renesas,groups =  "avb_mdio", "avb_gmii";
++		renesas,function = "avb";
++	};
++
++	sdhi0_pins: sd0 {
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
++	};
++
++	sdhi1_pins: sd2 {
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,function = "sdhi1";
++	};
++
++	mmcif0_pins: mmc {
++		renesas,groups = "mmc_data8", "mmc_ctrl";
++		renesas,function = "mmc";
++		};
++
++	qspi_pins: spi0 {
++		renesas,groups = "qspi_ctrl", "qspi_data2";
++		renesas,function = "qspi";
++	};
++
++	msiof1_pins: spi2 {
++		renesas,groups = "msiof1_ss2_b", "msiof1_rx_b", "msiof1_tx_b", 
++				 "msiof1_clk_b" , "msiof1_sync_b";
++		renesas,function = "msiof1";
++	};
++
++	msiof2_pins: spi1 {
++		renesas,groups = "msiof2_clk", "msiof2_tx_d", "msiof2_rx_d", "msiof2_ss2_d",
++				"msiof2_ss1_d", "msiof2_sync_d";
++		renesas,function = "msiof2";
++        };
++
++	backlight_pins: backlight {
++		renesas,groups = "tpu_to3";
++		renesas,function = "tpu";
++	};
++
++	sound_pins: sound {
++		renesas,groups = "ssi0129_ctrl", "ssi0_data", "ssi1_data";
++		renesas,function = "ssi";
++	};
++
++	can0_pins: can0 {
++		renesas,groups = "can0_data_d";
++		renesas,function = "can0";
++	};
++
++	can1_pins: can1 {
++		renesas,groups = "can1_data_d";
++		renesas,function = "can1";
++	};
++
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data8", "vin0_clk";
++		renesas,function = "vin0";
++	};
++
++	vin2_pins: vin2 {
++		renesas,groups = "vin2_data8", "vin2_clk";
++		renesas,function = "vin2";
++	};
++
++	usb0_pins: usb0 {
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
++	};
++};
++
++&sata1 {
++	sata-act-gpios = <&gpio5 11 GPIO_ACTIVE_HIGH>;
++
++};
++
++&usbphy {
++	status = "okay";
++};
++
++&xhci {
++        status = "okay"; 
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif4 {
++	pinctrl-0 = <&scif4_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scifb1 {
++        pinctrl-0 = <&scifb1_pins>;
++        pinctrl-names = "default";
++	ctsrts;
++
++        status = "okay";
++};
++
++&hscif1 {
++        pinctrl-0 = <&hscif1_pins>;
++        pinctrl-names = "default";
++        ctsrts;
++        status = "okay";
++};
++
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins>;
++	pinctrl-names = "default";
++	
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&reg_3p3v>;
++	cd-gpios = <&gpio7 11 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi1>;
++	vqmmc-supply = <&vccq_sdhi1>;
++	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
++	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
++&mmcif0 {
++        pinctrl-0 = <&mmcif0_pins>;
++        pinctrl-names = "default";
++
++        vmmc-supply = <&reg_3p3v>;
++        bus-width = <8>;
++        non-removable;
++        status = "okay";
++};
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++
++	renesas,no-ether-link;
++	renesas,phy = <0x3>;
++	status = "okay";
++};
++
++&qspi {
++	pinctrl-0 = <&qspi_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "sst,sst25vf016b";
++		reg = <0>;
++		spi-max-frequency = <30000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		m25p,fast-read;
++		spi-cpol;
++		spi-cpha;
++	};
++};
++
++&msiof1 {
++	pinctrl-0 = <&msiof1_pins>;
++	pinctrl-names = "default";
++
++};
++
++&msiof2 {
++        pinctrl-0 = <&msiof2_pins>;
++        pinctrl-names = "default";
++
++        status = "okay";
++};
++
++&tpu {
++	status = "okay";
++};
++
++&cpu0 {
++        cpu0-supply = <&reg_1p0v>;
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++        ft5x06@38 {
++                compatible = "focal,ft5x06";
++                reg = <0x38>;
++                interrupt-parent = <&gpio2>;
++                interrupts = <12 GPIO_ACTIVE_HIGH>;
++                int-gpio = <&gpio2 12 GPIO_ACTIVE_HIGH>;
++        };
++
++	codec: sgtl5000@0a {
++		#sound-dai-cells = <0>;
++		compatible = "fsl,sgtl5000";
++		reg = <0x0a>;
++		VDDA-supply = <&reg_2p5v>;
++		VDDIO-supply = <&reg_3p3v>;
++		VDDD-supply = <&reg_0p0v>;
++		hp-det-gpios = <&gpio2 19 GPIO_ACTIVE_LOW>;
++		mic-det-gpios = <&gpio2 21 GPIO_ACTIVE_LOW>;
++        };
++	
++	rtc@68 {
++		compatible = "bq32000";
++		reg = <0x68>;
++	};
++};
++
++&i2c5 {
++	status = "okay";
++	clock-frequency = <400000>;
++};
++
++&pci0 {
++	status = "okay";
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++};
++
++&pci1 {
++	status = "okay";
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++};
++
++&can0 {
++        pinctrl-0 = <&can0_pins>;
++        pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	trx-en-gpio = <&gpio2 3 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
++&can1 {
++        pinctrl-0 = <&can1_pins>;
++        pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	trx-en-gpio = <&gpio0 4 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++
++};
++
++&rcar_sound {
++	pinctrl-0 = <&sound_pins>;
++	pinctrl-names = "default";
++
++	#sound-dai-cells = <0>;
++
++	status = "okay";
++
++	rcar_sound,dai {
++		dai0 {
++			playback = <&ssi1 &src1 &dvc1>; 
++			capture = <&ssi0 &src0>;
++		}; 
++	};
++};
++
++&ssi1 {
++	shared-pin;
++};
++
++&wdt0 {
++	status = "okay";
++};
+-- 
+1.9.1
+

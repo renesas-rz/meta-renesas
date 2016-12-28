@@ -12,6 +12,7 @@ SRC_URI = "file://vspm-kernel.tar.bz2"
 S = "${WORKDIR}"
 
 VSPM_CFG_r8a7743 = "M2CONFIG"
+VSPM_CFG_r8a7744 = "M2CONFIG"
 VSPM_CFG_r8a7745 = "E2CONFIG"
 
 do_compile() {

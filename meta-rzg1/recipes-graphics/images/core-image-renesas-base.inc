@@ -19,6 +19,7 @@ IMAGE_INSTALL_append_rzg1 = " \
     gstreamer1.0-plugins-good-videocrop \
     gstreamer1.0-plugins-bad-fbdevsink \
     gstreamer1.0-plugins-bad-videoparsersbad \
+    gstreamer1.0-plugins-good-isomp4 \
 "
 
 IMAGE_INSTALL_append_rzg1 = " \

@@ -10,9 +10,9 @@ COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m)"
 PV_append = "+git${SRCREV}"
 
 RENESAS_BACKPORTS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git"
-SRCREV = "165e12ce2d7839e755debbec78dfa43b54345275"
+SRCREV = "34547b2a5032ce6dca24b745d608d2f3baac187f"
 SRC_URI = " \
-	${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.7 \
+	${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.8 \
 "
 
 SRC_URI_append = " \
@@ -32,7 +32,6 @@ SRC_URI_append = " \
 	file://0018-media-V4L-Add-mem2mem-ioctl-and-file-operation-helpe.patch \
 	file://0019-add-drivers-for-r8a7743-and-r8a7745.patch \
 	file://0020-add-r8a7743-can-pin-groups.patch \
-    \
 	file://ext/0004-drm-rcar-du-parse-dt-adv7511-i2c-address.patch \
 	file://ext/0005-Fix-ADV7511-subchips-offsets.patch \
 	file://ext/0006-usb-xhci-rcar-Change-RCar-Gen2-usb3-firmware-to-upstream-name.patch \
@@ -48,6 +47,7 @@ SRC_URI_append = " \
 	file://0039-Add-sysfs-for-pwm-from-kernel-v3.11.patch \
 	file://0040-Fix-issue-limit-setting-value-lower-2s-of-period.patch \
 	file://0041-Bluetooth-btusb-Add-Realtek-8723-8761-support.patch \
+	file://0035_Fix_machine_compatible_SKRZG1E_and_SKRZG1M.patch\
 	file://0042-INTC-workaround.patch \
 "
 
@@ -59,12 +59,31 @@ SRC_URI_append = " \
 
 SRC_URI_append_skrzg1m = " file://skrzg1m.cfg"
 
-SRC_URI_append_iwg20m = " \
-	file://0032-iwg20m-Add-support-for-iWave-iwg20m-board.patch \
-	file://0033-iwg20m-Fix-issue-HDMI-output-is-clone-from-LVDS.patch \
-	file://0034-i2c-Revert-commit-Move-pm_runtime-to-fix-iWave-VIN2.patch \
-	file://0037-USB2.0-OTG-Enable-USB2.0-OTG-Like-Connector-on-iWave.patch \
-	file://0038-Fix-issue-ov7725-soc_cam.patch \
+SRC_URI_append_iwg20m = "  \
+    file://iwg20m/0001-RZ-G1-SoC-add-watchdog-driver.patch \
+    file://iwg20m/0002-iwg20m-add-dts-defconfig-boar-info.patch \
+    file://iwg20m/0003-iwg20m-update-spi-msiof.patch \
+    file://iwg20m/0004-fix-r8a7743.dtsi-clock-issue.patch \
+    file://iwg20m/0005-iwg20m-add-dtsi-for-g1m.patch \
+    file://iwg20m/0006-iwg20m-g1n-add-dts.patch \
+    file://iwg20m/0007-iwg20m-g1n-add-dtsi.patch \
+    file://iwg20m/0008-rzg1-soc-add-firmware-for-usb3.0.patch \
+    file://iwg20m/0009-fix-clk-for-i2c-and-change-name-usb3.0-fw.patch \
+    file://iwg20m/0010-iwg20m-add-logo-image-and-update-logo-driver.patch \
+    file://iwg20m/0011-iwg20m-fix-sgtl5000-driver-to-detect-mic-and-headpho.patch \
+    file://iwg20m/0012-iwg20m-config-static-dev-mmc2-emmc-mmc1-usd-mmc0-sd.patch \
+    file://iwg20m/0013-iwg20m-update-source-lvds-du-adv7511.patch \
+    file://iwg20m/0014-iwg20m-add-driver-for-ov7725-cam.patch \
+    file://iwg20m/0015-iwg20m-sata-led-driver-enable.patch \
+    file://iwg20m/0016-iwg20m-update-touch-backlight-viddecoder.patch \
+    file://iwg20m/0017-iwg20m-Fix-issue-HDMI-output-is-clone-from-LVDS.patch \
+    file://iwg20m/0018-i2c-Revert-commit-Move-pm_runtime-to-fix-iWave-VIN2.patch \
+    file://iwg20m/0019-iwg20m-update-file-board-info.patch \
+    file://iwg20m/0020-add-ov5640-camera-driver.patch \
+    file://iwg20m/0021-solve-conflict-ov5640-adv7511-i2c-cec-addr.patch \  
+    file://iwg20m/0022-iwg20m-support-usb-otg.patch \
+    file://iwg20m/0023-iwg20m-add-pwm-in-pfc-and-dts.patch \
+    file://iwg20m/0024-Fix-issue-ov7725-soc_cam.patch \
 "
 
 
@@ -77,7 +96,7 @@ PATCHTOOL_rzg1 = "git"
 S = "${WORKDIR}/git"
 
 KERNEL_DEFCONFIG = "shmobile_defconfig"
-KERNEL_DEFCONFIG_iwg20m = "iw_rainbowg20m_defconfig"
+KERNEL_DEFCONFIG_iwg20m = "iwg20m_defconfig"
 
 do_configure_prepend() {
     install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
@@ -148,7 +167,5 @@ SRC_URI_append_skrzg1e = " \
 	file://skrzg1e/0002-Add-pwm-support-on-device-tree-for-skrzg1e-board.patch \
 "
 
-SRC_URI_append_iwg20m = " \
-	file://iWave/0001-Add-pwm-pin-function-controller-setting-for-r8a7743-.patch \
-	file://iWave/0002-Add-pwm-support-on-device-tree-for-iWave-board.patch \
-"
+#SRC_URI_append_iwg20m = " \ file://iWave/0001-Add-pwm-pin-function-controller-setting-for-r8a7743-.patch \ file://iWave/0002-Add-pwm-support-on-device-tree-for-iWave-board.patch \ "
+

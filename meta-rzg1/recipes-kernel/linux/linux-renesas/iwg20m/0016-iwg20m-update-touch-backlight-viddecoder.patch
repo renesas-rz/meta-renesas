@@ -1,0 +1,393 @@
+From 57618a9c4ad96262e389617e79e3bcdcc0250838 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Fri, 21 Oct 2016 18:52:30 +0700
+Subject: [PATCH 13/15] iwg20m update touch,backlight,viddecoder
+
+---
+ drivers/input/touchscreen/edt-ft5x06.c |  42 ++++++++
+ drivers/media/i2c/tvp5150.c            | 183 ++++++++++++++++++++++++---------
+ drivers/pwm/pwm-renesas-tpu.c          |   1 +
+ 3 files changed, 177 insertions(+), 49 deletions(-)
+
+diff --git a/drivers/input/touchscreen/edt-ft5x06.c b/drivers/input/touchscreen/edt-ft5x06.c
+index 83fa1b1..6efcb23 100644
+--- a/drivers/input/touchscreen/edt-ft5x06.c
++++ b/drivers/input/touchscreen/edt-ft5x06.c
+@@ -35,6 +35,9 @@
+ #include <linux/gpio.h>
+ #include <linux/input/mt.h>
+ #include <linux/input/edt-ft5x06.h>
++#ifdef CONFIG_MACH_IWG20M
++#include <linux/of.h>
++#endif
+ 
+ #define MAX_SUPPORT_POINTS		5
+ 
+@@ -701,11 +704,39 @@ edt_ft5x06_ts_get_parameters(struct edt_ft5x06_ts_data *tsdata)
+ 	tsdata->num_y = edt_ft5x06_register_read(tsdata, WORK_REGISTER_NUM_Y);
+ }
+ 
++#ifdef CONFIG_OF
++#include <linux/of_gpio.h>
++
++static int edt_ft5x06_of_probe(struct i2c_client *client,
++		struct edt_ft5x06_platform_data *pdata)
++{
++	struct device_node *np = client->dev.of_node;
++
++	if (!np)
++		return -ENODEV;
++
++	pdata->irq_pin = of_get_named_gpio(np, "int-gpio", 0);
++	pdata->reset_pin = of_get_named_gpio(np, "reset-gpio", 0);
++
++	return 0;
++}
++#else /* !CONFIG_OF */
++static int edt_ft5x06_of_probe(struct i2c_client *client,
++		struct edt_ft5x06_platform_data *pdata)
++{
++	return -ENODEV;
++}
++#endif /* CONFIG_OF */
++
+ static int edt_ft5x06_ts_probe(struct i2c_client *client,
+ 					 const struct i2c_device_id *id)
+ {
++#ifdef CONFIG_MACH_IWG20M
++	struct edt_ft5x06_platform_data *pdata;
++#else
+ 	const struct edt_ft5x06_platform_data *pdata =
+ 						client->dev.platform_data;
++#endif
+ 	struct edt_ft5x06_ts_data *tsdata;
+ 	struct input_dev *input;
+ 	int error;
+@@ -713,10 +744,13 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client,
+ 
+ 	dev_dbg(&client->dev, "probing for EDT FT5x06 I2C\n");
+ 
++	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
+ 	if (!pdata) {
+ 		dev_err(&client->dev, "no platform data?\n");
+ 		return -EINVAL;
+ 	}
++	edt_ft5x06_of_probe(client, pdata);
++	client->dev.platform_data = (void *) pdata;
+ 
+ 	error = edt_ft5x06_ts_reset(client, pdata->reset_pin);
+ 	if (error)
+@@ -814,6 +848,7 @@ err_free_irq:
+ err_free_mem:
+ 	input_free_device(input);
+ 	kfree(tsdata);
++	kfree(pdata);
+ 
+ 	if (gpio_is_valid(pdata->irq_pin))
+ 		gpio_free(pdata->irq_pin);
+@@ -874,11 +909,18 @@ static const struct i2c_device_id edt_ft5x06_ts_id[] = {
+ };
+ MODULE_DEVICE_TABLE(i2c, edt_ft5x06_ts_id);
+ 
++static const struct of_device_id edt_ft5x06_ts_dt_ids[] = {
++        { .compatible = "focal,ft5x06", },
++        { /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, edt_ft5x06_ts_dt_ids);
++
+ static struct i2c_driver edt_ft5x06_ts_driver = {
+ 	.driver = {
+ 		.owner = THIS_MODULE,
+ 		.name = "edt_ft5x06",
+ 		.pm = &edt_ft5x06_ts_pm_ops,
++		.of_match_table = edt_ft5x06_ts_dt_ids,
+ 	},
+ 	.id_table = edt_ft5x06_ts_id,
+ 	.probe    = edt_ft5x06_ts_probe,
+diff --git a/drivers/media/i2c/tvp5150.c b/drivers/media/i2c/tvp5150.c
+index 485159a..fb9f9e3 100644
+--- a/drivers/media/i2c/tvp5150.c
++++ b/drivers/media/i2c/tvp5150.c
+@@ -14,6 +14,11 @@
+ #include <media/tvp5150.h>
+ #include <media/v4l2-chip-ident.h>
+ #include <media/v4l2-ctrls.h>
++#ifdef CONFIG_MACH_IWG20M
++/*IWG20M: TV-IN: Added include files for GPIO configuration and mbus configuration for soc_camera */
++#include <linux/of_gpio.h>
++#include <media/soc_camera.h>
++#endif
+ 
+ #include "tvp5150_reg.h"
+ 
+@@ -442,7 +447,10 @@ static const struct i2c_reg_value tvp5150_init_default[] = {
+ /* Default values as sugested at TVP5150AM1 datasheet */
+ static const struct i2c_reg_value tvp5150_init_enable[] = {
+ 	{
++#ifndef CONFIG_MACH_IWG20M
++                /*IWG20M: TV-IN: Commented register value to get the proper capture data from TVP5150 chip */
+ 		TVP5150_CONF_SHARED_PIN, 2
++#endif
+ 	},{	/* Automatic offset and AGC enabled */
+ 		TVP5150_ANAL_CHL_CTL, 0x15
+ 	},{	/* Activate YCrCb output 0x9 or 0xd ? */
+@@ -456,7 +464,10 @@ static const struct i2c_reg_value tvp5150_init_enable[] = {
+ 	},{
+ 		TVP5150_CHROMA_PROC_CTL_2, 0x54
+ 	},{	/* Non documented, but initialized on WinTV USB2 */
++#ifndef CONFIG_MACH_IWG20M
++                /*IWG20M: TV-IN: Commented register value to get the proper capture data from TVP5150 chip */
+ 		0x27, 0x20
++#endif
+ 	},{
+ 		0xff,0xff
+ 	}
+@@ -838,8 +849,12 @@ static int tvp5150_enum_mbus_fmt(struct v4l2_subdev *sd, unsigned index,
+ {
+ 	if (index)
+ 		return -EINVAL;
+-
++#ifdef CONFIG_MACH_IWG20M
++/*IWG20M: TV-IN: Added controller supported code format */
++	*code = V4L2_MBUS_FMT_YUYV8_2X8;
++#else
+ 	*code = V4L2_MBUS_FMT_UYVY8_2X8;
++#endif
+ 	return 0;
+ }
+ 
+@@ -856,8 +871,13 @@ static int tvp5150_mbus_fmt(struct v4l2_subdev *sd,
+ 	f->width = decoder->rect.width;
+ 	f->height = decoder->rect.height;
+ 
++#ifdef CONFIG_MACH_IWG20M
++/*IWG20M: TV-IN: Added controller supported format */
++	f->field = V4L2_FIELD_INTERLACED;
++	f->code = V4L2_MBUS_FMT_YUYV8_2X8;
++#else
+ 	f->code = V4L2_MBUS_FMT_UYVY8_2X8;
+-	f->field = V4L2_FIELD_SEQ_TB;
++#endif
+ 	f->colorspace = V4L2_COLORSPACE_SMPTE170M;
+ 
+ 	v4l2_dbg(1, debug, sd, "width = %d, height = %d\n", f->width,
+@@ -918,6 +938,24 @@ static int tvp5150_s_crop(struct v4l2_subdev *sd, const struct v4l2_crop *a)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_MACH_IWG20M
++/*IWG20M: TV-IN: mbus configuration and protocol format for soc_camera */
++static int tvp5150_g_mbus_config(struct v4l2_subdev *sd,
++		struct v4l2_mbus_config *cfg)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(sd);
++	struct soc_camera_subdev_desc *ssdd = soc_camera_i2c_to_desc(client);
++
++	cfg->flags = V4L2_MBUS_PCLK_SAMPLE_RISING | V4L2_MBUS_MASTER |
++		V4L2_MBUS_VSYNC_ACTIVE_LOW | V4L2_MBUS_HSYNC_ACTIVE_LOW |
++		V4L2_MBUS_DATA_ACTIVE_HIGH;
++	cfg->type = V4L2_MBUS_BT656;
++	cfg->flags = soc_camera_apply_board_flags(ssdd, cfg);
++
++	return 0;
++}
++#endif
++
+ static int tvp5150_g_crop(struct v4l2_subdev *sd, struct v4l2_crop *a)
+ {
+ 	struct tvp5150 *decoder = container_of(sd, struct tvp5150, sd);
+@@ -1118,6 +1156,10 @@ static const struct v4l2_subdev_video_ops tvp5150_video_ops = {
+ 	.s_crop = tvp5150_s_crop,
+ 	.g_crop = tvp5150_g_crop,
+ 	.cropcap = tvp5150_cropcap,
++#ifdef CONFIG_MACH_IWG20M
++/*IWG20M: TV-IN: Inizilation for mbus configuration */
++	.g_mbus_config = tvp5150_g_mbus_config,
++#endif
+ };
+ 
+ static const struct v4l2_subdev_vbi_ops tvp5150_vbi_ops = {
+@@ -1139,25 +1181,46 @@ static const struct v4l2_subdev_ops tvp5150_ops = {
+ 			I2C Client & Driver
+  ****************************************************************************/
+ 
+-static int tvp5150_probe(struct i2c_client *c,
+-			 const struct i2c_device_id *id)
++/*
++ * tvp5150_init_controls() - Init controls
++ * @core: pointer to private state structure
++ *
++ * Init TVP5150 supported control handler.
++ */
++static int tvp5150_init_controls(struct tvp5150 *core)
+ {
+-	struct tvp5150 *core;
+-	struct v4l2_subdev *sd;
+-	int tvp5150_id[4];
+-	int i, res;
++	v4l2_ctrl_handler_init(&core->hdl, 5);
++	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
++			V4L2_CID_BRIGHTNESS, 0, 255, 1, 128);
++	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
++			V4L2_CID_CONTRAST, 0, 255, 1, 128);
++	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
++			V4L2_CID_SATURATION, 0, 255, 1, 128);
++	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
++			V4L2_CID_HUE, -128, 127, 1, 0);
++	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
++			V4L2_CID_PIXEL_RATE, 27000000,
++			27000000, 1, 27000000);
++	core->sd.ctrl_handler = &core->hdl;
++	if (core->hdl.error) {
++		int res = core->hdl.error;
++		v4l2_ctrl_handler_free(&core->hdl);
++		return res;
++	}
++	v4l2_ctrl_handler_setup(&core->hdl);
+ 
+-	/* Check if the adapter supports the needed features */
+-	if (!i2c_check_functionality(c->adapter,
+-	     I2C_FUNC_SMBUS_READ_BYTE | I2C_FUNC_SMBUS_WRITE_BYTE_DATA))
+-		return -EIO;
++	return 0;
++}
+ 
+-	core = kzalloc(sizeof(struct tvp5150), GFP_KERNEL);
+-	if (!core) {
+-		return -ENOMEM;
+-	}
+-	sd = &core->sd;
+-	v4l2_i2c_subdev_init(sd, c, &tvp5150_ops);
++static int tvp5150_detect_version(struct tvp5150 *core)
++{
++	struct v4l2_subdev *sd = &core->sd;
++	struct i2c_client *c = v4l2_get_subdevdata(sd);
++	unsigned int i;
++	u16 dev_id;
++	u16 rom_ver;
++	u8 regs[4];
++	int res;
+ 
+ 	/* 
+ 	 * Read consequent registers - TVP5150_MSB_DEV_ID, TVP5150_LSB_DEV_ID,
+@@ -1166,52 +1229,74 @@ static int tvp5150_probe(struct i2c_client *c,
+ 	for (i = 0; i < 4; i++) {
+ 		res = tvp5150_read(sd, TVP5150_MSB_DEV_ID + i);
+ 		if (res < 0)
+-			goto free_core;
+-		tvp5150_id[i] = res;
++			return res;
++		regs[i] = res;
+ 	}
+ 
+-	v4l_info(c, "chip found @ 0x%02x (%s)\n",
+-		 c->addr << 1, c->adapter->name);
++	dev_id = (regs[0] << 8) | regs[1];
++	rom_ver = (regs[2] << 8) | regs[3];
+ 
+-	if (tvp5150_id[2] == 4 && tvp5150_id[3] == 0) { /* Is TVP5150AM1 */
+-		v4l2_info(sd, "tvp%02x%02xam1 detected.\n",
+-			  tvp5150_id[0], tvp5150_id[1]);
++	v4l2_info(sd, "tvp%04x (%u.%u) chip found @ 0x%02x (%s)\n",
++			dev_id, regs[2], regs[3], c->addr << 1, c->adapter->name);
++
++	if (dev_id == 0x5150 && rom_ver == 0x0321) { /* TVP51510A */
++		v4l2_info(sd, "tvp5150a detected.\n");
++	} else if (dev_id == 0x5150 && rom_ver == 0x0400) { /* TVP5150AM1 */
++		v4l2_info(sd, "tvp5150am1 detected.\n");
+ 
+ 		/* ITU-T BT.656.4 timing */
+ 		tvp5150_write(sd, TVP5150_REV_SELECT, 0);
+ 	} else {
+-		/* Is TVP5150A */
+-		if (tvp5150_id[2] == 3 || tvp5150_id[3] == 0x21) {
+-			v4l2_info(sd, "tvp%02x%02xa detected.\n",
+-				  tvp5150_id[2], tvp5150_id[3]);
+-		} else {
+-			v4l2_info(sd, "*** unknown tvp%02x%02x chip detected.\n",
+-				  tvp5150_id[2], tvp5150_id[3]);
+-			v4l2_info(sd, "*** Rom ver is %d.%d\n",
+-				  tvp5150_id[2], tvp5150_id[3]);
++		v4l2_info(sd, "*** unknown tvp%04x chip detected.\n", dev_id);
+ 		}
++
++	return 0;
++}
++
++static int tvp5150_probe(struct i2c_client *c,
++			 const struct i2c_device_id *id)
++{
++	struct tvp5150 *core;
++	struct v4l2_subdev *sd;
++	struct device_node *np;
++	int res, pwrd_gpio;
++
++	np = of_find_compatible_node(NULL, NULL, "iwave,g20m-q7-com");
++	if (!np) {
++		pr_warn("failed to find g20m-q7-com node\n");
++		return -1;
+ 	}
+ 
++	pwrd_gpio = of_get_named_gpio(np, "tv-pwn", 0);
++	if (gpio_is_valid(pwrd_gpio) &&
++			!gpio_request_one(pwrd_gpio, GPIOF_DIR_OUT, "power-down")) {
++		gpio_set_value(pwrd_gpio, 1);
++		mdelay(100);
++	}
++
++	/* Check if the adapter supports the needed features */
++	if (!i2c_check_functionality(c->adapter,
++	     I2C_FUNC_SMBUS_READ_BYTE | I2C_FUNC_SMBUS_WRITE_BYTE_DATA))
++		return -EIO;
++
++	core = kzalloc(sizeof(struct tvp5150), GFP_KERNEL);
++	if (!core) {
++		return -ENOMEM;
++	}
++	sd = &core->sd;
++	v4l2_i2c_subdev_init(sd, c, &tvp5150_ops);
++
++	res = tvp5150_detect_version(core);
++	if (res < 0)
++		goto free_core;
++
+ 	core->norm = V4L2_STD_ALL;	/* Default is autodetect */
+ 	core->input = TVP5150_COMPOSITE1;
+ 	core->enable = 1;
+ 
+-	v4l2_ctrl_handler_init(&core->hdl, 4);
+-	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
+-			V4L2_CID_BRIGHTNESS, 0, 255, 1, 128);
+-	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
+-			V4L2_CID_CONTRAST, 0, 255, 1, 128);
+-	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
+-			V4L2_CID_SATURATION, 0, 255, 1, 128);
+-	v4l2_ctrl_new_std(&core->hdl, &tvp5150_ctrl_ops,
+-			V4L2_CID_HUE, -128, 127, 1, 0);
+-	sd->ctrl_handler = &core->hdl;
+-	if (core->hdl.error) {
+-		res = core->hdl.error;
+-		v4l2_ctrl_handler_free(&core->hdl);
++	res=tvp5150_init_controls(core);
++	if (res)
+ 		goto free_core;
+-	}
+-	v4l2_ctrl_handler_setup(&core->hdl);
+ 
+ 	/* Default is no cropping */
+ 	core->rect.top = 0;
+diff --git a/drivers/pwm/pwm-renesas-tpu.c b/drivers/pwm/pwm-renesas-tpu.c
+index aff6ba9..4b70563 100644
+--- a/drivers/pwm/pwm-renesas-tpu.c
++++ b/drivers/pwm/pwm-renesas-tpu.c
+@@ -467,6 +467,7 @@ static int tpu_remove(struct platform_device *pdev)
+ 
+ #ifdef CONFIG_OF
+ static const struct of_device_id tpu_of_table[] = {
++	{ .compatible = "renesas,tpu-r8a7743", },
+ 	{ .compatible = "renesas,tpu-r8a73a4", },
+ 	{ .compatible = "renesas,tpu-r8a7740", },
+ 	{ .compatible = "renesas,tpu-r8a7790", },
+-- 
+1.9.1
+

@@ -1,0 +1,57 @@
+From f4aacc480704ee8b9640c31bc7c113edcbff3338 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Fri, 21 Oct 2016 18:34:24 +0700
+Subject: [PATCH 12/15] iwg20m sata led driver enable
+
+---
+ drivers/ata/libata-core.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 16a4703..974cc45 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -68,6 +68,10 @@
+ #include <linux/ratelimit.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/platform_device.h>
++#ifdef  CONFIG_MACH_IWG20M
++#include <linux/of_gpio.h>
++#include <linux/gpio.h>
++#endif
+ 
+ #include "libata.h"
+ #include "libata-transport.h"
+@@ -2700,6 +2704,10 @@ int ata_bus_probe(struct ata_port *ap)
+ static void sata_print_link_status(struct ata_link *link)
+ {
+ 	u32 sstatus, scontrol, tmp;
++#ifdef  CONFIG_MACH_IWG20M
++        struct device_node *np;
++        int sata_led;
++#endif
+ 
+ 	if (sata_scr_read(link, SCR_STATUS, &sstatus))
+ 		return;
+@@ -2709,6 +2717,18 @@ static void sata_print_link_status(struct ata_link *link)
+ 		tmp = (sstatus >> 4) & 0xf;
+ 		ata_link_info(link, "SATA link up %s (SStatus %X SControl %X)\n",
+ 			      sata_spd_string(tmp), sstatus, scontrol);
++#ifdef  CONFIG_MACH_IWG20M
++		/* SATA-LED */
++		np = of_find_node_by_path("/sata@ee500000");
++		if (!np) {
++			pr_warn("Iwave:failed to find SATA LED node\n");
++		}
++		sata_led = of_get_named_gpio(np, "sata-act-gpios", 0);
++		if (gpio_is_valid(sata_led) &&
++				!gpio_request_one(sata_led, GPIOF_DIR_OUT, "sata-led")) {
++			gpio_set_value_cansleep(sata_led, 0);
++		}
++#endif
+ 	} else {
+ 		ata_link_info(link, "SATA link down (SStatus %X SControl %X)\n",
+ 			      sstatus, scontrol);
+-- 
+1.9.1
+

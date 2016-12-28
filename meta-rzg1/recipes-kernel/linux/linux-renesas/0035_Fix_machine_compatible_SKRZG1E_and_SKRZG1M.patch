@@ -1,0 +1,86 @@
+commit 474e701345afdebb1baa848656bf921a4242a93c
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Oct 6 12:54:46 2016 +0700
+
+    Description:
+        - Correct parent clock of z2
+        - Describe PLL0 ratio for E2
+        - Correct PLL clock
+        - Set spi configure for special machine
+    
+    Signed-off-by: khoahvd <khoahvd@fsoft.com.vn>
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 73fe01b..80e07c8 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -518,9 +518,9 @@
+ 		};
+ 		z2_clk: z2_clk {
+ 			compatible = "fixed-factor-clock";
+-			clocks = <&cpg_clocks R8A7745_CLK_PLL1>;
++			clocks = <&cpg_clocks R8A7745_CLK_PLL0>;
+ 			#clock-cells = <0>;
+-			clock-div = <2>;
++			clock-div = <1>;
+ 			clock-mult = <1>;
+ 			clock-output-names = "z2";
+ 		};
+diff --git a/arch/arm/mach-shmobile/pm-r8a7743.c b/arch/arm/mach-shmobile/pm-r8a7743.c
+index 38d1617..01c47a6 100644
+--- a/arch/arm/mach-shmobile/pm-r8a7743.c
++++ b/arch/arm/mach-shmobile/pm-r8a7743.c
+@@ -136,7 +136,6 @@ void r8a7743_module_reset(unsigned int n, u32 bits, int usecs)
+ 	udelay(usecs);
+ 
+ 	writel_relaxed(bits, cpg_base + r8a7743_reset_regs[n].srstclr);
+-	readl_relaxed(cpg_base + r8a7743_reset_regs[n].srstclr); /* sync */
+ 
+ 	iounmap(cpg_base);
+ }
+diff --git a/arch/arm/mach-shmobile/pm-r8a7745.c b/arch/arm/mach-shmobile/pm-r8a7745.c
+index 85d29d3..c5de27c 100644
+--- a/arch/arm/mach-shmobile/pm-r8a7745.c
++++ b/arch/arm/mach-shmobile/pm-r8a7745.c
+@@ -134,7 +134,6 @@ void r8a7745_module_reset(unsigned int n, u32 bits, int usecs)
+ 	udelay(usecs);
+ 
+ 	writel_relaxed(bits, cpg_base + r8a7745_reset_regs[n].srstclr);
+-	readl_relaxed(cpg_base + r8a7745_reset_regs[n].srstclr); /* sync */
+ 
+ 	iounmap(cpg_base);
+ }
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 4a273e8..a5271bb 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -349,10 +349,12 @@ static void __init rcar_gen2_cpg_clocks_init(struct device_node *np)
+ 
+ 	if (of_machine_is_compatible("renesas,r8a7790") ||
+ 	    of_machine_is_compatible("renesas,r8a7791") ||
+-	    of_machine_is_compatible("renesas,r8a7793")) {
++	    of_machine_is_compatible("renesas,r8a7793") ||
++	    of_machine_is_compatible("renesas,r8a7743")) { 
+ 		config = &cpg_pll_configs[CPG_PLL_CONFIG_INDEX(cpg_mode)];
+ 		is_e2 = false;
+-	} else if (of_machine_is_compatible("renesas,r8a7794")) {
++	} else if (of_machine_is_compatible("renesas,r8a7794") ||
++		   of_machine_is_compatible("renesas,r8a7745")) {
+ 		config = &e2_cpg_pll_configs[CPG_PLL_CONFIG_INDEX(cpg_mode)];
+ 		is_e2 = true;
+ 	} else {
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index 15519b9..e6d7578 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -202,7 +202,9 @@ static int msiof_rcar_is_gen2(struct device *dev)
+ 	return of_device_is_compatible(node, "renesas,msiof-r8a7790") ||
+ 		of_device_is_compatible(node, "renesas,msiof-r8a7791") ||
+ 		of_device_is_compatible(node, "renesas,msiof-r8a7793") ||
+-		of_device_is_compatible(node, "renesas,msiof-r8a7794");
++		of_device_is_compatible(node, "renesas,msiof-r8a7794") ||
++		of_device_is_compatible(node, "renesas,msiof-r8a7745") ||
++		of_device_is_compatible(node, "renesas,msiof-r8a7743");
+ }
+ 
+ static u32 sh_msiof_read(struct sh_msiof_spi_priv *p, int reg_offs)

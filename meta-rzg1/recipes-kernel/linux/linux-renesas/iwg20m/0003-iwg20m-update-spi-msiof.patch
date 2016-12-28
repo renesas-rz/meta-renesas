@@ -1,0 +1,94 @@
+From b48d0bfb9836ca15651381a5859d24fe124608a7 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Fri, 21 Oct 2016 20:07:57 +0700
+Subject: [PATCH 14/15] iwg20m update spi msiof
+
+---
+ drivers/spi/spi-sh-msiof.c | 27 ++++-----------------------
+ 1 file changed, 4 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index 55c366d..f5cb412 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -28,7 +28,6 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+-#include <linux/of_gpio.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #ifdef CONFIG_SPI_SH_MSIOF_DMA
+@@ -585,7 +584,8 @@ static int sh_msiof_spi_setup(struct spi_device *spi)
+ 				  !!(spi->mode & SPI_CS_HIGH));
+ 
+ 	if (spi->cs_gpio >= 0)
+-		gpio_direction_output(spi->cs_gpio, !(spi->mode & SPI_CS_HIGH));
++		gpio_set_value(spi->cs_gpio, !(spi->mode & SPI_CS_HIGH));
++
+ 
+ 	pm_runtime_put_sync(&p->pdev->dev);
+ 
+@@ -1073,12 +1073,6 @@ static const struct sh_msiof_chipdata r8a779x_data = {
+ 	.master_flags = SPI_MASTER_MUST_TX,
+ };
+ 
+-static const struct sh_msiof_chipdata r8a774_3_5_data = {
+-	.tx_fifo_size = 64,
+-	.rx_fifo_size = 64,
+-	.master_flags = SPI_MASTER_MUST_TX,
+-};
+-
+ static const struct of_device_id sh_msiof_match[] = {
+ 	{ .compatible = "renesas,sh-msiof",        .data = &sh_data },
+ 	{ .compatible = "renesas,sh-mobile-msiof", .data = &sh_data },
+@@ -1086,8 +1080,7 @@ static const struct of_device_id sh_msiof_match[] = {
+ 	{ .compatible = "renesas,msiof-r8a7791",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7793",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7794",   .data = &r8a779x_data },
+-	{ .compatible = "renesas,msiof-r8a7743",   .data = &r8a774_3_5_data },
+-	{ .compatible = "renesas,msiof-r8a7745",   .data = &r8a774_3_5_data },
++	{ .compatible = "renesas,msiof-r8a7743",   .data = &r8a779x_data },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, sh_msiof_match);
+@@ -1098,7 +1091,6 @@ static struct sh_msiof_spi_info *sh_msiof_spi_parse_dt(struct device *dev)
+ 	struct sh_msiof_spi_info *info;
+ 	struct device_node *np = dev->of_node;
+ 	u32 num_cs = 1;
+-	int i;
+ 
+ 	info = devm_kzalloc(dev, sizeof(struct sh_msiof_spi_info), GFP_KERNEL);
+ 	if (!info) {
+@@ -1122,16 +1114,6 @@ static struct sh_msiof_spi_info *sh_msiof_spi_parse_dt(struct device *dev)
+ 
+ 	info->num_chipselect = num_cs;
+ 
+-	for (i = 0; i < num_cs; i++) {
+-		int cs_gpio = of_get_named_gpio(np, "cs-gpios", i);
+-
+-		if (gpio_is_valid(cs_gpio)) {
+-			if (devm_gpio_request(dev, cs_gpio, "msiof-cs-gpio")) {
+-				dev_err(dev, "Can't get CS GPIO %i\n", i);
+-				return NULL;
+-			}
+-		}
+-	}
+ 	return info;
+ }
+ #else
+@@ -1390,10 +1372,9 @@ static struct platform_device_id spi_driver_ids[] = {
+ 	{ "spi_sh_msiof",	(kernel_ulong_t)&sh_data },
+ 	{ "spi_r8a7790_msiof",	(kernel_ulong_t)&r8a779x_data },
+ 	{ "spi_r8a7791_msiof",	(kernel_ulong_t)&r8a779x_data },
++	{ "spi_r8a7743_msiof",	(kernel_ulong_t)&r8a779x_data },
+ 	{ "spi_r8a7793_msiof",	(kernel_ulong_t)&r8a779x_data },
+ 	{ "spi_r8a7794_msiof",	(kernel_ulong_t)&r8a779x_data },
+-	{ "spi_r8a7743_msiof",	(kernel_ulong_t)&r8a774_3_5_data },
+-	{ "spi_r8a7745_msiof",	(kernel_ulong_t)&r8a774_3_5_data },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(platform, spi_driver_ids);
+-- 
+1.9.1
+

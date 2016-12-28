@@ -1,0 +1,38 @@
+From 2b574c746050e1b2acdb9fb932f6a2f87713b748 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Sat, 22 Oct 2016 03:47:26 +0700
+Subject: [PATCH] fix clk for i2c and change name usb3.0 fw
+
+---
+ drivers/i2c/busses/i2c-sh_mobile.c | 1 +
+ drivers/usb/host/xhci-rcar.c       | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-sh_mobile.c b/drivers/i2c/busses/i2c-sh_mobile.c
+index 6e4c6fc..3e3257e 100644
+--- a/drivers/i2c/busses/i2c-sh_mobile.c
++++ b/drivers/i2c/busses/i2c-sh_mobile.c
+@@ -664,6 +664,7 @@ static const struct of_device_id sh_mobile_i2c_dt_ids[] = {
+ 	{ .compatible = "renesas,iic-r8a73a4", .data = &fast_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7790", .data = &gen2_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7791", .data = &gen2_clock_dt_config },
++	{ .compatible = "renesas,iic-r8a7743", .data = &gen2_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7792", .data = &gen2_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7793", .data = &gen2_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7794", .data = &gen2_clock_dt_config },
+diff --git a/drivers/usb/host/xhci-rcar.c b/drivers/usb/host/xhci-rcar.c
+index ff0d1b4..fb9a441 100644
+--- a/drivers/usb/host/xhci-rcar.c
++++ b/drivers/usb/host/xhci-rcar.c
+@@ -16,7 +16,7 @@
+ #include "xhci.h"
+ #include "xhci-rcar.h"
+ 
+-#define FIRMWARE_NAME		"r8a779x_usb3_v1.dlmem"
++#define FIRMWARE_NAME		"UU3DRD1FW_2005L.dlmem"
+ MODULE_FIRMWARE(FIRMWARE_NAME);
+ 
+ /*** Register Offset ***/
+-- 
+1.9.1
+

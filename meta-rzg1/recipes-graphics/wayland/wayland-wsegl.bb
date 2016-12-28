@@ -6,6 +6,7 @@ COMPATIBLE_MACHINE = "(r8a7790|r8a7791|r8a7793|r8a7794)"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI_r8a7743 = "file://r8a7743_wayland_wsegl_library_for_linux.tar.bz2"
+SRC_URI_r8a7744 = "file://r8a7743_wayland_wsegl_library_for_linux.tar.bz2"
 SRC_URI_r8a7745 = "file://r8a7745_wayland_wsegl_library_for_linux.tar.bz2"
 
 DEPENDS = "virtual/mesa wayland-kms libgbm libdrm"

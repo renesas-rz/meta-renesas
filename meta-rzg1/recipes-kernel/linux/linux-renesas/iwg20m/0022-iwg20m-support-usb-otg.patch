@@ -1,22 +1,20 @@
-From 430b504247d5b03d9cd89c2052adb23b78084de3 Mon Sep 17 00:00:00 2001
-From: Chuan Nguyen <chuan.nguyen.jy@rvc.renesas.com>
-Date: Tue, 28 Jun 2016 17:29:16 +0700
-Subject: [PATCH] USB2.0 OTG: Enable USB2.0 OTG Like Connector on iWave
- - Support switch role by changing Cable/Connector
- - Do not support protocol HNP & SRP
+From 38798b348c916fd4a38962dbc2e1d53dcb41ec94 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Thu, 8 Dec 2016 19:07:54 +0700
+Subject: [PATCH] iwg20m support usb otg
 
 ---
- arch/arm/configs/iw_rainbowg20m_defconfig       |  14 +-
- arch/arm/mach-shmobile/board-r8a7743-iwg20m.c   | 101 +++++++++++--
+ arch/arm/configs/iwg20m_defconfig               |  13 +-
+ arch/arm/mach-shmobile/board-r8a7743-iwg20m.c   |  51 ++++---
  drivers/usb/phy/phy-rcar-gen2-usb.c             | 188 ++++++++++++++++++------
  include/linux/platform_data/usb-rcar-gen2-phy.h |   2 +
- 4 files changed, 247 insertions(+), 58 deletions(-)
+ 4 files changed, 186 insertions(+), 68 deletions(-)
 
-diff --git a/arch/arm/configs/iw_rainbowg20m_defconfig b/arch/arm/configs/iw_rainbowg20m_defconfig
-index 4417dc5..4c949fe 100644
---- a/arch/arm/configs/iw_rainbowg20m_defconfig
-+++ b/arch/arm/configs/iw_rainbowg20m_defconfig
-@@ -2434,7 +2434,7 @@ CONFIG_USB=y
+diff --git a/arch/arm/configs/iwg20m_defconfig b/arch/arm/configs/iwg20m_defconfig
+index 3d583f6..89275f1 100644
+--- a/arch/arm/configs/iwg20m_defconfig
++++ b/arch/arm/configs/iwg20m_defconfig
+@@ -2435,7 +2435,7 @@ CONFIG_USB=y
  #
  CONFIG_USB_DEFAULT_PERSIST=y
  # CONFIG_USB_DYNAMIC_MINORS is not set
@@ -25,7 +23,7 @@ index 4417dc5..4c949fe 100644
  # CONFIG_USB_OTG_WHITELIST is not set
  # CONFIG_USB_OTG_BLACKLIST_HUB is not set
  # CONFIG_USB_MON is not set
-@@ -2457,12 +2457,17 @@ CONFIG_USB_EHCI_PCI=y
+@@ -2458,12 +2458,16 @@ CONFIG_USB_EHCI_PCI=y
  # CONFIG_USB_ISP116X_HCD is not set
  # CONFIG_USB_ISP1760_HCD is not set
  # CONFIG_USB_ISP1362_HCD is not set
@@ -38,14 +36,13 @@ index 4417dc5..4c949fe 100644
  # CONFIG_USB_UHCI_HCD is not set
  # CONFIG_USB_SL811_HCD is not set
  # CONFIG_USB_R8A66597_HCD is not set
-+# CONFIG_USB_RENESAS_USBHS_HCD is not set
  # CONFIG_USB_MUSB_HDRC is not set
 -# CONFIG_USB_RENESAS_USBHS is not set
 +CONFIG_USB_RENESAS_USBHS=y
  
  #
  # USB Device Class drivers
-@@ -2559,6 +2564,7 @@ CONFIG_USB_GADGET_STORAGE_NUM_BUFFERS=2
+@@ -2560,6 +2564,7 @@ CONFIG_USB_GADGET_STORAGE_NUM_BUFFERS=2
  # USB Peripheral Controller
  #
  # CONFIG_USB_R8A66597 is not set
@@ -53,7 +50,7 @@ index 4417dc5..4c949fe 100644
  # CONFIG_USB_PXA27X is not set
  # CONFIG_USB_MV_UDC is not set
  # CONFIG_USB_MV_U3D is not set
-@@ -2576,7 +2582,7 @@ CONFIG_USB_ETH=m
+@@ -2577,7 +2582,7 @@ CONFIG_USB_ETH=m
  CONFIG_USB_ETH_RNDIS=y
  # CONFIG_USB_ETH_EEM is not set
  # CONFIG_USB_G_NCM is not set
@@ -63,7 +60,7 @@ index 4417dc5..4c949fe 100644
  CONFIG_USB_MASS_STORAGE=m
  # CONFIG_USB_G_SERIAL is not set
 diff --git a/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c b/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
-index 8bac270..284a67f 100644
+index a254b04..b800ea2 100644
 --- a/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
 +++ b/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
 @@ -32,7 +32,7 @@
@@ -75,7 +72,7 @@ index 8bac270..284a67f 100644
  #include <linux/usb/renesas_usbhs.h>
  #endif
  #include <media/soc_camera.h>
-@@ -162,8 +162,9 @@ static const struct clk_name clk_names[] __initconst = {
+@@ -165,8 +165,9 @@ static const struct clk_name clk_names[] __initconst = {
  	{ "fdp1", NULL, NULL },
  	{ "fdp0", NULL, NULL },
  	{ "pvrsrvkm", NULL, "pvrsrvkm" },
@@ -86,7 +83,7 @@ index 8bac270..284a67f 100644
  #else
  	{ "ehci", NULL, "pci-rcar-gen2.0" },
  #endif
-@@ -179,7 +180,7 @@ static const struct clk_name clk_enables[] __initconst = {
+@@ -182,7 +183,7 @@ static const struct clk_name clk_enables[] __initconst = {
  	{ "dmah", NULL, "sh-dma-engine.1" },
  	{ "sys-dmac1", NULL, "sh-dma-engine.2" },
  	{ "sys-dmac0", NULL, "sh-dma-engine.3" },
@@ -95,7 +92,7 @@ index 8bac270..284a67f 100644
  	{ "usbdmac0", NULL, "sh-dma-engine.4" },
  	{ "usbdmac1", NULL, "sh-dma-engine.5" },
  #endif
-@@ -376,7 +377,7 @@ PDATA_HSCIF(11, 0xe6cd0000,  gic_spi(21), 2); /* HSCIF2 */
+@@ -412,7 +413,7 @@ PDATA_HSCIF(11, 0xe6cd0000,  gic_spi(21), 2); /* HSCIF2 */
  #define AUXDATA_SCIFB(index, baseaddr, irq) SCIF_AD("scifb", index, baseaddr)
  #define AUXDATA_HSCIF(index, baseaddr, irq) SCIF_AD("hscif", index, baseaddr)
  
@@ -104,92 +101,48 @@ index 8bac270..284a67f 100644
  /* USB-DMAC */
  static const struct sh_dmae_channel usb_dmac_channels[] = {
  	{
-@@ -487,6 +488,7 @@ struct usbhs_private {
- 	struct renesas_usbhs_platform_info info;
- 	struct usb_phy *phy;
- 	int id_gpio;
-+	int pwr_gpio;
- };
+@@ -564,7 +565,7 @@ static int usbhs_hardware_init(struct platform_device *pdev)
+         } else {
+                 pr_warn("Error: Unable to get USB OTG ID input\n");
+                 ret = -ENOTSUPP;
+-                goto error2;
++                goto error;
+         }
  
- #define usbhs_get_priv(pdev) \
-@@ -513,6 +515,67 @@ static int usbhs_power_ctrl(struct platform_device *pdev,
+         np1 = of_find_node_by_path("/gpio@e6055800");
+@@ -574,7 +575,7 @@ static int usbhs_hardware_init(struct platform_device *pdev)
+         } else {
+                 pr_warn("Error: Unable to get USB0 Power output pin\n");
+                 ret = -ENOTSUPP;
+-                goto error2;
++                goto error;
+         }
+ 
+ 
+@@ -583,12 +584,7 @@ static int usbhs_hardware_init(struct platform_device *pdev)
+ 	gpio_request_one(priv->pwr_gpio, GPIOF_DIR_OUT, NULL);
+ 	if (!gpio_get_value(priv->id_gpio)) {
+ 		gpio_set_value(priv->pwr_gpio, 1);
+-		pr_warn("Error: USB0 cable selects host mode\n");
+-		ret = -ENOTSUPP;
+-		goto error;
+-	}
+-	else
+-	{
++	} else {
+ 		gpio_set_value(priv->pwr_gpio, 0);
+ 	}
+ 
+@@ -600,8 +596,6 @@ static int usbhs_hardware_init(struct platform_device *pdev)
  	return 0;
+ 
+ error:
+-	gpio_free(priv->id_gpio);
+-error2:
+ 	return ret;
  }
  
-+static int usbhs_hardware_init(struct platform_device *pdev)
-+{
-+	struct usbhs_private *priv = usbhs_get_priv(pdev);
-+	struct usb_phy *phy;
-+	int ret;
-+	struct device_node *np, *np1;
-+
-+	np = of_find_node_by_path("/gpio@e6051000");
-+	if (np) {
-+		priv->id_gpio = of_get_gpio(np, 11);
-+		of_node_put(np);
-+	} else {
-+		pr_warn("Error: Unable to get USB OTG ID input\n");
-+		ret = -ENOTSUPP;
-+		goto error;
-+	}
-+
-+	np1 = of_find_node_by_path("/gpio@e6055800");
-+	if (np1) {
-+		priv->pwr_gpio = of_get_gpio(np1, 23);
-+		of_node_put(np1);
-+	} else {
-+		pr_warn("Error: Unable to get USB0 Power output pin\n");
-+		ret = -ENOTSUPP;
-+		goto error;
-+	}
-+
-+
-+	/* Check USB OTG ID pin */
-+	gpio_request_one(priv->id_gpio, GPIOF_IN, NULL);
-+	gpio_request_one(priv->pwr_gpio, GPIOF_DIR_OUT, NULL);
-+	if (!gpio_get_value(priv->id_gpio))
-+		gpio_set_value(priv->pwr_gpio, 1);
-+	else
-+		gpio_set_value(priv->pwr_gpio, 0);
-+
-+	phy = usb_get_phy_dev(&pdev->dev, 0);
-+	if (IS_ERR(phy))
-+		return PTR_ERR(phy);
-+
-+	priv->phy = phy;
-+	return 0;
-+
-+error:
-+	return ret;
-+}
-+
-+static int usbhs_hardware_exit(struct platform_device *pdev)
-+{
-+	struct usbhs_private *priv = usbhs_get_priv(pdev);
-+
-+	if (!priv->phy)
-+		return 0;
-+
-+	usb_put_phy(priv->phy);
-+	priv->phy = NULL;
-+
-+	gpio_free(priv->id_gpio);
-+	return 0;
-+}
-+
- static int usbhs_get_id(struct platform_device *pdev)
- {
- 	return USBHS_GADGET;
-@@ -546,6 +609,8 @@ static struct usbhs_private usbhs_priv __initdata = {
- 	.info = {
- 		.platform_callback = {
- 			.power_ctrl	= usbhs_power_ctrl,
-+			.hardware_init  = usbhs_hardware_init,
-+			.hardware_exit  = usbhs_hardware_exit,
- 			.get_id		= usbhs_get_id,
- 			.get_vbus	= usbhs_get_vbus,
- 		},
-@@ -572,6 +637,21 @@ static void __init iwg20m_add_usb0_gadget(void)
+@@ -680,6 +674,22 @@ static void __init iwg20m_add_usb0_gadget(void)
  					  &usbhs_priv.info,
  					  sizeof(usbhs_priv.info));
  }
@@ -208,16 +161,17 @@ index 8bac270..284a67f 100644
 +					0, pci0_resources,
 +					ARRAY_SIZE(pci0_resources));
 +}
++
  #else
  /* Internal PCI0 */
  static const struct resource pci0_resources[] __initconst = {
-@@ -608,9 +688,11 @@ static void __init iwg20m_add_usb1_host(void)
+@@ -716,9 +726,11 @@ static void __init iwg20m_add_usb1_host(void)
  
  /* USBHS PHY */
  static const struct rcar_gen2_phy_platform_data usbhs_phy_pdata __initconst = {
 -#if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
 -	.chan0_pci = 0,	/* Channel 0 is USBHS */
--	.gpio_vbus = -1,
+-	.gpio_vbus = 798,
 +#if IS_ENABLED(CONFIG_USB_OTG)
 +	.chan0_pci = 1,	/* Initial Channel 0 is PCI USB */
 +	.gpio_vbus = 798, /* The number which indicate the pin */
@@ -226,7 +180,7 @@ index 8bac270..284a67f 100644
  	.wakeup = true,
  #else
  	.chan0_pci = 1,	/* Channel 0 is PCI USB */
-@@ -802,8 +884,9 @@ static void __init iwg20m_add_usb_devices(void)
+@@ -923,8 +935,9 @@ static void __init iwg20m_add_usb_devices(void)
  					  ARRAY_SIZE(usbhs_phy_resources),
  					  &usbhs_phy_pdata,
  					  sizeof(usbhs_phy_pdata));
@@ -237,7 +191,7 @@ index 8bac270..284a67f 100644
  #else
  	iwg20m_add_usb0_host();
  #endif
-@@ -954,7 +1037,7 @@ static void __init iwg20m_add_standard_devices(void)
+@@ -1076,7 +1089,7 @@ static void __init iwg20m_add_standard_devices(void)
  	shmobile_clk_workaround(clk_enables, ARRAY_SIZE(clk_enables), true);
  	r8a7743_add_dt_devices();
  	iwg20m_add_dmac_prototype();
@@ -545,15 +499,15 @@ index 9e7205d..540d5ff 100644
  	return 0;
  }
 diff --git a/include/linux/platform_data/usb-rcar-gen2-phy.h b/include/linux/platform_data/usb-rcar-gen2-phy.h
-index 99409e5..4c1ad72 100644
+index 99409e5..17a309e 100644
 --- a/include/linux/platform_data/usb-rcar-gen2-phy.h
 +++ b/include/linux/platform_data/usb-rcar-gen2-phy.h
 @@ -18,6 +18,8 @@ struct rcar_gen2_phy_platform_data {
  	/* USB channel 2 configuration */
  	bool chan2_pci:1;	/* true: PCI USB host 2, false: USBSS */
  	int gpio_vbus;
-+	int gpio_id;
-+	int gpio_pwr;
++    int gpio_id;
++    int gpio_pwr;
  	bool wakeup;
  };
  

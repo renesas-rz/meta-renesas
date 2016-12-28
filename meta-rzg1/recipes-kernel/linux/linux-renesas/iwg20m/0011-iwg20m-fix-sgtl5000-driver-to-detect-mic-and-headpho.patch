@@ -1,0 +1,200 @@
+From 6f1b7320e44440d14a8d7a389c47d5a7232e03f2 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.com.vn>
+Date: Thu, 20 Oct 2016 23:03:23 +0700
+Subject: [PATCH 06/15] iwg10m fix sgtl5000 driver to detect mic and headphone
+
+---
+ sound/soc/codecs/sgtl5000.c     | 115 ++++++++++++++++++++++++++++++++++++++++
+ sound/soc/generic/simple-card.c |  15 ++++++
+ 2 files changed, 130 insertions(+)
+
+diff --git a/sound/soc/codecs/sgtl5000.c b/sound/soc/codecs/sgtl5000.c
+index ea47938..b83b18d 100644
+--- a/sound/soc/codecs/sgtl5000.c
++++ b/sound/soc/codecs/sgtl5000.c
+@@ -27,6 +27,14 @@
+ #include <sound/soc.h>
+ #include <sound/soc-dapm.h>
+ #include <sound/initval.h>
++#ifdef CONFIG_MACH_IWG20M
++/* IWG20M: Audio: HeadPhone and Mic Detect Implementation */
++#include <linux/err.h>
++#include <linux/irq.h>
++#include <linux/io.h>
++#include <linux/of_gpio.h>
++#include <linux/gpio.h>
++#endif
+ 
+ #include "sgtl5000.h"
+ 
+@@ -60,6 +68,20 @@ static const u16 sgtl5000_regs[SGTL5000_MAX_REG_OFFSET] =  {
+ 	[SGTL5000_DAP_AVC_DECAY] = 0x0050,
+ };
+ 
++#ifdef CONFIG_MACH_IWG20M
++/* IWG20M: Audio: HeadPhone and Mic Detect Implementation */
++struct sh_sgtl5000_priv {
++        int hp_gpio;
++        int hp_active_low;
++        int mic_gpio;
++        int mic_active_low;
++        int hp_irq;
++        int mic_irq;
++};
++
++static struct sh_sgtl5000_priv card_priv;
++#endif
++
+ /* regulator supplies for sgtl5000, VDDD is an optional external supply */
+ enum sgtl5000_regulator_supplies {
+ 	VDDA,
+@@ -142,6 +164,59 @@ static int mic_bias_event(struct snd_soc_dapm_widget *w,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_MACH_IWG20M
++/* IWG20M: Audio: HeadPhone and Mic Detect Implementation */
++/* 
++ *Headphone Detect Handler 
++ */
++static irqreturn_t hp_handler(int irq, void *dev_id)
++{
++	struct sh_sgtl5000_priv *priv = &card_priv;
++	int hp_status;
++
++	hp_status = gpio_get_value(priv->hp_gpio) ? 1 : 0;
++	if (hp_status != priv->hp_active_low){
++#ifdef CONFIG_MACH_IWG20M
++		printk("Headphone is plugged\n");
++#else
++		pr_debug("Headphone is plugged\n");
++#endif
++	}else {
++#ifdef CONFIG_MACH_IWG20M
++		printk("Headphone is unplugged\n");
++#else
++		pr_debug("Headphone is unplugged\n");
++#endif
++	}
++	return IRQ_RETVAL(1);
++}
++
++/*
+++ *Microphone Detect handler 
+++ */
++static irqreturn_t mic_handler(int irq, void *dev_id)
++{
++	struct sh_sgtl5000_priv *priv = &card_priv;
++	int mic_status;
++
++	mic_status = gpio_get_value(priv->mic_gpio) ? 1 : 0;
++	if (mic_status != priv->mic_active_low){
++#ifdef CONFIG_MACH_IWG20M
++		printk("Microphone is plugged\n");
++#else
++		pr_debug("Microphone is plugged\n");
++#endif
++	}else {
++#ifdef CONFIG_MACH_IWG20M
++		printk("Microphone is unplugged\n");
++#else
++		pr_debug("Microphone is unplugged\n");
++#endif
++	}
++	return IRQ_RETVAL(1);
++}
++#endif
++
+ /*
+  * As manual described, ADC/DAC only works when VAG powerup,
+  * So enabled VAG before ADC/DAC up.
+@@ -1299,6 +1374,15 @@ static int sgtl5000_probe(struct snd_soc_codec *codec)
+ 	int ret;
+ 	struct sgtl5000_priv *sgtl5000 = snd_soc_codec_get_drvdata(codec);
+ 
++#ifdef CONFIG_MACH_IWG20M
++	/* IWG20M: Audio: HeadPhone and Mic Detect Implementation */
++	struct sh_sgtl5000_priv *priv = &card_priv;
++	struct device_node *np;  
++	np = of_find_compatible_node(NULL, NULL, "fsl,sgtl5000");
++	int hp_status, mic_status;
++#endif
++
++
+ 	/* setup i2c data ops */
+ 	ret = snd_soc_codec_set_cache_io(codec, 16, 16, SND_SOC_I2C);
+ 	if (ret < 0) {
+@@ -1358,6 +1442,37 @@ static int sgtl5000_probe(struct snd_soc_codec *codec)
+ 	if (ret)
+ 		goto err;
+ 
++#ifdef CONFIG_MACH_IWG20M
++	/* IWG20M: Audio: HeadPhone and Mic Detect Implementation */
++
++	priv->hp_gpio = of_get_named_gpio_flags(np, "hp-det-gpios", 0,
++			(enum of_gpio_flags *)&priv->hp_active_low);
++	priv->mic_gpio = of_get_named_gpio_flags(np, "mic-det-gpios", 0,
++			(enum of_gpio_flags *)&priv->mic_active_low);
++
++	gpio_request(priv->hp_gpio, "HeadPhone-Detect");
++	gpio_direction_input(priv->hp_gpio);
++	priv->hp_irq = gpio_to_irq(priv->hp_gpio);
++	hp_status = gpio_get_value(priv->hp_gpio) ? 1 : 0;
++
++	ret=request_irq(priv->hp_irq,hp_handler,IRQF_DISABLED | IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"HeadPhone",0);
++	if (ret < 0) {
++		printk(KERN_ALERT "%s: request hp_irq failed with %d\n",__func__, ret);
++		free_irq(priv->hp_irq,0);
++	}
++
++	gpio_request(priv->mic_gpio, "Microphone-Detect");
++	gpio_direction_input(priv->mic_gpio);
++	priv->mic_irq = gpio_to_irq(priv->mic_gpio);
++	mic_status = gpio_get_value(priv->mic_gpio) ? 1 : 0;
++
++	ret=request_irq(priv->mic_irq,mic_handler,IRQF_DISABLED | IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"MicroPhone",0);
++	if (ret < 0) {
++		printk(KERN_ALERT "%s: request mic_irq failed with %d\n",__func__, ret);
++		free_irq(priv->mic_irq,0);
++	}
++#endif
++
+ 	return 0;
+ 
+ err:
+diff --git a/sound/soc/generic/simple-card.c b/sound/soc/generic/simple-card.c
+index 9556644..c58f010 100644
+--- a/sound/soc/generic/simple-card.c
++++ b/sound/soc/generic/simple-card.c
+@@ -113,6 +113,16 @@ static int asoc_simple_card_dai_init(struct snd_soc_pcm_runtime *rtd)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_MACH_IWG20M
++static const struct snd_soc_dapm_widget sgtl5000_dapm_widgets[] = {
++        SND_SOC_DAPM_MIC("Mic Jack", NULL),
++        SND_SOC_DAPM_LINE("Line In Jack", NULL),
++        SND_SOC_DAPM_HP("Headphone Jack", NULL),
++        SND_SOC_DAPM_SPK("Line Out Jack", NULL),
++        SND_SOC_DAPM_SPK("Ext Spk", NULL),
++};
++#endif
++
+ static int
+ asoc_simple_card_sub_parse_of(struct device_node *np,
+ 			      struct asoc_simple_dai *dai,
+@@ -419,6 +429,11 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
+ 	dai_link = priv->dai_link;
+ 	priv->snd_card.dai_link = dai_link;
+ 	priv->snd_card.num_links = num_links;
++#ifdef CONFIG_MACH_IWG20M
++	priv->snd_card.dapm_widgets = sgtl5000_dapm_widgets;
++	priv->snd_card.num_dapm_widgets = ARRAY_SIZE(sgtl5000_dapm_widgets);
++#endif
++
+ 
+ 	/* get room for the other properties */
+ 	priv->dai_props = devm_kzalloc(dev,
+-- 
+1.9.1
+

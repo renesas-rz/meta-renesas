@@ -1,0 +1,504 @@
+From 77f303945fa01cee3315c415e356762981dd2665 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Thu, 8 Dec 2016 23:25:32 +0700
+Subject: [PATCH] iwg20m add pwm in pfc and dts
+
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts  |  85 +++++++++++++++++++++++
+ arch/arm/boot/dts/r8a7743-iwg20m.dtsi |  56 +++++++++++++++
+ arch/arm/boot/dts/r8a7744-iwg20m.dts  |  68 ++++++++++++++++++
+ arch/arm/boot/dts/r8a7744.dtsi        |  55 +++++++++++++++
+ drivers/pinctrl/sh-pfc/pfc-r8a7743.c  | 127 ++++++++++++++++++++++++++++++++++
+ 5 files changed, 391 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index fb82b7f..b0a35ce 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -256,6 +256,41 @@
+ 		renesas,function = "tpu";
+ 	};
+ 
++    pwm0_pins: pwm0 {
++        renesas,groups = "pwm0";
++        renesas,function = "pwm0";
++    };
++
++    pwm1_pins: pwm1 {
++        renesas,groups = "pwm1";
++        renesas,function = "pwm1";
++    };
++
++    pwm2_pins: pwm2 {
++        renesas,groups = "pwm2";
++        renesas,function = "pwm2";
++    };
++
++    pwm3_pins: pwm3 {
++        renesas,groups = "pwm3";
++        renesas,function = "pwm3";
++    };
++
++    pwm4_pins: pwm4 {
++        renesas,groups = "pwm4";
++        renesas,function = "pwm4";
++    };
++
++    pwm5_pins: pwm5 {
++        renesas,groups = "pwm5";
++        renesas,function = "pwm5";
++    };
++
++    pwm6_pins: pwm6 {
++        renesas,groups = "pwm6";
++        renesas,function = "pwm6";
++    };
++
+ 	sound_pins: sound {
+ 		renesas,groups = "ssi0129_ctrl", "ssi0_data", "ssi1_data";
+ 		renesas,function = "ssi";
+@@ -418,6 +453,56 @@
+ 	status = "okay";
+ };
+ 
++&pwm0 {
++//    pinctrl-0 = <&pwm0_pins>;
++//    pinctrl-names = "default";
++
++    status = "okay";
++};
++
++&pwm1 {
++    pinctrl-0 = <&pwm1_pins>;
++    pinctrl-names = "default";
++
++    status = "okay";
++};
++
++&pwm2 {
++//    pinctrl-0 = <&pwm2_pins>;
++//    pinctrl-names = "default";
++
++    status = "okay";
++};
++
++/* Option for pwm3 when tpu not use */
++&pwm3 {
++//    pinctrl-0 = <&pwm3_pins>;
++//    pinctrl-names = "default";
++
++    status = "okay";
++};
++
++&pwm4 {
++//    pinctrl-0 = <&pwm4_pins>;
++//    pinctrl-names = "default";
++
++    status = "okay";
++};
++
++&pwm5 {
++    pinctrl-0 = <&pwm5_pins>;
++    pinctrl-names = "default";
++
++    status = "okay";
++};
++
++&pwm6 {
++//    pinctrl-0 = <&pwm6_pins>;
++//    pinctrl-names = "default";
++
++    status = "okay";
++};
++
+ &cpu0 {
+         cpu0-supply = <&reg_1p0v>;
+ };
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+index ba050c0..3c29e5f 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+@@ -1133,6 +1133,62 @@
+ 		#pwm-cells = <3>;
+         };
+ 
++    pwm0: pwm@e6e30000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e30000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++        };
++
++    pwm1: pwm@e6e31000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e31000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++        };
++
++    pwm2: pwm@e6e32000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e32000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm3: pwm@e6e33000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e33000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm4: pwm@e6e34000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e34000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm5: pwm@e6e35000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e35000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm6: pwm@e6e36000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e36000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
+ 	pci0: pci@ee090000 {
+ 		compatible = "renesas,pci-r8a7743";
+ 		device_type = "pci";
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 5ca3207..fea6b15 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -254,6 +254,41 @@
+ 		renesas,function = "tpu";
+ 	};
+ 
++    pwm0_pins: pwm0 {
++        renesas,groups = "pwm0";
++        renesas,function = "pwm0";
++    };
++
++    pwm1_pins: pwm1 {
++        renesas,groups = "pwm1";
++        renesas,function = "pwm1";
++    };
++
++    pwm2_pins: pwm2 {
++        renesas,groups = "pwm2";
++        renesas,function = "pwm2";
++    };
++
++    pwm3_pins: pwm3 {
++        renesas,groups = "pwm3";
++        renesas,function = "pwm3";
++    };
++
++    pwm4_pins: pwm4 {
++        renesas,groups = "pwm4";
++        renesas,function = "pwm4";
++    };
++
++    pwm5_pins: pwm5 {
++        renesas,groups = "pwm5";
++        renesas,function = "pwm5";
++    };
++
++    pwm6_pins: pwm6 {
++        renesas,groups = "pwm6";
++        renesas,function = "pwm6";
++    };
++
+ 	sound_pins: sound {
+ 		renesas,groups = "ssi0129_ctrl", "ssi0_data", "ssi1_data";
+ 		renesas,function = "ssi";
+@@ -416,6 +451,39 @@
+ 	status = "okay";
+ };
+ 
++&pwm0 {
++    status = "okay";
++};
++
++&pwm1 {
++    pinctrl-0 = <&pwm1_pins>;
++    pinctrl-names = "default";
++    status = "okay";
++};
++
++&pwm2 {
++    status = "okay";
++};
++
++/* Option for pwm3 when tpu not use */
++&pwm3 {
++    status = "okay";
++};
++
++&pwm4 {
++    status = "okay";
++};
++
++&pwm5 {
++    pinctrl-0 = <&pwm5_pins>;
++    pinctrl-names = "default";
++    status = "okay";
++};
++
++&pwm6 {
++    status = "okay";
++};
++
+ &cpu0 {
+         cpu0-supply = <&reg_1p0v>;
+ };
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index ec8b809..7517416 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1133,6 +1133,61 @@
+ 		#pwm-cells = <3>;
+         };
+ 
++    pwm0: pwm@e6e30000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e30000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++        };
++
++    pwm1: pwm@e6e31000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e31000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++        };
++
++    pwm2: pwm@e6e32000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e32000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm3: pwm@e6e33000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e33000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm4: pwm@e6e34000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e34000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm5: pwm@e6e35000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e35000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
++
++    pwm6: pwm@e6e36000 {
++        compatible = "renesas,pwm-rcar";
++        reg = <0 0xe6e36000 0 0x8>;
++        clocks = <&mstp5_clks R8A7743_CLK_PWM>;
++        status = "disabled";
++        #pwm-cells = <2>;
++    };
+ 
+ 
+ 	pci0: pci@ee090000 {
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7743.c b/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
+index 897ecba..1d5902b 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
+@@ -1560,6 +1560,80 @@ static const unsigned int tpu_to3_mux[] = {
+ 	TPU_TO3_MARK,
+ };
+ 
++/* - PWM -------------------------------------------------------------------- */
++static const unsigned int pwm0_pins[] = {
++    RCAR_GP_PIN(6, 14),
++};
++static const unsigned int pwm0_mux[] = {
++    PWM0_MARK,
++};
++static const unsigned int pwm0_b_pins[] = {
++    RCAR_GP_PIN(5, 30),
++};
++static const unsigned int pwm0_b_mux[] = {
++    PWM0_B_MARK,
++};
++static const unsigned int pwm1_pins[] = {
++     RCAR_GP_PIN(1, 17),
++};
++static const unsigned int pwm1_mux[] = {
++     PWM1_MARK,
++};
++static const unsigned int pwm1_b_pins[] = {
++     RCAR_GP_PIN(6, 15),
++};
++static const unsigned int pwm1_b_mux[] = {
++     PWM1_B_MARK,
++};
++static const unsigned int pwm2_pins[] = {
++     RCAR_GP_PIN(1, 18),
++};
++static const unsigned int pwm2_mux[] = {
++     PWM2_MARK,
++};
++static const unsigned int pwm2_b_pins[] = {
++     RCAR_GP_PIN(0, 16),
++};
++static const unsigned int pwm2_b_mux[] = {
++     PWM2_B_MARK,
++};
++static const unsigned int pwm3_pins[] = {
++     RCAR_GP_PIN(1, 24),
++};
++static const unsigned int pwm3_mux[] = {
++     PWM3_MARK,
++};
++static const unsigned int pwm4_pins[] = {
++     RCAR_GP_PIN(3, 26),
++};
++static const unsigned int pwm4_mux[] = {
++     PWM4_MARK,
++};
++static const unsigned int pwm4_b_pins[] = {
++     RCAR_GP_PIN(3, 31),
++};
++static const unsigned int pwm4_b_mux[] = {
++     PWM4_B_MARK,
++};
++static const unsigned int pwm5_pins[] = {
++	RCAR_GP_PIN(7, 21),
++};
++static const unsigned int pwm5_mux[] = {
++	PWM5_MARK,
++};
++static const unsigned int pwm5_b_pins[] = {
++	RCAR_GP_PIN(7, 20),
++};
++static const unsigned int pwm5_b_mux[] = {
++	PWM5_B_MARK,
++};
++static const unsigned int pwm6_pins[] = {
++	RCAR_GP_PIN(7, 22),
++};
++static const unsigned int pwm6_mux[] = {
++	PWM6_MARK,
++};
++
+ /* - CAN -------------------------------------------------------------------- */
+ 
+ static const unsigned int can0_data_pins[] = {
+@@ -4066,6 +4140,18 @@ static const struct sh_pfc_pin_group pinmux_groups[] = {
+ 	SH_PFC_PIN_GROUP(audio_clk_c),
+ 	SH_PFC_PIN_GROUP(audio_clkout),
+ 	SH_PFC_PIN_GROUP(tpu_to3),
++	SH_PFC_PIN_GROUP(pwm0),
++	SH_PFC_PIN_GROUP(pwm0_b),
++	SH_PFC_PIN_GROUP(pwm1),
++	SH_PFC_PIN_GROUP(pwm1_b),
++	SH_PFC_PIN_GROUP(pwm2),
++	SH_PFC_PIN_GROUP(pwm2_b),
++	SH_PFC_PIN_GROUP(pwm3),
++	SH_PFC_PIN_GROUP(pwm4),
++	SH_PFC_PIN_GROUP(pwm4_b),
++	SH_PFC_PIN_GROUP(pwm5),
++	SH_PFC_PIN_GROUP(pwm5_b),
++	SH_PFC_PIN_GROUP(pwm6),
+ 	SH_PFC_PIN_GROUP(can0_data),
+ 	SH_PFC_PIN_GROUP(can0_data_b),
+ 	SH_PFC_PIN_GROUP(can0_data_c),
+@@ -4425,6 +4511,39 @@ static const char * const tpu_groups[] = {
+ 	"tpu_to3",
+ };
+ 
++static const char * const pwm0_groups[] = {
++	"pwm0",
++	"pwm0_b",
++};
++
++static const char * const pwm1_groups[] = {
++	"pwm1",
++	"pwm1_b",
++};
++
++static const char * const pwm2_groups[] = {
++	"pwm2",
++	"pwm2_b",
++};
++
++static const char * const pwm3_groups[] = {
++	"pwm3",
++};
++
++static const char * const pwm4_groups[] = {
++	"pwm4",
++	"pwm4_b",
++};
++
++static const char * const pwm5_groups[] = {
++	"pwm5",
++	"pwm5_b",
++};
++
++static const char * const pwm6_groups[] = {
++	"pwm6",
++};
++
+ static const char * const du_groups[] = {
+ 	"du_rgb666",
+ 	"du_rgb888",
+@@ -4625,6 +4744,7 @@ static const char * const msiof2_groups[] = {
+ 	"msiof2_tx_e",
+ };
+ 
++
+ static const char * const qspi_groups[] = {
+ 	"qspi_ctrl",
+ 	"qspi_data2",
+@@ -4860,6 +4980,13 @@ static const char * const avb_groups[] = {
+ static const struct sh_pfc_function pinmux_functions[] = {
+ 	SH_PFC_FUNCTION(audio_clk),
+ 	SH_PFC_FUNCTION(tpu),
++	SH_PFC_FUNCTION(pwm0),
++	SH_PFC_FUNCTION(pwm1),
++	SH_PFC_FUNCTION(pwm2),
++	SH_PFC_FUNCTION(pwm3),
++	SH_PFC_FUNCTION(pwm4),
++	SH_PFC_FUNCTION(pwm5),
++	SH_PFC_FUNCTION(pwm6),
+ 	SH_PFC_FUNCTION(can0),
+ 	SH_PFC_FUNCTION(can1),
+ 	SH_PFC_FUNCTION(du),
+-- 
+1.9.1
+

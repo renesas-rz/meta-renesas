@@ -1,0 +1,1435 @@
+From 549bbb0ceb769f6f353dfe36581bb4a922d0d25c Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Sun, 6 Nov 2016 16:18:18 +0700
+Subject: [PATCH] iwg20m g1n add dtsi
+
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 1416 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 1416 insertions(+)
+ create mode 100644 arch/arm/boot/dts/r8a7744.dtsi
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+new file mode 100644
+index 0000000..ec8b809
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -0,0 +1,1416 @@
++/*
++ * Device Tree Source for the r8a7743 SoC
++ *
++ * Copyright (C) 2013-2015 Renesas Electronics Corporation
++ * Copyright (C) 2013-2014 Renesas Solutions Corp.
++ * Copyright (C) 2014 Cogent Embedded Inc.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++#include <dt-bindings/clock/r8a7743-clock.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++
++/ {
++	compatible = "renesas,r8a7743";
++	interrupt-parent = <&gic>;
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c4;
++		i2c5 = &i2c5;
++		eth  = &avb;	
++		spi0 = &qspi;
++		spi1 = &msiof0;
++		spi2 = &msiof1;
++		spi3 = &msiof2;
++	};
++
++	cpus {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		cpu0: cpu@0 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a15";
++			reg = <0>;
++			clock-frequency = <1500000000>;
++			voltage-tolerance = <1>; /* 1% */
++			clocks = <&cpg_clocks R8A7743_CLK_Z>;
++			clock-latency = <300000>; /* 300 us */
++
++			/* kHz - uV - OPPs unknown yet */
++			operating-points = <1500000 1000000>,
++					   <1312500 1000000>,
++					   <1125000 1000000>,
++					   < 937500 1000000>,
++					   < 750000 1000000>,
++					   < 375000 1000000>;
++		};
++
++		cpu1: cpu@1 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a15";
++			reg = <1>;
++			clock-frequency = <1500000000>;
++		};
++	};
++
++	gic: interrupt-controller@f1001000 {
++		compatible = "arm,cortex-a15-gic";
++		#interrupt-cells = <3>;
++		#address-cells = <0>;
++		interrupt-controller;
++		reg = <0 0xf1001000 0 0x1000>,
++			<0 0xf1002000 0 0x1000>,
++			<0 0xf1004000 0 0x2000>,
++			<0 0xf1006000 0 0x2000>;
++		interrupts = <1 9 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
++	};
++    /*info: add watchdog, scifxx, mstpx_clks from iwg20m */ 
++    wdt0: watchdog@e6020000 {
++        compatible = "renesas,rwdt-r8a7743", "renesas,rwdt";
++        reg = <0 0xe6020000 0 0x0c>;
++        clocks = <&mstp4_clks R8A7743_CLK_RWDT>;
++        status = "disabled";
++    };
++
++	gpio0: gpio@e6050000 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6050000 0 0x50>;
++		interrupts = <0 4 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 0 32>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO0>;
++	};
++
++	gpio1: gpio@e6051000 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6051000 0 0x50>;
++		interrupts = <0 5 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 32 32>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO1>;
++	};
++
++	gpio2: gpio@e6052000 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6052000 0 0x50>;
++		interrupts = <0 6 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 64 32>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO2>;
++	};
++
++	gpio3: gpio@e6053000 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6053000 0 0x50>;
++		interrupts = <0 7 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 96 32>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO3>;
++	};
++
++	gpio4: gpio@e6054000 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6054000 0 0x50>;
++		interrupts = <0 8 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 128 32>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO4>;
++	};
++
++	gpio5: gpio@e6055000 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6055000 0 0x50>;
++		interrupts = <0 9 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 160 32>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO5>;
++	};
++
++	gpio6: gpio@e6055400 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6055400 0 0x50>;
++		interrupts = <0 10 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 192 32>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO6>;
++	};
++
++	gpio7: gpio@e6055800 {
++		compatible = "renesas,gpio-r8a7743", "renesas,gpio-rcar";
++		reg = <0 0xe6055800 0 0x50>;
++		interrupts = <0 11 IRQ_TYPE_LEVEL_HIGH>;
++		#gpio-cells = <2>;
++		gpio-controller;
++		gpio-ranges = <&pfc 0 224 26>;
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		clocks = <&mstp9_clks R8A7743_CLK_GPIO7>;
++	};
++
++	thermal@e61f0000 {
++		compatible = "renesas,thermal-r8a7743", "renesas,rcar-thermal";
++		reg = <0 0xe61f0000 0 0x14>, <0 0xe61f0100 0 0x38>;
++		interrupts = <0 69 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp5_clks R8A7743_CLK_THERMAL>;
++	};
++
++	timer {
++		compatible = "arm,armv7-timer";
++		interrupts = <1 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
++			     <1 14 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
++			     <1 11 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
++			     <1 10 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>;
++	};
++
++	irqc0: interrupt-controller@e61c0000 {
++		compatible = "renesas,irqc-r8a7743", "renesas,irqc";
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		reg = <0 0xe61c0000 0 0x200>;
++		interrupts = <0 0 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 1 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 2 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 3 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 12 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 13 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 14 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 15 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 16 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 17 IRQ_TYPE_LEVEL_HIGH>;
++	};
++
++	audma0: dma-controller@ec700000 {
++		compatible = "renesas,rcar-dmac";
++		reg = <0 0xec700000 0 0x10000>;
++		interrupts =	<0 346 IRQ_TYPE_LEVEL_HIGH
++				 0 320 IRQ_TYPE_LEVEL_HIGH
++				 0 321 IRQ_TYPE_LEVEL_HIGH
++				 0 322 IRQ_TYPE_LEVEL_HIGH
++				 0 323 IRQ_TYPE_LEVEL_HIGH
++				 0 324 IRQ_TYPE_LEVEL_HIGH
++				 0 325 IRQ_TYPE_LEVEL_HIGH
++				 0 326 IRQ_TYPE_LEVEL_HIGH
++				 0 327 IRQ_TYPE_LEVEL_HIGH
++				 0 328 IRQ_TYPE_LEVEL_HIGH
++				 0 329 IRQ_TYPE_LEVEL_HIGH
++				 0 330 IRQ_TYPE_LEVEL_HIGH
++				 0 331 IRQ_TYPE_LEVEL_HIGH
++				 0 332 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "error",
++				"ch0", "ch1", "ch2", "ch3",
++				"ch4", "ch5", "ch6", "ch7",
++				"ch8", "ch9", "ch10", "ch11",
++				"ch12";
++		clocks = <&mstp5_clks R8A7743_CLK_AUDIO_DMAC0>;
++		clock-names = "fck";
++		#dma-cells = <1>;
++		dma-channels = <13>;
++	};
++
++	audma1: dma-controller@ec720000 {
++		compatible = "renesas,rcar-dmac";
++		reg = <0 0xec720000 0 0x10000>;
++		interrupts =	<0 347 IRQ_TYPE_LEVEL_HIGH
++				 0 333 IRQ_TYPE_LEVEL_HIGH
++				 0 334 IRQ_TYPE_LEVEL_HIGH
++				 0 335 IRQ_TYPE_LEVEL_HIGH
++				 0 336 IRQ_TYPE_LEVEL_HIGH
++				 0 337 IRQ_TYPE_LEVEL_HIGH
++				 0 338 IRQ_TYPE_LEVEL_HIGH
++				 0 339 IRQ_TYPE_LEVEL_HIGH
++				 0 340 IRQ_TYPE_LEVEL_HIGH
++				 0 341 IRQ_TYPE_LEVEL_HIGH
++				 0 342 IRQ_TYPE_LEVEL_HIGH
++				 0 343 IRQ_TYPE_LEVEL_HIGH
++				 0 344 IRQ_TYPE_LEVEL_HIGH
++				 0 345 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "error",
++				"ch0", "ch1", "ch2", "ch3",
++				"ch4", "ch5", "ch6", "ch7",
++				"ch8", "ch9", "ch10", "ch11",
++				"ch12";
++		clocks = <&mstp5_clks R8A7743_CLK_AUDIO_DMAC1>;
++		clock-names = "fck";
++		#dma-cells = <1>;
++		dma-channels = <13>;
++	};
++
++	audmapp: dma-controller@ec740000 {
++		compatible = "renesas,rcar-audmapp";
++		#dma-cells = <1>;
++
++		reg = <0 0xec740000 0 0x200>;
++	};
++
++	/* The memory map in the User's Manual maps the cores to bus numbers */
++	i2c0: i2c@e6508000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7743";
++		reg = <0 0xe6508000 0 0x40>;
++		interrupts = <0 287 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7743_CLK_I2C0>;
++		status = "disabled";
++	};
++
++	i2c1: i2c@e6518000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7743";
++		reg = <0 0xe6518000 0 0x40>;
++		interrupts = <0 288 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7743_CLK_I2C1>;
++		status = "disabled";
++	};
++
++	i2c2: i2c@e6530000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7743";
++		reg = <0 0xe6530000 0 0x40>;
++		interrupts = <0 286 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7743_CLK_I2C2>;
++		status = "disabled";
++	};
++
++	i2c3: i2c@e6540000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7743";
++		reg = <0 0xe6540000 0 0x40>;
++		interrupts = <0 290 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7743_CLK_I2C3>;
++		status = "disabled";
++	};
++
++	i2c4: i2c@e6520000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7743";
++		reg = <0 0xe6520000 0 0x40>;
++		interrupts = <0 19 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7743_CLK_I2C4>;
++		status = "disabled";
++	};
++
++	i2c5: i2c@e6528000 {
++		/* doesn't need pinmux */
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7743";
++		reg = <0 0xe6528000 0 0x40>;
++		interrupts = <0 20 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7743_CLK_I2C5>;
++		status = "disabled";
++	};
++
++	pfc: pfc@e6060000 {
++		compatible = "renesas,pfc-r8a7743";
++		reg = <0 0xe6060000 0 0x250>;
++		#gpio-range-cells = <3>;
++	};
++
++	sdhi0: sd@ee100000 {
++		compatible = "renesas,sdhi-r8a7743";
++		reg = <0 0xee100000 0 0x200>;
++		dma-names = "tx", "rx";
++		interrupts = <0 165 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7743_CLK_SDHI0>;
++		dma-xmit-sz = <32>;
++		renesas,clk-rate = <195000000>;
++		renesas,mmc-scc-tapnum = <8>;
++		renesas,pfcs = <0xe6060000 0x8c>;
++		renesas,id = <0>;
++		status = "disabled";
++	};
++
++	sdhi1: sd@ee140000 {
++		compatible = "renesas,sdhi-r8a7743";
++		reg = <0 0xee140000 0 0x100>;
++		dma-names = "tx", "rx";
++		interrupts = <0 167 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7743_CLK_SDHI1>;
++		cap-uhs-sdr50;
++		dma-xmit-sz = <32>;
++		renesas,clk-rate = <97500000>;
++		renesas,pfcs = <0xe6060000 0x8c>;
++		renesas,id = <1>;
++		status = "disabled";
++	};
++
++	sdhi2: sd@ee160000 {
++		compatible = "renesas,sdhi-r8a7743";
++		reg = <0 0xee160000 0 0x100>;
++		dma-names = "tx", "rx";
++		interrupts = <0 168 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7743_CLK_SDHI2>;
++		cap-uhs-sdr50;
++		dma-xmit-sz = <32>;
++		renesas,clk-rate = <97500000>;
++		renesas,pfcs = <0xe6060000 0x8c>;
++		renesas,id = <2>;
++		status = "disabled";
++	};
++
++	mmcif0: mmcif@ee200000 {
++		compatible = "renesas,mmcif-r8a7743", "renesas,sh-mmcif";
++		reg = <0 0xee200000 0 0x80>;
++		dma-names = "tx", "rx";
++		interrupts = <0 169 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7743_CLK_MMCIF0>;
++		reg-io-width = <4>;
++		renesas,clk-rate = <97500000>;
++		status = "disabled";
++	};
++
++    /*todo: check manual till scifa0*/
++	scifa0: serial@e6c40000 {
++		compatible = "renesas,scifa-r8a7743", "renesas,scifa";
++		reg = <0 0xe6c40000 0 64>;
++		interrupts = <0 144 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_SCIFA0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifa1: serial@e6c50000 {
++		compatible = "renesas,scifa-r8a7743", "renesas,scifa";
++		reg = <0 0xe6c50000 0 64>;
++		interrupts = <0 145 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_SCIFA1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifa2: serial@e6c60000 {
++		compatible = "renesas,scifa-r8a7743", "renesas,scifa";
++		reg = <0 0xe6c60000 0 64>;
++		interrupts = <0 151 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_SCIFA2>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifa3: serial@e6c70000 {
++		compatible = "renesas,scifa-r8a7743", "renesas,scifa";
++		reg = <0 0xe6c70000 0 64>;
++		interrupts = <0 29 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp11_clks R8A7743_CLK_SCIFA3>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifa4: serial@e6c78000 {
++		compatible = "renesas,scifa-r8a7743", "renesas,scifa";
++		reg = <0 0xe6c78000 0 64>;
++		interrupts = <0 30 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp11_clks R8A7743_CLK_SCIFA4>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifa5: serial@e6c80000 {
++		compatible = "renesas,scifa-r8a7743", "renesas,scifa";
++		reg = <0 0xe6c80000 0 64>;
++		interrupts = <0 31 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp11_clks R8A7743_CLK_SCIFA5>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifb0: serial@e6c20000 {
++		compatible = "renesas,scifb-r8a7743", "renesas,scifb";
++		reg = <0 0xe6c20000 0 64>;
++		interrupts = <0 148 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_SCIFB0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifb1: serial@e6c30000 {
++		compatible = "renesas,scifb-r8a7743", "renesas,scifb";
++		reg = <0 0xe6c30000 0 64>;
++		interrupts = <0 149 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_SCIFB1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifb2: serial@e6ce0000 {
++		compatible = "renesas,scifb-r8a7743", "renesas,scifb";
++		reg = <0 0xe6ce0000 0 64>;
++		interrupts = <0 150 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_SCIFB2>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif0: serial@e6e60000 {
++		compatible = "renesas,scif-r8a7743", "renesas,scif";
++		reg = <0 0xe6e60000 0 64>;
++		interrupts = <0 152 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_SCIF0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif1: serial@e6e68000 {
++		compatible = "renesas,scif-r8a7743", "renesas,scif";
++		reg = <0 0xe6e68000 0 64>;
++		interrupts = <0 153 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_SCIF1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif2: serial@e6e58000 {
++		compatible = "renesas,scif-r8a7743", "renesas,scif";
++		reg = <0 0xe6e58000 0 64>;
++		interrupts = <0 22 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_SCIF2>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif3: serial@e6ea8000 {
++		compatible = "renesas,scif-r8a7743", "renesas,scif";
++		reg = <0 0xe6ea8000 0 64>;
++		interrupts = <0 23 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_SCIF3>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif4: serial@e6ee0000 {
++		compatible = "renesas,scif-r8a7743", "renesas,scif";
++		reg = <0 0xe6ee0000 0 64>;
++		interrupts = <0 24 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_SCIF4>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif5: serial@e6ee8000 {
++		compatible = "renesas,scif-r8a7743", "renesas,scif";
++		reg = <0 0xe6ee8000 0 64>;
++		interrupts = <0 25 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_SCIF5>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	hscif0: serial@e62c0000 {
++		compatible = "renesas,hscif-r8a7743", "renesas,hscif";
++		reg = <0 0xe62c0000 0 96>;
++		interrupts = <0 154 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_HSCIF0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	hscif1: serial@e62c8000 {
++		compatible = "renesas,hscif-r8a7743", "renesas,hscif";
++		reg = <0 0xe62c8000 0 96>;
++		interrupts = <0 155 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_HSCIF1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	hscif2: serial@e62d0000 {
++		compatible = "renesas,hscif-r8a7743", "renesas,hscif";
++		reg = <0 0xe62d0000 0 96>;
++		interrupts = <0 21 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7743_CLK_HSCIF2>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	ether: ethernet@ee700000 {
++		compatible = "renesas,ether-r8a7743";
++		reg = <0 0xee700000 0 0x400>;
++		interrupts = <0 162 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7743_CLK_ETHER>;
++		phy-mode = "rmii";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++	avb: ethernet@e6800000 {
++		compatible = "renesas,gether-r8a7743";
++		reg = <0 0xe6800000 0 0x7bf>;
++		interrupts = <0 163 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7743_CLK_AVB>;
++		phy-mode = "gmii";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++    xhci: xhci@ee000000 {
++            compatible = "renesas,xhci-r8a7743";
++            reg = <0 0xee000000 0 0xc00>;
++            interrupts = <0 101 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&mstp3_clks R8A7743_CLK_SSUSB>;
++            phys = <&usbphy 1 1>;
++            phy-names = "usb";
++            status = "disabled";
++    };
++
++	sata0: sata@ee300000 {
++		compatible = "renesas,sata-r8a7743";
++		reg = <0 0xee300000 0 0x2000>;
++		interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7743_CLK_SATA0>;
++		status = "disabled";
++	};
++
++	sata1: sata@ee500000 {
++		compatible = "renesas,sata-r8a7743";
++		reg = <0 0xee500000 0 0x2000>;
++		interrupts = <0 106 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7743_CLK_SATA1>;
++		status = "disabled";
++	};
++
++    usbphy: usb-phy@e6590100 {
++		compatible = "renesas,usb-phy-r8a7743";
++		reg = <0 0xe6590100 0 0x100>;
++		#phy-cells = <2>;
++		clocks = <&mstp7_clks R8A7743_CLK_HSUSB>;
++		clock-names = "usbhs";
++		status = "disabled";
++
++		usb-phy@0,0 {
++			renesas,phy-select = <0 0>;
++			renesas,ugctrl2-masks = <0x00000030 0x00000010>;
++		};
++		usb-phy@0,1 {
++			renesas,phy-select = <0 1>;
++			renesas,ugctrl2-masks = <0x00000030 0x00000030>;
++		};
++		usb-phy@1,0 {
++			renesas,phy-select = <1 0>;
++			renesas,ugctrl2-masks = <0x80000000 0x00000000>;
++		};
++		usb-phy@1,1 {
++			renesas,phy-select = <1 1>;
++			renesas,ugctrl2-masks = <0x80000000 0x80000000>;
++		};
++	};
++
++        can0: can@e6e80000 {
++                 compatible = "renesas,can-r8a7743";
++                 reg = <0 0xe6e80000 0 0x1000>;
++                 interrupts = <0 186 IRQ_TYPE_LEVEL_HIGH>;
++                 clocks = <&mstp9_clks R8A7743_CLK_RCAN0>;
++                 clock-names = "clkp1";
++                 status = "disabled";
++         };
++ 
++         can1: can@e6e88000 {
++                 compatible = "renesas,can-r8a7743";
++                 reg = <0 0xe6e88000 0 0x1000>;
++                 interrupts = <0 187 IRQ_TYPE_LEVEL_HIGH>;
++                 clocks = <&mstp9_clks R8A7743_CLK_RCAN1>;
++                 clock-names = "clkp1";
++                 status = "disabled";
++         };
++
++	clocks {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		/* External root clock */
++		extal_clk: extal_clk {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			/* This value must be overriden by the board. */
++			clock-frequency = <0>;
++			clock-output-names = "extal";
++		};
++
++		/*
++		 * The external audio clocks are configured as 0 Hz fixed frequency clocks by
++		 * default. Boards that provide audio clocks should override them.
++		 */
++		audio_clk_a: audio_clk_a {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <0>;
++			clock-output-names = "audio_clk_a";
++		};
++		audio_clk_b: audio_clk_b {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <0>;
++			clock-output-names = "audio_clk_b";
++		};
++		audio_clk_c: audio_clk_c {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <0>;
++			clock-output-names = "audio_clk_c";
++		};
++
++		/* External PCIe clock - can be overridden by the board */
++		pcie_bus_clk: pcie_bus_clk {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <100000000>;
++			clock-output-names = "pcie_bus";
++			status = "disabled";
++		};
++
++		/* Special CPG clocks */
++		cpg_clocks: cpg_clocks@e6150000 {
++			compatible = "renesas,r8a7743-cpg-clocks",
++				     "renesas,rcar-gen2-cpg-clocks";
++			reg = <0 0xe6150000 0 0x1000>;
++			clocks = <&extal_clk>;
++			#clock-cells = <1>;
++			clock-output-names = "main", "pll0", "pll1", "pll3",
++					     "lb", "qspi", "sdh", "sd0", "z";
++		};
++
++		/* Variable factor clocks */
++		sd1_clk: sd2_clk@e6150078 {
++			compatible = "renesas,r8a7743-div6-clock", "renesas,cpg-div6-clock";
++			reg = <0 0xe6150078 0 4>;
++			clocks = <&pll1_div2_clk>;
++			#clock-cells = <0>;
++			clock-output-names = "sd1";
++		};
++		sd2_clk: sd3_clk@e615026c {
++			compatible = "renesas,r8a7743-div6-clock", "renesas,cpg-div6-clock";
++			reg = <0 0xe615026c 0 4>;
++			clocks = <&pll1_div2_clk>;
++			#clock-cells = <0>;
++			clock-output-names = "sd2";
++		};
++		mmc0_clk: mmc0_clk@e6150240 {
++			compatible = "renesas,r8a7743-div6-clock", "renesas,cpg-div6-clock";
++			reg = <0 0xe6150240 0 4>;
++			clocks = <&pll1_div2_clk>;
++			#clock-cells = <0>;
++			clock-output-names = "mmc0";
++		};
++		ssp_clk: ssp_clk@e6150248 {
++			compatible = "renesas,r8a7743-div6-clock", "renesas,cpg-div6-clock";
++			reg = <0 0xe6150248 0 4>;
++			clocks = <&pll1_div2_clk>;
++			#clock-cells = <0>;
++			clock-output-names = "ssp";
++		};
++		ssprs_clk: ssprs_clk@e615024c {
++			compatible = "renesas,r8a7743-div6-clock", "renesas,cpg-div6-clock";
++			reg = <0 0xe615024c 0 4>;
++			clocks = <&pll1_div2_clk>;
++			#clock-cells = <0>;
++			clock-output-names = "ssprs";
++		};
++
++		/* Fixed factor clocks */
++		pll1_div2_clk: pll1_div2_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <2>;
++			clock-mult = <1>;
++			clock-output-names = "pll1_div2";
++		};
++		zg_clk: zg_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <5>;
++			clock-mult = <1>;
++			clock-output-names = "zg";
++		};
++		zx_clk: zx_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <3>;
++			clock-mult = <1>;
++			clock-output-names = "zx";
++		};
++		zs_clk: zs_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <6>;
++			clock-mult = <1>;
++			clock-output-names = "zs";
++		};
++		hp_clk: hp_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <12>;
++			clock-mult = <1>;
++			clock-output-names = "hp";
++		};
++		i_clk: i_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <2>;
++			clock-mult = <1>;
++			clock-output-names = "i";
++		};
++		b_clk: b_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <12>;
++			clock-mult = <1>;
++			clock-output-names = "b";
++		};
++		p_clk: p_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <24>;
++			clock-mult = <1>;
++			clock-output-names = "p";
++		};
++		cl_clk: cl_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <48>;
++			clock-mult = <1>;
++			clock-output-names = "cl";
++		};
++		m2_clk: m2_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <8>;
++			clock-mult = <1>;
++			clock-output-names = "m2";
++		};
++		imp_clk: imp_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <4>;
++			clock-mult = <1>;
++			clock-output-names = "imp";
++		};
++		rclk_clk: rclk_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <(48 * 1024)>;
++			clock-mult = <1>;
++			clock-output-names = "rclk";
++		};
++		oscclk_clk: oscclk_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL1>;
++			#clock-cells = <0>;
++			clock-div = <(12 * 1024)>;
++			clock-mult = <1>;
++			clock-output-names = "oscclk";
++		};
++		zb3_clk: zb3_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL3>;
++			#clock-cells = <0>;
++			clock-div = <4>;
++			clock-mult = <1>;
++			clock-output-names = "zb3";
++		};
++		zb3d2_clk: zb3d2_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL3>;
++			#clock-cells = <0>;
++			clock-div = <8>;
++			clock-mult = <1>;
++			clock-output-names = "zb3d2";
++		};
++		ddr_clk: ddr_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&cpg_clocks R8A7743_CLK_PLL3>;
++			#clock-cells = <0>;
++			clock-div = <8>;
++			clock-mult = <1>;
++			clock-output-names = "ddr";
++		};
++		mp_clk: mp_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&pll1_div2_clk>;
++			#clock-cells = <0>;
++			clock-div = <15>;
++			clock-mult = <1>;
++			clock-output-names = "mp";
++		};
++		cp_clk: cp_clk {
++			compatible = "fixed-factor-clock";
++			clocks = <&extal_clk>;
++			#clock-cells = <0>;
++			clock-div = <2>;
++			clock-mult = <1>;
++			clock-output-names = "cp";
++		};
++
++		/* Gate clocks */
++		mstp0_clks: mstp0_clks@e6150130 {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150130 0 4>, <0 0xe6150030 0 4>;
++			clocks = <&mp_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <R8A7743_CLK_MSIOF0>;
++			clock-output-names = "msiof0";
++		};
++		mstp1_clks: mstp1_clks@e6150134 {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150134 0 4>, <0 0xe6150038 0 4>;
++			clocks = <&zs_clk>, <&zs_clk>, <&p_clk>,
++				 <&zg_clk>, <&zs_clk>, <&zs_clk>, <&zs_clk>,
++				 <&p_clk>, <&p_clk>, <&rclk_clk>, <&cp_clk>,
++				 <&zs_clk>, <&zs_clk>, <&zs_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_VCP0 R8A7743_CLK_VPC0
++				R8A7743_CLK_TMU1 R8A7743_CLK_PVRSRVKM R8A7743_CLK_2DDMAC
++				R8A7743_CLK_FDP1 R8A7743_CLK_FDP0 R8A7743_CLK_TMU3
++				R8A7743_CLK_TMU2 R8A7743_CLK_CMT0 R8A7743_CLK_TMU0
++				R8A7743_CLK_VSP1_DU1 R8A7743_CLK_VSP1_DU0 R8A7743_CLK_VSP1_S
++			>;
++			clock-output-names =
++				"vcp0", "vpc0", "tmu1", "pvrsrvkm",
++				"tddmac", "fdp1", "fdp0", "tmu3", "tmu2",
++				"cmt0", "tmu0", "vsp1-du1", "vsp1-du0", "vsps";
++		};
++		mstp2_clks: mstp2_clks@e6150138 {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150138 0 4>, <0 0xe6150040 0 4>;
++			clocks = <&mp_clk>, <&mp_clk>, <&mp_clk>, <&mp_clk>, <&mp_clk>,
++				 <&mp_clk>, <&mp_clk>, <&mp_clk>,
++				 <&zs_clk>, <&zs_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_SCIFA2 R8A7743_CLK_SCIFA1 R8A7743_CLK_SCIFA0
++				R8A7743_CLK_MSIOF2 R8A7743_CLK_SCIFB0 R8A7743_CLK_SCIFB1
++				R8A7743_CLK_MSIOF1 R8A7743_CLK_SCIFB2
++				R8A7743_CLK_SYS_DMAC1 R8A7743_CLK_SYS_DMAC0
++			>;
++			clock-output-names =
++				"scifa2", "scifa1", "scifa0", "msiof2", "scifb0",
++				"scifb1", "msiof1", "scifb2",
++				"sys-dmac1", "sys-dmac0";
++		};
++		mstp3_clks: mstp3_clks@e615013c {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
++			clocks = <&cp_clk>, <&sd2_clk>, <&sd1_clk>, <&cpg_clocks R8A7743_CLK_SD0>,
++				 <&mmc0_clk>, <&hp_clk>, <&mp_clk>, <&hp_clk>, <&mp_clk>, <&rclk_clk>,
++				 <&hp_clk>, <&hp_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_TPU0 R8A7743_CLK_SDHI2 R8A7743_CLK_SDHI1 R8A7743_CLK_SDHI0
++				R8A7743_CLK_MMCIF0 R8A7743_CLK_IIC0 R8A7743_CLK_PCIEC R8A7743_CLK_IIC1
++				R8A7743_CLK_SSUSB R8A7743_CLK_CMT1
++				R8A7743_CLK_USBDMAC0 R8A7743_CLK_USBDMAC1
++			>;
++			clock-output-names =
++				"tpu0", "sdhi2", "sdhi1", "sdhi0",
++				"mmcif0", "i2c7", "pciec", "i2c8", "ssusb", "cmt1",
++				"usbdmac0", "usbdmac1";
++		};
++       
++        mstp4_clks: mstp4_clks@e6150140 {
++            compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++            reg = <0 0xe6150140 0 4>, <0 0xe615004c 0 4>;
++            clocks = <&cp_clk>, <&rclk_clk>;
++            #clock-cells = <1>;
++            clock-indices = <R8A7743_CLK_IRQC R8A7743_CLK_RWDT>;
++            clock-output-names = "irqc", "rwdt";
++        };
++
++		mstp5_clks: mstp5_clks@e6150144 {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150144 0 4>, <0 0xe615003c 0 4>;
++			clocks = <&zs_clk>, <&zs_clk>, <&extal_clk>, <&p_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <R8A7743_CLK_AUDIO_DMAC0 R8A7743_CLK_AUDIO_DMAC1
++					R8A7743_CLK_THERMAL R8A7743_CLK_PWM>;
++			clock-indices = <R8A7743_CLK_AUDIO_DMAC0 R8A7743_CLK_AUDIO_DMAC1
++					R8A7743_CLK_THERMAL R8A7743_CLK_PWM>;
++			clock-output-names = "audmac0", "audmac1", "thermal", "pwm";
++		};
++		mstp7_clks: mstp7_clks@e615014c {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe615014c 0 4>, <0 0xe61501c4 0 4>;
++			clocks = <&mp_clk>,  <&hp_clk>, <&zs_clk>, <&p_clk>, <&p_clk>, <&zs_clk>,
++				 <&zs_clk>, <&p_clk>, <&p_clk>, <&p_clk>, <&p_clk>,
++				 <&zx_clk>, <&zx_clk>, <&zx_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_EHCI R8A7743_CLK_HSUSB R8A7743_CLK_HSCIF2 R8A7743_CLK_SCIF5
++				R8A7743_CLK_SCIF4 R8A7743_CLK_HSCIF1 R8A7743_CLK_HSCIF0
++				R8A7743_CLK_SCIF3 R8A7743_CLK_SCIF2 R8A7743_CLK_SCIF1
++				R8A7743_CLK_SCIF0 R8A7743_CLK_DU1 R8A7743_CLK_DU0
++				R8A7743_CLK_LVDS0
++			>;
++			clock-output-names =
++				"ehci", "hsusb", "hscif2", "scif5", "scif4", "hscif1", "hscif0",
++				"scif3", "scif2", "scif1", "scif0", "du1", "du0", "lvds0";
++		};
++		mstp8_clks: mstp8_clks@e6150990 {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150990 0 4>, <0 0xe61509a0 0 4>;
++			clocks = <&zx_clk>, <&zg_clk>, <&zg_clk>, <&zg_clk>, <&p_clk>,
++				 <&hp_clk>, <&zs_clk>, <&zs_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_IPMMU_GP
++				R8A7743_CLK_VIN2 R8A7743_CLK_VIN1 R8A7743_CLK_VIN0
++				R8A7743_CLK_ETHER R8A7743_CLK_AVB R8A7743_CLK_SATA1 R8A7743_CLK_SATA0
++			>;
++			clock-output-names =
++				"ipmmu_gp", "vin2", "vin1", "vin0", "ether", "avb", "sata1",
++				"sata0";
++		};
++		mstp9_clks: mstp9_clks@e6150994 {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150994 0 4>, <0 0xe61509a4 0 4>;
++			clocks = <&cp_clk>, <&cp_clk>, <&cp_clk>, <&cp_clk>,
++				 <&cp_clk>, <&cp_clk>, <&cp_clk>, <&cp_clk>,
++				 <&p_clk>, <&p_clk>, <&cpg_clocks R8A7743_CLK_QSPI>, <&hp_clk>,
++				 <&cp_clk>, <&hp_clk>, <&hp_clk>, <&hp_clk>,
++				 <&hp_clk>, <&hp_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_GPIO7 R8A7743_CLK_GPIO6 R8A7743_CLK_GPIO5 R8A7743_CLK_GPIO4
++				R8A7743_CLK_GPIO3 R8A7743_CLK_GPIO2 R8A7743_CLK_GPIO1 R8A7743_CLK_GPIO0
++				R8A7743_CLK_RCAN1 R8A7743_CLK_RCAN0 R8A7743_CLK_QSPI_MOD R8A7743_CLK_I2C5
++				R8A7743_CLK_IICDVFS R8A7743_CLK_I2C4 R8A7743_CLK_I2C3 R8A7743_CLK_I2C2
++				R8A7743_CLK_I2C1 R8A7743_CLK_I2C0
++			>;
++			clock-output-names =
++				"gpio7", "gpio6", "gpio5", "gpio4", "gpio3", "gpio2", "gpio1", "gpio0",
++				"rcan1", "rcan0", "qspi_mod", "i2c5", "i2c6", "i2c4", "i2c3", "i2c2",
++				"i2c1", "i2c0";
++		};
++		mstp10_clks: mstp10_clks@e6150998 {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150998 0 4>, <0 0xe61509a8 0 4>;
++			clocks = <&p_clk>, /* parent of SCU */
++				<&p_clk>,
++				<&p_clk>, <&p_clk>, <&p_clk>, <&p_clk>, <&p_clk>,
++				<&p_clk>, <&p_clk>, <&p_clk>, <&p_clk>, <&p_clk>,
++				<&mstp10_clks R8A7743_CLK_SCU>, <&mstp10_clks R8A7743_CLK_SCU>,
++				<&mstp10_clks R8A7743_CLK_SCU>, <&mstp10_clks R8A7743_CLK_SCU>,
++				<&mstp10_clks R8A7743_CLK_SCU>, <&mstp10_clks R8A7743_CLK_SCU>,
++				<&mstp10_clks R8A7743_CLK_SCU>, <&mstp10_clks R8A7743_CLK_SCU>,
++				<&mstp10_clks R8A7743_CLK_SCU>, <&mstp10_clks R8A7743_CLK_SCU>,
++				<&mstp10_clks R8A7743_CLK_SCU>, <&mstp10_clks R8A7743_CLK_SCU>;
++
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_SCU
++				R8A7743_CLK_SSI
++				R8A7743_CLK_SSI9 R8A7743_CLK_SSI8 R8A7743_CLK_SSI7 R8A7743_CLK_SSI6 R8A7743_CLK_SSI5
++				R8A7743_CLK_SSI4 R8A7743_CLK_SSI3 R8A7743_CLK_SSI2 R8A7743_CLK_SSI1 R8A7743_CLK_SSI0
++				R8A7743_CLK_DVC1 R8A7743_CLK_DVC0
++				R8A7743_CLK_SRC9 R8A7743_CLK_SRC8 R8A7743_CLK_SRC7 R8A7743_CLK_SRC6 R8A7743_CLK_SRC5
++				R8A7743_CLK_SRC4 R8A7743_CLK_SRC3 R8A7743_CLK_SRC2 R8A7743_CLK_SRC1 R8A7743_CLK_SRC0
++			>;
++			clock-indices = <
++				R8A7743_CLK_SCU
++				R8A7743_CLK_SSI
++				R8A7743_CLK_SSI9 R8A7743_CLK_SSI8 R8A7743_CLK_SSI7 R8A7743_CLK_SSI6 R8A7743_CLK_SSI5
++				R8A7743_CLK_SSI4 R8A7743_CLK_SSI3 R8A7743_CLK_SSI2 R8A7743_CLK_SSI1 R8A7743_CLK_SSI0
++				R8A7743_CLK_DVC1 R8A7743_CLK_DVC0
++				R8A7743_CLK_SRC9 R8A7743_CLK_SRC8 R8A7743_CLK_SRC7 R8A7743_CLK_SRC6 R8A7743_CLK_SRC5
++				R8A7743_CLK_SRC4 R8A7743_CLK_SRC3 R8A7743_CLK_SRC2 R8A7743_CLK_SRC1 R8A7743_CLK_SRC0
++			>;
++			clock-output-names =
++				"scu", "ssi",
++				"ssi9", "ssi8", "ssi7", "ssi6", "ssi5",
++				"ssi4", "ssi3", "ssi2", "ssi1", "ssi0",
++				"dvc1", "dvc0",
++				"src9", "src8", "src7", "src6", "src5",
++				"src4", "src3", "src2", "src1", "src0";
++		};
++		mstp11_clks: mstp11_clks@e615099c {
++			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe615099c 0 4>, <0 0xe61509ac 0 4>;
++			clocks = <&mp_clk>, <&mp_clk>, <&mp_clk>;
++			#clock-cells = <1>;
++			renesas,clock-indices = <
++				R8A7743_CLK_SCIFA3 R8A7743_CLK_SCIFA4 R8A7743_CLK_SCIFA5
++			>;
++			clock-output-names = "scifa3", "scifa4", "scifa5";
++		};
++	};
++
++	qspi: spi@e6b10000 {
++		compatible = "renesas,qspi-r8a7743", "renesas,qspi";
++		reg = <0 0xe6b10000 0 0x2c>;
++		interrupts = <0 184 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7743_CLK_QSPI_MOD>;
++		num-cs = <1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++	msiof0: spi@e6e20000 {
++		compatible = "renesas,msiof-r8a7743";
++		reg = <0 0xe6e20000 0 0x0064>;
++		interrupts = <0 156 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp0_clks R8A7743_CLK_MSIOF0>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++	msiof1: spi@e6e10000 {
++		compatible = "renesas,msiof-r8a7743";
++		reg = <0 0xe6e10000 0 0x0064>;
++		interrupts = <0 157 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_MSIOF1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++	msiof2: spi@e6e00000 {
++		compatible = "renesas,msiof-r8a7743";
++		reg = <0 0xe6e00000 0 0x0064>;
++		interrupts = <0 158 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7743_CLK_MSIOF2>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++	tpu: pwm@e60f0000 {
++		compatible = "renesas,tpu-r8a7743", "renesas,tpu";
++		reg = <0 0xe60f0000 0 0x40>;
++		interrupts = <0 135 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7743_CLK_TPU0>;
++		status = "disabled";
++		#pwm-cells = <3>;
++        };
++
++
++
++	pci0: pci@ee090000 {
++		compatible = "renesas,pci-r8a7743";
++		device_type = "pci";
++		clocks = <&mstp7_clks R8A7743_CLK_EHCI>;
++		reg = <0 0xee090000 0 0xc00>,
++		      <0 0xee080000 0 0x1100>;
++		interrupts = <0 108 IRQ_TYPE_LEVEL_HIGH>;
++		status = "disabled";
++
++		bus-range = <0 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		ranges = <0x02000000 0 0xee080000 0 0xee080000 0 0x00010000>;
++		interrupt-map-mask = <0xff00 0 0 0x7>;
++		interrupt-map = <0x0000 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
++				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
++				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
++	};
++
++	pci1: pci@ee0d0000 {
++		compatible = "renesas,pci-r8a7743";
++		device_type = "pci";
++		clocks = <&mstp7_clks R8A7743_CLK_EHCI>;
++		reg = <0 0xee0d0000 0 0xc00>,
++		      <0 0xee0c0000 0 0x1100>;
++		interrupts = <0 113 IRQ_TYPE_LEVEL_HIGH>;
++		status = "disabled";
++
++		bus-range = <1 1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		ranges = <0x02000000 0 0xee0c0000 0 0xee0c0000 0 0x00010000>;
++		interrupt-map-mask = <0xff00 0 0 0x7>;
++		interrupt-map = <0x0000 0 0 1 &gic 0 113 IRQ_TYPE_LEVEL_HIGH
++				 0x0800 0 0 1 &gic 0 113 IRQ_TYPE_LEVEL_HIGH
++				 0x1000 0 0 2 &gic 0 113 IRQ_TYPE_LEVEL_HIGH>;
++	};
++
++	pciec: pcie@fe000000 {
++		compatible = "renesas,pcie-r8a7743";
++		reg = <0 0xfe000000 0 0x80000>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		bus-range = <0x00 0xff>;
++		device_type = "pci";
++		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
++			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
++			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
++			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
++		/* Map all possible DDR as inbound ranges */
++		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000
++			      0x43000000 2 0x00000000 2 0x00000000 1 0x00000000>;
++		interrupts = <0 116 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 117 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 118 IRQ_TYPE_LEVEL_HIGH>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic 0 116 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7743_CLK_PCIEC>, <&pcie_bus_clk>;
++		clock-names = "pcie", "pcie_bus";
++		status = "disabled";
++	};
++
++	rcar_sound: rcar_sound@0xec500000 {
++		#sound-dai-cells = <1>;
++		compatible =  "renesas,rcar_sound-r8a7743", "renesas,rcar_sound-gen2", "renesas,rcar_sound";
++		reg =	<0 0xec500000 0 0x1000>, /* SCU */
++			<0 0xec5a0000 0 0x100>,  /* ADG */
++			<0 0xec540000 0 0x1000>, /* SSIU */
++			<0 0xec541000 0 0x1280>; /* SSI */
++		clocks = <&mstp10_clks R8A7743_CLK_SSI>,
++			<&mstp10_clks R8A7743_CLK_SSI9>, <&mstp10_clks R8A7743_CLK_SSI8>,
++			<&mstp10_clks R8A7743_CLK_SSI7>, <&mstp10_clks R8A7743_CLK_SSI6>,
++			<&mstp10_clks R8A7743_CLK_SSI5>, <&mstp10_clks R8A7743_CLK_SSI4>,
++			<&mstp10_clks R8A7743_CLK_SSI3>, <&mstp10_clks R8A7743_CLK_SSI2>,
++			<&mstp10_clks R8A7743_CLK_SSI1>, <&mstp10_clks R8A7743_CLK_SSI0>,
++			<&mstp10_clks R8A7743_CLK_SRC9>, <&mstp10_clks R8A7743_CLK_SRC8>,
++			<&mstp10_clks R8A7743_CLK_SRC7>, <&mstp10_clks R8A7743_CLK_SRC6>,
++			<&mstp10_clks R8A7743_CLK_SRC5>, <&mstp10_clks R8A7743_CLK_SRC4>,
++			<&mstp10_clks R8A7743_CLK_SRC3>, <&mstp10_clks R8A7743_CLK_SRC2>,
++			<&mstp10_clks R8A7743_CLK_SRC1>, <&mstp10_clks R8A7743_CLK_SRC0>,
++			<&mstp10_clks R8A7743_CLK_DVC0>, <&mstp10_clks R8A7743_CLK_DVC1>,
++			<&audio_clk_a>, <&audio_clk_b>, <&audio_clk_c>, <&m2_clk>;
++		clock-names = "ssi",
++				"ssi.9", "ssi.8", "ssi.7", "ssi.6", "ssi.5",
++				"ssi.4", "ssi.3", "ssi.2", "ssi.1", "ssi.0",
++				"src.9", "src.8", "src.7", "src.6", "src.5",
++				"src.4", "src.3", "src.2", "src.1", "src.0",
++				"dvc.0", "dvc.1",
++				"clk_a", "clk_b", "clk_c", "clk_i";
++
++		dmas =		<&audma0 0x01>,	<&audma1 0x02>,	<&audma0 0x15>,	<&audma1 0x16>,
++				<&audma0 0x03>,	<&audma1 0x04>,	<&audma0 0x49>,	<&audma1 0x4a>,
++				<&audma0 0x05>,	<&audma1 0x06>,	<&audma0 0x63>,	<&audma1 0x64>,
++				<&audma0 0x07>,	<&audma1 0x08>,	<&audma0 0x6f>,	<&audma1 0x70>,
++				<&audma0 0x09>,	<&audma1 0x0a>,	<&audma0 0x71>,	<&audma1 0x72>,
++				<&audma0 0x0b>,	<&audma1 0x0c>,	<&audma0 0x73>,	<&audma1 0x74>,
++				<&audma0 0x0d>,	<&audma1 0x0e>,	<&audma0 0x75>,	<&audma1 0x76>,
++				<&audma0 0x0f>,	<&audma1 0x10>,	<&audma0 0x79>,	<&audma1 0x7a>,
++				<&audma0 0x11>,	<&audma1 0x12>,	<&audma0 0x7b>,	<&audma1 0x7c>,
++				<&audma0 0x13>,	<&audma1 0x14>,	<&audma0 0x7d>,	<&audma1 0x7e>,
++
++				<&audma0 0x85>,	<&audma1 0x9a>,	<&audma0 0xbc>,
++				<&audma0 0x87>,	<&audma1 0x9c>,	<&audma0 0xbe>,
++				<&audma0 0x89>,	<&audma1 0x9e>,
++				<&audma0 0x8b>,	<&audma1 0xa0>,
++				<&audma0 0x8d>,	<&audma1 0xb0>,
++				<&audma0 0x8f>,	<&audma1 0xb2>,
++				<&audma0 0x91>,	<&audma1 0xb4>,
++				<&audma0 0x93>,	<&audma1 0xb6>,
++				<&audma0 0x95>,	<&audma1 0xb8>,
++				<&audma0 0x97>,	<&audma1 0xba>,
++
++				<&audmapp 0x2d00>,	<&audmapp 0x2e00>,	<&audmapp 0x2f00>,	<&audmapp 0x3000>,	<&audmapp 0x3100>,
++				<&audmapp 0x2d04>,	<&audmapp 0x2e04>,	<&audmapp 0x2f04>,	<&audmapp 0x3004>,	<&audmapp 0x3104>,
++				<&audmapp 0x2d08>,	<&audmapp 0x2e08>,	<&audmapp 0x2f08>,	<&audmapp 0x3008>,	<&audmapp 0x3108>,
++				<&audmapp 0x2d0c>,	<&audmapp 0x2e0c>,	<&audmapp 0x2f0c>,	<&audmapp 0x300c>,	<&audmapp 0x310c>,
++				<&audmapp 0x2d0d>,	<&audmapp 0x2e0d>,	<&audmapp 0x2f0d>,	<&audmapp 0x300d>,	<&audmapp 0x310d>,
++				<&audmapp 0x2d0e>,	<&audmapp 0x2e0e>,	<&audmapp 0x2f0e>,	<&audmapp 0x300e>,	<&audmapp 0x310e>,
++				<&audmapp 0x2d0f>,	<&audmapp 0x2e0f>,	<&audmapp 0x2f0f>,	<&audmapp 0x300f>,	<&audmapp 0x310f>,
++				<&audmapp 0x2d10>,	<&audmapp 0x2e10>,	<&audmapp 0x2f10>,	<&audmapp 0x3010>,	<&audmapp 0x3110>,
++				<&audmapp 0x2d11>,	<&audmapp 0x2e11>,	<&audmapp 0x2f11>,	<&audmapp 0x3011>,	<&audmapp 0x3111>,
++				<&audmapp 0x2d12>,	<&audmapp 0x2e12>,	<&audmapp 0x2f12>,	<&audmapp 0x3012>,	<&audmapp 0x3112>,
++
++				<&audmapp 0x3200>,	<&audmapp 0x3300>,	<&audmapp 0x3400>,	<&audmapp 0x3500>,	<&audmapp 0x3600>,
++				<&audmapp 0x3204>,	<&audmapp 0x3304>,	<&audmapp 0x3404>,	<&audmapp 0x3504>,	<&audmapp 0x3604>,
++				<&audmapp 0x3208>,	<&audmapp 0x3308>,	<&audmapp 0x3408>,	<&audmapp 0x3508>,	<&audmapp 0x3608>,
++				<&audmapp 0x320c>,	<&audmapp 0x330c>,	<&audmapp 0x340c>,	<&audmapp 0x350c>,	<&audmapp 0x360c>,
++				<&audmapp 0x320d>,	<&audmapp 0x330d>,	<&audmapp 0x340d>,	<&audmapp 0x350d>,	<&audmapp 0x360d>,
++				<&audmapp 0x320e>,	<&audmapp 0x330e>,	<&audmapp 0x340e>,	<&audmapp 0x350e>,	<&audmapp 0x360e>,
++				<&audmapp 0x320f>,	<&audmapp 0x330f>,	<&audmapp 0x340f>,	<&audmapp 0x350f>,	<&audmapp 0x360f>,
++				<&audmapp 0x3210>,	<&audmapp 0x3310>,	<&audmapp 0x3410>,	<&audmapp 0x3510>,	<&audmapp 0x3610>,
++				<&audmapp 0x3211>,	<&audmapp 0x3311>,	<&audmapp 0x3411>,	<&audmapp 0x3511>,	<&audmapp 0x3611>,
++				<&audmapp 0x3212>,	<&audmapp 0x3312>,	<&audmapp 0x3412>,	<&audmapp 0x3512>,	<&audmapp 0x3612>,
++
++				<&audmapp 0x002d>,	<&audmapp 0x002e>,	<&audmapp 0x002f>,	<&audmapp 0x0030>,	<&audmapp 0x0031>,
++				<&audmapp 0x042d>,	<&audmapp 0x042e>,	<&audmapp 0x042f>,	<&audmapp 0x0430>,	<&audmapp 0x0431>,
++				<&audmapp 0x082d>,	<&audmapp 0x082e>,	<&audmapp 0x082f>,	<&audmapp 0x0830>,	<&audmapp 0x0831>,
++				<&audmapp 0x0c2d>,	<&audmapp 0x0c2e>,	<&audmapp 0x0c2f>,	<&audmapp 0x0c30>,	<&audmapp 0x0c31>,
++				<&audmapp 0x0d2d>,	<&audmapp 0x0d2e>,	<&audmapp 0x0d2f>,	<&audmapp 0x0d30>,	<&audmapp 0x0d31>,
++				<&audmapp 0x0e2d>,	<&audmapp 0x0e2e>,	<&audmapp 0x0e2f>,	<&audmapp 0x0e30>,	<&audmapp 0x0e31>,
++				<&audmapp 0x0f2d>,	<&audmapp 0x0f2e>,	<&audmapp 0x0f2f>,	<&audmapp 0x0f30>,	<&audmapp 0x0f31>,
++				<&audmapp 0x102d>,	<&audmapp 0x102e>,	<&audmapp 0x102f>,	<&audmapp 0x1030>,	<&audmapp 0x1031>,
++				<&audmapp 0x112d>,	<&audmapp 0x112e>,	<&audmapp 0x112f>,	<&audmapp 0x1130>,	<&audmapp 0x1131>,
++				<&audmapp 0x122d>,	<&audmapp 0x122e>,	<&audmapp 0x122f>,	<&audmapp 0x1230>,	<&audmapp 0x1231>,
++
++				<&audmapp 0x0032>,	<&audmapp 0x0033>,	<&audmapp 0x0034>,	<&audmapp 0x0035>,	<&audmapp 0x0036>,
++				<&audmapp 0x0432>,	<&audmapp 0x0433>,	<&audmapp 0x0434>,	<&audmapp 0x0435>,	<&audmapp 0x0436>,
++				<&audmapp 0x0832>,	<&audmapp 0x0833>,	<&audmapp 0x0834>,	<&audmapp 0x0835>,	<&audmapp 0x0836>,
++				<&audmapp 0x0c32>,	<&audmapp 0x0c33>,	<&audmapp 0x0c34>,	<&audmapp 0x0c35>,	<&audmapp 0x0c36>,
++				<&audmapp 0x0d32>,	<&audmapp 0x0d33>,	<&audmapp 0x0d34>,	<&audmapp 0x0d35>,	<&audmapp 0x0d36>,
++				<&audmapp 0x0e32>,	<&audmapp 0x0e33>,	<&audmapp 0x0e34>,	<&audmapp 0x0e35>,	<&audmapp 0x0e36>,
++				<&audmapp 0x0f32>,	<&audmapp 0x0f33>,	<&audmapp 0x0f34>,	<&audmapp 0x0f35>,	<&audmapp 0x0f36>,
++				<&audmapp 0x1032>,	<&audmapp 0x1033>,	<&audmapp 0x1034>,	<&audmapp 0x1035>,	<&audmapp 0x1036>,
++				<&audmapp 0x1132>,	<&audmapp 0x1133>,	<&audmapp 0x1134>,	<&audmapp 0x1135>,	<&audmapp 0x1136>,
++				<&audmapp 0x1232>,	<&audmapp 0x1233>,	<&audmapp 0x1234>,	<&audmapp 0x1235>,	<&audmapp 0x1236>,
++				<&audmapp 0x3700>,	<&audmapp 0x3800>,
++				<&audmapp 0x3704>,	<&audmapp 0x3804>,
++				<&audmapp 0x3708>,	<&audmapp 0x3808>,
++				<&audmapp 0x370c>,	<&audmapp 0x380c>,
++				<&audmapp 0x370d>,	<&audmapp 0x380d>,
++				<&audmapp 0x370e>,	<&audmapp 0x380e>,
++				<&audmapp 0x370f>,	<&audmapp 0x380f>,
++				<&audmapp 0x3710>,	<&audmapp 0x3810>,
++				<&audmapp 0x3711>,	<&audmapp 0x3811>,
++				<&audmapp 0x3712>,	<&audmapp 0x3812>;
++
++		dma-names =	"mem_ssi0",	"ssi0_mem",	"mem_ssiu0",	"ssiu0_mem",
++				"mem_ssi1",	"ssi1_mem",	"mem_ssiu1",	"ssiu1_mem",
++				"mem_ssi2",	"ssi2_mem",	"mem_ssiu2",	"ssiu2_mem",
++				"mem_ssi3",	"ssi3_mem",	"mem_ssiu3",	"ssiu3_mem",
++				"mem_ssi4",	"ssi4_mem",	"mem_ssiu4",	"ssiu4_mem",
++				"mem_ssi5",	"ssi5_mem",	"mem_ssiu5",	"ssiu5_mem",
++				"mem_ssi6",	"ssi6_mem",	"mem_ssiu6",	"ssiu6_mem",
++				"mem_ssi7",	"ssi7_mem",	"mem_ssiu7",	"ssiu7_mem",
++				"mem_ssi8",	"ssi8_mem",	"mem_ssiu8",	"ssiu8_mem",
++				"mem_ssi9",	"ssi9_mem",	"mem_ssiu9",	"ssiu9_mem",
++
++				"mem_src0",	"src0_mem",	"dvc0_mem",
++				"mem_src1",	"src1_mem",	"dvc1_mem",
++				"mem_src2",	"src2_mem",
++				"mem_src3",	"src3_mem",
++				"mem_src4",	"src4_mem",
++				"mem_src5",	"src5_mem",
++				"mem_src6",	"src6_mem",
++				"mem_src7",	"src7_mem",
++				"mem_src8",	"src8_mem",
++				"mem_src9",	"src9_mem",
++
++				"src0_ssiu0",		"src1_ssiu0",		"src2_ssiu0",		"src3_ssiu0",		"src4_ssiu0",
++				"src0_ssiu1",		"src1_ssiu1",		"src2_ssiu1",		"src3_ssiu1",		"src4_ssiu1",
++				"src0_ssiu2",		"src1_ssiu2",		"src2_ssiu2",		"src3_ssiu2",		"src4_ssiu2",
++				"src0_ssiu3",		"src1_ssiu3",		"src2_ssiu3",		"src3_ssiu3",		"src4_ssiu3",
++				"src0_ssiu4",		"src1_ssiu4",		"src2_ssiu4",		"src3_ssiu4",		"src4_ssiu4",
++				"src0_ssiu5",		"src1_ssiu5",		"src2_ssiu5",		"src3_ssiu5",		"src4_ssiu5",
++				"src0_ssiu6",		"src1_ssiu6",		"src2_ssiu6",		"src3_ssiu6",		"src4_ssiu6",
++				"src0_ssiu7",		"src1_ssiu7",		"src2_ssiu7",		"src3_ssiu7",		"src4_ssiu7",
++				"src0_ssiu8",		"src1_ssiu8",		"src2_ssiu8",		"src3_ssiu8",		"src4_ssiu8",
++				"src0_ssiu9",		"src1_ssiu9",		"src2_ssiu9",		"src3_ssiu9",		"src4_ssiu9",
++
++				"src5_ssiu0",		"src6_ssiu0",		"src7_ssiu0",		"src8_ssiu0",		"src9_ssiu0",
++				"src5_ssiu1",		"src6_ssiu1",		"src7_ssiu1",		"src8_ssiu1",		"src9_ssiu1",
++				"src5_ssiu2",		"src6_ssiu2",		"src7_ssiu2",		"src8_ssiu2",		"src9_ssiu2",
++				"src5_ssiu3",		"src6_ssiu3",		"src7_ssiu3",		"src8_ssiu3",		"src9_ssiu3",
++				"src5_ssiu4",		"src6_ssiu4",		"src7_ssiu4",		"src8_ssiu4",		"src9_ssiu4",
++				"src5_ssiu5",		"src6_ssiu5",		"src7_ssiu5",		"src8_ssiu5",		"src9_ssiu5",
++				"src5_ssiu6",		"src6_ssiu6",		"src7_ssiu6",		"src8_ssiu6",		"src9_ssiu6",
++				"src5_ssiu7",		"src6_ssiu7",		"src7_ssiu7",		"src8_ssiu7",		"src9_ssiu7",
++				"src5_ssiu8",		"src6_ssiu8",		"src7_ssiu8",		"src8_ssiu8",		"src9_ssiu8",
++				"src5_ssiu9",		"src6_ssiu9",		"src7_ssiu9",		"src8_ssiu9",		"src9_ssiu9",
++
++				"ssiu0_src0",		"ssiu0_src1",		"ssiu0_src2",		"ssiu0_src3",		"ssiu0_src4",
++				"ssiu1_src0",		"ssiu1_src1",		"ssiu1_src2",		"ssiu1_src3",		"ssiu1_src4",
++				"ssiu2_src0",		"ssiu2_src1",		"ssiu2_src2",		"ssiu2_src3",		"ssiu2_src4",
++				"ssiu3_src0",		"ssiu3_src1",		"ssiu3_src2",		"ssiu3_src3",		"ssiu3_src4",
++				"ssiu4_src0",		"ssiu4_src1",		"ssiu4_src2",		"ssiu4_src3",		"ssiu4_src4",
++				"ssiu5_src0",		"ssiu5_src1",		"ssiu5_src2",		"ssiu5_src3",		"ssiu5_src4",
++				"ssiu6_src0",		"ssiu6_src1",		"ssiu6_src2",		"ssiu6_src3",		"ssiu6_src4",
++				"ssiu7_src0",		"ssiu7_src1",		"ssiu7_src2",		"ssiu7_src3",		"ssiu7_src4",
++				"ssiu8_src0",		"ssiu8_src1",		"ssiu8_src2",		"ssiu8_src3",		"ssiu8_src4",
++				"ssiu9_src0",		"ssiu9_src1",		"ssiu9_src2",		"ssiu9_src3",		"ssiu9_src4",
++
++				"ssiu0_src5",		"ssiu0_src6",		"ssiu0_src7",		"ssiu0_src8",		"ssiu0_src9",
++				"ssiu1_src5",		"ssiu1_src6",		"ssiu1_src7",		"ssiu1_src8",		"ssiu1_src9",
++				"ssiu2_src5",		"ssiu2_src6",		"ssiu2_src7",		"ssiu2_src8",		"ssiu2_src9",
++				"ssiu3_src5",		"ssiu3_src6",		"ssiu3_src7",		"ssiu3_src8",		"ssiu3_src9",
++				"ssiu4_src5",		"ssiu4_src6",		"ssiu4_src7",		"ssiu4_src8",		"ssiu4_src9",
++				"ssiu5_src5",		"ssiu5_src6",		"ssiu5_src7",		"ssiu5_src8",		"ssiu5_src9",
++				"ssiu6_src5",		"ssiu6_src6",		"ssiu6_src7",		"ssiu6_src8",		"ssiu6_src9",
++				"ssiu7_src5",		"ssiu7_src6",		"ssiu7_src7",		"ssiu7_src8",		"ssiu7_src9",
++				"ssiu8_src5",		"ssiu8_src6",		"ssiu8_src7",		"ssiu8_src8",		"ssiu8_src9",
++				"ssiu9_src5",		"ssiu9_src6",		"ssiu9_src7",		"ssiu9_src8",		"ssiu9_src9",
++				"dvc0_ssiu0",		"dvc1_ssiu0",
++				"dvc0_ssiu1",		"dvc1_ssiu1",
++				"dvc0_ssiu2",		"dvc1_ssiu2",
++				"dvc0_ssiu3",		"dvc1_ssiu3",
++				"dvc0_ssiu4",		"dvc1_ssiu4",
++				"dvc0_ssiu5",		"dvc1_ssiu5",
++				"dvc0_ssiu6",		"dvc1_ssiu6",
++				"dvc0_ssiu7",		"dvc1_ssiu7",
++				"dvc0_ssiu8",		"dvc1_ssiu8",
++				"dvc0_ssiu9",		"dvc1_ssiu9";
++
++		status = "disabled";
++
++		rcar_sound,dvc {
++			dvc0: dvc@0 { };
++			dvc1: dvc@1 { };
++		};
++
++		rcar_sound,src {
++			src0: src@0 { interrupts = <0 352 IRQ_TYPE_LEVEL_HIGH>; };
++			src1: src@1 { interrupts = <0 353 IRQ_TYPE_LEVEL_HIGH>; };
++			src2: src@2 { interrupts = <0 354 IRQ_TYPE_LEVEL_HIGH>; };
++			src3: src@3 { interrupts = <0 355 IRQ_TYPE_LEVEL_HIGH>; };
++			src4: src@4 { interrupts = <0 356 IRQ_TYPE_LEVEL_HIGH>; };
++			src5: src@5 { interrupts = <0 357 IRQ_TYPE_LEVEL_HIGH>; };
++			src6: src@6 { interrupts = <0 358 IRQ_TYPE_LEVEL_HIGH>; };
++			src7: src@7 { interrupts = <0 359 IRQ_TYPE_LEVEL_HIGH>; };
++			src8: src@8 { interrupts = <0 360 IRQ_TYPE_LEVEL_HIGH>; };
++			src9: src@9 { interrupts = <0 361 IRQ_TYPE_LEVEL_HIGH>; };
++		};
++
++		rcar_sound,ssi {
++			ssi0: ssi@0 { interrupts = <0 370 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi1: ssi@1 { interrupts = <0 371 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi2: ssi@2 { interrupts = <0 372 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi3: ssi@3 { interrupts = <0 373 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi4: ssi@4 { interrupts = <0 374 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi5: ssi@5 { interrupts = <0 375 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi6: ssi@6 { interrupts = <0 376 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi7: ssi@7 { interrupts = <0 377 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi8: ssi@8 { interrupts = <0 378 IRQ_TYPE_LEVEL_HIGH>; };
++			ssi9: ssi@9 { interrupts = <0 379 IRQ_TYPE_LEVEL_HIGH>; };
++		};
++	};
++};
+-- 
+1.9.1
+

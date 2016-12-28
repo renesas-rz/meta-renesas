@@ -1,0 +1,34 @@
+diff --git a/drivers/gpu/drm/i2c/adv7511_core.c b/drivers/gpu/drm/i2c/adv7511_core.c
+index bb82fea..e8d9400 100644
+--- a/drivers/gpu/drm/i2c/adv7511_core.c
++++ b/drivers/gpu/drm/i2c/adv7511_core.c
+@@ -936,7 +936,12 @@ static int adv7511_parse_dt(struct device_node *np, struct adv7511_link_config *
+ }
+ static const int edid_i2c_addr = 0x7e;
+ static const int packet_i2c_addr = 0x70;
+-static const int cec_i2c_addr = 0x78;
++#ifdef  CONFIG_MACH_IWG20M
++     /* FIX: OV5640 and ADV7511 CEC I2C address conflict */
++    static const int cec_i2c_addr = 0x7A;
++#else
++    static const int cec_i2c_addr = 0x78;
++#endif
+ 
+ static int adv7511_probe(struct i2c_client *i2c,
+ 	const struct i2c_device_id *id)
+@@ -1024,6 +1029,15 @@ static int adv7511_probe(struct i2c_client *i2c,
+ 	if (ret)
+ 		return ret;
+ 
++ #ifndef  CONFIG_MACH_IWG20M
++    /* possible i2c main addresses are 0x39 and 0x3d, *
++     *to avoid conflicts add offset for subchips 
++     */
++    edid_i2c_addr += 4;
++    packet_i2c_addr += 4;
++    cec_i2c_addr += 4;
++#endif
++                      
+ 	regmap_write(adv7511->regmap, ADV7511_REG_EDID_I2C_ADDR, edid_i2c_addr);
+ 	regmap_write(adv7511->regmap, ADV7511_REG_PACKET_I2C_ADDR, packet_i2c_addr);
+ 	regmap_write(adv7511->regmap, ADV7511_REG_CEC_I2C_ADDR, cec_i2c_addr);

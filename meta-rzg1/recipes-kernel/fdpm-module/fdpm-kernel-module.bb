@@ -13,6 +13,7 @@ SRC_URI = "file://fdpm-kernel.tar.bz2"
 S = "${WORKDIR}/fdpm"
 
 FDPM_CFG_r8a7743 = "M2CONFIG"
+FDPM_CFG_r8a7744 = "M2CONFIG"
 FDPM_CFG_r8a7745 = "E2CONFIG"
 
 KERNEL_HEADER_PATH = "${KERNELSRC}/include/linux"

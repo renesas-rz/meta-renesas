@@ -1,0 +1,522 @@
+From 900382ee436bc743a09333354008a8cd45c9bfa8 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Sun, 30 Oct 2016 15:45:02 +0700
+Subject: [PATCH] iwg20m update file board info
+
+---
+ arch/arm/mach-shmobile/board-r8a7743-iwg20m.c | 335 ++++++++++++++++++--------
+ 1 file changed, 228 insertions(+), 107 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c b/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
+index 8bac270..a254b04 100644
+--- a/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
++++ b/arch/arm/mach-shmobile/board-r8a7743-iwg20m.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2015 iWave Systems Technologies Pvt. Ltd.
++ * Copyright (c) 2015-2016 iWave Systems Technologies Pvt. Ltd.
+  *
+  * The code contained herein is licensed under the GNU General Public
+  * License. You may obtain a copy of the GNU General Public License
+@@ -47,7 +47,7 @@
+ #include "r8a7743.h"
+ #include "rcar-gen2.h"
+ 
+-#define BSP_VERSION                             "iW-PREWZ-SC-01-R3.0-REL1.0-Linux3.10.31"
++#define BSP_VERSION                             "iW-PREWZ-SC-01-R3.0-REL2.0a-Linux3.10.31"
+ #define	RWTCNT		0xE6020000
+ #define	WDTRSTCR	0xE6160054
+ #define	CA15BAR		0xE6160020
+@@ -68,7 +68,7 @@ static struct rcar_du_encoder_data iwg20m_du_encoders[] = {
+ 			.width_mm = 150,
+ 			.height_mm = 87.5,
+ 			.mode = {
+-				.clock = 30066,
++				.clock = 33260,
+ 				.hdisplay = 800,
+ 				.hsync_start = 840,
+ 				.hsync_end = 928,
+@@ -85,14 +85,14 @@ static struct rcar_du_encoder_data iwg20m_du_encoders[] = {
+ 
+ static struct rcar_du_crtc_data iwg20m_du_crtcs[] = {
+ 	{
+-		.exclk = 0, /* Internal Clock */
++		.exclk = 0, /* NoP */
+ 		.init_conn_type = DRM_MODE_CONNECTOR_LVDS,
+ #ifdef CONFIG_DRM_RCAR_DU_CONNECT_VSP
+ 		.vsp = CONFIG_DRM_RCAR_DU0_USE_VSPDU_CH,
+ #endif
+ 	},
+ 	{
+-		.exclk = 0, /* Internal Clock */
++		.exclk = 0, /* NoP */
+ 		.init_conn_type = DRM_MODE_CONNECTOR_HDMIA,
+ #ifdef CONFIG_DRM_RCAR_DU_CONNECT_VSP
+ 		.vsp = CONFIG_DRM_RCAR_DU1_USE_VSPDU_CH,
+@@ -138,6 +138,9 @@ static void __init iwg20m_add_du_device(void)
+  * devices until they get moved to DT.
+  */
+ static const struct clk_name clk_names[] __initconst = {
++#if IS_ENABLED(CONFIG_RAVB)
++	{ "avb", NULL, "e6800000.ethernet" },
++#endif
+ 	{ "cmt0", NULL, "sh_cmt.0" },
+ 	{ "cmt0", "fck", "sh-cmt-48-gen2.0" },
+ 	{ "du0", "du.0", "rcar-du-r8a7743" },
+@@ -183,7 +186,6 @@ static const struct clk_name clk_enables[] __initconst = {
+ 	{ "usbdmac0", NULL, "sh-dma-engine.4" },
+ 	{ "usbdmac1", NULL, "sh-dma-engine.5" },
+ #endif
+-	{ "ssp_dev", NULL, "ssp_dev" },
+ 	{ "ipmmu_gp", NULL, "ipmmu_gp" },
+ };
+ 
+@@ -218,7 +220,7 @@ static const struct clk_name clk_enables[] __initconst = {
+ }
+ 
+ static const struct sh_dmae_slave_config r8a7743_sys_dmac_slaves[] = {
+-        SYS_DMAC_SLAVE(MMCIF0, 32, 0xee200000, 0x34, 0x34, 0xd1, 0xd2),
++	SYS_DMAC_SLAVE(MMCIF0, 32, 0xee200000, 0x34, 0x34, 0xd1, 0xd2),
+ 	SYS_DMAC_SLAVE(SDHI0, 256, 0xee100000, 0x60, 0x2060, 0xcd, 0xce),
+ 	SYS_DMAC_SLAVE(SDHI1, 256, 0xee140000, 0x30, 0x2030, 0xc1, 0xc2),
+ 	SYS_DMAC_SLAVE(SDHI2, 256, 0xee160000, 0x30, 0x2030, 0xd3, 0xd4),
+@@ -239,7 +241,24 @@ static const struct sh_dmae_slave_config r8a7743_sys_dmac_slaves[] = {
+ 	SYS_DMAC_SLAVE(MSIOF2, 32, 0xe6e00000, 0x50, 0x60, 0x41, 0x42),
+ };
+ 
+-static const struct sh_dmae_channel r8a7743_sys_dmac_channels[] = {
++static const struct sh_dmae_channel r8a7743_sys_dmac_channels_low[] = {
++	DMAE_CHANNEL(0x8080, 1),
++	DMAE_CHANNEL(0x8100, 2),
++	DMAE_CHANNEL(0x8180, 3),
++	DMAE_CHANNEL(0x8200, 4),
++	DMAE_CHANNEL(0x8280, 5),
++	DMAE_CHANNEL(0x8300, 6),
++	DMAE_CHANNEL(0x8380, 7),
++	DMAE_CHANNEL(0x8400, 8),
++	DMAE_CHANNEL(0x8480, 9),
++	DMAE_CHANNEL(0x8500, 10),
++	DMAE_CHANNEL(0x8580, 11),
++	DMAE_CHANNEL(0x8600, 12),
++	DMAE_CHANNEL(0x8680, 13),
++	DMAE_CHANNEL(0x8700, 14),
++};
++
++static const struct sh_dmae_channel r8a7743_sys_dmac_channels_high[] = {
+ 	DMAE_CHANNEL(0x8000, 0),
+ 	DMAE_CHANNEL(0x8080, 1),
+ 	DMAE_CHANNEL(0x8100, 2),
+@@ -257,29 +276,46 @@ static const struct sh_dmae_channel r8a7743_sys_dmac_channels[] = {
+ 	DMAE_CHANNEL(0x8700, 14),
+ };
+ 
+-static struct sh_dmae_pdata r8a7743_sys_dmac_platform_data = {
+-	.slave		= r8a7743_sys_dmac_slaves,
+-	.slave_num	= ARRAY_SIZE(r8a7743_sys_dmac_slaves),
+-	.channel	= r8a7743_sys_dmac_channels,
+-	.channel_num	= ARRAY_SIZE(r8a7743_sys_dmac_channels),
+-	.ts_low_shift	= TS_LOW_SHIFT,
+-	.ts_low_mask	= TS_LOW_BIT << TS_LOW_SHIFT,
+-	.ts_high_shift	= TS_HI_SHIFT,
+-	.ts_high_mask	= TS_HI_BIT << TS_HI_SHIFT,
+-	.ts_shift	= dma_ts_shift,
+-	.ts_shift_num	= ARRAY_SIZE(dma_ts_shift),
+-	.dmaor_init	= DMAOR_DME,
+-	.chclr_present	= 1,
+-	.chclr_bitwise	= 1,
+-	.fourty_bits_addr = 1,
++static struct sh_dmae_pdata r8a7743_sys_dmac_platform_data[] = {
++	{
++		.slave		= r8a7743_sys_dmac_slaves,
++		.slave_num	= ARRAY_SIZE(r8a7743_sys_dmac_slaves),
++		.channel	= r8a7743_sys_dmac_channels_low,
++		.channel_num	= ARRAY_SIZE(r8a7743_sys_dmac_channels_low),
++		.ts_low_shift	= TS_LOW_SHIFT,
++		.ts_low_mask	= TS_LOW_BIT << TS_LOW_SHIFT,
++		.ts_high_shift	= TS_HI_SHIFT,
++		.ts_high_mask	= TS_HI_BIT << TS_HI_SHIFT,
++		.ts_shift	= dma_ts_shift,
++		.ts_shift_num	= ARRAY_SIZE(dma_ts_shift),
++		.dmaor_init	= DMAOR_DME,
++		.chclr_present	= 1,
++		.chclr_bitwise	= 1,
++		.fourty_bits_addr = 1,
++	},
++	{
++		.slave		= r8a7743_sys_dmac_slaves,
++		.slave_num	= ARRAY_SIZE(r8a7743_sys_dmac_slaves),
++		.channel	= r8a7743_sys_dmac_channels_high,
++		.channel_num	= ARRAY_SIZE(r8a7743_sys_dmac_channels_high),
++		.ts_low_shift	= TS_LOW_SHIFT,
++		.ts_low_mask	= TS_LOW_BIT << TS_LOW_SHIFT,
++		.ts_high_shift	= TS_HI_SHIFT,
++		.ts_high_mask	= TS_HI_BIT << TS_HI_SHIFT,
++		.ts_shift	= dma_ts_shift,
++		.ts_shift_num	= ARRAY_SIZE(dma_ts_shift),
++		.dmaor_init	= DMAOR_DME,
++		.chclr_present	= 1,
++		.chclr_bitwise	= 1,
++		.fourty_bits_addr = 1,
++	},
+ };
+ 
+ static struct resource r8a7743_sys_dmac_resources[] = {
+ 	/* Channel registers and DMAOR for low */
+ 	DEFINE_RES_MEM(0xe6700020, 0x8763 - 0x20),
+ 	DEFINE_RES_IRQ(gic_spi(197)),
+-	DEFINE_RES_NAMED(gic_spi(200), 15, NULL, IORESOURCE_IRQ),
+-
++	DEFINE_RES_NAMED(gic_spi(201), 14, NULL, IORESOURCE_IRQ),
+ 	/* Channel registers and DMAOR for high */
+ 	DEFINE_RES_MEM(0xe6720020, 0x8763 - 0x20),
+ 	DEFINE_RES_IRQ(gic_spi(220)),
+@@ -487,6 +523,7 @@ struct usbhs_private {
+ 	struct renesas_usbhs_platform_info info;
+ 	struct usb_phy *phy;
+ 	int id_gpio;
++	int pwr_gpio;
+ };
+ 
+ #define usbhs_get_priv(pdev) \
+@@ -513,6 +550,75 @@ static int usbhs_power_ctrl(struct platform_device *pdev,
+ 	return 0;
+ }
+ 
++static int usbhs_hardware_init(struct platform_device *pdev)
++{
++        struct usbhs_private *priv = usbhs_get_priv(pdev);
++        struct usb_phy *phy;
++        int ret;
++        struct device_node *np, *np1;
++
++        np = of_find_node_by_path("/gpio@e6051000");
++        if (np) {
++                priv->id_gpio = of_get_gpio(np, 11);
++                of_node_put(np);
++        } else {
++                pr_warn("Error: Unable to get USB OTG ID input\n");
++                ret = -ENOTSUPP;
++                goto error2;
++        }
++
++        np1 = of_find_node_by_path("/gpio@e6055800");
++        if (np1) {
++                priv->pwr_gpio = of_get_gpio(np1, 23);
++                of_node_put(np1);
++        } else {
++                pr_warn("Error: Unable to get USB0 Power output pin\n");
++                ret = -ENOTSUPP;
++                goto error2;
++        }
++
++
++	/* Check USB OTG ID pin */
++	gpio_request_one(priv->id_gpio, GPIOF_IN, NULL);
++	gpio_request_one(priv->pwr_gpio, GPIOF_DIR_OUT, NULL);
++	if (!gpio_get_value(priv->id_gpio)) {
++		gpio_set_value(priv->pwr_gpio, 1);
++		pr_warn("Error: USB0 cable selects host mode\n");
++		ret = -ENOTSUPP;
++		goto error;
++	}
++	else
++	{
++		gpio_set_value(priv->pwr_gpio, 0);
++	}
++
++	phy = usb_get_phy_dev(&pdev->dev, 0);
++	if (IS_ERR(phy))
++		return PTR_ERR(phy);
++
++	priv->phy = phy;
++	return 0;
++
++error:
++	gpio_free(priv->id_gpio);
++error2:
++	return ret;
++}
++
++static int usbhs_hardware_exit(struct platform_device *pdev)
++{
++	struct usbhs_private *priv = usbhs_get_priv(pdev);
++
++	if (!priv->phy)
++		return 0;
++
++	usb_put_phy(priv->phy);
++	priv->phy = NULL;
++
++	gpio_free(priv->id_gpio);
++	return 0;
++}
++
+ static int usbhs_get_id(struct platform_device *pdev)
+ {
+ 	return USBHS_GADGET;
+@@ -546,6 +652,8 @@ static struct usbhs_private usbhs_priv __initdata = {
+ 	.info = {
+ 		.platform_callback = {
+ 			.power_ctrl	= usbhs_power_ctrl,
++			.hardware_init	= usbhs_hardware_init,
++			.hardware_exit	= usbhs_hardware_exit,
+ 			.get_id		= usbhs_get_id,
+ 			.get_vbus	= usbhs_get_vbus,
+ 		},
+@@ -610,7 +718,7 @@ static void __init iwg20m_add_usb1_host(void)
+ static const struct rcar_gen2_phy_platform_data usbhs_phy_pdata __initconst = {
+ #if IS_ENABLED(CONFIG_USB_RENESAS_USBHS_UDC)
+ 	.chan0_pci = 0,	/* Channel 0 is USBHS */
+-	.gpio_vbus = -1,
++	.gpio_vbus = 798,
+ 	.wakeup = true,
+ #else
+ 	.chan0_pci = 1,	/* Channel 0 is PCI USB */
+@@ -626,65 +734,78 @@ static const struct rcar_gen2_phy_platform_data usbhs_phy_pdata __initconst = {
+ 
+ /* VIN */
+ static const struct resource vin_resources[] __initconst = {
+-        /* VIN0 */
+-        DEFINE_RES_MEM(0xe6ef0000, 0x1000),
+-        DEFINE_RES_IRQ(gic_spi(188)),
+-        /* VIN1 */
+-        DEFINE_RES_MEM(0xe6ef1000, 0x1000),
+-        DEFINE_RES_IRQ(gic_spi(189)),
+-        /* VIN2 */
+-        DEFINE_RES_MEM(0xe6ef2000, 0x1000),
+-        DEFINE_RES_IRQ(gic_spi(190)),
++	/* VIN0 */
++	DEFINE_RES_MEM(0xe6ef0000, 0x1000),
++	DEFINE_RES_IRQ(gic_spi(188)),
++	/* VIN1 */
++	DEFINE_RES_MEM(0xe6ef1000, 0x1000),
++	DEFINE_RES_IRQ(gic_spi(189)),
++	/* VIN2 */
++	DEFINE_RES_MEM(0xe6ef2000, 0x1000),
++	DEFINE_RES_IRQ(gic_spi(190)),
+ };
+ 
+ static void __init iwg20m_add_vin_device(unsigned idx,
+-                                        struct rcar_vin_platform_data *pdata)
++					struct rcar_vin_platform_data *pdata)
+ {
+-        struct platform_device_info vin_info = {
+-                .parent         = &platform_bus,
+-                .name           = "r8a7743-vin",
+-                .id             = idx,
+-                .res            = &vin_resources[idx * 2],
+-                .num_res        = 2,
+-                .dma_mask       = DMA_BIT_MASK(32),
+-                .data           = pdata,
+-                .size_data      = sizeof(*pdata),
+-        };
++	struct platform_device_info vin_info = {
++		.parent		= &platform_bus,
++		.name		= "r8a7743-vin",
++		.id		= idx,
++		.res		= &vin_resources[idx * 2],
++		.num_res	= 2,
++		.dma_mask	= DMA_BIT_MASK(32),
++		.data		= pdata,
++		.size_data	= sizeof(*pdata),
++	};
+ 
+         BUG_ON(idx > 2);
+ 
+-        platform_device_register_full(&vin_info);
++	platform_device_register_full(&vin_info);
+ }
+ 
+-#define IWG20M_CAMERA(idx, name, addr, pdata, flag)                    \
+-static struct i2c_board_info i2c_cam##idx##_device = {                  \
+-        I2C_BOARD_INFO(name, addr),                                     \
+-};                                                                      \
+-                                                                        \
+-static struct rcar_vin_platform_data vin##idx##_pdata = {               \
+-        .flags = flag,                                                  \
+-};                                                                      \
+-                                                                        \
+-static struct soc_camera_link cam##idx##_link = {                       \
+-        .bus_id = idx,                                                  \
+-        .board_info = &i2c_cam##idx##_device,                           \
+-        .i2c_adapter_id = 5,                                            \
+-        .module_name = name,                                            \
+-        .priv = pdata,                                                  \
++#define IWG20M_CAMERA(idx, name, addr, pdata, flag)			\
++static struct i2c_board_info i2c_cam##idx##_device = {			\
++	I2C_BOARD_INFO(name, addr),					\
++};									\
++									\
++static struct rcar_vin_platform_data vin##idx##_pdata = {		\
++	.flags = flag,							\
++};									\
++									\
++static struct soc_camera_link cam##idx##_link = {			\
++	.bus_id = idx,							\
++	.board_info = &i2c_cam##idx##_device,				\
++	.i2c_adapter_id = 5,						\
++	.module_name = name,						\
++	.priv = pdata,							\
+ }
+ 
+ IWG20M_CAMERA(0, "tvp5150", 0x5d, NULL, RCAR_VIN_BT656);
+-IWG20M_CAMERA(2, "ov7725", 0x21, NULL, RCAR_VIN_BT656);
++IWG20M_CAMERA(2, "ov5640", 0x3c, NULL, RCAR_VIN_BT656);
+ 
+ static void __init iwg20m_add_camera0_device(void)
+ {
+-        platform_device_register_data(&platform_bus, "soc-camera-pdrv", 0,
+-                                      &cam0_link, sizeof(cam0_link));
+-        iwg20m_add_vin_device(0, &vin0_pdata);
++	platform_device_register_data(&platform_bus, "soc-camera-pdrv", 0,
++				      &cam0_link, sizeof(cam0_link));
++	iwg20m_add_vin_device(0, &vin0_pdata);
+ }
+ 
+ static void __init iwg20m_add_camera2_device(void)
+ {
++	struct device_node *np;
++	int status;
++	
++	np = of_find_compatible_node(NULL, NULL, "iwave,g20m-q7-com");
++
++	of_property_read_u32(np, "vin2-ov5640", &status);
++	if(!status)
++	{
++		/* select OV7725 if selected in u-boot */
++		strcpy (cam2_link.board_info->type, "ov7725");
++		cam2_link.board_info->addr = 0x21;
++	}
++
+         platform_device_register_data(&platform_bus, "soc-camera-pdrv", 2,
+                                       &cam2_link, sizeof(cam2_link));
+         iwg20m_add_vin_device(2, &vin2_pdata);
+@@ -826,7 +947,6 @@ static struct sh_msiof_spi_info msiof1_info = {
+ 	.dma_tx_id              = SYS_DMAC_SLAVE_MSIOF1_TX,
+ 	.dma_rx_id              = SYS_DMAC_SLAVE_MSIOF1_RX,
+ };
+-
+ /* MSIOF spidev */
+ static const struct spi_board_info spi_bus[] __initconst = {
+ 	{
+@@ -852,52 +972,54 @@ static const struct spi_board_info spi_bus[] __initconst = {
+ 	},
+ };
+ 
++#define iwg20m_add_msiof_device spi_register_board_info
++
++
+ static void iwg20m_restart(char mode, const char *cmd)
+ {
+-        struct device_node *np;
+-        int com_rst_gpio;
+-
+-        void __iomem *wdtrstcr = ioremap_nocache(WDTRSTCR, 4);
+-        void __iomem *ca15bar  = ioremap_nocache(CA15BAR, 4);
+-        void __iomem *rwtcnt   = ioremap_nocache(RWTCNT, 0x12);
+-        BUG_ON(!ca15bar);
+-        BUG_ON(!wdtrstcr);
+-        BUG_ON(!rwtcnt);
+-
+-        np = of_find_compatible_node(NULL, NULL, "iwave,g20m-q7-com");
+-        if (!np) {
+-                pr_warn("failed to find g20m-q7-com node\n");
+-                goto put_node;
+-        }
++	struct device_node *np;
++	int com_rst_gpio;
+ 
+-        com_rst_gpio = of_get_named_gpio(np, "reset-gpios", 0);
+-        if (gpio_is_valid(com_rst_gpio) &&
+-                        !gpio_request_one(com_rst_gpio, GPIOF_DIR_OUT, "comm-rst")) {
++	void __iomem *wdtrstcr = ioremap_nocache(WDTRSTCR, 4);
++	void __iomem *ca15bar  = ioremap_nocache(CA15BAR, 4);
++	void __iomem *rwtcnt   = ioremap_nocache(RWTCNT, 0x12);
++	BUG_ON(!ca15bar);
++	BUG_ON(!wdtrstcr);
++	BUG_ON(!rwtcnt);
+ 
+-                gpio_set_value(com_rst_gpio, 1);
+-                mdelay(100);
+-                gpio_set_value(com_rst_gpio, 0);
+-                mdelay(100);
+-                gpio_set_value(com_rst_gpio, 1);
+-        }
++	np = of_find_compatible_node(NULL, NULL, "iwave,g20m-q7-com");
++	if (!np) {
++		pr_warn("failed to find g20m-q7-com node\n");
++		goto put_node;
++	}
++
++	com_rst_gpio = of_get_named_gpio(np, "reset-gpios", 0);
++	if (gpio_is_valid(com_rst_gpio) &&
++			!gpio_request_one(com_rst_gpio, GPIOF_DIR_OUT, "comm-rst")) {
++
++		gpio_set_value(com_rst_gpio, 1);
++		mdelay(100);
++		gpio_set_value(com_rst_gpio, 0);
++		mdelay(100);
++		gpio_set_value(com_rst_gpio, 1);
++	}
+ 
+ 	/* Enabling RWDT Reset request */
+-        iowrite32(0xA55A0002, wdtrstcr);
++	iowrite32(0xA55A0002, wdtrstcr);
+ 	/* setting ROM Address as SYS Boot Address */
+-        iowrite32(0x00E63402, ca15bar); 
+-        iowrite32(0x00E63412, ca15bar);
++	iowrite32(0x00E63402, ca15bar); 
++	iowrite32(0x00E63412, ca15bar);
+ 	/* setting counter value and starting the Timer */
+-        iowrite32(0x5A5AFFF0, rwtcnt);
+-        iowrite32(0xA5A5A580, rwtcnt+4);
++	iowrite32(0x5A5AFFF0, rwtcnt);
++	iowrite32(0xA5A5A580, rwtcnt+4);
+ 
+ put_node:
+-        of_node_put(np);
+-        iounmap(wdtrstcr);
+-        iounmap(ca15bar);
+-        iounmap(rwtcnt);
+-}
++	of_node_put(np);
++	iounmap(wdtrstcr);
++	iounmap(ca15bar);
++	iounmap(rwtcnt);
+ 
+-#define iwg20m_add_msiof_device spi_register_board_info
++}
+ 
+ static struct of_dev_auxdata iwg20m_auxdata_lookup[] __initdata = {
+ 	OF_DEV_AUXDATA("renesas,mmcif-r8a7743", 0xee200000, "sh_mmcif",
+@@ -959,23 +1081,22 @@ static void __init iwg20m_add_standard_devices(void)
+ #endif
+ 	of_platform_populate(NULL, of_default_bus_match_table,
+ 			iwg20m_auxdata_lookup, NULL);
+-
+ 	print_board_info();
+ 	iwg20m_add_du_device();
+ 	iwg20m_add_usb_devices();
+ 	iwg20m_add_camera0_device();
+ 	iwg20m_add_camera2_device();
+ #if IS_ENABLED(CONFIG_VIDEO_RENESAS_VSP1) && \
+-	!defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
++!defined(CONFIG_DRM_RCAR_DU_CONNECT_VSP)
+ 	iwg20m_add_vsp1_devices();
+ #endif
+ 	iwg20m_add_msiof_device(spi_bus, ARRAY_SIZE(spi_bus));
+ }
+ 
+ static const char * const iwg20m_boards_compat_dt[] __initconst = {
+-	"iw,iwg20m",
+-	"iw,iwg20m_q7",
+-	"iw,iwg20m-reference",
++       "iw,iwg20m",
++       "iw,iwg20m_q7",
++       "iw,iwg20m-reference",
+ 	NULL,
+ };
+ 
+-- 
+1.9.1
+
