@@ -1,0 +1,94 @@
+commit d29a304b1f81ed89fd94cfdae740b4916f1a7221
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 14:38:54 2016 +0700
+
+    Add changes ATA driver for r8a7742-iwg21m_q7
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 16a4703..c29d4b0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -68,6 +68,10 @@
+ #include <linux/ratelimit.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/platform_device.h>
++#ifdef  CONFIG_MACH_IWG21M
++#include <linux/of_gpio.h>
++#include <linux/gpio.h>
++#endif
+ 
+ #include "libata.h"
+ #include "libata-transport.h"
+@@ -2700,6 +2704,10 @@ int ata_bus_probe(struct ata_port *ap)
+ static void sata_print_link_status(struct ata_link *link)
+ {
+ 	u32 sstatus, scontrol, tmp;
++#ifdef  CONFIG_MACH_IWG21M
++        struct device_node *np;
++        int sata_led;
++#endif
+ 
+ 	if (sata_scr_read(link, SCR_STATUS, &sstatus))
+ 		return;
+@@ -2709,9 +2717,34 @@ static void sata_print_link_status(struct ata_link *link)
+ 		tmp = (sstatus >> 4) & 0xf;
+ 		ata_link_info(link, "SATA link up %s (SStatus %X SControl %X)\n",
+ 			      sata_spd_string(tmp), sstatus, scontrol);
++#ifdef  CONFIG_MACH_IWG21M
++		/* SATA-LED */
++		np = of_find_node_by_path("/sata@ee500000");
++		if (!np) {
++			pr_warn("Iwave:failed to find SATA LED node\n");
++		}
++		sata_led = of_get_named_gpio(np, "sata-act-gpios", 0);
++		if (gpio_is_valid(sata_led) &&
++				!gpio_request_one(sata_led, GPIOF_DIR_OUT, "sata-led")) {
++			gpio_set_value_cansleep(sata_led, 0);
++		}
++#endif
+ 	} else {
+ 		ata_link_info(link, "SATA link down (SStatus %X SControl %X)\n",
+ 			      sstatus, scontrol);
++#ifdef  CONFIG_MACH_IWG21M
++                /* SATA-LED */
++                np = of_find_node_by_path("/sata@ee500000");
++                if (!np) {
++                        pr_warn("Iwave:failed to find SATA LED node\n");
++                }
++                sata_led = of_get_named_gpio(np, "sata-act-gpios", 0);
++                if (gpio_is_valid(sata_led) &&
++                                !gpio_request_one(sata_led, GPIOF_DIR_OUT, "sata-led")) {
++                        gpio_set_value_cansleep(sata_led, 1);
++                }
++#endif
++
+ 	}
+ }
+ 
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 5fca98e..c8ccd30 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -865,9 +865,13 @@ static struct of_device_id sata_rcar_match[] = {
+ 		.data = (void *)RCAR_GEN2_SATA
+ 	},
+ 	{
++		.compatible = "renesas,sata-r8a7742",
++		.data = (void *)RCAR_GEN2_SATA
++	},
++	{
+ 		.compatible = "renesas,sata-r8a7743",
+ 		.data = (void *)RCAR_GEN2_SATA
+-	},	
++	},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, sata_rcar_match);
+@@ -878,6 +882,7 @@ static const struct platform_device_id sata_rcar_id_table[] = {
+ 	{ "sata-r8a7790", RCAR_GEN2_SATA },
+ 	{ "sata-r8a7791", RCAR_GEN2_SATA },
+ 	{ "sata-r8a7793", RCAR_GEN2_SATA },
++	{ "sata-r8a7742", RCAR_GEN2_SATA },
+ 	{ "sata-r8a7743", RCAR_GEN2_SATA },
+ 	{ },
+ };

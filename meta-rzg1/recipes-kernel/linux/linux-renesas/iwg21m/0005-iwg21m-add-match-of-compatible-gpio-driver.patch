@@ -1,0 +1,43 @@
+commit d78a395814eb133658af7ff22af43911e25a2f9d
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 14:46:46 2016 +0700
+
+    iwg21m-add-match-of-compatible-gpio-driver
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index 44f9f3e..aae54ef 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -270,9 +270,9 @@ static int gpio_rcar_get(struct gpio_chip *chip, unsigned offset)
+ 	/* testing on r8a7790 shows that INDT does not show correct pin state
+ 	 * when configured as output, so use OUTDT in case of output pins */
+ 	if (gpio_rcar_read(gpio_to_priv(chip), INOUTSEL) & bit)
+-		return (int)(gpio_rcar_read(gpio_to_priv(chip), OUTDT) & bit);
++		return ((int)(gpio_rcar_read(gpio_to_priv(chip), OUTDT) & bit) >> offset);
+ 	else
+-		return (int)(gpio_rcar_read(gpio_to_priv(chip), INDT) & bit);
++		return ((int)(gpio_rcar_read(gpio_to_priv(chip), INDT) & bit) >> offset);
+ }
+ 
+ static void gpio_rcar_set(struct gpio_chip *chip, unsigned offset, int value)
+@@ -343,6 +343,11 @@ static const struct of_device_id gpio_rcar_of_table[] = {
+ 			.has_both_edge_trigger = true,
+ 		},
+ 	}, {
++		.compatible = "renesas,gpio-r8a7742",
++		.data = (void *)&(const struct gpio_rcar_info) {
++			.has_both_edge_trigger = true,
++		},
++	}, {
+ 		.compatible = "renesas,gpio-r8a7743",
+ 		.data = (void *)&(const struct gpio_rcar_info) {
+ 			.has_both_edge_trigger = true,
+@@ -359,7 +364,7 @@ static const struct of_device_id gpio_rcar_of_table[] = {
+ 		},
+ 	}, {
+ 		/* Terminator */
+-	}, 
++	},
+ };
+ 
+ MODULE_DEVICE_TABLE(of, gpio_rcar_of_table);

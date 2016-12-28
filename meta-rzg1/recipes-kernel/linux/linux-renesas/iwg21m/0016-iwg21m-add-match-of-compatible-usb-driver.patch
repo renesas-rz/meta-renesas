@@ -1,0 +1,117 @@
+commit 213517683a70c10163e81d02bd7b46adb4aa2f72
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 15:12:41 2016 +0700
+
+    Add match of compatible r8a7742-iwg21m_q7 for usb driver
+
+diff --git a/drivers/thermal/rcar_thermal.c b/drivers/thermal/rcar_thermal.c
+index e108b3d..036416e 100644
+--- a/drivers/thermal/rcar_thermal.c
++++ b/drivers/thermal/rcar_thermal.c
+@@ -243,7 +243,11 @@ static int rcar_thermal_get_trip_temp(struct thermal_zone_device *zone,
+ 	/* see rcar_thermal_get_temp() */
+ 	switch (trip) {
+ 	case 0: /* +90 <= temp */
++#ifdef CONFIG_MACH_IWG21M
++		*temp = MCELSIUS(105);
++#else
+ 		*temp = MCELSIUS(90);
++#endif
+ 		break;
+ 	default:
+ 		dev_err(dev, "rcar driver trip error\n");
+diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
+index 0e9fcd6..b09de3b 100644
+--- a/drivers/usb/host/xhci-plat.c
++++ b/drivers/usb/host/xhci-plat.c
+@@ -36,6 +36,7 @@ static void xhci_plat_quirks(struct device *dev, struct xhci_hcd *xhci)
+ 	/* QUIRK: R-Car xHCI must be suspended extra slowly */
+ 	if (of_device_is_compatible(of_node, "renesas,xhci-r8a7790") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7791") ||
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7742") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7743"))
+ 		xhci->quirks |= XHCI_SLOW_SUSPEND | XHCI_NO_64BIT;
+ }
+@@ -49,6 +50,7 @@ static int xhci_plat_setup(struct usb_hcd *hcd)
+ 	if (of_device_is_compatible(of_node, "renesas,xhci-r8a7790") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7791") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7793") ||
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7742") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7743")) {
+ 		ret = xhci_rcar_init_quirk(hcd);
+ 		if (ret)
+@@ -65,6 +67,7 @@ static int xhci_plat_start(struct usb_hcd *hcd)
+ 	if (of_device_is_compatible(of_node, "renesas,xhci-r8a7790") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7791") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7793") ||
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7742") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7743"))
+ 		xhci_rcar_start(hcd);
+ 
+@@ -297,6 +300,7 @@ static const struct of_device_id usb_xhci_of_match[] = {
+ 	{ .compatible = "renesas,xhci-r8a7791"},
+ 	{ .compatible = "renesas,xhci-r8a7793"},
+ 	{ .compatible = "renesas,xhci-r8a7743"},
++	{ .compatible = "renesas,xhci-r8a7742"},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, usb_xhci_of_match);
+diff --git a/drivers/usb/host/xhci-rcar.c b/drivers/usb/host/xhci-rcar.c
+index ff0d1b4..70f765f 100644
+--- a/drivers/usb/host/xhci-rcar.c
++++ b/drivers/usb/host/xhci-rcar.c
+@@ -16,7 +16,11 @@
+ #include "xhci.h"
+ #include "xhci-rcar.h"
+ 
++#ifdef CONFIG_MACH_IWG21M
++#define FIRMWARE_NAME           "UU3DRD1FW_2005L.dlmem"
++#else
+ #define FIRMWARE_NAME		"r8a779x_usb3_v1.dlmem"
++#endif
+ MODULE_FIRMWARE(FIRMWARE_NAME);
+ 
+ /*** Register Offset ***/
+diff --git a/drivers/usb/phy/Kconfig b/drivers/usb/phy/Kconfig
+index bbefdf2..64b6e5b 100644
+--- a/drivers/usb/phy/Kconfig
++++ b/drivers/usb/phy/Kconfig
+@@ -202,13 +202,13 @@ config USB_RCAR_PHY
+ 
+ config USB_RCAR_GEN2_PHY
+ 	tristate "Renesas R-Car Gen2 USB PHY support"
+-	depends on ARCH_R8A7790 || ARCH_R8A7791 || ARCH_R8A7793 || ARCH_R8A7794 || ARCH_R8A7743 || ARCH_R8A7745 || COMPILE_TEST
++	depends on ARCH_R8A7790 || ARCH_R8A7791 || ARCH_R8A7793 || ARCH_R8A7794 || ARCH_R8A7742 || ARCH_R8A7743 || ARCH_R8A7745 || COMPILE_TEST
+ 	select USB_PHY
+ 	help
+ 	  Say Y here to add support for the Renesas R-Car Gen2 USB PHY driver.
+ 	  It is typically used to control internal USB PHY for USBHS,
+ 	  and to configure shared USB channels 0 and 2.
+-	  This driver supports R8A7790, R8A7791, R8A7793, R8A7794, R8A7743 and R8A7745.
++	  This driver supports R8A7790, R8A7791, R8A7793, R8A7794, R8A7742, R8A7743 and R8A7745.
+ 
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called phy-rcar-gen2-usb.
+diff --git a/drivers/usb/renesas_usbhs/common.c b/drivers/usb/renesas_usbhs/common.c
+index 7eddc22..ea639c5 100644
+--- a/drivers/usb/renesas_usbhs/common.c
++++ b/drivers/usb/renesas_usbhs/common.c
+@@ -470,6 +470,10 @@ static const struct of_device_id usbhs_of_match[] = {
+ 		.compatible = "renesas,usbhs-r8a7743",
+ 		.data = (void *)USBHS_TYPE_R8A7743,
+ 	},
++	{
++		.compatible = "renesas,usbhs-r8a7742",
++		.data = (void *)USBHS_TYPE_R8A7742,
++	},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, usbhs_of_match);
+@@ -547,6 +551,7 @@ static int usbhs_probe(struct platform_device *pdev)
+ 	case USBHS_TYPE_R8A7790:
+ 	case USBHS_TYPE_R8A7791:
+ 	case USBHS_TYPE_R8A7743:
++	case USBHS_TYPE_R8A7742:
+ 		priv->pfunc = usbhs_rcar2_ops;
+ 		if (!priv->dparam.pipe_type) {
+ 			priv->dparam.pipe_type = usbhsc_new_pipe_type;

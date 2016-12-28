@@ -1,0 +1,562 @@
+commit 45e89f6cf54e2e17f12915fb679099825791a899
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 15:22:01 2016 +0700
+
+    Add match of compatible r8a7742-iwg21m for header files in include folder
+
+diff --git a/include/dt-bindings/clock/r8a7742-clock.h b/include/dt-bindings/clock/r8a7742-clock.h
+new file mode 100644
+index 0000000..63c38eb
+--- /dev/null
++++ b/include/dt-bindings/clock/r8a7742-clock.h
+@@ -0,0 +1,159 @@
++/*
++ * Copyright 2013 Ideas On Board SPRL
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __DT_BINDINGS_CLOCK_R8A7742_H__
++#define __DT_BINDINGS_CLOCK_R8A7742_H__
++
++/* CPG */
++#define R8A7742_CLK_MAIN		0
++#define R8A7742_CLK_PLL0		1
++#define R8A7742_CLK_PLL1		2
++#define R8A7742_CLK_PLL3		3
++#define R8A7742_CLK_LB			4
++#define R8A7742_CLK_QSPI		5
++#define R8A7742_CLK_SDH			6
++#define R8A7742_CLK_SD0			7
++#define R8A7742_CLK_SD1			8
++#define R8A7742_CLK_Z			9
++
++/* MSTP0 */
++#define R8A7742_CLK_MSIOF0		0
++#define R8A7742_CLK_ARMREG		11
++
++/* MSTP1 */
++#define R8A7742_CLK_VCP1		0
++#define R8A7742_CLK_VCP0		1
++#define R8A7742_CLK_VPC1		2
++#define R8A7742_CLK_VPC0		3
++#define R8A7742_CLK_SSP1		9
++#define R8A7742_CLK_TMU1		11
++#define R8A7742_CLK_PVRSRVKM		12
++#define R8A7742_CLK_2DDMAC		15
++#define R8A7742_CLK_FDP2		17
++#define R8A7742_CLK_FDP1		18
++#define R8A7742_CLK_FDP0		19
++#define R8A7742_CLK_TMU3		21
++#define R8A7742_CLK_TMU2		22
++#define R8A7742_CLK_CMT0		24
++#define R8A7742_CLK_TMU0		25
++#define R8A7742_CLK_VSP1_DU1		27
++#define R8A7742_CLK_VSP1_DU0		28
++#define R8A7742_CLK_VSP1_R		30
++#define R8A7742_CLK_VSP1_S		31
++
++/* MSTP2 */
++#define R8A7742_CLK_SCIFA2		2
++#define R8A7742_CLK_SCIFA1		3
++#define R8A7742_CLK_SCIFA0		4
++#define R8A7742_CLK_MSIOF2		5
++#define R8A7742_CLK_SCIFB0		6
++#define R8A7742_CLK_SCIFB1		7
++#define R8A7742_CLK_MSIOF1		8
++#define R8A7742_CLK_MSIOF3		15
++#define R8A7742_CLK_SCIFB2		16
++#define R8A7742_CLK_SYS_DMAC1		18
++#define R8A7742_CLK_SYS_DMAC0		19
++
++/* MSTP3 */
++#define R8A7742_CLK_IIC2		0
++#define R8A7742_CLK_TPU0		4
++#define R8A7742_CLK_MMCIF1		5
++#define R8A7742_CLK_SDHI3		11
++#define R8A7742_CLK_SDHI2		12
++#define R8A7742_CLK_SDHI1		13
++#define R8A7742_CLK_SDHI0		14
++#define R8A7742_CLK_MMCIF0		15
++#define R8A7742_CLK_IIC0		18
++#define R8A7742_CLK_PCIEC		19
++#define R8A7742_CLK_IIC1		23
++#define R8A7742_CLK_SSUSB		28
++#define R8A7742_CLK_CMT1		29
++#define R8A7742_CLK_USBDMAC0		30
++#define R8A7742_CLK_USBDMAC1		31
++
++/* MSTP4 */
++#define R8A7742_CLK_RWDT		2
++#define R8A7742_CLK_IRQC		7
++#define R8A7742_CLK_INTC_SYS		8
++
++/* MSTP5 */
++#define R8A7742_CLK_AUDIO_DMAC1		1
++#define R8A7742_CLK_AUDIO_DMAC0		2
++#define R8A7742_CLK_THERMAL		22
++#define R8A7742_CLK_PWM			23
++#define R8A7742_CLK_PBOOT_ROM		26
++#define R8A7742_CLK_SBOOT_ROM		30
++
++/* MSTP7 */
++#define R8A7742_CLK_EHCI		3
++#define R8A7742_CLK_HSUSB		4
++#define R8A7742_CLK_HSCIF1		16
++#define R8A7742_CLK_HSCIF0		17
++#define R8A7742_CLK_SCIF1		20
++#define R8A7742_CLK_SCIF0		21
++#define R8A7742_CLK_DU2			22
++#define R8A7742_CLK_DU1			23
++#define R8A7742_CLK_DU0			24
++#define R8A7742_CLK_LVDS1		25
++#define R8A7742_CLK_LVDS0		26
++
++/* MSTP8 */
++#define R8A7742_CLK_RGP2D		7
++#define R8A7742_CLK_VIN3		8
++#define R8A7742_CLK_VIN2		9
++#define R8A7742_CLK_VIN1		10
++#define R8A7742_CLK_VIN0		11
++#define R8A7742_CLK_AVB		12
++#define R8A7742_CLK_ETHER		13
++#define R8A7742_CLK_SATA1		14
++#define R8A7742_CLK_SATA0		15
++
++/* MSTP9 */
++#define R8A7742_CLK_GPIO5		7
++#define R8A7742_CLK_GPIO4		8
++#define R8A7742_CLK_GPIO3		9
++#define R8A7742_CLK_GPIO2		10
++#define R8A7742_CLK_GPIO1		11
++#define R8A7742_CLK_GPIO0		12
++#define R8A7742_CLK_RCAN1		15
++#define R8A7742_CLK_RCAN0		16
++#define R8A7742_CLK_QSPI_MOD		17
++#define R8A7742_CLK_IICDVFS		26
++#define R8A7742_CLK_I2C3		28
++#define R8A7742_CLK_I2C2		29
++#define R8A7742_CLK_I2C1		30
++#define R8A7742_CLK_I2C0		31
++
++/* MSTP10 */
++#define R8A7742_CLK_SSI			5
++#define R8A7742_CLK_SSI9		6
++#define R8A7742_CLK_SSI8		7
++#define R8A7742_CLK_SSI7		8
++#define R8A7742_CLK_SSI6		9
++#define R8A7742_CLK_SSI5		10
++#define R8A7742_CLK_SSI4		11
++#define R8A7742_CLK_SSI3		12
++#define R8A7742_CLK_SSI2		13
++#define R8A7742_CLK_SSI1		14
++#define R8A7742_CLK_SSI0		15
++#define R8A7742_CLK_SCU			17
++#define R8A7742_CLK_DVC1		18
++#define R8A7742_CLK_DVC0		19
++#define R8A7742_CLK_SRC9		22
++#define R8A7742_CLK_SRC8		23
++#define R8A7742_CLK_SRC7		24
++#define R8A7742_CLK_SRC6		25
++#define R8A7742_CLK_SRC5		26
++#define R8A7742_CLK_SRC4		27
++#define R8A7742_CLK_SRC3		28
++#define R8A7742_CLK_SRC2		29
++#define R8A7742_CLK_SRC1		30
++#define R8A7742_CLK_SRC0		31
++
++#endif /* __DT_BINDINGS_CLOCK_R8A7742_H__ */
+diff --git a/include/linux/linux_logo.h b/include/linux/linux_logo.h
+index ca5bd91..602b88e 100644
+--- a/include/linux/linux_logo.h
++++ b/include/linux/linux_logo.h
+@@ -32,6 +32,12 @@ struct linux_logo {
+ 	const unsigned char *data;
+ };
+ 
++/* iWave */
++extern const struct linux_logo logo_iwave_solo_clut224;
++extern const struct linux_logo logo_iwave_dual_clut224;
++extern const struct linux_logo logo_iwave_triple_clut224;
++extern const struct linux_logo logo_iwave_quad_clut224;
++
+ extern const struct linux_logo logo_linux_mono;
+ extern const struct linux_logo logo_linux_vga16;
+ extern const struct linux_logo logo_linux_clut224;
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index 59299bb..61cb803 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -130,6 +130,9 @@ struct tmio_mmc_data {
+ 	struct tmio_mmc_dma		*dma;
+ 	struct device			*dev;
+ 	unsigned int			cd_gpio;
++#ifdef CONFIG_MACH_IWG21M
++	unsigned int                    led_gpio;
++#endif
+ 	void (*set_pwr)(struct platform_device *host, int state);
+ 	void (*set_clk_div)(struct platform_device *host, int state);
+ 	int (*write16_hook)(struct tmio_mmc_host *host, int addr);
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index 45b941e..4306609 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -376,6 +376,10 @@ int mmc_add_host(struct mmc_host *);
+ void mmc_remove_host(struct mmc_host *);
+ void mmc_free_host(struct mmc_host *);
+ int mmc_of_parse(struct mmc_host *host);
++#ifdef CONFIG_MACH_IWG21M
++void sd_led_ctrl_enable(struct mmc_host *mmchost);
++void sd_led_ctrl_disable(struct mmc_host *mmchost);
++#endif
+ 
+ static inline void *mmc_priv(struct mmc_host *host)
+ {
+diff --git a/include/linux/platform_data/camera-rcar.h b/include/linux/platform_data/camera-rcar.h
+index 03a9df6..ce1c490 100644
+--- a/include/linux/platform_data/camera-rcar.h
++++ b/include/linux/platform_data/camera-rcar.h
+@@ -18,6 +18,7 @@
+ #define RCAR_VIN_BT601			(1 << 2)
+ #define RCAR_VIN_BT656			(1 << 3)
+ #define RCAR_VIN_BT709			(1 << 4)
++#define RCAR_VIN2_G			(1 << 5)
+ 
+ struct rcar_vin_platform_data {
+ 	unsigned int flags;
+diff --git a/include/linux/pwm.h b/include/linux/pwm.h
+index 4495fc9..9dc3151 100644
+--- a/include/linux/pwm.h
++++ b/include/linux/pwm.h
+@@ -154,7 +154,7 @@ struct pwm_ops {
+ 	void			(*disable)(struct pwm_chip *chip,
+ 					   struct pwm_device *pwm);
+ #ifdef CONFIG_PWM_TIMER_SUPPORT
+-	//set time unit				   
++	//set time unit
+ 	void		(*set_time_unit)(struct pwm_chip *pwm, int unit);
+ #endif /*CONFIG_PWM_TIMER_SUPPORT*/
+ #ifdef CONFIG_DEBUG_FS
+diff --git a/include/linux/sh_dma.h b/include/linux/sh_dma.h
+index e2847ba..cda4408 100644
+--- a/include/linux/sh_dma.h
++++ b/include/linux/sh_dma.h
+@@ -107,7 +107,7 @@ struct sh_dmae_pdata {
+ #define DM_DEC	0x00008000
+ #if defined(CONFIG_ARCH_R8A7790) || defined(CONFIG_ARCH_R8A7791) || \
+ 	defined(CONFIG_ARCH_R8A7794) || defined(CONFIG_ARCH_R8A7743) || \
+-	defined(CONFIG_ARCH_R8A7745)
++	defined(CONFIG_ARCH_R8A7745) || defined(CONFIG_ARCH_R8A7742)
+ #define DM_FIX	0x00000000
+ #else
+ #define DM_FIX	0x0000c000
+@@ -115,8 +115,8 @@ struct sh_dmae_pdata {
+ #define SM_INC	0x00001000
+ #define SM_DEC	0x00002000
+ #if defined(CONFIG_ARCH_R8A7790) || defined(CONFIG_ARCH_R8A7791) || \
+-	defined(CONFIG_ARCH_R8A7794)  || defined(CONFIG_ARCH_R8A7743) || \
+-	defined(CONFIG_ARCH_R8A7745)
++	defined(CONFIG_ARCH_R8A7794) || defined(CONFIG_ARCH_R8A7743) || \
++	defined(CONFIG_ARCH_R8A7745) || defined(CONFIG_ARCH_R8A7742)
+ #define SM_FIX	0x00000000
+ #else
+ #define SM_FIX	0x00003000
+diff --git a/include/linux/usb/renesas_usbhs.h b/include/linux/usb/renesas_usbhs.h
+index 3bef676..ba2c9c6 100644
+--- a/include/linux/usb/renesas_usbhs.h
++++ b/include/linux/usb/renesas_usbhs.h
+@@ -178,6 +178,7 @@ struct renesas_usbhs_driver_param {
+ #define USBHS_TYPE_R8A7790 1
+ #define USBHS_TYPE_R8A7791 2
+ #define USBHS_TYPE_R8A7743 3
++#define USBHS_TYPE_R8A7742 4
+ 
+ /*
+  * option:
+diff --git a/include/media/v4l2-chip-ident.h b/include/media/v4l2-chip-ident.h
+index c1b7184..51160fc 100644
+--- a/include/media/v4l2-chip-ident.h
++++ b/include/media/v4l2-chip-ident.h
+@@ -77,6 +77,7 @@ enum {
+ 	V4L2_IDENT_OV2640 = 259,
+ 	V4L2_IDENT_OV9740 = 260,
+ 	V4L2_IDENT_OV5642 = 261,
++	V4L2_IDENT_OV5640 = 262,
+ 
+ 	/* module saa7146: reserved range 300-309 */
+ 	V4L2_IDENT_SAA7146 = 300,
+diff --git a/include/net/bluetooth/bluetooth.h b/include/net/bluetooth/bluetooth.h
+index 10eb9b3..2ee2520 100644
+--- a/include/net/bluetooth/bluetooth.h
++++ b/include/net/bluetooth/bluetooth.h
+@@ -265,6 +265,7 @@ typedef void (*hci_req_complete_t)(struct hci_dev *hdev, u8 status);
+ 
+ struct hci_req_ctrl {
+ 	bool			start;
++	bool			ignore_status;
+ 	u8			event;
+ 	hci_req_complete_t	complete;
+ };
+diff --git a/include/net/bluetooth/hci_core.h b/include/net/bluetooth/hci_core.h
+index 7cb6d36..f1d7500 100644
+--- a/include/net/bluetooth/hci_core.h
++++ b/include/net/bluetooth/hci_core.h
+@@ -1084,7 +1084,7 @@ int hci_req_run(struct hci_request *req, hci_req_complete_t complete);
+ void hci_req_add(struct hci_request *req, u16 opcode, u32 plen,
+ 		 const void *param);
+ void hci_req_add_ev(struct hci_request *req, u16 opcode, u32 plen,
+-		    const void *param, u8 event);
++		    const void *param, u8 event, bool ignore_status);
+ void hci_req_cmd_complete(struct hci_dev *hdev, u16 opcode, u8 status);
+ 
+ struct sk_buff *__hci_cmd_sync(struct hci_dev *hdev, u16 opcode, u32 plen,
+diff --git a/net/bluetooth/hci_core.c b/net/bluetooth/hci_core.c
+index 7c88f5f..8c66d06 100644
+--- a/net/bluetooth/hci_core.c
++++ b/net/bluetooth/hci_core.c
+@@ -145,7 +145,7 @@ struct sk_buff *__hci_cmd_sync_ev(struct hci_dev *hdev, u16 opcode, u32 plen,
+ 
+ 	hci_req_init(&req, hdev);
+ 
+-	hci_req_add_ev(&req, opcode, plen, param, event);
++	hci_req_add_ev(&req, opcode, plen, param, event, false);
+ 
+ 	hdev->req_status = HCI_REQ_PEND;
+ 
+@@ -603,8 +603,8 @@ static void hci_init3_req(struct hci_request *req, unsigned long opt)
+ 
+ 		bacpy(&cp.bdaddr, BDADDR_ANY);
+ 		cp.delete_all = 0x01;
+-		hci_req_add(req, HCI_OP_DELETE_STORED_LINK_KEY,
+-			    sizeof(cp), &cp);
++		hci_req_add_ev(req, HCI_OP_DELETE_STORED_LINK_KEY,
++			    sizeof(cp), &cp, 0, true);
+ 	}
+ 
+ 	if (hdev->commands[5] & 0x10)
+@@ -2688,7 +2688,7 @@ int hci_send_cmd(struct hci_dev *hdev, __u16 opcode, __u32 plen,
+ 
+ /* Queue a command to an asynchronous HCI request */
+ void hci_req_add_ev(struct hci_request *req, u16 opcode, u32 plen,
+-		    const void *param, u8 event)
++		    const void *param, u8 event, bool ignore_status)
+ {
+ 	struct hci_dev *hdev = req->hdev;
+ 	struct sk_buff *skb;
+@@ -2714,13 +2714,14 @@ void hci_req_add_ev(struct hci_request *req, u16 opcode, u32 plen,
+ 
+ 	bt_cb(skb)->req.event = event;
+ 
++	bt_cb(skb)->req.ignore_status = ignore_status;
+ 	skb_queue_tail(&req->cmd_q, skb);
+ }
+ 
+ void hci_req_add(struct hci_request *req, u16 opcode, u32 plen,
+ 		 const void *param)
+ {
+-	hci_req_add_ev(req, opcode, plen, param, 0);
++	hci_req_add_ev(req, opcode, plen, param, 0, false);
+ }
+ 
+ /* Get data from the previously sent command */
+@@ -3444,6 +3445,10 @@ void hci_req_cmd_complete(struct hci_dev *hdev, u16 opcode, u8 status)
+ 		return;
+ 	}
+ 
++	/* Check for commands whose failures aren't critical */
++	if (bt_cb(hdev->sent_cmd)->req.ignore_status)
++		status = 0;
++
+ 	/* If the command succeeded and there's still more commands in
+ 	 * this request the request is not yet complete.
+ 	 */
+diff --git a/sound/soc/codecs/sgtl5000.c b/sound/soc/codecs/sgtl5000.c
+index ea47938..1d60687 100644
+--- a/sound/soc/codecs/sgtl5000.c
++++ b/sound/soc/codecs/sgtl5000.c
+@@ -27,6 +27,14 @@
+ #include <sound/soc.h>
+ #include <sound/soc-dapm.h>
+ #include <sound/initval.h>
++#ifdef CONFIG_MACH_IWG21M
++/* IWG21M: Audio: HeadPhone and Mic Detect Implementation */
++#include <linux/err.h>
++#include <linux/irq.h>
++#include <linux/io.h>
++#include <linux/of_gpio.h>
++#include <linux/gpio.h>
++#endif
+ 
+ #include "sgtl5000.h"
+ 
+@@ -60,6 +68,20 @@ static const u16 sgtl5000_regs[SGTL5000_MAX_REG_OFFSET] =  {
+ 	[SGTL5000_DAP_AVC_DECAY] = 0x0050,
+ };
+ 
++#ifdef CONFIG_MACH_IWG21M
++/* IWG21M: Audio: HeadPhone and Mic Detect Implementation */
++struct sh_sgtl5000_priv {
++        int hp_gpio;
++        int hp_active_low;
++        int mic_gpio;
++        int mic_active_low;
++        int hp_irq;
++        int mic_irq;
++};
++
++static struct sh_sgtl5000_priv card_priv;
++#endif
++
+ /* regulator supplies for sgtl5000, VDDD is an optional external supply */
+ enum sgtl5000_regulator_supplies {
+ 	VDDA,
+@@ -142,6 +164,59 @@ static int mic_bias_event(struct snd_soc_dapm_widget *w,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_MACH_IWG21M
++/* IWG21M: Audio: HeadPhone and Mic Detect Implementation */
++/*
++ *Headphone Detect Handler
++ */
++static irqreturn_t hp_handler(int irq, void *dev_id)
++{
++	struct sh_sgtl5000_priv *priv = &card_priv;
++	int hp_status;
++
++	hp_status = gpio_get_value(priv->hp_gpio) ? 1 : 0;
++	if (hp_status != priv->hp_active_low){
++#ifdef CONFIG_MACH_IWG21M
++		printk("Headphone is plugged\n");
++#else
++		pr_debug("Headphone is plugged\n");
++#endif
++	}else {
++#ifdef CONFIG_MACH_IWG21M
++		printk("Headphone is unplugged\n");
++#else
++		pr_debug("Headphone is unplugged\n");
++#endif
++	}
++	return IRQ_RETVAL(1);
++}
++
++/*
+++ *Microphone Detect handler
+++ */
++static irqreturn_t mic_handler(int irq, void *dev_id)
++{
++	struct sh_sgtl5000_priv *priv = &card_priv;
++	int mic_status;
++
++	mic_status = gpio_get_value(priv->mic_gpio) ? 1 : 0;
++	if (mic_status != priv->mic_active_low){
++#ifdef CONFIG_MACH_IWG21M
++		printk("Microphone is plugged\n");
++#else
++		pr_debug("Microphone is plugged\n");
++#endif
++	}else {
++#ifdef CONFIG_MACH_IWG21M
++		printk("Microphone is unplugged\n");
++#else
++		pr_debug("Microphone is unplugged\n");
++#endif
++	}
++	return IRQ_RETVAL(1);
++}
++#endif
++
+ /*
+  * As manual described, ADC/DAC only works when VAG powerup,
+  * So enabled VAG before ADC/DAC up.
+@@ -1299,6 +1374,15 @@ static int sgtl5000_probe(struct snd_soc_codec *codec)
+ 	int ret;
+ 	struct sgtl5000_priv *sgtl5000 = snd_soc_codec_get_drvdata(codec);
+ 
++#ifdef CONFIG_MACH_IWG21M
++	/* IWG21M: Audio: HeadPhone and Mic Detect Implementation */
++	struct sh_sgtl5000_priv *priv = &card_priv;
++	struct device_node *np;
++	int hp_status, mic_status;
++
++	np = of_find_compatible_node(NULL, NULL, "fsl,sgtl5000");
++#endif
++
+ 	/* setup i2c data ops */
+ 	ret = snd_soc_codec_set_cache_io(codec, 16, 16, SND_SOC_I2C);
+ 	if (ret < 0) {
+@@ -1358,6 +1442,37 @@ static int sgtl5000_probe(struct snd_soc_codec *codec)
+ 	if (ret)
+ 		goto err;
+ 
++#ifdef CONFIG_MACH_IWG21M
++	/* IWG21M: Audio: HeadPhone and Mic Detect Implementation */
++
++	priv->hp_gpio = of_get_named_gpio_flags(np, "hp-det-gpios", 0,
++			(enum of_gpio_flags *)&priv->hp_active_low);
++	priv->mic_gpio = of_get_named_gpio_flags(np, "mic-det-gpios", 0,
++			(enum of_gpio_flags *)&priv->mic_active_low);
++
++	gpio_request(priv->hp_gpio, "HeadPhone-Detect");
++	gpio_direction_input(priv->hp_gpio);
++	priv->hp_irq = gpio_to_irq(priv->hp_gpio);
++	hp_status = gpio_get_value(priv->hp_gpio) ? 1 : 0;
++
++	ret=request_irq(priv->hp_irq,hp_handler,IRQF_DISABLED | IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"HeadPhone",0);
++	if (ret < 0) {
++		printk(KERN_ALERT "%s: request hp_irq failed with %d\n",__func__, ret);
++		free_irq(priv->hp_irq,0);
++	}
++
++	gpio_request(priv->mic_gpio, "Microphone-Detect");
++	gpio_direction_input(priv->mic_gpio);
++	priv->mic_irq = gpio_to_irq(priv->mic_gpio);
++	mic_status = gpio_get_value(priv->mic_gpio) ? 1 : 0;
++
++	ret=request_irq(priv->mic_irq,mic_handler,IRQF_DISABLED | IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"MicroPhone",0);
++	if (ret < 0) {
++		printk(KERN_ALERT "%s: request mic_irq failed with %d\n",__func__, ret);
++		free_irq(priv->mic_irq,0);
++	}
++#endif
++
+ 	return 0;
+ 
+ err:
+diff --git a/sound/soc/generic/simple-card.c b/sound/soc/generic/simple-card.c
+index 9556644..18ba85f 100644
+--- a/sound/soc/generic/simple-card.c
++++ b/sound/soc/generic/simple-card.c
+@@ -113,6 +113,16 @@ static int asoc_simple_card_dai_init(struct snd_soc_pcm_runtime *rtd)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_MACH_IWG21M
++static const struct snd_soc_dapm_widget sgtl5000_dapm_widgets[] = {
++        SND_SOC_DAPM_MIC("Mic Jack", NULL),
++        SND_SOC_DAPM_LINE("Line In Jack", NULL),
++        SND_SOC_DAPM_HP("Headphone Jack", NULL),
++        SND_SOC_DAPM_SPK("Line Out Jack", NULL),
++        SND_SOC_DAPM_SPK("Ext Spk", NULL),
++};
++#endif
++
+ static int
+ asoc_simple_card_sub_parse_of(struct device_node *np,
+ 			      struct asoc_simple_dai *dai,
+@@ -419,6 +429,11 @@ static int asoc_simple_card_probe(struct platform_device *pdev)
+ 	dai_link = priv->dai_link;
+ 	priv->snd_card.dai_link = dai_link;
+ 	priv->snd_card.num_links = num_links;
++#ifdef CONFIG_MACH_IWG21M
++	priv->snd_card.dapm_widgets = sgtl5000_dapm_widgets;
++	priv->snd_card.num_dapm_widgets = ARRAY_SIZE(sgtl5000_dapm_widgets);
++#endif
++
+ 
+ 	/* get room for the other properties */
+ 	priv->dai_props = devm_kzalloc(dev,

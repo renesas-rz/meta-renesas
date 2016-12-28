@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://wayland-kms.c;beginline=6;endline=24;md5=5cdaac262c87
 SRCREV = "70810cc21c8f2c9f3e9d4c23602e9f12a6e69c5f"
 SRC_URI = "git://github.com/thayama/wayland-kms;protocol=git;branch=master"
 
-COMPATIBLE_MACHINE = "(r8a7743|r8a7744|r8a7745)"
+COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745)"
 S = "${WORKDIR}/git"
 DEPENDS = "libdrm wayland"
 

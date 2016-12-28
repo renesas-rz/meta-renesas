@@ -1,0 +1,101 @@
+commit 6abfdd73a7266c6e079ed5f346619dd89e383f3f
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 14:56:32 2016 +0700
+
+    Add match of compatible r8a7742-iwg21m_q7 for touchscreen driver
+
+diff --git a/drivers/input/touchscreen/edt-ft5x06.c b/drivers/input/touchscreen/edt-ft5x06.c
+index 83fa1b1..959162d 100644
+--- a/drivers/input/touchscreen/edt-ft5x06.c
++++ b/drivers/input/touchscreen/edt-ft5x06.c
+@@ -35,6 +35,9 @@
+ #include <linux/gpio.h>
+ #include <linux/input/mt.h>
+ #include <linux/input/edt-ft5x06.h>
++#ifdef CONFIG_MACH_IWG21M
++#include <linux/of.h>
++#endif
+ 
+ #define MAX_SUPPORT_POINTS		5
+ 
+@@ -701,11 +704,39 @@ edt_ft5x06_ts_get_parameters(struct edt_ft5x06_ts_data *tsdata)
+ 	tsdata->num_y = edt_ft5x06_register_read(tsdata, WORK_REGISTER_NUM_Y);
+ }
+ 
++#ifdef CONFIG_OF
++#include <linux/of_gpio.h>
++
++static int edt_ft5x06_of_probe(struct i2c_client *client,
++		struct edt_ft5x06_platform_data *pdata)
++{
++	struct device_node *np = client->dev.of_node;
++
++	if (!np)
++		return -ENODEV;
++
++	pdata->irq_pin = of_get_named_gpio(np, "int-gpio", 0);
++	pdata->reset_pin = of_get_named_gpio(np, "reset-gpio", 0);
++
++	return 0;
++}
++#else /* !CONFIG_OF */
++static int edt_ft5x06_of_probe(struct i2c_client *client,
++		struct edt_ft5x06_platform_data *pdata)
++{
++	return -ENODEV;
++}
++#endif /* CONFIG_OF */
++
+ static int edt_ft5x06_ts_probe(struct i2c_client *client,
+ 					 const struct i2c_device_id *id)
+ {
++#ifdef CONFIG_MACH_IWG21M
++	struct edt_ft5x06_platform_data *pdata;
++#else
+ 	const struct edt_ft5x06_platform_data *pdata =
+ 						client->dev.platform_data;
++#endif
+ 	struct edt_ft5x06_ts_data *tsdata;
+ 	struct input_dev *input;
+ 	int error;
+@@ -713,10 +744,13 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client,
+ 
+ 	dev_dbg(&client->dev, "probing for EDT FT5x06 I2C\n");
+ 
++	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
+ 	if (!pdata) {
+ 		dev_err(&client->dev, "no platform data?\n");
+ 		return -EINVAL;
+ 	}
++	edt_ft5x06_of_probe(client, pdata);
++	client->dev.platform_data = (void *) pdata;
+ 
+ 	error = edt_ft5x06_ts_reset(client, pdata->reset_pin);
+ 	if (error)
+@@ -814,6 +848,7 @@ err_free_irq:
+ err_free_mem:
+ 	input_free_device(input);
+ 	kfree(tsdata);
++	kfree(pdata);
+ 
+ 	if (gpio_is_valid(pdata->irq_pin))
+ 		gpio_free(pdata->irq_pin);
+@@ -874,11 +909,18 @@ static const struct i2c_device_id edt_ft5x06_ts_id[] = {
+ };
+ MODULE_DEVICE_TABLE(i2c, edt_ft5x06_ts_id);
+ 
++static const struct of_device_id edt_ft5x06_ts_dt_ids[] = {
++        { .compatible = "focal,ft5x06", },
++        { /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, edt_ft5x06_ts_dt_ids);
++
+ static struct i2c_driver edt_ft5x06_ts_driver = {
+ 	.driver = {
+ 		.owner = THIS_MODULE,
+ 		.name = "edt_ft5x06",
+ 		.pm = &edt_ft5x06_ts_pm_ops,
++		.of_match_table = edt_ft5x06_ts_dt_ids,
+ 	},
+ 	.id_table = edt_ft5x06_ts_id,
+ 	.probe    = edt_ft5x06_ts_probe,

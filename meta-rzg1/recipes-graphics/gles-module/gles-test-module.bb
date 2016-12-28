@@ -5,7 +5,7 @@ PN = "gles-test-module"
 PR = "r0"
 OPENGLES3 ?= "0"
 
-COMPATIBLE_MACHINE = "(r8a7743|r8a7744|r8a7745)"
+COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = '${@base_conditional( "OPENGLES3", "1", \

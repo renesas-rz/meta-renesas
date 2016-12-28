@@ -1,0 +1,139 @@
+commit 2b27e0b86e1723c194390fa29ee92d96d29b3a13
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 15:01:27 2016 +0700
+
+    Add match of compatible r8a7742-iwg21m_q7 for MMC driver
+
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index ae8fbd4..b6b1490 100644
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -2014,7 +2014,17 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
+ 	struct mmc_blk_data *md;
+ 	int devidx, ret;
+ 
++#ifdef CONFIG_MACH_IWG21M
++	/* IWG21M: SD/MMC: Fix for static slot numbering  Standard SD - 0, eMMC - 1*/
++	if ((!strcmp(mmc_hostname(card->host), "mmc1")) && !subname)
++		devidx = 1;
++	else if (!strcmp(mmc_hostname(card->host), "mmc0"))
++		devidx = 0;
++	else
++		devidx = find_next_zero_bit(dev_use, max_devices, 2);
++#else
+ 	devidx = find_first_zero_bit(dev_use, max_devices);
++#endif
+ 	if (devidx >= max_devices)
+ 		return ERR_PTR(-ENOSPC);
+ 	__set_bit(devidx, dev_use);
+@@ -2032,7 +2042,15 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
+ 	 * index anymore so we keep track of a name index.
+ 	 */
+ 	if (!subname) {
++#ifdef CONFIG_MACH_IWG21M
++		/* IWG21M: SD/MMC: Fix for static slot numbering  Standard SD - 0, eMMC1 - 1*/
++		if (!strcmp(mmc_hostname(card->host), "mmc1"))
++			md->name_idx = 1;
++		else if (!strcmp(mmc_hostname(card->host), "mmc0"))
++			md->name_idx = 0;
++#else
+ 		md->name_idx = find_first_zero_bit(name_use, max_devices);
++#endif
+ 		__set_bit(md->name_idx, name_use);
+ 	} else
+ 		md->name_idx = ((struct mmc_blk_data *)
+diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
+index 419edfa..ac40276 100644
+--- a/drivers/mmc/core/bus.c
++++ b/drivers/mmc/core/bus.c
+@@ -341,6 +341,11 @@ int mmc_add_card(struct mmc_card *card)
+ 
+ 	mmc_card_set_present(card);
+ 
++#ifdef CONFIG_MACH_IWG21M
++	if(!strncmp(mmc_hostname(card->host),"mmc0",4))
++		sd_led_ctrl_enable(card->host);
++#endif
++
+ 	return 0;
+ }
+ 
+@@ -365,6 +370,11 @@ void mmc_remove_card(struct mmc_card *card)
+ 		device_del(&card->dev);
+ 	}
+ 
++#ifdef CONFIG_MACH_IWG21M
++	if(!strncmp(mmc_hostname(card->host),"mmc0",4))
++		sd_led_ctrl_disable(card->host);
++#endif
++
+ 	put_device(&card->dev);
+ }
+ 
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index 59a2006..f1500ab 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -32,6 +32,10 @@
+ #include <linux/sh_dma.h>
+ #include <linux/delay.h>
+ #include <linux/regulator/consumer.h>
++#ifdef CONFIG_MACH_IWG21M
++#include <linux/of_gpio.h>
++#include <linux/gpio.h>
++#endif
+ 
+ #include "tmio_mmc.h"
+ 
+@@ -133,6 +137,7 @@ static const struct of_device_id sh_mobile_sdhi_of_match[] = {
+ 	{ .compatible = "renesas,sdhi-r8a7791", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7793", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7794", .data = &of_rcar_gen2_compatible, },
++	{ .compatible = "renesas,sdhi-r8a7742", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7743", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7745", .data = &of_rcar_gen2_compatible, },
+ 	{},
+@@ -574,6 +579,25 @@ static void sh_mobile_sdhi_enable_sdbuf_acc32(struct tmio_mmc_host *host,
+ 
+ }
+ 
++#ifdef CONFIG_MACH_IWG21M
++/* Enable LED if device present, disable otherwise */
++void sd_led_ctrl_enable(struct mmc_host *mmc)
++{
++	struct tmio_mmc_host *host = mmc_priv(mmc);
++
++	if (gpio_is_valid(host->pdata->led_gpio))
++		gpio_set_value (host->pdata->led_gpio, 1);
++}
++
++void sd_led_ctrl_disable(struct mmc_host *mmc)
++{
++	struct tmio_mmc_host *host = mmc_priv(mmc);
++
++	if (gpio_is_valid(host->pdata->led_gpio))
++		gpio_set_value (host->pdata->led_gpio, 0);
++}
++#endif
++
+ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id =
+@@ -661,6 +685,17 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++#ifdef CONFIG_MACH_IWG21M
++	/* SD LED */
++	mmc_data->led_gpio = of_get_named_gpio(np, "led-gpios", 0);
++	if (gpio_is_valid(mmc_data->led_gpio)){
++		if(devm_gpio_request_one(&pdev->dev,
++					mmc_data->led_gpio, GPIOF_DIR_OUT,"sd-led"))
++			dev_err(&pdev->dev,
++					"failed to request led-gpios gpio!\n");
++	}
++#endif
++
+ 	if (np && !of_property_read_u32(np, "renesas,id", &mask))
+ 		vlt->mask = mask;
+ 

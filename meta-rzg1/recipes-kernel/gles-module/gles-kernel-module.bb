@@ -8,8 +8,14 @@ DEPENDS = "linux-renesas"
 PN = "gles-kernel-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "(r8a7743|r8a7744|r8a7745)"
+COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+
+SRC_URI_r8a7742 = 'file://RGX_KM_H2.tar.bz2'
+S_r8a7742 = "${WORKDIR}/rogue_km"
+KERNEL_SRC_PATH_r8a7742 = "build/linux/r8a7742_linux"
+KERNEL_OLD_SRC_PATH_r8a7742 = "build/linux/r8a7790_linux/"
+TARGET_PATH_r8a7742 = "rogue_km/binary_r8a7742_linux_release/target/kbuild/"
 
 SRC_URI_r8a7743 = 'file://SGX_KM_M2.tar.bz2'
 S_r8a7743 = "${WORKDIR}/eurasia_km"

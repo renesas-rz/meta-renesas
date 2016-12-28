@@ -14,6 +14,7 @@ SRC_URI = "file://mmngr.tar.bz2 \
            file://0001_add_physical_address_translate_feature.patch"
 S = "${WORKDIR}/mmngr"
 
+MMNGR_CFG_r8a7742 = "MMNGR_LAGER"
 MMNGR_CFG_r8a7743 = "MMNGR_KOELSCH"
 MMNGR_CFG_r8a7744 = "MMNGR_GOSE"
 MMNGR_CFG_r8a7745 = "MMNGR_ALT"

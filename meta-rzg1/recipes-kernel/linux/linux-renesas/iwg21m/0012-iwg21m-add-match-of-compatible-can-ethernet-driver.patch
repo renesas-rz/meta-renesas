@@ -1,0 +1,110 @@
+commit f6cf41f807bc7f6bfefad623dce7d606dd5f988f
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 15:03:30 2016 +0700
+
+    Add match of compatible r8a7742-iwg21m_q7 for net can & ethernet driver
+
+diff --git a/drivers/net/can/rcar_can.c b/drivers/net/can/rcar_can.c
+index 1d94fc7..fca4d17 100644
+--- a/drivers/net/can/rcar_can.c
++++ b/drivers/net/can/rcar_can.c
+@@ -900,6 +900,7 @@ static const struct of_device_id rcar_can_of_table[] __maybe_unused = {
+ 	{ .compatible = "renesas,can-r8a7790" },
+ 	{ .compatible = "renesas,can-r8a7791" },
+ 	{ .compatible = "renesas,can-r8a7743" },
++	{ .compatible = "renesas,can-r8a7742" },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, rcar_can_of_table);
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 7d60de1..1ed20fe 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -303,6 +303,27 @@ static struct ravb_cpu_data r8a779x_data_giga = {
+ 	.need_txalign = 1,
+ };
+ 
++/* R8A7742 */
++static struct ravb_cpu_data r8a7742_data_giga = {
++	.set_duplex	= ravb_set_duplex,
++	.set_rate	= ravb_set_rate,
++
++	.register_type	= RAVB_REG_RCAR_GEN2,
++
++	.csel_value = 0x00010000,
++	.gti_value = ((1000*(1<<20)) / 130),
++
++	.ecsr_value	= ECSR_ICD | ECSR_MPD,
++	.ecsipr_value	= ECSIPR_LCHNGIP | ECSIPR_ICDIP | ECSIPR_MPDIP,
++
++	.irq_flags	= IRQF_SHARED,
++	.apr		= 0,
++	.mpr		= 1,
++	.tpauser	= 0,
++	.hw_swap	= 1,
++	.need_txalign = 1,
++};
++
+ /* R8A774_3/5 */
+ static struct ravb_cpu_data r8a774_3_5_data_giga = {
+ 	.set_duplex	= ravb_set_duplex,
+@@ -2152,6 +2173,7 @@ static struct ravb_plat_data *ravb_parse_dt(struct device *dev,
+ 
+ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,gether-r8a7790", .data = &r8a779x_data_giga },
++	{ .compatible = "renesas,gether-r8a7742", .data = &r8a7742_data_giga },
+ 	{ .compatible = "renesas,gether-r8a7743", .data = &r8a774_3_5_data_giga },
+ 	{ .compatible = "renesas,gether-r8a7794", .data = &r8a779x_data_giga },
+ 	{ .compatible = "renesas,gether-r8a7745", .data = &r8a774_3_5_data_giga },
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index b106e175..232a669 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -507,6 +507,31 @@ static struct sh_eth_cpu_data r8a779x_data = {
+ 	.shift_rd0	= 1,
+ };
+ 
++/* R8A7742 */
++static struct sh_eth_cpu_data r8a7742_data = {
++	.set_duplex	= sh_eth_set_duplex,
++	.set_rate	= sh_eth_set_rate_r8a777x,
++
++	.register_type	= SH_ETH_REG_FAST_RCAR,
++
++	.ecsr_value	= ECSR_PSRTO | ECSR_LCHNG | ECSR_ICD,
++	.ecsipr_value	= ECSIPR_PSRTOIP | ECSIPR_LCHNGIP | ECSIPR_ICDIP,
++	.eesipr_value	= 0x01ff009f,
++
++	.tx_check	= EESR_FTC | EESR_CND | EESR_DLC | EESR_CD | EESR_RTO,
++	.eesr_err_check	= EESR_TWB | EESR_TABT | EESR_RABT | EESR_RFE |
++			  EESR_RDE | EESR_RFRMER | EESR_TFE | EESR_TDE |
++			  EESR_ECI,
++	.fdr_value	= 0x00000f0f,
++
++	.apr		= 1,
++	.mpr		= 1,
++	.tpauser	= 1,
++	.hw_swap	= 1,
++	.rmiimode	= 1,
++	.shift_rd0	= 1,
++};
++
+ static struct sh_eth_cpu_data r8a774_3_5_data = {
+ 	.set_duplex	= sh_eth_set_duplex,
+ 	.set_rate	= sh_eth_set_rate_r8a777x,
+@@ -2818,6 +2843,7 @@ static const struct of_device_id sh_eth_match_table[] = {
+ 	{ .compatible = "renesas,ether-r8a7791", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r8a7793", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r8a7794", .data = &r8a779x_data },
++	{ .compatible = "renesas,ether-r8a7742", .data = &r8a7742_data },
+ 	{ .compatible = "renesas,ether-r8a7743", .data = &r8a774_3_5_data },
+ 	{ .compatible = "renesas,ether-r8a7745", .data = &r8a774_3_5_data },
+ 	{ .compatible = "renesas,ether-r7s72100", .data = &r7s72100_data },
+@@ -3052,6 +3078,7 @@ static struct platform_device_id sh_eth_id_table[] = {
+ 	{ "r8a7791-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7793-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7794-ether", (kernel_ulong_t)&r8a779x_data },
++	{ "r8a7742-ether", (kernel_ulong_t)&r8a7742_data },
+ 	{ "r8a7743-ether", (kernel_ulong_t)&r8a774_3_5_data },
+ 	{ "r8a7745-ether", (kernel_ulong_t)&r8a774_3_5_data },
+ 	{ }

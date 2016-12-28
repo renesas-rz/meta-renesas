@@ -1,0 +1,32 @@
+commit 73368a4bc7837de4306c0749d423abd0a5610f20
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Thu Nov 24 22:33:18 2016 +0700
+
+    Add configure compatible for rcar clk gen
+
+diff --git a/drivers/clk/shmobile/Makefile b/drivers/clk/shmobile/Makefile
+index f1b027b..ba7d0be 100644
+--- a/drivers/clk/shmobile/Makefile
++++ b/drivers/clk/shmobile/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_ARCH_R8A7790)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7791)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7793)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7794)		+= clk-rcar-gen2.o
++obj-$(CONFIG_ARCH_R8A7742)              += clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7743)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7745)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_SHMOBILE_MULTI)	+= clk-div6.o
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 18fa199..548d0ad 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -350,7 +350,8 @@ static void __init rcar_gen2_cpg_clocks_init(struct device_node *np)
+ 	if (of_machine_is_compatible("renesas,r8a7790") ||
+ 	    of_machine_is_compatible("renesas,r8a7791") ||
+ 	    of_machine_is_compatible("renesas,r8a7793") ||
+-	    of_machine_is_compatible("renesas,r8a7743")) { 
++	    of_machine_is_compatible("renesas,r8a7743") ||
++	    of_machine_is_compatible("renesas,r8a7742")) { 
+ 		config = &cpg_pll_configs[CPG_PLL_CONFIG_INDEX(cpg_mode)];
+ 		is_e2 = false;
+ 	} else if (of_machine_is_compatible("renesas,r8a7794") ||

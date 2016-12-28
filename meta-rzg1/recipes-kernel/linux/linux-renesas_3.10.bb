@@ -5,7 +5,7 @@ require ../../include/gles-control.inc
 require ../../include/multimedia-control.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg21m)"
 
 PV_append = "+git${SRCREV}"
 
@@ -86,6 +86,27 @@ SRC_URI_append_iwg20m = "  \
     file://iwg20m/0024-Fix-issue-ov7725-soc_cam.patch \
 "
 
+SRC_URI_append_iwg21m = "  \
+    file://iwg21m/0001-iwg21m-add-dts-defconfig-boar-info.patch \
+    file://iwg21m/0002-iwg21m-add-ata-change.patch \
+    file://iwg21m/0003-iwg21m-add-configure-compatible-for-clk-gen-rcar.patch \
+    file://iwg21m/0003-rzg1-soc-add-firmware-for-usb3.0.patch \
+    file://iwg21m/0004-iwg21m-add-machine-compatible-r8a7742-for-spi-sh-msiof.patch \
+    file://iwg21m/0005-iwg21m-add-match-of-compatible-gpio-driver.patch \
+    file://iwg21m/0006-iwg21m-add-match-of-compatible-gpu-driver.patch \
+    file://iwg21m/0007-iwg21m-add-match-of-compatible-i2c-driver.patch \
+    file://iwg21m/0008-iwg21m-add-match-of-compatible-touchscreen-driver.patch \
+    file://iwg21m/0010-iwg21m-add-match-of-compatible-media-driver.patch \
+    file://iwg21m/0011-iwg21m-add-match-of-compatible-mmc-driver.patch \
+    file://iwg21m/0012-iwg21m-add-match-of-compatible-can-ethernet-driver.patch \
+    file://iwg21m/0013-iwg21m-add-match-of-compatible-pci-phy-driver.patch \
+    file://iwg21m/0014-iwg21m-add-match-of-compatible-pinctrl-driver.patch \
+    file://iwg21m/0015-iwg21m-add-match-of-compatible-pwm-sh-spi-driver.patch \
+    file://iwg21m/0016-iwg21m-add-match-of-compatible-usb-driver.patch \
+    file://iwg21m/0017-iwg21m-add-match-of-compatible-video-logo.patch \
+    file://iwg21m/0018-iwg21m-add-match-of-compatible-watchdog-driver.patch \
+    file://iwg21m/0019-iwg21m-add-match-of-compatible-header-files.patch \
+"
 
 KERNEL_DEVICETREE_append_skrzg1m = '${@ \
 	" ${S}/arch/arm/boot/dts/r8a7743-skrzg1m-eavb.dts " if 'skrzg1m-tse' in '${MACHINE_FEATURES}' else \
@@ -97,6 +118,7 @@ S = "${WORKDIR}/git"
 
 KERNEL_DEFCONFIG = "shmobile_defconfig"
 KERNEL_DEFCONFIG_iwg20m = "iwg20m_defconfig"
+KERNEL_DEFCONFIG_iwg21m = "iwg21m_defconfig"
 
 do_configure_prepend() {
     install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
@@ -166,6 +188,4 @@ SRC_URI_append_skrzg1e = " \
 	file://skrzg1e/0001-Add-pwm-pinfc-setting-for-r8a7745-skrzg1e.patch \
 	file://skrzg1e/0002-Add-pwm-support-on-device-tree-for-skrzg1e-board.patch \
 "
-
-#SRC_URI_append_iwg20m = " \ file://iWave/0001-Add-pwm-pin-function-controller-setting-for-r8a7743-.patch \ file://iWave/0002-Add-pwm-support-on-device-tree-for-iWave-board.patch \ "
 

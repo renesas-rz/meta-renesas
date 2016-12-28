@@ -8,6 +8,10 @@ PACKAGECONFIG_append_rzg1 = " \
 DEPENDS_append_rzg1 = " \
     ${@base_conditional('USE_GLES', '1', 'gles-user-module', '', d)} \
     ${@base_conditional('USE_GLES_MULTIMEDIA', '1', 'libmediactl-v4l2', '', d)}"
+REPENDS_append_rzg1 = " \
+    ${@'vsp2-kernel-module' \
+    if '${USE_GLES}' == '1' and '${USE_MULTIMEDIA}' == '1' else ''}"
+    
 EXTRA_OECONF_append_rzg1 = " \
     ${@base_conditional('USE_GLES', '1', '--enable-v4l2', \
     '--disable-xwayland-test WESTON_NATIVE_BACKEND=fbdev-backend.so', d)}"
@@ -31,6 +35,7 @@ SRC_URI_append_rzg1 = " \
 S = "${WORKDIR}/git"
 
 RDEPENDS_${PN}_append_rzg1 = " \
+    ${@base_conditional('USE_GLES', '1', 'media-ctl', '', d)} \
     ${@base_conditional('USE_GLES_MULTIMEDIA', '1', 'vsp2-kernel-module', '', d)}"
 
 
@@ -59,6 +64,15 @@ do_install_append_iwg20m () {
     install ${WORKDIR}/iwg20m-lvdstouch.rules ${D}/${sysconfdir}/udev/rules.d/
 }
 
-
 FILES_${PN}_append_iwg20m += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
+
+SRC_URI_append_iwg21m = " file://iwg21m-lvdstouch.rules "
+
+do_install_append_iwg21m () {
+    install -d ${D}/${sysconfdir}/udev/rules.d/
+    install ${WORKDIR}/iwg21m-lvdstouch.rules ${D}/${sysconfdir}/udev/rules.d/
+}
+
+FILES_${PN}_append_iwg21m += " ${sysconfdir}/udev/rules.d/iwg21m-lvdstouch.rules "
+
 DEPENDS += " libmediactl-v4l2 "

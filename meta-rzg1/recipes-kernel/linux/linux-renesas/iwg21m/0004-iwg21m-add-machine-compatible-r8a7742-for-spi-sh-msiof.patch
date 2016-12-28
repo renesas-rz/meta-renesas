@@ -1,0 +1,36 @@
+commit 05eba40bcff137c88a6daa58a29e7419f9fd4393
+Author: khoahvd <khoahvd@fsoft.com.vn>
+Date:   Fri Nov 25 02:32:39 2016 +0700
+
+    Add machine compatible with r8a7742 for spi
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index 55c366d..3eb5f98 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -204,7 +204,8 @@ static int msiof_rcar_is_gen2(struct device *dev)
+ 		of_device_is_compatible(node, "renesas,msiof-r8a7793") ||
+ 		of_device_is_compatible(node, "renesas,msiof-r8a7794") ||
+ 		of_device_is_compatible(node, "renesas,msiof-r8a7745") ||
+-		of_device_is_compatible(node, "renesas,msiof-r8a7743");
++		of_device_is_compatible(node, "renesas,msiof-r8a7743") ||
++                of_device_is_compatible(node, "renesas,msiof-r8a7742");
+ }
+ 
+ static u32 sh_msiof_read(struct sh_msiof_spi_priv *p, int reg_offs)
+@@ -1086,6 +1087,7 @@ static const struct of_device_id sh_msiof_match[] = {
+ 	{ .compatible = "renesas,msiof-r8a7791",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7793",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7794",   .data = &r8a779x_data },
++        { .compatible = "renesas,msiof-r8a7742",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7743",   .data = &r8a774_3_5_data },
+ 	{ .compatible = "renesas,msiof-r8a7745",   .data = &r8a774_3_5_data },
+ 	{},
+@@ -1392,6 +1394,7 @@ static struct platform_device_id spi_driver_ids[] = {
+ 	{ "spi_r8a7791_msiof",	(kernel_ulong_t)&r8a779x_data },
+ 	{ "spi_r8a7793_msiof",	(kernel_ulong_t)&r8a779x_data },
+ 	{ "spi_r8a7794_msiof",	(kernel_ulong_t)&r8a779x_data },
++        { "spi_r8a7742_msiof",  (kernel_ulong_t)&r8a779x_data },
+ 	{ "spi_r8a7743_msiof",	(kernel_ulong_t)&r8a774_3_5_data },
+ 	{ "spi_r8a7745_msiof",	(kernel_ulong_t)&r8a774_3_5_data },
+ 	{},
