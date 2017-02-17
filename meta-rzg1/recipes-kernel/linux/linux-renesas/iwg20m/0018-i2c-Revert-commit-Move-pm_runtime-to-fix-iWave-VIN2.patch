@@ -1,22 +1,17 @@
-From bd9d2bd495b30162b3044d2910ab35cd7b902c7b Mon Sep 17 00:00:00 2001
-From: HungTran <hung.tran.jy@rvc.renesas.com>
-Date: Wed, 1 Jun 2016 20:49:20 +0700
-Subject: [PATCH] i2c: Revert commit "Move pm_runtime" to fix iWave VIN2
-
-In iWave iwg20m board, VIN2 is missing due to the change
-in commit 973b24540a67cafa0945c8b7e31919f097030803  "Move pm_runtime function"
+From a0ce303e33f17e62985fa81b19bd7a87c7275167 Mon Sep 17 00:00:00 2001
+From:  HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 17 Feb 2017 20:23:29 +0700
+Subject: [PATCH] i2c: Revert commit "Move pm_runtime" to fix iWave VIN2 
+In iWave iwg20m board, VIN2 is missing due to the change in commit
+ 973b24540a67cafa0945c8b7e31919f097030803  "Move pm_runtime function" 
 This commit revert it to fix VIN2.
 
-Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
----
- drivers/i2c/busses/i2c-rcar.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
-index 4834af2..2888879 100644
+index 1d33e9b..4ae4fa2 100644
 --- a/drivers/i2c/busses/i2c-rcar.c
 +++ b/drivers/i2c/busses/i2c-rcar.c
-@@ -586,6 +586,8 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+@@ -577,6 +577,8 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
  	unsigned long flags;
  	int i, ret, timeout;
  
@@ -25,16 +20,15 @@ index 4834af2..2888879 100644
  	/*-------------- spin lock -----------------*/
  	spin_lock_irqsave(&priv->lock, flags);
  
-@@ -652,6 +654,8 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
- 		ret = i + 1; /* The number of transfer */
- 	}
- 
-+	pm_runtime_put(dev);
-+
- 	if (ret < 0 && ret != -ENXIO)
+@@ -651,6 +653,7 @@ out:
  		dev_err(dev, "error %d : %x\n", ret, priv->flags);
  
-@@ -753,7 +757,6 @@ static int rcar_i2c_probe(struct platform_device *pdev)
+ 	rcar_i2c_init(priv);
++	pm_runtime_put(dev);
+ 	return ret;
+ }
+ 
+@@ -749,7 +752,6 @@ static int rcar_i2c_probe(struct platform_device *pdev)
  	}
  
  	pm_runtime_enable(dev);
@@ -42,7 +36,7 @@ index 4834af2..2888879 100644
  	platform_set_drvdata(pdev, priv);
  
  	dev_info(dev, "probed\n");
-@@ -767,7 +770,6 @@ static int rcar_i2c_remove(struct platform_device *pdev)
+@@ -763,7 +765,6 @@ static int rcar_i2c_remove(struct platform_device *pdev)
  	struct device *dev = &pdev->dev;
  
  	i2c_del_adapter(&priv->adap);

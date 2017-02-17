@@ -10,9 +10,9 @@ COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg21m)"
 PV_append = "+git${SRCREV}"
 
 RENESAS_BACKPORTS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git"
-SRCREV = "34547b2a5032ce6dca24b745d608d2f3baac187f"
+SRCREV = "235125d065d0b648fc1b2c466952d71724504e7c"
 SRC_URI = " \
-	${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.8 \
+	${RENESAS_BACKPORTS_URL};protocol=git;branch=bsp/v3.10.31-ltsi/rcar-gen2-1.9.9 \
 "
 
 SRC_URI_append = " \
@@ -49,6 +49,7 @@ SRC_URI_append = " \
 	file://0041-Bluetooth-btusb-Add-Realtek-8723-8761-support.patch \
 	file://0035_Fix_machine_compatible_SKRZG1E_and_SKRZG1M.patch\
 	file://0042-INTC-workaround.patch \
+	file://0044-Revert-return-value-for-phy-device.patch \
 "
 
 

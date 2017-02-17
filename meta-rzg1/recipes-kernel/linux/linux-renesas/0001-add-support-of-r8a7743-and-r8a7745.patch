@@ -800,16 +800,16 @@ index 0000000..faffab2
 +		mstp2_clks: mstp2_clks@e6150138 {
 +			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
 +			reg = <0 0xe6150138 0 4>, <0 0xe6150040 0 4>;
-+			clocks = <&mp_clk>, <&mp_clk>, 
++			clocks = <&mp_clk>, <&mp_clk>,
 +				 <&zs_clk>, <&zs_clk>;
 +			#clock-cells = <1>;
 +			renesas,clock-indices = <
-+				R8A7743_CLK_MSIOF2 
-+				R8A7743_CLK_MSIOF1 
++				R8A7743_CLK_MSIOF2
++				R8A7743_CLK_MSIOF1
 +				R8A7743_CLK_SYS_DMAC1 R8A7743_CLK_SYS_DMAC0
 +			>;
 +			clock-output-names =
-+				"msiof2", "msiof1", 
++				"msiof2", "msiof1",
 +				"sys-dmac1", "sys-dmac0";
 +		};
 +		mstp3_clks: mstp3_clks@e615013c {
@@ -821,7 +821,7 @@ index 0000000..faffab2
 +			#clock-cells = <1>;
 +			renesas,clock-indices = <
 +				R8A7743_CLK_TPU0 R8A7743_CLK_SDHI2 R8A7743_CLK_SDHI1 R8A7743_CLK_SDHI0
-+				R8A7743_CLK_MMCIF0 R8A7743_CLK_PCIEC 
++				R8A7743_CLK_MMCIF0 R8A7743_CLK_PCIEC
 +				R8A7743_CLK_SSUSB R8A7743_CLK_CMT1
 +				R8A7743_CLK_USBDMAC0 R8A7743_CLK_USBDMAC1
 +			>;
@@ -1949,7 +1949,7 @@ index 0000000..86085fa
 +			compatible = "renesas,r8a7745-mstp-clocks", "renesas,cpg-mstp-clocks";
 +			reg = <0 0xe6150134 0 4>, <0 0xe6150038 0 4>;
 +			clocks = <&zs_clk>, <&zs_clk>, <&p_clk>, <&zg_clk>, <&zs_clk>,
-+				 <&zs_clk>, <&p_clk>, <&p_clk>, <&rclk_clk>, 
++				 <&zs_clk>, <&p_clk>, <&p_clk>, <&rclk_clk>,
 +				 <&zs_clk>, <&zs_clk>;
 +			#clock-cells = <1>;
 +			renesas,clock-indices = <
@@ -1965,16 +1965,16 @@ index 0000000..86085fa
 +		mstp2_clks: mstp2_clks@e6150138 {
 +			compatible = "renesas,r8a7745-mstp-clocks", "renesas,cpg-mstp-clocks";
 +			reg = <0 0xe6150138 0 4>, <0 0xe6150040 0 4>;
-+			clocks = <&mp_clk>, <&mp_clk>, 
++			clocks = <&mp_clk>, <&mp_clk>,
 +				 <&zs_clk>, <&zs_clk>;
 +			#clock-cells = <1>;
 +			renesas,clock-indices = <
 +				R8A7745_CLK_MSIOF2
-+				R8A7745_CLK_MSIOF1 
++				R8A7745_CLK_MSIOF1
 +				R8A7745_CLK_SYS_DMAC1 R8A7745_CLK_SYS_DMAC0
 +			>;
 +			clock-output-names =
-+				"msiof2", "msiof1", 
++				"msiof2", "msiof1",
 +				"sys-dmac1", "sys-dmac0";
 +		};
 +		mstp3_clks: mstp3_clks@e615013c {
@@ -2372,7 +2372,7 @@ index bb1b599..ce134e9 100644
 @@ -52,6 +52,15 @@ config ARCH_R8A7794
  	bool "R-Car E2 (R8A77940)"
  	select RENESAS_IRQC
- 
+
 +
 +config ARCH_R8A7743
 +	bool "RZ/G1M (R8A77430)"
@@ -2383,12 +2383,12 @@ index bb1b599..ce134e9 100644
 +	select RENESAS_IRQC
 +
  comment "Renesas ARM SoCs Board Type"
- 
+
  config MACH_GENMAI
 @@ -168,6 +177,16 @@ config ARCH_R8A7791
  	select RENESAS_IRQC
  	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 
+
 +config ARCH_R8A7743
 +	bool "RZ/G1M (R8A77430)"
 +	select ARCH_WANT_OPTIONAL_GPIOLIB
@@ -2416,7 +2416,7 @@ index 8d997e2..bb1192f 100644
 +obj-$(CONFIG_ARCH_R8A7745)	+= setup-r8a7745.o setup-rcar-gen2.o
  obj-$(CONFIG_ARCH_EMEV2)	+= setup-emev2.o
  obj-$(CONFIG_ARCH_R7S72100)	+= setup-r7s72100.o
- 
+
 @@ -33,6 +35,7 @@ obj-$(CONFIG_ARCH_R8A7778)	+= clock-r8a7778.o
  obj-$(CONFIG_ARCH_R8A7779)	+= clock-r8a7779.o
  obj-$(CONFIG_ARCH_R8A7790)	+= clock-r8a7790.o
@@ -2424,7 +2424,7 @@ index 8d997e2..bb1192f 100644
 +obj-$(CONFIG_ARCH_R8A7743)	+= clock-r8a7743.o
  obj-$(CONFIG_ARCH_R7S72100)	+= clock-r7s72100.o
  endif
- 
+
 @@ -40,8 +43,10 @@ endif
  cpu-y				:= platsmp.o headsmp.o
  cpu-$(CONFIG_ARCH_R8A7790)	+= platsmp-apmu.o platsmp-rst.o
@@ -2433,7 +2433,7 @@ index 8d997e2..bb1192f 100644
  cpu-$(CONFIG_ARCH_R8A7793)	+= platsmp-apmu.o platsmp-rst.o
  cpu-$(CONFIG_ARCH_R8A7794)	+= platsmp-apmu.o platsmp-rst.o
 +cpu-$(CONFIG_ARCH_R8A7745)	+= platsmp-apmu.o platsmp-rst.o
- 
+
  # SMP objects
  smp-y				:= $(cpu-y)
 @@ -49,8 +54,10 @@ smp-$(CONFIG_ARCH_SH73A0)	+= smp-sh73a0.o headsmp-scu.o platsmp-scu.o
@@ -2445,7 +2445,7 @@ index 8d997e2..bb1192f 100644
  smp-$(CONFIG_ARCH_R8A7794)	+= smp-r8a7794.o
 +smp-$(CONFIG_ARCH_R8A7745)	+= smp-r8a7745.o
  smp-$(CONFIG_ARCH_EMEV2)	+= smp-emev2.o headsmp-scu.o platsmp-scu.o
- 
+
  # PM objects
 @@ -63,8 +70,10 @@ obj-$(CONFIG_ARCH_R8A7740)	+= pm-r8a7740.o pm-rmobile.o
  obj-$(CONFIG_ARCH_R8A7779)	+= pm-r8a7779.o pm-rcar.o
@@ -2455,7 +2455,7 @@ index 8d997e2..bb1192f 100644
  obj-$(CONFIG_ARCH_R8A7793)	+= pm-r8a7793.o pm-rcar.o $(cpu-y)
  obj-$(CONFIG_ARCH_R8A7794)	+= pm-r8a7794.o pm-rcar.o $(cpu-y)
 +obj-$(CONFIG_ARCH_R8A7745)	+= pm-r8a7745.o pm-rcar.o $(cpu-y)
- 
+
  # IRQ objects
  obj-$(CONFIG_ARCH_SH7372)	+= entry-intc.o
 diff --git a/arch/arm/mach-shmobile/clock-r8a7743.c b/arch/arm/mach-shmobile/clock-r8a7743.c
@@ -3942,7 +3942,7 @@ index 0000000..ace8ada
 +	r8a7743_register_scif(6);
 +	r8a7743_register_scif(7);
 +	r8a7743_register_scif(8);
-+	
++
 +	r8a7743_add_dt_devices();
 +	r8a7743_register_irqc(0);
 +	r8a7743_register_thermal();
@@ -4461,11 +4461,11 @@ index 5435fd2..fb68ed0 100644
  #define VNDMR2_HPS		(1 << 29)
  #define VNDMR2_FTEV		(1 << 17)
 +#define VNDMR2_VLV_1	(1 << 12)
- 
+
  #define VIN_MAX_WIDTH		2048
  #define VIN_MAX_HEIGHT		2048
 @@ -636,6 +637,7 @@ static int rcar_vin_setup(struct rcar_vin_priv *priv)
- 
+
  	/* output format */
  	switch (icd->current_fmt->host_fmt->fourcc) {
 +	case V4L2_PIX_FMT_NV12: /*FIXME: capture NV16 data with NV12 format name*/
@@ -4475,7 +4475,7 @@ index 5435fd2..fb68ed0 100644
 @@ -1268,7 +1270,7 @@ static int rcar_vin_set_bus_param(struct soc_camera_device *icd)
  	if (ret < 0 && ret != -ENOIOCTLCMD)
  		return ret;
- 
+
 -	val = priv->field == V4L2_FIELD_NONE ? VNDMR2_FTEV : 0;
 +	val = VNDMR2_FTEV | VNDMR2_VLV_1;
  	if (!(common_flags & V4L2_MBUS_VSYNC_ACTIVE_LOW))
@@ -4499,7 +4499,7 @@ index 5435fd2..fb68ed0 100644
 @@ -1806,7 +1816,8 @@ static int rcar_vin_try_fmt(struct soc_camera_device *icd,
  	pix->field = mf.field;
  	pix->colorspace = mf.colorspace;
- 
+
 -	if (pixfmt == V4L2_PIX_FMT_NV16) {
 +	/*FIXME: VIN capture NV16 data with NV12 format name*/
 +	if (pixfmt == V4L2_PIX_FMT_NV16 || pixfmt == V4L2_PIX_FMT_NV12) {
@@ -4515,9 +4515,9 @@ index fd56f25..ee89901 100644
  	vma->vm_private_data	= &buf->handler;
  	vma->vm_ops		= &vb2_common_vm_ops;
 +	vma->vm_pgoff = buf->dma_addr >> PAGE_SHIFT;
- 
+
  	vma->vm_ops->open(vma);
- 
+
 diff --git a/include/dt-bindings/clock/r8a7743-clock.h b/include/dt-bindings/clock/r8a7743-clock.h
 new file mode 100644
 index 0000000..15168c9
@@ -4648,7 +4648,7 @@ index 0000000..15168c9
 +#define R8A7743_CLK_SCU			17
 +#define R8A7743_CLK_DVC1		18
 +#define R8A7743_CLK_DVC0		19
-+#define R8A7743_CLK_SRC9		22	
++#define R8A7743_CLK_SRC9		22
 +#define R8A7743_CLK_SRC8		23
 +#define R8A7743_CLK_SRC7		24
 +#define R8A7743_CLK_SRC6		25
@@ -4782,7 +4782,7 @@ index 0000000..383f7fa
 +#define R8A7745_CLK_SCU			17
 +#define R8A7745_CLK_DVC1		18
 +#define R8A7745_CLK_DVC0		19
-+#define R8A7745_CLK_SRC9		22	
++#define R8A7745_CLK_SRC9		22
 +#define R8A7745_CLK_SRC8		23
 +#define R8A7745_CLK_SRC7		24
 +#define R8A7745_CLK_SRC6		25
@@ -4795,6 +4795,6 @@ index 0000000..383f7fa
 +
 +
 +#endif /* __DT_BINDINGS_CLOCK_R8A7745_H__ */
--- 
+--
 1.9.1
 

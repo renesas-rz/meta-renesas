@@ -32,12 +32,4 @@ index 44f9f3e..aae54ef 100644
  		.compatible = "renesas,gpio-r8a7743",
  		.data = (void *)&(const struct gpio_rcar_info) {
  			.has_both_edge_trigger = true,
-@@ -359,7 +364,7 @@ static const struct of_device_id gpio_rcar_of_table[] = {
- 		},
- 	}, {
- 		/* Terminator */
--	}, 
-+	},
- };
- 
- MODULE_DEVICE_TABLE(of, gpio_rcar_of_table);
+

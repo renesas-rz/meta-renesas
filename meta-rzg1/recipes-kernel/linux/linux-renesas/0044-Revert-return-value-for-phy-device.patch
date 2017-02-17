@@ -1,0 +1,19 @@
+commit 65fa939cb2b8b86144c7811c286886f463f7e374
+Author: linhnv25 <linhnv25@fsoft.com.vn>
+Date:   Fri Jan 20 15:01:41 2017 +0700
+
+    Revert return value for phy device
+
+diff --git a/drivers/net/phy/phy_device.c b/drivers/net/phy/phy_device.c
+index bcf51b7..3657b4a
+--- a/drivers/net/phy/phy_device.c
++++ b/drivers/net/phy/phy_device.c
+@@ -340,7 +340,7 @@ struct phy_device *get_phy_device(struct mii_bus *bus, int addr, bool is_c45)
+ 
+ 	/* If the phy_id is mostly Fs, there is no device there */
+ 	if ((phy_id & 0x1fffffff) == 0x1fffffff)
+-		return ERR_PTR(-ENODEV);
++		return NULL;
+ 
+ 	dev = phy_device_create(bus, addr, phy_id, is_c45, &c45_ids);
+ 

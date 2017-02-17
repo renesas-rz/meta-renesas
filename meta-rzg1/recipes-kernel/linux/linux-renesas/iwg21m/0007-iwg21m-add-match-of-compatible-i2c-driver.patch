@@ -1,32 +1,33 @@
-commit d89b089055949c32054a4e256430a5e5ba5a44ad
-Author: khoahvd <khoahvd@fsoft.com.vn>
-Date:   Thu Nov 24 14:54:58 2016 +0700
+commit be36c3e11baa4cdb5da2839c71599f3df7b370cc
+Author: linhnv25 <linhnv25@fsoft.com.vn>
+Date:   Sat Jan 14 12:02:25 2017 +0700
 
     Add match of compatible r8a7742-iwg21m_q7 for i2c driver
 
 diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
-index 9464409..abe42c5 100644
+index 1d33e9b..eb4f908 100644
 --- a/drivers/i2c/busses/i2c-rcar.c
 +++ b/drivers/i2c/busses/i2c-rcar.c
-@@ -586,6 +586,8 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+@@ -577,6 +577,8 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
  	unsigned long flags;
  	int i, ret, timeout;
  
-+    pm_runtime_get_sync(dev);
++	pm_runtime_get_sync(dev);
 +
  	/*-------------- spin lock -----------------*/
  	spin_lock_irqsave(&priv->lock, flags);
  
-@@ -652,6 +654,8 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+@@ -646,6 +648,9 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+ 
  		ret = i + 1; /* The number of transfer */
  	}
- 
-+	pm_runtime_put(dev);
 +
++	pm_runtime_put(dev);
++	
+ out:
  	if (ret < 0 && ret != -ENXIO)
  		dev_err(dev, "error %d : %x\n", ret, priv->flags);
- 
-@@ -677,6 +681,7 @@ static const struct of_device_id rcar_i2c_dt_ids[] = {
+@@ -673,6 +678,7 @@ static const struct of_device_id rcar_i2c_dt_ids[] = {
  	{ .compatible = "renesas,i2c-r8a7792", .data = (void *)I2C_RCAR_GEN2 },
  	{ .compatible = "renesas,i2c-r8a7793", .data = (void *)I2C_RCAR_GEN2 },
  	{ .compatible = "renesas,i2c-r8a7794", .data = (void *)I2C_RCAR_GEN2 },
@@ -34,7 +35,7 @@ index 9464409..abe42c5 100644
  	{ .compatible = "renesas,i2c-r8a7743", .data = (void *)I2C_RCAR_GEN2 },
  	{ .compatible = "renesas,i2c-r8a7745", .data = (void *)I2C_RCAR_GEN2 },
  	{},
-@@ -753,7 +757,6 @@ static int rcar_i2c_probe(struct platform_device *pdev)
+@@ -749,7 +755,6 @@ static int rcar_i2c_probe(struct platform_device *pdev)
  	}
  
  	pm_runtime_enable(dev);
@@ -42,7 +43,7 @@ index 9464409..abe42c5 100644
  	platform_set_drvdata(pdev, priv);
  
  	dev_info(dev, "probed\n");
-@@ -767,7 +770,6 @@ static int rcar_i2c_remove(struct platform_device *pdev)
+@@ -763,7 +768,6 @@ static int rcar_i2c_remove(struct platform_device *pdev)
  	struct device *dev = &pdev->dev;
  
  	i2c_del_adapter(&priv->adap);
@@ -50,4 +51,3 @@ index 9464409..abe42c5 100644
  	pm_runtime_disable(dev);
  
  	return 0;
--- 
