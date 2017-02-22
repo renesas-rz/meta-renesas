@@ -1,5 +1,5 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-SRC_URI_rzg1 = "git://github.com/renesas-devel/gst-plugins-good.git;protocol=git;branch=RCAR-GEN2/1.2.3 \
+SRC_URI_rzg1 = "gitsm://github.com/renesas-devel/gst-plugins-good.git;protocol=git;branch=RCAR-GEN2/1.2.3 \
 "
 SRCREV_rzg1 = "e752441fef9f70c97bb0976476fdaa6c7df27b6b"
 
