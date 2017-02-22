@@ -14,7 +14,7 @@ SRC_URI = "git://git.denx.de/u-boot-sh.git;branch=renesas/bsp/rcar-gen2-1.9.4;pr
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(skrzg1m|skrzg1e|iwg20m)"
+COMPATIBLE_MACHINE = "(skrzg1m|skrzg1e|iwg20m|iwg21m)"
 
 SRC_URI_append_lcb = " \
 	file://0001-add-r8a7743-and-r8a7745-support.patch \
@@ -26,5 +26,11 @@ SRC_URI_append_lcb = " \
 "
 
 SRC_URI_append_iwg20m = " \
-	file://PATCH000-iW-PREWZ-SC-01-R3.0-REL1.0-Linux3.10.31-UBoot_basic_customization.patch \
+	file://PATCH002-iW-PREWZ-SC-01-R3.0-REL2.0-Linux3.10.31-UBoot_basic_customization.patch \
+"
+
+SRC_URI_append_iwg21m = " \
+	file://0010-add-r8a7742-support.patch \
+	file://0011-add-skrzg1h-support.patch \
+	file://PATCH001-iW-PREXZ-SC-01-R2.0-REL1.0-Linux3.10.31-UBoot_basic_customization.patch \
 "
