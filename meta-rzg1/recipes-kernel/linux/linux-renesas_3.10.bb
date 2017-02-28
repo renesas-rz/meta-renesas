@@ -5,7 +5,7 @@ require ../../include/gles-control.inc
 require ../../include/multimedia-control.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg21m)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg21m|iwg22m)"
 
 PV_append = "+git${SRCREV}"
 
@@ -109,6 +109,10 @@ SRC_URI_append_iwg21m = "  \
     file://iwg21m/0019-iwg21m-add-match-of-compatible-header-files.patch \
 "
 
+SRC_URI_append_iwg22m = "  \
+    file://iwg22m/0001-iwg22m-Add-support-for-iWave-iwg22m-board.patch \
+ "
+
 KERNEL_DEVICETREE_append_skrzg1m = '${@ \
 	" ${S}/arch/arm/boot/dts/r8a7743-skrzg1m-eavb.dts " if 'skrzg1m-tse' in '${MACHINE_FEATURES}' else \
 	""}'
@@ -120,6 +124,7 @@ S = "${WORKDIR}/git"
 KERNEL_DEFCONFIG = "shmobile_defconfig"
 KERNEL_DEFCONFIG_iwg20m = "iwg20m_defconfig"
 KERNEL_DEFCONFIG_iwg21m = "iwg21m_defconfig"
+KERNEL_DEFCONFIG_iwg21m = "iwg22m_defconfig"
 
 do_configure_prepend() {
     install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
