@@ -1,0 +1,67 @@
+From 8602cd7934b085d92fcd2f22788372ed76407ccd Mon Sep 17 00:00:00 2001
+From: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 27 Feb 2017 21:44:17 +0700
+Subject: [PATCH] add mmngr configuration for iwg22m
+
+---
+ include/mmngr_private.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/include/mmngr_private.h b/include/mmngr_private.h
+index 1653ac5..32520a6 100644
+--- a/include/mmngr_private.h
++++ b/include/mmngr_private.h
+@@ -195,6 +195,17 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ 	#define MM_OMXBUF_MXI_ADDR	(0x78000000UL)
+ 	#endif
+ #endif
++#ifdef MMNGR_IWG22M
++	#ifdef MMNGR_IPMMU_ENABLE
++	#define MM_OMXBUF_ADDR	(0x5C000000UL)
++	#define MM_OMXBUF_SIZE	(64 * 1024 * 1024)
++	#define MM_OMXBUF_MXI_ADDR	(0x11C000000UL)
++	#else
++	#define MM_OMXBUF_ADDR	(0x5C000000UL)
++	#define MM_OMXBUF_SIZE	(64 * 1024 * 1024)
++	#define MM_OMXBUF_MXI_ADDR	(0x5C000000UL)
++	#endif
++#endif
+ 
+ #ifdef MMNGR_KOELSCH
+ #define MM_IPCBUF_ADDR	(0x68000000)
+@@ -212,6 +223,10 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_IPCBUF_ADDR	(0x68000000)
+ #define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
+ #endif
++#ifdef MMNGR_IWG22M
++#define MM_IPCBUF_ADDR	(0x5C000000)
++#define MM_IPCBUF_SIZE	(0)
++#endif
+ 
+ #ifdef MMNGR_KOELSCH
+ #define MM_SSPBUF_ADDR	(0x6F000000)
+@@ -229,13 +244,21 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_SSPBUF_ADDR	(0x6F000000)
+ #define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
+ #endif
++#ifdef MMNGR_IWG22M
++#define MM_SSPBUF_ADDR	(0x5C000000)
++#define MM_SSPBUF_SIZE	(0)
++#endif
+ 
+ #ifdef MMNGR_KOELSCH
+ #define MM_MVBUF_ADDR	(0x75000000)
+ #define MM_MVBUF_SIZE	(40 * 1024 * 1024)
+ #endif
+ 
++#ifdef MMNGR_IWG22M
++#define MM_KERNEL_RESERVE_SIZE	(64 * 1024 * 1024)
++#else
+ #define MM_KERNEL_RESERVE_SIZE	(256 * 1024 * 1024)
++#endif
+ 
+ #define	MM_CO_ORDER		(12)
+ 
+-- 
+1.9.1
+
