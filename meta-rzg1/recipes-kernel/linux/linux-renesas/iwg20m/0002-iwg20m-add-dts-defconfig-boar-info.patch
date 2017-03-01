@@ -35,7 +35,7 @@ new file mode 100644
 index 0000000..b62e829
 --- /dev/null
 +++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
-@@ -0,0 +1,525 @@
+@@ -0,0 +1,526 @@
 +/*
 + * Copyright (c) 2015 iWave Systems Technologies Pvt. Ltd.
 + *
@@ -196,6 +196,7 @@ index 0000000..b62e829
 +                reset-gpios = <&gpio2 13 GPIO_ACTIVE_LOW>;
 +		cam-pwn = <&gpio0 3 GPIO_ACTIVE_HIGH>;
 +		tv-pwn = <&gpio0 22 GPIO_ACTIVE_HIGH>;
++		vin2-ov5640 = <1>;
 +        };
 +
 +};
