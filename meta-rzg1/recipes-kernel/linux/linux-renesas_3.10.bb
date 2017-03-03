@@ -124,7 +124,7 @@ S = "${WORKDIR}/git"
 KERNEL_DEFCONFIG = "shmobile_defconfig"
 KERNEL_DEFCONFIG_iwg20m = "iwg20m_defconfig"
 KERNEL_DEFCONFIG_iwg21m = "iwg21m_defconfig"
-KERNEL_DEFCONFIG_iwg21m = "iwg22m_defconfig"
+KERNEL_DEFCONFIG_iwg22m = "iwg22m_defconfig"
 
 do_configure_prepend() {
     install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
