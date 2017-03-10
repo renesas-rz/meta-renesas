@@ -2,7 +2,7 @@ require ../../include/gles-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI_rzg1 = "git://github.com/renesas-devel/gst-omx.git;protocol=git;branch=RCAR-GEN2/1.0.0"
+SRC_URI_rzg1 = "gitsm://github.com/renesas-devel/gst-omx.git;protocol=git;branch=RCAR-GEN2/1.0.0"
 SRCREV_rzg1 = "${@'e0a23fb50ec211a8058eac223847bbcc574fb343' \
     if '1' in '${USE_GLES_WAYLAND}' else '05563465faad99243ee2dd30547e3075eb8cf5e3'}"
 

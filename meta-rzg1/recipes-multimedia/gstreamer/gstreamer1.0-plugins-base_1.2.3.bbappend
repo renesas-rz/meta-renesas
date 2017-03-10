@@ -1,7 +1,7 @@
 require ../../include/gles-control.inc
 require ../../include/multimedia-control.inc
 
-SRC_URI_rzg1 = "git://github.com/renesas-devel/gst-plugins-base.git;protocol=git;branch=RCAR-GEN2/1.2.3"
+SRC_URI_rzg1 = "gitsm://github.com/renesas-devel/gst-plugins-base.git;protocol=git;branch=RCAR-GEN2/1.2.3"
 SRCREV_rzg1 = "b3a5d9f75ed82739ecae6d866f9b268d1e13cec5"
 LIC_FILES_CHKSUM_remove_rzg1 = "\
     file://common/coverage/coverage-report.pl;beginline=2;endline=17;md5=a4e1830fce078028c8f0974161272607 \
