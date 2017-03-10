@@ -75,6 +75,32 @@ IMAGE_INSTALL_append_iwg21m = " \
     lttng-modules \
     lttng-ust \
 "
+IMAGE_INSTALL_append_iwg22m = " \
+    libdrm-tests \
+    libdrm-kms \
+    bash \
+    dosfstools \
+    evtest \
+    e2fsprogs-mke2fs \
+    i2c-tools \
+    iproute2 \
+    memtester \
+    python-subprocess \
+    python-datetime \
+    python-json \
+    ethtool \
+    mtd-utils \
+    mtd-utils-ubifs \
+    iperf \
+    can-utils \
+    pciutils \
+    libsocketcan \
+    minicom \
+    lttng-tools \
+    lttng-modules \
+    lttng-ust \
+"
+
 IMAGE_INSTALL_append_rzg1 = '${@base_conditional("USE_GLES", "1", \
     "gles-kernel-module gles-user-module", "", d)}'
 

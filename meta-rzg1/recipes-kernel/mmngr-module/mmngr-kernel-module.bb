@@ -12,12 +12,17 @@ DEPENDS = "linux-renesas"
 PN = "mmngr-kernel-module"
 SRC_URI = "file://mmngr.tar.bz2 \
            file://0001_add_physical_address_translate_feature.patch"
+
+SRC_URI_append_iwg22m = "\
+           file://0002-add-mmngr-configuration-for-iwg22m.patch\
+"
 S = "${WORKDIR}/mmngr"
 
 MMNGR_CFG_r8a7742 = "MMNGR_LAGER"
 MMNGR_CFG_r8a7743 = "MMNGR_KOELSCH"
 MMNGR_CFG_r8a7744 = "MMNGR_GOSE"
 MMNGR_CFG_r8a7745 = "MMNGR_ALT"
+MMNGR_CFG_iwg22m = "MMNGR_IWG22M"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
