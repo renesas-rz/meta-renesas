@@ -4879,7 +4879,7 @@ index 0000000..88c99a3
 +#
 +# Default contiguous memory area size:
 +#
-+CONFIG_CMA_SIZE_MBYTES=128
++CONFIG_CMA_SIZE_MBYTES=256
 +CONFIG_CMA_SIZE_SEL_MBYTES=y
 +# CONFIG_CMA_SIZE_SEL_PERCENTAGE is not set
 +# CONFIG_CMA_SIZE_SEL_MIN is not set
