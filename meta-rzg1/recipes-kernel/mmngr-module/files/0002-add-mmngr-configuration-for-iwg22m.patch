@@ -1,84 +1,67 @@
-From 7660404d2f3efcb72bfc2a9fbd6297f080021c30 Mon Sep 17 00:00:00 2001
+From 915efc4361331ad517a329c2c256fff77a434167 Mon Sep 17 00:00:00 2001
 From: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
-Date: Wed, 1 Mar 2017 19:51:34 +0700
-Subject: [PATCH 2/2] add mmngr configuration for iwg22m
+Date: Wed, 29 Mar 2017 17:43:41 +0700
+Subject: [PATCH] edit mmngr config for iwg22m
 
 ---
- include/mmngr_private.h | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ include/mmngr_private.h | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/include/mmngr_private.h b/include/mmngr_private.h
-index f61a890..ca4a679 100644
+index 1653ac5..a29c827 100644
 --- a/include/mmngr_private.h
 +++ b/include/mmngr_private.h
-@@ -196,6 +196,17 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
- 	#define MM_OMXBUF_MXI_ADDR	(0x78000000UL)
- 	#endif
+@@ -175,13 +175,13 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
  #endif
-+#ifdef MMNGR_IWG22M
-+	#ifdef MMNGR_IPMMU_ENABLE
+ #ifdef MMNGR_ALT
+ 	#ifdef MMNGR_IPMMU_ENABLE
+-	#define MM_OMXBUF_ADDR	(0x78000000UL)
+-	#define MM_OMXBUF_SIZE	(128 * 1024 * 1024)
+-	#define MM_OMXBUF_MXI_ADDR	(0x138000000UL)
 +	#define MM_OMXBUF_ADDR	(0x5C000000UL)
 +	#define MM_OMXBUF_SIZE	(64 * 1024 * 1024)
 +	#define MM_OMXBUF_MXI_ADDR	(0x11C000000UL)
-+	#else
+ 	#else
+-	#define MM_OMXBUF_ADDR	(0x78000000UL)
+-	#define MM_OMXBUF_SIZE	(128 * 1024 * 1024)
+-	#define MM_OMXBUF_MXI_ADDR	(0x78000000UL)
 +	#define MM_OMXBUF_ADDR	(0x5C000000UL)
 +	#define MM_OMXBUF_SIZE	(64 * 1024 * 1024)
 +	#define MM_OMXBUF_MXI_ADDR	(0x5C000000UL)
-+	#endif
-+#endif
- 
- #ifdef MMNGR_KOELSCH
- #define MM_IPCBUF_ADDR	(0x68000000)
-@@ -213,6 +224,10 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
- #define MM_IPCBUF_ADDR	(0x68000000)
+ 	#endif
+ #endif
+ #ifdef MMNGR_GOSE
+@@ -205,8 +205,8 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
  #define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
  #endif
-+#ifdef MMNGR_IWG22M
+ #ifdef MMNGR_ALT
+-#define MM_IPCBUF_ADDR	(0x68000000)
+-#define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
 +#define MM_IPCBUF_ADDR	(0x5C000000)
-+#define MM_IPCBUF_SIZE	(0)
-+#endif
- 
- #ifdef MMNGR_KOELSCH
- #define MM_SSPBUF_ADDR	(0x6F000000)
-@@ -230,13 +245,21 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
- #define MM_SSPBUF_ADDR	(0x6F000000)
++#define MM_IPCBUF_SIZE  (0)
+ #endif
+ #ifdef MMNGR_GOSE
+ #define MM_IPCBUF_ADDR	(0x68000000)
+@@ -222,8 +222,8 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
  #define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
  #endif
-+#ifdef MMNGR_IWG22M
+ #ifdef MMNGR_ALT
+-#define MM_SSPBUF_ADDR	(0x6F000000)
+-#define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
 +#define MM_SSPBUF_ADDR	(0x5C000000)
-+#define MM_SSPBUF_SIZE	(0)
-+#endif
- 
- #ifdef MMNGR_KOELSCH
- #define MM_MVBUF_ADDR	(0x75000000)
++#define MM_SSPBUF_SIZE  (0)
+ #endif
+ #ifdef MMNGR_GOSE
+ #define MM_SSPBUF_ADDR	(0x6F000000)
+@@ -235,7 +235,7 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
  #define MM_MVBUF_SIZE	(40 * 1024 * 1024)
  #endif
  
-+#ifdef MMNGR_IWG22M
+-#define MM_KERNEL_RESERVE_SIZE	(256 * 1024 * 1024)
 +#define MM_KERNEL_RESERVE_SIZE	(64 * 1024 * 1024)
-+#else
- #define MM_KERNEL_RESERVE_SIZE	(256 * 1024 * 1024)
-+#endif
  
  #define	MM_CO_ORDER		(12)
  
-@@ -333,6 +356,16 @@ enum {
- #define IPMMU_PGDVAL_SECTION_2	0x0ULL
- #define IPMMU_PGDVAL_SECTION_3	0x0ULL
- #endif
-+#ifdef MMNGR_IWG22M
-+#define IPMMU_ADDR_SECTION_0	0x0100000000ULL
-+#define IPMMU_ADDR_SECTION_1	0x0ULL
-+#define IPMMU_ADDR_SECTION_2	0x0ULL
-+#define IPMMU_ADDR_SECTION_3	0x0ULL
-+#define IPMMU_PGDVAL_SECTION_0	IPMMU_PGDVAL(IPMMU_ADDR_SECTION_0)
-+#define IPMMU_PGDVAL_SECTION_1	IPMMU_PGDVAL(IPMMU_ADDR_SECTION_1)
-+#define IPMMU_PGDVAL_SECTION_2	0x0ULL
-+#define IPMMU_PGDVAL_SECTION_3	0x0ULL
-+#endif
- #ifdef MMNGR_GOSE
- #define IPMMU_ADDR_SECTION_0	0x0100000000ULL
- #define IPMMU_ADDR_SECTION_1	0x0ULL
 -- 
 1.9.1
 
