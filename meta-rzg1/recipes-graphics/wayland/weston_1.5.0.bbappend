@@ -16,7 +16,7 @@ EXTRA_OECONF_append_rzg1 = " \
     ${@base_conditional('USE_GLES', '1', '--enable-v4l2', \
     '--disable-xwayland-test WESTON_NATIVE_BACKEND=fbdev-backend.so', d)}"
 
-SRCREV_rzg1 = "${@'5d3b6db3a44aa8b1bc5f5ae31f7bfbcf2d92d17a' \
+SRCREV_rzg1 = "${@'f14615019f94897041164fd95df3b42349ec59e6' \
     if '1' in '${USE_GLES}' else '00781bcf518f6bab0d08e6962630b0994e8bf632'}"
 SRC_URI_rzg1 = " \
     git://github.com/renesas-devel/weston.git;protocol=git;branch=RCAR-GEN2/1.5.0/gl-fallback \
@@ -27,8 +27,6 @@ SRC_URI_rzg1 = " \
     file://make-libwebp-explicitly-configurable.patch \
 "
 SRC_URI_append_rzg1 = " \
-    file://0001-media-ctl-Separate-libmediactl-code-from-weston.patch \
-    file://0002-Revert-V4L2-renderer-workaround-for-a-bulid-error.patch \
     ${@base_conditional("USE_GLES_MULTIMEDIA", "1", \
         "file://vsp-renderer-Change-VSP-device-from-VSP1-to-VSP2.patch", "", d)} \
 "

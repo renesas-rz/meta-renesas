@@ -1,0 +1,31 @@
+From bc12fde6c7f94af421788f8e8ac9954279144839 Mon Sep 17 00:00:00 2001
+From: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+Date: Mon, 23 Jan 2017 14:33:13 +0700
+Subject: [PATCH] fix segmentation fault of waylandsink inspect
+
+when calling gst-inspect-1.0, wl_queue of wl_display is NULL.
+Adding condition to check wl_queue before destroying this queue.
+
+Signed-off-by: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+---
+ gstwaylandsink.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index bb7fd8c..475590a 100755
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -423,7 +423,9 @@ gst_wayland_sink_finalize (GObject * object)
+   GstWaylandSink *sink = GST_WAYLAND_SINK (object);
+ 
+   GST_DEBUG_OBJECT (sink, "Finalizing the sink..");
+-  wl_event_queue_destroy(sink->display->wl_queue);  /* Destroy queue when finalize */
++  if (sink->display->wl_queue) {
++    wl_event_queue_destroy(sink->display->wl_queue);  /* Destroy queue when finalize */
++  }
+   g_free (sink->display);
+ 
+   if (sink->shm_pool)
+-- 
+1.9.1
+
