@@ -8,10 +8,10 @@ COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m)"
 
 PV_append = "+git${SRCREV}"
 
-RENESAS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
-SRCREV = "0d1912303e54ed1b2a371be0bba51c384dd57326"
+RENESAS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/bwh/linux-cip.git"
+SRCREV = "a09e49b41e1bb15e0ec04a8a3b92728de7310c96"
 SRC_URI = " \
-	${RENESAS_URL};protocol=git;branch=linux-4.4.y \
+	${RENESAS_URL};protocol=git;branch=linux-4.4.y-cip \
 	file://ARM-dts-porter-fix-bootargs.patch \
 	file://ARM-dts-silk-fix-bootargs.patch \
 	file://i2c-rcar-make-sure-clocks-are-on-when-doing-clock-calculation.patch \
