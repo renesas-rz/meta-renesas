@@ -1,8 +1,10 @@
-From d1ee3b701fd60c703890b81f6f35902c7d91ae48 Mon Sep 17 00:00:00 2001
-From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
-Date: Mon, 11 Jul 2016 13:36:43 +0300
+From b42a04c73b26eb0dd656ac065bbabe5b072a6874 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Tue, 25 Apr 2017 17:31:37 +0700
 Subject: [PATCH] change da9063 I2C address
 
+Signed-off-by: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
 ---
  arch/arm/boot/dts/r8a7743-skrzg1m.dts              | 2 +-
  arch/arm/mach-shmobile/regulator-quirk-rcar-gen2.c | 2 +-
@@ -22,18 +24,18 @@ index 733074a..79c7cc3 100644
  		interrupts = <2 IRQ_TYPE_LEVEL_LOW>;
  		interrupt-controller;
 diff --git a/arch/arm/mach-shmobile/regulator-quirk-rcar-gen2.c b/arch/arm/mach-shmobile/regulator-quirk-rcar-gen2.c
-index 93f7a14..6512d6b 100644
+index 4647cd6..50109ea 100644
 --- a/arch/arm/mach-shmobile/regulator-quirk-rcar-gen2.c
 +++ b/arch/arm/mach-shmobile/regulator-quirk-rcar-gen2.c
-@@ -93,7 +93,7 @@ static int regulator_quirk_notify(struct notifier_block *nb,
+@@ -80,7 +80,7 @@ static int regulator_quirk_notify(struct notifier_block *nb,
  	client = to_i2c_client(dev);
  	dev_dbg(dev, "Detected %s\n", client->name);
  
--	if ((client->addr == 0x58 && !strcmp(client->name, "da9063")))
-+	if (((client->addr == 0x58 || client->addr == 0x5A) && !strcmp(client->name, "da9063")))
- 		da9xxx_mask_irqs(client, da9063_mask_regs,
- 				 ARRAY_SIZE(da9063_mask_regs));
- 	else if (client->addr == 0x68 && !strcmp(client->name, "da9210"))
+-	if ((client->addr == 0x58 && !strcmp(client->name, "da9063")) ||
++	if (((client->addr == 0x58 || client->addr == 0x5A) && !strcmp(client->name, "da9063")) ||
+ 	    (client->addr == 0x68 && !strcmp(client->name, "da9210"))) {
+ 		int ret;
+ 
 -- 
 1.9.1
 
