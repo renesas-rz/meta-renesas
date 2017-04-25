@@ -12,8 +12,6 @@ RENESAS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/bwh/linux-cip.git"
 SRCREV = "a09e49b41e1bb15e0ec04a8a3b92728de7310c96"
 SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=linux-4.4.y-cip \
-	file://ARM-dts-porter-fix-bootargs.patch \
-	file://ARM-dts-silk-fix-bootargs.patch \
 	file://i2c-rcar-make-sure-clocks-are-on-when-doing-clock-calculation.patch \
 	file://i2c-rcar-rework-hw-init.patch \
 	file://i2c-rcar-remove-unused-IOERROR-state.patch \
@@ -24,7 +22,6 @@ SRC_URI = " \
 	file://i2c-rcar-check-master-irqs-before-slave-irqs.patch \
 	file://i2c-rcar-revoke-START-request-early.patch \
 	file://pinctrl-sh-pfc-r8a7794-fix-GP2-29-muxing.patch \
-	file://pinctrl-sh-pfc-only-use-dummy-states-for-non-DT-platforms.patch \
 	file://ARM-dts-r8a7794-Reference-both-DMA-controllers-in-SDHI-nodes.patch \
 	file://ARM-shmobile-porter-add-HS-USB-DT-support.patch \
 	file://ARM-dts-porter-remove-enable-prop-from-HS-USB-device-node.patch \
