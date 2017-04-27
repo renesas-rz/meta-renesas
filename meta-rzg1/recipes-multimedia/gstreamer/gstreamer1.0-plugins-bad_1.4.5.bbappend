@@ -16,6 +16,7 @@ SRC_URI_append += " \
     file://0007-gst145-waylandsink-Change-the-color-format-mapping-for-XBGR.patch \
     file://0008-gst145-waylandsink-Correct-coding-style-by-gst-indent.patch \
     file://0009-gst-145-waylandsink-Preliminary-for-the-gstdmabuf-allocat.patch \
+    file://waylandsink-Fix-a-potential-build-issue-caused-by-mi.patch \
 "
 
 DEPENDS += "weston"
