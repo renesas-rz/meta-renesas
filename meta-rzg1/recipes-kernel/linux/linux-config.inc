@@ -108,6 +108,9 @@ configure_common(){
     kernel_configure_variable SH_SCI_DMA y
 
     kernel_configure_variable DRM_RCAR_VSP y
+
+    # Branch prediction
+    kernel_configure_variable CPU_BPREDICT_DISABLE n
 }
 
 
