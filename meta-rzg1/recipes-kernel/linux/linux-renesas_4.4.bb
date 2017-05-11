@@ -169,6 +169,7 @@ SRC_URI = " \
 	file://vsp/0069-ARM-dts-r8a7745-support-vspdu.patch \
 	file://vsp/0070-drm-rcar-du-enable-rendering-througth-vsp-device.patch \
 	file://ARM-shmobile-timer-Fix-preset_lpj-leading-to-too-sho.patch \
+	file://da9063-using-RTC-to-reboot-silk-board.patch \
 "
 
 
