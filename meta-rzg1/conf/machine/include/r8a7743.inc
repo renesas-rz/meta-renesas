@@ -9,4 +9,4 @@ PREFERRED_PROVIDER_nativesdk-linux-libc-headers ?= "nativesdk-linux-libc-headers
 PREFERRED_PROVIDER_u-boot ?= "u-boot"
 
 KERNEL_IMAGETYPE ?= "uImage"
-EXTRA_IMAGEDEPENDS += "u-boot"
+#EXTRA_IMAGEDEPENDS += "u-boot"
