@@ -1,0 +1,47 @@
+From 5cdfea3b06ec2840abffd9c4b7c4344bb0d6eed4 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Tue, 30 May 2017 17:48:29 +0700
+Subject: [PATCH 15/15] ARM: DTS: iwg20m: enable i2c control for RTC
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index 018477b..79574f3 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -122,6 +122,11 @@
+ 				"msiof2_ss1_d", "msiof2_sync_d";
+ 		renesas,function = "msiof2";
+ 	};
++
++	i2c2_pins: i2c2 {
++		renesas,groups = "i2c2";
++		renesas,function = "i2c2";
++	};
+ };
+ 
+ &scif0 {
+@@ -234,3 +239,16 @@
+ 
+         status = "okay";
+ };
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++	rtc@68 {
++		compatible = "bq32000";
++		reg = <0x68>;
++	};
++};
+-- 
+1.9.1
+

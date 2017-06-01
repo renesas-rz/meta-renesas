@@ -1,0 +1,70 @@
+From 333825ac9a57ab3a7813eabca0af6866bc88b9e2 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 29 May 2017 18:32:51 +0700
+Subject: [PATCH 07/15] ARM: DTS: r8a7743: add definition for ether AVB
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743.dtsi            | 18 +++++++++++++++---
+ include/dt-bindings/clock/r8a7743-clock.h |  1 +
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index 79473a6..8667d91 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -800,6 +800,18 @@
+ 		status = "disabled";
+ 	};
+ 
++	avb: ethernet@e6800000 {
++		compatible = "renesas,etheravb-r8a7743";
++		reg = <0 0xe6800000 0 0x7bf>;
++		interrupts = <0 163 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7743_CLK_AVB>;
++		power-domains = <&cpg_clocks>;
++		phy-mode = "gmii";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
+ 	sata0: sata@ee300000 {
+ 		compatible = "renesas,sata-r8a7743";
+ 		reg = <0 0xee300000 0 0x2000>;
+@@ -1415,16 +1427,16 @@
+ 			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe6150990 0 4>, <0 0xe61509a0 0 4>;
+ 			clocks = <&zx_clk>, <&zg_clk>, <&zg_clk>,
+-			         <&zg_clk>, <&p_clk>, <&zs_clk>, <&zs_clk>;
++			         <&zg_clk>, <&p_clk>, <&hp_clk>, <&zs_clk>, <&zs_clk>;
+ 			#clock-cells = <1>;
+ 			clock-indices = <
+ 				R8A7743_CLK_IPMMU_SGX 
+ 				R8A7743_CLK_VIN2 R8A7743_CLK_VIN1 R8A7743_CLK_VIN0
+-				R8A7743_CLK_ETHER R8A7743_CLK_SATA1 R8A7743_CLK_SATA0
++				R8A7743_CLK_ETHER R8A7743_CLK_AVB R8A7743_CLK_SATA1 R8A7743_CLK_SATA0
+ 			>;
+ 			clock-output-names =
+ 				"ipmmu_sgx", "vin2", "vin1", "vin0", "ether",
+-				"sata1", "sata0";
++				"avb", "sata1", "sata0";
+ 		};
+ 		mstp9_clks: mstp9_clks@e6150994 {
+ 			compatible = "renesas,r8a7743-mstp-clocks", "renesas,cpg-mstp-clocks";
+diff --git a/include/dt-bindings/clock/r8a7743-clock.h b/include/dt-bindings/clock/r8a7743-clock.h
+index 65cb582..da1749a 100644
+--- a/include/dt-bindings/clock/r8a7743-clock.h
++++ b/include/dt-bindings/clock/r8a7743-clock.h
+@@ -99,6 +99,7 @@
+ #define R8A7743_CLK_VIN2		9
+ #define R8A7743_CLK_VIN1		10
+ #define R8A7743_CLK_VIN0		11
++#define R8A7743_CLK_AVB		12
+ #define R8A7743_CLK_ETHER		13
+ #define R8A7743_CLK_SATA1		14
+ #define R8A7743_CLK_SATA0		15
+-- 
+1.9.1
+

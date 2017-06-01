@@ -83,11 +83,6 @@ configure_common(){
     kernel_configure_variable FB_SH_MOBILE_HDMI y
     kernel_configure_variable FRAMEBUFFER_CONSOLE y
 
-    #Enable continious allocator
-    kernel_configure_variable CMA y
-    kernel_configure_variable DMA_CMA y
-    kernel_configure_variable_val CMA_SIZE_MBYTES 256
-
     #Enable HR timer
     kernel_configure_variable HIGH_RES_TIMERS y
 
@@ -189,3 +184,16 @@ configure_LVDS_panel(){
     kernel_configure_variable DRM_PANEL_SIMPLE y
 }
 
+configure_cma_iwg20m(){
+    #Enable continious allocator
+    kernel_configure_variable CMA y
+    kernel_configure_variable DMA_CMA y
+    kernel_configure_variable_val CMA_SIZE_MBYTES 128
+}
+
+configure_cma_skrzg1m(){
+    #Enable continious allocator
+    kernel_configure_variable CMA y
+    kernel_configure_variable DMA_CMA y
+    kernel_configure_variable_val CMA_SIZE_MBYTES 256
+}

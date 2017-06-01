@@ -1,0 +1,87 @@
+From 3c67159fdf91fe78ea60864b5e4699fca945e325 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Thu, 27 Apr 2017 18:44:44 +0700
+Subject: [PATCH 01/15] ARM: DTS: Initial support device tree for iwg20m
+
+New create r8a7743-iwg20m.dts support for iwg20m board
+Add initial setting for memory, scif
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/Makefile           |  1 +
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 51 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+)
+ create mode 100644 arch/arm/boot/dts/r8a7743-iwg20m.dts
+
+diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
+index d688605..55da90c 100644
+--- a/arch/arm/boot/dts/Makefile
++++ b/arch/arm/boot/dts/Makefile
+@@ -551,6 +551,7 @@ dtb-$(CONFIG_ARCH_SHMOBILE_MULTI) += \
+ 	r8a7791-koelsch.dtb \
+ 	r8a7791-porter.dtb \
+ 	r8a7743-skrzg1m.dtb \
++	r8a7743-iwg20m.dtb \
+ 	r8a7745-skrzg1e.dtb \
+ 	r8a7793-gose.dtb \
+ 	r8a7794-alt.dtb \
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+new file mode 100644
+index 0000000..665b797
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (c) 2015 iWave Systems Technologies Pvt. Ltd.
++ *
++ * The code contained herein is licensed under the GNU General Public
++ * License. You may obtain a copy of the GNU General Public License
++ * Version 2 or later at the following locations:
++ *
++ * http://www.opensource.org/licenses/gpl-license.html
++ * http://www.gnu.org/copyleft/gpl.html
++ */
++
++/dts-v1/;
++#include "r8a7743.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++
++/ {
++	model = "iwg20m";
++	compatible = "iw,iwg20m", "renesas,r8a7743";
++
++	aliases {
++		serial0 = &scif0;
++	};
++
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0 0x40000000 0 0x20000000>;
++	};
++
++	memory@200000000 {
++		device_type = "memory";
++		reg = <2 0x00000000 0 0x20000000>;
++	};
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&pfc {
++	scif0_pins: serial0 {
++		renesas,groups = "scif0_data_d";
++		renesas,function = "scif0";
++	};
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
+-- 
+1.9.1
+

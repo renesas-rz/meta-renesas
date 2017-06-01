@@ -1,0 +1,26 @@
+From d867d085e7918ae2a42bea1dadbb4a6e217f2aec Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Tue, 30 May 2017 18:51:19 +0700
+Subject: [PATCH 12/15] spi: sh-msiof: add IDs for for spi of r8a7743 SoC
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ drivers/spi/spi-sh-msiof.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index dfcbb91..bf0512f 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -1273,6 +1273,7 @@ static int sh_msiof_spi_remove(struct platform_device *pdev)
+ 
+ static const struct platform_device_id spi_driver_ids[] = {
+ 	{ "spi_sh_msiof",	(kernel_ulong_t)&sh_data },
++	{ "spi_r8a7743_msiof",  (kernel_ulong_t)&r8a779x_data },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(platform, spi_driver_ids);
+-- 
+1.9.1
+

@@ -1,0 +1,95 @@
+From 428b196bb02b9803cae433b4bb607820110ab664 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 29 May 2017 18:41:04 +0700
+Subject: [PATCH 09/15] ARM: DTS: iwg20m: add support SDIO
+
+support SD/microSD cards on iwg20m board
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 54 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index e83c597..f3d4100 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -41,6 +41,29 @@
+ 		regulator-always-on;
+ 		regulator-boot-on;
+ 	};
++
++	vcc_sdhi1: reg_vcc_sdhi1 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI1 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio1 16 GPIO_ACTIVE_LOW>;
++	};
++
++	vccq_sdhi1: reg_vccq_sdhi1 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI1 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio2 30 GPIO_ACTIVE_LOW>;
++		gpios-states = <1>;
++		states = <3300000 1
++				  1800000 0>;
++	};
+ };
+ 
+ &extal_clk {
+@@ -58,6 +81,16 @@
+ 		renesas,function = "mmc";
+ 	};
+ 
++	sdhi0_pins: sd0 {
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
++	};
++
++	sdhi1_pins: sd2 {
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,function = "sdhi1";
++	};
++
+ 	avb_pins: avb {
+ 		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
+ 		renesas,function = "avb";
+@@ -81,6 +114,27 @@
+         status = "okay";
+ };
+ 
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&reg_3p3v>;
++	cd-gpios = <&gpio7 11 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi1>;
++	vqmmc-supply = <&vccq_sdhi1>;
++	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
++	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++};
++
+ &avb {
+ 	pinctrl-0 = <&avb_pins>;
+ 	pinctrl-names = "default";
+-- 
+1.9.1
+

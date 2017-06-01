@@ -1,0 +1,65 @@
+From fa1fc52a09e57430df610c080c97cb65242bc6ce Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 29 May 2017 18:50:58 +0700
+Subject: [PATCH 10/15] ARM: DTS: iwg20m: enable USB ports
+
+Signed-off-by: Loc Pham <loc.pham.xh@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index f3d4100..919d939 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -95,6 +95,16 @@
+ 		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
+ 		renesas,function = "avb";
+ 	};
++
++	usb0_pins: usb0 {
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
++	};
+ };
+ 
+ &scif0 {
+@@ -148,3 +158,29 @@
+ 		micrel,led-mode = <1>;
+ 	};
+ };
++
++&hsusb {
++	status = "okay";
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++};
++
++&usbphy {
++	status = "okay";
++};
++
++&xhci {
++	status = "okay";
++};
++
++&pci0 {
++	status = "okay";
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++};
++
++&pci1 {
++	status = "okay";
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++};
+-- 
+1.9.1
+

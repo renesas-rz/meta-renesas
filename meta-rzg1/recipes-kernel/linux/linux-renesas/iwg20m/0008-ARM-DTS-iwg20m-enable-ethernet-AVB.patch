@@ -1,0 +1,66 @@
+From 5c2fa20f7fd8281dadac6fa744d0c6e87482400e Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 29 May 2017 18:33:27 +0700
+Subject: [PATCH 08/15] ARM: DTS: iwg20m: enable ethernet AVB
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index f08614a..e83c597 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -12,6 +12,7 @@
+ /dts-v1/;
+ #include "r8a7743.dtsi"
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
+ 
+ / {
+ 	model = "iwg20m";
+@@ -19,6 +20,7 @@
+ 
+ 	aliases {
+ 		serial0 = &scif0;
++		eth = &avb;
+ 	};
+ 
+ 	memory@40000000 {
+@@ -54,7 +56,12 @@
+ 	mmcif0_pins: mmc {
+ 		renesas,groups = "mmc_data8", "mmc_ctrl";
+ 		renesas,function = "mmc";
+-		};
++	};
++
++	avb_pins: avb {
++		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
++		renesas,function = "avb";
++	};
+ };
+ 
+ &scif0 {
+@@ -73,3 +80,17 @@
+         non-removable;
+         status = "okay";
+ };
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++
++	phy-handle = <&phy0>;
++	renesas,no-ether-link;
++	status = "okay";
++
++	phy0: ethernet-phy@0 {
++		reg = <3>;
++		micrel,led-mode = <1>;
++	};
++};
+-- 
+1.9.1
+

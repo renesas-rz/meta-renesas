@@ -4,7 +4,7 @@ require linux-dtb-append.inc
 require linux-config.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m)"
 
 PV_append = "+git${SRCREV}"
 
@@ -167,6 +167,21 @@ SRC_URI = " \
 	file://vsp/0070-drm-rcar-du-enable-rendering-througth-vsp-device.patch \
 	file://ARM-shmobile-timer-Fix-preset_lpj-leading-to-too-sho.patch \
 	file://da9063-using-RTC-to-reboot-silk-board.patch \
+	file://iwg20m/0001-ARM-DTS-Initial-support-device-tree-for-iwg20m.patch \
+	file://iwg20m/0002-ARM-DTS-iwg20m-Add-support-eMMC.patch \
+	file://iwg20m/0003-ARM-shmobile-r8a7743-Allow-booting-secondary-CPU-cor.patch \
+	file://iwg20m/0004-net-ethernet-ravb-add-support-r8a7743-SoC.patch \
+	file://iwg20m/0005-pinctrl-sh-pfc-r8a7743-add-pinmux-for-ravb.patch \
+	file://iwg20m/0006-ARM-config-shmobile-enable-ethernet-AVB.patch \
+	file://iwg20m/0007-ARM-DTS-r8a7743-add-definition-for-ether-AVB.patch \
+	file://iwg20m/0008-ARM-DTS-iwg20m-enable-ethernet-AVB.patch \
+	file://iwg20m/0009-ARM-DTS-iwg20m-add-support-SDIO.patch \
+	file://iwg20m/0010-ARM-DTS-iwg20m-enable-USB-ports.patch \
+	file://iwg20m/0011-ARM-DTS-iwg20m-Enable-SPI.patch \
+	file://iwg20m/0012-spi-sh-msiof-add-IDs-for-for-spi-of-r8a7743-SoC.patch \
+	file://iwg20m/0013-ARM-config-shmobile-enable-SPI.patch \
+	file://iwg20m/0014-ARM-config-shmobile-enable-JFFS2-file-system.patch \
+	file://iwg20m/0015-ARM-DTS-iwg20m-enable-i2c-control-for-RTC.patch \
 "
 
 
@@ -185,7 +200,7 @@ do_configure_prepend() {
 
 
 do_configure_append() {
-	
+
 	configure_ext3
 	configure_ext4
 	configure_usb_storage
@@ -196,10 +211,26 @@ do_configure_append() {
 	yes '' | oe_runmake oldconfig
 }
 
+do_configure_append_skrzg1m() {
+
+	configure_cma_skrzg1m
+
+	yes '' | oe_runmake oldconfig
+}
+
+do_configure_append_iwg20m() {
+
+	configure_cma_iwg20m
+	configure_ravb
+
+	kernel_configure_variable USB_U_ETHER n
+
+	yes '' | oe_runmake oldconfig
+}
+
 
 ## for gles-kernel-module
 do_compile_append() {
 	cp ${KBUILD_OUTPUT}/vmlinux ${STAGING_KERNEL_BUILDDIR}/vmlinux
 
 }
-

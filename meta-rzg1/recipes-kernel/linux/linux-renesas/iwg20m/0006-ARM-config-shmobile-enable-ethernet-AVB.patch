@@ -1,0 +1,26 @@
+From 6e89cd8e088f78da8cb09d126a2b642987c25342 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 29 May 2017 18:14:20 +0700
+Subject: [PATCH 06/15] ARM: config: shmobile: enable ethernet AVB
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index f1016c9a..a138ddb 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -84,6 +84,7 @@ CONFIG_NETDEVICES=y
+ # CONFIG_NET_VENDOR_MICREL is not set
+ # CONFIG_NET_VENDOR_NATSEMI is not set
+ CONFIG_SH_ETH=y
++CONFIG_RAVB=y
+ # CONFIG_NET_VENDOR_SEEQ is not set
+ CONFIG_SMSC911X=y
+ # CONFIG_NET_VENDOR_STMICRO is not set
+-- 
+1.9.1
+

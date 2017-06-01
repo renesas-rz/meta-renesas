@@ -1,0 +1,79 @@
+From 11d429ec534cfca5e2f225344fcc36e25b20c692 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 29 May 2017 19:01:29 +0700
+Subject: [PATCH 11/15] ARM: DTS: iwg20m: Enable SPI
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 50 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index 919d939..018477b 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -105,6 +105,23 @@
+ 		renesas,groups = "usb1";
+ 		renesas,function = "usb1";
+ 	};
++
++	qspi_pins: spi0 {
++		renesas,groups = "qspi_ctrl", "qspi_data2";
++		renesas,function = "qspi";
++	};
++
++	msiof1_pins: spi2 {
++		renesas,groups = "msiof1_ss2_b", "msiof1_rx_b", "msiof1_tx_b",
++				 "msiof1_clk_b" , "msiof1_sync_b";
++		renesas,function = "msiof1";
++	};
++
++	msiof2_pins: spi3 {
++		renesas,groups = "msiof2_clk", "msiof2_tx_d", "msiof2_rx_d", 
++				"msiof2_ss1_d", "msiof2_sync_d";
++		renesas,function = "msiof2";
++	};
+ };
+ 
+ &scif0 {
+@@ -184,3 +201,36 @@
+ 	pinctrl-0 = <&usb1_pins>;
+ 	pinctrl-names = "default";
+ };
++
++&qspi {
++	pinctrl-0 = <&qspi_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "sst,sst25vf016b";
++		reg = <0>;
++		spi-max-frequency = <30000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		m25p,fast-read;
++		spi-cpol;
++		spi-cpha;
++	};
++};
++
++&msiof1 {
++       pinctrl-0 = <&msiof1_pins>;
++       pinctrl-names = "default";
++
++};
++
++&msiof2 {
++        pinctrl-0 = <&msiof2_pins>;
++        pinctrl-names = "default";
++
++        status = "okay";
++};
+-- 
+1.9.1
+

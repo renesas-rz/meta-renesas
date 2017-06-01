@@ -1,0 +1,26 @@
+From 98107998fe2a593f9b3ffd4062c4bb71dd73dca6 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Thu, 18 May 2017 17:00:53 +0700
+Subject: [PATCH 04/15] net: ethernet: ravb: add support r8a7743 SoC
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 549ad20..377041f 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1672,6 +1672,7 @@ static int ravb_mdio_release(struct ravb_private *priv)
+ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,etheravb-r8a7790", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7794", .data = (void *)RCAR_GEN2 },
++	{ .compatible = "renesas,etheravb-r8a7743", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7795", .data = (void *)RCAR_GEN3 },
+ 	{ }
+ };
+-- 
+1.9.1
+

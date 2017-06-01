@@ -1,0 +1,27 @@
+From d63e58dd7d5360ca0fafd360cfcd1a904e24c48e Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Tue, 30 May 2017 16:30:53 +0700
+Subject: [PATCH 14/15] ARM: config: shmobile: enable JFFS2 file system
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/configs/shmobile_defconfig | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 1c45d4b..bd7f6ae 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -214,3 +214,8 @@ CONFIG_NLS_ISO8859_1=y
+ # CONFIG_ENABLE_WARN_DEPRECATED is not set
+ # CONFIG_ENABLE_MUST_CHECK is not set
+ # CONFIG_ARM_UNWIND is not set
++CONFIG_JFFS2_FS=y
++CONFIG_JFFS2_FS_DEBUG=0
++CONFIG_JFFS2_FS_WRITEBUFFER=y
++CONFIG_JFFS2_ZLIB=y
++CONFIG_JFFS2_RTIME=y
+-- 
+1.9.1
+
