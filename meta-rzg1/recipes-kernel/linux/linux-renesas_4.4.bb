@@ -182,6 +182,7 @@ SRC_URI = " \
 	file://iwg20m/0013-ARM-config-shmobile-enable-SPI.patch \
 	file://iwg20m/0014-ARM-config-shmobile-enable-JFFS2-file-system.patch \
 	file://iwg20m/0015-ARM-DTS-iwg20m-enable-i2c-control-for-RTC.patch \
+	file://iwg20m/0016-ARM-DTS-iwg20m-enable-remained-scif-channels.patch \
 "
 
 

@@ -1,0 +1,91 @@
+From 0a01a064dbdb753dd5d3afffa48d27fdf05172f9 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 5 Jun 2017 21:19:22 +0700
+Subject: [PATCH] ARM: DTS: iwg20m: enable remained scif channels
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 53 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index 6cbe989..0a60584 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -20,6 +20,10 @@
+ 
+ 	aliases {
+ 		serial0 = &scif0;
++		serial1 = &scif1;
++		serial2 = &scif4;
++		serial3 = &scifb1;
++		serial4 = &hscif1;
+ 		eth = &avb;
+ 	};
+ 
+@@ -76,6 +80,26 @@
+ 		renesas,function = "scif0";
+ 	};
+ 
++	scif1_pins: serial1 {
++		renesas,groups = "scif1_data_d";
++		renesas,function = "scif1";
++	};
++
++	scif4_pins: serial2 {
++		renesas,groups = "scif4_data_c";
++		renesas,function = "scif4";
++	};
++
++	scifb1_pins: serial3 {
++		renesas,groups = "scifb1_data_d", "scifb1_ctrl";
++		renesas,function = "scifb1";
++	};
++
++	hscif1_pins: serial4 {
++                renesas,groups = "hscif1_data_c", "hscif1_ctrl_c";
++                renesas,function = "hscif1";
++	};
++
+ 	mmcif0_pins: mmc {
+ 		renesas,groups = "mmc_data8", "mmc_ctrl";
+ 		renesas,function = "mmc";
+@@ -136,6 +160,35 @@
+ 	status = "okay";
+ };
+ 
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif4 {
++	pinctrl-0 = <&scif4_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scifb1 {
++        pinctrl-0 = <&scifb1_pins>;
++        pinctrl-names = "default";
++	    ctsrts;
++
++        status = "okay";
++};
++
++&hscif1 {
++        pinctrl-0 = <&hscif1_pins>;
++        pinctrl-names = "default";
++        ctsrts;
++        status = "okay";
++};
++
+ &mmcif0 {
+         pinctrl-0 = <&mmcif0_pins>;
+         pinctrl-names = "default";
+-- 
+1.9.1
+
