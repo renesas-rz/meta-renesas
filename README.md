@@ -1,6 +1,6 @@
 # meta-renesas-private
 
-Branch yocto_2.0
+Branch cip-dev
 --------------------------------------------------------------------------------------
 This branch supports building a Yocto 2.0 based BSP with the following components:
 
@@ -8,7 +8,7 @@ GCC 5.2
 
 U-Boot 2015.07
 
-Linux kernel 4.4
+Linux kernel 4.4 - CIP
 
 Weston 1.9
 
