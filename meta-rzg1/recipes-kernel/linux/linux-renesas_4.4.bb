@@ -225,6 +225,7 @@ do_configure_append_iwg20m() {
 	configure_ravb
 
 	kernel_configure_variable USB_U_ETHER n
+	kernel_configure_variable USB_ETH m
 
 	yes '' | oe_runmake oldconfig
 }
