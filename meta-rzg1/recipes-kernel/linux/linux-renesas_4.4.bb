@@ -226,6 +226,7 @@ do_configure_append_iwg20m() {
 
 	kernel_configure_variable USB_U_ETHER n
 	kernel_configure_variable USB_ETH m
+	kernel_configure_variable RTC_DRV_BQ32K y
 
 	yes '' | oe_runmake oldconfig
 }
