@@ -1,0 +1,21 @@
+From 5df948eb7424e754481ae1765961672da0bc026a Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Fri, 16 Jun 2017 13:05:12 +0700
+Subject: [PATCH] fix issue weston can't start when there's no input device
+
+
+diff --git a/src/compositor-drm.c b/src/compositor-drm.c
+index 2087c93..e99a13b 100644
+--- a/src/compositor-drm.c
++++ b/src/compositor-drm.c
+@@ -2933,7 +2933,6 @@ drm_compositor_create(struct wl_display *display,
+ 	if (udev_input_init(&ec->input,
+ 			    &ec->base, ec->udev, param->seat_id) < 0) {
+ 		weston_log("failed to create input devices\n");
+-		goto err_sprite;
+ 	}
+ 
+ 	if (create_outputs(ec, param->connector, drm_device) < 0) {
+-- 
+1.9.1
+

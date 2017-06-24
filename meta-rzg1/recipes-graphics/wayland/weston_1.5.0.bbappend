@@ -72,4 +72,8 @@ do_install_append_iwg21m () {
 
 FILES_${PN}_append_iwg21m += " ${sysconfdir}/udev/rules.d/iwg21m-lvdstouch.rules "
 
+# iwg23s have no default connected input for weston. This patch fix issue weston can't startup 
+# if there's no input device
+SRC_URI_append_iwg23s = " file://0001-fix-issue-weston-can-t-start-when-there-s-no-input-d.patch "
+
 DEPENDS += " libmediactl-v4l2 "
