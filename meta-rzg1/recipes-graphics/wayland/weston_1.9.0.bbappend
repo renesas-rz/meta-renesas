@@ -16,6 +16,7 @@ SRC_URI_append = " file://0001-protocol-Add-pkgconfig-file-to-be-referred-from-c
                    file://0015-Fix-gl-fallback.patch \
 		   file://0016-Fix-kernel-warning.patch \
 		   file://0017-workaround-rcar-crtc.patch \
+		   file://0018-weston_fix_issue_not_start_if_no_input_device.patch \
                  "
 
 do_install_append() {
