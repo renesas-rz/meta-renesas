@@ -16,12 +16,17 @@ SRC_URI = "file://mmngr.tar.bz2 \
 SRC_URI_append_iwg22m = "\
            file://0002-add-mmngr-configuration-for-iwg22m.patch\
 "
+SRC_URI_append_iwg23s = "\
+           file://cma_mapping_change.patch \
+"
+
 S = "${WORKDIR}/mmngr"
 
 MMNGR_CFG_r8a7742 = "MMNGR_LAGER"
 MMNGR_CFG_r8a7743 = "MMNGR_KOELSCH"
 MMNGR_CFG_r8a7744 = "MMNGR_GOSE"
 MMNGR_CFG_r8a7745 = "MMNGR_ALT"
+MMNGR_CFG_r8a7747X = "MMNGR_ALT"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
