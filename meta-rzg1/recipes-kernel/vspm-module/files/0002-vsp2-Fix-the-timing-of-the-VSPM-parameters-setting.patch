@@ -1,0 +1,203 @@
+commit 565e8fde349c5867301f24cff5b2b85c2a25424b
+Author: Nguyen Van Linh [FGA.BU13.RZG] <LinhNV25@fsoft.com.vn>
+Date:   Fri Apr 21 19:31:22 2017 +0700
+
+    vsp2: Fix the timing of the VSPM parameters setting.
+
+diff --git a/drv/vsp2_bru.c b/drv/vsp2_bru.c
+index 49cc991..91134cf 100644
+--- a/drv/vsp2_bru.c
++++ b/drv/vsp2_bru.c
+@@ -91,6 +91,7 @@ static int bru_s_ctrl(struct v4l2_ctrl *ctrl)
+ 	case V4L2_CID_BG_COLOR:
+ 		vsp_bru->blend_virtual->color =
+ 			ctrl->val | (0xff << VI6_BRU_VIRRPF_COL_A_SHIFT);
++		bru->bgcolor = ctrl->val;
+ 		break;
+ 	}
+ 
+@@ -155,6 +156,8 @@ static int bru_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	vsp_bru->blend_virtual->x_position	= 0;
+ 	vsp_bru->blend_virtual->y_position	= 0;
+ 	vsp_bru->blend_virtual->pwd		= VSP_LAYER_PARENT;
++	vsp_bru->blend_virtual->color =
++		bru->bgcolor | (0xff << VI6_BRU_VIRRPF_COL_A_SHIFT);
+ 
+ 	/* Route BRU input 1 as SRC input to the ROP unit and configure the ROP
+ 	 * unit with a NOP operation to make BRU input 1 available as the
+diff --git a/drv/vsp2_bru.h b/drv/vsp2_bru.h
+index 00be49b..280617e 100644
+--- a/drv/vsp2_bru.h
++++ b/drv/vsp2_bru.h
+@@ -83,6 +83,8 @@ struct vsp2_bru {
+ 		struct vsp2_rwpf *rpf;
+ 		struct v4l2_rect compose;
+ 	} inputs[4];
++	
++	u32 bgcolor;
+ };
+ 
+ static inline struct vsp2_bru *to_bru(struct v4l2_subdev *subdev)
+diff --git a/drv/vsp2_rpf.c b/drv/vsp2_rpf.c
+index 90f31d9..1ba33f9 100644
+--- a/drv/vsp2_rpf.c
++++ b/drv/vsp2_rpf.c
+@@ -124,6 +124,7 @@ static int rpf_s_ctrl(struct v4l2_ctrl *ctrl)
+ 
+ 		pipe = to_vsp2_pipeline(&rpf->entity.subdev.entity);
+ 		vsp2_pipeline_propagate_alpha(pipe, &rpf->entity, ctrl->val);
++		rpf->alpha = ctrl->val;
+ 		break;
+ 	}
+ 
+@@ -144,6 +145,7 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	const struct vsp2_format_info *fmtinfo = rpf->video.fmtinfo;
+ 	const struct v4l2_pix_format_mplane *format = &rpf->video.format;
+ 	const struct v4l2_rect *crop = &rpf->crop;
++	struct vsp2_pipeline *pipe;
+ 	u32 infmt;
+ 	int ret;
+ 	u32 stride_y = 0;
+@@ -189,22 +191,20 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	rpf->offsets[0] = crop->top * stride_y
+ 			+ crop->left * fmtinfo->bpp[0] / 8;
+ 
+-	vsp_in->addr = (void *)((unsigned long)rpf->buf_addr[0]
+-					     + rpf->offsets[0]);
+-
+ 	if (format->num_planes > 1) {
+ 		rpf->offsets[1] = crop->top * stride_c / fmtinfo->vsub
+ 				+ crop->left * fmtinfo->bpp[1] / fmtinfo->hsub
+ 				/ 8;
++   } else {
++      rpf->offsets[1] = 0;
++   }
+ 
+-		vsp_in->addr_c0 = (void *)((unsigned long)rpf->buf_addr[1]
+-							+ rpf->offsets[1]);
+-
+-		if (format->num_planes > 2)
+-			vsp_in->addr_c1 =
+-				(void *)((unsigned long)rpf->buf_addr[2]
+-						      + rpf->offsets[1]);
+-	}
++   vsp_in->addr = (void *)((unsigned long)rpf->buf_addr[0]
++					     + rpf->offsets[0]);
++	vsp_in->addr_c0 = (void *)((unsigned long)rpf->buf_addr[1]
++						 + rpf->offsets[1]);
++	vsp_in->addr_c1 = (void *)((unsigned long)rpf->buf_addr[2]
++						 + rpf->offsets[1]);
+ 
+ 	vsp_in->stride		= stride_y;
+ 	vsp_in->stride_c	= stride_c;
+@@ -253,6 +253,11 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	vsp_in->vir		= VSP_NO_VIR;
+ 	vsp_in->vircolor	= 0;
+ 
++   vsp_in->alpha_blend->afix = rpf->alpha;
++
++	pipe = to_vsp2_pipeline(&rpf->entity.subdev.entity);
++	vsp2_pipeline_propagate_alpha(pipe, &rpf->entity, rpf->alpha);
++
+ 	vsp_in->alpha_blend->addr_a = NULL;
+ 	vsp_in->alpha_blend->alphan = VSP_ALPHA_NO;
+ 	vsp_in->alpha_blend->alpha1 = 0;
+@@ -324,14 +329,10 @@ static void rpf_vdev_queue(struct vsp2_video *video,
+ 		return;
+ 
+ 	vsp_in->addr = (void *)((unsigned long)buf->addr[0] + rpf->offsets[0]);
+-	if (buf->buf.num_planes > 1) {
+-		vsp_in->addr_c0 =
+-			(void *)((unsigned long)buf->addr[1] + rpf->offsets[1]);
+-	}
+-	if (buf->buf.num_planes > 2) {
+-		vsp_in->addr_c1 =
+-			(void *)((unsigned long)buf->addr[2] + rpf->offsets[1]);
+-	}
++	vsp_in->addr_c0 =
++		(void *)((unsigned long)buf->addr[1] + rpf->offsets[1]);
++	vsp_in->addr_c1 =
++		(void *)((unsigned long)buf->addr[2] + rpf->offsets[1]);
+ }
+ 
+ static const struct vsp2_video_operations rpf_vdev_ops = {
+diff --git a/drv/vsp2_rwpf.h b/drv/vsp2_rwpf.h
+index a25667c..8ddb68c 100644
+--- a/drv/vsp2_rwpf.h
++++ b/drv/vsp2_rwpf.h
+@@ -87,6 +87,8 @@ struct vsp2_rwpf {
+ 	} location;
+ 	struct v4l2_rect crop;
+ 
++   unsigned int alpha;
++
+ 	unsigned int offsets[2];
+ 	dma_addr_t buf_addr[3];
+ };
+diff --git a/drv/vsp2_video.c b/drv/vsp2_video.c
+index b65b392..58d35f3 100644
+--- a/drv/vsp2_video.c
++++ b/drv/vsp2_video.c
+@@ -870,6 +870,11 @@ static int vsp2_video_buffer_prepare(struct vb2_buffer *vb)
+ 			return -EINVAL;
+ 	}
+ 
++	for ( ; i < 3; ++i) {
++		buf->addr[i] = 0;
++		buf->length[i] = 0;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drv/vsp2_wpf.c b/drv/vsp2_wpf.c
+index 176723d..d22d5ab 100644
+--- a/drv/vsp2_wpf.c
++++ b/drv/vsp2_wpf.c
+@@ -89,6 +89,7 @@ static int wpf_s_ctrl(struct v4l2_ctrl *ctrl)
+ 	switch (ctrl->id) {
+ 	case V4L2_CID_ALPHA_COMPONENT:
+ 		vsp_out->pad = ctrl->val;
++		wpf->alpha = ctrl->val;
+ 		break;
+ 	}
+ 
+@@ -141,6 +142,10 @@ static int wpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	vsp_out->x_coffset	= crop->left;
+ 	vsp_out->y_coffset	= crop->top;
+ 
++	vsp_out->addr = (void *)((unsigned long)wpf->buf_addr[0]);
++	vsp_out->addr_c0 = (void *)((unsigned long)wpf->buf_addr[1]);
++	vsp_out->addr_c1 = (void *)((unsigned long)wpf->buf_addr[2]);
++
+ 	/* Format */
+ 	outfmt = fmtinfo->hwfmt << VI6_WPF_OUTFMT_WRFMT_SHIFT;
+ 
+@@ -177,6 +182,8 @@ static int wpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	vsp_out->dith		= (outfmt & (3 << 12)) >> 12;
+ 	vsp_out->pxa		= (outfmt & (1 << 23)) >> 23;
+ 
++	vsp_out->pad = wpf->alpha;
++	
+ 	vsp_out->cbrm		= VSP_CSC_ROUND_DOWN;
+ 	vsp_out->abrm		= VSP_CONVERSION_ROUNDDOWN;
+ 	vsp_out->athres		= 0;
+@@ -221,12 +228,14 @@ static void wpf_vdev_queue(struct vsp2_video *video,
+ 	VSPM_VSP_PAR *vsp_par =
+ 		wpf->entity.vsp2->vspm->ip_par.unionIpParam.ptVsp;
+ 	T_VSP_OUT *vsp_out = vsp_par->dst_par;
++   unsigned int i;
++
++	for (i = 0; i < 3; ++i)
++		wpf->buf_addr[i] = buf->addr[i];
+ 
+ 	vsp_out->addr = (void *)((unsigned long)buf->addr[0]);
+-	if (buf->buf.num_planes > 1)
+-		vsp_out->addr_c0 = (void *)((unsigned long)buf->addr[1]);
+-	if (buf->buf.num_planes > 2)
+-		vsp_out->addr_c1 = (void *)((unsigned long)buf->addr[2]);
++	vsp_out->addr_c0 = (void *)((unsigned long)buf->addr[1]);
++	vsp_out->addr_c1 = (void *)((unsigned long)buf->addr[2]);
+ }
+ 
+ static const struct vsp2_video_operations wpf_vdev_ops = {

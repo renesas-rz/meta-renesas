@@ -1,0 +1,29 @@
+commit 38b9a626bee24aad130378f8e0c75d46cd740b12
+Author: Nguyen Van Linh [FGA.BU13.RZG] <LinhNV25@fsoft.com.vn>
+Date:   Fri Apr 21 19:19:08 2017 +0700
+
+    vsp2: Fix the way of setting the number of available RPF.
+
+diff --git a/drv/vsp2_rpf.c b/drv/vsp2_rpf.c
+index f1b06b4..90f31d9 100644
+--- a/drv/vsp2_rpf.c
++++ b/drv/vsp2_rpf.c
+@@ -149,6 +149,8 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	u32 stride_y = 0;
+ 	u32 stride_c = 0;
+ 	u32 height = 0;
++	VSPM_VSP_PAR *vsp_par =
++		rpf->entity.vsp2->vspm->ip_par.unionIpParam.ptVsp;
+ 	T_VSP_IN *vsp_in = rpf_get_vsp_in(rpf);
+ 	u16 vspm_format;
+ 
+@@ -270,7 +272,8 @@ static int rpf_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	vsp_in->alpha_blend->mscolor1 = 0;
+ 
+ 	/* Count rpf_num. */
+-	rpf->entity.vsp2->vspm->ip_par.unionIpParam.ptVsp->rpf_num++;
++	if (vsp_par->rpf_num < rpf->entity.index + 1)
++		vsp_par->rpf_num = rpf->entity.index + 1;
+ 
+ 	return 0;
+ }

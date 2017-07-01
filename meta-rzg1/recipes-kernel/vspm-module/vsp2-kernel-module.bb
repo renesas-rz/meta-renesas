@@ -13,8 +13,11 @@ PR = "r0"
 SRCREV = "c231aff0fba0a2c559968098e5573050a1aa336d"
 SRC_URI = " \
     git://github.com/renesas-devel/vsp2driver.git;protocol=git;branch=RCAR-GEN2/1.0.0 \
+    file://0001-vsp2-Fix-the-way-of-setting-the-number-of-available-RPF.patch \
+    file://0002-vsp2-Fix-the-timing-of-the-VSPM-parameters-setting.patch \
     file://vsp2drv-init \
 "
+
 S = "${WORKDIR}/git"
 
 do_configure[noexec] = "1"
