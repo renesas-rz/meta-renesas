@@ -4,12 +4,12 @@ SECTION = "libs"
 
 LIC_FILES_CHKSUM = "file://gbm.c;beginline=4;endline=22;md5=5cdaac262c876e98e47771f11c7036b5"
 
-SRCREV = "84eaeff0b0eec200f4d6473f1343a13625019d88"
+SRCREV = "c4ee70a7202dc81eaa45a73535e82cee98db2a0d"
 SRC_URI = "git://github.com/thayama/libgbm;protocol=git;branch=master"
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745)"
+COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745|r8a7747X)"
 DEPENDS = "wayland-kms"
 
 inherit autotools pkgconfig

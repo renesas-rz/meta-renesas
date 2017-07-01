@@ -8,7 +8,7 @@ DEPENDS = "linux-renesas"
 PN = "gles-kernel-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745)"
+COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745|r8a7747X)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI_r8a7742 = 'file://RGX_KM_H2.tar.bz2'
@@ -34,6 +34,12 @@ S_r8a7745 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7745 = "eurasiacon/build/linux2/r8a7745_linux/"
 KERNEL_OLD_SRC_PATH_r8a7745 = "eurasiacon/build/linux2/r8a7794_linux/"
 TARGET_PATH_r8a7745 = "eurasia_km/eurasiacon/binary2_r8a7745_linux_release/target/kbuild"
+
+SRC_URI_r8a7747X = 'file://SGX_KM_E2X.tar.bz2'
+S_r8a7747X = "${WORKDIR}/eurasia_km"
+KERNEL_SRC_PATH_r8a7747X = "eurasiacon/build/linux2/r8a7747X_linux/"
+KERNEL_OLD_SRC_PATH_r8a7747X = "eurasiacon/build/linux2/r8a7794X_linux/"
+TARGET_PATH_r8a7747X = "eurasia_km/eurasiacon/binary2_r8a7747X_linux_release/target/kbuild"
 
 GLES = "${@base_contains('MACHINE_FEATURES', 'rgx', 'rgx', \
     base_contains('MACHINE_FEATURES', 'sgx', 'sgx', '', d), d)}"

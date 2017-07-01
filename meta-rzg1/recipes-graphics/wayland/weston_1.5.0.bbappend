@@ -51,7 +51,6 @@ SRC_URI_append_rzg1 = " \
 DEPENDS += "libinput"
 EXTRA_OECONF += " --enable-libinput-backend "
 
-
 # Rule for indentify LVDS touch device.
 # Without this rule, if users connect HDMI touch device, they cannot touch
 #    correctly on LVDS (all touch event will go to HDMI screen)
