@@ -21,12 +21,8 @@ SRC_URI = " \
 DEPENDS = "libomxil libuiomux"
 S = "${WORKDIR}/git"
 
-# for armadillo800eva
-SRCREV_armadillo800eva = "bd43cfba750773cd323fb546f279e76b37c6d713"
-SRC_URI_append_armadillo800eva = " file://vcp1-library-change.patch"
 CHECK_OMXIL_SH_MW = "${USE_RENESAS_MW_VCP1}"
 CHECK_OMXIL_SH_MW += "${USE_RENESAS_MW_VPU5}"
-DEPENDS_append_armadillo800eva = ' ${@base_contains("CHECK_OMXIL_SH_MW", "1", "vcp1", "", d)}'
 
 inherit autotools pkgconfig
 
