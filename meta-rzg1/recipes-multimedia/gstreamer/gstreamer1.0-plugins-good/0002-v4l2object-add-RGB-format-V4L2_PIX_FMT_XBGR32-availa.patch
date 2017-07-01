@@ -1,0 +1,63 @@
+From 5578f2e6c879f5f0518c8d14ed6f82d98d6e487f Mon Sep 17 00:00:00 2001
+From: Hitoshi Kojima <hitoshi.kojima.wt@ps.hitachi-solutions.com>
+Date: Fri, 18 Nov 2016 12:02:30 +0900
+Subject: [PATCH 2/2] v4l2object: support RGB format V4L2_PIX_FMT_XBGR32 in VIN
+
+Backported the code for supporting "V4L2_PIX_FMT_XBGR32" format from the following commit.
+
+git://anongit.freedesktop.org/gstreamer/gst-plugins-good
+commit: 2538fee2fd8fdb74b05f0a511281bc4707e7cc44
+
+Signed-off-by: Hitoshi Kojima <hitoshi.kojima.wt@ps.hitachi-solutions.com>
+---
+ sys/v4l2/gstv4l2object.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 1cd5b92..fbe132a 100644
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -941,6 +941,7 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
+   {V4L2_PIX_FMT_RGB24, TRUE},
+   {V4L2_PIX_FMT_BGR32, TRUE},
+   {V4L2_PIX_FMT_RGB32, TRUE},
++  {V4L2_PIX_FMT_XBGR32, TRUE},
+   {V4L2_PIX_FMT_GREY, TRUE},
+   {V4L2_PIX_FMT_YVU410, TRUE},
+   {V4L2_PIX_FMT_YVU420, TRUE},
+@@ -1100,6 +1101,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
+ 
+     case V4L2_PIX_FMT_RGB32:
+     case V4L2_PIX_FMT_BGR32:
++    case V4L2_PIX_FMT_XBGR32:
+       rank = RGB_BASE_RANK;
+       break;
+ 
+@@ -1395,6 +1397,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
+     case V4L2_PIX_FMT_BGR24:
+     case V4L2_PIX_FMT_RGB32:
+     case V4L2_PIX_FMT_BGR32:
++    case V4L2_PIX_FMT_XBGR32:
+     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
+     case V4L2_PIX_FMT_NV16:    /* 16  Y/CrCb 4:2:2  */
+@@ -1433,6 +1436,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
+         case V4L2_PIX_FMT_RGB32:
+           format = GST_VIDEO_FORMAT_RGBx;
+           break;
++        case V4L2_PIX_FMT_XBGR32:
+         case V4L2_PIX_FMT_BGR32:
+           format = GST_VIDEO_FORMAT_BGRx;
+           break;
+@@ -1641,6 +1645,8 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
+         fourcc = V4L2_PIX_FMT_RGB32;
+         break;
+       case GST_VIDEO_FORMAT_BGRx:
++        fourcc = V4L2_PIX_FMT_XBGR32;
++        break;
+       case GST_VIDEO_FORMAT_BGRA:
+         fourcc = V4L2_PIX_FMT_BGR32;
+         break;
+-- 
+1.7.9.5
+
