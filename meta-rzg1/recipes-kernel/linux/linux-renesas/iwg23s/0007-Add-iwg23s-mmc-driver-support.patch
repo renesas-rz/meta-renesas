@@ -1,0 +1,1038 @@
+From 0fb673b34325e54c3019c2cba13386bbe4f63d3d Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:21:07 +0700
+Subject: [PATCH 07/15] iwg23s: mmc: Add mmc driver support.
+ Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/mmc/card/block.c          |   18 +++
+ drivers/mmc/core/mmc.c            |    2 +-
+ drivers/mmc/host/sh_mobile_sdhi.c |  163 ++++++++++++++------
+ drivers/mmc/host/tmio_mmc.h       |   16 ++
+ drivers/mmc/host/tmio_mmc_dma.c   |  300 +++++++++++++++++++++++++++----------
+ drivers/mmc/host/tmio_mmc_pio.c   |   48 ++++--
+ include/linux/mfd/tmio.h          |   15 +-
+ 7 files changed, 414 insertions(+), 148 deletions(-)
+
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index ae8fbd4..c83be01 100644
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -2014,7 +2014,17 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
+ 	struct mmc_blk_data *md;
+ 	int devidx, ret;
+ 
++#ifdef CONFIG_MACH_IWG23S
++	/* IWG23S: SD/MMC: Fix for static slot numbering  Micro SD - 0, eMMC - 1*/
++	if ((!strcmp(mmc_hostname(card->host), "mmc1")) && !subname)
++		devidx = 1;
++	else if (!strcmp(mmc_hostname(card->host), "mmc0"))
++		devidx = 0;
++	else
++		devidx = find_next_zero_bit(dev_use, max_devices, 2);
++#else
+ 	devidx = find_first_zero_bit(dev_use, max_devices);
++#endif
+ 	if (devidx >= max_devices)
+ 		return ERR_PTR(-ENOSPC);
+ 	__set_bit(devidx, dev_use);
+@@ -2032,7 +2042,15 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
+ 	 * index anymore so we keep track of a name index.
+ 	 */
+ 	if (!subname) {
++#ifdef CONFIG_MACH_IWG23S
++		/* IWG23S: SD/MMC: Fix for static slot numbering  Micro SD - 0, eMMC1 - 1*/
++		if (!strcmp(mmc_hostname(card->host), "mmc1"))
++			md->name_idx = 1;
++		else if (!strcmp(mmc_hostname(card->host), "mmc0"))
++			md->name_idx = 0;
++#else
+ 		md->name_idx = find_first_zero_bit(name_use, max_devices);
++#endif
+ 		__set_bit(md->name_idx, name_use);
+ 	} else
+ 		md->name_idx = ((struct mmc_blk_data *)
+diff --git a/drivers/mmc/core/mmc.c b/drivers/mmc/core/mmc.c
+index e50d071..74589cd 100644
+--- a/drivers/mmc/core/mmc.c
++++ b/drivers/mmc/core/mmc.c
+@@ -294,7 +294,7 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
+ 	}
+ 
+ 	card->ext_csd.rev = ext_csd[EXT_CSD_REV];
+-	if (card->ext_csd.rev > 6) {
++	if (card->ext_csd.rev > 7) {
+ 		pr_err("%s: unrecognised EXT_CSD revision %d\n",
+ 			mmc_hostname(card->host), card->ext_csd.rev);
+ 		err = -EINVAL;
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index c9d653e..d2407bb 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -1,7 +1,7 @@
+ /*
+  * SuperH Mobile SDHI
+  *
+- * Copyright (C) 2014-2015 Renesas Electronics Corporation
++ * Copyright (C) 2014-2016 Renesas Electronics Corporation
+  * Copyright (C) 2009 Magnus Damm
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -45,6 +45,8 @@
+ /* SDHI host controller version */
+ #define SDHI_VERSION_CB0D	0xCB0D
+ #define SDHI_VERSION_490C	0x490C
++#define SDHI_VERSION_CC0D	0xCC0D
++#define SDHI_VERSION_CC10	0xCC10
+ 
+ #define EXT_ACC           0xe4
+ #define SD_DMACR(x)       ((x) ? 0x192 : 0xe6)
+@@ -56,6 +58,8 @@
+ enum {
+ 	SH_MOBILE_SDHI_VER_490C = 0,
+ 	SH_MOBILE_SDHI_VER_CB0D,
++	SH_MOBILE_SDHI_VER_CC0D,
++	SH_MOBILE_SDHI_VER_CC10,
+ 	SH_MOBILE_SDHI_VER_MAX, /* SDHI max */
+ };
+ 
+@@ -66,13 +70,6 @@ enum {
+ 	SH_MOBILE_SDHI_EXT_ACC_MAX, /* EXT_ACC access size max */
+ };
+ 
+-/* SD buffer access size for EXT_ACC */
+-static unsigned short sh_acc_size[][SH_MOBILE_SDHI_EXT_ACC_MAX] = {
+-	/* { 16bit, 32bit, }, */
+-	{ 0x0000, 0x0001, },	/* SH_MOBILE_SDHI_VER_490C */
+-	{ 0x0001, 0x0000, },	/* SH_MOBILE_SDHI_VER_CB0D */
+-};
+-
+ struct sh_mobile_sdhi_scc {
+ 	unsigned long clk;	/* clock for SDR104 */
+ 	u32 tap;		/* sampling clock position for SDR104 */
+@@ -135,6 +132,10 @@ static const struct of_device_id sh_mobile_sdhi_of_match[] = {
+ 	{ .compatible = "renesas,sdhi-r8a7794", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7743", .data = &of_rcar_gen2_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7745", .data = &of_rcar_gen2_compatible, },
++	{ .compatible = "renesas,sdhi-r8a7747x",
++		.data = &of_rcar_gen2_compatible, },
++	{ .compatible = "renesas,mmc-r8a7747x",
++		.data = &of_rcar_gen2_compatible, },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, sh_mobile_sdhi_of_match);
+@@ -144,12 +145,17 @@ static int sh_dma_size[][SH_MOBILE_SDHI_DMA_XMIT_SZ_MAX] = {
+ 	/* { 1byte, 2byte, 4byte, 8byte, 16byte, 32byte, }, */
+ 	{ -EINVAL, 0x0000, 0x0000, -EINVAL, 0x5000, 0xa000, },	/* VER_490C */
+ 	{ -EINVAL, 0x0000, 0x0000, -EINVAL, 0x0001, 0x0004, },	/* VER_CB0D */
++	{ -EINVAL, 0x0000, 0x0000, -EINVAL, 0x0001, 0x0004, },	/* VER_CC0D */
++	{ -EINVAL, -EINVAL, -EINVAL,
++		-EINVAL, -EINVAL, -EINVAL, }, /* VER_CC10 */
+ };
+ 
+ struct sh_mobile_sdhi_vlt {
+ 	u32 base;		/* base address for IO voltage */
+ 	u32 offset;		/* offset value for IO voltage */
+ 	u32 mask;		/* bit mask position for IO voltage */
++	u32 size;		/* bit mask size for IO voltage */
++	u32 e2x;		/* value 1 is E2X vlt register */
+ };
+ 
+ struct sh_mobile_sdhi {
+@@ -160,6 +166,38 @@ struct sh_mobile_sdhi {
+ 	struct sh_mobile_sdhi_vlt vlt;
+ };
+ 
++static void sh_mobile_sdhi_sdbuf_width(struct tmio_mmc_host *host, int width)
++{
++	u32 val;
++
++	/*
++	 * see also
++	 *	sh_mobile_sdhi_of_data :: dma_buswidth
++	 */
++	switch (sd_ctrl_read16(host, CTL_VERSION)) {
++	case 0x490C:
++		val = (width == 32) ? 0x0001 : 0x0000;
++		break;
++	case 0xCB0D:
++		val = (width == 32) ? 0x0000 : 0x0001;
++		break;
++	case 0xCC10:
++	case 0xCD10:
++		if (width == 64)
++			val = 0x0000;
++		else if (width == 32)
++			val = 0x0101;
++		else	/* width = 16 */
++			val = 0x0001;
++		break;
++	default:
++		/* nothing to do */
++		return;
++	}
++
++	sd_ctrl_write16(host, EXT_ACC, val);
++}
++
+ static int sh_mobile_sdhi_clk_enable(struct platform_device *pdev, unsigned int *f)
+ {
+ 	struct mmc_host *mmc = platform_get_drvdata(pdev);
+@@ -200,7 +238,10 @@ static void sh_mobile_sdhi_set_ioctrl(struct tmio_mmc_host *host, int state)
+ 
+ 	ctrl = ioread32(ioctrl);
+ 	/* Set 1.8V/3.3V */
+-	mask = 0xff << (24 - vlt->mask * 8);
++	if (vlt->e2x)
++		mask = vlt->size << vlt->mask;
++	else
++		mask = 0xff << (24 - vlt->mask * 8);
+ 
+ 	if (state == SH_MOBILE_SDHI_SIGNAL_330V)
+ 		ctrl |= mask;
+@@ -403,13 +444,6 @@ static int sh_mobile_sdhi_select_tuning(struct tmio_mmc_host *host,
+ 	/* Select SCC */
+ 	tap_num = (readl(host->ctl + SH_MOBILE_SDHI_SCC_DTCNTL) >> 16) & 0xf;
+ 
+-	for (i = 0; i < tap_num * 2; i++) {
+-		if (tap[i]) {
+-			tap[i % tap_num] = tap[i];
+-			tap[(i % tap_num) + tap_num] = tap[i];
+-		}
+-	}
+-
+ 	tap_cnt = 0;
+ 	ntap = 0;
+ 	tap_start = 0;
+@@ -491,7 +525,7 @@ static void sh_mobile_sdhi_hw_reset(struct tmio_mmc_host *host)
+ 
+ static int sh_mobile_sdhi_wait_idle(struct tmio_mmc_host *host)
+ {
+-	int timeout = 1000;
++	int timeout = 4000;
+ 
+ 	while (--timeout && !(sd_ctrl_read16(host, CTL_STATUS2) & (1 << 13)))
+ 		udelay(1);
+@@ -566,19 +600,14 @@ static const struct sh_mobile_sdhi_ops sdhi_ops = {
+ 	.cd_wakeup = sh_mobile_sdhi_cd_wakeup,
+ };
+ 
+-static void sh_mobile_sdhi_enable_sdbuf_acc32(struct tmio_mmc_host *host,
+-								int enable)
++static void sh_mobile_sdhi_enable_dma(struct tmio_mmc_host *host, bool enable)
+ {
+-	struct sh_mobile_sdhi *priv = container_of(host->pdata,
+-						   struct sh_mobile_sdhi,
+-						   mmc_data);
+-	unsigned short acc_size;
++	int dma_width = host->dma->sdbuf_64bit ? 64 : 32;
+ 
+-	acc_size = enable ?
+-		sh_acc_size[priv->type][SH_MOBILE_SDHI_EXT_ACC_32BIT] :
+-		sh_acc_size[priv->type][SH_MOBILE_SDHI_EXT_ACC_16BIT];
+-	sd_ctrl_write16(host, EXT_ACC, acc_size);
++	sd_ctrl_write16(host, CTL_DMA_ENABLE, enable ? 2 : 0);
+ 
++	/* enable 32bit access if DMA mode if possibile */
++	sh_mobile_sdhi_sdbuf_width(host, enable ? dma_width : 16);
+ }
+ 
+ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+@@ -603,7 +632,7 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 	void __iomem *product_reg;
+ #endif
+ 	struct sh_mobile_sdhi_vlt *vlt;
+-	u32 pfcs[2], mask;
++	u32 pfcs[2], mask[2];
+ 	bool use_dma = true;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+@@ -611,8 +640,10 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 
+ 	priv = devm_kzalloc(&pdev->dev, sizeof(struct sh_mobile_sdhi), GFP_KERNEL);
+-	if (!priv)
++	if (priv == NULL) {
++		dev_err(&pdev->dev, "kzalloc failed\n");
+ 		return -ENOMEM;
++	}
+ 
+ 	mmc_data = &priv->mmc_data;
+ 	dma_priv = &priv->dma_priv;
+@@ -666,8 +697,18 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	if (np && !of_property_read_u32(np, "renesas,id", &mask))
+-		vlt->mask = mask;
++	if (np) {
++		if (!of_property_read_u32(np, "renesas,e2x", &vlt->e2x)) {
++			if (!of_property_read_u32_array(np, "renesas,id",
++							mask, 2)) {
++				vlt->mask = mask[0];
++				vlt->size = mask[1];
++			}
++		} else {
++			if (!of_property_read_u32(np, "renesas,id", &mask[0]))
++				vlt->mask = mask[0];
++		}
++	}
+ 
+ 	mmc_data->clk_enable = sh_mobile_sdhi_clk_enable;
+ 	mmc_data->clk_disable = sh_mobile_sdhi_clk_disable;
+@@ -702,8 +743,6 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 			dma_priv->chan_priv_rx = (void *)p->dma_slave_rx;
+ 			dma_priv->slave_id_tx = p->dma_slave_tx;
+ 			dma_priv->slave_id_rx = p->dma_slave_rx;
+-			mmc_data->enable_sdbuf_acc32 =
+-				sh_mobile_sdhi_enable_sdbuf_acc32;
+ 		} else if (p->dma_slave_tx < 0 || p->dma_slave_rx < 0)
+ 			use_dma = false;
+ 	}
+@@ -716,8 +644,18 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++	if (np) {
++		if (of_property_read_u32(np, "max-blk-count",
++			&mmc_data->max_blk_count))
++			mmc_data->max_blk_count = 0;
++		if (of_property_read_u32(np, "max-segs",
++			(u32 *)(&mmc_data->max_segs)))
++			mmc_data->max_segs = 0;
++	}
++
+ 	dma_priv->alignment_shift = shift;
+ 	dma_priv->filter = shdma_chan_filter;
++	dma_priv->enable = sh_mobile_sdhi_enable_dma;
+ 
+ 	if (use_dma)
+ 		mmc_data->dma = dma_priv;
+@@ -745,6 +794,8 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 		mmc_data->capabilities |= MMC_CAP_UHS_SDR50;
+ 	if (of_find_property(np, "cap-uhs-sdr104", NULL))
+ 		mmc_data->capabilities |= MMC_CAP_UHS_SDR104;
++	if (of_find_property(np, "mmc-hs200-1_8v", NULL))
++		mmc_data->capabilities2 |= MMC_CAP2_HS200_1_8V_SDR;
+ 
+ 	if (mmc_data->capabilities & MMC_CAP_UHS_SDR104) {
+ 		mmc_data->capabilities |= MMC_CAP_CMD23 |
+@@ -752,21 +803,35 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 		mmc_data->flags |= TMIO_MMC_HAS_UHS_SCC;
+ 	}
+ 
+-	/* SD control register space size is 0x100, 0x200 for bus_shift=1 */
+-	mmc_data->bus_shift = resource_size(res) >> 9;
++	/* SD control register space size */
++	if (resource_size(res) > 0x400) /* 0x400 for bus_shift=2 */
++		mmc_data->bus_shift = 2;
++	else if (resource_size(res) > 0x100) /* 0x100, 0x200 for bus_shift=1 */
++		mmc_data->bus_shift = 1;
++	else
++		mmc_data->bus_shift = 0;
+ 
+ 	ret = tmio_mmc_host_probe(&host, pdev, mmc_data);
+ 	if (ret < 0)
+ 		goto eprobe;
+ 
++	host->dma = dma_priv;
+ 	pm_runtime_get_sync(&pdev->dev);
+ 
+ 	ver = sd_ctrl_read16(host, CTL_VERSION);
+-	if (ver == SDHI_VERSION_CB0D)
++	if (ver == SDHI_VERSION_CB0D) {
+ 		priv->type = SH_MOBILE_SDHI_VER_CB0D;
+-	else if (ver == SDHI_VERSION_490C)
++		dma_priv->sdbuf_64bit = false;
++	} else if (ver == SDHI_VERSION_490C) {
+ 		priv->type = SH_MOBILE_SDHI_VER_490C;
+-	else {
++		dma_priv->sdbuf_64bit = false;
++	} else if (ver == SDHI_VERSION_CC0D) {
++		priv->type = SH_MOBILE_SDHI_VER_CC0D;
++		dma_priv->sdbuf_64bit = false;
++	} else if (ver == SDHI_VERSION_CC10) {
++		priv->type = SH_MOBILE_SDHI_VER_CC10;
++		dma_priv->sdbuf_64bit = true;
++	} else {
+ 		dev_err(host->pdata->dev, "Unknown SDHI version\n");
+ 		goto eirq;
+ 	}
+@@ -775,21 +840,25 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 	 * FIXME:
+ 	 * this Workaround can be more clever method
+ 	 */
+-	sh_mobile_sdhi_enable_sdbuf_acc32(host, false);
++	sh_mobile_sdhi_enable_dma(host, false);
+ 
+ 	/* Some controllers check the ILL_FUNC bit. */
+ 	if (priv->type == SH_MOBILE_SDHI_VER_490C)
+ 		mmc_data->flags |= TMIO_MMC_CHECK_ILL_FUNC;
+-
+-	/* Set DMA xmit size */
+-	if (p && p->dma_slave_tx > 0 && p->dma_slave_rx > 0) {
+-		dma_size = sh_mobile_sdhi_get_xmit_size(priv->type,
++	if ((priv->type == SH_MOBILE_SDHI_VER_CB0D)	||
++	    (priv->type == SH_MOBILE_SDHI_VER_490C)	||
++	    (priv->type == SH_MOBILE_SDHI_VER_CC0D)) {
++		/* Set DMA xmit size */
++		if (p && p->dma_slave_tx > 0 && p->dma_slave_rx > 0) {
++			dma_size = sh_mobile_sdhi_get_xmit_size(priv->type,
+ 					priv->dma_priv.alignment_shift);
+-		if (dma_size < 0) {
+-			ret = dma_size;
+-			goto eirq;
++			if (dma_size < 0) {
++				ret = dma_size;
++				dev_err(host->pdata->dev, "Invalid dma xmit size\n");
++				goto eirq;
++			}
++			sd_ctrl_write16(host, SD_DMACR(priv->type), dma_size);
+ 		}
+-		sd_ctrl_write16(host, SD_DMACR(priv->type), dma_size);
+ 	}
+ 
+ 	/*
+diff --git a/drivers/mmc/host/tmio_mmc.h b/drivers/mmc/host/tmio_mmc.h
+index 97b54b3..b74866f 100644
+--- a/drivers/mmc/host/tmio_mmc.h
++++ b/drivers/mmc/host/tmio_mmc.h
+@@ -63,6 +63,18 @@ enum tmio_mmc_power {
+ #define TMIO_TRANSTATE_DEND	0x00000001
+ #define TMIO_TRANSTATE_AEND	0x00000002
+ 
++struct tmio_mmc_dma {
++	void *chan_priv_tx;
++	void *chan_priv_rx;
++	int slave_id_tx;
++	int slave_id_rx;
++	int alignment_shift;
++	dma_addr_t dma_rx_offset;
++	bool sdbuf_64bit;
++	bool (*filter)(struct dma_chan *chan, void *arg);
++	void (*enable)(struct tmio_mmc_host *host, bool enable);
++};
++
+ struct tmio_mmc_host {
+ 	void __iomem *ctl;
+ 	struct mmc_command      *cmd;
+@@ -85,6 +97,7 @@ struct tmio_mmc_host {
+ 
+ 	struct platform_device *pdev;
+ 	struct tmio_mmc_data *pdata;
++	struct tmio_mmc_dma	*dma;
+ 
+ 	/* DMA support */
+ 	bool			force_pio;
+@@ -94,10 +107,13 @@ struct tmio_mmc_host {
+ 	struct tasklet_struct	dma_issue;
+ 	struct scatterlist	bounce_sg;
+ 	u8			*bounce_buf;
++	bool			use_internal_dma;
++	void __iomem		*prr;
+ 
+ 	/* Track lost interrupts */
+ 	struct delayed_work	delayed_reset_work;
+ 	struct work_struct	done;
++	struct work_struct	sdio_done;
+ 
+ 	/* Cache IRQ mask */
+ 	u32			sdcard_irq_mask;
+diff --git a/drivers/mmc/host/tmio_mmc_dma.c b/drivers/mmc/host/tmio_mmc_dma.c
+index 1a5f767..34ef7ae 100644
+--- a/drivers/mmc/host/tmio_mmc_dma.c
++++ b/drivers/mmc/host/tmio_mmc_dma.c
+@@ -1,7 +1,7 @@
+ /*
+  * linux/drivers/mmc/tmio_mmc_dma.c
+  *
+- * Copyright (C) 2014 Renesas Electronics Corporation
++ * Copyright (C) 2014-2016 Renesas Electronics Corporation
+  * Copyright (C) 2010-2011 Guennadi Liakhovetski
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -12,6 +12,7 @@
+  */
+ 
+ #include <linux/device.h>
++#include <linux/delay.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/dmaengine.h>
+ #include <linux/mfd/tmio.h>
+@@ -24,47 +25,99 @@
+ 
+ #define TMIO_MMC_MIN_DMA_LEN 8
+ 
++#define DM_CM_DTRAN_MODE	0x820
++#define DM_CM_DTRAN_CTRL	0x828
++#define DM_CM_RST		0x830
++#define DM_CM_INFO1		0x840
++#define DM_CM_INFO1_MASK	0x848
++#define DM_CM_INFO2		0x850
++#define DM_CM_INFO2_MASK	0x858
++#define DM_DTRAN_ADDR		0x880
++
++/* DM_CM_DTRAN_MODE */
++#define DTRAN_MODE_CH_NUM_CH0	0	/* "downstream" = for write commands */
++#define DTRAN_MODE_CH_NUM_CH1	BIT(16)	/* "uptream" = for read commands */
++#define DTRAN_MODE_BUS_WID_TH	(BIT(5) | BIT(4))
++#define DTRAN_MODE_ADDR_MODE	BIT(0)	/* 1 = Increment address */
++
++/* DM_CM_DTRAN_CTRL */
++#define DTRAN_CTRL_DM_START	BIT(0)
++
++/* DM_CM_RST */
++#define RST_DTRANRST1		BIT(9)
++#define RST_DTRANRST0		BIT(8)
++#define RST_RESERVED_BITS	GENMASK_ULL(32, 0)
++
++/* DM_CM_INFO1 and DM_CM_INFO1_MASK */
++#define INFO1_DTRANEND1		BIT(17)
++#define INFO1_DTRANEND0		BIT(16)
++
++/* DM_CM_INFO2 and DM_CM_INFO2_MASK */
++#define INFO2_DTRANERR1		BIT(17)
++#define INFO2_DTRANERR0		BIT(16)
++
++/* Product register */
++#define PRR			0xFF000044
++#define PRR_PRCUT_MASK		0x00007FFF
++#define PRR_E2X_ES1		0x00005300
++
++/*
++ * Specification of this driver:
++ * - host->chan_{rx,tx} will be used as a flag of enabling/disabling the dma
++ * - Since this SDHI DMAC register set has actual 32-bit and "bus_shift" is 2,
++ *   this driver cannot use original sd_ctrl_{write,read}32 functions.
++ */
++
++static void tmio_dm_write(struct tmio_mmc_host *host, int addr, u32 val)
++{
++	writel(val, host->ctl + addr);
++}
++
+ void tmio_mmc_enable_dma(struct tmio_mmc_host *host, bool enable)
+ {
+-	struct tmio_mmc_data *pdata = host->pdata;
++	if (host->use_internal_dma) {
++		if (!host->chan_tx || !host->chan_rx)
++			return;
+ 
+-	if (!host->chan_tx || !host->chan_rx)
+-		return;
++		if ((host->dma) && (host->dma->enable))
++			host->dma->enable(host, enable);
++	} else {
++		if (!host->chan_tx || !host->chan_rx)
++			return;
+ 
+-	if (pdata->enable_sdbuf_acc32 && pdata->dma &&
+-				pdata->dma->alignment_shift > 1)
+-		pdata->enable_sdbuf_acc32(host, enable);
++		if (host->dma->enable)
++			host->dma->enable(host, enable);
+ 
+ #if defined(CONFIG_SUPERH) || defined(CONFIG_ARCH_SHMOBILE)
+-	/* Switch DMA mode on or off - SuperH specific? */
+-	sd_ctrl_write16(host, CTL_DMA_ENABLE, enable ? 2 : 0);
++		/* Switch DMA mode on or off - SuperH specific? */
++		sd_ctrl_write16(host, CTL_DMA_ENABLE, enable ? 2 : 0);
+ #endif
++	}
+ }
+ 
+ void tmio_mmc_abort_dma(struct tmio_mmc_host *host)
+ {
+-	tmio_mmc_enable_dma(host, false);
++	if (host->use_internal_dma) {
++		u32 val = RST_DTRANRST1 | RST_DTRANRST0;
+ 
+-	if (host->chan_rx)
+-		dmaengine_terminate_all(host->chan_rx);
+-	if (host->chan_tx)
+-		dmaengine_terminate_all(host->chan_tx);
++		dev_dbg(&host->pdev->dev, "%s\n", __func__);
+ 
+-	tmio_mmc_enable_dma(host, true);
+-}
++		tmio_mmc_enable_dma(host, false);
+ 
+-static void tmio_mmc_rx_dma_complete(void *arg)
+-{
+-	struct tmio_mmc_host *host = arg;
++		tmio_dm_write(host, DM_CM_RST, ~val);
++		tmio_dm_write(host, DM_CM_RST, val);
+ 
+-	tmio_set_transtate(host, TMIO_TRANSTATE_DEND);
+-}
++		tmio_mmc_enable_dma(host, true);
++	} else {
++		tmio_mmc_enable_dma(host, false);
+ 
+-static void tmio_mmc_tx_dma_complete(void *arg)
+-{
+-	struct tmio_mmc_host *host = arg;
++		if (host->chan_rx)
++			dmaengine_terminate_all(host->chan_rx);
++		if (host->chan_tx)
++			dmaengine_terminate_all(host->chan_tx);
+ 
+-	tmio_set_transtate(host, TMIO_TRANSTATE_DEND);
++		tmio_mmc_enable_dma(host, true);
++	}
+ }
+ 
+ static void tmio_mmc_start_dma_rx(struct tmio_mmc_host *host)
+@@ -120,9 +173,6 @@ static void tmio_mmc_start_dma_rx(struct tmio_mmc_host *host)
+ 			DMA_DEV_TO_MEM, DMA_CTRL_ACK);
+ 
+ 	if (desc) {
+-		desc->callback = tmio_mmc_rx_dma_complete;
+-		desc->callback_param = host;
+-
+ 		cookie = dmaengine_submit(desc);
+ 		if (cookie < 0) {
+ 			desc = NULL;
+@@ -205,9 +255,6 @@ static void tmio_mmc_start_dma_tx(struct tmio_mmc_host *host)
+ 			DMA_MEM_TO_DEV, DMA_CTRL_ACK);
+ 
+ 	if (desc) {
+-		desc->callback = tmio_mmc_tx_dma_complete;
+-		desc->callback_param = host;
+-
+ 		cookie = dmaengine_submit(desc);
+ 		if (cookie < 0) {
+ 			desc = NULL;
+@@ -236,9 +283,54 @@ pio:
+ void tmio_mmc_start_dma(struct tmio_mmc_host *host,
+ 			       struct mmc_data *data)
+ {
+-	struct tmio_mmc_data *pdata = host->pdata;
++	if (host->use_internal_dma) {
++		struct scatterlist *sg = host->sg_ptr;
++		u32 dtran_mode = DTRAN_MODE_BUS_WID_TH | DTRAN_MODE_ADDR_MODE;
++		enum dma_data_direction dir;
++		int ret;
++		u32 irq_mask;
+ 
+-	tmio_clear_transtate(host);
++		/* This DMAC cannot handle if sg_len is not 1 */
++		BUG_ON(host->sg_len > 1);
++
++		dev_dbg(&host->pdev->dev, "%s: %d, %x\n",
++			__func__, host->sg_len,
++			data->flags);
++
++		/* This DMAC cannot handle if buffer is not 8-bytes alignment */
++		if (!IS_ALIGNED(sg->offset, 8)) {
++			host->force_pio = true;
++			tmio_mmc_enable_dma(host, false);
++			return;
++		}
++
++		if (data->flags & MMC_DATA_READ) {
++			dtran_mode |= DTRAN_MODE_CH_NUM_CH1;
++			dir = DMA_FROM_DEVICE;
++			irq_mask = TMIO_STAT_RXRDY;
++		} else {
++			dtran_mode |= DTRAN_MODE_CH_NUM_CH0;
++			dir = DMA_TO_DEVICE;
++			irq_mask = TMIO_STAT_TXRQ;
++		}
++
++		ret = dma_map_sg(&host->pdev->dev, sg, host->sg_len, dir);
++		if (ret < 0) {
++			dev_err(&host->pdev->dev,
++				"%s: dma_map_sg failed\n", __func__);
++			return;
++		}
++
++		tmio_mmc_enable_dma(host, true);
++
++		/* disable PIO irqs to avoid "PIO IRQ in DMA mode!" */
++		tmio_mmc_disable_mmc_irqs(host, irq_mask);
++
++		/* set dma parameters */
++		tmio_dm_write(host, DM_CM_DTRAN_MODE, dtran_mode);
++		tmio_dm_write(host, DM_DTRAN_ADDR, sg->dma_address);
++	} else {
++		struct tmio_mmc_data *pdata = host->pdata;
+ 
+ 	if (pdata->dma && (!host->chan_tx || !host->chan_rx)) {
+ 		struct resource *res = platform_get_resource(host->pdev,
+@@ -308,14 +400,23 @@ ecfgrx:
+ 	host->chan_rx = NULL;
+ ereqrx:
+ ecfgtx:
+-	dma_release_channel(host->chan_tx);
+-	host->chan_tx = NULL;
++		dma_release_channel(host->chan_tx);
++		host->chan_tx = NULL;
++	}
+ }
+ 
+ static void tmio_mmc_issue_tasklet_fn(unsigned long priv)
+ {
+ 	struct tmio_mmc_host *host = (struct tmio_mmc_host *)priv;
+-	struct dma_chan *chan = NULL;
++	if (host->use_internal_dma) {
++		dev_dbg(&host->pdev->dev, "%s\n", __func__);
++
++		tmio_mmc_enable_mmc_irqs(host, TMIO_STAT_DATAEND);
++
++		/* start the DMAC */
++		tmio_dm_write(host, DM_CM_DTRAN_CTRL, DTRAN_CTRL_DM_START);
++	} else {
++		struct dma_chan *chan = NULL;
+ 
+ 	spin_lock_irq(&host->lock);
+ 
+@@ -328,41 +429,78 @@ static void tmio_mmc_issue_tasklet_fn(unsigned long priv)
+ 
+ 	spin_unlock_irq(&host->lock);
+ 
+-	tmio_mmc_enable_mmc_irqs(host, TMIO_MASK_DMA);
++		tmio_mmc_enable_mmc_irqs(host, TMIO_STAT_DATAEND);
+ 
+-	if (chan)
+-		dma_async_issue_pending(chan);
++		if (chan)
++			dma_async_issue_pending(chan);
++	}
+ }
+ 
+ static void tmio_mmc_tasklet_fn(unsigned long arg)
+ {
+ 	struct tmio_mmc_host *host = (struct tmio_mmc_host *)arg;
++	if (host->use_internal_dma) {
++		enum dma_data_direction dir;
+ 
+-	spin_lock_irq(&host->lock);
++		dev_dbg(&host->pdev->dev, "%s: %p\n", __func__, host->data);
++
++		if (!host->data)
++			return;
+ 
+-	if (!host->data)
+-		goto out;
++		if (host->data->flags & MMC_DATA_READ) {
++			dir = DMA_FROM_DEVICE;
++			if ((ioread32(host->prr) & PRR_PRCUT_MASK)
++				== PRR_E2X_ES1)
++				mdelay(1);
++		} else
++			dir = DMA_TO_DEVICE;
+ 
+-	if (host->data->flags & MMC_DATA_READ)
+-		dma_unmap_sg(host->chan_rx->device->dev,
+-			     host->sg_ptr, host->sg_len,
+-			     DMA_FROM_DEVICE);
+-	else
+-		dma_unmap_sg(host->chan_tx->device->dev,
+-			     host->sg_ptr, host->sg_len,
+-			     DMA_TO_DEVICE);
++		dma_unmap_sg(&host->pdev->dev, host->sg_ptr, host->sg_len, dir);
++		tmio_mmc_enable_dma(host, false);
++		tmio_mmc_do_data_irq(host);
++	} else {
+ 
+-	tmio_mmc_do_data_irq(host);
++		spin_lock_irq(&host->lock);
++
++		if (!host->data)
++			goto out;
++
++		if (host->data->flags & MMC_DATA_READ)
++			dma_unmap_sg(host->chan_rx->device->dev,
++				     host->sg_ptr, host->sg_len,
++				     DMA_FROM_DEVICE);
++		else
++			dma_unmap_sg(host->chan_tx->device->dev,
++				     host->sg_ptr, host->sg_len,
++				     DMA_TO_DEVICE);
++
++		tmio_mmc_do_data_irq(host);
+ out:
+-	spin_unlock_irq(&host->lock);
++		spin_unlock_irq(&host->lock);
++	}
+ }
+ 
+ void tmio_mmc_request_dma(struct tmio_mmc_host *host, struct tmio_mmc_data *pdata)
+ {
+-	/* We can only either use DMA for both Tx and Rx or not use it at all */
+-	if (!pdata->dma || (!host->pdev->dev.of_node &&
+-		(!pdata->dma->chan_priv_tx || !pdata->dma->chan_priv_rx)))
+-		return;
++	if (host->use_internal_dma) {
++		/* Each value is set to non-zero to
++			assume "enabling" each DMA */
++		host->chan_rx = host->chan_tx = (void *)0xdeadbeaf;
++
++		/* mapping product register */
++		host->prr = ioremap_nocache(PRR, 0x4);
++
++		tasklet_init(&host->dma_complete, tmio_mmc_tasklet_fn,
++			     (unsigned long)host);
++		tasklet_init(&host->dma_issue, tmio_mmc_issue_tasklet_fn,
++			     (unsigned long)host);
++	} else {
++		/* We can only either use DMA for both Tx
++			and Rx or not use it at all */
++		if (!pdata->dma || (!host->pdev->dev.of_node &&
++			(!pdata->dma->chan_priv_tx ||
++				!pdata->dma->chan_priv_rx)))
++			return;
+ 
+ 	if (!host->chan_tx && !host->chan_rx) {
+ 		struct resource *res = platform_get_resource(host->pdev,
+@@ -417,12 +555,14 @@ void tmio_mmc_request_dma(struct tmio_mmc_host *host, struct tmio_mmc_data *pdat
+ 		if (!host->bounce_buf)
+ 			goto ebouncebuf;
+ 
+-		tasklet_init(&host->dma_complete, tmio_mmc_tasklet_fn, (unsigned long)host);
+-		tasklet_init(&host->dma_issue, tmio_mmc_issue_tasklet_fn, (unsigned long)host);
+-	}
+-
+-	tmio_mmc_enable_dma(host, true);
++			tasklet_init(&host->dma_complete,
++				tmio_mmc_tasklet_fn, (unsigned long)host);
++			tasklet_init(&host->dma_issue,
++				tmio_mmc_issue_tasklet_fn, (unsigned long)host);
++		}
+ 
++		tmio_mmc_enable_dma(host, true);
++	}
+ 	return;
+ 
+ ebouncebuf:
+@@ -437,20 +577,28 @@ ecfgtx:
+ 
+ void tmio_mmc_release_dma(struct tmio_mmc_host *host)
+ {
+-	if (host->chan_tx) {
+-		struct dma_chan *chan = host->chan_tx;
+-		host->chan_tx = NULL;
+-		dma_release_channel(chan);
+-	}
+-	if (host->chan_rx) {
+-		struct dma_chan *chan = host->chan_rx;
+-		host->chan_rx = NULL;
+-		dma_release_channel(chan);
+-	}
+-	if (host->bounce_buf) {
+-		free_pages((unsigned long)host->bounce_buf, 0);
+-		host->bounce_buf = NULL;
++	if (host->use_internal_dma) {
++		iounmap(host->prr);
++
++		/* Each value is set to zero to assume "disabling" each DMA */
++		host->chan_rx = host->chan_tx = NULL;
++	} else {
++		if (host->chan_tx) {
++			struct dma_chan *chan = host->chan_tx;
++			host->chan_tx = NULL;
++			dma_release_channel(chan);
++		}
++		if (host->chan_rx) {
++			struct dma_chan *chan = host->chan_rx;
++			host->chan_rx = NULL;
++			dma_release_channel(chan);
++		}
++		if (host->bounce_buf) {
++			free_pages((unsigned long)host->bounce_buf, 0);
++			host->bounce_buf = NULL;
++		}
++
++		tasklet_kill(&host->dma_complete);
++		tasklet_kill(&host->dma_issue);
+ 	}
+-	tasklet_kill(&host->dma_complete);
+-	tasklet_kill(&host->dma_issue);
+ }
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 807c644..d74aeca 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -50,6 +50,7 @@
+ #include <linux/scatterlist.h>
+ #include <linux/spinlock.h>
+ #include <linux/workqueue.h>
++#include <linux/mmc/tmio.h>
+ 
+ #include "tmio_mmc.h"
+ 
+@@ -360,6 +361,13 @@ static void tmio_mmc_done_work(struct work_struct *work)
+ 	tmio_mmc_finish_request(host);
+ }
+ 
++static void tmio_mmc_sdio_done_work(struct work_struct *work)
++{
++	struct tmio_mmc_host *host = container_of(work, struct tmio_mmc_host,
++						  sdio_done);
++	mmc_signal_sdio_irq(host->mmc);
++}
++
+ #define TMIO_MMC_MAX_TUNING_LOOP 40
+ 
+ static int tmio_mmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
+@@ -748,18 +756,20 @@ static void tmio_mmc_data_irq(struct tmio_mmc_host *host, unsigned int stat)
+ 		 */
+ 		if (pdata->flags & TMIO_MMC_CHECK_ILL_FUNC) {
+ 			if (sd_ctrl_read32(host, CTL_STATUS) & TMIO_STAT_ILL_FUNC) {
+-				tmio_mmc_disable_mmc_irqs(host, TMIO_MASK_DMA);
+-				tmio_set_transtate(host, TMIO_TRANSTATE_AEND);
++				tmio_mmc_disable_mmc_irqs(host,
++							  TMIO_STAT_DATAEND);
++				tasklet_schedule(&host->dma_complete);
+ 			}
+ 		} else {
+ 			if (!(sd_ctrl_read32(host, CTL_STATUS) & TMIO_STAT_CMD_BUSY)) {
+-				tmio_mmc_disable_mmc_irqs(host, TMIO_MASK_DMA);
+-				tmio_set_transtate(host, TMIO_TRANSTATE_AEND);
++				tmio_mmc_disable_mmc_irqs(host,
++							  TMIO_STAT_DATAEND);
++				tasklet_schedule(&host->dma_complete);
+ 			}
+ 		}
+ 	} else if (host->chan_rx && (data->flags & MMC_DATA_READ) && !host->force_pio) {
+-		tmio_mmc_disable_mmc_irqs(host, TMIO_MASK_DMA);
+-		tmio_set_transtate(host, TMIO_TRANSTATE_AEND);
++		tmio_mmc_disable_mmc_irqs(host, TMIO_STAT_DATAEND);
++		tasklet_schedule(&host->dma_complete);
+ 	} else {
+ 		tmio_mmc_do_data_irq(host);
+ 		tmio_mmc_disable_mmc_irqs(host, TMIO_MASK_READOP | TMIO_MASK_WRITEOP);
+@@ -936,6 +946,8 @@ irqreturn_t tmio_mmc_sdio_irq(int irq, void *devid)
+ 	status = sd_ctrl_read16(host, CTL_SDIO_STATUS);
+ 	ireg = status & TMIO_SDIO_MASK_ALL & ~host->sdcard_irq_mask;
+ 
++	sd_ctrl_write16(host, CTL_SDIO_IRQ_MASK, TMIO_SDIO_MASK_ALL);
++
+ 	if (pdata->flags & TMIO_MMC_SDIO_STATUS_QUIRK) {
+ 		sd_ctrl_write16(host, CTL_SDIO_STATUS,
+ 					(status & ~TMIO_SDIO_MASK_ALL) | 6);
+@@ -945,7 +957,7 @@ irqreturn_t tmio_mmc_sdio_irq(int irq, void *devid)
+ 	}
+ 
+ 	if (mmc->caps & MMC_CAP_SDIO_IRQ && ireg & TMIO_SDIO_STAT_IOIRQ)
+-		mmc_signal_sdio_irq(mmc);
++		schedule_work(&host->sdio_done);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -1049,7 +1061,6 @@ static void tmio_mmc_request(struct mmc_host *mmc, struct mmc_request *mrq)
+ 			goto fail;
+ 		if (!ret) {
+ 			ret = -ETIMEDOUT;
+-			host->done_tuning = false;
+ 			goto fail;
+ 		}
+ 		host->last_req_ts = jiffies;
+@@ -1242,6 +1253,10 @@ static void tmio_mmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
+ 		case MMC_BUS_WIDTH_4:
+ 			sd_ctrl_write16(host, CTL_SD_MEM_CARD_OPT, 0x00e0);
+ 		break;
++		case MMC_BUS_WIDTH_8:
++			sd_ctrl_write16(host, CTL_SD_MEM_CARD_OPT, 0x20e0);
++		break;
++
+ 		}
+ 	}
+ 
+@@ -1355,6 +1370,9 @@ static void tmio_mmc_of_parse(struct platform_device *pdev,
+ 
+ 	if (of_get_property(np, "toshiba,mmc-wrprotect-disable", NULL))
+ 		pdata->flags |= TMIO_MMC_WRPROTECT_DISABLE;
++	if (of_get_property(np, "use-internal-dma", NULL)) {
++		pdata->flags |= TMIO_MMC_USE_INTERNAL_DMA;
++	}
+ }
+ 
+ int tmio_mmc_host_probe(struct tmio_mmc_host **host,
+@@ -1387,6 +1405,7 @@ int tmio_mmc_host_probe(struct tmio_mmc_host **host,
+ 	pdata->dev = &pdev->dev;
+ 	_host = mmc_priv(mmc);
+ 	_host->pdata = pdata;
++	_host->dma = pdata->dma;
+ 	_host->mmc = mmc;
+ 	_host->pdev = pdev;
+ 	platform_set_drvdata(pdev, mmc);
+@@ -1407,10 +1426,10 @@ int tmio_mmc_host_probe(struct tmio_mmc_host **host,
+ 	mmc->ops = &tmio_mmc_ops;
+ 	mmc->caps |= MMC_CAP_4_BIT_DATA | pdata->capabilities;
+ 	mmc->caps2 |= pdata->capabilities2;
+-	mmc->max_segs = 32;
++	mmc->max_segs = pdata->max_segs ? pdata->max_segs : 32;
+ 	mmc->max_blk_size = 512;
+-	mmc->max_blk_count = (PAGE_CACHE_SIZE / mmc->max_blk_size) *
+-		mmc->max_segs;
++	mmc->max_blk_count = pdata->max_blk_count ? :
++		(PAGE_CACHE_SIZE / mmc->max_blk_size) * mmc->max_segs;
+ 	mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
+ 	mmc->max_seg_size = mmc->max_req_size;
+ 
+@@ -1465,15 +1484,16 @@ int tmio_mmc_host_probe(struct tmio_mmc_host **host,
+ 	if (pdata->flags & TMIO_MMC_SDIO_IRQ)
+ 		tmio_mmc_enable_sdio_irq(mmc, 0);
+ 
++	if (pdata->flags & TMIO_MMC_USE_INTERNAL_DMA)
++		_host->use_internal_dma = true;
++
+ 	spin_lock_init(&_host->lock);
+ 	mutex_init(&_host->ios_lock);
+ 
+-	spin_lock_init(&_host->trans_lock);
+-	_host->trans_state = 0;
+-
+ 	/* Init delayed work for request timeouts */
+ 	INIT_DELAYED_WORK(&_host->delayed_reset_work, tmio_mmc_reset_work);
+ 	INIT_WORK(&_host->done, tmio_mmc_done_work);
++	INIT_WORK(&_host->sdio_done, tmio_mmc_sdio_done_work);
+ 
+ 	/* See if we also get DMA */
+ 	tmio_mmc_request_dma(_host, pdata);
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index 59299bb..48c2930 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -98,6 +98,9 @@
+ /* Some controllers have UHS-I sampling clock controller */
+ #define TMIO_MMC_HAS_UHS_SCC		(1 << 11)
+ 
++/* Use the internal DMA module */
++#define TMIO_MMC_USE_INTERNAL_DMA	(1 << 12)
++
+ int tmio_core_mmc_enable(void __iomem *cnf, int shift, unsigned long base);
+ int tmio_core_mmc_resume(void __iomem *cnf, int shift, unsigned long base);
+ void tmio_core_mmc_pwr(void __iomem *cnf, int shift, int state);
+@@ -105,16 +108,6 @@ void tmio_core_mmc_clk_div(void __iomem *cnf, int shift, int state);
+ 
+ struct dma_chan;
+ 
+-struct tmio_mmc_dma {
+-	void *chan_priv_tx;
+-	void *chan_priv_rx;
+-	int slave_id_tx;
+-	int slave_id_rx;
+-	int alignment_shift;
+-	dma_addr_t dma_rx_offset;
+-	bool (*filter)(struct dma_chan *chan, void *arg);
+-};
+-
+ struct tmio_mmc_host;
+ 
+ /*
+@@ -130,6 +123,8 @@ struct tmio_mmc_data {
+ 	struct tmio_mmc_dma		*dma;
+ 	struct device			*dev;
+ 	unsigned int			cd_gpio;
++	unsigned int			max_blk_count;
++	unsigned short			max_segs;
+ 	void (*set_pwr)(struct platform_device *host, int state);
+ 	void (*set_clk_div)(struct platform_device *host, int state);
+ 	int (*write16_hook)(struct tmio_mmc_host *host, int addr);
+-- 
+1.7.9.5
+

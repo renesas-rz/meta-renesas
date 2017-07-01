@@ -1,0 +1,1976 @@
+From 6d5fd09d50ccbaadb552b80ef3b926f433237167 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:17:09 +0700
+Subject: [PATCH 06/15] iwg23s: media: Add media driver support.
+ Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/media/platform/Makefile                  |    2 +
+ drivers/media/platform/rcar-dvdec.c              | 1313 ++++++++++++++++++++++
+ drivers/media/platform/rcar-dvdec.h              |  407 +++++++
+ drivers/media/platform/soc_camera/rcar_vin.c     |  134 ++-
+ drivers/media/platform/soc_camera/soc_mediabus.c |   10 +
+ 5 files changed, 1836 insertions(+), 30 deletions(-)
+ create mode 100644 drivers/media/platform/rcar-dvdec.c
+ create mode 100644 drivers/media/platform/rcar-dvdec.h
+
+diff --git a/drivers/media/platform/Makefile b/drivers/media/platform/Makefile
+index 4e4da48..7bc1798 100644
+--- a/drivers/media/platform/Makefile
++++ b/drivers/media/platform/Makefile
+@@ -27,6 +27,8 @@ obj-$(CONFIG_VIDEO_CODA) 		+= coda.o
+ 
+ obj-$(CONFIG_VIDEO_SH_VEU)		+= sh_veu.o
+ 
++obj-$(CONFIG_VIDEO_RCAR_VIN)		+= rcar-dvdec.o
++
+ obj-$(CONFIG_VIDEO_MEM2MEM_DEINTERLACE)	+= m2m-deinterlace.o
+ 
+ obj-$(CONFIG_VIDEO_S3C_CAMIF) 		+= s3c-camif/
+diff --git a/drivers/media/platform/rcar-dvdec.c b/drivers/media/platform/rcar-dvdec.c
+new file mode 100644
+index 0000000..2eda19c
+--- /dev/null
++++ b/drivers/media/platform/rcar-dvdec.c
+@@ -0,0 +1,1313 @@
++/*
++ * drivers/media/platform/rcar-dvdec.c
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * rcar-dvdec.c R-Car E2X Digital video decoder driver
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include <linux/dma-mapping.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/errno.h>
++#include <linux/fs.h>
++#include <linux/i2c.h>
++#include <linux/init.h>
++#include <linux/interrupt.h>
++#include <linux/kernel.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/slab.h>
++#include <linux/videodev2.h>
++#include <linux/module.h>
++
++#include <media/v4l2-common.h>
++#include <media/v4l2-device.h>
++#include <media/v4l2-ctrls.h>
++#include <media/v4l2-ioctl.h>
++#include <media/v4l2-mediabus.h>
++#include <media/videobuf-dma-contig.h>
++
++#include <media/soc_camera.h>
++#include <media/soc_camera_platform.h>
++
++#include "rcar-dvdec.h"
++
++const struct reg_color rcar_dvdec_reg_color[8] = {
++
++	/* TGCR1,  TGCR2,   TGCR3,   HAFCCR1, HAFCCR2, HAFCCR3, */
++	/* VCDWCR1,BTLCR,   ACCCR1,  AGCCR1,  YCSCR3,  YCSCR4,  */
++	/* YCSCR5,  YCSCR6,  YCSCR7,  YCSCR9,  YCSCR12          */
++
++	/* 0 : DVDEC_NTSC358 */
++	{ 0x0100,  0x40F1,  0x0594,  0xC2B4,  0x0B18,  0x8A50,
++	  0x53CF,  0x741F,  0x50DC,  0x08E6,  0x2204,  0x3408,
++	  0x2006,  0x0806,  0x6325,  0x8660,  0x0205,  },
++
++	/* 1 : DVDEC_NTSC443 */
++	{ 0x0100,  0x4D20,  0x0584,  0xC2C0,  0x0B11,  0x8A76,
++	  0x2BCF,  0x742F,  0x50DC,  0x08E6,  0x2204,  0x3408,
++	  0x2006,  0x0806,  0x6325,  0x8660,  0x0205,  },
++
++	/* 2 : DVDEC_PAL443 */
++	{ 0x0100,  0x4D20,  0x0584,  0xC2C0,  0x0B11,  0x8A76,
++	  0x2BCF,  0x747D,  0x50DC,  0x08F2,  0x2203,  0x4FC2,
++	  0x200A,  0x0F0A,  0x3328,  0x0000,  0x0001,  },
++
++	/* 3 : DVDEC_PALM */
++	{ 0x0100,  0x40F1,  0x0594,  0xC2B4,  0x0B18,  0x8A50,
++	  0x53CF,  0x7477,  0x50E6,  0x08F2,  0x2203,  0x4FC2,
++	  0x200A,  0x0F0A,  0x3328,  0x0000,  0x0001,  },
++
++	/* 4 : DVDEC_PALN */
++	{ 0x0100,  0x4D20,  0x0584,  0xC2C0,  0x0B11,  0x8A76,
++	  0x2BCF,  0x747B,  0x50E6,  0x08F2,  0x2203,  0x4FC2,
++	  0x200A,  0x0F0A,  0x3328,  0x0000,  0x0001,  },
++
++	/* 5 : DVDEC_SECAM */
++	{ 0x0100,  0x4D20,  0x0584,  0xC2C0,  0x0B11,  0x8A76,
++	  0x2BCF,  0x74BE,  0x50DC,  0x08F2,  0x2204,  0x3401,
++	  0x2006,  0x0F06,  0x3328,  0x8660,  0x0005,  },
++
++	/* 6 : NTSC-443 60 */
++	{ 0x0100,  0x40F1,  0x0594,  0xC2B4,  0x0B18,  0x8A50,
++	  0x53CF,  0x742F,  0x50DC,  0x08E6,  0x2204,  0x3408,
++	  0x2006,  0x0806,  0x6325,  0x8660,  0x0205,  },
++
++	/* 7 : PAL 60 */
++	{ 0x0100,  0x40F1,  0x0594,  0xC2B4,  0x0B18,  0x8A50,
++	  0x53CF,  0x747D,  0x50E6,  0x08F2,  0x2203,  0x4FC2,
++	  0x200A,  0x0F0A,  0x3238,  0x0000,  0x0001,  },
++};
++
++const struct dvdec_rect rcar_dvdec_rect[8] = {
++	{ 16, 241, 0, 1428},	/* 0 : DVDEC_NTSC358 */
++	{ 16, 241, 0, 1428},	/* 1 : DVDEC_NTSC443 */
++	{ 19, 288, 0, 1412},	/* 2 : DVDEC_PAL443 */
++	{ 16, 241, 0, 1428},	/* 3 : DVDEC_PALM */
++	{ 19, 288, 0, 1412},	/* 4 : DVDEC_PALN */
++	{ 19, 288, 0, 1412},	/* 5 : DVDEC_SECAM */
++	{ 16, 241, 0, 1428},	/* 6 : NTSC-443 60 */
++	{ 16, 241, 0, 1428},	/* 7 : PAL 60 */
++};
++
++struct rcar_dvdec_state {
++	struct v4l2_ctrl_handler ctrl_hdl;
++	struct v4l2_subdev	sd;
++	struct mutex		mutex; /* mutual excl. when accessing chip */
++	v4l2_std_id		curr_norm;
++	bool			autodetect;
++	u8			input;
++	u8			output;
++	u32			in_cfmt;
++	const struct rcar_dvdec_color_format	*cfmt;
++	void __iomem *base;
++	u16			vsyncsr;
++};
++
++#define to_rcar_dvdec_sd(_ctrl) (&container_of(_ctrl->handler,		\
++					    struct rcar_dvdec_state,	\
++					    ctrl_hdl)->sd)
++
++struct regval_list {
++	unsigned char reg_num;
++	unsigned char value;
++};
++
++struct rcar_dvdec_color_format {
++	enum v4l2_mbus_pixelcode code;
++	enum v4l2_colorspace colorspace;
++};
++
++/*
++ * supported color format list
++ */
++static const struct rcar_dvdec_color_format rcar_dvdec_cfmts[] = {
++	{
++		.code		= V4L2_MBUS_FMT_YUYV10_1X20,
++		.colorspace	= V4L2_COLORSPACE_JPEG,
++	},
++};
++
++static void rcar_dvdec_initcolor(struct v4l2_subdev *sd, u32 dvdec_fmt);
++
++static inline struct rcar_dvdec_state *to_state(struct v4l2_subdev *sd)
++{
++	return container_of(sd, struct rcar_dvdec_state, sd);
++}
++
++/*
++ * rcar_dvdec_s_input() - Select input pin
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @input: input pin(0:VIN1A, 1:VIN2A)
++ *
++ * Select and set input pin
++ */
++static int rcar_dvdec_s_input(struct v4l2_subdev *sd, u32 input)
++{
++	struct platform_device *pdev = v4l2_get_subdevdata(sd);
++	struct rcar_dvdec_state *state = to_state(sd);
++	u16 adccr2;
++
++	if ((input & DVDEC_ADCCR2_ADC_VINSEL_MASK) != input) {
++		dev_err(&pdev->dev, "Invalid input\n");
++		return -EINVAL;
++	}
++
++	adccr2 = ioread16(state->base + DVDEC_ADCCR2_REG);
++	adccr2 &= ~DVDEC_ADCCR2_ADC_VINSEL_MASK;
++	adccr2 |= input;
++	iowrite16(adccr2, state->base + DVDEC_ADCCR2_REG);
++
++	state->input = input;
++	return 0;
++}
++
++/*
++ * rcar_dvdec_s_output() - Select output direction
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @output: output id(0:VIN0, 1:VIN1)
++ *
++ * Select and set output direction.
++ */
++static int rcar_dvdec_s_output(struct v4l2_subdev *sd, u32 output)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	void __iomem *pmmr_reg;
++	void __iomem *adccr4_reg;
++
++	pmmr_reg = ioremap_nocache(DVDEC_PMMR_REG, 0x04);
++	adccr4_reg = ioremap_nocache(DVDEC_ADCCR4_REG, 0x04);
++
++	if (output == 0) {
++		writel_relaxed(~0x0001, pmmr_reg);
++		/* VIN0_SEL=1  (use VIN0-Module)*/
++		writel_relaxed(0x0001, adccr4_reg);
++	} else {
++		writel_relaxed(~0x0002, pmmr_reg);
++		/* VIN1_SEL=1  (use VIN1-Module)*/
++		writel_relaxed(0x0002, adccr4_reg);
++	}
++
++	iounmap(adccr4_reg);
++	iounmap(pmmr_reg);
++
++	state->output = output;
++	return 0;
++}
++
++/*
++ * rcar_dvdec_to_v4l2_std() - Decide V4L2 video standard
++ * @sd: ptr to v4l2_subdev struct
++ * @cromasr1: Chroma Decoding Read Register 1 value
++ * @vsyncsr: Sync Separation Status/Vertical Cycle Read Registar value
++ *
++ * Decide V4l2 video standard from the digital video decoder register
++ */
++static v4l2_std_id rcar_dvdec_to_v4l2_std(struct v4l2_subdev *sd,
++	u16 cromasr1, u16 vsyncsr)
++{
++	struct platform_device *pdev = v4l2_get_subdevdata(sd);
++	struct rcar_dvdec_state *state = to_state(sd);
++	v4l2_std_id std;
++
++	/* SECAM or UNDETECTABLE */
++	std = V4L2_STD_UNKNOWN;
++
++	state->vsyncsr = (vsyncsr & DVDEC_VSYNCSR_FVMODE_MASK);
++
++	switch (cromasr1 & DVDEC_CROMASR1_COLORSYS_MASK) {
++	case DVDEC_CROMASR1_COLORSYS_NTSC:
++		switch (cromasr1 & DVDEC_CROMASR1_FSCMODE_MASK) {
++		case DVDEC_CROMASR1_FSCMODE_358:
++			/* NTSC-M */
++			dev_info(&pdev->dev, "Detected NTSC 358\n");
++			std = V4L2_STD_NTSC;
++			break;
++
++		case DVDEC_CROMASR1_FSCMODE_443:
++			/* NTSC-4.43 */
++			std = V4L2_STD_NTSC_443;
++			switch	(vsyncsr & DVDEC_VSYNCSR_FVMODE_MASK) {
++			case DVDEC_VSYNCSR_FVMODE_50:
++				dev_info(&pdev->dev, "Detected PAL443 50Hz\n");
++				break;
++
++			case DVDEC_VSYNCSR_FVMODE_60:
++				dev_info(&pdev->dev, "Detected PAL443 60Hz\n");
++				break;
++			}
++			break;
++		}
++		break;
++
++	case DVDEC_CROMASR1_COLORSYS_PAL:
++		switch (cromasr1 & DVDEC_CROMASR1_FSCMODE_MASK) {
++		case DVDEC_CROMASR1_FSCMODE_358:
++			switch	(vsyncsr & DVDEC_VSYNCSR_FVMODE_MASK) {
++			case DVDEC_VSYNCSR_FVMODE_50:
++				/* PAL-N */
++				dev_info(&pdev->dev, "Detected PALN\n");
++				std = V4L2_STD_PAL_N;
++				break;
++
++			case DVDEC_VSYNCSR_FVMODE_60:
++				/* PAL-M */
++				dev_info(&pdev->dev, "Detected PALM\n");
++				std = V4L2_STD_PAL_M;
++				break;
++			}
++			break;
++
++		case DVDEC_CROMASR1_FSCMODE_443:
++			switch (vsyncsr & DVDEC_VSYNCSR_FVMODE_MASK) {
++			case DVDEC_VSYNCSR_FVMODE_50:
++				/* PAL-4.43 */
++				dev_info(&pdev->dev, "Detected PAL443\n");
++				std = V4L2_STD_PAL;
++				break;
++
++			case DVDEC_VSYNCSR_FVMODE_60:
++				/* PAL-60 */
++				dev_info(&pdev->dev, "Detected PAL60\n");
++				std = V4L2_STD_PAL_60;
++				break;
++			}
++		}
++	}
++
++	return std;
++}
++
++/*
++ * v4l2_std_to_rcar_dvdec() - Decide control value
++ * @v4l2_std_id: V4l2 video standard id
++ *
++ * Convert V4l2 video standard id to the control value of
++ * the digital video decoder.
++ */
++static u16 v4l2_std_to_rcar_dvdec(v4l2_std_id std)
++{
++	if (std == V4L2_STD_NTSC)
++		return DVDEC_BTLCR_DETECT_NTSC_M;
++	if (std == V4L2_STD_NTSC_443)
++		return DVDEC_BTLCR_DETECT_NTSC_443;
++	if (std == V4L2_STD_PAL)
++		return DVDEC_BTLCR_DETECT_PAL_443;
++	if (std == V4L2_STD_PAL_M)
++		return DVDEC_BTLCR_DETECT_PAL_M;
++	if (std == V4L2_STD_PAL_N)
++		return DVDEC_BTLCR_DETECT_PAL_N;
++	if (std & V4L2_STD_PAL_60)
++		return DVDEC_BTLCR_DETECT_PAL_60;
++
++	return DVDEC_BTLCR_DETECT_AUTO;
++}
++
++/*
++ * v4l2_std_to_rcar_dvdec_id() - Decide control value
++ * @v4l2_std_id: V4l2 video standard id
++ *
++ * Convert V4l2 video standard id to private id
++ */
++static u32 v4l2_std_to_rcar_dvdec_id(
++	struct rcar_dvdec_state *state, v4l2_std_id std)
++{
++	if (std == V4L2_STD_NTSC)
++		return DVDEC_NTSC358;
++	if (std == V4L2_STD_NTSC_443) {
++		if (state->vsyncsr == DVDEC_VSYNCSR_FVMODE_50)
++			return DVDEC_NTSC443;
++		else
++			return DVDEC_NTSC60;
++	}
++	if (std == V4L2_STD_PAL)
++		return DVDEC_PAL443;
++	if (std == V4L2_STD_PAL_M)
++		return DVDEC_PALM;
++	if (std == V4L2_STD_PAL_N)
++		return DVDEC_PALN;
++	if (std & V4L2_STD_PAL_60)
++		return DVDEC_PAL60;
++
++	return DVDEC_NTSC358;
++}
++
++/*
++ * __rcar_dvdec_status() - get digital video decoder status
++ * @sd: ptr to v4l2_subdev struct
++ * @status: input status
++ * @std: V4l2 video standard
++ *
++ * Get status and/or V4l2 video standard
++ */
++static int __rcar_dvdec_status(
++	struct v4l2_subdev *sd, u32 *status, v4l2_std_id *std)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	u16 val, cromasr1, vsyncsr;
++
++	/* Set auto detection mode */
++	val = ioread16(state->base + DVDEC_VCDWCR1_REG);
++	val &= ~DVDEC_VCDWCR1_AMASK;
++	val |= DVDEC_VCDWCR1_AUTO;
++	iowrite16(val, state->base + DVDEC_VCDWCR1_REG);
++
++	cromasr1 = ioread16(state->base + DVDEC_CROMASR1_REG);
++	vsyncsr  = ioread16(state->base + DVDEC_VSYNCSR_REG);
++	if (status) {
++		if (vsyncsr & DVDEC_VSYNCSR_NOSIGNAL)
++			*status = V4L2_IN_ST_NO_SIGNAL;
++		else
++			*status = 0;
++	}
++	if (std) {
++		*std = rcar_dvdec_to_v4l2_std(sd, cromasr1, vsyncsr);
++		state->in_cfmt = v4l2_std_to_rcar_dvdec_id(state, *std);
++		rcar_dvdec_initcolor(sd, state->in_cfmt);
++	}
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_querystd() - V4L2 decoder i/f handler for querystd
++ * @sd: ptr to v4l2_subdev struct
++ * @std: standard input video id
++ *
++ * Obtains the video standard input id
++ */
++static int rcar_dvdec_querystd(struct v4l2_subdev *sd, v4l2_std_id *std)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	int err = mutex_lock_interruptible(&state->mutex);
++
++	if (err)
++		return err;
++
++	/* when we are interrupt driven we know the state */
++	if (!state->autodetect)
++		*std = state->curr_norm;
++	else
++		err = __rcar_dvdec_status(sd, NULL, std);
++
++	mutex_unlock(&state->mutex);
++	return err;
++}
++
++/*
++ * rcar_dvdec_g_input_status() - V4L2 decoder i/f handler for g_input_status
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @status: input status
++ *
++ * Get input status
++ */
++static int rcar_dvdec_g_input_status(struct v4l2_subdev *sd, u32 *status)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	int ret = mutex_lock_interruptible(&state->mutex);
++
++	if (ret)
++		return ret;
++
++	ret = __rcar_dvdec_status(sd, status, NULL);
++	mutex_unlock(&state->mutex);
++	return ret;
++}
++
++/*
++ * rcar_dvdec_s_std() - V4L2 decoder i/f handler for s_std
++ * @sd: ptr to v4l2_subdev struct
++ * @std: standard input video id
++ *
++ * Select the video standard for the current input
++ */
++static int rcar_dvdec_s_std(struct v4l2_subdev *sd, v4l2_std_id std)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	int ret = mutex_lock_interruptible(&state->mutex);
++	u16 val, dvdec_color;
++
++	if (ret)
++		return ret;
++
++	/* all standards -> autodetect */
++	if (std == V4L2_STD_ALL) {
++		val = ioread16(state->base + DVDEC_BTLCR_REG);
++		val &= ~DVDEC_BTLCR_DETECT_MASK;
++		val |= DVDEC_BTLCR_DETECT_AUTO;
++		iowrite16(val, state->base + DVDEC_BTLCR_REG);
++
++		__rcar_dvdec_status(sd, NULL, &state->curr_norm);
++		state->autodetect = true;
++	} else {
++		dvdec_color = v4l2_std_to_rcar_dvdec(std);
++
++		val = ioread16(state->base + DVDEC_BTLCR_REG);
++		val &= ~DVDEC_BTLCR_DETECT_MASK;
++		val |= dvdec_color;
++		iowrite16(val, state->base + DVDEC_BTLCR_REG);
++
++		state->curr_norm = std;
++		state->autodetect = false;
++	}
++	mutex_unlock(&state->mutex);
++	return ret;
++}
++
++/*
++ * rcar_dvdec_s_stream() - V4L2 decoder i/f handler for s_stream
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @enable: streaming enable or disable
++ *
++ * Sets streaming to enable or disable, if possible.
++ * Currently no implementation.
++ */
++static int rcar_dvdec_s_stream(struct v4l2_subdev *sd, int enable)
++{
++	struct platform_device *pdev = v4l2_get_subdevdata(sd);
++	struct rcar_dvdec_state *state = to_state(sd);
++
++	dev_dbg(&pdev->dev, "format %d\n", state->cfmt->code);
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_g_crop() - V4L2 decoder i/f handler for g_crop
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @a: pointer to standard V4L2 cropcap structure
++ *
++ * Gets current cropping rectangle.
++ */
++static int rcar_dvdec_g_crop(struct v4l2_subdev *sd, struct v4l2_crop *a)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++
++	a->c.left = rcar_dvdec_rect[state->in_cfmt].left;
++	a->c.top = rcar_dvdec_rect[state->in_cfmt].top;
++	/* set current window size */
++	a->c.width = rcar_dvdec_rect[state->in_cfmt].width;
++	a->c.height = rcar_dvdec_rect[state->in_cfmt].height;
++	a->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_cropcap() - V4L2 decoder i/f handler for cropcap
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @a: pointer to standard V4L2 cropcap structure
++ *
++ * Gets cropping limits, default cropping rectangle and pixel aspect.
++ */
++static int rcar_dvdec_cropcap(struct v4l2_subdev *sd, struct v4l2_cropcap *a)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++
++	a->bounds.left = rcar_dvdec_rect[state->in_cfmt].left;
++	a->bounds.top = rcar_dvdec_rect[state->in_cfmt].top;
++	/* set maximum window size */
++	a->bounds.width = rcar_dvdec_rect[state->in_cfmt].width;
++	a->bounds.height = rcar_dvdec_rect[state->in_cfmt].height;
++	a->defrect = a->bounds;
++	a->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++	a->pixelaspect.numerator = 1;
++	a->pixelaspect.denominator = 1;
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_s_ctrl() - V4L2 decoder i/f handler for s_ctrl
++ * @ctrl: pointer to standard V4L2 control structure
++ *
++ * Set a control in rcar_dvdec decoder device.
++ */
++static int rcar_dvdec_s_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct v4l2_subdev *sd = to_rcar_dvdec_sd(ctrl);
++	struct rcar_dvdec_state *state = to_state(sd);
++	int ret = mutex_lock_interruptible(&state->mutex);
++	int val;
++
++	if (ret)
++		return ret;
++
++	val = ctrl->val;
++	switch (ctrl->id) {
++	case V4L2_CID_CONTRAST:
++		if ((ctrl->val < DVDEC_YGAINCR_MIN) ||
++					(ctrl->val > DVDEC_YGAINCR_MAX))
++			ret = -ERANGE;
++		else
++			iowrite16(val, state->base + DVDEC_YGAINCR_REG);
++		break;
++	case V4L2_CID_BLUE_BALANCE:
++		if ((ctrl->val < DVDEC_CBGAINCR_MIN) ||
++					(ctrl->val > DVDEC_CBGAINCR_MAX))
++			ret = -ERANGE;
++		else
++			iowrite16(val, state->base + DVDEC_CBGAINCR_REG);
++		break;
++	case V4L2_CID_RED_BALANCE:
++		if ((ctrl->val < DVDEC_CRGAINCR_MIN) ||
++					(ctrl->val > DVDEC_CRGAINCR_MAX))
++			ret = -ERANGE;
++		else
++			iowrite16(val, state->base + DVDEC_CRGAINCR_REG);
++		break;
++	case V4L2_CID_USER_R8A7747X_INPUT:
++		rcar_dvdec_s_input(sd, ctrl->val);
++		break;
++	default:
++		ret = -EINVAL;
++	}
++
++	mutex_unlock(&state->mutex);
++	return ret;
++}
++
++/*
++ * rcar_dvdec_initcolor() - Init for each color format
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @sd: dvdec color format id
++ *
++ * Init recommendation setting of registers for each color format
++ */
++static void rcar_dvdec_initcolor(struct v4l2_subdev *sd, u32 dvdec_fmt)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	struct platform_device *pdev = v4l2_get_subdevdata(sd);
++
++	dev_dbg(&pdev->dev, "Color format %d\n", dvdec_fmt);
++
++	/* V Update Enable for TGCR1 to TGCR3 */
++	iowrite16(0x8000, state->base + DVDEC_RUPDCR_REG);
++
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].TGCR1,
++		state->base + DVDEC_TGCR1_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].TGCR2,
++		state->base + DVDEC_TGCR2_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].TGCR3,
++		state->base + DVDEC_TGCR3_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].HAFCCR1,
++		state->base + DVDEC_HAFCCR1_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].HAFCCR2,
++		state->base + DVDEC_HAFCCR2_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].HAFCCR3,
++		state->base + DVDEC_HAFCCR3_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].VCDWCR1,
++		state->base + DVDEC_VCDWCR1_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].ACCCR1,
++		state->base + DVDEC_ACCCR1_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].AGCCR1,
++		state->base + DVDEC_AGCCR1_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].YCSCR3,
++		state->base + DVDEC_YCSCR3_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].YCSCR4,
++		state->base + DVDEC_YCSCR4_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].YCSCR5,
++		state->base + DVDEC_YCSCR5_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].YCSCR6,
++		state->base + DVDEC_YCSCR6_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].YCSCR7,
++		state->base + DVDEC_YCSCR7_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].YCSCR9,
++		state->base + DVDEC_YCSCR9_REG);
++	iowrite16(rcar_dvdec_reg_color[dvdec_fmt].YCSCR12,
++		state->base + DVDEC_YCSCR12_REG);
++
++	return;
++}
++
++/*
++ * rcar_dvdec_init2dYcNTSC() - Init coefficient for NTSC
++ * @sd: pointer to standard V4L2 sub-device structure
++ *
++ * Init Chroma filter TAP coefficients for NTSC
++ */
++static void rcar_dvdec_init2dYcNTSC(struct v4l2_subdev *sd)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	u16 val, mode, narrow;
++
++	val = ioread16(state->base + DVDEC_YCSCR12_REG);
++	mode   = val & DVDEC_YCSCR12_MODE_MASK;
++	narrow = val & DVDEC_YCSCR12_NARROW_MASK;
++
++	if (mode == DVDEC_YCSCR12_MODE_BYPASS)
++		return;
++
++	if (mode == DVDEC_YCSCR12_MODE_CASCADE) {
++		/* NTCS : Cascade Filter 1stage or 2stages */
++		iowrite16(24, state->base + DVDEC_YCTWA_F0_REG);
++		iowrite16(44, state->base + DVDEC_YCTWA_F1_REG);
++		iowrite16(20, state->base + DVDEC_YCTWA_F2_REG);
++		iowrite16(DVDEC_YCTMINUS|52, state->base + DVDEC_YCTWA_F3_REG);
++		iowrite16(DVDEC_YCTMINUS|128, state->base + DVDEC_YCTWA_F4_REG);
++		iowrite16(DVDEC_YCTMINUS|128, state->base + DVDEC_YCTWA_F5_REG);
++		iowrite16(DVDEC_YCTMINUS|12, state->base + DVDEC_YCTWA_F6_REG);
++		iowrite16(132, state->base + DVDEC_YCTWA_F7_REG);
++		iowrite16(200, state->base + DVDEC_YCTWA_F8_REG);
++
++		if (narrow == DVDEC_YCSCR12_NARROW_17TAP) {
++			/* NTCS : Cascade Filter 2stages */
++			iowrite16(24, state->base + DVDEC_YCTNA_F0_REG);
++			iowrite16(44, state->base + DVDEC_YCTNA_F1_REG);
++			iowrite16(20, state->base + DVDEC_YCTNA_F2_REG);
++			iowrite16(DVDEC_YCTMINUS|52,
++					state->base + DVDEC_YCTNA_F3_REG);
++			iowrite16(DVDEC_YCTMINUS|128,
++					state->base + DVDEC_YCTNA_F4_REG);
++			iowrite16(DVDEC_YCTMINUS|128,
++					state->base + DVDEC_YCTNA_F5_REG);
++			iowrite16(DVDEC_YCTMINUS|12,
++					state->base + DVDEC_YCTNA_F6_REG);
++			iowrite16(132, state->base + DVDEC_YCTNA_F7_REG);
++			iowrite16(200, state->base + DVDEC_YCTNA_F8_REG);
++		}
++	}
++
++	if (mode == DVDEC_YCSCR12_MODE_TAKEOFF) {
++		if (narrow == DVDEC_YCSCR12_NARROW_BYPASS) {
++			/* NTCS : TAKE-OFF Filter Broad-band */
++			iowrite16(0, state->base + DVDEC_YCTWA_F0_REG);
++			iowrite16(0, state->base + DVDEC_YCTWA_F1_REG);
++			iowrite16(0, state->base + DVDEC_YCTWA_F2_REG);
++			iowrite16(DVDEC_YCTMINUS|28,
++					state->base + DVDEC_YCTWA_F3_REG);
++			iowrite16(96, state->base + DVDEC_YCTWA_F4_REG);
++			iowrite16(228, state->base + DVDEC_YCTWA_F5_REG);
++			iowrite16(916, state->base + DVDEC_YCTWA_F6_REG);
++			iowrite16(204, state->base + DVDEC_YCTWA_F7_REG);
++			iowrite16(1648, state->base + DVDEC_YCTWA_F8_REG);
++		}
++
++		if (narrow == DVDEC_YCSCR12_NARROW_17TAP) {
++			/* NTCS : TAKE-OFF Filter Narrow-band */
++			iowrite16(0, state->base + DVDEC_YCTWA_F0_REG);
++			iowrite16(DVDEC_YCTMINUS|48,
++					state->base + DVDEC_YCTWA_F1_REG);
++			iowrite16(DVDEC_YCTMINUS|20,
++					state->base + DVDEC_YCTWA_F2_REG);
++			iowrite16(160, state->base + DVDEC_YCTWA_F3_REG);
++			iowrite16(232, state->base + DVDEC_YCTWA_F4_REG);
++			iowrite16(DVDEC_YCTMINUS|116,
++					state->base + DVDEC_YCTWA_F5_REG);
++			iowrite16(DVDEC_YCTMINUS|900,
++					state->base + DVDEC_YCTWA_F6_REG);
++			iowrite16(DVDEC_YCTMINUS|4,
++					state->base + DVDEC_YCTWA_F7_REG);
++			iowrite16(1392, state->base + DVDEC_YCTWA_F8_REG);
++		}
++	}
++}
++
++/*
++ * rcar_dvdec_init2dYcPAL() - Init coefficient for PAL
++ * @sd: pointer to standard V4L2 sub-device structure
++ *
++ * Init Chroma filter TAP coefficients for PAL
++ */
++static void rcar_dvdec_init2dYcPAL(struct v4l2_subdev *sd)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	u16 val, mode, narrow;
++
++	val = ioread16(state->base + DVDEC_YCSCR12_REG);
++	mode   = val & DVDEC_YCSCR12_MODE_MASK;
++	narrow = val & DVDEC_YCSCR12_NARROW_MASK;
++
++	if (mode == DVDEC_YCSCR12_MODE_BYPASS)
++		return;
++
++	if (mode == DVDEC_YCSCR12_MODE_CASCADE) {
++		/* NTCS : Cascade Filter 1stage or 2stages */
++		iowrite16(DVDEC_YCTMINUS|20, state->base + DVDEC_YCTWA_F0_REG);
++		iowrite16(24, state->base + DVDEC_YCTWA_F1_REG);
++		iowrite16(64, state->base + DVDEC_YCTWA_F2_REG);
++		iowrite16(40, state->base + DVDEC_YCTWA_F3_REG);
++		iowrite16(DVDEC_YCTMINUS|76, state->base + DVDEC_YCTWA_F4_REG);
++		iowrite16(DVDEC_YCTMINUS|164, state->base + DVDEC_YCTWA_F5_REG);
++		iowrite16(DVDEC_YCTMINUS|84, state->base + DVDEC_YCTWA_F6_REG);
++		iowrite16(108, state->base + DVDEC_YCTWA_F7_REG);
++		iowrite16(216, state->base + DVDEC_YCTWA_F8_REG);
++
++		if (narrow == DVDEC_YCSCR12_NARROW_17TAP) {
++			/* NTCS : Cascade Filter 2stages */
++			iowrite16(DVDEC_YCTMINUS|20,
++					state->base + DVDEC_YCTNA_F0_REG);
++			iowrite16(24, state->base + DVDEC_YCTNA_F1_REG);
++			iowrite16(64, state->base + DVDEC_YCTNA_F2_REG);
++			iowrite16(40, state->base + DVDEC_YCTNA_F3_REG);
++			iowrite16(DVDEC_YCTMINUS|76,
++					state->base + DVDEC_YCTNA_F4_REG);
++			iowrite16(DVDEC_YCTMINUS|164,
++					state->base + DVDEC_YCTNA_F5_REG);
++			iowrite16(DVDEC_YCTMINUS|84,
++					state->base + DVDEC_YCTNA_F6_REG);
++			iowrite16(108, state->base + DVDEC_YCTNA_F7_REG);
++			iowrite16(216, state->base + DVDEC_YCTNA_F8_REG);
++		}
++	}
++
++	if (mode == DVDEC_YCSCR12_MODE_TAKEOFF) {
++		if (narrow == DVDEC_YCSCR12_NARROW_BYPASS) {
++			/* NTCS : TAKE-OFF Filter Broad-band */
++			iowrite16(0, state->base + DVDEC_YCTWA_F0_REG);
++			iowrite16(0, state->base + DVDEC_YCTWA_F1_REG);
++			iowrite16(0, state->base + DVDEC_YCTWA_F2_REG);
++			iowrite16(16, state->base + DVDEC_YCTWA_F3_REG);
++			iowrite16(59, state->base + DVDEC_YCTWA_F4_REG);
++			iowrite16(85, state->base + DVDEC_YCTWA_F5_REG);
++			iowrite16(DVDEC_YCTMINUS|498,
++					state->base + DVDEC_YCTWA_F6_REG);
++			iowrite16(DVDEC_YCTMINUS|101,
++					state->base + DVDEC_YCTWA_F7_REG);
++			iowrite16(878, state->base + DVDEC_YCTWA_F8_REG);
++		}
++
++		if (narrow == DVDEC_YCSCR12_NARROW_17TAP) {
++			/* NTCS : TAKE-OFF Filter Narrow-band */
++			iowrite16(0, state->base + DVDEC_YCTWA_F0_REG);
++			iowrite16(0, state->base + DVDEC_YCTWA_F1_REG);
++			iowrite16(DVDEC_YCTMINUS|23,
++					state->base + DVDEC_YCTWA_F2_REG);
++			iowrite16(DVDEC_YCTMINUS|46,
++					state->base + DVDEC_YCTWA_F3_REG);
++			iowrite16(145, state->base + DVDEC_YCTWA_F4_REG);
++			iowrite16(409, state->base + DVDEC_YCTWA_F5_REG);
++			iowrite16(DVDEC_YCTMINUS|918,
++					state->base + DVDEC_YCTWA_F6_REG);
++			iowrite16(DVDEC_YCTMINUS|363,
++					state->base + DVDEC_YCTWA_F7_REG);
++			iowrite16(1592, state->base + DVDEC_YCTWA_F8_REG);
++		}
++	}
++}
++
++/*
++ * rcar_dvdec_set_params() - Set parameters
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @width: pointer to width of input video
++ * @height: pointer to height of input video
++ * @code: V4l2 format code
++ *
++ * Set parameters of digital video decoder
++ */
++static int rcar_dvdec_set_params(struct v4l2_subdev *sd,
++			u32 *width, u32 *height, enum v4l2_mbus_pixelcode code)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	struct platform_device *pdev = v4l2_get_subdevdata(sd);
++	int i;
++	u16 cromasr2;
++
++	/*
++	 * select format
++	 */
++	for (i = 0; i < ARRAY_SIZE(rcar_dvdec_cfmts); i++) {
++		if (code == rcar_dvdec_cfmts[i].code) {
++			state->cfmt = rcar_dvdec_cfmts + i;
++			break;
++		}
++	}
++	if (i >= ARRAY_SIZE(rcar_dvdec_cfmts))
++		return -EINVAL;			/* no match format */
++
++	cromasr2 = ioread16(state->base + DVDEC_CROMASR2_REG);
++	if (cromasr2 & DVDEC_CROMASR2_ISNTSC) {
++		dev_info(&pdev->dev, "Detected the NTSC video input signal\n");
++		rcar_dvdec_init2dYcNTSC(sd);
++	} else if (cromasr2 & DVDEC_CROMASR2_ISPAL) {
++		dev_info(&pdev->dev, "Detected the PAL video input signal\n");
++		rcar_dvdec_init2dYcPAL(sd);
++	} else if (cromasr2 & DVDEC_CROMASR2_ISSECAM) {
++		/* SECAM is not supported */
++		dev_info(&pdev->dev, "Detected the SECAM video input signal\n");
++	} else {
++		dev_info(&pdev->dev, "Not detect any video input signal\n");
++	}
++
++	/*
++	 * set window size
++	 */
++	*width  = rcar_dvdec_rect[state->in_cfmt].width;
++	*height = rcar_dvdec_rect[state->in_cfmt].height;
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_enum_fmt() - V4L2 decoder i/f handler for enum_mbus_fmt
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @index: format index
++ * @code: pointer to mediabus format
++ *
++ * Enumerate supported mediabus formats.
++ */
++static int rcar_dvdec_enum_fmt(struct v4l2_subdev *sd, unsigned int index,
++			   enum v4l2_mbus_pixelcode *code)
++{
++	if (index >= ARRAY_SIZE(rcar_dvdec_cfmts))
++		return -EINVAL;
++
++	*code = rcar_dvdec_cfmts[index].code;
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_g_fmt() - V4L2 decoder i/f handler for g_mbus_fmt
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @mf: pointer to mediabus format structure
++ *
++ * Negotiate the image capture size and mediabus format.
++ * Get the data format.
++ */
++static int rcar_dvdec_g_fmt(struct v4l2_subdev *sd,
++			struct v4l2_mbus_framefmt *mf)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++
++	if (!state->cfmt)
++		state->cfmt = rcar_dvdec_cfmts;
++
++	mf->width	= rcar_dvdec_rect[state->in_cfmt].width;
++	mf->height	= rcar_dvdec_rect[state->in_cfmt].height;
++	mf->code	= state->cfmt->code;
++	mf->colorspace	= state->cfmt->colorspace;
++	mf->field	= V4L2_FIELD_NONE;
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_try_fmt() - V4L2 decoder i/f handler for try_mbus_fmt
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @mf: pointer to mediabus format structure
++ *
++ * Negotiate the image capture size and mediabus format.
++ * Try a format.
++ */
++static int rcar_dvdec_try_fmt(struct v4l2_subdev *sd,
++			  struct v4l2_mbus_framefmt *mf)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	int i;
++
++	mf->width = rcar_dvdec_rect[state->in_cfmt].width;
++	mf->height = rcar_dvdec_rect[state->in_cfmt].height;
++	if (mf->field == V4L2_FIELD_NONE)	/* support only interlaced */
++		mf->field = V4L2_FIELD_INTERLACED;
++
++	for (i = 0; i < ARRAY_SIZE(rcar_dvdec_cfmts); i++)
++		if (mf->code == rcar_dvdec_cfmts[i].code)
++			break;
++
++	if (i == ARRAY_SIZE(rcar_dvdec_cfmts)) {
++		/* Unsupported format requested. Propose either */
++		if (state->cfmt) {
++			/* the current one or */
++			mf->colorspace = state->cfmt->colorspace;
++			mf->code = state->cfmt->code;
++		} else {
++			/* the default one */
++			mf->colorspace = rcar_dvdec_cfmts[0].colorspace;
++			mf->code = rcar_dvdec_cfmts[0].code;
++		}
++	} else {
++		/* Also return the colorspace */
++		mf->colorspace	= rcar_dvdec_cfmts[i].colorspace;
++	}
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_s_fmt() - V4L2 decoder i/f handler for s_mbus_fmt
++ * @sd: pointer to standard V4L2 sub-device structure
++ * @mf: pointer to mediabus format structure
++ *
++ * Negotiate the image capture size and mediabus format.
++ * Set the data format.
++ */
++static int rcar_dvdec_s_fmt(struct v4l2_subdev *sd,
++			struct v4l2_mbus_framefmt *mf)
++{
++	struct rcar_dvdec_state *state = to_state(sd);
++	int ret;
++
++	ret = rcar_dvdec_set_params(sd, &mf->width, &mf->height, mf->code);
++
++	if (!ret)
++		mf->colorspace = state->cfmt->colorspace;
++
++	return ret;
++}
++
++static int rcar_dvdec_g_mbus_config(struct v4l2_subdev *sd,
++					struct v4l2_mbus_config *cfg)
++{
++	cfg->flags = V4L2_MBUS_PCLK_SAMPLE_RISING |
++		V4L2_MBUS_VSYNC_ACTIVE_LOW | V4L2_MBUS_HSYNC_ACTIVE_LOW |
++		V4L2_MBUS_DATA_ACTIVE_HIGH | V4L2_MBUS_MASTER;
++	cfg->type = V4L2_MBUS_BT656;
++
++	return 0;
++}
++
++static struct platform_device_id rcar_dvdec_id_table[] = {
++	{ "r8a7794x-dvdec",  RCAR_E2X },
++	{ "r8a7747x-dvdec",  RZ_G1C },
++	{},
++};
++MODULE_DEVICE_TABLE(platform, rcar_dvdec_id_table);
++
++static const struct v4l2_subdev_video_ops rcar_dvdec_video_ops = {
++	.querystd	= rcar_dvdec_querystd,
++	.g_input_status = rcar_dvdec_g_input_status,
++	.s_stream	= rcar_dvdec_s_stream,
++	.cropcap	= rcar_dvdec_cropcap,
++	.g_crop		= rcar_dvdec_g_crop,
++	.enum_mbus_fmt	= rcar_dvdec_enum_fmt,
++	.g_mbus_fmt	= rcar_dvdec_g_fmt,
++	.try_mbus_fmt	= rcar_dvdec_try_fmt,
++	.s_mbus_fmt	= rcar_dvdec_s_fmt,
++	.g_mbus_config	= rcar_dvdec_g_mbus_config,
++};
++
++static const struct v4l2_subdev_core_ops rcar_dvdec_core_ops = {
++	.s_std = rcar_dvdec_s_std,
++	.queryctrl = v4l2_subdev_queryctrl,
++	.g_ctrl = v4l2_subdev_g_ctrl,
++	.s_ctrl = v4l2_subdev_s_ctrl,
++};
++
++static const struct v4l2_subdev_ops rcar_dvdec_ops = {
++	.core = &rcar_dvdec_core_ops,
++	.video = &rcar_dvdec_video_ops,
++};
++
++static const struct v4l2_ctrl_ops rcar_dvdec_ctrl_ops = {
++	.s_ctrl = rcar_dvdec_s_ctrl,
++};
++
++static const struct v4l2_ctrl_config rcar_dvdec_ctrls[] = {
++	{
++		.ops	= &rcar_dvdec_ctrl_ops,
++		.id		= V4L2_CID_USER_R8A7747X_INPUT,
++		.type	= V4L2_CTRL_TYPE_INTEGER,
++		.name	= "Set Input Id",
++		.min	= 0,
++		.max	= 1,
++		.step	= 1,
++	/* IWG23S: VIN: set '0' -> VIN1A and set '1' -> VIN2A */
++		.def	= 0,
++		.flags	= 0,
++	}
++};
++
++/*
++ * rcar_dvdec_init_controls() - Init controls
++ * @state: pointer to private state structure
++ *
++ * Init rcar_dvdec supported control handler.
++ */
++static int rcar_dvdec_init_controls(struct rcar_dvdec_state *state)
++{
++	int i;
++
++	v4l2_ctrl_handler_init(&state->ctrl_hdl,
++				ARRAY_SIZE(rcar_dvdec_ctrls) + 3);
++
++	v4l2_ctrl_new_std(&state->ctrl_hdl, &rcar_dvdec_ctrl_ops,
++			  V4L2_CID_CONTRAST, DVDEC_YGAINCR_MIN,
++			  DVDEC_YGAINCR_MAX, 1, DVDEC_YGAINCR_DEF);
++	v4l2_ctrl_new_std(&state->ctrl_hdl, &rcar_dvdec_ctrl_ops,
++			  V4L2_CID_BLUE_BALANCE, DVDEC_CBGAINCR_MIN,
++			  DVDEC_CBGAINCR_MAX, 1, DVDEC_CBGAINCR_DEF);
++	v4l2_ctrl_new_std(&state->ctrl_hdl, &rcar_dvdec_ctrl_ops,
++			  V4L2_CID_RED_BALANCE, DVDEC_CRGAINCR_MIN,
++			  DVDEC_CRGAINCR_MAX, 1, DVDEC_CRGAINCR_DEF);
++	for (i = 0; i < ARRAY_SIZE(rcar_dvdec_ctrls); ++i)
++		v4l2_ctrl_new_custom(&state->ctrl_hdl,
++					&rcar_dvdec_ctrls[i], NULL);
++
++	state->sd.ctrl_handler = &state->ctrl_hdl;
++	if (state->ctrl_hdl.error) {
++		int err = state->ctrl_hdl.error;
++
++		v4l2_ctrl_handler_free(&state->ctrl_hdl);
++		return err;
++	}
++	v4l2_ctrl_handler_setup(&state->ctrl_hdl);
++
++	return 0;
++}
++
++/*
++ * rcar_dvdec_exit_controls() - Cleanup controls
++ * @state: pointer to private state structure
++ *
++ * Free rcar_dvdec supported control handler.
++ */
++static void rcar_dvdec_exit_controls(struct rcar_dvdec_state *state)
++{
++	v4l2_ctrl_handler_free(&state->ctrl_hdl);
++}
++
++/*
++ * init_device - Init a digital video decoder
++ * @sd: pointer to v4l2_subdev structure
++ * @state: pointer to private state structure
++ *
++ * Initialize the digital video decoder
++ */
++static int init_device(struct v4l2_subdev *sd, struct rcar_dvdec_state *state)
++{
++	int ret;
++	u16 val;
++
++	iowrite16(DVDEC_ADCCR1_INIT, state->base + DVDEC_ADCCR1_REG);
++
++	iowrite16(DVDEC_SYNSCR1_INIT, state->base + DVDEC_SYNSCR1_REG);
++	iowrite16(DVDEC_SYNSCR2_INIT, state->base + DVDEC_SYNSCR2_REG);
++	iowrite16(DVDEC_SYNSCR3_INIT, state->base + DVDEC_SYNSCR3_REG);
++	iowrite16(DVDEC_SYNSCR4_INIT, state->base + DVDEC_SYNSCR4_REG);
++	iowrite16(DVDEC_SYNSCR5_INIT, state->base + DVDEC_SYNSCR5_REG);
++
++	iowrite16(DVDEC_HAFCCR1_INIT, state->base + DVDEC_HAFCCR1_REG);
++	iowrite16(DVDEC_HAFCCR2_INIT, state->base + DVDEC_HAFCCR2_REG);
++	iowrite16(DVDEC_HAFCCR3_INIT, state->base + DVDEC_HAFCCR3_REG);
++
++	val = ioread16(state->base + DVDEC_VCDWCR1_REG);
++	val &= ~DVDEC_VCDWCR1_IMASK;
++	val |= DVDEC_VCDWCR1_INIT;
++	iowrite16(val, state->base + DVDEC_VCDWCR1_REG);
++
++	iowrite16(DVDEC_DCPCR1_INIT, state->base + DVDEC_DCPCR1_REG);
++	iowrite16(DVDEC_DCPCR2_INIT, state->base + DVDEC_DCPCR2_REG);
++	iowrite16(DVDEC_DCPCR3_INIT, state->base + DVDEC_DCPCR3_REG);
++	iowrite16(DVDEC_DCPCR4_INIT, state->base + DVDEC_DCPCR4_REG);
++	iowrite16(DVDEC_DCPCR5_INIT, state->base + DVDEC_DCPCR5_REG);
++	iowrite16(DVDEC_DCPCR6_INIT, state->base + DVDEC_DCPCR6_REG);
++	iowrite16(DVDEC_DCPCR7_INIT, state->base + DVDEC_DCPCR7_REG);
++	iowrite16(DVDEC_DCPCR8_INIT, state->base + DVDEC_DCPCR8_REG);
++
++	iowrite16(DVDEC_NSDCR_INIT, state->base + DVDEC_NSDCR_REG);
++
++	/* Enable autodetection */
++	if (state->autodetect) {
++		iowrite16(DVDEC_BTLCR_INIT | DVDEC_BTLCR_DETECT_AUTO,
++					state->base + DVDEC_BTLCR_REG);
++	} else {
++		ret = v4l2_std_to_rcar_dvdec(state->curr_norm);
++		iowrite16(DVDEC_BTLCR_INIT | (u16)ret,
++				state->base + DVDEC_BTLCR_REG);
++	}
++
++	iowrite16(DVDEC_BTGPCR_INIT, state->base + DVDEC_BTGPCR_REG);
++
++	iowrite16(DVDEC_ACCCR1_INIT, state->base + DVDEC_ACCCR1_REG);
++	iowrite16(DVDEC_ACCCR2_INIT, state->base + DVDEC_ACCCR2_REG);
++	iowrite16(DVDEC_ACCCR3_INIT, state->base + DVDEC_ACCCR3_REG);
++
++	iowrite16(DVDEC_TINTCR_INIT, state->base + DVDEC_TINTCR_REG);
++	iowrite16(DVDEC_YCDCR_INIT, state->base + DVDEC_YCDCR_REG);
++
++	iowrite16(DVDEC_AGCCR1_INIT, state->base + DVDEC_AGCCR1_REG);
++
++	val = ioread16(state->base + DVDEC_AGCCR2_REG);
++	val &= ~DVDEC_AGCCR2_IMASK;
++	val |= DVDEC_AGCCR2_INIT;
++	iowrite16(val, state->base + DVDEC_AGCCR2_REG);
++
++	iowrite16(DVDEC_PKLIMITCR_INIT, state->base + DVDEC_PKLIMITCR_REG);
++
++	iowrite16(DVDEC_RGORCR1_INIT, state->base + DVDEC_RGORCR1_REG);
++	iowrite16(DVDEC_RGORCR2_INIT, state->base + DVDEC_RGORCR2_REG);
++	iowrite16(DVDEC_RGORCR3_INIT, state->base + DVDEC_RGORCR3_REG);
++	iowrite16(DVDEC_RGORCR4_INIT, state->base + DVDEC_RGORCR4_REG);
++	iowrite16(DVDEC_RGORCR5_INIT, state->base + DVDEC_RGORCR5_REG);
++	iowrite16(DVDEC_RGORCR6_INIT, state->base + DVDEC_RGORCR6_REG);
++	iowrite16(DVDEC_RGORCR7_INIT, state->base + DVDEC_RGORCR7_REG);
++
++	iowrite16(DVDEC_AFCPFCR_INIT, state->base + DVDEC_AFCPFCR_REG);
++	iowrite16(DVDEC_RUPDCR_INIT, state->base + DVDEC_RUPDCR_REG);
++	iowrite16(DVDEC_YCSCR8_INIT, state->base + DVDEC_YCSCR8_REG);
++	iowrite16(DVDEC_YCSCR11_INIT, state->base + DVDEC_YCSCR11_REG);
++	iowrite16(DVDEC_DCPCR9_INIT, state->base + DVDEC_DCPCR9_REG);
++
++	iowrite16(DVDEC_YGAINCR_INIT, state->base + DVDEC_YGAINCR_REG);
++	iowrite16(DVDEC_CBGAINCR_INIT, state->base + DVDEC_CBGAINCR_REG);
++	iowrite16(DVDEC_CRGAINCR_INIT, state->base + DVDEC_CRGAINCR_REG);
++
++	iowrite16(DVDEC_PGA_UPDATE_INIT, state->base + DVDEC_PGA_UPDATE_REG);
++	iowrite16(DVDEC_PGACR_INIT, state->base + DVDEC_PGACR_REG);
++#ifndef CONFIG_MACH_IWG23S
++	/* IWG23S: VIN: VIN1A/VIN2A will be selected from v4l2_ctrl_config */
++	iowrite16(DVDEC_ADCCR2_INIT, state->base + DVDEC_ADCCR2_REG);
++#endif
++
++	/* read current norm */
++	__rcar_dvdec_status(sd, NULL, &state->curr_norm);
++
++	/* Select VIN0 as output direction */
++	ret = rcar_dvdec_s_output(sd, 0);
++
++	return ret;
++}
++
++/*
++ * rcar_dvdec_probe - Probe a digital video decoder
++ * @pdev: pointer to platform device
++ *
++ * Initialize the digital video decoder
++ */
++static int rcar_dvdec_probe(struct platform_device *pdev)
++{
++	struct rcar_dvdec_state *state;
++	struct v4l2_subdev *sd;
++	struct resource *res;
++	struct soc_camera_platform_info *p = pdev->dev.platform_data;
++	struct soc_camera_device *icd;
++	struct soc_camera_host *ici;
++	int ret;
++
++	dev_info(&pdev->dev, "Probing rcar-dvdec\n");
++	if (!p)
++		return -EINVAL;
++	if (!p->icd) {
++		dev_err(&pdev->dev,
++			"Platform has not set soc_camera_device pointer!\n");
++		return -EINVAL;
++	}
++
++	state = kzalloc(sizeof(struct rcar_dvdec_state), GFP_KERNEL);
++	if (state == NULL) {
++		dev_err(&pdev->dev, "Failed to alloc memory\n");
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	icd = p->icd;
++	icd->control = &pdev->dev;
++	ici = to_soc_camera_host(icd->parent);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (res == NULL) {
++		dev_err(&pdev->dev, "Failed to get platform resource\n");
++		ret = -EINVAL;
++		goto err_free_state;
++	}
++
++	state->base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(state->base)) {
++		dev_err(&pdev->dev, "Failed to remap resource\n");
++		ret = PTR_ERR(state->base);
++		goto err_free_state;
++	}
++
++	pm_suspend_ignore_children(&pdev->dev, true);
++	pm_runtime_enable(&pdev->dev);
++	pm_runtime_get_sync(&pdev->dev);
++
++	mutex_init(&state->mutex);
++	state->autodetect = true;
++	state->input = 0;
++	state->output = 0;
++	state->in_cfmt = DVDEC_NTSC358;
++	state->cfmt = &rcar_dvdec_cfmts[0];
++	sd = &state->sd;
++
++	v4l2_subdev_init(sd, &rcar_dvdec_ops);
++	v4l2_set_subdevdata(sd, pdev);
++	strncpy(sd->name, dev_name(&pdev->dev), V4L2_SUBDEV_NAME_SIZE);
++
++	ret = v4l2_device_register_subdev(&ici->v4l2_dev, sd);
++	if (ret) {
++		dev_err(&pdev->dev, "Failed to register subdev\n");
++		goto err_free_state;
++	}
++
++	ret = rcar_dvdec_init_controls(state);
++	if (ret) {
++		dev_err(&pdev->dev, "Failed to init controls\n");
++		goto err_unreg_subdev;
++	}
++
++	/* clock supply to the A/D converter */
++	iowrite16(DVDEC_PSAV_ON, state->base + DVDEC_ADCCR3_REG);
++
++	ret = init_device(sd, state);
++	if (ret) {
++		dev_err(&pdev->dev, "Failed to init device\n");
++		goto err_free_ctrl;
++	}
++
++	platform_set_drvdata(pdev, sd);
++	return 0;
++
++err_free_ctrl:
++	rcar_dvdec_exit_controls(state);
++err_unreg_subdev:
++	pm_runtime_put(&pdev->dev);
++	mutex_destroy(&state->mutex);
++	v4l2_device_unregister_subdev(sd);
++err_free_state:
++	kfree(state);
++err:
++	dev_err(&pdev->dev, "Failed to probe: %d\n", ret);
++	return ret;
++}
++
++/*
++ * adv7180_remove - Remove digital video decoder support
++ * @pdev: pointer to platform device
++ *
++ * Reset the digital video decoder
++ */
++static int rcar_dvdec_remove(struct platform_device *pdev)
++{
++	struct v4l2_subdev *sd = platform_get_drvdata(pdev);
++	struct rcar_dvdec_state *state = to_state(sd);
++
++	v4l2_ctrl_handler_free(&state->ctrl_hdl);
++	pm_runtime_put(&pdev->dev);
++	mutex_destroy(&state->mutex);
++	v4l2_device_unregister_subdev(sd);
++	kfree(to_state(sd));
++	return 0;
++}
++
++static struct platform_driver rcar_dvdec = {
++	.probe   = rcar_dvdec_probe,
++	.remove  = rcar_dvdec_remove,
++	.driver  = {
++		.name	= "rcar-dvdec",
++		.owner	= THIS_MODULE,
++	},
++	.id_table	= rcar_dvdec_id_table,
++};
++
++module_platform_driver(rcar_dvdec);
++
++MODULE_DESCRIPTION("R-Car E2X Digital Video Decoder driver");
++MODULE_LICENSE("GPL v2");
++MODULE_VERSION("0.1.0");
++MODULE_ALIAS("platform:rcar-dvdec");
+diff --git a/drivers/media/platform/rcar-dvdec.h b/drivers/media/platform/rcar-dvdec.h
+new file mode 100644
+index 0000000..7cb5f3c
+--- /dev/null
++++ b/drivers/media/platform/rcar-dvdec.h
+@@ -0,0 +1,407 @@
++/*
++ * drivers/media/platform/rcar-dvdec.h
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#ifndef _RCAR_DVDEC_H_
++#define _RCAR_DVDEC_H_
++
++#define V4L2_CID_USER_R8A7794X_INPUT	(V4L2_CID_USER_R8A7794X_BASE + 0)
++#define V4L2_CID_USER_R8A7747X_INPUT	(V4L2_CID_USER_R8A7747X_BASE + 0)
++
++enum chip_id {
++	RCAR_E2X,
++	RZ_G1C,
++};
++
++struct reg_color {
++	u16 TGCR1;
++	u16 TGCR2;
++	u16 TGCR3;
++	u16 HAFCCR1;
++	u16 HAFCCR2;
++	u16 HAFCCR3;
++	u16 VCDWCR1;
++	u16 BTLCR;
++	u16 ACCCR1;
++	u16 AGCCR1;
++	u16 YCSCR3;
++	u16 YCSCR4;
++	u16 YCSCR5;
++	u16 YCSCR6;
++	u16 YCSCR7;
++	u16 YCSCR9;
++	u16 YCSCR12;
++};
++
++struct dvdec_rect {
++	u32 top;
++	u32 height;
++	u32 left;
++	u32 width;
++};
++
++/* Color Format Id */
++#define DVDEC_NTSC358	0
++#define DVDEC_NTSC443	1
++#define DVDEC_PAL443	2
++#define DVDEC_PALM	3
++#define DVDEC_PALN	4
++#define DVDEC_SECAM	5
++#define DVDEC_NTSC60	6
++#define DVDEC_PAL60	7
++
++/* Address of 24D. Digital Video Decoder registers  */
++/* Offset value from 0xFEB81000 */
++#define DVDEC_ADCCR1_REG			0x008
++#define DVDEC_TGCR1_REG				0x00E
++#define DVDEC_TGCR2_REG				0x010
++#define DVDEC_TGCR3_REG				0x012
++#define DVDEC_SYNSCR1_REG			0x01A
++#define DVDEC_SYNSCR2_REG			0x01C
++#define DVDEC_SYNSCR3_REG			0x01E
++#define DVDEC_SYNSCR4_REG			0x020
++#define DVDEC_SYNSCR5_REG			0x022
++#define DVDEC_HAFCCR1_REG			0x024
++#define DVDEC_HAFCCR2_REG			0x026
++#define DVDEC_HAFCCR3_REG			0x028
++#define DVDEC_VCDWCR1_REG			0x02A
++#define DVDEC_DCPCR1_REG			0x030
++#define DVDEC_DCPCR2_REG			0x032
++#define DVDEC_DCPCR3_REG			0x034
++#define DVDEC_DCPCR4_REG			0x036
++#define DVDEC_DCPCR5_REG			0x038
++#define DVDEC_DCPCR6_REG			0x03A
++#define DVDEC_DCPCR7_REG			0x03C
++#define DVDEC_DCPCR8_REG			0x03E
++#define DVDEC_NSDCR_REG				0x040
++#define DVDEC_BTLCR_REG				0x042
++#define DVDEC_BTGPCR_REG			0x044
++#define DVDEC_ACCCR1_REG			0x046
++#define DVDEC_ACCCR2_REG			0x048
++#define DVDEC_ACCCR3_REG			0x04A
++#define DVDEC_TINTCR_REG			0x04C
++#define DVDEC_YCDCR_REG				0x04E
++#define DVDEC_AGCCR1_REG			0x050
++#define DVDEC_AGCCR2_REG			0x052
++#define DVDEC_PKLIMITCR_REG			0x054
++#define DVDEC_RGORCR1_REG			0x056
++#define DVDEC_RGORCR2_REG			0x058
++#define DVDEC_RGORCR3_REG			0x05A
++#define DVDEC_RGORCR4_REG			0x05C
++#define DVDEC_RGORCR5_REG			0x05E
++#define DVDEC_RGORCR6_REG			0x060
++#define DVDEC_RGORCR7_REG			0x062
++
++#define DVDEC_AFCPFCR_REG			0x07C
++#define DVDEC_RUPDCR_REG			0x07E
++#define DVDEC_VSYNCSR_REG			0x080
++#define DVDEC_HSYNCSR_REG			0x082
++#define DVDEC_DCPSR1_REG			0x084
++#define DVDEC_DCPSR2_REG			0x086
++#define DVDEC_NSDSR_REG				0x08C
++#define DVDEC_CROMASR1_REG			0x08E
++#define DVDEC_CROMASR2_REG			0x090
++#define DVDEC_SYNCSSR_REG			0x092
++#define DVDEC_AGCCSR1_REG			0x094
++#define DVDEC_AGCCSR2_REG			0x096
++
++#define DVDEC_YCSCR3_REG			0x104
++#define DVDEC_YCSCR4_REG			0x106
++#define DVDEC_YCSCR5_REG			0x108
++#define DVDEC_YCSCR6_REG			0x10A
++#define DVDEC_YCSCR7_REG			0x10C
++#define DVDEC_YCSCR8_REG			0x10E
++#define DVDEC_YCSCR9_REG			0x110
++#define DVDEC_YCSCR11_REG			0x114
++#define DVDEC_YCSCR12_REG			0x116
++
++#define DVDEC_DCPCR9_REG			0x180
++
++#define DVDEC_YCTWA_F0_REG			0x192
++#define DVDEC_YCTWA_F1_REG			0x194
++#define DVDEC_YCTWA_F2_REG			0x196
++#define DVDEC_YCTWA_F3_REG			0x198
++#define DVDEC_YCTWA_F4_REG			0x19A
++#define DVDEC_YCTWA_F5_REG			0x19C
++#define DVDEC_YCTWA_F6_REG			0x19E
++#define DVDEC_YCTWA_F7_REG			0x1A0
++#define DVDEC_YCTWA_F8_REG			0x1A2
++#define DVDEC_YCTWB_F0_REG			0x1A4
++#define DVDEC_YCTWB_F1_REG			0x1A6
++#define DVDEC_YCTWB_F2_REG			0x1A8
++#define DVDEC_YCTWB_F3_REG			0x1AA
++#define DVDEC_YCTWB_F4_REG			0x1AC
++#define DVDEC_YCTWB_F5_REG			0x1AE
++#define DVDEC_YCTWB_F6_REG			0x1B0
++#define DVDEC_YCTWB_F7_REG			0x1B2
++#define DVDEC_YCTWB_F8_REG			0x1B4
++#define DVDEC_YCTNA_F0_REG			0x1B6
++#define DVDEC_YCTNA_F1_REG			0x1B8
++#define DVDEC_YCTNA_F2_REG			0x1BA
++#define DVDEC_YCTNA_F3_REG			0x1BC
++#define DVDEC_YCTNA_F4_REG			0x1BE
++#define DVDEC_YCTNA_F5_REG			0x1C0
++#define DVDEC_YCTNA_F6_REG			0x1C2
++#define DVDEC_YCTNA_F7_REG			0x1C4
++#define DVDEC_YCTNA_F8_REG			0x1C6
++#define DVDEC_YCTNB_F0_REG			0x1C8
++#define DVDEC_YCTNB_F1_REG			0x1CA
++#define DVDEC_YCTNB_F2_REG			0x1CC
++#define DVDEC_YCTNB_F3_REG			0x1CE
++#define DVDEC_YCTNB_F4_REG			0x1D0
++#define DVDEC_YCTNB_F5_REG			0x1D2
++#define DVDEC_YCTNB_F6_REG			0x1D4
++#define DVDEC_YCTNB_F7_REG			0x1D6
++#define DVDEC_YCTNB_F8_REG			0x1D8
++
++#define DVDEC_YGAINCR_REG			0x200
++#define DVDEC_CBGAINCR_REG			0x202
++#define DVDEC_CRGAINCR_REG			0x204
++
++#define DVDEC_PGA_UPDATE_REG			0x280
++#define DVDEC_PGACR_REG				0x282
++#define DVDEC_ADCCR2_REG			0x284
++#define DVDEC_ADCCR3_REG			0x286
++
++
++#define DVDEC_PMMR_REG				0xE6060000
++#define DVDEC_ADCCR4_REG			0xE60600CC
++
++/* Burst Lock/Chroma Decoding Control Register */
++#define DVDEC_BTLCR_DETECT_MASK			0x00FF
++#define DVDEC_BTLCR_DETECT_AUTO			0x00C0
++#define DVDEC_BTLCR_DETECT_NTSC_M		0x001F
++#define DVDEC_BTLCR_DETECT_NTSC_443		0x002F
++#define DVDEC_BTLCR_DETECT_PAL_443		0x007D
++#define DVDEC_BTLCR_DETECT_PAL_M		0x0077
++#define DVDEC_BTLCR_DETECT_PAL_N		0x007B
++#define DVDEC_BTLCR_DETECT_PAL_60		0x007D
++#define DVDEC_BTLCR_DETECT_SECAM		0x00BE
++
++#define DVDEC_CROMASR1_COLORSYS_MASK		0xC000
++#define DVDEC_CROMASR1_COLORSYS_NTSC		0x0000
++#define DVDEC_CROMASR1_COLORSYS_PAL		0x4000
++#define DVDEC_CROMASR1_COLORSYS_SECAM		0x8000
++#define DVDEC_CROMASR1_COLORSYS_UNDETECTABLE	0xC000
++
++#define DVDEC_CROMASR1_FSCMODE_MASK		0x2000
++#define DVDEC_CROMASR1_FSCMODE_358		0x0000
++#define DVDEC_CROMASR1_FSCMODE_443		0x2000
++
++#define DVDEC_CROMASR2_ISSECAM			0x1000
++#define DVDEC_CROMASR2_ISPAL			0x0800
++#define DVDEC_CROMASR2_ISNTSC			0x0400
++
++#define DVDEC_VSYNCSR_NOSIGNAL			0x0800
++#define DVDEC_VSYNCSR_FVMODE_MASK		0x0200
++#define DVDEC_VSYNCSR_FVMODE_50			0x0000
++#define DVDEC_VSYNCSR_FVMODE_60			0x0200
++
++#define DVDEC_YCTMINUS				0x1000
++
++/* CONTRAST */
++#define DVDEC_YGAINCR_MIN	0
++#define DVDEC_YGAINCR_DEF	816
++#define DVDEC_YGAINCR_MAX	1023
++/* BLUE BALANCE */
++#define DVDEC_CBGAINCR_MIN	0
++#define DVDEC_CBGAINCR_DEF	663
++#define DVDEC_CBGAINCR_MAX	1023
++/* RED BALANCE */
++#define DVDEC_CRGAINCR_MIN	0
++#define DVDEC_CRGAINCR_DEF	663
++#define DVDEC_CRGAINCR_MAX	1023
++
++#define DVDEC_YCSCR12_MODE_MASK			0x000C
++#define DVDEC_YCSCR12_MODE_BYPASS		0x0000
++#define DVDEC_YCSCR12_MODE_CASCADE		0x0004
++#define DVDEC_YCSCR12_MODE_TAKEOFF		0x0008
++
++#define DVDEC_YCSCR12_NARROW_MASK		0x0001
++#define DVDEC_YCSCR12_NARROW_BYPASS		0x0000
++#define DVDEC_YCSCR12_NARROW_17TAP		0x0001
++
++#define DVDEC_ADCCR2_ADC_VINSEL_MASK		0x0001
++
++/* Power supply ON/OFF(ADCCR3 register) */
++#define DVDEC_PSAV_ON		0x0200
++#define DVDEC_PSAV_OFF		0x0210
++
++/* R-Car E2X HW Users Manual rev0.5E */
++/* Table 24D.42 Recommended Setting Common to Various Color Formats */
++#define DVDEC_ADCCR1_INIT		(1 << 8)	/* AGCMODE        */
++
++#define DVDEC_SYNSCR1_INIT		((3 << 13)	/* LPFVSYNC       */\
++					| (5 << 10)	/* LPFHSYNC       */\
++					| (2 << 4)	/* VELOCITYSHIFT_H */\
++					| (2 << 2)	/* SLICERMODE_H   */\
++					| (2 << 0))	/* SLICERMODE_V   */
++
++#define DVDEC_SYNSCR2_INIT		((15 << 6)	/* SYNCMAXDUTY_H  */\
++					| (10 << 0))	/* SYNCMINDUTY_H  */
++
++#define DVDEC_SYNSCR3_INIT		((15 << 10)	/* SSCLIPSEL      */\
++					| (146 << 0))	/* CSYNCSLICE_H   */
++
++#define DVDEC_SYNSCR4_INIT		((15 << 6)	/* SYNCMAXDUTY_V  */\
++					| (9 << 0))	/* SYNCMINDUTY_V  */
++
++#define DVDEC_SYNSCR5_INIT		((0 << 15)	/* VSYNCDELAY     */\
++					| (10 << 10)	/* VSYNCSLICE     */\
++					| (146 << 0))	/* CSYNCSLICE_V   */
++
++#define DVDEC_HAFCCR1_INIT		((12 << 12)	/* HAFCGAIN       */\
++					| (0 << 10)	/* HAFCFREERUN    */\
++					| (692 << 0))	/* HAFCTYP        */
++
++#define DVDEC_HAFCCR2_INIT		((0 << 12)	/* HAFCSTART      */\
++					| (1 << 11)	/* NOX2HOSC       */\
++					| (0 << 10)	/* DOX2HOSC       */\
++					| (742 << 0))	/* HAFCMAX	  */
++
++#define DVDEC_HAFCCR3_INIT		((8 << 12)	/* HAFCEND        */\
++					| (2 << 10)	/* HAFCMODE       */\
++					| (642 << 0))	/* HAFCMIN        */
++
++#define DVDEC_VCDWCR1_INIT		(0 << 15)	/* VCDFREERUN     */
++
++#define DVDEC_VCDWCR1_AUTO		((0 << 15)	/* VCDFREERUN     */\
++					| (0 << 14)	/* NOVCD50	  */\
++					| (0 << 13)	/* NOVCD60	  */\
++					| (0 << 12))	/* VCDDEFAULT	  */
++
++#define DVDEC_VCDWCR1_IMASK		(0x8000)
++
++#define DVDEC_VCDWCR1_AMASK		(0xF800)
++
++#define DVDEC_DCPCR1_INIT		((1 << 15)	/* DCPMODE_Y      */\
++					| (0 << 11)	/* DCPCHECK       */\
++					| (984 << 0))	/* BLANKLEVEL_Y   */
++
++#define DVDEC_DCPCR2_INIT		((0 << 15)	/* DCPMODE_C      */\
++					| (0 << 6)	/* BLANKLEVEL_CB  */\
++					| (0 << 0))	/* BLANKLEVEL_CR  */
++
++#define DVDEC_DCPCR3_INIT		(0 << 12)	/* DCPRESPONSE    */
++
++#define DVDEC_DCPCR4_INIT		(16 << 10)	/* DCPSTART       */
++
++#define DVDEC_DCPCR5_INIT		(16 << 10)	/* DCPEND         */
++
++#define DVDEC_DCPCR6_INIT		(27 << 8)	/* DCPWIDTH       */
++
++#define DVDEC_DCPCR7_INIT		(162 << 8)	/* DCPPOS_Y       */
++
++#define DVDEC_DCPCR8_INIT		(54 << 8)	/* DCPPOS_C       */
++
++#define DVDEC_NSDCR_INIT		((0 << 12)	/* ACFINPUT       */\
++					| (0 << 4)	/* ACFLAGTIME     */\
++					| (3 << 0))	/* ACFFILTER      */
++
++#define DVDEC_BTLCR_INIT		((1 << 14)	/* LOCKRANGE      */\
++					| (3 << 12)	/* LOOPGAIN       */\
++					| (1 << 10)	/* LOCKLIMIT      */\
++					| (0 << 9))	/* BCOFREERUN     */
++
++#define DVDEC_BTGPCR_INIT		((0 << 15)	/* BGPCHECK       */\
++					| (54 << 8)	/* BGPWIDTH       */\
++					| (110 << 0))	/* BGPSTART       */
++
++#define DVDEC_ACCCR1_INIT		((5 << 12)	/* KILLEROFFSET   */\
++					| (0 << 11)	/* ACCMODE        */\
++					| (0 << 9)	/* ACCMAXGAIN     */\
++					| (292 << 0))	/* ACCLEVEL       */
++
++#define DVDEC_ACCCR2_INIT		((0 << 9)	/* CHROMASUBGAIN  */\
++					| (210 << 0))	/* CHROMAMAINGAIN */
++
++#define DVDEC_ACCCR3_INIT		((1 << 14)	/* ACCRESPONSE    */\
++					| (8 << 8)	/* ACCPRECIS      */\
++					| (0 << 7)	/* KILLERMODE     */\
++					| (4 << 1))	/* KILLERLEVEL    */
++
++#define DVDEC_TINTCR_INIT		((0 << 10)	/* TINTSUB        */\
++					| (0 << 0))	/* TINTMAIN       */
++
++#define DVDEC_YCDCR_INIT		((0 << 4)	/* LUMADELAY      */\
++					| (0 << 2)	/* CHROMALPF      */\
++					| (2 << 0))	/* DEMODMODE      */
++
++#define DVDEC_AGCCR1_INIT		((0 << 13)	/* DUREDUCE       */\
++					| (0 << 12)	/* NOREDUCE       */\
++					| (4 << 9)	/* AGCRESPONSE    */\
++					| (236 << 0))	/* AGCLEVEL       */
++
++#define DVDEC_AGCCR2_INIT		(10 << 8)	/* AGCPRECIS      */
++#define DVDEC_AGCCR2_IMASK		(0x3F00)
++
++#define DVDEC_PKLIMITCR_INIT		((2 << 14)	/* PEAKLEVEL      */\
++					| (2 << 12)	/* PEAKATTACK     */\
++					| (3 << 10)	/* PEAKRELEASE    */\
++					| (0 << 8)	/* PEAKRATIO      */\
++					| (20 << 0))	/* MAXPEAKSAMPLES */
++
++#define DVDEC_RGORCR1_INIT		(928 << 0)	/* RADJ_O_LEVEL0  */
++
++#define DVDEC_RGORCR2_INIT		(32 << 0)	/* RADJ_U_LEVEL0  */
++
++#define DVDEC_RGORCR3_INIT		(960 << 0)	/* RADJ_O_LEVEL1  */
++
++#define DVDEC_RGORCR4_INIT		(48 << 0)	/* RADJ_U_LEVEL1  */
++
++#define DVDEC_RGORCR5_INIT		(992 << 0)	/* RADJ_O_LEVEL2  */
++
++#define DVDEC_RGORCR6_INIT		(64 << 0)	/* RADJ_U_LEVEL2  */
++
++#define DVDEC_RGORCR7_INIT		((0 << 12)	/* TEST_MONI      */\
++					| (0 << 9)	/* RADJ_MIX_K_FIX */\
++					| (1 << 2)	/* UCMP_SW        */\
++					| (1 << 1)	/* DCMP_SW        */\
++					| (1 << 0))	/* HWIDE_SW       */
++
++#define DVDEC_AFCPFCR_INIT		((0 << 4)	/* PHDET_FIX      */\
++					| (5 << 0))	/* PHDET_DIV      */
++
++#define DVDEC_RUPDCR_INIT		(1 << 15)	/* NEWSETTING     */
++
++#define DVDEC_YCSCR8_INIT		((0 << 15)	/* HBPF_NARROW    */\
++					| (0 << 14)	/* HVBPF_NARROW   */\
++					| (0 << 13)	/* HBPF1_9TAP_ON  */\
++					| (0 << 12)	/* HVBPF1_9TAP_ON */\
++					| (0 << 11))	/* HFIL_TAP_SEL   */
++
++#define DVDEC_YCSCR11_INIT		((108 << 9)	/* Reserved       */\
++					| (0 << 0))	/* V_Y_LEVEL      */
++
++#define DVDEC_DCPCR9_INIT		((7 << 13)	/* Reserved       */\
++					| (0 << 12)	/* CLP_HOLD_ON_Y  */\
++					| (0 << 11)	/* CLP_HOLD_ON_CB */\
++					| (0 << 10))	/* CLP_HOLD_ON_CR */
++
++#define DVDEC_YGAINCR_INIT		(816 << 0)	/* Y_GAIN2        */
++#define DVDEC_CBGAINCR_INIT		(663 << 0)	/* CB_GAIN2       */
++#define DVDEC_CRGAINCR_INIT		(663 << 0)	/* CR_GAIN2       */
++
++#define DVDEC_PGA_UPDATE_INIT		(1 << 0)	/* PGA_VEN        */
++#define DVDEC_PGACR_INIT		((0 << 14)	/* PGA_GAIN_SEL   */\
++					| (0 << 8)	/* PGA_GAIN       */\
++					| (8 << 0))	/* Reserved       */
++
++#define DVDEC_ADCCR2_INIT		(0 << 0)	/* ADC_VINSEL     */
++
++#endif /* _RCAR_DVDEC_H_ */
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 1a1b111..4683d88 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -139,6 +139,8 @@ enum chip_id {
+ 	RCAR_H1,
+ 	RCAR_M1,
+ 	RCAR_E1,
++	RCAR_E2X,
++	RZ_G1C,
+ };
+ 
+ struct VIN_COEFF {
+@@ -900,7 +902,31 @@ static irqreturn_t rcar_vin_irq(int irq, void *data)
+ 				VNMS_FBS_MASK) >> VNMS_FBS_SHIFT;
+ 		else
+ 			slot = 0;
++#ifdef CONFIG_MACH_IWG23S
++		priv->queue_buf[slot]->v4l2_buf.field = priv->field;
++		priv->queue_buf[slot]->v4l2_buf.sequence = priv->sequence++;
++		do_gettimeofday(&priv->queue_buf[slot]->v4l2_buf.timestamp);
++		vb2_buffer_done(priv->queue_buf[slot], VB2_BUF_STATE_DONE);
++		priv->queue_buf[slot] = NULL;
++
++		if (priv->state != STOPPING)
++			can_run = rcar_vin_fill_hw_slot(priv);
+ 
++		if (hw_stopped || !can_run) {
++			priv->state = STOPPED;
++		} else if (is_continuous_transfer(priv) &&
++			   list_empty(&priv->capture) &&
++			   priv->state == RUNNING) {
++			/*
++			 * The continuous capturing requires an explicit stop
++			 * operation when there is no buffer to be set into
++			 * the VnMBm registers.
++			 */
++			rcar_vin_request_capture_stop(priv);
++		} else {
++			rcar_vin_capture(priv);
++		}
++#else
+ 		if (!is_continuous_transfer(priv) || ((priv->state == RUNNING)
+ 			&& !list_empty(&priv->capture))) {
+ 			priv->queue_buf[slot]->v4l2_buf.field =
+@@ -933,6 +959,7 @@ static irqreturn_t rcar_vin_irq(int irq, void *data)
+ 			else
+ 				priv->state = STOPPED;
+ 		}
++#endif
+ 	} else if (hw_stopped) {
+ 		priv->state = STOPPED;
+ 		priv->request_to_stop = false;
+@@ -1102,30 +1129,67 @@ static int rcar_vin_set_rect(struct soc_camera_device *icd)
+ 		cam_subrect->left, cam_subrect->top);
+ 
+ 	/* Set Start/End Pixel/Line Pre-Clip */
+-	iowrite32(left_offset << dsize, priv->base + VNSPPRC_REG);
+-	iowrite32((left_offset + cam_subrect->width - 1) << dsize,
+-		  priv->base + VNEPPRC_REG);
+-	switch (priv->field) {
+-	case V4L2_FIELD_INTERLACED:
+-	case V4L2_FIELD_INTERLACED_TB:
+-	case V4L2_FIELD_INTERLACED_BT:
+-		iowrite32(top_offset / 2, priv->base + VNSLPRC_REG);
+-		iowrite32((top_offset + cam_subrect->height) / 2 - 1,
+-			  priv->base + VNELPRC_REG);
+-		break;
+-	default:
+-		iowrite32(top_offset, priv->base + VNSLPRC_REG);
+-		iowrite32(top_offset + cam_subrect->height - 1,
+-			  priv->base + VNELPRC_REG);
+-		break;
++	if ((priv->chip == RCAR_E2X) || (priv->chip == RZ_G1C)) {
++		/* Need to set same size with the DVDEC output */
++		iowrite32(cam_subrect->top, priv->base + VNSLPRC_REG);
++		iowrite32(cam_subrect->top + cam_subrect->height - 1,
++			priv->base + VNELPRC_REG);
++		iowrite32(cam_subrect->left, priv->base + VNSPPRC_REG);
++		iowrite32(cam_subrect->left + cam_subrect->width - 1,
++			priv->base + VNEPPRC_REG);
++	} else {
++
++		iowrite32(left_offset << dsize, priv->base + VNSPPRC_REG);
++		iowrite32((left_offset + cam_subrect->width - 1) << dsize,
++			  priv->base + VNEPPRC_REG);
++		switch (priv->field) {
++		case V4L2_FIELD_INTERLACED:
++		case V4L2_FIELD_INTERLACED_TB:
++		case V4L2_FIELD_INTERLACED_BT:
++			iowrite32(top_offset / 2, priv->base + VNSLPRC_REG);
++			iowrite32((top_offset + cam_subrect->height) / 2 - 1,
++				  priv->base + VNELPRC_REG);
++			break;
++		default:
++			iowrite32(top_offset, priv->base + VNSLPRC_REG);
++			iowrite32(top_offset + cam_subrect->height - 1,
++				  priv->base + VNELPRC_REG);
++			break;
++		}
+ 	}
+ 
+-	/* Set scaling coefficient */
+-	value = 0;
+-	if (cam_subrect->height != cam->out_height)
+-		value = (4096 * cam_subrect->height) / cam->out_height;
+-	dev_dbg(icd->parent, "YS Value: %lx\n", value);
+-	iowrite32(value, priv->base + VNYS_REG);
++	if ((priv->chip == RCAR_E2X) || (priv->chip == RZ_G1C)) {
++		/* Set scaling coefficient */
++		value = 0;
++		if ((cam_subrect->height * 2) != cam->out_height)
++			value = (4096 * (cam_subrect->height * 2))
++				/ cam->out_height;
++		dev_dbg(icd->parent, "YS Value: %lx\n", value);
++		iowrite32(value, priv->base + VNYS_REG);
++
++		value = 0;
++		if (cam_subrect->width != cam->out_width)
++			value = (4096 * cam_subrect->width) / cam->out_width;
++
++		/* Horizontal enlargement is up to double size */
++		if (0 < value  && value < 0x0800)
++			value = 0x0800;
++		dev_dbg(icd->parent, "XS Value: %lx\n", value);
++		iowrite32(value, priv->base + VNXS_REG);
++
++		/* Horizontal enlargement is carried out */
++		/* by scaling down from double size */
++		if (value < 0x1000)
++			value *= 2;
++
++		set_coeff(priv, value);
++	} else {
++		/* Set scaling coefficient */
++		value = 0;
++		if (cam_subrect->height != cam->out_height)
++			value = (4096 * cam_subrect->height) / cam->out_height;
++		dev_dbg(icd->parent, "YS Value: %lx\n", value);
++		iowrite32(value, priv->base + VNYS_REG);
+ 
+ 	value = 0;
+ 	if (cam_subrect->width != cam->out_width)
+@@ -1143,7 +1207,8 @@ static int rcar_vin_set_rect(struct soc_camera_device *icd)
+ 	if (value < 0x1000)
+ 		value *= 2;
+ 
+-	set_coeff(priv, value);
++		set_coeff(priv, value);
++	}
+ 
+ 	/* Set Start/End Pixel/Line Post-Clip */
+ 	iowrite32(0, priv->base + VNSPPOC_REG);
+@@ -1647,13 +1712,21 @@ static int rcar_vin_set_fmt(struct soc_camera_device *icd,
+ 		field = pix->field;
+ 		break;
+ 	case V4L2_FIELD_INTERLACED:
+-		/* Query for standard if not explicitly mentioned _TB/_BT */
+-		ret = v4l2_subdev_call(sd, video, querystd, &std);
+-		if (ret < 0)
+-			std = V4L2_STD_625_50;
+-
+-		field = std & V4L2_STD_625_50 ? V4L2_FIELD_INTERLACED_TB :
+-						V4L2_FIELD_INTERLACED_BT;
++		if ((priv->chip == RCAR_E2X) || (priv->chip == RZ_G1C))
++			/* dvdec is fixed at BT */
++			field = V4L2_FIELD_INTERLACED_BT;
++		else {
++			/*
++			 * Query for standard if not explicitly
++			 * mentioned _TB/_BT
++			 */
++			ret = v4l2_subdev_call(sd, video, querystd, &std);
++			if (ret < 0)
++				std = V4L2_STD_625_50;
++			field = std & V4L2_STD_625_50
++					? V4L2_FIELD_INTERLACED_TB
++					: V4L2_FIELD_INTERLACED_BT;
++		}
+ 		break;
+ 	}
+ 
+@@ -1888,6 +1961,7 @@ static struct platform_device_id rcar_vin_id_table[] = {
+ 	{ "r8a7793-vin",  RCAR_GEN2 },
+ 	{ "r8a7791-vin",  RCAR_GEN2 },
+ 	{ "r8a7790-vin",  RCAR_GEN2 },
++	{ "r8a7747x-vin",  RZ_G1C },
+ 	{ "r8a7779-vin",  RCAR_H1 },
+ 	{ "r8a7778-vin",  RCAR_M1 },
+ 	{ "uPD35004-vin", RCAR_E1 },
+diff --git a/drivers/media/platform/soc_camera/soc_mediabus.c b/drivers/media/platform/soc_camera/soc_mediabus.c
+index dc02dec..1b830bd 100644
+--- a/drivers/media/platform/soc_camera/soc_mediabus.c
++++ b/drivers/media/platform/soc_camera/soc_mediabus.c
+@@ -57,6 +57,16 @@ static const struct soc_mbus_lookup mbus_fmt[] = {
+ 		.layout			= SOC_MBUS_LAYOUT_PACKED,
+ 	},
+ }, {
++	.code = V4L2_MBUS_FMT_YUYV10_1X20,
++	.fmt = {
++		.fourcc			= V4L2_PIX_FMT_YUYV,
++		.name			= "YUYV 20bit",
++		.bits_per_sample	= 20,
++		.packing		= SOC_MBUS_PACKING_NONE,
++		.order			= SOC_MBUS_ORDER_LE,
++		.layout			= SOC_MBUS_LAYOUT_PACKED,
++	},
++}, {
+ 	.code = V4L2_MBUS_FMT_RGB555_2X8_PADHI_LE,
+ 	.fmt = {
+ 		.fourcc			= V4L2_PIX_FMT_RGB555,
+-- 
+1.7.9.5
+

@@ -1,0 +1,31 @@
+commit 99b2e7a33bef9ecbebec46952d57a615a5532f81
+Author: ThaoHM2 <thaohm2@fsoft.com.vn>
+Date:   Wed May 17 17:13:06 2017 +0700
+
+    Enable config drm rcar du connect vsp in defconfig
+
+diff --git a/arch/arm/configs/iwg23s_defconfig b/arch/arm/configs/iwg23s_defconfig
+index e65cfab..d55ffc4d 100644
+--- a/arch/arm/configs/iwg23s_defconfig
++++ b/arch/arm/configs/iwg23s_defconfig
+@@ -1967,7 +1967,7 @@ CONFIG_DRM_RCAR_DU=y
+ # CONFIG_DRM_RCAR_DESKTOP_TURN_OFF is not set
+ CONFIG_DRM_RCAR_ALPHA_BIT_ARGB1555=0
+ CONFIG_DRM_RCAR_DU_OVERLAY_CH=0x3f
+-# CONFIG_DRM_RCAR_DU_CONNECT_VSP is not set
++CONFIG_DRM_RCAR_DU_CONNECT_VSP=y
+ # CONFIG_DRM_SHMOBILE is not set
+ # CONFIG_DRM_TILCDC is not set
+ # CONFIG_DRM_QXL is not set
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index cc4dce7..e6474e0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -51,6 +51,7 @@ enum chip_id {
+ 	RCAR_M2,
+ 	RCAR_M2N,
+ 	RCAR_E2,
++	RCAR_E2X,
+ 	RZ_G1E,
+ 	RZ_G1M,
+ 	RZ_G1C

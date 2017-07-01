@@ -1,0 +1,26 @@
+From 651a7ccb8a2a2b62dbcad35270ac7d082c5c265c Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:15:40 +0700
+Subject: [PATCH 05/15] iwg23s: i2c: Add i2c busses driver support.
+ Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/i2c/busses/i2c-rcar.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 1d33e9b..fb575b7 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -675,6 +675,7 @@ static const struct of_device_id rcar_i2c_dt_ids[] = {
+ 	{ .compatible = "renesas,i2c-r8a7794", .data = (void *)I2C_RCAR_GEN2 },
+ 	{ .compatible = "renesas,i2c-r8a7743", .data = (void *)I2C_RCAR_GEN2 },
+ 	{ .compatible = "renesas,i2c-r8a7745", .data = (void *)I2C_RCAR_GEN2 },
++	{ .compatible = "renesas,i2c-r8a7747x", .data = (void *)I2C_RCAR_GEN2 },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, rcar_i2c_dt_ids);
+-- 
+1.7.9.5
+

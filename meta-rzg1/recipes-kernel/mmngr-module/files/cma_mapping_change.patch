@@ -1,0 +1,55 @@
+diff --git a/include/mmngr_private.h b/include/mmngr_private.h
+index 1653ac5..555aca6 100644
+--- a/include/mmngr_private.h
++++ b/include/mmngr_private.h
+@@ -175,13 +175,13 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #endif
+ #ifdef MMNGR_ALT
+ 	#ifdef MMNGR_IPMMU_ENABLE
+-	#define MM_OMXBUF_ADDR	(0x78000000UL)
+-	#define MM_OMXBUF_SIZE	(128 * 1024 * 1024)
+-	#define MM_OMXBUF_MXI_ADDR	(0x138000000UL)
++	#define MM_OMXBUF_ADDR	(0x5C000000UL)
++	#define MM_OMXBUF_SIZE	(64 * 1024 * 1024)
++	#define MM_OMXBUF_MXI_ADDR	(0x11C000000UL)
+ 	#else
+-	#define MM_OMXBUF_ADDR	(0x78000000UL)
+-	#define MM_OMXBUF_SIZE	(128 * 1024 * 1024)
+-	#define MM_OMXBUF_MXI_ADDR	(0x78000000UL)
++	#define MM_OMXBUF_ADDR	(0x5C000000UL)
++	#define MM_OMXBUF_SIZE	(64 * 1024 * 1024)
++	#define MM_OMXBUF_MXI_ADDR	(0x5C000000UL)
+ 	#endif
+ #endif
+ #ifdef MMNGR_GOSE
+@@ -205,8 +205,8 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
+ #endif
+ #ifdef MMNGR_ALT
+-#define MM_IPCBUF_ADDR	(0x68000000)
+-#define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
++#define MM_IPCBUF_ADDR	(0x5C000000)
++#define MM_IPCBUF_SIZE	(0)
+ #endif
+ #ifdef MMNGR_GOSE
+ #define MM_IPCBUF_ADDR	(0x68000000)
+@@ -222,8 +222,8 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
+ #endif
+ #ifdef MMNGR_ALT
+-#define MM_SSPBUF_ADDR	(0x6F000000)
+-#define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
++#define MM_SSPBUF_ADDR	(0x5C000000)
++#define MM_SSPBUF_SIZE	(0)
+ #endif
+ #ifdef MMNGR_GOSE
+ #define MM_SSPBUF_ADDR	(0x6F000000)
+@@ -235,7 +235,7 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_MVBUF_SIZE	(40 * 1024 * 1024)
+ #endif
+ 
+-#define MM_KERNEL_RESERVE_SIZE	(256 * 1024 * 1024)
++#define MM_KERNEL_RESERVE_SIZE	(64 * 1024 * 1024)
+ 
+ #define	MM_CO_ORDER		(12)
+ 

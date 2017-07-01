@@ -1,0 +1,89 @@
+From 756b529d499a9d28cbe445504750401f196d54fe Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:23:32 +0700
+Subject: [PATCH 08/15] iwg23s: net: can: Add net can and ethernet driver
+ support Signed-off-by: Nguyen Van Linh
+ [FGA.BU13.RZG] <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/net/can/rcar_can.c               |    2 ++
+ drivers/net/ethernet/renesas/ravb_main.c |   15 +++++++++++++++
+ drivers/net/ethernet/renesas/sh_eth.c    |    2 ++
+ 3 files changed, 19 insertions(+)
+
+diff --git a/drivers/net/can/rcar_can.c b/drivers/net/can/rcar_can.c
+index 1d94fc7..ca54988 100644
+--- a/drivers/net/can/rcar_can.c
++++ b/drivers/net/can/rcar_can.c
+@@ -900,6 +900,8 @@ static const struct of_device_id rcar_can_of_table[] __maybe_unused = {
+ 	{ .compatible = "renesas,can-r8a7790" },
+ 	{ .compatible = "renesas,can-r8a7791" },
+ 	{ .compatible = "renesas,can-r8a7743" },
++	{ .compatible = "renesas,can-r8a7742" },
++	{ .compatible = "renesas,can-r8a7747x" },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, rcar_can_of_table);
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 7d60de1..ff8321b 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1329,6 +1329,19 @@ static int ravb_phy_init(struct net_device *ndev)
+ 	mdp->speed = 0;
+ 	mdp->duplex = -1;
+ 
++#ifdef CONFIG_MACH_IWG23S
++	/* IWG23S: Ethernet: Ethernet PHY detection added */
++	/* check for attached phy */
++	for (mdp->phy_id = 0; mdp->phy_id < PHY_MAX_ADDR ; mdp->phy_id++) {
++		if ((mdp->mii_bus->phy_mask & (1 << mdp->phy_id)))
++			continue;
++		if ((mdp->mii_bus->phy_map[mdp->phy_id] == NULL) || 
++				(mdp->mii_bus->phy_map[mdp->phy_id]->phy_id == 0))
++			continue;
++		break;
++	}
++#endif
++
+ 	/* Try connect to PHY */
+ 
+ 	snprintf(phy_id, sizeof(phy_id), PHY_ID_FMT,
+@@ -2155,6 +2168,7 @@ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,gether-r8a7743", .data = &r8a774_3_5_data_giga },
+ 	{ .compatible = "renesas,gether-r8a7794", .data = &r8a779x_data_giga },
+ 	{ .compatible = "renesas,gether-r8a7745", .data = &r8a774_3_5_data_giga },
++	{ .compatible = "renesas,gether-r8a7747x", .data = &r8a779x_data_giga },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, ravb_match_table);
+@@ -2416,6 +2430,7 @@ static struct platform_device_id ravb_id_table[] = {
+ 	{ "r8a7790-gether", (kernel_ulong_t)&r8a779x_data_giga },
+ 	{ "r8a7794-gether", (kernel_ulong_t)&r8a779x_data_giga },
+ 	{ "r8a7745-gether", (kernel_ulong_t)&r8a774_3_5_data_giga },
++	{ "r8a7747x-gether", (kernel_ulong_t)&r8a779x_data_giga },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(platform, ravb_id_table);
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index 86a2e48..2d5df17 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -2821,6 +2821,7 @@ static const struct of_device_id sh_eth_match_table[] = {
+ 	{ .compatible = "renesas,ether-r8a7794", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r8a7743", .data = &r8a774_3_5_data },
+ 	{ .compatible = "renesas,ether-r8a7745", .data = &r8a774_3_5_data },
++	{ .compatible = "renesas,ether-r8a7747x", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r7s72100", .data = &r7s72100_data },
+ 	{ }
+ };
+@@ -3055,6 +3056,7 @@ static struct platform_device_id sh_eth_id_table[] = {
+ 	{ "r8a7794-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7743-ether", (kernel_ulong_t)&r8a774_3_5_data },
+ 	{ "r8a7745-ether", (kernel_ulong_t)&r8a774_3_5_data },
++	{ "r8a7747x-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(platform, sh_eth_id_table);
+-- 
+1.7.9.5
+

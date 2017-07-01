@@ -1,0 +1,2628 @@
+From 9a1bc1dd784f50624b5289489d62758106d981dd Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:14:20 +0700
+Subject: [PATCH 04/15] iwg23s: gpu: Add gpu driver support.
+ Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/gpu/drm/drm_edid.c                         |   10 +-
+ drivers/gpu/drm/drm_fb_helper.c                    |    2 +-
+ drivers/gpu/drm/i2c/Kconfig                        |    6 +
+ drivers/gpu/drm/i2c/Makefile                       |    3 +
+ drivers/gpu/drm/i2c/sii902x.c                      |  344 ++++++++++++++
+ drivers/gpu/drm/rcar-du/Makefile                   |    7 +-
+ drivers/gpu/drm/rcar-du/rcar_cvbs_regs.h           |  176 ++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c             |   90 +++-
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h             |    1 +
+ drivers/gpu/drm/rcar-du/rcar_du_cvbscon.c          |  208 +++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_cvbscon.h          |   24 +
+ drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.c          |  469 ++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.h          |   58 +++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c              |   55 ++-
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h              |    7 +-
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c          |   38 +-
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.h          |    2 +
+ drivers/gpu/drm/rcar-du/rcar_du_group.c            |   21 +-
+ drivers/gpu/drm/rcar-du/rcar_du_group.h            |    2 +
+ drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c          |    4 +
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c              |    7 +-
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c          |   24 +
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.c |  254 +++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.h |   40 ++
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h             |   68 +++
+ drivers/gpu/drm/rcar-du/rcar_lvds_regs_r8a7747x.h  |   87 ++++
+ 26 files changed, 1984 insertions(+), 23 deletions(-)
+ create mode 100644 drivers/gpu/drm/i2c/sii902x.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_cvbs_regs.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_cvbscon.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_cvbscon.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.c
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.h
+ create mode 100644 drivers/gpu/drm/rcar-du/rcar_lvds_regs_r8a7747x.h
+
+diff --git a/drivers/gpu/drm/drm_edid.c b/drivers/gpu/drm/drm_edid.c
+index ae095a43..cb5fffd 100644
+--- a/drivers/gpu/drm/drm_edid.c
++++ b/drivers/gpu/drm/drm_edid.c
+@@ -168,7 +168,7 @@ static const struct drm_display_mode drm_dmt_modes[] = {
+ 	{ DRM_MODE("640x480", DRM_MODE_TYPE_DRIVER, 36000, 640, 696,
+ 		   752, 832, 0, 480, 481, 484, 509, 0,
+ 		   DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC) },
+-#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)
++#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)  || defined(CONFIG_DRM_I2C_SII902X)
+ 	/* 800x480@60Hz */
+ 	{ DRM_MODE("800x480", DRM_MODE_TYPE_DRIVER, 29580, 800, 816,
+ 		   896, 992, 0, 480, 481, 484, 497, 0,
+@@ -202,7 +202,7 @@ static const struct drm_display_mode drm_dmt_modes[] = {
+ 	{ DRM_MODE("848x480", DRM_MODE_TYPE_DRIVER, 33750, 848, 864,
+ 		   976, 1088, 0, 480, 486, 494, 517, 0,
+ 		   DRM_MODE_FLAG_PHSYNC | DRM_MODE_FLAG_PVSYNC) },
+-#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)
++#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)  || defined(CONFIG_DRM_I2C_SII902X)
+ 	/* 1024x600@60Hz */
+ 	{ DRM_MODE("1024x600", DRM_MODE_TYPE_DRIVER, 48960, 1024, 1064,
+ 		   1168, 1312, 0, 600, 601, 604, 622, 0,
+@@ -237,7 +237,7 @@ static const struct drm_display_mode drm_dmt_modes[] = {
+ 	{ DRM_MODE("1152x864", DRM_MODE_TYPE_DRIVER, 108000, 1152, 1216,
+ 		   1344, 1600, 0, 864, 865, 868, 900, 0,
+ 		   DRM_MODE_FLAG_PHSYNC | DRM_MODE_FLAG_PVSYNC) },
+-#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)
++#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)  || defined(CONFIG_DRM_I2C_SII902X)
+ 	/* 1280x720@60Hz */
+ 	{ DRM_MODE("1280x720", DRM_MODE_TYPE_DRIVER, 74480, 1280, 1336,
+ 		   1472, 1664, 0, 720, 721, 724, 746, 0,
+@@ -427,7 +427,7 @@ static const struct drm_display_mode drm_dmt_modes[] = {
+ 	{ DRM_MODE("1856x1392", DRM_MODE_TYPE_DRIVER, 356500, 1856, 1904,
+ 		   1936, 2016, 0, 1392, 1395, 1399, 1474, 0,
+ 		   DRM_MODE_FLAG_PHSYNC | DRM_MODE_FLAG_NVSYNC) },
+-#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)
++#if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)  || defined(CONFIG_DRM_I2C_SII902X)
+ 	/* 1920x1080i@60Hz */
+ 	{ DRM_MODE("1920x1080i", DRM_MODE_TYPE_DRIVER, 74250, 1920, 2008,
+ 		   2052, 2200, 0, 1080, 1084, 1094, 1125, 0,
+@@ -1209,6 +1209,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ #if defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE)
+ 		if (get_edid_block(data, block, 0, EDID_LENGTH))
+ #else
++		mdelay(10);
+ 		if (drm_do_probe_ddc_edid(adapter, block, 0, EDID_LENGTH))
+ #endif
+ 			goto out;
+@@ -1235,6 +1236,7 @@ drm_do_get_edid(struct drm_connector *connector, struct i2c_adapter *adapter)
+ 	block = new;
+ 
+ 	for (j = 1; j <= block[0x7e]; j++) {
++		mdelay(10);
+ 		for (i = 0; i < 4; i++) {
+ #if defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE)
+ 			if (get_edid_block(data,
+diff --git a/drivers/gpu/drm/drm_fb_helper.c b/drivers/gpu/drm/drm_fb_helper.c
+index 57371af..bf0db68 100644
+--- a/drivers/gpu/drm/drm_fb_helper.c
++++ b/drivers/gpu/drm/drm_fb_helper.c
+@@ -1144,7 +1144,7 @@ static int drm_fb_helper_single_fb_probe(struct drm_fb_helper *fb_helper,
+ 
+ #if defined(CONFIG_DRM_RCAR_DU) || defined(CONFIG_DRM_RCAR_DU_MODULE)
+ 	if (crtc_count == 0) {
+-#if defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE)
++#if (defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE)) || (defined(CONFIG_DRM_I2C_SII902X))
+ 		sizes.fb_width = sizes.surface_width = 1920;
+ 		sizes.fb_height = sizes.surface_height = 1080;
+ 		crtc_count++;
+diff --git a/drivers/gpu/drm/i2c/Kconfig b/drivers/gpu/drm/i2c/Kconfig
+index 3edb45a..3404800 100644
+--- a/drivers/gpu/drm/i2c/Kconfig
++++ b/drivers/gpu/drm/i2c/Kconfig
+@@ -35,6 +35,12 @@ config DRM_ADV7511
+ 	  If you want to use ADV7511, you select y.
+ 	  If you don't want to use ADV7511, you select n.
+ 
++config DRM_I2C_SII902X
++	tristate "sii902x"
++	depends on DRM && I2C
++	help
++	  Support for sii902x DVI/HDMI encoder chips
++
+ config DRM_ADV7511_DVI_OUTPUT
+ 	bool "ADV7511 DVI output mode"
+ 	depends on DRM_ADV7511
+diff --git a/drivers/gpu/drm/i2c/Makefile b/drivers/gpu/drm/i2c/Makefile
+index ffa2540..81b3715 100644
+--- a/drivers/gpu/drm/i2c/Makefile
++++ b/drivers/gpu/drm/i2c/Makefile
+@@ -6,6 +6,9 @@ obj-$(CONFIG_DRM_I2C_CH7006) += ch7006.o
+ sil164-y := sil164_drv.o
+ obj-$(CONFIG_DRM_I2C_SIL164) += sil164.o
+ 
++sii902x := sii902x_drv.o
++obj-$(CONFIG_DRM_I2C_SII902X) += sii902x.o
++
+ tda998x-y := tda998x_drv.o
+ obj-$(CONFIG_DRM_I2C_NXP_TDA998X) += tda998x.o
+ 
+diff --git a/drivers/gpu/drm/i2c/sii902x.c b/drivers/gpu/drm/i2c/sii902x.c
+new file mode 100644
+index 0000000..e2501c4
+--- /dev/null
++++ b/drivers/gpu/drm/i2c/sii902x.c
+@@ -0,0 +1,344 @@
++/*
++ * Copyright (c) 2016 iWave Systems Technologies Pvt. Ltd.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/i2c.h>
++#include <linux/regmap.h>
++#include <linux/gpio.h>
++#include <linux/of_gpio.h>
++
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
++#include <drm/drm_edid.h>
++
++//#include <drm/drm_encon.h>
++
++struct sii902x_encoder_params {
++};
++
++struct sii902x {
++	struct i2c_client *client;
++
++        enum drm_connector_status status;
++        int dpms_mode;
++
++        unsigned int current_edid_segment;
++        uint8_t edid_buf[256];
++
++        wait_queue_head_t wq;
++        struct drm_encoder *encoder;
++
++        struct edid *edid;
++        int gpio_pd;
++
++        struct workqueue_struct *work_queue;
++        struct delayed_work edid_handler;
++        struct delayed_work hpd_handler;
++        unsigned int edid_read_retries;
++        bool connector_detect_disconnect;
++};
++
++static int sii902x_write(struct i2c_client *client, uint8_t addr, uint8_t val)
++{
++	int ret;
++
++	ret = i2c_smbus_write_byte_data(client, addr, val);
++	if (ret) {
++		dev_dbg(&client->dev, "%s failed with %d\n", __func__, ret);
++	}
++	return ret;
++}
++
++static uint8_t sii902x_read(struct i2c_client *client, uint8_t addr)
++{
++	int dat;
++
++	dat = i2c_smbus_read_byte_data(client, addr);
++
++	return dat;	
++}
++
++static int hdmi_cap = 0; /* FIXME */
++
++static void sii902x_poweron(struct i2c_client *client)
++{
++	/* Turn on DVI or HDMI */
++	if (hdmi_cap)
++		sii902x_write(client, 0x1A, 0x01 | 4);
++	else
++		sii902x_write(client, 0x1A, 0x00);
++
++	return;
++}
++
++static void sii902x_poweroff(struct i2c_client *client)
++{
++	/* disable tmds before changing resolution */
++	if (hdmi_cap)
++		sii902x_write(client, 0x1A, 0x11);
++	else
++		sii902x_write(client, 0x1A, 0x10);
++
++	return;
++}
++
++static int sii902x_get_modes(struct drm_encoder *encoder,
++		struct drm_connector *connector)
++{
++        struct i2c_client *client = drm_i2c_encoder_get_client(encoder);
++	struct i2c_adapter *adap = client->adapter;
++
++	struct edid *edid;
++	int ret;
++	int old, dat, cnt = 100;
++
++	old = sii902x_read(client, 0x1A);
++
++	sii902x_write(client, 0x1A, old | 0x4);
++	do {
++		cnt--;
++		msleep(10);
++		dat = sii902x_read(client, 0x1A);
++	} while ((!(dat & 0x2)) && cnt);
++
++	if (!cnt)
++		return -ETIMEDOUT;
++
++	sii902x_write(client, 0x1A, old | 0x06);
++
++	edid = drm_get_edid(connector, adap);
++	if (edid) {
++		drm_mode_connector_update_edid_property(connector, edid);
++		ret = drm_add_edid_modes(connector, edid);
++		kfree(edid);
++	}
++
++	cnt = 100;
++	do {
++		cnt--;
++		sii902x_write(client, 0x1A, old & ~0x6);
++		msleep(10);
++		dat = sii902x_read(client, 0x1A);
++	} while ((dat & 0x6) && cnt);
++
++	if (!cnt)
++		ret = -1;
++
++	sii902x_write(client, 0x1A, old);
++
++	return 0;
++}
++
++static irqreturn_t sii902x_detect_handler(int irq, void *data)
++{
++	struct sii902x *sii902x = data;
++	struct i2c_client *client = sii902x->client;
++	int dat;
++
++	dat = sii902x_read(client, 0x3D);
++	if (dat & 0x1) {
++		/* cable connection changes */
++		if (dat & 0x4) {
++			printk("plugin\n");
++		} else {
++			printk("plugout\n");
++		}
++	}
++	sii902x_write(client, 0x3D, dat);
++
++	return IRQ_HANDLED;
++}
++
++
++static int sii902x_mode_valid(struct drm_encoder *encoder,
++			  struct drm_display_mode *mode)
++{
++	return MODE_OK;
++}
++
++static void sii902x_mode_set(struct drm_encoder *encoder,
++			 struct drm_display_mode *mode,
++			 struct drm_display_mode *adjusted_mode)
++{
++        struct i2c_client *client = drm_i2c_encoder_get_client(encoder);
++
++	u16 data[4];
++	u32 refresh;
++	u8 *tmp;
++	int i;
++
++	/* Power up */
++	sii902x_write(client, 0x1E, 0x00);
++
++	dev_dbg(&client->dev, "%s: %dx%d, pixclk %d\n", __func__,
++			mode->hdisplay, mode->vdisplay,
++			mode->clock * 1000);
++
++	/* set TPI video mode */
++	data[0] = mode->clock / 10;
++	data[2] = mode->htotal;
++	data[3] = mode->vtotal;
++	refresh = data[2] * data[3];
++	refresh = (mode->clock * 1000) / refresh;
++	data[1] = refresh * 100;
++	tmp = (u8 *)data;
++	for (i = 0; i < 8; i++)
++		sii902x_write(client, i, tmp[i]);
++
++	/* input bus/pixel: full pixel wide (24bit), rising edge */
++	sii902x_write(client, 0x08, 0x70);
++	/* Set input format to RGB */
++	sii902x_write(client, 0x09, 0x00);
++	/* set output format to RGB */
++	sii902x_write(client, 0x0A, 0x00);
++	/* audio setup */
++	sii902x_write(client, 0x25, 0x00);
++	sii902x_write(client, 0x26, 0x40);
++	sii902x_write(client, 0x27, 0x00);
++}
++
++static void sii902x_dpms(struct drm_encoder *encoder, int mode)
++{
++        struct i2c_client *client = drm_i2c_encoder_get_client(encoder);
++
++	if (mode)
++		sii902x_poweroff(client);
++	else
++		sii902x_poweron(client);
++}
++
++static enum drm_connector_status sii902x_encoder_detect(struct drm_encoder *encoder,
++        struct drm_connector *connector)
++{
++
++return 1;
++}
++/*
++static void sii902x_prepare(struct drm_encoder *encoder)
++{
++        struct i2c_client *client = drm_i2c_encoder_get_client(encoder);
++
++	sii902x_poweroff(client);
++}
++
++static void sii902x_commit(struct drm_encoder_connector *encon)
++{
++        struct i2c_client *client = drm_i2c_encoder_get_client(encoder);
++
++	sii902x_poweron(client);
++}
++*/
++
++struct drm_encoder_slave_funcs sii902x_encoder_funcs = {
++	.dpms = sii902x_dpms,
++	.mode_set = sii902x_mode_set,
++	.get_modes = sii902x_get_modes,
++	.mode_valid = sii902x_mode_valid,
++	.detect = sii902x_encoder_detect,
++
++//	.prepare = sii902x_prepare,
++//	.commit = sii902x_commit,
++};
++
++/* I2C driver functions */
++
++static int
++sii902x_probe(struct i2c_client *client, const struct i2c_device_id *id)
++{
++	int dat, ret;
++	struct sii902x *sii902x;
++
++	sii902x = kzalloc(sizeof(*sii902x), GFP_KERNEL);
++	if (!sii902x)
++		return -ENOMEM;
++
++	sii902x->client = client;
++
++	/* Set 902x in hardware TPI mode on and jump out of D3 state */
++	if (sii902x_write(client, 0xc7, 0x00) < 0) {
++		dev_err(&client->dev, "SII902x: cound not find device\n");
++		return -ENODEV;
++	}
++
++	/* read device ID */
++	dat = sii902x_read(client, 0x1b);
++	if (dat != 0xb0) {
++		dev_err(&client->dev, "not found. id is 0x%02x instead of 0xb0\n",
++				dat);
++		return -ENODEV;
++	}
++
++	if (client->irq) {
++		ret = request_threaded_irq(client->irq, NULL, sii902x_detect_handler,
++				IRQF_TRIGGER_FALLING,
++				"SII902x_det", sii902x);
++		sii902x_write(client, 0x3c, 0x01);
++	}
++
++	i2c_set_clientdata(client, sii902x);
++	dev_info(&client->dev, "initialized\n");
++
++	return 0;
++}
++
++static int sii902x_remove(struct i2c_client *client)
++{
++	return 0;
++}
++
++static int sii902x_encoder_init(struct i2c_client *i2c,
++        struct drm_device *dev, struct drm_encoder_slave *encoder)
++{
++
++        struct sii902x *sii902x = i2c_get_clientdata(i2c);
++
++        encoder->slave_priv = sii902x;
++        encoder->slave_funcs = &sii902x_encoder_funcs;
++
++        sii902x->encoder = &encoder->base;
++
++        return 0;
++}
++
++static struct i2c_device_id sii902x_ids[] = {
++	{ "sii9022", 0 },
++	{ }
++};
++
++static struct drm_i2c_encoder_driver sii902x_driver = {
++	.i2c_driver = {
++		.probe = sii902x_probe,
++		.remove = sii902x_remove,
++		.driver = {
++			.name = "sii902x",
++		},
++		.id_table = sii902x_ids,
++	},
++
++	.encoder_init = sii902x_encoder_init,
++};
++
++static int __init sii902x_init(void)
++{
++	return drm_i2c_encoder_register(THIS_MODULE, &sii902x_driver);
++}
++
++static void __exit sii902x_exit(void)
++{
++	drm_i2c_encoder_unregister(&sii902x_driver);
++}
++
++MODULE_AUTHOR("Sascha Hauer <s.hauer at pengutronix.de>");
++MODULE_DESCRIPTION("Silicon Image sii902x HDMI transmitter driver");
++MODULE_LICENSE("GPL");
++
++module_init(sii902x_init);
++module_exit(sii902x_exit);
+diff --git a/drivers/gpu/drm/rcar-du/Makefile b/drivers/gpu/drm/rcar-du/Makefile
+index a2be7b7..ed8c985 100644
+--- a/drivers/gpu/drm/rcar-du/Makefile
++++ b/drivers/gpu/drm/rcar-du/Makefile
+@@ -7,12 +7,15 @@ rcar-du-drm-y := rcar_du_crtc.o \
+ 		 rcar_du_lvdscon.o \
+ 		 rcar_du_rgbcon.o \
+ 		 rcar_du_plane.o \
+-		 rcar_du_vgacon.o
++		 rcar_du_vgacon.o \
++		 rcar_du_cvbscon.o \
++		 rcar_du_cvbsenc.o
+ 
+ rcar-du-drm-$(CONFIG_DRM_RCAR_DU_CONNECT_VSP)	+= vspd_drv_main.o \
+ 						   vspd_dl.o \
+ 						   vsp_du_if.o
+ 
+-rcar-du-drm-$(CONFIG_DRM_RCAR_LVDS)	+= rcar_du_lvdsenc.o
++rcar-du-drm-$(CONFIG_DRM_RCAR_LVDS)	+= rcar_du_lvdsenc.o \
++					   rcar_du_lvdsenc_r8a7747x.o
+ 
+ obj-$(CONFIG_DRM_RCAR_DU)		+= rcar-du-drm.o
+diff --git a/drivers/gpu/drm/rcar-du/rcar_cvbs_regs.h b/drivers/gpu/drm/rcar-du/rcar_cvbs_regs.h
+new file mode 100644
+index 0000000..3073ab9
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_cvbs_regs.h
+@@ -0,0 +1,176 @@
++/*
++ * rcar_cvbs_regs.h  --  R-Car CVBS Interface Registers Definitions
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X: contact
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ */
++
++#ifndef __RCAR_CVBS_REGS_H__
++#define __RCAR_CVBS_REGS_H__
++
++#define VSET				0x0120
++#define VSET_VESEL			(1 << 14)
++
++#define DENCOUT				0x0300
++
++#define DENCOUT2			0x0302
++#define DENCOUT2_HDPD0(x)		(((x) & 0xf) << 0)
++#define DENCOUT2_HDPD0_VDAC		DENCOUT2_HDPD0(0x3)
++
++#define DENCO20				0x0308
++#define DENCO20_YSEL_INIT		(0x3ff << 0)
++#define DENCO20_YSEL_OUT2DAC		(0x000 << 0)
++
++#define IDENCMD1			0x00C0
++#define IDENCMD1_SRL_EN			(1 << 12)
++#define IDENCMD1_FLD2CC_TRANS_UPDATE	(0 << 9)
++#define IDENCMD1_FLD2CC_TRANS_COMP	(1 << 9)
++#define IDENCMD1_FLD1CC_TRANS_UPDATE	(0 << 8)
++#define IDENCMD1_FLD1CC_TRANS_COMP	(1 << 8)
++#define IDENCMD1_WSS_OFF		(0 << 6)
++#define IDENCMD1_WSS_ON			(1 << 6)
++#define IDENCMD1_SUBC_FREQ_3_58		(0 << 5)
++#define IDENCMD1_SUBC_FREQ_4_43		(1 << 5)
++#define IDENCMD1_SUBC_PHCTRL_ON		(0 << 4)
++#define IDENCMD1_SUBC_PHCTRL_OFF	(1 << 4)
++#define IDENCMD1_FLD_FREQ_525_60	(0 << 1)
++#define IDENCMD1_FLD_FREQ_625_50	(1 << 1)
++#define IDENCMD1_CDM_NTSC		(0 << 0)
++#define IDENCMD1_CDM_PAL		(1 << 0)
++
++#define IDENCMD2			0x00C2
++#define IDENCMD2_ADJ_COL_UPLIM_ON	(1 << 15)
++#define IDENCMD2_ADJ_COL_LOLIM_ON	(1 << 14)
++#define IDENCMD2_ADJ_LUM_UPLIM_ON	(1 << 13)
++#define IDENCMD2_ADJ_LUM_LOLIM_ON	(1 << 12)
++#define IDENCMD2_COL_UPLIM_ON		(1 << 11)
++#define IDENCMD2_COL_LOLIM_ON		(1 << 10)
++#define IDENCMD2_LUM_UPLIM_ON		(1 << 9)
++#define IDENCMD2_LUM_LOLIM_ON		(1 << 8)
++#define IDENCMD2_Y1SETUP_OFF		(0 << 0)
++#define IDENCMD2_Y1SETUP_POS_7_5IRE	(1 << 0)
++#define IDENCMD2_Y1SETUP_NEG_7_5IRE	(2 << 0)
++
++#define ITNTBLEV			0x00C4
++#define ITNTBLEV_BURST(x)		(((x) & 0xff) << 8)
++#define ITNTBLEV_TINT(x)		(((x) & 0xff) << 0)
++
++#define IFSCH				0x00C6
++#define IFSCH_M_NTSC			0x21F0
++#define IFSCH_BGI_PAL			0x2A09
++#define IFSCH_M_PAL			0x21E6
++#define IFSCH_N_PAL			0x21F6
++
++#define IFSCL				0x00C8
++#define IFSCL_M_NTSC			0x7C1F
++#define IFSCL_BGI_PAL			0x8ACB
++#define IFSCL_M_PAL			0xEFE3
++#define IFSCL_N_PAL			0x9447
++
++#define IDLYSET				0x00CA
++#define IDLYSET_Y1DLY(x)		(((x) & 0x3f) << 8)
++
++
++#define ISYNSET				0x00CC
++#define ISYNSET_SYNDLY(x)		(((x) & 0x1f) << 8)
++#define ISYNSET_Y1SYNC_LEVEL(x)		(((x) & 0xff) << 0)
++
++#define ICCCGWS				0x00CE
++#define ICCCGWS_CC_ANDG_ON		(0 << 6)
++#define ICCCGWS_CC_ANDG_OFF		(1 << 6)
++#define ICCCGWS_VBI_BYPASS_BYPS		(0 << 5)
++#define ICCCGWS_VBI_BYPASS_BLNK		(1 << 5)
++#define ICCCGWS_Y1CC_OFF		(0 << 1)
++#define ICCCGWS_Y1CC_FLD1		(1 << 1)
++#define ICCCGWS_Y1CC_FLD2		(2 << 1)
++#define ICCCGWS_Y1CC_BOTH		(3 << 1)
++#define ICCCGWS_CGMS_OFF		(0 << 0)
++#define ICCCGWS_CGMS_ON			(1 << 0)
++
++#define ICCD1				0x00D0
++#define ICCD1_CC11(x)			(((x) & 0x7f) << 8)
++#define ICCD1_CC10(x)			(((x) & 0x7f) << 0)
++
++#define ICCD2				0x00D2
++#define ICCD2_CC21(x)			(((x) & 0x7f) << 8)
++#define ICCD2_CC20(x)			(((x) & 0x7f) << 0)
++
++#define ICGWSD				0x00D4
++#define ICGWSD_CGWS(x)			(((x) & 0x3fff) << 0)
++
++#define IBLKSHP				0x00D6
++#define IBLKSHP_UNSHARP_ON		(1 << 15)
++#define IBLKSHP_SHLMT(x)		(((x) & 0x7f) << 8)
++#define IBLKSHP_GAMMA_MODE(x)		(((x) & 0x1f) << 3)
++#define IBLKSHP_BKPNT_OFF		(0 << 0)
++#define IBLKSHP_BKPNT_MODE1		(1 << 0)
++#define IBLKSHP_BKPNT_MODE2		(2 << 0)
++#define IBLKSHP_BKPNT_MODE3		(3 << 0)
++
++#define ISHRPSET			0x00D8
++#define ISHRPSET_PSW_0T			(0 << 14)
++#define ISHRPSET_PSW_1T			(1 << 14)
++#define ISHRPSET_PSW_2T			(2 << 14)
++#define ISHRPSET_SHRPNSB(x)		(((x) & 0x3f) << 8)
++#define ISHRPSET_OSW_0T			(0 << 6)
++#define ISHRPSET_OSW_1T			(1 << 6)
++#define ISHRPSET_OSW_2T			(2 << 6)
++#define ISHRPSET_SHRPNSA(x)		(((x) & 0x3f) << 0)
++
++#define IBRTCON				0x00DA
++#define IBRTCON_BRIGHT(x)		(((x) & 0xff) << 8)
++#define IBRTCON_CONT(x)			(((x) & 0xff) << 0)
++
++#define IHADA				0x00DC
++#define IHADA_WIND(x)			(((x) & 0x7f) << 8)
++#define IHADA_STC_AREA_B_ON		(1 << 1)
++#define IHADA_STC_AREA_A_ON		(1 << 0)
++
++#define ITNTCOL				0x00DE
++#define ITNTCOL_TINT(x)			(((x) & 0x7f) << 8)
++#define ITNTCOL_COLOR(x)		(((x) & 0x7f) << 0)
++
++#define ICGAIN				0x00F4
++#define ICGAIN_CGAIN(x)			(((x) & 0xfff) << 0)
++
++#define IBURST				0x00F8
++#define IBURST_START(x)			(((x) & 0xff) << 8)
++#define IBURST_END(x)			(((x) & 0xff) << 0)
++
++#define ICSP				0x00FA
++#define ICSP_SCH(x)			(((x) & 0xff) << 8)
++#define ICSP_START(x)			(((x) & 0xff) << 0)
++
++#define IY1GAIN		0x0108
++#define IY1GAIN_Y1GAIN(x)		(((x) & 0x3ff) << 0)
++
++/* -----------------------------------------------------------------------------
++ * MOD_SEL5 register
++ */
++#define MOD_SEL5_REGISTER		0xE60600D0
++#define MOD_SEL5_DACPDB_PD		(0 << 4)
++#define MOD_SEL5_DACPDB_NORMAL		(1 << 4)
++#define MOD_SEL5_DACPDB_MASK		(1 << 4)
++#define MOD_SEL5_DU1_SEL_MODE_DU0	(0 << 0)
++#define MOD_SEL5_DU1_SEL_MODE_DU1	(1 << 0)
++
++#define MOD_SEL5_MASK_REGISTER		0xE6060000
++
++/* -----------------------------------------------------------------------------
++ * Reset register
++ */
++#define SRCR7_REGISTER			0xE61501CC
++#define SRSTCLR7_REGISTER		0xE615095C
++#define SRCR7_DVENC			(1 << 27)
++
++
++#define PADSA2R_REGISTER		0xFEB20028
++#define PADSA2R_DU0_DVENC		0x77900300
++#define PADSA2R_DU1_DVENC		0x77900C00
++
++#endif /* __RCAR_CVBS_REGS_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 775a0f4..b335970 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -138,6 +138,11 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 		dclksel_bit = ESCR_DCLKSEL_CLKS;
+ 	}
+ 
++	if (rcrtc->crtc.connector_type == DRM_MODE_CONNECTOR_Composite) {
++		div = 2;
++		dclksel_bit = ESCR_DCLKSEL_DCLKIN;
++	}
++
+ 	if (dclksel_bit & ESCR_DCLKSEL_CLKS)
+ 		dev_dbg(rcrtc->group->dev->dev,
+ 		      "Internal clock is used in CRTC[%d]. Dot clock:%ldkHz\n",
+@@ -200,6 +205,68 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	rcar_du_crtc_write(rcrtc, DEWR,  mode->hdisplay);
+ }
+ 
++static void rcar_du_crtc_set_color_conv_factor(struct rcar_du_crtc *rcrtc)
++{
++	if (rcrtc->crtc.connector_type == DRM_MODE_CONNECTOR_Composite) {
++		/* Set for full scale to ITU-R BT.601 conversion */
++		if (rcrtc->index == 0) {
++			rcar_du_group_update(rcrtc->group,
++				YCLRP, YCLRP_DU0(0x020e), YCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				YCLGP, YCLGP_DU0(0x0408), YCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				YCLBP, YCLBP_DU0(0x00c9), YCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				YCLAP, YCLAP_DU0(0x0010), YCLAP_DU0_MASK);
++
++			rcar_du_group_update(rcrtc->group,
++				CBCLRP, CBCLRP_DU0(0x112f), CBCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CBCLGP, CBCLGP_DU0(0x1254), CBCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CBCLBP, CBCLBP_DU0(0x0383), CBCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++			CBCLAP, CBCLAP_DU0(0x0080), CBCLAP_DU0_MASK);
++
++			rcar_du_group_update(rcrtc->group,
++				CRCLRP, CRCLRP_DU0(0x0383), CRCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CRCLGP, CRCLGP_DU0(0x12f2), CRCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CRCLBP, CRCLBP_DU0(0x1091), CRCLRGBP_DU0_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CRCLAP, CRCLAP_DU0(0x0080), CRCLAP_DU0_MASK);
++		} else {
++			rcar_du_group_update(rcrtc->group,
++				YCLRP, YCLRP_DU1(0x020e), YCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				YCLGP, YCLGP_DU1(0x0408), YCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				YCLBP, YCLBP_DU1(0x00c9), YCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				YCLAP, YCLAP_DU1(0x0010), YCLAP_DU1_MASK);
++
++			rcar_du_group_update(rcrtc->group,
++				CBCLRP, CBCLRP_DU1(0x112f), CBCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CBCLGP, CBCLGP_DU1(0x1254), CBCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CBCLBP, CBCLBP_DU1(0x0383), CBCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CBCLAP, CBCLAP_DU1(0x0080), CBCLAP_DU1_MASK);
++
++			rcar_du_group_update(rcrtc->group,
++				CRCLRP, CRCLRP_DU1(0x0383), CRCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CRCLGP, CRCLGP_DU1(0x12f2), CRCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CRCLBP, CRCLBP_DU1(0x1091), CRCLRGBP_DU1_MASK);
++			rcar_du_group_update(rcrtc->group,
++				CRCLAP, CRCLAP_DU1(0x0080), CRCLAP_DU1_MASK);
++		}
++	}
++}
++
+ void rcar_du_crtc_route_output(struct drm_crtc *crtc,
+ 			       enum rcar_du_output output)
+ {
+@@ -354,6 +421,8 @@ static void rcar_du_crtc_start(struct rcar_du_crtc *rcrtc)
+ 	rcar_du_crtc_update_planes(crtc);
+ 	mutex_unlock(&rcrtc->group->planes.lock);
+ 
++	rcar_du_crtc_set_color_conv_factor(rcrtc);
++
+ 	/* Setup planes. */
+ 	for (i = 0; i < ARRAY_SIZE(rcrtc->group->planes.planes); ++i) {
+ 		struct rcar_du_plane *plane = &rcrtc->group->planes.planes[i];
+@@ -871,13 +940,20 @@ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index)
+ 	rcrtc->dpms = DRM_MODE_DPMS_OFF;
+ 	rcrtc->plane = &rgrp->planes.planes[index % 2];
+ 	rcrtc->lvds_ch = -1;
++	rcrtc->cvbs_ch = -1;
+ 
+-	if (pdata->init_conn_type)
++	if (pdata->init_conn_type) {
+ 		crtc->connector_type = pdata->init_conn_type;
+-	else
++		if (pdata->init_conn_type == DRM_MODE_CONNECTOR_LVDS)
++			rcdu->info->routes[RCAR_DU_OUTPUT_LVDS0].possible_crtcs
++				= BIT(index);
++		else if (pdata->init_conn_type == DRM_MODE_CONNECTOR_Composite)
++			rcdu->info->routes[RCAR_DU_OUTPUT_CVBS].possible_crtcs
++				= BIT(index);
++	} else
+ 		crtc->connector_type = DRM_MODE_CONNECTOR_Unknown;
+ 
+-#if !defined(CONFIG_DRM_ADV7511) && !defined(CONFIG_DRM_ADV7511_MODULE)
++#if !defined(CONFIG_DRM_I2C_SII902X) && !defined(CONFIG_DRM_ADV7511) && !defined(CONFIG_DRM_ADV7511_MODULE)
+ 	if ((pdata->init_conn_type) &&
+ 		(crtc->connector_type == DRM_MODE_CONNECTOR_HDMIA)) {
+ 		if (rcdu->info->chip == RCAR_H2)
+@@ -885,7 +961,8 @@ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index)
+ 		if ((rcdu->info->chip == RCAR_M2 || rcdu->info->chip == RZ_G1M) ||
+ 			(rcdu->info->chip == RCAR_M2N))
+ 			crtc->connector_type = DRM_MODE_CONNECTOR_Unknown;
+-		if (rcdu->info->chip == RCAR_E2 || rcdu->info->chip == RZ_G1E)
++		if ((rcdu->info->chip == RCAR_E2 || rcdu->info->chip == RZ_G1E) ||
++		  (rcdu->info->chip == RCAR_E2X)|| (rcar->info->chip == RZ_G1C))
+ 			crtc->connector_type = DRM_MODE_CONNECTOR_LVDS;
+ 	}
+ #endif
+@@ -899,7 +976,7 @@ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index)
+ 			((rcdu->info->chip == RZ_G1M) ||
+ 			(rcdu->info->chip == RCAR_M2N) ||
+ 			(rcdu->info->chip == RZ_G1E) ||
+-			(rcdu->info->chip == RCAR_E2)))
++			(rcdu->info->chip == RCAR_E2))))
+ 			crtc->connector_type = DRM_MODE_CONNECTOR_Unknown;
+ 	}
+ #endif
+@@ -955,7 +1032,8 @@ int rcar_du_crtc_create(struct rcar_du_group *rgrp, unsigned int index)
+ 
+ 	if (vsp_ch != RCAR_DU_VSPD_UNUSED) {
+ 		/* R8A7794 and R8A7745 are not supported VSPD1 */
+-		if (((rcdu->info->chip == RCAR_E2) || (rcdu->info->chip == RZ_G1E)) &&
++		if (((rcdu->info->chip == RCAR_E2) || (rcdu->info->chip == RZ_G1E) ||
++		    (rcdu->info->chip == RCAR_E2X) || (rcdu->info->chip == RZ_G1C)) &&
+ 			((0x01 << vsp_ch) & BIT(1)))
+ 			vsp_ch = pdata->vsp = RCAR_DU_VSPD_UNUSED;
+ 		else if ((rcdu->info->chip == RCAR_H2) && (index == DU_CH_2) &&
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+index 6cdd02e6..31b6008 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+@@ -42,6 +42,7 @@ struct rcar_du_crtc {
+ 	struct rcar_du_group *group;
+ 	struct rcar_du_plane *plane;
+ 	int lvds_ch;
++	int cvbs_ch;
+ 	unsigned int dptsr_read;
+ 	unsigned int use_count;
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_cvbscon.c b/drivers/gpu/drm/rcar-du/rcar_du_cvbscon.c
+new file mode 100644
+index 0000000..3a4263f
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_cvbscon.c
+@@ -0,0 +1,208 @@
++/*
++ * rcar_du_cvbscon.c  --  R-Car Display Unit CVBS Connector
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X: contact
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_encoder.h"
++#include "rcar_du_kms.h"
++#include "rcar_du_cvbscon.h"
++#include "rcar_du_cvbsenc.h"
++
++struct rcar_du_cvbs_connector {
++	struct rcar_du_connector connector;
++
++	const struct rcar_du_connector_cvbs_data *cvbs;
++
++	struct drm_property *prop_tvsys;
++	u32 tvsys;
++};
++
++#define to_rcar_cvbs_connector(c) \
++	container_of(c, struct rcar_du_cvbs_connector, connector.connector)
++
++static int rcar_du_cvbs_connector_get_modes(struct drm_connector *connector)
++{
++	struct rcar_du_cvbs_connector *cvbscon =
++		to_rcar_cvbs_connector(connector);
++	struct drm_display_mode *mode;
++	u32 mode_num =
++		sizeof(cvbscon->cvbs->modes)/sizeof(cvbscon->cvbs->modes[0]);
++	u32 i;
++	u32 count = 0;
++
++	for (i = 0; i < mode_num; i++) {
++		mode = drm_mode_create(connector->dev);
++		if (mode == NULL)
++			return count;
++
++		mode->type = DRM_MODE_TYPE_PREFERRED | DRM_MODE_TYPE_DRIVER;
++		mode->clock = cvbscon->cvbs->modes[i].clock;
++		mode->hdisplay = cvbscon->cvbs->modes[i].hdisplay;
++		mode->hsync_start = cvbscon->cvbs->modes[i].hsync_start;
++		mode->hsync_end = cvbscon->cvbs->modes[i].hsync_end;
++		mode->htotal = cvbscon->cvbs->modes[i].htotal;
++		mode->vdisplay = cvbscon->cvbs->modes[i].vdisplay;
++		mode->vsync_start = cvbscon->cvbs->modes[i].vsync_start;
++		mode->vsync_end = cvbscon->cvbs->modes[i].vsync_end;
++		mode->vtotal = cvbscon->cvbs->modes[i].vtotal;
++		mode->flags = cvbscon->cvbs->modes[i].flags;
++
++		drm_mode_set_name(mode);
++		drm_mode_probed_add(connector, mode);
++		count++;
++	}
++
++	return count;
++}
++
++static int rcar_du_cvbs_connector_mode_valid(struct drm_connector *connector,
++					    struct drm_display_mode *mode)
++{
++	struct rcar_du_cvbs_connector *cvbscon =
++			to_rcar_cvbs_connector(connector);
++
++	if (mode->hdisplay != 720)
++		return MODE_ONE_WIDTH;
++
++	switch (cvbscon->tvsys) {
++	case RCAR_CVBS_OUTPUT_TVSYS_NTSC:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_M:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_60:
++		if (mode->vdisplay != 480)
++			return MODE_V_ILLEGAL;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_N:
++		if (mode->vdisplay != 576)
++			return MODE_V_ILLEGAL;
++		break;
++	default:
++		return MODE_ERROR;
++	}
++
++	return MODE_OK;
++}
++
++static const struct drm_connector_helper_funcs connector_helper_funcs = {
++	.get_modes = rcar_du_cvbs_connector_get_modes,
++	.mode_valid = rcar_du_cvbs_connector_mode_valid,
++	.best_encoder = rcar_du_connector_best_encoder,
++};
++
++static void rcar_du_cvbs_connector_destroy(struct drm_connector *connector)
++{
++	drm_sysfs_connector_remove(connector);
++	drm_connector_cleanup(connector);
++}
++
++static enum drm_connector_status
++rcar_du_cvbs_connector_detect(struct drm_connector *connector, bool force)
++{
++	return connector_status_connected;
++}
++
++static int rcar_du_cvbs_connector_set_tvsys(
++			struct rcar_du_cvbs_connector *cvbscon, u32 tvsys)
++{
++	if (cvbscon->tvsys == tvsys)
++		return 0;
++
++	if (tvsys < 0 || tvsys >= RCAR_CVBS_OUTPUT_TVSYS_NUM)
++		return -EINVAL;
++
++	rcar_du_cvbsenc_set_tvsys(cvbscon->connector.encoder->cvbs, tvsys);
++
++	cvbscon->tvsys = tvsys;
++
++	return 0;
++}
++
++static int rcar_du_cvbs_connector_set_property(struct drm_connector *connector,
++		struct drm_property *property, uint64_t val)
++{
++	struct rcar_du_cvbs_connector *cvbscon =
++		to_rcar_cvbs_connector(connector);
++
++	if (property == cvbscon->prop_tvsys)
++		rcar_du_cvbs_connector_set_tvsys(cvbscon, (u32)val);
++	else
++		return -EINVAL;
++
++	return 0;
++}
++
++
++static const struct drm_connector_funcs connector_funcs = {
++	.dpms = drm_helper_connector_dpms,
++	.detect = rcar_du_cvbs_connector_detect,
++	.fill_modes = drm_helper_probe_single_connector_modes,
++	.set_property = rcar_du_cvbs_connector_set_property,
++	.destroy = rcar_du_cvbs_connector_destroy,
++};
++
++int rcar_du_cvbs_connector_init(struct rcar_du_device *rcdu,
++				struct rcar_du_encoder *renc,
++				const struct rcar_du_connector_cvbs_data *cvbs)
++{
++	struct rcar_du_cvbs_connector *cvbscon;
++	struct drm_connector *connector;
++	int ret;
++
++	cvbscon = devm_kzalloc(rcdu->dev, sizeof(*cvbscon), GFP_KERNEL);
++	if (cvbscon == NULL)
++		return -ENOMEM;
++
++	cvbscon->cvbs = cvbs;
++
++	cvbscon->prop_tvsys = drm_property_create_range(
++					rcdu->ddev, 0, "tvsys",
++					0, RCAR_CVBS_OUTPUT_TVSYS_NUM - 1);
++	if (cvbscon->prop_tvsys == NULL)
++		return -ENOMEM;
++
++	connector = &cvbscon->connector.connector;
++
++	connector->interlace_allowed = true;
++
++	ret = drm_connector_init(rcdu->ddev, connector, &connector_funcs,
++				 DRM_MODE_CONNECTOR_Composite);
++	if (ret < 0)
++		return ret;
++
++	drm_connector_helper_add(connector, &connector_helper_funcs);
++	ret = drm_sysfs_connector_add(connector);
++	if (ret < 0)
++		return ret;
++
++	drm_helper_connector_dpms(connector, DRM_MODE_DPMS_OFF);
++	drm_object_property_set_value(&connector->base,
++		rcdu->ddev->mode_config.dpms_property, DRM_MODE_DPMS_OFF);
++
++	ret = drm_mode_connector_attach_encoder(connector, renc->encoder);
++	if (ret < 0)
++		return ret;
++
++	connector->encoder = renc->encoder;
++	cvbscon->connector.encoder = renc;
++
++	cvbscon->tvsys =
++		rcar_du_cvbsenc_get_tvsys(cvbscon->connector.encoder->cvbs);
++	drm_object_attach_property(&connector->base,
++			cvbscon->prop_tvsys, cvbscon->tvsys);
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_cvbscon.h b/drivers/gpu/drm/rcar-du/rcar_du_cvbscon.h
+new file mode 100644
+index 0000000..4032449
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_cvbscon.h
+@@ -0,0 +1,24 @@
++/*
++ * rcar_du_cvbscon.h  --  R-Car Display Unit CVBS Connector
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X: contact
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_CVBSCON_H__
++#define __RCAR_DU_CVBSCON_H__
++
++struct rcar_du_device;
++struct rcar_du_encoder;
++
++int rcar_du_cvbs_connector_init(struct rcar_du_device *rcdu,
++				struct rcar_du_encoder *renc,
++				const struct rcar_du_connector_cvbs_data *cvbs);
++
++#endif /* __RCAR_DU_CVBSCON_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.c b/drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.c
+new file mode 100644
+index 0000000..8ff1dcf
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.c
+@@ -0,0 +1,469 @@
++/*
++ * rcar_du_cvbsenc.c  --  R-Car Display Unit CVBS Encoder
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X: contact
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++#include <drm/drm_encoder_slave.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_encoder.h"
++#include "rcar_du_cvbsenc.h"
++#include "rcar_cvbs_regs.h"
++
++struct rcar_du_cvbsenc {
++	struct rcar_du_device *dev;
++
++	unsigned int index;
++	void __iomem *mmio;
++	struct clk *clock;
++	int dpms;
++
++	enum rcar_cvbs_input input;
++	enum rcar_cvbs_output_tvsys tvsys;
++};
++
++static void rcar_cvbs_write(struct rcar_du_cvbsenc *cvbs, u32 reg, u16 data)
++{
++	iowrite16(data, cvbs->mmio + reg);
++}
++
++void rcar_du_cvbsenc_set_tvsys(struct rcar_du_cvbsenc *cvbs,
++			       enum rcar_cvbs_output_tvsys tvsys)
++{
++	cvbs->tvsys = tvsys;
++
++	return;
++}
++
++enum rcar_cvbs_output_tvsys
++rcar_du_cvbsenc_get_tvsys(struct rcar_du_cvbsenc *cvbs)
++{
++	return cvbs->tvsys;
++}
++
++void rcar_du_cvbsenc_set_operating_mode(struct rcar_du_cvbsenc *cvbs)
++{
++	u16 val = 0;
++
++	val = IDENCMD1_SRL_EN;
++
++	switch (cvbs->tvsys) {
++	case RCAR_CVBS_OUTPUT_TVSYS_NTSC:
++		val |= IDENCMD1_WSS_OFF | IDENCMD1_SUBC_FREQ_3_58 |
++		       IDENCMD1_SUBC_PHCTRL_ON | IDENCMD1_FLD_FREQ_525_60 |
++		       IDENCMD1_CDM_NTSC;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_M:
++		val |= IDENCMD1_WSS_OFF | IDENCMD1_SUBC_FREQ_3_58 |
++		       IDENCMD1_SUBC_PHCTRL_ON | IDENCMD1_FLD_FREQ_525_60 |
++		       IDENCMD1_CDM_PAL;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_60:
++		val |= IDENCMD1_WSS_OFF | IDENCMD1_SUBC_FREQ_4_43 |
++		       IDENCMD1_SUBC_PHCTRL_OFF | IDENCMD1_FLD_FREQ_525_60 |
++		       IDENCMD1_CDM_PAL;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL:
++		val |= IDENCMD1_WSS_OFF | IDENCMD1_SUBC_FREQ_4_43 |
++		       IDENCMD1_SUBC_PHCTRL_ON | IDENCMD1_FLD_FREQ_625_50 |
++		       IDENCMD1_CDM_PAL;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_N:
++		val |= IDENCMD1_WSS_OFF | IDENCMD1_SUBC_FREQ_3_58 |
++		       IDENCMD1_SUBC_PHCTRL_ON | IDENCMD1_FLD_FREQ_625_50 |
++		       IDENCMD1_CDM_PAL;
++		break;
++	default:
++		/* DO NOTHING */
++		break;
++	}
++
++	rcar_cvbs_write(cvbs, IDENCMD1, val);
++
++	val = IDENCMD2_ADJ_COL_UPLIM_ON | IDENCMD2_ADJ_COL_LOLIM_ON |
++	      IDENCMD2_ADJ_LUM_UPLIM_ON | IDENCMD2_ADJ_LUM_LOLIM_ON |
++	      IDENCMD2_COL_UPLIM_ON | IDENCMD2_COL_LOLIM_ON |
++	      IDENCMD2_LUM_UPLIM_ON | IDENCMD2_LUM_LOLIM_ON |
++	      IDENCMD2_Y1SETUP_OFF;
++
++	rcar_cvbs_write(cvbs, IDENCMD2, val);
++}
++
++void rcar_du_cvbsenc_set_tint_burst_amplitude(struct rcar_du_cvbsenc *cvbs)
++{
++	u16 val = 0;
++
++	switch (cvbs->tvsys) {
++	case RCAR_CVBS_OUTPUT_TVSYS_NTSC:
++		val = ITNTBLEV_BURST(0xc9) | ITNTBLEV_TINT(0x00);
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_M:
++		val = ITNTBLEV_BURST(0xd9) | ITNTBLEV_TINT(0x00);
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_60:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_N:
++		val = ITNTBLEV_BURST(0xd7) | ITNTBLEV_TINT(0x00);
++		break;
++	default:
++		/* DO NOTHING */
++		break;
++	}
++
++	rcar_cvbs_write(cvbs, ITNTBLEV, val);
++}
++
++void rcar_du_cvbsenc_set_subcarrier_freq(struct rcar_du_cvbsenc *cvbs)
++{
++	u16 val_hi = 0;
++	u16 val_lo = 0;
++
++	switch (cvbs->tvsys) {
++	case RCAR_CVBS_OUTPUT_TVSYS_NTSC:
++		val_hi = IFSCH_M_NTSC;
++		val_lo = IFSCL_M_NTSC;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_M:
++		val_hi = IFSCH_M_PAL;
++		val_lo = IFSCL_M_PAL;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_60:
++		val_hi = IFSCH_BGI_PAL;
++		val_lo = IFSCL_BGI_PAL;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL:
++		val_hi = IFSCH_BGI_PAL;
++		val_lo = IFSCL_BGI_PAL;
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_N:
++		val_hi = IFSCH_N_PAL;
++		val_lo = IFSCL_N_PAL;
++		break;
++	default:
++		/* DO NOTHING */
++		break;
++	}
++
++	rcar_cvbs_write(cvbs, IFSCH, val_hi);
++	rcar_cvbs_write(cvbs, IFSCL, val_lo);
++}
++
++void rcar_du_cvbsenc_set_lum_sync_level(struct rcar_du_cvbsenc *cvbs)
++{
++	u16 val = 0;
++
++	val = ISYNSET_SYNDLY(0x15);
++
++	switch (cvbs->tvsys) {
++	case RCAR_CVBS_OUTPUT_TVSYS_NTSC:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_M:
++		val |= ISYNSET_Y1SYNC_LEVEL(0xdb);
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_60:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_N:
++		val |= ISYNSET_Y1SYNC_LEVEL(0xea);
++		break;
++	default:
++		/* DO NOTHING */
++		break;
++	}
++
++	rcar_cvbs_write(cvbs, ISYNSET, val);
++}
++
++void rcar_du_cvbsenc_set_burst_insert_pos(struct rcar_du_cvbsenc *cvbs)
++{
++	u16 val = 0;
++
++	switch (cvbs->tvsys) {
++	case RCAR_CVBS_OUTPUT_TVSYS_NTSC:
++		val = IBURST_START(0x45) | IBURST_END(0x65);
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_M:
++		val = IBURST_START(0x49) | IBURST_END(0x6b);
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_60:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_N:
++		val = IBURST_START(0x47) | IBURST_END(0x65);
++		break;
++	default:
++		/* DO NOTHING */
++		break;
++	}
++
++	rcar_cvbs_write(cvbs, IBURST, val);
++}
++
++
++void rcar_du_cvbsenc_set_burst_adv_start_pos(struct rcar_du_cvbsenc *cvbs)
++{
++	u16 val = 0;
++
++	val = ICSP_SCH(0x00);
++
++	switch (cvbs->tvsys) {
++	case RCAR_CVBS_OUTPUT_TVSYS_NTSC:
++		val |= ICSP_START(0x3d);
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_M:
++		val |= ICSP_START(0x42);
++		break;
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_60:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL:
++	case RCAR_CVBS_OUTPUT_TVSYS_PAL_N:
++		val |= ICSP_START(0x41);
++		break;
++	default:
++		/* DO NOTHING */
++		break;
++	}
++
++	rcar_cvbs_write(cvbs, ICSP, val);
++}
++
++int rcar_du_cvbsenc_start(struct rcar_du_cvbsenc *cvbs,
++			  struct rcar_du_crtc *rcrtc)
++{
++	void __iomem *srstclr7_reg;
++	void __iomem *padsa2r_reg;
++	void __iomem *mod_sel5_reg;
++	void __iomem *mod_sel5_mask_reg;
++	u32 padsa2r_val;
++	u32 mod_sel5_val;
++	u16 val;
++	int ret;
++
++	if (cvbs->dpms == DRM_MODE_DPMS_ON)
++		return 0;
++
++	if (!(cvbs->dev->info->cvbs_crtc & (0x01 << rcrtc->index)))
++		return -1;
++
++	rcrtc->cvbs_ch = cvbs->index;
++
++	cvbs->input = (rcrtc->index == 1) ? RCAR_CVBS_INPUT_DU1
++					  : RCAR_CVBS_INPUT_DU0;
++
++	/* software reset release */
++	srstclr7_reg = ioremap_nocache(SRSTCLR7_REGISTER, 0x04);
++	writel_relaxed(SRCR7_DVENC, srstclr7_reg);
++	iounmap(srstclr7_reg);
++
++	/* Set PADSA2R register */
++	padsa2r_reg = ioremap_nocache(PADSA2R_REGISTER, 0x04);
++	if (rcrtc->index == 1) {
++		padsa2r_val = PADSA2R_DU1_DVENC |
++			      (readl_relaxed(padsa2r_reg) & 0x00000300);
++	} else {
++		padsa2r_val = PADSA2R_DU0_DVENC |
++			      (readl_relaxed(padsa2r_reg) & 0x00000C00);
++	}
++	writel_relaxed(padsa2r_val, padsa2r_reg);
++	iounmap(padsa2r_reg);
++
++	/* DAC power on and DU data select */
++	mod_sel5_mask_reg = ioremap_nocache(MOD_SEL5_MASK_REGISTER, 0x04);
++	mod_sel5_reg      = ioremap_nocache(MOD_SEL5_REGISTER, 0x04);
++	mod_sel5_val = MOD_SEL5_DACPDB_NORMAL;
++	mod_sel5_val |= (rcrtc->index == 1) ? MOD_SEL5_DU1_SEL_MODE_DU1
++					    : MOD_SEL5_DU1_SEL_MODE_DU0;
++	writel_relaxed(~mod_sel5_val, mod_sel5_mask_reg);
++	writel_relaxed(mod_sel5_val, mod_sel5_reg);
++	iounmap(mod_sel5_reg);
++	iounmap(mod_sel5_mask_reg);
++
++	ret = clk_prepare_enable(cvbs->clock);
++	if (ret < 0)
++		return ret;
++
++	/* Use the NTSC encoder */
++	rcar_cvbs_write(cvbs, VSET, VSET_VESEL);
++
++	/* Set DAC output pin */
++	rcar_cvbs_write(cvbs, DENCOUT2, DENCOUT2_HDPD0_VDAC);
++
++	/* Initial state(not output): set to 0x3FF */
++	rcar_cvbs_write(cvbs, DENCO20, DENCO20_YSEL_INIT);
++
++	/* Set operating mode */
++	rcar_du_cvbsenc_set_operating_mode(cvbs);
++
++	/* Set TINT burst amplitude */
++	rcar_du_cvbsenc_set_tint_burst_amplitude(cvbs);
++
++	/* Set subcarrier frequency */
++	rcar_du_cvbsenc_set_subcarrier_freq(cvbs);
++
++	/* Set luminance signal synchronization level */
++	rcar_du_cvbsenc_set_lum_sync_level(cvbs);
++
++	/* Set Closed-Caption/CGMS/WSS mode */
++	val = ICCCGWS_CC_ANDG_ON | ICCCGWS_VBI_BYPASS_BLNK |
++	      ICCCGWS_Y1CC_OFF | ICCCGWS_CGMS_OFF;
++	rcar_cvbs_write(cvbs, ICCCGWS, val);
++
++	/* Set burst insertion position */
++	rcar_du_cvbsenc_set_burst_insert_pos(cvbs);
++
++	/* Set burst advanced start position */
++	rcar_du_cvbsenc_set_burst_adv_start_pos(cvbs);
++
++	/* Note: keep following registers initial value:
++	 *   IDLYSET, ICCD1, ICCD2, ICGWSD, IBLKSHP, ISHPSET,
++	 *   IBRTCON, IHADA, ITNTCOL, IY1GAIN, ICGAIN
++	 */
++
++	/* Start output to DAC */
++	rcar_cvbs_write(cvbs, DENCO20, DENCO20_YSEL_OUT2DAC);
++
++	cvbs->dpms = DRM_MODE_DPMS_ON;
++
++	return 0;
++}
++
++int rcar_du_cvbsenc_stop_suspend(struct rcar_du_cvbsenc *cvbs)
++{
++	if (cvbs->dpms == DRM_MODE_DPMS_OFF)
++		return -1;
++
++	/* Stop output to DAC */
++	clk_disable_unprepare(cvbs->clock);
++
++	if (cvbs->dev->info->cvbs_crtc) {
++		void __iomem *srcr7_reg;
++		void __iomem *mod_sel5_reg;
++		void __iomem *mod_sel5_mask_reg;
++		u32 mod_sel5_val;
++
++		/* DAC power down */
++		mod_sel5_mask_reg = ioremap_nocache(MOD_SEL5_MASK_REGISTER,
++						    0x04);
++		mod_sel5_reg      = ioremap_nocache(MOD_SEL5_REGISTER, 0x04);
++		mod_sel5_val = readl_relaxed(mod_sel5_reg);
++		mod_sel5_val &= ~MOD_SEL5_DACPDB_MASK;
++		mod_sel5_val |= MOD_SEL5_DACPDB_PD;
++		writel_relaxed(~mod_sel5_val, mod_sel5_mask_reg);
++		writel_relaxed(mod_sel5_val, mod_sel5_reg);
++		iounmap(mod_sel5_reg);
++		iounmap(mod_sel5_mask_reg);
++
++		/* software reset */
++		srcr7_reg = ioremap_nocache(SRCR7_REGISTER, 0x04);
++		writel_relaxed(readl_relaxed(srcr7_reg) |
++				SRCR7_DVENC, srcr7_reg);
++		iounmap(srcr7_reg);
++	}
++
++	cvbs->dpms = DRM_MODE_DPMS_OFF;
++
++	return 0;
++}
++
++void rcar_du_cvbsenc_stop(struct rcar_du_cvbsenc *cvbs)
++{
++	int ret;
++	unsigned int i;
++
++	ret = rcar_du_cvbsenc_stop_suspend(cvbs);
++	if (ret < 0)
++		return;
++
++	for (i = 0; i < cvbs->dev->pdata->num_crtcs; ++i)
++		if (cvbs->index == cvbs->dev->crtcs[i].cvbs_ch)
++			cvbs->dev->crtcs[i].cvbs_ch = -1;
++}
++
++int rcar_du_cvbsenc_dpms(struct rcar_du_cvbsenc *cvbs,
++			 struct drm_crtc *crtc, int mode)
++{
++	if (mode == DRM_MODE_DPMS_OFF) {
++		rcar_du_cvbsenc_stop(cvbs);
++		return 0;
++	} else if (crtc) {
++		struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++		return rcar_du_cvbsenc_start(cvbs, rcrtc);
++	} else
++		return -EINVAL;
++}
++
++static int rcar_du_cvbsenc_get_resources(struct rcar_du_cvbsenc *cvbs,
++					 struct platform_device *pdev)
++{
++	struct resource *mem;
++	char name[7];
++
++	sprintf(name, "cvbs.%u", cvbs->index);
++
++	mem = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
++	if (mem == NULL) {
++		dev_err(&pdev->dev, "failed to get memory resource for %s\n",
++			name);
++		return -EINVAL;
++	}
++
++	cvbs->mmio = devm_ioremap_resource(&pdev->dev, mem);
++	if (cvbs->mmio == NULL) {
++		dev_err(&pdev->dev, "failed to remap memory resource for %s\n",
++			name);
++		return -ENOMEM;
++	}
++
++	cvbs->clock = devm_clk_get(&pdev->dev, name);
++	if (IS_ERR(cvbs->clock)) {
++		dev_err(&pdev->dev, "failed to get clock for %s\n", name);
++		return PTR_ERR(cvbs->clock);
++	}
++
++	return 0;
++}
++
++int rcar_du_cvbsenc_init(struct rcar_du_device *rcdu)
++{
++	struct platform_device *pdev = to_platform_device(rcdu->dev);
++	const struct rcar_du_platform_data *pdata = rcdu->pdata;
++	struct rcar_du_cvbsenc *cvbs;
++	unsigned int j;
++	int ret;
++
++	if (rcdu->info->num_cvbs > 0) {
++		cvbs = devm_kzalloc(&pdev->dev, sizeof(*cvbs), GFP_KERNEL);
++		if (cvbs == NULL) {
++			dev_err(&pdev->dev, "failed to allocate private data\n");
++			return -ENOMEM;
++		}
++
++		cvbs->dev = rcdu;
++		cvbs->index = 0;
++		cvbs->input = RCAR_CVBS_INPUT_DU0;
++		cvbs->dpms = DRM_MODE_DPMS_OFF;
++
++		for (j = 0; j < pdata->num_encoders; j++) {
++			if (pdata->encoders[j].output == RCAR_DU_OUTPUT_CVBS)
++				cvbs->tvsys = pdata->encoders[j].connector
++						.cvbs.tvsys;
++		}
++
++		ret = rcar_du_cvbsenc_get_resources(cvbs, pdev);
++		if (ret < 0)
++			return ret;
++
++		rcdu->cvbs = cvbs;
++	}
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.h b/drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.h
+new file mode 100644
+index 0000000..def9eff
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_cvbsenc.h
+@@ -0,0 +1,58 @@
++/*
++ * rcar_du_cvbsenc.h  --  R-Car Display Unit CVBS Encoder
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X: contact
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_CVBSENC_H__
++#define __RCAR_DU_CVBSENC_H__
++
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/platform_data/rcar-du.h>
++
++#ifdef R8A779X_ES2_DU_CVBS_CH_DATA_GAP_WORKAROUND
++#define WAIT_PS_TIME_UNDER_61MHZ	100000
++#define WAIT_PS_TIME_UPPER_61MHZ	50000
++#define WAIT_PS_TIME_UPPER_121MHZ	25000
++#endif
++
++struct rcar_drm_crtc;
++struct rcar_du_cvbsenc;
++
++enum rcar_cvbs_input {
++	RCAR_CVBS_INPUT_DU0,
++	RCAR_CVBS_INPUT_DU1,
++};
++
++enum rcar_cvbs_output_tvsys {
++	RCAR_CVBS_OUTPUT_TVSYS_NTSC = 0,
++	RCAR_CVBS_OUTPUT_TVSYS_PAL,
++	RCAR_CVBS_OUTPUT_TVSYS_PAL_M,
++	RCAR_CVBS_OUTPUT_TVSYS_PAL_N,
++	RCAR_CVBS_OUTPUT_TVSYS_PAL_60,
++	RCAR_CVBS_OUTPUT_TVSYS_NUM
++};
++
++void rcar_du_cvbsenc_set_tvsys(struct rcar_du_cvbsenc *cvbs,
++			       enum rcar_cvbs_output_tvsys tvsys);
++enum rcar_cvbs_output_tvsys
++rcar_du_cvbsenc_get_tvsys(struct rcar_du_cvbsenc *cvbs);
++
++int rcar_du_cvbsenc_start(struct rcar_du_cvbsenc *cvbs,
++			  struct rcar_du_crtc *rcrtc);
++void rcar_du_cvbsenc_stop(struct rcar_du_cvbsenc *cvbs);
++int rcar_du_cvbsenc_stop_suspend(struct rcar_du_cvbsenc *cvbs);
++
++int rcar_du_cvbsenc_init(struct rcar_du_device *rcdu);
++int rcar_du_cvbsenc_dpms(struct rcar_du_cvbsenc *cvbs,
++			 struct drm_crtc *crtc, int mode);
++
++#endif /* __RCAR_DU_CVBSENC_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index be48fd4..e9070b3 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -442,7 +442,7 @@ static int rcar_du_pm_suspend(struct device *dev)
+ 
+ 	drm_kms_helper_poll_disable(rcdu->ddev);
+ 
+-#if defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE)
++#if defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE) || defined(CONFIG_DRM_I2C_SII902X)
+ 	list_for_each_entry(encoder,
+ 			 &rcdu->ddev->mode_config.encoder_list, head) {
+ 		if ((encoder->encoder_type == DRM_MODE_ENCODER_TMDS) &&
+@@ -483,7 +483,7 @@ static int rcar_du_pm_resume(struct device *dev)
+ 	}
+ #endif
+ 
+-#if defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE)
++#if defined(CONFIG_DRM_ADV7511) || defined(CONFIG_DRM_ADV7511_MODULE) || defined(CONFIG_DRM_I2C_SII902X)
+ 	list_for_each_entry(encoder,
+ 			 &rcdu->ddev->mode_config.encoder_list, head) {
+ 		if ((encoder->encoder_type == DRM_MODE_ENCODER_TMDS) &&
+@@ -540,6 +540,7 @@ static const struct rcar_du_device_info rcar_du_r8a7779_info = {
+ 		},
+ 	},
+ 	.num_lvds = 0,
++	.num_cvbs = 0,
+ 	.chip = RCAR_H1,
+ };
+ 
+@@ -585,12 +586,14 @@ static const struct rcar_du_device_info rcar_du_r8a7790_info = {
+ 		},
+ 	},
+ 	.num_lvds = 2,
++	.num_cvbs = 0,
+ 	.drgbs_bit = 0,
+ 	.max_xres = 1920,
+ 	.max_yres = 1080,
+ 	.interlace = false,
+ 	.lvds0_crtc = BIT(0),
+ 	.lvds1_crtc = BIT(1) | BIT(2),
++	.cvbs_crtc = 0,
+ 	.vspd_crtc = BIT(0) | BIT(1),
+ 	.chip = RCAR_H2,
+ 	.drgbs_use = true,
+@@ -622,12 +625,14 @@ static const struct rcar_du_device_info rcar_du_r8a7791_info = {
+ 		},
+ 	},
+ 	.num_lvds = 1,
++	.num_cvbs = 0,
+ 	.drgbs_bit = 1,
+ 	.max_xres = 1920,
+ 	.max_yres = 1080,
+ 	.interlace = false,
+ 	.lvds0_crtc = BIT(0),
+ 	.lvds1_crtc = 0,
++	.cvbs_crtc = 0,
+ 	.vspd_crtc = BIT(0) | BIT(1),
+ 	.chip = RCAR_M2,
+ 	.drgbs_use = true,
+@@ -659,12 +664,14 @@ static const struct rcar_du_device_info rcar_du_r8a7793_info = {
+ 		},
+ 	},
+ 	.num_lvds = 1,
++	.num_cvbs = 0,
+ 	.drgbs_bit = 1,
+ 	.max_xres = 1920,
+ 	.max_yres = 1080,
+ 	.interlace = true,
+ 	.lvds0_crtc = BIT(0),
+ 	.lvds1_crtc = 0,
++	.cvbs_crtc = 0,
+ 	.vspd_crtc = BIT(0) | BIT(1),
+ 	.chip = RCAR_M2N,
+ 	.drgbs_use = true,
+@@ -705,12 +712,14 @@ static const struct rcar_du_device_info rcar_du_r8a7794_info = {
+ 		},
+ 	},
+ 	.num_lvds = 0,
++	.num_cvbs = 0,
+ 	.drgbs_bit = 0,
+ 	.max_xres = 1920,
+ 	.max_yres = 1080,
+ 	.interlace = false,
+ 	.lvds0_crtc = 0,
+ 	.lvds1_crtc = 0,
++	.cvbs_crtc = 0,
+ 	.vspd_crtc = BIT(0),
+ 	.chip = RCAR_E2,
+ 	.drgbs_use = false,
+@@ -803,6 +812,47 @@ static const struct rcar_du_device_info rcar_du_r8a7743_info = {
+ };
+ 
+ 
++#ifdef R8A7790_ES1_DU_LVDS_LANE_MISCONNECTION_WORKAROUND
++static struct rcar_du_device_info rcar_du_r8a7747x_info = {
++#else
++static const struct rcar_du_device_info rcar_du_r8a7747x_info = {
++#endif
++	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK | RCAR_DU_FEATURE_DEFR8 |
++		    RCAR_DU_FEATURE_VSP1_SOURCE,
++	.num_crtcs = 2,
++	.routes = {
++		[RCAR_DU_OUTPUT_DPAD0] = {
++			.possible_crtcs = BIT(0),
++			.possible_clones = 0,
++			.encoder_type = DRM_MODE_ENCODER_NONE,
++		},
++		[RCAR_DU_OUTPUT_LVDS0] = {
++			.possible_crtcs = BIT(0) | BIT(1),
++			.possible_clones = 0,
++			.encoder_type = DRM_MODE_ENCODER_LVDS,
++		},
++		[RCAR_DU_OUTPUT_CVBS] = {
++			.possible_crtcs = BIT(0) | BIT(1),
++			.possible_clones = 0,
++			.encoder_type = DRM_MODE_ENCODER_TVDAC,
++		},
++	},
++	.num_lvds = 1,
++	.num_cvbs = 1,
++	.drgbs_bit = 1,
++	.max_xres = 1920,
++	.max_yres = 1080,
++	.interlace = true,
++	.lvds0_crtc = 0,
++	.lvds1_crtc = 0,
++	.cvbs_crtc = BIT(0) | BIT(1),
++	.vspd_crtc = BIT(0),	/* FIXME G1C-CVBS */
++	.chip = RZ_G1C,
++	.drgbs_use = true,
++	.vscs_use = false,
++};
++
++
+ static const struct platform_device_id rcar_du_id_table[] = {
+ 	{ "rcar-du-r8a7779", (kernel_ulong_t)&rcar_du_r8a7779_info },
+ 	{ "rcar-du-r8a7790", (kernel_ulong_t)&rcar_du_r8a7790_info },
+@@ -811,6 +861,7 @@ static const struct platform_device_id rcar_du_id_table[] = {
+ 	{ "rcar-du-r8a7794", (kernel_ulong_t)&rcar_du_r8a7794_info },
+ 	{ "rcar-du-r8a7743", (kernel_ulong_t)&rcar_du_r8a7743_info },
+ 	{ "rcar-du-r8a7745", (kernel_ulong_t)&rcar_du_r8a7745_info },
++	{ "rcar-du-r8a7747x", (kernel_ulong_t)&rcar_du_r8a7747x_info },
+ 	{ }
+ };
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index 22a769a..cc4dce7 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -26,6 +26,7 @@ struct drm_device;
+ struct drm_fbdev_cma;
+ struct rcar_du_device;
+ struct rcar_du_lvdsenc;
++struct rcar_du_cvbsenc;
+ 
+ #define R8A7790_ES1_DU_LVDS_LANE_MISCONNECTION_WORKAROUND
+ #define R8A779X_ES2_DU_LVDS_CH_DATA_GAP_WORKAROUND
+@@ -51,7 +52,8 @@ enum chip_id {
+ 	RCAR_M2N,
+ 	RCAR_E2,
+ 	RZ_G1E,
+-	RZ_G1M
++	RZ_G1M,
++	RZ_G1C
+ };
+ 
+ /*
+@@ -83,6 +85,7 @@ struct rcar_du_device_info {
+ 	unsigned int num_crtcs;
+ 	struct rcar_du_output_routing routes[RCAR_DU_OUTPUT_MAX];
+ 	unsigned int num_lvds;
++	unsigned int num_cvbs;
+ 	unsigned int drgbs_bit;
+ 	unsigned int max_xres;
+ 	unsigned int max_yres;
+@@ -90,6 +93,7 @@ struct rcar_du_device_info {
+ 	unsigned int cpu_clk_time_ps;
+ 	unsigned int lvds0_crtc;
+ 	unsigned int lvds1_crtc;
++	unsigned int cvbs_crtc;
+ 	unsigned int vspd_crtc;
+ 	enum chip_id chip;
+ 	bool drgbs_use;
+@@ -121,6 +125,7 @@ struct rcar_du_device {
+ 	unsigned int vspd1_sink;
+ 
+ 	struct rcar_du_lvdsenc *lvds[2];
++	struct rcar_du_cvbsenc *cvbs;
+ 	unsigned int crtcs_connect_id[3];
+ #ifdef CONFIG_DRM_RCAR_DU_CONNECT_VSP
+ 	unsigned int vsp_reserve;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+index aff3a74..f2ea4a0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+@@ -28,6 +28,8 @@
+ #include "rcar_du_lvdsenc.h"
+ #include "rcar_du_vgacon.h"
+ #include "rcar_du_hdmicon.h"
++#include "rcar_du_cvbscon.h"
++#include "rcar_du_cvbsenc.h"
+ #include "../i2c/adv7511.h"
+ 
+ /* -----------------------------------------------------------------------------
+@@ -52,6 +54,8 @@ static void rcar_du_encoder_dpms(struct drm_encoder *encoder, int mode)
+ 
+ 	if (renc->lvds)
+ 		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc, mode);
++	if (renc->cvbs)
++		rcar_du_cvbsenc_dpms(renc->cvbs, encoder->crtc, mode);
+ 
+ 	if (get_rcar_slave_funcs(encoder) &&
+ 		get_rcar_slave_funcs(encoder)->dpms)
+@@ -73,6 +77,8 @@ static bool rcar_du_encoder_mode_fixup(struct drm_encoder *encoder,
+ 		|| (encoder->encoder_type == DRM_MODE_ENCODER_TMDS))
+ 		return true;
+ 
++	/* FIXME E2X-CVBS */
++
+ 	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
+ 		if (connector->encoder == encoder) {
+ 			found = true;
+@@ -118,6 +124,9 @@ static void rcar_du_encoder_mode_prepare(struct drm_encoder *encoder)
+ 	if (renc->lvds)
+ 		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc,
+ 				     DRM_MODE_DPMS_OFF);
++	if (renc->cvbs)
++		rcar_du_cvbsenc_dpms(renc->cvbs, encoder->crtc,
++				     DRM_MODE_DPMS_OFF);
+ 
+ 	if (get_rcar_slave_funcs(encoder) &&
+ 		get_rcar_slave_funcs(encoder)->dpms)
+@@ -131,6 +140,9 @@ static void rcar_du_encoder_mode_commit(struct drm_encoder *encoder)
+ 	if (renc->lvds)
+ 		rcar_du_lvdsenc_dpms(renc->lvds, encoder->crtc,
+ 				     DRM_MODE_DPMS_ON);
++	if (renc->cvbs)
++		rcar_du_cvbsenc_dpms(renc->cvbs, encoder->crtc,
++				     DRM_MODE_DPMS_ON);
+ 
+ 	if (get_rcar_slave_funcs(encoder) &&
+ 		get_rcar_slave_funcs(encoder)->dpms)
+@@ -187,10 +199,19 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	struct rcar_du_encoder *renc;
+ 	unsigned int encoder_type;
+ 	int ret;
+-	u32 val;
++
+ 	struct i2c_adapter *adapter;
+ 	struct i2c_board_info info[] = {
+ 		{
++#ifdef CONFIG_MACH_IWG23S
++			.type = "sii9022",
++			.addr = 0x39,
++		},
++		{},
++	};
++
++	info->of_node = of_find_node_by_name(NULL, "sii9022");
++#else
+ 			.type = "adv7511",
+ 			.addr = 0x39,
+ 			.platform_data = &(struct adv7511_video_config) {
+@@ -209,9 +230,7 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	};
+ 
+ 	info->of_node = of_find_node_by_name(NULL, "adv7511");
+-
+-	if (of_property_read_u32(info->of_node, "adi,reg", &val) == 0)
+-		info->addr = val;
++#endif
+ 
+ 	renc = devm_kzalloc(rcdu->dev, sizeof(*renc), GFP_KERNEL);
+ 	if (renc == NULL)
+@@ -228,7 +247,9 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	case RCAR_DU_OUTPUT_LVDS1:
+ 		renc->lvds = rcdu->lvds[1];
+ 		break;
+-
++	case RCAR_DU_OUTPUT_CVBS:
++		renc->cvbs = rcdu->cvbs;
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -246,6 +267,9 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 	case RCAR_DU_ENCODER_HDMI:
+ 		encoder_type = DRM_MODE_ENCODER_TMDS;
+ 		break;
++	case RCAR_DU_ENCODER_CVBS:
++		encoder_type = DRM_MODE_ENCODER_TVDAC;
++		break;
+ 	case RCAR_DU_ENCODER_NONE:
+ 	default:
+ 		/* No external encoder, use the internal encoder type. */
+@@ -289,6 +313,10 @@ int rcar_du_encoder_init(struct rcar_du_device *rcdu,
+ 		if (type == RCAR_DU_ENCODER_RGB)
+ 			return rcar_du_rgb_connector_init(rcdu, renc,
+ 						&data->connector.rgb.panel);
++
++	case DRM_MODE_ENCODER_TVDAC:
++		return rcar_du_cvbs_connector_init(rcdu, renc,
++						&data->connector.cvbs);
+ 		/* fallthrough */
+ 	default:
+ 		return -EINVAL;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h b/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+index f18d2b3..469c688 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.h
+@@ -20,12 +20,14 @@
+ 
+ struct rcar_du_device;
+ struct rcar_du_lvdsenc;
++struct rcar_du_cvbsenc;
+ 
+ struct rcar_du_encoder {
+ 	struct drm_encoder_slave slave_encoder;
+ 	struct drm_encoder *encoder;
+ 	enum rcar_du_output output;
+ 	struct rcar_du_lvdsenc *lvds;
++	struct rcar_du_cvbsenc *cvbs;
+ 	struct rcar_du_device *dev;
+ };
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.c b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+index 3620040..aa6509d 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+@@ -44,6 +44,13 @@ void rcar_du_group_write(struct rcar_du_group *rgrp, u32 reg, u32 data)
+ 	rcar_du_write(rgrp->dev, rgrp->mmio_offset + reg, data);
+ }
+ 
++void rcar_du_group_update(struct rcar_du_group *rgrp, u32 reg, u32 data,
++			  u32 mask)
++{
++	rcar_du_write(rgrp->dev, rgrp->mmio_offset + reg,
++		      (rcar_du_group_read(rgrp, reg) & ~mask) | (data & mask));
++}
++
+ static void rcar_du_group_setup_defr8(struct rcar_du_group *rgrp)
+ {
+ 	u32 defr8 = DEFR8_CODE | DEFR8_DEFE8;
+@@ -76,12 +83,24 @@ static void rcar_du_group_setup_defr8(struct rcar_du_group *rgrp)
+ 
+ static void rcar_du_group_setup(struct rcar_du_group *rgrp)
+ {
++	u32 defr5 = 0;
++
+ 	/* Enable extended features */
+ 	rcar_du_group_write(rgrp, DEFR, DEFR_CODE | DEFR_DEFE);
+ 	rcar_du_group_write(rgrp, DEFR2, DEFR2_CODE | DEFR2_DEFE2G);
+ 	rcar_du_group_write(rgrp, DEFR3, DEFR3_CODE | DEFR3_DEFE3);
+ 	rcar_du_group_write(rgrp, DEFR4, DEFR4_CODE);
+-	rcar_du_group_write(rgrp, DEFR5, DEFR5_CODE | DEFR5_DEFE5);
++
++	defr5 = DEFR5_CODE | DEFR5_DEFE5;
++	if (rgrp->index == 0) {
++		if (rgrp->dev->crtcs[0].crtc.connector_type
++					== DRM_MODE_CONNECTOR_Composite)
++			defr5 |= (1 << 18) | (2 << 4);	/* DU0 to DVENC */
++		if (rgrp->dev->crtcs[1].crtc.connector_type
++					== DRM_MODE_CONNECTOR_Composite)
++			defr5 |= (1 << 18) | (2 << 6);	/* DU1 to DVENC */
++	}
++	rcar_du_group_write(rgrp, DEFR5, defr5);
+ 
+ 	rcar_du_group_setup_defr8(rgrp);
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.h b/drivers/gpu/drm/rcar-du/rcar_du_group.h
+index e55f1bb..2f112bf 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.h
+@@ -46,6 +46,8 @@ struct rcar_du_group {
+ 
+ u32 rcar_du_group_read(struct rcar_du_group *rgrp, u32 reg);
+ void rcar_du_group_write(struct rcar_du_group *rgrp, u32 reg, u32 data);
++void rcar_du_group_update(struct rcar_du_group *rgrp, u32 reg, u32 data,
++			  u32 mask);
+ 
+ int rcar_du_group_get(struct rcar_du_group *rgrp);
+ void rcar_du_group_put(struct rcar_du_group *rgrp);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
+index 793e7ad..76d2077 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
+@@ -125,7 +125,11 @@ int rcar_du_hdmi_connector_init(struct rcar_du_device *rcdu,
+ 
+ 	connector = &rcon->connector;
+ 
++#ifdef CONFIG_MACH_IWG23S
++	np = of_find_node_by_name(NULL, "sii9022");
++#else
+ 	np = of_find_node_by_name(NULL, "adv7511");
++#endif
+ 	if ((np) && (of_get_gpio(np, 0) > 0))
+ 		connector->polled = DRM_CONNECTOR_POLL_HPD;
+ 	else
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 8870f09..a5fa903 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -25,6 +25,7 @@
+ #include "rcar_du_encoder.h"
+ #include "rcar_du_kms.h"
+ #include "rcar_du_lvdsenc.h"
++#include "rcar_du_cvbsenc.h"
+ #include "rcar_du_regs.h"
+ 
+ static bool rcar_du_fbdev_pan = true;
+@@ -257,6 +258,10 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	ret = rcar_du_cvbsenc_init(rcdu);
++	if (ret < 0)
++		return ret;
++
+ 	for (i = 0; i < rcdu->pdata->num_encoders; ++i) {
+ 		const struct rcar_du_encoder_data *pdata =
+ 			&rcdu->pdata->encoders[i];
+@@ -266,7 +271,7 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 		if (pdata->type == RCAR_DU_ENCODER_UNUSED)
+ 			continue;
+ 
+-#if !defined(CONFIG_DRM_ADV7511) && !defined(CONFIG_DRM_ADV7511_MODULE)
++#if !defined(CONFIG_DRM_I2C_SII902X) && !defined(CONFIG_DRM_ADV7511) && !defined(CONFIG_DRM_ADV7511_MODULE)
+ 		if (pdata->type == RCAR_DU_ENCODER_HDMI)
+ 			continue;
+ #endif
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+index 9ab32ee..aaa1ad4 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc.c
+@@ -21,6 +21,7 @@
+ #include "rcar_du_drv.h"
+ #include "rcar_du_encoder.h"
+ #include "rcar_du_lvdsenc.h"
++#include "rcar_du_lvdsenc_r8a7747x.h"
+ #include "rcar_lvds_regs.h"
+ 
+ #ifdef R8A779X_ES2_DU_LVDS_CH_DATA_GAP_WORKAROUND
+@@ -58,6 +59,9 @@ int rcar_du_lvdsenc_start(struct rcar_du_lvdsenc *lvds,
+ 	unsigned int wait_loop, i;
+ #endif
+ 
++	if (lvds->dev->info->chip == RZ_G1C)
++		return rcar_du_lvdsenc_r8a7747x_start(lvds, rcrtc);
++
+ 	if (lvds->dpms == DRM_MODE_DPMS_ON)
+ 		return 0;
+ 
+@@ -172,6 +176,11 @@ int rcar_du_lvdsenc_start(struct rcar_du_lvdsenc *lvds,
+ 
+ 		spin_unlock_irqrestore(&lvdsenc_lock, flags);
+ 	} else {
++		/* Turn all the channels on. */
++		rcar_lvds_write(lvds, LVDCR1, LVDCR1_CHSTBY(3) |
++				 LVDCR1_CHSTBY(2) | LVDCR1_CHSTBY(1) |
++				 LVDCR1_CHSTBY(0) | LVDCR1_CLKSTBY);
++
+ 		/* Turn the PLL on, wait for the startup delay,
+ 			 and turn the output on. */
+ 		lvdcr0 |= LVDCR0_PLLEN;
+@@ -183,6 +192,10 @@ int rcar_du_lvdsenc_start(struct rcar_du_lvdsenc *lvds,
+ 		rcar_lvds_write(lvds, LVDCR0, lvdcr0);
+ 	}
+ #else
++	/* Turn all the channels on. */
++	rcar_lvds_write(lvds, LVDCR1, LVDCR1_CHSTBY(3) | LVDCR1_CHSTBY(2) |
++			LVDCR1_CHSTBY(1) | LVDCR1_CHSTBY(0) | LVDCR1_CLKSTBY);
++
+ 	/* Turn the PLL on, wait for the startup delay, and turn the output
+ 	 * on.
+ 	 */
+@@ -201,6 +214,9 @@ int rcar_du_lvdsenc_start(struct rcar_du_lvdsenc *lvds,
+ 
+ int rcar_du_lvdsenc_stop_suspend(struct rcar_du_lvdsenc *lvds)
+ {
++	if (lvds->dev->info->chip == RZ_G1C)
++		return rcar_du_lvdsenc_r8a7747x_stop_suspend(lvds);
++
+ 	if (lvds->dpms == DRM_MODE_DPMS_OFF)
+ 		return -1;
+ 
+@@ -233,6 +249,11 @@ void rcar_du_lvdsenc_stop(struct rcar_du_lvdsenc *lvds)
+ 	int ret;
+ 	unsigned int i;
+ 
++	if (lvds->dev->info->chip == RZ_G1C) {
++		rcar_du_lvdsenc_r8a7747x_stop(lvds);
++		return;
++	}
++
+ 	ret = rcar_du_lvdsenc_stop_suspend(lvds);
+ 	if (ret < 0)
+ 		return;
+@@ -245,6 +266,9 @@ void rcar_du_lvdsenc_stop(struct rcar_du_lvdsenc *lvds)
+ int rcar_du_lvdsenc_dpms(struct rcar_du_lvdsenc *lvds,
+ 			 struct drm_crtc *crtc, int mode)
+ {
++	if (lvds->dev->info->chip == RZ_G1C)
++		return rcar_du_lvdsenc_r8a7747x_dpms(lvds, crtc, mode);
++
+ 	if (mode == DRM_MODE_DPMS_OFF) {
+ 		rcar_du_lvdsenc_stop(lvds);
+ 		return 0;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.c b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.c
+new file mode 100644
+index 0000000..44d43df
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.c
+@@ -0,0 +1,254 @@
++/*
++ * rcar_du_lvdsenc_r8a7747x.c  --  R-Car Display Unit LVDS Encoder for R8A7747X
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++#include <drm/drm_encoder_slave.h>
++
++#include "rcar_du_drv.h"
++#include "rcar_du_encoder.h"
++#include "rcar_du_lvdsenc_r8a7747x.h"
++#include "rcar_lvds_regs_r8a7747x.h"
++
++struct rcar_du_lvdsenc {
++	struct rcar_du_device *dev;
++
++	unsigned int index;
++	void __iomem *mmio;
++	struct clk *clock;
++	int dpms;
++	int mode;
++
++	enum rcar_lvds_input input;
++};
++
++static void rcar_lvds_write(struct rcar_du_lvdsenc *lvds, u32 reg, u32 data)
++{
++	iowrite32(data, lvds->mmio + reg);
++}
++
++static u32 rcar_lvds_read(struct rcar_du_lvdsenc *lvds, u32 reg)
++{
++	return ioread32(lvds->mmio + reg);
++}
++
++static int rcar_du_lvdsenc_init_reg(struct rcar_du_lvdsenc *lvds,
++				    struct rcar_du_crtc *rcrtc)
++{
++	u32 lclkselr = 0;
++	u32 lpllsetr = 0;
++	u32 lpllmonr = 0;
++
++	/* TODO E2X-LVDS:
++	 *  Clear the DU and LVDS module standby states using CPG: MSTPCR */
++
++	/* Make settings of LVDS PLL and select a channel. */
++	lclkselr = LCLKSELR_LVDS_IN_CLK_SEL_2_1_DU_DOTCLKIN0;
++	lclkselr |= LCLKSELR_LVDS_NIDIV_SET(2);
++	lclkselr &= ~LCLKSELR_LVDS_CLK_EN;
++	rcar_lvds_write(lvds, LCLKSELR, lclkselr);
++
++	lpllsetr = LPLLSETR_LVDSPLL_BP_NORMAL;
++	lpllsetr |= LPLLSETR_LVDSPLL_FD(811);
++	lpllsetr |= LPLLSETR_LVDSPLL_RD(31 - 1);
++	lpllsetr |= LPLLSETR_LVDSPLL_OD(0);
++	lpllsetr |= LPLLSETR_LVDSPLL_PD;
++	rcar_lvds_write(lvds, LPLLSETR, lpllsetr);
++
++	lclkselr |= LCLKSELR_LVDS_BIAS_PDN;
++	rcar_lvds_write(lvds, LCLKSELR, lclkselr);
++
++	/* Wait for at least 0.5 us. -> Wait for 1 us. */
++	usleep_range(1, 5);
++
++	/* Release power-down state. */
++	lpllsetr &= ~LPLLSETR_LVDSPLL_PD;
++	rcar_lvds_write(lvds, LPLLSETR, lpllsetr);
++
++	/* Wait until the LVDS PLL is locked. */
++	do {
++		lpllmonr = rcar_lvds_read(lvds, LPLLMONR);
++		/* TODO E2X-LVDS: Tune the waiting time. */
++		usleep_range(1, 5);
++	} while (lpllmonr == 0);
++
++	/* Enable LVDS PLL output. */
++	lclkselr |= LCLKSELR_LVDS_CLK_EN;
++
++	/* Select the DU clock. */
++	if (lvds->dev->info->lvds0_crtc & (0x01 << rcrtc->index)) {
++		void __iomem *padsa2r_reg = NULL;
++		u32 padsa2r_val = 0;
++
++		padsa2r_reg = ioremap_nocache(PADSA2R_REGISTER, 0x04);
++		if (rcrtc->index == 1) {
++			lclkselr |= LCLKSELR_LVDS_IN_CLK_SEL_0_DU1;
++			padsa2r_val = PADSA2R_DU1_LVDS |
++				      (readl_relaxed(padsa2r_reg) & 0x00000300);
++			lvds->input = RCAR_LVDS_INPUT_DU1;
++		} else {
++			lclkselr |= LCLKSELR_LVDS_IN_CLK_SEL_0_DU0;
++			padsa2r_val = PADSA2R_DU0_LVDS |
++				      (readl_relaxed(padsa2r_reg) & 0x00000C00);
++			lvds->input = RCAR_LVDS_INPUT_DU0;
++		}
++		rcar_lvds_write(lvds, LCLKSELR, lclkselr);
++
++		writel_relaxed(padsa2r_val, padsa2r_reg);
++		iounmap(padsa2r_reg);
++	}
++
++	return 0;
++}
++
++int rcar_du_lvdsenc_r8a7747x_start(struct rcar_du_lvdsenc *lvds,
++				   struct rcar_du_crtc *rcrtc)
++{
++	u32 lvdcr0;
++	u32 lvdhcr;
++	int ret;
++
++	if (lvds->dpms == DRM_MODE_DPMS_ON)
++		return 0;
++
++	rcrtc->lvds_ch = lvds->index;
++
++	/* software reset release */
++	if (lvds->dev->info->lvds0_crtc & (0x01 << rcrtc->index)) {
++		void __iomem *srstclr7_reg;
++		srstclr7_reg = ioremap_nocache(SRSTCLR7_REGISTER, 0x04);
++		writel_relaxed(SRCR7_LVDS0, srstclr7_reg);
++		iounmap(srstclr7_reg);
++	}
++
++	ret = clk_prepare_enable(lvds->clock);
++	if (ret < 0)
++		return ret;
++
++	ret = rcar_du_lvdsenc_init_reg(lvds, rcrtc);
++	if (ret < 0)
++		return ret;
++
++	/* Hardcode the channels and control signals routing for now.
++	 *
++	 * HSYNC -> CTRL0
++	 * VSYNC -> CTRL1
++	 * DISP  -> CTRL2
++	 * 0     -> CTRL3
++	 */
++	rcar_lvds_write(lvds, LVDCTRCR, LVDCTRCR_CTR3SEL_ZERO |
++			LVDCTRCR_CTR2SEL_DISP | LVDCTRCR_CTR1SEL_VSYNC |
++			LVDCTRCR_CTR0SEL_HSYNC);
++
++#ifdef R8A7790_ES1_DU_LVDS_LANE_MISCONNECTION_WORKAROUND
++	if (rcar_du_needs(lvds->dev, RCAR_DU_QUIRK_LVDS_LANES))
++		lvdhcr = LVDCHCR_CHSEL_CH(0, 0) | LVDCHCR_CHSEL_CH(1, 3)
++		       | LVDCHCR_CHSEL_CH(2, 2) | LVDCHCR_CHSEL_CH(3, 1);
++	else
++		lvdhcr = LVDCHCR_CHSEL_CH(0, 0) | LVDCHCR_CHSEL_CH(1, 1)
++		       | LVDCHCR_CHSEL_CH(2, 2) | LVDCHCR_CHSEL_CH(3, 3);
++#else
++	lvdhcr = LVDCHCR_CHSEL_CH(0, 0) | LVDCHCR_CHSEL_CH(1, 1)
++	       | LVDCHCR_CHSEL_CH(2, 2) | LVDCHCR_CHSEL_CH(3, 3);
++#endif
++
++	rcar_lvds_write(lvds, LVDCHCR, lvdhcr);
++
++	/* Select the input, hardcode mode 0, enable LVDS operation and turn
++	 * bias circuitry on.
++	 */
++	lvdcr0 = LVDCR0_LVMD(lvds->mode);
++	if (rcrtc->index == 1)
++		lvdcr0 |= LVDCR0_DUSEL;
++	rcar_lvds_write(lvds, LVDCR0, lvdcr0);
++
++	/* TODO E2X-LVDS: Unnecessary waiting? */
++	usleep_range(100, 150);
++
++	/* LVDS output on. */
++	lvdcr0 |= LVDCR0_LVRES;
++	rcar_lvds_write(lvds, LVDCR0, lvdcr0);
++
++	lvds->dpms = DRM_MODE_DPMS_ON;
++	return 0;
++}
++
++int rcar_du_lvdsenc_r8a7747x_stop_suspend(struct rcar_du_lvdsenc *lvds)
++{
++	u32 lclkselr;
++	u32 lpllsetr;
++
++	if (lvds->dpms == DRM_MODE_DPMS_OFF)
++		return -1;
++
++	/* LVDS output off */
++	rcar_lvds_write(lvds, LVDCR0, 0);
++
++	/* Disable LVDS PLL output */
++	lclkselr = rcar_lvds_read(lvds, LCLKSELR);
++	lclkselr &= ~LCLKSELR_LVDS_CLK_EN;
++	rcar_lvds_write(lvds, LCLKSELR, lclkselr);
++
++	/* LVDS PLL power-down */
++	lpllsetr = rcar_lvds_read(lvds, LPLLSETR);
++	lpllsetr |= LPLLSETR_LVDSPLL_PD;
++	rcar_lvds_write(lvds, LPLLSETR, lpllsetr);
++
++	/* Wait for 1 us. */
++	usleep_range(1, 5);
++
++	clk_disable_unprepare(lvds->clock);
++
++	/* software reset */
++	if (lvds->dev->info->lvds0_crtc) {
++		void __iomem *srcr7_reg;
++		srcr7_reg = ioremap_nocache(SRCR7_REGISTER, 0x04);
++		writel_relaxed(readl_relaxed(srcr7_reg) |
++				SRCR7_LVDS0, srcr7_reg);
++		iounmap(srcr7_reg);
++	}
++
++	lvds->dpms = DRM_MODE_DPMS_OFF;
++
++	return 0;
++}
++
++void rcar_du_lvdsenc_r8a7747x_stop(struct rcar_du_lvdsenc *lvds)
++{
++	int ret;
++	unsigned int i;
++
++	ret = rcar_du_lvdsenc_r8a7747x_stop_suspend(lvds);
++	if (ret < 0)
++		return;
++
++	for (i = 0; i < lvds->dev->pdata->num_crtcs; ++i)
++		if (lvds->index == lvds->dev->crtcs[i].lvds_ch)
++			lvds->dev->crtcs[i].lvds_ch = -1;
++}
++
++int rcar_du_lvdsenc_r8a7747x_dpms(struct rcar_du_lvdsenc *lvds,
++			 struct drm_crtc *crtc, int mode)
++{
++	if (mode == DRM_MODE_DPMS_OFF) {
++		rcar_du_lvdsenc_r8a7747x_stop(lvds);
++		return 0;
++	} else if (crtc) {
++		struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
++		return rcar_du_lvdsenc_r8a7747x_start(lvds, rcrtc);
++	} else
++		return -EINVAL;
++}
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.h b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.h
+new file mode 100644
+index 0000000..a0ff2e9
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_du_lvdsenc_r8a7747x.h
+@@ -0,0 +1,40 @@
++/*
++ * rcar_du_lvdsenc_r8a7747x.h  --  R-Car Display Unit LVDS Encoder for R8A7747X
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef __RCAR_DU_LVDSENC_R8A7747X_H__
++#define __RCAR_DU_LVDSENC_R8A7747X_H__
++
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/platform_data/rcar-du.h>
++
++#include "rcar_du_lvdsenc.h"
++
++int rcar_du_lvdsenc_r8a7747x_start(struct rcar_du_lvdsenc *lvds,
++				   struct rcar_du_crtc *rcrtc);
++void rcar_du_lvdsenc_r8a7747x_stop(struct rcar_du_lvdsenc *lvds);
++int rcar_du_lvdsenc_r8a7747x_stop_suspend(struct rcar_du_lvdsenc *lvds);
++
++#if IS_ENABLED(CONFIG_DRM_RCAR_LVDS)
++int rcar_du_lvdsenc_r8a7747x_dpms(struct rcar_du_lvdsenc *lvds,
++				  struct drm_crtc *crtc, int mode);
++#else
++static inline int rcar_du_lvdsenc_r8a7747x_dpms(struct rcar_du_lvdsenc *lvds,
++						struct drm_crtc *crtc, int mode)
++{
++	return 0;
++}
++#endif
++
++
++#endif /* __RCAR_DU_LVDSENC_R8A7747X_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+index 33619f6..7a9cbd3 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_regs.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -518,4 +518,72 @@
+ #define GCBCR			0x11098
+ #define BCBCR			0x1109c
+ 
++/* -----------------------------------------------------------------------------
++ * RGB-YC Conversion Coefficient Registers
++ */
++
++#define YCLRGBP_DU1_MASK	0x1fff0000
++#define YCLRGBP_DU0_MASK	0x00001fff
++#define YCLAP_DU1_MASK		0x00ff0000
++#define YCLAP_DU0_MASK		0x000000ff
++
++#define YCLRP			0x14000
++#define YCLRP_DU1(x)		((x << 16) & YCLRGBP_DU1_MASK)
++#define YCLRP_DU0(x)		((x <<  0) & YCLRGBP_DU0_MASK)
++
++#define YCLGP			0x14004
++#define YCLGP_DU1(x)		((x << 16) & YCLRGBP_DU1_MASK)
++#define YCLGP_DU0(x)		((x <<  0) & YCLRGBP_DU0_MASK)
++
++#define YCLBP			0x14008
++#define YCLBP_DU1(x)		((x << 16) & YCLRGBP_DU1_MASK)
++#define YCLBP_DU0(x)		((x <<  0) & YCLRGBP_DU0_MASK)
++
++#define YCLAP			0x1400C
++#define YCLAP_DU1(x)		((x << 16) & YCLAP_DU1_MASK)
++#define YCLAP_DU0(x)		((x <<  0) & YCLAP_DU0_MASK)
++
++#define CBCLRGBP_DU1_MASK	0x1fff0000
++#define CBCLRGBP_DU0_MASK	0x00001fff
++#define CBCLAP_DU1_MASK		0x00ff0000
++#define CBCLAP_DU0_MASK		0x000000ff
++
++#define CBCLRP			0x14010
++#define CBCLRP_DU1(x)		((x << 16) & CBCLRGBP_DU1_MASK)
++#define CBCLRP_DU0(x)		((x <<  0) & CBCLRGBP_DU0_MASK)
++
++#define CBCLGP			0x14014
++#define CBCLGP_DU1(x)		((x << 16) & CBCLRGBP_DU1_MASK)
++#define CBCLGP_DU0(x)		((x <<  0) & CBCLRGBP_DU0_MASK)
++
++#define CBCLBP			0x14018
++#define CBCLBP_DU1(x)		((x << 16) & CBCLRGBP_DU1_MASK)
++#define CBCLBP_DU0(x)		((x <<  0) & CBCLRGBP_DU0_MASK)
++
++#define CBCLAP			0x1401C
++#define CBCLAP_DU1(x)		((x << 16) & CBCLAP_DU1_MASK)
++#define CBCLAP_DU0(x)		((x <<  0) & CBCLAP_DU0_MASK)
++
++#define CRCLRGBP_DU1_MASK	0x1fff0000
++#define CRCLRGBP_DU0_MASK	0x00001fff
++#define CRCLAP_DU1_MASK		0x00ff0000
++#define CRCLAP_DU0_MASK		0x000000ff
++
++#define CRCLRP			0x14020
++#define CRCLRP_DU1(x)		((x << 16) & CRCLRGBP_DU1_MASK)
++#define CRCLRP_DU0(x)		((x <<  0) & CRCLRGBP_DU0_MASK)
++
++#define CRCLGP			0x14024
++#define CRCLGP_DU1(x)		((x << 16) & CRCLRGBP_DU1_MASK)
++#define CRCLGP_DU0(x)		((x <<  0) & CRCLRGBP_DU0_MASK)
++
++#define CRCLBP			0x14028
++#define CRCLBP_DU1(x)		((x << 16) & CRCLRGBP_DU1_MASK)
++#define CRCLBP_DU0(x)		((x <<  0) & CRCLRGBP_DU0_MASK)
++
++#define CRCLAP			0x1402C
++#define CRCLAP_DU1(x)		((x << 16) & CRCLAP_DU1_MASK)
++#define CRCLAP_DU0(x)		((x <<  0) & CRCLAP_DU0_MASK)
++
++
+ #endif /* __RCAR_DU_REGS_H__ */
+diff --git a/drivers/gpu/drm/rcar-du/rcar_lvds_regs_r8a7747x.h b/drivers/gpu/drm/rcar-du/rcar_lvds_regs_r8a7747x.h
+new file mode 100644
+index 0000000..ab942f5
+--- /dev/null
++++ b/drivers/gpu/drm/rcar-du/rcar_lvds_regs_r8a7747x.h
+@@ -0,0 +1,87 @@
++/*
++ * rcar_lvds_regs_r8a7747x.h  --  R-Car LVDS Interface Registers Definitions
++ *                                for R8A7747X
++ *
++ * Copyright (C) 2016 Renesas Electronics Corporation
++ *
++ * Contact: TODO E2X
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation.
++ */
++
++#ifndef __RCAR_LVDS_REGS_R8A7747X_H__
++#define __RCAR_LVDS_REGS_R8A7747X_H__
++
++#define LCLKSELR			0x0000
++#define LCLKSELR_LVDS_IN_CLK_SEL_2_1_PERI		(0 << 25)
++#define LCLKSELR_LVDS_IN_CLK_SEL_2_1_DU_DOTCLKIN0	(1 << 25)
++#define LCLKSELR_LVDS_IN_CLK_SEL_2_1_DU_DOTCLKIN1	(2 << 25)
++#define LCLKSELR_LVDS_IN_CLK_SEL_0_DU0	(0 << 24)
++#define LCLKSELR_LVDS_IN_CLK_SEL_0_DU1	(1 << 24)
++#define LCLKSELR_LVDS_NIDIV_SET(x)	(((x) & 0x3) << 16)
++#define LCLKSELR_LVDS_CLK_EN		(1 << 4)
++#define LCLKSELR_LVDS_BIAS_PDN		(1 << 1)
++
++#define LPLLSETR			0x0004
++#define LPLLSETR_LVDSPLL_BP_NORMAL	(0 << 31)
++#define LPLLSETR_LVDSPLL_BP_BYPASS	(1 << 31)
++#define LPLLSETR_LVDSPLL_FD(x)		(((x) & 0x7ff) << 16)
++#define LPLLSETR_LVDSPLL_RD(x)		(((x) & 0x1f) << 8)
++#define LPLLSETR_LVDSPLL_OD(x)		(((x) & 0x3) << 4)
++#define LPLLSETR_LVDSPLL_PD		(1 << 0)
++
++#define LPLLMONR			0x0008
++#define LPLLMONR_LVDSPLL_LD_LOCKED	(1 << 0)
++
++#define LVDCR0				0x0010
++#define LVDCR0_DUSEL			(1 << 15)
++#define LVDCR0_LVMD_SHIFT		8
++#define LVDCR0_LVMD_MASK		(0xf << LVDCR0_LVMD_SHIFT)
++#define LVDCR0_LVMD(x)			((x << LVDCR0_LVMD_SHIFT) \
++						 & LVDCR0_LVMD_MASK)
++#define LVDCR0_LVRES			(1 << 0)
++
++#define LVDCTRCR			0x0014
++#define LVDCTRCR_CTR3SEL_ZERO		(0 << 12)
++#define LVDCTRCR_CTR3SEL_ODD		(1 << 12)
++#define LVDCTRCR_CTR3SEL_CDE		(2 << 12)
++#define LVDCTRCR_CTR3SEL_MASK		(7 << 12)
++#define LVDCTRCR_CTR2SEL_DISP		(0 << 8)
++#define LVDCTRCR_CTR2SEL_ODD		(1 << 8)
++#define LVDCTRCR_CTR2SEL_CDE		(2 << 8)
++#define LVDCTRCR_CTR2SEL_HSYNC		(3 << 8)
++#define LVDCTRCR_CTR2SEL_VSYNC		(4 << 8)
++#define LVDCTRCR_CTR2SEL_MASK		(7 << 8)
++#define LVDCTRCR_CTR1SEL_VSYNC		(0 << 4)
++#define LVDCTRCR_CTR1SEL_DISP		(1 << 4)
++#define LVDCTRCR_CTR1SEL_ODD		(2 << 4)
++#define LVDCTRCR_CTR1SEL_CDE		(3 << 4)
++#define LVDCTRCR_CTR1SEL_HSYNC		(4 << 4)
++#define LVDCTRCR_CTR1SEL_MASK		(7 << 4)
++#define LVDCTRCR_CTR0SEL_HSYNC		(0 << 0)
++#define LVDCTRCR_CTR0SEL_VSYNC		(1 << 0)
++#define LVDCTRCR_CTR0SEL_DISP		(2 << 0)
++#define LVDCTRCR_CTR0SEL_ODD		(3 << 0)
++#define LVDCTRCR_CTR0SEL_CDE		(4 << 0)
++#define LVDCTRCR_CTR0SEL_MASK		(7 << 0)
++
++#define LVDCHCR				0x0018
++#define LVDCHCR_CHSEL_CH(n, c)		((((c) - (n)) & 3) << ((n) * 4))
++#define LVDCHCR_CHSEL_MASK(n)		(3 << ((n) * 4))
++
++/* -----------------------------------------------------------------------------
++ * Reset register
++ */
++#define SRCR7_REGISTER		0xE61501CC
++#define SRSTCLR7_REGISTER	0xE615095C
++#define SRCR7_LVDS0		(1 << 26)
++#define SRCR7_LVDS1		(1 << 25)
++
++
++#define PADSA2R_REGISTER	0xFEB20028
++#define PADSA2R_DU0_LVDS	0x77900200
++#define PADSA2R_DU1_LVDS	0x77900800
++
++#endif /* __RCAR_LVDS_REGS_R8A7747X_H__ */
+-- 
+1.7.9.5
+

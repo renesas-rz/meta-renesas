@@ -1,0 +1,28 @@
+From aebce00c92561918af0e1c3805871239a6ef5b38 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:27:46 +0700
+Subject: [PATCH 11/15] iwg23s: sh: Add sh driver support. Signed-off-by:
+ Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/sh/pm_runtime.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/sh/pm_runtime.c b/drivers/sh/pm_runtime.c
+index 4c376ac..3262378 100644
+--- a/drivers/sh/pm_runtime.c
++++ b/drivers/sh/pm_runtime.c
+@@ -93,6 +93,9 @@ static int __init sh_pm_runtime_init(void)
+ 		    !of_machine_is_compatible("renesas,r8a7794") &&
+ 		    !of_machine_is_compatible("renesas,r8a7743") &&
+ 		    !of_machine_is_compatible("renesas,r8a7745") &&
++		    !of_machine_is_compatible("renesas,r8a77470") &&
++		    !of_machine_is_compatible("renesas,r8a77471") &&
++		    !of_machine_is_compatible("iw,iwg23s") &&
+ 		    !of_machine_is_compatible("renesas,sh7372") &&
+ 		    !of_machine_is_compatible("renesas,sh73a0"))
+ 			return 0;
+-- 
+1.7.9.5
+

@@ -1,0 +1,70 @@
+From 589d53ffda322b0e312063cc401aacc9865b9911 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:34:26 +0700
+Subject: [PATCH 14/15] iwg23s: include: linux: Add include linux rcar-du
+ and v4l2-driver support. Signed-off-by: Nguyen
+ Van Linh [FGA.BU13.RZG] <LinhNV25@fsoft.com.vn>
+
+---
+ include/linux/platform_data/rcar-du.h |    8 ++++++++
+ include/uapi/linux/v4l2-controls.h    |    4 ++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/include/linux/platform_data/rcar-du.h b/include/linux/platform_data/rcar-du.h
+index 9c73015..37ac0aa 100644
+--- a/include/linux/platform_data/rcar-du.h
++++ b/include/linux/platform_data/rcar-du.h
+@@ -23,6 +23,7 @@ enum rcar_du_output {
+ 	RCAR_DU_OUTPUT_LVDS1,
+ 	RCAR_DU_OUTPUT_TCON,
+ 	RCAR_DU_OUTPUT_HDMI,
++	RCAR_DU_OUTPUT_CVBS,
+ 	RCAR_DU_OUTPUT_MAX,
+ };
+ 
+@@ -33,6 +34,7 @@ enum rcar_du_encoder_type {
+ 	RCAR_DU_ENCODER_LVDS,
+ 	RCAR_DU_ENCODER_RGB,
+ 	RCAR_DU_ENCODER_HDMI,
++	RCAR_DU_ENCODER_CVBS,
+ };
+ 
+ #ifdef CONFIG_DRM_RCAR_DU_CONNECT_VSP
+@@ -69,6 +71,11 @@ struct rcar_du_connector_hdmi_data {
+ 	/* TODO: Add DDC information for EDID retrieval */
+ };
+ 
++struct rcar_du_connector_cvbs_data {
++	unsigned int tvsys;
++	struct drm_mode_modeinfo modes[2];
++};
++
+ /*
+  * struct rcar_du_encoder_data - Encoder platform data
+  * @type: the encoder type (RCAR_DU_ENCODER_*)
+@@ -88,6 +95,7 @@ struct rcar_du_encoder_data {
+ 		struct rcar_du_connector_rgb_data rgb;
+ 		struct rcar_du_connector_vga_data vga;
+ 		struct rcar_du_connector_hdmi_data hdmi;
++		struct rcar_du_connector_cvbs_data cvbs;
+ 	} connector;
+ };
+ 
+diff --git a/include/uapi/linux/v4l2-controls.h b/include/uapi/linux/v4l2-controls.h
+index 69bd5bb..b0059fe 100644
+--- a/include/uapi/linux/v4l2-controls.h
++++ b/include/uapi/linux/v4l2-controls.h
+@@ -160,6 +160,10 @@ enum v4l2_colorfx {
+  * of controls. Total of 16 controls is reserved for this driver */
+ #define V4L2_CID_USER_SI476X_BASE		(V4L2_CID_USER_BASE + 0x1040)
+ 
++/* The base for the r8a7747x driver controls.
++ * We reserve 16 controls for this driver. */
++#define V4L2_CID_USER_R8A7747X_BASE		(V4L2_CID_USER_BASE + 0x1050)
++
+ /* MPEG-class control IDs */
+ 
+ #define V4L2_CID_MPEG_BASE 			(V4L2_CTRL_CLASS_MPEG | 0x900)
+-- 
+1.7.9.5
+

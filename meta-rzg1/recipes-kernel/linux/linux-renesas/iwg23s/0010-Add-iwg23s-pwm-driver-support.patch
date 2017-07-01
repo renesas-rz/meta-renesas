@@ -1,0 +1,26 @@
+From ad5aca7573d03c6985746a272fe8934f88e393f2 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:26:34 +0700
+Subject: [PATCH 10/15] iwg23s: pwm: Add pwm driver support.
+ Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/pwm/pwm-rcar.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pwm/pwm-rcar.c b/drivers/pwm/pwm-rcar.c
+index bd401935..f750db0 100644
+--- a/drivers/pwm/pwm-rcar.c
++++ b/drivers/pwm/pwm-rcar.c
+@@ -313,6 +313,7 @@ static int rcar_pwm_remove(struct platform_device *pdev)
+ }
+ 
+ static const struct of_device_id rcar_pwm_of_table[] = {
++	{ .compatible = "renesas,pwm-r8a7747x", },
+ 	{ .compatible = "renesas,pwm-rcar", },
+ 	{ },
+ };
+-- 
+1.7.9.5
+

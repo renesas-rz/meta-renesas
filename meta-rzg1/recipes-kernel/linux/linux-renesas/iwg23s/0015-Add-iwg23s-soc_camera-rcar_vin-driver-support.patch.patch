@@ -1,0 +1,45 @@
+From 7372f2256a6a6089cf51041cd19c5d19708d556b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Thu, 20 Apr 2017 14:21:20 +0700
+Subject: [PATCH 15/15] iwg23s: soc_camera: Add rcar_vin driver support.
+ Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/media/platform/soc_camera/rcar_vin.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 4683d88..27e8bab 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -93,6 +93,7 @@
+ #define VNMC_INF_YUV8_BT656	(0 << 16)
+ #define VNMC_INF_YUV8_BT601	(1 << 16)
+ #define VNMC_INF_YUV16		(5 << 16)
++#define VNMC_INF_YUV20		((5 << 16) | (2 << 12))
+ #define VNMC_INF_RGB888		(6 << 16)
+ #define VNMC_INF_MASK		(7 << 16)
+ #define VNMC_VUP		(1 << 10)
+@@ -630,6 +631,10 @@ static int rcar_vin_setup(struct rcar_vin_priv *priv)
+ 		/* BT.601/BT.1358 16bit YCbCr422 */
+ 		vnmc |= VNMC_INF_YUV16;
+ 		break;
++	case V4L2_MBUS_FMT_YUYV10_1X20:
++		/* BT.601/BT.709/BT.1358 20bit YCbCr422 */
++		vnmc |= VNMC_INF_YUV20;
++		break;
+ 	case V4L2_MBUS_FMT_YUYV8_2X8:
+ 		/* BT.656 8bit YCbCr422 or BT.601 8bit YCbCr422 */
+ 		vnmc |= priv->pdata->flags & RCAR_VIN_BT656 ?
+@@ -1532,6 +1537,7 @@ static int rcar_vin_get_formats(struct soc_camera_device *icd, unsigned int idx,
+ 	switch (code) {
+ 	case V4L2_MBUS_FMT_YUYV8_1X16:
+ 	case V4L2_MBUS_FMT_YUYV8_2X8:
++	case V4L2_MBUS_FMT_YUYV10_1X20:
+ 	case V4L2_MBUS_FMT_RGB888_1X24:
+ 		if (cam->extra_fmt)
+ 			break;
+-- 
+1.7.9.5
+

@@ -1,0 +1,148 @@
+From dd82ef47712a5a225704bd62e8588d149e03b9e4 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sun, 16 Apr 2017 14:10:19 +0700
+Subject: [PATCH 02/15] iwg23s: clk: clk: r8a7747x: Add r8a7747x specific
+ clocks, pll, pll_out support. Signed-off-by:
+ Nguyen Van Linh [FGA.BU13.RZG]
+ <LinhNV25@fsoft.com.vn>
+
+---
+ drivers/clk/shmobile/Makefile        |    1 +
+ drivers/clk/shmobile/clk-rcar-gen2.c |   55 +++++++++++++++++++++++++++++++---
+ 2 files changed, 52 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/clk/shmobile/Makefile b/drivers/clk/shmobile/Makefile
+index f1b027b..cce7e91 100644
+--- a/drivers/clk/shmobile/Makefile
++++ b/drivers/clk/shmobile/Makefile
+@@ -7,6 +7,7 @@ obj-$(CONFIG_ARCH_R8A7793)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7794)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7743)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7745)		+= clk-rcar-gen2.o
++obj-$(CONFIG_ARCH_R8A7747X)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_SHMOBILE_MULTI)	+= clk-div6.o
+ obj-$(CONFIG_ARCH_SHMOBILE_MULTI)	+= clk-mstp.o
+ # for emply built-in.o
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 18fa199..deed1da 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -22,6 +22,7 @@
+ #include <linux/spinlock.h>
+ 
+ static bool is_e2;
++static bool is_e2x;
+ 
+ struct rcar_gen2_cpg {
+ 	struct clk_onecell_data data;
+@@ -203,6 +204,19 @@ static struct clk * __init cpg_z_clk_register(struct rcar_gen2_cpg *cpg)
+  * *2 :	Table 7.5c indicates VCO ouput (PLL1 = VCO/2)
+  */
+ 
++/*
++ * PLL Multiplication Ratio [E2X]
++ *   MD		EXTAL		PLL0	PLL1	PLL3
++ * 14 13	(MHz)			*1	*1
++ *--------------------------------------------------
++ * 0  0		20 x 1			x80/2	x78/2	x50
++ * 0  1		26 x 1			x60/2	x60/2	x56
++ * 1  0		Prohibited setting	-	-	-
++ * 1  1		30 x 1			x52/2	x52/2	x50
++ *
++ * *1 :	Table 7.5 indicates VCO ouput (PLLx = VCO/2)
++ */
++
+ #define CPG_PLL_CONFIG_INDEX(md)	((((md) & BIT(14)) >> 12) | \
+ 					 (((md) & BIT(13)) >> 12) | \
+ 					 (((md) & BIT(19)) >> 19))
+@@ -228,6 +242,11 @@ static const struct cpg_pll_config e2_cpg_pll_configs[8] __initconst = {
+ 	{ /* Invalid */ }, { 2, 200, 208,  88 },
+ };
+ 
++static const struct cpg_pll_config e2x_cpg_pll_configs[4] __initconst = {
++	{ 1, 80, 78, 50 }, { 1, 60, 60, 56 },
++	{ /* Invalid */ }, { 1, 52, 52, 50 },
++};
++
+ /* SDHI divisors */
+ static const struct clk_div_table cpg_sdh_div_table[] = {
+ 	{  0,  2 }, {  1,  3 }, {  2,  4 }, {  3,  6 },
+@@ -241,6 +260,11 @@ static const struct clk_div_table cpg_sd01_div_table[] = {
+ 	{  0,  0 },
+ };
+ 
++static const struct clk_div_table e2x_cpg_sd01_div_table[] = {
++	{  5, 12 }, {  6, 16 }, {  7, 18 }, {  8, 24 },
++	{ 10, 36 }, { 11, 48 }, { 12, 10 }, {  0,  0 },
++};
++
+ /* -----------------------------------------------------------------------------
+  * Initialization
+  */
+@@ -276,13 +300,19 @@ rcar_gen2_cpg_register_clock(struct device_node *np, struct rcar_gen2_cpg *cpg,
+ 		}
+ 	} else if (!strcmp(name, "pll1")) {
+ 		parent_name = "main";
+-		mult = config->pll1_mult / 2;
++		if (is_e2x)
++			mult = config->pll1_mult;
++		else
++			mult = config->pll1_mult / 2;
+ 	} else if (!strcmp(name, "pll3")) {
+ 		parent_name = "main";
+ 		mult = config->pll3_mult;
+ 	} else if (!strcmp(name, "lb")) {
+ 		parent_name = "pll1";
+-		div = cpg_mode & BIT(18) ? 36 : 24;
++		if (is_e2x)
++			div = 12;
++		else
++			div = cpg_mode & BIT(18) ? 36 : 24;
+ 	} else if (!strcmp(name, "qspi")) {
+ 		parent_name = "pll1_div2";
+ 		div = (cpg_mode & (BIT(3) | BIT(2) | BIT(1))) == BIT(2)
+@@ -293,11 +323,17 @@ rcar_gen2_cpg_register_clock(struct device_node *np, struct rcar_gen2_cpg *cpg,
+ 		shift = 8;
+ 	} else if (!strcmp(name, "sd0")) {
+ 		parent_name = "pll1";
+-		table = cpg_sd01_div_table;
++		if (is_e2x)
++			table = e2x_cpg_sd01_div_table;
++		else
++			table = cpg_sd01_div_table;
+ 		shift = 4;
+ 	} else if (!strcmp(name, "sd1")) {
+ 		parent_name = "pll1";
+-		table = cpg_sd01_div_table;
++		if (is_e2x)
++			table = e2x_cpg_sd01_div_table;
++		else
++			table = cpg_sd01_div_table;
+ 		shift = 0;
+ 	} else if (!strcmp(name, "z")) {
+ 		return cpg_z_clk_register(cpg);
+@@ -353,10 +389,21 @@ static void __init rcar_gen2_cpg_clocks_init(struct device_node *np)
+ 	    of_machine_is_compatible("renesas,r8a7743")) { 
+ 		config = &cpg_pll_configs[CPG_PLL_CONFIG_INDEX(cpg_mode)];
+ 		is_e2 = false;
++		is_e2x = false;
+ 	} else if (of_machine_is_compatible("renesas,r8a7794") ||
+ 		   of_machine_is_compatible("renesas,r8a7745")) {
+ 		config = &e2_cpg_pll_configs[CPG_PLL_CONFIG_INDEX(cpg_mode)];
+ 		is_e2 = true;
++		is_e2x = false;
++	} else if (of_machine_is_compatible("renesas,r8a77945") ||
++			   of_machine_is_compatible("renesas,r8a77946") ||
++			   of_machine_is_compatible("iw,iwg23s") ||
++			   of_machine_is_compatible("renesas,r8a77470") ||
++			   of_machine_is_compatible("renesas,r8a77471")) {
++		config = &e2x_cpg_pll_configs[CPG_PLL_CONFIG_INDEX(cpg_mode)
++						>> 1];
++		is_e2 = false;
++		is_e2x = true;
+ 	} else {
+ 		pr_err("%s: failed to find R-Car Gen2 compatible\n", __func__);
+ 		return;
+-- 
+1.7.9.5
+

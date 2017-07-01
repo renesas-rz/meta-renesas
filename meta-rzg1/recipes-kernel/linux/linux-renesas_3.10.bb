@@ -5,7 +5,7 @@ require ../../include/gles-control.inc
 require ../../include/multimedia-control.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg21m|iwg22m)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg21m|iwg22m|iwg23s)"
 
 PV_append = "+git${SRCREV}"
 
@@ -113,6 +113,25 @@ SRC_URI_append_iwg22m = "  \
     file://iwg22m/0001-iwg22m-Add-support-for-iWave-iwg22m-board.patch \
  "
 
+SRC_URI_append_iwg23s = "  \
+    file://iwg23s/0001-Add-iwg23s-mach-shmobile-and-dts-driver-support.patch \
+    file://iwg23s/0002-Add-iwg23s-clk-driver-support.patch \
+    file://iwg23s/0003-Add-iwg23s-gpio-driver-support.patch \
+    file://iwg23s/0004-Add-iwg23s-gpu-driver-support.patch \
+    file://iwg23s/0005-Add-iwg23s-i2c-driver-support.patch \
+    file://iwg23s/0006-Add-iwg23s-media-driver-support.patch \
+    file://iwg23s/0007-Add-iwg23s-mmc-driver-support.patch \
+    file://iwg23s/0008-Add-iwg23s-net-can-and-ethernet-driver-support.patch \
+    file://iwg23s/0009-Add-iwg23s-pinctl-driver-support.patch \
+    file://iwg23s/0010-Add-iwg23s-pwm-driver-support.patch \
+    file://iwg23s/0011-Add-iwg23s-sh-driver-support.patch \
+    file://iwg23s/0012-Add-iwg23s-spi-driver-support.patch \
+    file://iwg23s/0013-Add-iwg23s-usb-driver-support.patch \
+    file://iwg23s/0014-Add-iwg23s-include-linux-rcar-du-and-v4l2-driver-support.patch \
+    file://iwg23s/0015-Add-iwg23s-soc_camera-rcar_vin-driver-support.patch.patch \
+    file://iwg23s/0016-Enable-config-drm-rcar-du-connect-vsp.patch \
+"
+
 KERNEL_DEVICETREE_append_skrzg1m = '${@ \
 	" ${S}/arch/arm/boot/dts/r8a7743-skrzg1m-eavb.dts " if 'skrzg1m-tse' in '${MACHINE_FEATURES}' else \
 	""}'
@@ -125,6 +144,7 @@ KERNEL_DEFCONFIG = "shmobile_defconfig"
 KERNEL_DEFCONFIG_iwg20m = "iwg20m_defconfig"
 KERNEL_DEFCONFIG_iwg21m = "iwg21m_defconfig"
 KERNEL_DEFCONFIG_iwg22m = "iwg22m_defconfig"
+KERNEL_DEFCONFIG_iwg23s = "iwg23s_defconfig"
 
 do_configure_prepend() {
     install -m 0644 ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig || die "No default configuration for ${MACHINE} / ${KERNEL_DEFCONFIG} available."
@@ -180,6 +200,8 @@ do_configure_append() {
     kernel_configure_variable   LIB80211_CRYPT_WEP=y
     kernel_configure_variable   LIB80211_CRYPT_CCMP=y
     kernel_configure_variable   LIB80211_CRYPT_TKIP=y
+
+    kernel_configure_variable   EXT4_FS y
 
     yes '' | oe_runmake oldconfig
 }
