@@ -1,7 +1,7 @@
 require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 
 KORG_ARCHIVE_COMPRESSION = "xz"
-COMPATIBLE_MACHINE = "(skrzg1m|skrzg1e|iwg20m|iwg21m|iwg22m)"
+COMPATIBLE_MACHINE = "(skrzg1m|skrzg1e|iwg20m|iwg21m|iwg22m|iwg23s)"
 PV_append = "+git${SRCREV}"
 
 RENESAS_BACKPORTS_URL="git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git"

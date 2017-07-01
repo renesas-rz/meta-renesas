@@ -22,6 +22,7 @@ VSPFILTER_CONFIGS = " \
     file://gstvspfilter-iwg20m.conf \
     file://gstvspfilter-iwg21m.conf \
     file://gstvspfilter-iwg22m.conf \
+    file://gstvspfilter-iwg23s.conf \
 "
 
 # For wayland
