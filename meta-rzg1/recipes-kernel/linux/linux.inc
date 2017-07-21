@@ -34,3 +34,9 @@ kernel_configure_variable_val() {
     CONF_SCRIPT="${S}/scripts/config --file ${B}/.config"
     $CONF_SCRIPT --set-val CONFIG_$1 $2
 }
+
+kernel_configure_variable_str() {
+    # Remove the config
+    CONF_SCRIPT="${S}/scripts/config --file ${B}/.config"
+    $CONF_SCRIPT --set-str CONFIG_$1 $2
+}
