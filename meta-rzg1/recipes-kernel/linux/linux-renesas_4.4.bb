@@ -254,6 +254,11 @@ do_configure_append_iwg20m() {
 	kernel_configure_variable SND_SOC_SGTL5000 y
 	kernel_configure_variable RENESAS_WDT y
 	kernel_configure_variable VIDEO_TVP5150 y
+	kernel_configure_variable USB_XHCI_HCD y
+	kernel_configure_variable USB_XHCI_PCI y
+	kernel_configure_variable USB_XHCI_PLATFORM y
+	kernel_configure_variable USB_XHCI_RCAR y
+	kernel_configure_variable_str EXTRA_FIRMWARE r8a779x_usb3_v1.dlmem
 
 	yes '' | oe_runmake oldconfig
 }
