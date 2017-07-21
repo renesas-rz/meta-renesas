@@ -259,6 +259,11 @@ do_configure_append_iwg20m() {
 	kernel_configure_variable USB_XHCI_PLATFORM y
 	kernel_configure_variable USB_XHCI_RCAR y
 	kernel_configure_variable_str EXTRA_FIRMWARE r8a779x_usb3_v1.dlmem
+	kernel_configure_variable MEDIA_USB_SUPPORT y
+	kernel_configure_variable MEDIA_CAMERA_SUPPORT y
+	kernel_configure_variable USB_VIDEO_CLASS y
+	kernel_configure_variable VIDEO_V4L2 y
+	kernel_configure_variable USB_VIDEO_CLASS y
 
 	yes '' | oe_runmake oldconfig
 }
