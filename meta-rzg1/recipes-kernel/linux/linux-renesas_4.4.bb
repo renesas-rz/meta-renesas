@@ -210,6 +210,9 @@ SRC_URI = " \
 	file://iwg20m/0041-usb-host-xhci-add-a-new-quirk-XHCI_NO_64BIT_SUPPORT.patch \
 	file://iwg20m/0042-usb-host-xhci-plat-fix-cannot-work-if-R-Car-Gen2-3-r.patch \
 	file://iwg20m/0043-media-tvp5150-Add-querystd-function.patch \
+	file://iwg20m/0044-mmc-block-enable-user-to-switch-bus-width.patch \
+	file://iwg20m/0045-pinctrl-sh-pfc-r8a7791-Add-missing-mmc_data8_b-pin-g.patch \
+	file://iwg20m/0046-ARM-DTS-iwg20m-Enable-bus-width-8-bit-mode-for-mmc.patch \
 "
 
 
