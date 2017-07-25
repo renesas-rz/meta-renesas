@@ -209,6 +209,7 @@ SRC_URI = " \
 	file://iwg20m/0040-r8a779x_usb3-Add-new-firmware.patch \
 	file://iwg20m/0041-usb-host-xhci-add-a-new-quirk-XHCI_NO_64BIT_SUPPORT.patch \
 	file://iwg20m/0042-usb-host-xhci-plat-fix-cannot-work-if-R-Car-Gen2-3-r.patch \
+	file://iwg20m/0043-media-tvp5150-Add-querystd-function.patch \
 "
 
 
