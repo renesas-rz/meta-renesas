@@ -207,6 +207,8 @@ SRC_URI = " \
 	file://iwg20m/0038-ARM-DTS-iwg20m-enable-PWM-module.patch \
 	file://iwg20m/0039-ARM-DTS-iwg20m-enable-xhci.patch \
 	file://iwg20m/0040-r8a779x_usb3-Add-new-firmware.patch \
+	file://iwg20m/0041-usb-host-xhci-add-a-new-quirk-XHCI_NO_64BIT_SUPPORT.patch \
+	file://iwg20m/0042-usb-host-xhci-plat-fix-cannot-work-if-R-Car-Gen2-3-r.patch \
 "
 
 
