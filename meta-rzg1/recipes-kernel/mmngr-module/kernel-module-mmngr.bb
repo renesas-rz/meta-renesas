@@ -12,11 +12,13 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngr"
 SRC_URI = "file://mmngr.tar.bz2 \
            file://0002-Add-physical-address-translating-feature.patch \
+           file://0003-Add-iwg20m-config.patch \
 "
 S = "${WORKDIR}/mmngr"
 
-MMNGR_CFG_r8a7743 = "MMNGR_KOELSCH"
-MMNGR_CFG_r8a7745 = "MMNGR_ALT"
+MMNGR_CFG_skrzg1m = "MMNGR_KOELSCH"
+MMNGR_CFG_skrzg1e = "MMNGR_ALT"
+MMNGR_CFG_iwg20m = "MMNGR_IWG20M"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
