@@ -1,0 +1,161 @@
+From 609f3d4f242adf03adb6f9b953f59b649ad1d709 Mon Sep 17 00:00:00 2001
+From: Long Dang <long.dang.aj@rvc.renesas.com>
+Date: Fri, 9 Sep 2016 10:15:06 +0700
+Subject: [PATCH 3/5] gst145-omxvideoenc:add UseBuffer with physical addr
+
+Porting from a patch in Linux 3.10 environment
+
+Signed-off-by: Long Dang <long.dang.aj@rvc.renesas.com>
+---
+ omx/gstomxvideoenc.c | 84 +++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 76 insertions(+), 8 deletions(-)
+
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index 76430de..90c8821 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -26,6 +26,7 @@
+ #include <gst/gst.h>
+ #include <gst/video/gstvideometa.h>
+ #include <string.h>
++#include <stdio.h>
+
+ #include "gstomxvideo.h"
+ #include "gstomxvideoenc.h"
+@@ -65,6 +66,7 @@ static void gst_omx_video_enc_get_property (GObject * object, guint prop_id,
+     GValue * value, GParamSpec * pspec);
+
+
++static GList * get_mmap_p_addr(const char * video_file);
+ static GstStateChangeReturn
+ gst_omx_video_enc_change_state (GstElement * element,
+     GstStateChange transition);
+@@ -101,6 +103,9 @@ enum
+   PROP_NUM_P_FRAMES
+ };
+
++GList * p_buffers = NULL;
++GstVideoCodecFrame * pre_frame;
++
+ /* FIXME: Better defaults */
+ #define GST_OMX_VIDEO_ENC_CONTROL_RATE_DEFAULT (0xffffffff)
+ #define GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT (0xffffffff)
+@@ -1144,6 +1149,13 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+       port_def.format.video.xFramerate = (info->fps_n) / (info->fps_d);
+   }
+
++  p_buffers = get_mmap_p_addr("/dev/video0");
++  if (p_buffers) {
++    port_def.nBufferCountActual = g_list_length (p_buffers);
++    GST_DEBUG_OBJECT (self, "get %d mmap physical addresses of /dev/video0",
++                      g_list_length (p_buffers));
++  }
++
+   GST_DEBUG_OBJECT (self, "Setting inport port definition");
+   if (gst_omx_port_update_port_definition (self->enc_in_port,
+           &port_def) != OMX_ErrorNone)
+@@ -1214,16 +1226,34 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+         return FALSE;
+
+       /* Need to allocate buffers to reach Idle state */
+-      if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+-        return FALSE;
++      if (p_buffers) {
++        if(gst_omx_port_use_buffers (self->enc_in_port,p_buffers) != OMX_ErrorNone){
++          GST_ERROR_OBJECT (self, "OMX_UseBuffer() Error! try OMX_AllocateBuffer()");
++          p_buffers = NULL;
++          if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
++            return FALSE;
++        }
++      } else {
++        if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
++          return FALSE;
++      }
+     } else {
+       if (gst_omx_component_set_state (self->enc,
+               OMX_StateIdle) != OMX_ErrorNone)
+         return FALSE;
+
+       /* Need to allocate buffers to reach Idle state */
+-      if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+-        return FALSE;
++      if (p_buffers) {
++        if(gst_omx_port_use_buffers (self->enc_in_port,p_buffers) != OMX_ErrorNone){
++          GST_ERROR_OBJECT (self, "OMX_UseBuffer() Error! try OMX_AllocateBuffer()");
++          p_buffers = NULL;
++          if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
++            return FALSE;
++        }
++      } else {
++        if (gst_omx_port_allocate_buffers (self->enc_in_port) != OMX_ErrorNone)
++          return FALSE;
++      }
+       if (gst_omx_port_allocate_buffers (self->enc_out_port) != OMX_ErrorNone)
+         return FALSE;
+     }
+@@ -1323,9 +1353,12 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
+       outbuf->omx_buf->nAllocLen - outbuf->omx_buf->nOffset) {
+     outbuf->omx_buf->nFilledLen = gst_buffer_get_size (inbuf);
+
+-    gst_buffer_extract (inbuf, 0,
+-        outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
+-        outbuf->omx_buf->nFilledLen);
++    if(!p_buffers) {
++      gst_buffer_extract (inbuf, 0,
++          outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
++          outbuf->omx_buf->nFilledLen);
++    }
++
+     ret = TRUE;
+     goto done;
+   }
+@@ -1695,7 +1728,13 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
+     GST_DEBUG_OBJECT (self, "Passed frame to component");
+   }
+
+-  gst_video_codec_frame_unref (frame);
++  if (p_buffers) {
++    if(pre_frame)
++      gst_video_codec_frame_unref (pre_frame);
++    pre_frame = frame;
++  } else {
++    gst_video_codec_frame_unref (frame);
++  }
+
+   return self->downstream_flow_ret;
+
+@@ -1876,3 +1915,32 @@ gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
+     return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+   }
+ }
++
++static GList * get_mmap_p_addr(const char * video_file)
++{
++    FILE *fp;
++    char map_file[50];
++    char s_p_addr[50];
++    char tmp[200];
++    unsigned long p_addr;
++    GList *mmap_addr = NULL;
++
++    snprintf( map_file, 50,"/proc/%d/maps",getpid());
++
++    if((fp = fopen(map_file, "r")) == NULL) {
++        return(0);
++    }
++
++    while(fgets(tmp, 200, fp) != NULL) {
++      if((strstr(tmp, video_file)) != NULL) {
++        strncpy(s_p_addr,tmp+23,8);
++        s_p_addr[8] = '\0';
++        p_addr = strtoul(s_p_addr,NULL,16);
++        GST_DEBUG ("Get physical address %lx from %s", p_addr, video_file);
++        mmap_addr = g_list_prepend (mmap_addr, (gpointer)p_addr);
++      }
++    }
++
++    fclose(fp);
++    return mmap_addr;
++}
+--
+1.9.1
