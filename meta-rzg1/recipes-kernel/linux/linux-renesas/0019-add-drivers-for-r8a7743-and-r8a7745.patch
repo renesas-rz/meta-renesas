@@ -135,7 +135,7 @@ index 967c29d..37127b3 100644
  			crtc->connector_type = DRM_MODE_CONNECTOR_VGA;
  		if ((crtc->connector_type == DRM_MODE_CONNECTOR_LVDS) &&
  			((rcdu->info->chip == RCAR_M2) ||
-+			((rcdu->info->chip == RZ_G1M) ||
++			(rcdu->info->chip == RZ_G1M) ||
  			(rcdu->info->chip == RCAR_M2N) ||
 +			(rcdu->info->chip == RZ_G1E) ||
  			(rcdu->info->chip == RCAR_E2)))
