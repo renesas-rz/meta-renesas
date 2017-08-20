@@ -1,0 +1,29 @@
+From 17358f539931ebd9c6b3fce65f67829a1eedf930 Mon Sep 17 00:00:00 2001
+From: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 21 Aug 2017 04:14:24 +0700
+Subject: [PATCH] iwg20m:add sata,xhci,pcie alias in dts
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index aacba72..9e2225b 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -25,6 +25,11 @@
+ 		serial3 = &scifb1;
+ 		serial4 = &hscif1;
+ 		rev	= &q7_common;
++		sata0 = &sata0;
++		sata1 = &sata1;
++		xhci = &xhci;
++		pciec = &pciec;
++		pciec_clk = &pcie_bus_clk;
+ 	};
+ 
+ 	memory@40000000 {
+-- 
+1.9.1
+

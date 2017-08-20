@@ -86,6 +86,7 @@ SRC_URI_append_iwg20m = "  \
     file://iwg20m/0023-iwg20m-add-pwm-in-pfc-and-dts.patch \
     file://iwg20m/0024-Fix-issue-ov7725-soc_cam.patch \
     file://iwg20m/0025-iwg20m-fix-issue-of-wrong-pin-assignment-of-mmc_scif.patch \
+    file://iwg20m/0026-iwg20m-add-sata-xhci-pcie-alias-in-dts.patch \
 "
 
 SRC_URI_append_iwg21m = "  \
