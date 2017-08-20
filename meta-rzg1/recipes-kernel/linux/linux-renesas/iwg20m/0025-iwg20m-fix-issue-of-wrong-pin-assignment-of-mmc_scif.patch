@@ -1,0 +1,83 @@
+From 663abbcc8bc526d2d20366d9bbe14d31aeae17ea Mon Sep 17 00:00:00 2001
+From: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 21 Aug 2017 03:45:33 +0700
+Subject: [PATCH] iwg20m:fix issue of wrong pin assignment of mmc_scif0
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts |  2 +-
+ arch/arm/boot/dts/r8a7744-iwg20m.dts |  2 +-
+ drivers/pinctrl/sh-pfc/pfc-r8a7743.c | 13 +++++++++++++
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index f7a6396..aacba72 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -231,7 +231,7 @@
+ 	};
+ 
+ 	mmcif0_pins: mmc {
+-		renesas,groups = "mmc_data8", "mmc_ctrl";
++		renesas,groups = "mmc_data8_b", "mmc_ctrl";
+ 		renesas,function = "mmc";
+ 		};
+ 
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 01a2117..513cb1f 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -240,7 +240,7 @@
+ 	};
+ 
+ 	mmcif0_pins: mmc {
+-		renesas,groups = "mmc_data8", "mmc_ctrl";
++		renesas,groups = "mmc_data8_b", "mmc_ctrl";
+ 		renesas,function = "mmc";
+ 		};
+ 
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7743.c b/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
+index 1da0c83..e39917e 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
+@@ -2315,10 +2315,21 @@ static const unsigned int mmc_data8_pins[] = {
+ 	RCAR_GP_PIN(6, 22), RCAR_GP_PIN(6, 23),
+ 	RCAR_GP_PIN(6, 28), RCAR_GP_PIN(6, 29),
+ };
++static const unsigned int mmc_data8_b_pins[] = {
++	/* D[0:7] */
++	RCAR_GP_PIN(6, 18), RCAR_GP_PIN(6, 19),
++	RCAR_GP_PIN(6, 20), RCAR_GP_PIN(6, 21),
++	RCAR_GP_PIN(6, 22), RCAR_GP_PIN(6, 23),
++	RCAR_GP_PIN(6, 6), RCAR_GP_PIN(6, 7),
++};
+ static const unsigned int mmc_data8_mux[] = {
+ 	MMC_D0_MARK, MMC_D1_MARK, MMC_D2_MARK, MMC_D3_MARK,
+ 	MMC_D4_MARK, MMC_D5_MARK, MMC_D6_MARK, MMC_D7_MARK,
+ };
++static const unsigned int mmc_data8_b_mux[] = {
++	MMC_D0_MARK, MMC_D1_MARK, MMC_D2_MARK, MMC_D3_MARK,
++	MMC_D4_MARK, MMC_D5_MARK, MMC_D6_B_MARK, MMC_D7_B_MARK,
++};
+ static const unsigned int mmc_ctrl_pins[] = {
+ 	/* CLK, CMD */
+ 	RCAR_GP_PIN(6, 16), RCAR_GP_PIN(6, 17),
+@@ -4245,6 +4256,7 @@ static const struct sh_pfc_pin_group pinmux_groups[] = {
+ 	SH_PFC_PIN_GROUP(mmc_data1),
+ 	SH_PFC_PIN_GROUP(mmc_data4),
+ 	SH_PFC_PIN_GROUP(mmc_data8),
++	SH_PFC_PIN_GROUP(mmc_data8_b),
+ 	SH_PFC_PIN_GROUP(mmc_ctrl),
+ 	SH_PFC_PIN_GROUP(msiof0_clk),
+ 	SH_PFC_PIN_GROUP(msiof0_sync),
+@@ -4664,6 +4676,7 @@ static const char * const mmc_groups[] = {
+ 	"mmc_data1",
+ 	"mmc_data4",
+ 	"mmc_data8",
++	"mmc_data8_b",
+ 	"mmc_ctrl",
+ };
+ 
+-- 
+1.9.1
+

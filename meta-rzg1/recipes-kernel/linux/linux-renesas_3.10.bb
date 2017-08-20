@@ -85,6 +85,7 @@ SRC_URI_append_iwg20m = "  \
     file://iwg20m/0022-iwg20m-support-usb-otg.patch \
     file://iwg20m/0023-iwg20m-add-pwm-in-pfc-and-dts.patch \
     file://iwg20m/0024-Fix-issue-ov7725-soc_cam.patch \
+    file://iwg20m/0025-iwg20m-fix-issue-of-wrong-pin-assignment-of-mmc_scif.patch \
 "
 
 SRC_URI_append_iwg21m = "  \
