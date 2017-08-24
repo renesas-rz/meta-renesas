@@ -6,7 +6,9 @@ This branch supports building a Yocto 2.0 based BSP with the following component
 
 GCC 5.2
 
-U-Boot 2015.07
+U-Boot 2015.07 (SKRZG1E/M)
+
+U-Boot 2013.01 (IWAVE-G1M)
 
 Linux kernel 4.4 - CIP
 
