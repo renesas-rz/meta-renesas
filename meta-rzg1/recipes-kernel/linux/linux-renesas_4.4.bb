@@ -205,6 +205,8 @@ SRC_URI = " \
 	file://iwg20m/0036-pwm-tpu-add-support-r8a7743-Soc.patch \
 	file://iwg20m/0037-pinctrl-sh-pfc-r8a7743-add-pinctrl-for-TPU.patch \
 	file://iwg20m/0038-ARM-DTS-iwg20m-enable-PWM-module.patch \
+	file://iwg20m/0039-ARM-DTS-iwg20m-enable-xhci.patch \
+	file://iwg20m/0040-r8a779x_usb3-Add-new-firmware.patch \
 "
 
 
