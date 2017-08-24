@@ -1,0 +1,84 @@
+From 1ab8fb0796d5271ee3f1eb5fe24c313924cf83cf Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Thu, 24 Aug 2017 17:58:00 +0700
+Subject: [PATCH 3/6] ARM: DTS: iwg20m: add vin2
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 41 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index f2e574f..45978eb 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -268,6 +268,11 @@
+ 		renesas,function = "vin0";
+ 	};
+ 
++	vin2_pins: vin2 {
++		renesas,groups = "vin2_data8", "vin2_clk";
++		renesas,function = "vin2";
++	};
++
+ 	pwm3_pins: pwm3 {
+ 		renesas,groups = "pwm3";
+ 		renesas,function = "pwm3";
+@@ -474,6 +479,19 @@
+ 			};
+ 		};
+ 	};
++
++	ov7725@21 {
++		compatible = "ovti,ov772x";
++		reg = <0x21>;
++		remote = <&vin2>;
++
++		port {
++			ov7725: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin2ep>;
++			};
++		};
++	};
+ };
+ 
+ &du {
+@@ -559,6 +577,13 @@
+ 		output-high;
+ 		line-name = "tvp-power";
+ 	};
++
++	cam-power{
++		gpio-hog;
++		gpios = <3 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "cam-power";
++	};
+ };
+ 
+ &wdt0{
+@@ -595,3 +620,19 @@
+ 		};
+ 	};
+ };
++
++&vin2 {
++	status = "okay";
++	pinctrl-0 = <&vin2_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin2ep: endpoint {
++			remote-endpoint = <&ov7725>;
++			bus-width = <8>;
++		};
++	};
++};
+-- 
+2.1.4
+

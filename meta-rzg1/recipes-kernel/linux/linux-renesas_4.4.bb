@@ -213,6 +213,10 @@ SRC_URI = " \
 	file://iwg20m/0044-mmc-block-enable-user-to-switch-bus-width.patch \
 	file://iwg20m/0045-pinctrl-sh-pfc-r8a7791-Add-missing-mmc_data8_b-pin-g.patch \
 	file://iwg20m/0046-ARM-DTS-iwg20m-Enable-bus-width-8-bit-mode-for-mmc.patch \
+	file://iwg20m/0047-media-tvp5150-remove-unused-variables.patch \
+	file://iwg20m/0048-ARM-DTS-iwg20m-add-vin2.patch \
+	file://iwg20m/0049-media-add-ov7725-driver.patch \
+	file://iwg20m/0050-media-edit-Makefile-to-build-ov7725-driver.patch \
 "
 
 
@@ -272,6 +276,7 @@ do_configure_append_iwg20m() {
 	kernel_configure_variable USB_VIDEO_CLASS y
 	kernel_configure_variable VIDEO_V4L2 y
 	kernel_configure_variable USB_VIDEO_CLASS y
+	kernel_configure_variable SOC_CAMERA_OV772X y
 
 	yes '' | oe_runmake oldconfig
 }
