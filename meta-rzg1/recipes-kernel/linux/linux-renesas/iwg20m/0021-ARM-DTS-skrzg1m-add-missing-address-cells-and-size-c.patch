@@ -1,0 +1,27 @@
+From d23b1d87ad91536317a1b0e346e7d6771a5c4c68 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 16 Jun 2017 17:58:07 +0700
+Subject: [PATCH 10/20] ARM: DTS: skrzg1m: add missing address-cells and
+ size-cells
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-skrzg1m.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-skrzg1m.dts b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+index cdd232d..dd7c4a6 100644
+--- a/arch/arm/boot/dts/r8a7743-skrzg1m.dts
++++ b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+@@ -145,6 +145,8 @@
+ 			#size-cells = <0>;
+ 
+ 			port@0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				reg = <0>;
+ 				panel_input: endpoint {
+ 					reg = <0>;
+-- 
+1.8.0.1
+

@@ -1,0 +1,83 @@
+From cda12f3b2506e9abc0995e9bf169e2321e397217 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 23:29:17 +0700
+Subject: [PATCH 12/12] ARM: DTS: iwg20m: enable vin
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 41 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index d420213..950855e 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -262,6 +262,11 @@
+ 		renesas,groups = "can1_data_d";
+ 		renesas,function = "can1";
+ 	};
++
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data8", "vin0_clk";
++		renesas,function = "vin0";
++	};
+ };
+ 
+ &scif0 {
+@@ -453,6 +458,19 @@
+ 			};
+ 		};
+ 	};
++
++	composite-in@5d {
++		compatible = "ti,tvp5150";
++		reg = <0x5d>;
++		remote = <&vin0>;
++
++		port {
++			tvp5150: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin0ep>;
++			};
++		};
++	};
+ };
+ 
+ &du {
+@@ -531,6 +549,13 @@
+ 		output-low;
+ 		line-name = "can1-trx-en-gpio";
+ 	};
++
++	tvp-power{
++		gpio-hog;
++		gpios = <22 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "tvp-power";
++	};
+ };
+ 
+ &wdt0{
+@@ -544,3 +569,19 @@
+ &pciec {
+         status = "okay";
+ };
++
++&vin0 {
++	status = "okay";
++	pinctrl-0 = <&vin0_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin0ep: endpoint {
++			remote-endpoint = <&tvp5150>;
++			bus-width = <8>;
++		};
++	};
++};
+-- 
+1.9.1
+

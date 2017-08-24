@@ -1,0 +1,32 @@
+From 415b71a0a2e649a62d9d586454a06e17df601d80 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 09:20:49 +0700
+Subject: [PATCH 10/12] ARM: DTS: iwg20m: enable PCIe
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+%% original patch: 0031-ARM-DTS-iwg20m-enable-PCIe.patch
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index 064de60..d420213 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -536,3 +536,11 @@
+ &wdt0{
+ 	status = "okay";
+ };
++
++&pcie_bus_clk {
++        status = "okay";
++};
++
++&pciec {
++        status = "okay";
++};
+-- 
+1.9.1
+

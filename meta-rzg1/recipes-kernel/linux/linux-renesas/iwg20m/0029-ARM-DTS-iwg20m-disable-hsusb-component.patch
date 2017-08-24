@@ -1,0 +1,36 @@
+From 91c794fdca8bfa8804c91f347bba3000a322b6c0 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 09:03:50 +0700
+Subject: [PATCH 08/12] ARM: DTS: iwg20m: disable hsusb component
+
+as description in HW manual, usb only can work for one mode HS/FS/LS
+disable hsusb to remove confliction
+
+Signed-off-by: Loc Pham <loc.pham.xh@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+%% original patch: 0029-ARM-DTS-iwg20m-disable-hsusb-component.patch
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index d47716b..5155a63 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -345,12 +345,6 @@
+ 	};
+ };
+ 
+-&hsusb {
+-	status = "okay";
+-	pinctrl-0 = <&usb0_pins>;
+-	pinctrl-names = "default";
+-};
+-
+ &usbphy {
+ 	status = "okay";
+ };
+-- 
+1.9.1
+

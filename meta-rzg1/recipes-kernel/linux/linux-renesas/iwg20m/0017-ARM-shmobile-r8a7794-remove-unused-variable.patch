@@ -1,0 +1,25 @@
+From 82849c59f2dd07ac87e2c1b84ad81ce3321d43ce Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 16 Jun 2017 16:59:25 +0700
+Subject: [PATCH 06/20] ARM: shmobile: r8a7794: remove unused variable
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/mach-shmobile/sgx-r8a7794-quirk.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/sgx-r8a7794-quirk.c b/arch/arm/mach-shmobile/sgx-r8a7794-quirk.c
+index 0f2f047..8329520 100644
+--- a/arch/arm/mach-shmobile/sgx-r8a7794-quirk.c
++++ b/arch/arm/mach-shmobile/sgx-r8a7794-quirk.c
+@@ -18,7 +18,6 @@ static int r8a7794_sgx_notifier_call(struct notifier_block *nb,
+ 				    unsigned long event, void *data)
+ {
+ 	struct device *dev = data;
+-	u32 val;
+ 
+ 	switch (event) {
+ 	case BUS_NOTIFY_BIND_DRIVER:
+-- 
+1.8.0.1
+

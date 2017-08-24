@@ -1,0 +1,44 @@
+From afb982152d9a9750fb39e0f101a5aaa7df6f793c Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 18:48:02 +0700
+Subject: [PATCH 09/20] ARM: DTS: iwg20m: enable PWM module
+
+Signed-off-by: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index 950855e..72dcf0d 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -267,6 +267,11 @@
+ 		renesas,groups = "vin0_data8", "vin0_clk";
+ 		renesas,function = "vin0";
+ 	};
++
++	pwm3_pins: pwm3 {
++		renesas,groups = "pwm3";
++		renesas,function = "pwm3";
++	};
+ };
+ 
+ &scif0 {
+@@ -570,6 +575,13 @@
+         status = "okay";
+ };
+ 
++&pwm3 {
++	pinctrl-0 = <&pwm3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
+ &vin0 {
+ 	status = "okay";
+ 	pinctrl-0 = <&vin0_pins>;
+-- 
+2.1.4
+

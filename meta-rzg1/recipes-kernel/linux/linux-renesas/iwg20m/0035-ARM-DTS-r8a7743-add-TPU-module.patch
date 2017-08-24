@@ -1,0 +1,33 @@
+From a4258770b32eacc452755739dcac5146b88bc7c4 Mon Sep 17 00:00:00 2001
+From: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 13:15:25 +0700
+Subject: [PATCH 06/20] ARM: DTS: r8a7743: add TPU module
+
+Signed-off-by: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index 18d2a18..9cab611 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -1641,6 +1641,15 @@
+ 		#pwm-cells = <2>;
+ 	};
+ 
++	tpu: pwm@e60f0000 {
++		compatible = "renesas,tpu-r8a7743", "renesas,tpu";
++		reg = <0 0xe60f0000 0 0x40>;
++		interrupts = <0 135 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7743_CLK_TPU0>;
++		status = "disabled";
++		#pwm-cells = <3>;
++	};
++
+ 	pci0: pci@ee090000 {
+ 		compatible = "renesas,pci-r8a7743";
+ 		device_type = "pci";
+-- 
+2.1.4
+

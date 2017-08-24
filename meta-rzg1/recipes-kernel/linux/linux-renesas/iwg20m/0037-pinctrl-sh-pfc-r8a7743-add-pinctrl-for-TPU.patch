@@ -1,0 +1,59 @@
+From 141b2eb28a947ca2563fe534f2e07d952e8d7622 Mon Sep 17 00:00:00 2001
+From: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 13:33:18 +0700
+Subject: [PATCH 08/20] pinctrl: sh-pfc: r8a7743: add pinctrl for TPU
+
+Signed-off-by: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7743.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7743.c b/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
+index 621ed27..73e2dae 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7743.c
+@@ -2820,6 +2820,14 @@ static const unsigned int msiof2_tx_e_pins[] = {
+ static const unsigned int msiof2_tx_e_mux[] = {
+ 	MSIOF2_TXD_E_MARK,
+ };
++/* - TPU -------------------------------------------------------------------- */
++static const unsigned int tpu_to3_pins[] = {
++	/* CLK */
++	RCAR_GP_PIN(1, 24),
++};
++static const unsigned int tpu_to3_mux[] = {
++	TPU_TO3_MARK,
++};
+ /* - PWM -------------------------------------------------------------------- */
+ static const unsigned int pwm0_pins[] = {
+ 	RCAR_GP_PIN(6, 14),
+@@ -4299,6 +4307,7 @@ static const struct sh_pfc_pin_group pinmux_groups[] = {
+ 	SH_PFC_PIN_GROUP(msiof2_sync_e),
+ 	SH_PFC_PIN_GROUP(msiof2_rx_e),
+ 	SH_PFC_PIN_GROUP(msiof2_tx_e),
++	SH_PFC_PIN_GROUP(tpu_to3),
+ 	SH_PFC_PIN_GROUP(pwm0),
+ 	SH_PFC_PIN_GROUP(pwm0_b),
+ 	SH_PFC_PIN_GROUP(pwm1),
+@@ -4503,6 +4512,10 @@ static const char * const can1_groups[] = {
+ 	"can_clk_d",
+ };
+ 
++static const char * const tpu_groups[] = {
++	"tpu_to3",
++};
++
+ static const char * const du_groups[] = {
+ 	"du_rgb666",
+ 	"du_rgb888",
+@@ -4990,6 +5003,7 @@ static const struct sh_pfc_function pinmux_functions[] = {
+ 	SH_PFC_FUNCTION(msiof0),
+ 	SH_PFC_FUNCTION(msiof1),
+ 	SH_PFC_FUNCTION(msiof2),
++	SH_PFC_FUNCTION(tpu),
+ 	SH_PFC_FUNCTION(pwm0),
+ 	SH_PFC_FUNCTION(pwm1),
+ 	SH_PFC_FUNCTION(pwm2),
+-- 
+2.1.4
+

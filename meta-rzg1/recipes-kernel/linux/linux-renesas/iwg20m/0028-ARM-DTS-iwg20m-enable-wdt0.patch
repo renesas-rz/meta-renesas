@@ -1,0 +1,27 @@
+From a9ed0dc584bbd70e7557903e727d2a51ab9d38e6 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 09:00:27 +0700
+Subject: [PATCH 07/12] ARM: DTS: iwg20m: enable wdt0
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+%% original patch: 0028-ARM-DTS-iwg20m-enable-wdt0.patch
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index 00d6fdd..d47716b 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -542,3 +542,7 @@
+ 		line-name = "can1-trx-en-gpio";
+ 	};
+ };
++
++&wdt0{
++	status = "okay";
++};
+-- 
+1.9.1
+

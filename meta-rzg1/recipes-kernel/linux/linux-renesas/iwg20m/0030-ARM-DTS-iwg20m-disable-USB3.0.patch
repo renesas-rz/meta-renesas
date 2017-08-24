@@ -1,0 +1,50 @@
+From 8b62afbed44927a95e51412b8ecf07bfd8174c31 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 30 Jun 2017 09:09:58 +0700
+Subject: [PATCH 09/12] ARM: DTS: iwg20m: disable USB3.0
+
+xhci is driver for for USB3.0
+we detected an issue when using xhci: can not transfer large data
+it stop transfering large data after a period with below message:
+
+xhci-hcd ee000000.usb: xHCI host not responding to stop endpoint command.
+xhci-hcd ee000000.usb: Assuming host is dying, halting host.
+xhci-hcd ee000000.usb: HC died; cleaning up
+usb 3-1: USB disconnect, device number 2
+usb 4-1: USB disconnect, device number 2
+sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x01 driverbyte=0x00
+sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x2a 2a 00 00 00 09 a1 00 00 f0 00
+blk_update_request: I/O error, dev sda, sector 2465
+FAT-fs (sda1): FAT read failed (blocknr 2)
+sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x01 driverbyte=0x00
+sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x2a 2a 00 00 00 0a 91 00 00 f0 00
+blk_update_request: I/O error, dev sda, sector 2705
+FAT-fs (sda1): FAT read failed (blocknr 1)
+mv: write error: Input/output error
+
+Signed-off-by: Loc Pham <loc.pham.xh@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+%% original patch: 0030-ARM-DTS-iwg20m-disable-USB3.0.patch
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dts | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dts b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+index 5155a63..064de60 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dts
+@@ -349,10 +349,6 @@
+ 	status = "okay";
+ };
+ 
+-&xhci {
+-	status = "okay";
+-};
+-
+ &pci0 {
+ 	status = "okay";
+ 	pinctrl-0 = <&usb0_pins>;
+-- 
+1.9.1
+

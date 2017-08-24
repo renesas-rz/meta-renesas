@@ -183,6 +183,28 @@ SRC_URI = " \
 	file://iwg20m/0014-ARM-config-shmobile-enable-JFFS2-file-system.patch \
 	file://iwg20m/0015-ARM-DTS-iwg20m-enable-i2c-control-for-RTC.patch \
 	file://iwg20m/0016-ARM-DTS-iwg20m-enable-remained-scif-channels.patch \
+	file://iwg20m/0017-ARM-shmobile-r8a7794-remove-unused-variable.patch \
+	file://iwg20m/0018-ARM-shmobile-r8a7745-remove-unused-variable.patch \
+	file://iwg20m/0019-ARM-shmobile-apmu-correct-specifier-in-pr_debug.patch \
+	file://iwg20m/0020-soc_camera-vin-remove-unused-variable.patch \
+	file://iwg20m/0021-ARM-DTS-skrzg1m-add-missing-address-cells-and-size-c.patch \
+	file://iwg20m/0022-ARM-DTS-iwg20m-enable-display.patch \
+	file://iwg20m/0023-ARM-DTS-iwg20m-enable-audio.patch \
+	file://iwg20m/0024-ARM-DTS-iwg20m-enable-CAN.patch \
+	file://iwg20m/0025-watchdog-renesas-wdt-add-driver.patch \
+	file://iwg20m/0026-watchdog-renesas-wdt-add-restart-handler.patch \
+	file://iwg20m/0027-ARM-DTS-r8a7743-add-description-for-wdt0.patch \
+	file://iwg20m/0028-ARM-DTS-iwg20m-enable-wdt0.patch \
+	file://iwg20m/0029-ARM-DTS-iwg20m-disable-hsusb-component.patch \
+	file://iwg20m/0030-ARM-DTS-iwg20m-disable-USB3.0.patch \
+	file://iwg20m/0031-ARM-DTS-iwg20m-enable-PCIe.patch \
+	file://iwg20m/0032-media-v4l-tvp5150-fix-not-work-on-iwg20m-board.patch \
+	file://iwg20m/0033-ARM-DTS-iwg20m-enable-vin.patch \
+	file://iwg20m/0034-ARM-DTS-r8a7743-add-PWM-module.patch \
+	file://iwg20m/0035-ARM-DTS-r8a7743-add-TPU-module.patch \
+	file://iwg20m/0036-pwm-tpu-add-support-r8a7743-Soc.patch \
+	file://iwg20m/0037-pinctrl-sh-pfc-r8a7743-add-pinctrl-for-TPU.patch \
+	file://iwg20m/0038-ARM-DTS-iwg20m-enable-PWM-module.patch \
 "
 
 
@@ -223,10 +245,15 @@ do_configure_append_iwg20m() {
 
 	configure_cma_iwg20m
 	configure_ravb
+	configure_rcar_can
+	configure_rcar_pwm
 
 	kernel_configure_variable USB_U_ETHER n
 	kernel_configure_variable USB_ETH m
 	kernel_configure_variable RTC_DRV_BQ32K y
+	kernel_configure_variable SND_SOC_SGTL5000 y
+	kernel_configure_variable RENESAS_WDT y
+	kernel_configure_variable VIDEO_TVP5150 y
 
 	yes '' | oe_runmake oldconfig
 }
