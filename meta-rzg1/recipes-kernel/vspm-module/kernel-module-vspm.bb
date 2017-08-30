@@ -2,8 +2,8 @@ require ../../include/rzg-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
-    file://vspm/drv/GPL-COPYING;md5=12f884d2ae1ff87c09e5b7ccc2c4ca7e \
-    file://vspm/drv/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
+    file://drv/GPL-COPYING;md5=12f884d2ae1ff87c09e5b7ccc2c4ca7e \
+    file://drv/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 DEPENDS = "linux-renesas"
 PN = "kernel-module-vspm"
@@ -13,14 +13,14 @@ SRC_URI = "file://vspm-kernel.tar.bz2 \
         file://0001-vsp-vsp_drv_par-correct-return-error-code-for-hgt_pa.patch \
 "
 
-S = "${WORKDIR}"
+S = "${WORKDIR}/vspm"
 
 VSPM_CFG_r8a7743 = "M2CONFIG"
 VSPM_CFG_r8a7745 = "E2CONFIG"
 
 do_compile() {
     export VSPM_CONFIG=${VSPM_CFG}
-    cd ${S}/vspm/drv
+    cd ${S}/drv
     make all ARCH=arm
 }
 
@@ -29,15 +29,15 @@ do_install() {
     mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include
 
     # Copy kernel module
-    cp -f ${S}/vspm/drv/vspm.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    cp -f ${S}/drv/vspm.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Copy shared header files
     cp -f ${KERNELSRC}/include/vspm_public.h ${D}/usr/src/kernel/include
     cp -f ${KERNELSRC}/include/vsp_drv.h ${D}/usr/src/kernel/include
     cp -f ${KERNELSRC}/include/tddmac_drv.h ${D}/usr/src/kernel/include
     cp -f ${KERNELSRC}/include/vspm_if.h ${D}/usr/src/kernel/include
-    cp -f ${S}/vspm/drv/Module.symvers ${D}/usr/src/kernel/include/vspm.symvers
-    cp -f ${S}/vspm/drv/Module.symvers ${KERNELSRC}/include/vspm.symvers
+    cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/vspm.symvers
+    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/vspm.symvers
 
     # Copy for vspm-user-module
     cp -f ${KERNELSRC}/include/vspm_if.h ${BUILDDIR}/include
