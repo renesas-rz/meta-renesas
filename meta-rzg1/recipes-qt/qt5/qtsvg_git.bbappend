@@ -1,6 +1,6 @@
 #Revision to update qt5.6.2
 require qt5.6.2_git.inc
-SRCREV = "82e11583928d47576c160d35c9df05c0eec34df8"
+SRCREV = "2d55b4996eaa26c973afdf15f6f703c0a1840a96"
 
 LIC_FILES_CHKSUM = " \
     file://LICENSE.LGPLv21;md5=4bfd28363f541b10d9f024181b8df516 \
@@ -9,8 +9,3 @@ LIC_FILES_CHKSUM = " \
     file://LGPL_EXCEPTION.txt;md5=9625233da42f9e0ce9d63651a9d97654 \
     file://LICENSE.FDL;md5=6d9f2a9af4c8b8c3c769f6cc1b6aaf7e \
 "
-
-DEP = " freetype fontconfig libwayland-egl"
-RDEPENDS_${PN} += "${DEP}"
-RDEPENDS_${PN}-plugins += "${DEP}"
-RDEPENDS_${PN}-examples += "${DEP}"

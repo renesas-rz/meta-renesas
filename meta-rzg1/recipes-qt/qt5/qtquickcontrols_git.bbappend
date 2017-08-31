@@ -1,0 +1,10 @@
+#Revision to update qt5.6.2
+require qt5.6.2_git.inc
+SRCREV = "59c6c0e0b1b5b46747595a58e11311b7393d7e70"
+
+LIC_FILES_CHKSUM = " \
+    file://LICENSE.LGPLv3;md5=a37e6cd7102174853307e03e6edc5f30 \
+    file://LICENSE.GPLv3;md5=88e2b9117e6be406b5ed6ee4ca99a705 \
+    file://LICENSE.GPLv2;md5=c96076271561b0e3785dad260634eaa8 \
+    file://LICENSE.FDL;md5=6d9f2a9af4c8b8c3c769f6cc1b6aaf7e \
+"
