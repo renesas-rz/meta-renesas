@@ -188,7 +188,7 @@ configure_cma_iwg20m(){
     #Enable continious allocator
     kernel_configure_variable CMA y
     kernel_configure_variable DMA_CMA y
-    kernel_configure_variable_val CMA_SIZE_MBYTES 128
+    kernel_configure_variable_val CMA_SIZE_MBYTES 176
 }
 
 configure_cma_skrzg1m(){
