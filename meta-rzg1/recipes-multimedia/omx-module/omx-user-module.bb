@@ -18,6 +18,7 @@ SRC_URI = " \
     file://RTM0AC0000ZMCL0100JPCL4.tar.bz2;name=file1 \
     file://RTM0AC0000MVPL0100JPCL4.tar.bz2;name=file2 \
     file://RTM0AC0000M264D100JPCL4.tar.bz2;name=file3 \
+    file://0001-config-vdcmn-increase-V_DEC_STREAM_BUFF_SIZE.patch \
 "
 SRC_URI += '${@base_conditional( "USE_H263_DECODER", "1", " file://RTM0AC0000XV263D20SL32C.tar.bz2;name=file4", "", d )}'
 SRC_URI += '${@base_conditional( "USE_MPEG2_DECODER", "1", " file://RTM0AC0000XVM2VD20SL32C.tar.bz2;name=file5", "", d )}'
