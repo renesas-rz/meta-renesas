@@ -217,6 +217,7 @@ SRC_URI = " \
 	file://iwg20m/0048-ARM-DTS-iwg20m-add-vin2.patch \
 	file://iwg20m/0049-media-add-ov7725-driver.patch \
 	file://iwg20m/0050-media-edit-Makefile-to-build-ov7725-driver.patch \
+	file://iwg20m/0051-media-soc_camera-rcar_vin-Add-NV16-scaling-support.patch \
 "
 
 
