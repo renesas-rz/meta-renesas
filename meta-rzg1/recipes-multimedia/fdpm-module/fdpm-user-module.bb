@@ -3,7 +3,9 @@ require ../../include/rzg-modules-common.inc
 LICENSE = "CLOSED"
 DEPENDS = "kernel-module-fdpm mmngr-user-module"
 PN = "fdpm-user-module"
-SRC_URI = "file://fdpm.tar.bz2"
+SRC_URI = "file://fdpm.tar.bz2 \
+	file://0001-fdpm_api_sub-check-even-for-in_width.patch \
+"
 
 S = "${WORKDIR}/fdpm"
 
