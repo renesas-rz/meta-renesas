@@ -1,0 +1,44 @@
+From 9cd3e520a6a34b08c2c912282cd3b83d79e53ace Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 15 Sep 2017 14:57:12 +0700
+Subject: [PATCH 1/2 for kernel module fdpm, UT bug-fix] drv: fdpm_sub: move check NULL before dereferences
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ drv/fdpm_sub.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/drv/fdpm_sub.c b/drv/fdpm_sub.c
+index 3eb2dee..88dddfe 100755
+--- a/drv/fdpm_sub.c
++++ b/drv/fdpm_sub.c
+@@ -404,18 +404,20 @@ int fdpm_lib_driver_quit(struct fdpm_privdata *priv)
+ 	int ret;
+ 	long sub_ercd;
+ 	int i;
+-	struct fdpm_drvdata    *pdrv = priv->pdrv;
+-	struct platform_device *pdev = pdrv->pdev;
+-
+-#if defined(M2CONFIG)
+-	struct platform_device *pdev_c2 = pdrv->pdev_c2;
+-#endif
++	struct fdpm_drvdata    *pdrv;
++	struct platform_device *pdev;
+ 
+ 	if (priv == NULL) {
+ 		ret = 0;
+ 		goto exit;
+ 	}
+ 
++	pdrv = priv->pdrv;
++	pdev = pdrv->pdev;
++#if defined(M2CONFIG)
++	struct platform_device *pdev_c2 = pdrv->pdev_c2;
++#endif
++
+ 	fdpm_resource_del_all_list(&pdrv->fdpm_independ.fdpm_itable);
+ 	for (i = 0; i < FDPM_FDP_NUM; i++) {
+ 		complete(&priv->set_thread[i].start);
+-- 
+2.7.4
+
