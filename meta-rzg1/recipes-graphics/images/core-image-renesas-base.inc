@@ -20,7 +20,6 @@ IMAGE_INSTALL_append_rzg1 = " \
     gstreamer1.0-plugins-good-videocrop \
     gstreamer1.0-plugins-bad-asfmux \
     gstreamer1.0-plugins-bad-fbdevsink \
-    gstreamer1.0-plugins-bad-faad \
     gstreamer1.0-plugins-bad-videoparsersbad \
 "
 
@@ -46,6 +45,4 @@ IMAGE_INSTALL_append_rzg1 = ' ${@base_contains("USE_GLES_TEST", "1", " \
 
 
 #### temperary ####
-
-IMAGE_INSTALL_remove_rzg1 = "gstreamer1.0-plugins-bad-faad"
 IMAGE_INSTALL_append_rzg1 = " kernel-module-vsp2 "
