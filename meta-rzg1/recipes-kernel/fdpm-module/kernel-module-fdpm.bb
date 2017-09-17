@@ -11,7 +11,6 @@ PN = "kernel-module-fdpm"
 PR = "r0"
 SRC_URI = "file://fdpm-kernel.tar.bz2 \
 	file://0001-drv-fdpm_sub-move-check-NULL-before-dereferences.patch \
-	file://0002-drv-manager-fdpm_seq-correct-operator-and-operator-p.patch \
 "
 S = "${WORKDIR}/fdpm"
 
