@@ -4,7 +4,7 @@ require linux-dtb-append.inc
 require linux-config.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg22m)"
 
 PV_append = "+git${SRCREV}"
 
