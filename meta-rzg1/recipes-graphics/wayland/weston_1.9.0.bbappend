@@ -24,3 +24,15 @@ do_install_append() {
     install -d ${D}/${datadir}/wayland-protocols/
     install -m 644 ${S}/protocol/linux-dmabuf.xml ${D}/${datadir}/wayland-protocols/
 }
+
+# Rule for indentify LVDS touch device.
+# Without this rule, if users connect HDMI touch device, they cannot touch
+#    correctly on LVDS (all touch event will go to HDMI screen)
+SRC_URI_append_iwg20m = " file://iwg20m-lvdstouch.rules "
+
+do_install_append_iwg20m () {
+    install -d ${D}/${sysconfdir}/udev/rules.d/
+    install ${WORKDIR}/iwg20m-lvdstouch.rules ${D}/${sysconfdir}/udev/rules.d/
+}
+
+FILES_${PN}_append_iwg20m += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
