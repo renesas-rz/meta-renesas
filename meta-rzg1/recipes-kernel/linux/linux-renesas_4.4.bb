@@ -223,6 +223,9 @@ SRC_URI = " \
 	file://iwg20m/0054-drm-fb_helper-Fix-return-value-of-drm_fb_helper_is_b.patch \
 	file://iwg20m/0055-drm-rcar_du-Fix-wrong-bpp-calculate-for-NV12-format-.patch \
 	file://iwg20m/0056-drm-fb-helper-implement-ioctl-FBIO_WAITFORVSYNC.patch \
+	file://iwg20m/0057-ARM-DTS-iwg20m-change-LCD-panel-to-etm0700g0dh6.patch \
+	file://iwg20m/0058-ARM-DTS-iwg20m-add-power-and-backlight-support-for-L.patch \
+	file://iwg20m/0059-ARM-DTS-iwg20m-add-device-node-for-LCD-pannel-touch.patch \
 "
 
 
@@ -283,6 +286,7 @@ do_configure_append_iwg20m() {
 	kernel_configure_variable VIDEO_V4L2 y
 	kernel_configure_variable USB_VIDEO_CLASS y
 	kernel_configure_variable SOC_CAMERA_OV772X y
+	kernel_configure_variable TOUCHSCREEN_EDT_FT5X06 y
 
 	yes '' | oe_runmake oldconfig
 }
