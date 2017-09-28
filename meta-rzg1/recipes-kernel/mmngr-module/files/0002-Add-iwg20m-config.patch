@@ -1,0 +1,403 @@
+From d24ee9682b3e724c27780c9fa9d7a7422c6de70b Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@renesas.com>
+Date: Fri, 29 Sep 2017 20:51:47 +0900
+Subject: [PATCH] Add iwg20m config
+
+Previously, KOELSCH and GOSE config are used for
+iwg20m G1M and iwg20m G1N, respectively.
+However, this causes an issue in memory when
+playing video on iwg20m G1M.
+
+Now this patch adds a separate config for iwg20m.
+This config support both G1M and G1N at the same time
+(Remember to change the config to MMNGR_IWG20M when building)
+
+Signed-off-by: HungTran <hung.tran.jy@renesas.com>
+---
+ drv/mmngr_drv.c         | 178 ++++++++++++++++++++++++++++++++++++++++--------
+ include/mmngr_private.h |  46 +++++++++++++
+ 2 files changed, 196 insertions(+), 28 deletions(-)
+ mode change 100644 => 100755 drv/mmngr_drv.c
+ mode change 100644 => 100755 include/mmngr_private.h
+
+diff --git a/drv/mmngr_drv.c b/drv/mmngr_drv.c
+old mode 100644
+new mode 100755
+index 7cba518..e040cb7
+--- a/drv/mmngr_drv.c
++++ b/drv/mmngr_drv.c
+@@ -417,13 +417,20 @@ static int mm_ioc_alloc_co_select(int __user *in, struct MM_PARAM *out)
+ 	else if (tmp.flag == MM_CARVEOUT_SSP)
+ 		ret = mm_ioc_alloc_co(&bm_ssp, in, out);
+ #endif
+-#ifndef MMNGR_MV_ENABLE
+-	else if (tmp.flag == MM_CARVEOUT_MV)
+-		ret = mm_ioc_alloc(mm_dev, (int __user *)in, out);
+-#else
+-	else if (tmp.flag == MM_CARVEOUT_MV)
+-		ret = mm_ioc_alloc_co(&bm_mv, in, out);
++
++	else if (tmp.flag == MM_CARVEOUT_MV) {
++		int alread_alloc = false;
++#ifdef MMNGR_MV_ENABLE
++		if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++		{
++			ret = mm_ioc_alloc_co(&bm_mv, in, out);
++			alread_alloc = true;
++		}
+ #endif
++		if (alread_alloc == false)
++			/* MV_ENABLE is false, or this is iwg20m G1N */
++			ret = mm_ioc_alloc(mm_dev, (int __user *)in, out);
++	}
+ 
+ 	return ret;
+ }
+@@ -452,13 +459,20 @@ static void mm_ioc_free_co_select(struct MM_PARAM *p)
+ 		mm_ioc_free_co(&bm, p);
+ 	else if (p->flag == MM_CARVEOUT_SSP)
+ 		mm_ioc_free_co(&bm_ssp, p);
+-#ifndef MMNGR_MV_ENABLE
+-	else if (p->flag == MM_CARVEOUT_MV)
+-		mm_ioc_free(mm_dev, p);
+-#else
+-	else if (p->flag == MM_CARVEOUT_MV)
+-		mm_ioc_free_co(&bm_mv, p);
++	else if (p->flag == MM_CARVEOUT_MV) {
++		int already_free = false;
++
++#ifdef MMNGR_MV_ENABLE
++		if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++		{
++			mm_ioc_free_co(&bm_mv, p);
++			already_free = true;
++		}
+ #endif
++		if (already_free == false)
++			/* MV_ENABLE is false, or this is iwg20m G1N */
++			mm_ioc_free(mm_dev, p);
++	}
+ }
+ 
+ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
+@@ -645,6 +659,32 @@ static void mm_set_pmb_area(phys_addr_t start, void *impmba, void *impmbd)
+ 		impmbd_val = MM_IMPMBD_VAL_SHADOW0;
+ 	}
+ #endif
++#ifdef MMNGR_IWG20M
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++	{
++		/* iwg20m G1M */
++		if (start >= IPMMU_ADDR_SECTION_1) {
++			ppn = (start - IPMMU_ADDR_SECTION_1) & MM_ADDR_MASK;
++			impmbd_val = MM_IMPMBD_VAL_SHADOW1;
++		} else if (start >= IPMMU_ADDR_SECTION_0) {
++			ppn = (start - IPMMU_ADDR_SECTION_0) & MM_ADDR_MASK;
++			impmbd_val = MM_IMPMBD_VAL_SHADOW0;
++		} else {
++			ppn = (start - MM_LEGACY_ADDR) & MM_ADDR_MASK;
++			impmbd_val = MM_IMPMBD_VAL_SHADOW0;
++		}
++	}
++	else
++	{
++		/* iwg20m G1N */
++		impmbd_val = MM_IMPMBD_VAL_SHADOW0;
++		if (start >= IPMMU_ADDR_SECTION_0)
++			ppn = (start - IPMMU_ADDR_SECTION_0) & MM_ADDR_MASK;
++		else
++			ppn = (start - MM_LEGACY_ADDR) & MM_ADDR_MASK;
++
++	}
++#endif
+ #ifdef MMNGR_LAGER
+ 	impmbd_val = MM_IMPMBD_VAL_SHADOW0;
+ 	if (start >= IPMMU_ADDR_SECTION_0)
+@@ -722,10 +762,20 @@ static int close(struct inode *inode, struct file *file)
+ #endif
+ 		} else if (p->flag == MM_CARVEOUT_MV) {
+ #ifdef MMNGR_MV_ENABLE
+-			if (p->phy_addr != 0) {
+-				printk(KERN_ERR "MMD close carveout MV\n");
+-				pb = &bm_mv;
+-				mm_ioc_free_co(pb, p);
++			if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) ==
++								MM_PRR_CPU_G1M)
++				if (p->phy_addr != 0) {
++					printk(KERN_ERR
++						"MMD close carveout MV\n");
++					pb = &bm_mv;
++					mm_ioc_free_co(pb, p);
++				}
++			else if (p->kernel_virt_addr != 0) {
++				printk(KERN_ERR "MMD close kernelheap\n");
++				mm_dev = mm_drvdata->mm_dev;
++				dma_free_coherent(mm_dev, p->size,
++						(void *)p->kernel_virt_addr,
++						(dma_addr_t)p->phy_addr);
+ 			}
+ #else
+ 			if (p->kernel_virt_addr != 0) {
+@@ -876,42 +926,83 @@ static int mm_init(void)
+ 	phys_addr_t		phy_addr;
+ 	void			*pkernel_virt_addr;
+ 
++	ret = map_register();
++	if (ret != 0) {
++		printk(KERN_ERR "MMD map_register() NG\n");
++		return -1;
++	}
++
++#ifdef MMNGR_IWG20M
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++		ret = alloc_bm(&bm, MM_OMXBUF_ADDR_IWG20M_G1M, MM_OMXBUF_SIZE, MM_CO_ORDER);
++	else
++		ret = alloc_bm(&bm, MM_OMXBUF_ADDR_IWG20M_G1N, MM_OMXBUF_SIZE, MM_CO_ORDER);
++#else
+ 	ret = alloc_bm(&bm, MM_OMXBUF_ADDR, MM_OMXBUF_SIZE, MM_CO_ORDER);
++#endif
++
+ 	if (ret) {
+ 		printk(KERN_ERR "MMD mm_init ERROR");
+ 		return -1;
+ 	}
+ 
+ #ifdef MMNGR_IPC
++#ifdef MMNGR_IWG20M
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++		ret = alloc_bm(&bm_h, MM_IPCBUF_ADDR_IWG20M_G1M, MM_IPCBUF_SIZE, MM_CO_ORDER);
++	else
++		ret = alloc_bm(&bm_h, MM_IPCBUF_ADDR_IWG20M_G1N, MM_IPCBUF_SIZE, MM_CO_ORDER);
++#else
+ 	ret = alloc_bm(&bm_h, MM_IPCBUF_ADDR, MM_IPCBUF_SIZE, MM_CO_ORDER);
++#endif
++
+ 	if (ret) {
+ 		printk(KERN_ERR "MMD mm_init ERROR");
+ 		return -1;
+ 	}
+ #endif
++
+ #ifdef MMNGR_SSP_ENABLE
++#ifdef MMNGR_IWG20M
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++		ret = alloc_bm(&bm_ssp, MM_SSPBUF_ADDR_IWG20M_G1M, MM_SSPBUF_SIZE, MM_CO_ORDER);
++	else
++		ret = alloc_bm(&bm_ssp, MM_SSPBUF_ADDR_IWG20M_G1N, MM_SSPBUF_SIZE, MM_CO_ORDER);
++#else
+ 	ret = alloc_bm(&bm_ssp, MM_SSPBUF_ADDR, MM_SSPBUF_SIZE, MM_CO_ORDER);
+-	if (ret) {
+-		printk(KERN_ERR "MMD mm_init ERROR");
+-		return -1;
+-	}
+ #endif
+-#ifdef MMNGR_MV_ENABLE
+-	ret = alloc_bm(&bm_mv, MM_MVBUF_ADDR, MM_MVBUF_SIZE, MM_CO_ORDER);
++
+ 	if (ret) {
+ 		printk(KERN_ERR "MMD mm_init ERROR");
+ 		return -1;
+ 	}
+ #endif
+ 
+-	ret = map_register();
+-	if (ret != 0) {
+-		printk(KERN_ERR "MMD map_register() NG\n");
+-		return -1;
++#ifdef MMNGR_MV_ENABLE
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M) {
++		ret = alloc_bm(&bm_mv, MM_MVBUF_ADDR, MM_MVBUF_SIZE, MM_CO_ORDER);
++
++		if (ret) {
++			printk(KERN_ERR "MMD mm_init ERROR");
++			return -1;
++		}
+ 	}
++	/* Ignore if this is iwg20m G1N (else case), not G1M */
++#endif
+ 
++#ifdef MMNGR_IWG20M
++	/* For iwg20m only */
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++		mm_set_mxi_path(MM_OMXBUF_MXI_ADDR_IWG20M_G1M,
++				MM_OMXBUF_MXI_ADDR_IWG20M_G1M + MM_OMXBUF_SIZE);
++	else
++		mm_set_mxi_path(MM_OMXBUF_MXI_ADDR_IWG20M_G1N,
++				MM_OMXBUF_MXI_ADDR_IWG20M_G1N + MM_OMXBUF_SIZE);
++#else
++	/* For other devices */
+ 	mm_set_mxi_path(MM_OMXBUF_MXI_ADDR,
+ 		MM_OMXBUF_MXI_ADDR + MM_OMXBUF_SIZE);
++#endif
+ 
+ #ifdef MMNGR_KOELSCH
+ 	if ((MM_PRR_ESMASK & ioread32(top_prr)) >= MM_PRR_ES2) {
+@@ -920,6 +1011,25 @@ static int mm_init(void)
+ 		mm_enable_vpc_utlb();
+ 	}
+ #endif
++#ifdef MMNGR_IWG20M
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++	{
++		/* iwg20m G1M */
++		if ((MM_PRR_ESMASK & ioread32(top_prr)) >= MM_PRR_ES2) {
++			mm_enable_pmb();
++			mm_set_pmb_area(MM_OMXBUF_ADDR_IWG20M_G1M, top_impmba0, top_impmbd0);
++			mm_enable_vpc_utlb();
++		}
++	}
++	else
++	{
++		/* iwg20m G1N */
++		mm_enable_pmb();
++		mm_set_pmb_area(MM_OMXBUF_ADDR_IWG20M_G1N, top_impmba0, top_impmbd0);
++		mm_enable_vpc_utlb();
++
++	}
++#endif
+ #ifdef MMNGR_LAGER
+ 	if ((MM_PRR_ESMASK & ioread32(top_prr)) >= MM_PRR_ES2) {
+ 		mm_enable_pmb();
+@@ -990,8 +1100,11 @@ static void mm_exit(void)
+ 	unmap_register();
+ 
+ #ifdef MMNGR_MV_ENABLE
+-	free_bm(&bm_mv);
++	if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++		free_bm(&bm_mv);
++	/* Ignore if this is iwg20m G1N (else case) */
+ #endif
++
+ #ifdef MMNGR_SSP_ENABLE
+ 	free_bm(&bm_ssp);
+ #endif
+@@ -1026,7 +1139,16 @@ static void r8a779x_ipmmu_startup(void)
+ 		pgdval_addr = kmalloc(PAGE_SIZE, GFP_KERNEL);
+ 		if (pgdval_addr != NULL) {
+ 			pgdval_addr[0] = IPMMU_PGDVAL_SECTION_0;
++
++#ifdef MMNGR_IWG20M
++			if (((MM_PRR_CPUMASK & ioread32(top_prr))>>8) == MM_PRR_CPU_G1M)
++				pgdval_addr[1] = IPMMU_PGDVAL_SECTION_1_IWG20M_G1M;
++			else
++				pgdval_addr[1] = IPMMU_PGDVAL_SECTION_1_IWG20M_G1N;
++#else
+ 			pgdval_addr[1] = IPMMU_PGDVAL_SECTION_1;
++#endif
++
+ 			pgdval_addr[2] = IPMMU_PGDVAL_SECTION_2;
+ 			pgdval_addr[3] = IPMMU_PGDVAL_SECTION_3;
+ 			r8a779x_ipmmu_pgd[i] = pgdval_addr;
+@@ -1062,7 +1184,7 @@ static int r8a779x_ipmmu_initialize(int domain)
+ 	iowrite32(0x00000003, base + IMCTR);
+ 
+ 	if (domain == IPMMUMX_DOMAIN) {
+-#ifdef MMNGR_KOELSCH
++#if defined(MMNGR_KOELSCH) || defined(MMNGR_IWG20M)
+ 		iowrite32(0x00000001, base + IMUCTR + (0x10 * 3));
+ 		iowrite32(0x00000001, base + IMUCTR + (0x10 * 7));
+ 		iowrite32(0x00000001, base + IMUCTR + (0x10 * 10));
+diff --git a/include/mmngr_private.h b/include/mmngr_private.h
+old mode 100644
+new mode 100755
+index f61a890..ee68b2c
+--- a/include/mmngr_private.h
++++ b/include/mmngr_private.h
+@@ -152,6 +152,10 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MMNGR_MV_ENABLE
+ #endif
+ 
++#ifdef MMNGR_IWG20M
++#define MMNGR_MV_ENABLE
++#endif
++
+ #ifdef MMNGR_KOELSCH
+ 	#ifdef MMNGR_IPMMU_ENABLE
+ 	#define MM_OMXBUF_ADDR	(0x78000000UL)
+@@ -163,6 +167,20 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ 	#define MM_OMXBUF_MXI_ADDR	(0x78000000UL)
+ 	#endif
+ #endif
++#ifdef MMNGR_IWG20M
++	#ifdef MMNGR_IPMMU_ENABLE
++	#define MM_OMXBUF_ADDR_IWG20M_G1M	(0x58000000UL)
++	#define MM_OMXBUF_ADDR_IWG20M_G1N	(0x78000000UL)
++	#define MM_OMXBUF_SIZE	(128 * 1024 * 1024)
++	#define MM_OMXBUF_MXI_ADDR	(0x138000000UL)
++	#else
++	#define MM_OMXBUF_ADDR_IWG20M_G1M	(0x58000000UL)
++	#define MM_OMXBUF_ADDR_IWG20M_G1N	(0x78000000UL)
++	#define MM_OMXBUF_SIZE	(128 * 1024 * 1024)
++	#define MM_OMXBUF_MXI_ADDR_IWG20M_G1M	(0x58000000UL)
++	#define MM_OMXBUF_MXI_ADDR_IWG20M_G1N	(0x78000000UL)
++	#endif
++#endif
+ #ifdef MMNGR_LAGER
+ 	#ifdef MMNGR_IPMMU_ENABLE
+ 	#define MM_OMXBUF_ADDR	(0x70000000UL)
+@@ -201,6 +219,11 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_IPCBUF_ADDR	(0x68000000)
+ #define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
+ #endif
++#ifdef MMNGR_IWG20M
++#define MM_IPCBUF_ADDR_IWG20M_G1M	(0x48000000)
++#define MM_IPCBUF_ADDR_IWG20M_G1N	(0x68000000)
++#define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
++#endif
+ #ifdef MMNGR_LAGER
+ #define MM_IPCBUF_ADDR	(0x68000000)
+ #define MM_IPCBUF_SIZE	(128 * 1024 * 1024)
+@@ -218,6 +241,11 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_SSPBUF_ADDR	(0x6F000000)
+ #define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
+ #endif
++#ifdef MMNGR_IWG20M
++#define MM_SSPBUF_ADDR_IWG20M_G1M	(0x4F000000)
++#define MM_SSPBUF_ADDR_IWG20M_G1N	(0x6F000000)
++#define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
++#endif
+ #ifdef MMNGR_LAGER
+ #define MM_SSPBUF_ADDR	(0x6F000000)
+ #define MM_SSPBUF_SIZE	(16 * 1024 * 1024)
+@@ -235,6 +263,10 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_MVBUF_ADDR	(0x75000000)
+ #define MM_MVBUF_SIZE	(40 * 1024 * 1024)
+ #endif
++#ifdef MMNGR_IWG20M
++#define MM_MVBUF_ADDR	(0x55000000)
++#define MM_MVBUF_SIZE	(40 * 1024 * 1024)
++#endif
+ 
+ #define MM_KERNEL_RESERVE_SIZE	(256 * 1024 * 1024)
+ 
+@@ -267,6 +299,8 @@ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma);
+ #define MM_PRR_ESMASK		(0x000000F0)
+ #define MM_PRR_ES2		(0x00000010)
+ 
++#define MM_PRR_CPUMASK		(0x00007F00)
++#define MM_PRR_CPU_G1M		(0x47)
+ 
+ enum {
+ 	IPMMUSY0_DOMAIN = 0,
+@@ -313,6 +347,18 @@ enum {
+ #define IPMMU_PGDVAL_SECTION_2	0x0ULL
+ #define IPMMU_PGDVAL_SECTION_3	0x0ULL
+ #endif
++#ifdef MMNGR_IWG20M
++#define IPMMU_ADDR_SECTION_0	0x0100000000ULL
++#define IPMMU_ADDR_SECTION_1	0x0200000000ULL
++#define IPMMU_ADDR_SECTION_1_IWG20M_G1N    0x0ULL
++#define IPMMU_ADDR_SECTION_2	0x0ULL
++#define IPMMU_ADDR_SECTION_3	0x0ULL
++#define IPMMU_PGDVAL_SECTION_0	IPMMU_PGDVAL(IPMMU_ADDR_SECTION_0)
++#define IPMMU_PGDVAL_SECTION_1_IWG20M_G1M	IPMMU_PGDVAL(IPMMU_ADDR_SECTION_1)
++#define IPMMU_PGDVAL_SECTION_1_IWG20M_G1N	IPMMU_PGDVAL(IPMMU_ADDR_SECTION_1_IWG20M_G1N)
++#define IPMMU_PGDVAL_SECTION_2	0x0ULL
++#define IPMMU_PGDVAL_SECTION_3	0x0ULL
++#endif
+ #ifdef MMNGR_LAGER
+ #define IPMMU_ADDR_SECTION_0	0x0100000000ULL
+ #define IPMMU_ADDR_SECTION_1	0x0140000000ULL
+-- 
+1.9.1
+

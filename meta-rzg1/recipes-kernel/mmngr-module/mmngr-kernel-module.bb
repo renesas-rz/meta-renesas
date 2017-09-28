@@ -11,7 +11,9 @@ LIC_FILES_CHKSUM = " \
 DEPENDS = "linux-renesas"
 PN = "mmngr-kernel-module"
 SRC_URI = "file://mmngr.tar.bz2 \
-           file://0001_add_physical_address_translate_feature.patch"
+           file://0001_add_physical_address_translate_feature.patch \
+           file://0002-Add-iwg20m-config.patch \
+"
 
 SRC_URI_append_iwg22m = "\
            file://0002-add-mmngr-configuration-for-iwg22m.patch\
@@ -27,6 +29,7 @@ MMNGR_CFG_r8a7743 = "MMNGR_KOELSCH"
 MMNGR_CFG_r8a7744 = "MMNGR_GOSE"
 MMNGR_CFG_r8a7745 = "MMNGR_ALT"
 MMNGR_CFG_r8a7747X = "MMNGR_ALT"
+MMNGR_CFG_iwg20m = "MMNGR_IWG20M"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
