@@ -19,6 +19,7 @@ S = "${WORKDIR}/mmngr"
 MMNGR_CFG_skrzg1m = "MMNGR_KOELSCH"
 MMNGR_CFG_skrzg1e = "MMNGR_ALT"
 MMNGR_CFG_iwg20m = "MMNGR_IWG20M"
+MMNGR_CFG_iwg22m = "MMNGR_IWG20M"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
