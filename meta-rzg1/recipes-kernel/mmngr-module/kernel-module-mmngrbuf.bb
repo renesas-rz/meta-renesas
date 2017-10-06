@@ -26,7 +26,6 @@ do_install () {
     mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include
 
     # Copy shared library for reference from other modules
-    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/mmngrbuf.symvers
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/mmngrbuf.symvers
 
     # Copy kernel module

@@ -75,8 +75,6 @@ do_install() {
     make kbuild_install ARCH=arm DISCIMAGE=${D}
     mkdir -p  ${D}/usr/src/kernel/include
     cp -f ${WORKDIR}/${TARGET_PATH}/Module.symvers \
-        ${KERNELSRC}/include/${GLES}.symvers
-    cp -f ${WORKDIR}/${TARGET_PATH}/Module.symvers \
         ${D}/usr/src/kernel/include/${GLES}.symvers
 }
 

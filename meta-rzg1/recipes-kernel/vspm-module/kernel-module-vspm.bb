@@ -32,12 +32,7 @@ do_install() {
     cp -f ${S}/drv/vspm.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Copy shared header files
-    cp -f ${KERNELSRC}/include/vspm_public.h ${D}/usr/src/kernel/include
-    cp -f ${KERNELSRC}/include/vsp_drv.h ${D}/usr/src/kernel/include
-    cp -f ${KERNELSRC}/include/tddmac_drv.h ${D}/usr/src/kernel/include
-    cp -f ${KERNELSRC}/include/vspm_if.h ${D}/usr/src/kernel/include
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/vspm.symvers
-    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/vspm.symvers
 
     # Copy for vspm-user-module
     cp -f ${KERNELSRC}/include/vspm_if.h ${BUILDDIR}/include

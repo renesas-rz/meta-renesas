@@ -29,15 +29,10 @@ do_compile() {
 
 do_install() {
     # Create destination folder
-    mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include/
+    mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Copy kernel module
     cp -f ${S}/drv/vsp2.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
-
-    # Copy shared library for reference from other modules
-    cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/vsp2.symvers
-    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/vsp2.symvers
-
 }
 
 PACKAGES = "\
@@ -48,10 +43,6 @@ PACKAGES = "\
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
     ${sysconfdir}/* \
-"
-
-FILES_${PN}-dev = " \
-    /usr/src/kernel/include/vsp2.symvers \
 "
 
 RPROVIDES_${PN} += "kernel-module-vsp2"

@@ -35,11 +35,6 @@ do_install() {
 
     # Copy driver and header files
     cp -f ${S}/drv/fdpm.ko ${D}/lib/modules/${KERNEL_VERSION}/extra
-    cp ${S}/drv/Module.symvers ${KERNELSRC}/include/fdpm.symvers
-
-    for f in ${FDPM_INSTALL_HEADERS} ; do
-        cp -f ${KERNEL_HEADER_PATH}/${f} ${KERNELSRC}/include
-    done
 
     # Copy header files to destination
     for f in ${FDPM_INSTALL_HEADERS} ; do

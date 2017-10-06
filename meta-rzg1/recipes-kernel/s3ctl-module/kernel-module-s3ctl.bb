@@ -26,8 +26,6 @@ do_install() {
     cp -f ${S}/drv/s3ctl.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
 
     # Copy shared header files
-    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/s3ctl.symvers
-    cp -f ${KERNELSRC}/include/s3ctl_private.h ${D}/usr/src/kernel/include
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/s3ctl.symvers
 }
 

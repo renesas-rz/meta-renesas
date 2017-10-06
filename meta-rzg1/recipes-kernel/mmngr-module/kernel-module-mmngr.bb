@@ -36,15 +36,10 @@ do_install () {
     mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include
 
     # Copy shared library for reference from other modules
-    cp -f ${S}/drv/Module.symvers ${KERNELSRC}/include/mmngr.symvers
     cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/mmngr.symvers
 
     # Copy kernel module
     cp -f ${S}/drv/mmngr.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
-
-    # Copy shared header files
-    cp -f ${KERNELSRC}/include/mmngr_public.h ${D}/usr/src/kernel/include
-    cp -f ${KERNELSRC}/include/mmngr_private.h ${D}/usr/src/kernel/include
 }
 
 # Append function to clean extract source

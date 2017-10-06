@@ -36,10 +36,6 @@ do_install() {
     cp -f ${S}/uvcs/include/uvcs_cmn.h  ${D}/usr/src/kernel/include
     cp -f ${S}/uvcs/include/uvcs_types.h  ${D}/usr/src/kernel/include
     cp -f ${S}/uvcs/source/makefile/linaro_5_2_1/Module.symvers  ${D}/usr/src/kernel/include/uvcs.symvers
-
-    cp -f ${S}/uvcs/include/uvcs_cmn.h  ${KERNELSRC}/include/
-    cp -f ${S}/uvcs/include/uvcs_types.h  ${KERNELSRC}/include/
-    cp -f ${S}/uvcs/source/makefile/linaro_5_2_1/Module.symvers  ${KERNELSRC}/include/uvcs.symvers
 }
 
 # Append function to clean extract source
