@@ -226,6 +226,7 @@ SRC_URI = " \
 	file://iwg20m/0057-ARM-DTS-iwg20m-change-LCD-panel-to-etm0700g0dh6.patch \
 	file://iwg20m/0058-ARM-DTS-iwg20m-add-power-and-backlight-support-for-L.patch \
 	file://iwg20m/0059-ARM-DTS-iwg20m-add-device-node-for-LCD-pannel-touch.patch \
+	file://iwg20m/0060-rcar-du-Work-around-to-enable-iwg20m-LCD-display.patch \
 "
 
 
