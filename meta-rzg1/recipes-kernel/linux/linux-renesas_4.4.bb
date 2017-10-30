@@ -90,6 +90,14 @@ do_configure_append_iwg20m() {
 	yes '' | oe_runmake oldconfig
 }
 
+do_configure_append_iwg22m() {
+	kernel_configure_variable STMPE_I2C y
+	kernel_configure_variable MFD_STMPE y
+	kernel_configure_variable TOUCHSCREEN_STMPE y
+	kernel_configure_variable TOUCHSCREEN_STMPE_CALIBRATION_WORKAROUND y
+
+	yes '' | oe_runmake oldconfig
+}
 
 ## for gles-kernel-module
 do_compile_append() {
