@@ -16,3 +16,7 @@ IMAGE_INSTALL_append_lcb = " \
     libsocketcan \
     weston-bin \
 "
+
+IMAGE_INSTALL_append = " \
+    iproute2 \
+"
