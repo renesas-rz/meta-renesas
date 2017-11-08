@@ -95,6 +95,7 @@ do_configure_append_iwg22m() {
 	kernel_configure_variable MFD_STMPE y
 	kernel_configure_variable TOUCHSCREEN_STMPE y
 	kernel_configure_variable TOUCHSCREEN_STMPE_CALIBRATION_WORKAROUND y
+	kernel_configure_variable SOC_CAMERA_OV772X y
 
 	yes '' | oe_runmake oldconfig
 }
