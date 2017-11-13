@@ -228,6 +228,8 @@ SRC_URI = " \
 	file://iwg20m/0059-ARM-DTS-iwg20m-add-device-node-for-LCD-pannel-touch.patch \
 	file://iwg20m/0060-rcar-du-Work-around-to-enable-iwg20m-LCD-display.patch \
 	file://iwg20m/0061-ARM-DTS-iwg20m-add-aliases-for-SATA-version-board.patch \
+	file://iwg20m/0062-dmaengine-ensure-dmaengine-helpers-check-valid-callback.patch \
+	file://iwg20m/0063-sh-sci.c-Fix-issue-exit-command-doesn-t-work-correctly.patch \
 "
 
 
