@@ -38,6 +38,16 @@ do_configure_append() {
 	configure_LVDS_panel
 	configure_common
 
+	kernel_configure_variable RTC_DRV_BQ32K y
+	kernel_configure_variable RTC_LIB y
+	kernel_configure_variable RTC_CLASS y
+	kernel_configure_variable RTC_HCTOSYS y
+	kernel_configure_variable RTC_SYSTOHC y
+	kernel_configure_variable RTC_HCTOSYS_DEVICE "rtc0"
+	kernel_configure_variable RTC_INTF_SYSFS y
+	kernel_configure_variable RTC_INTF_PROC y
+	kernel_configure_variable RTC_INTF_DEV y
+
 	yes '' | oe_runmake oldconfig
 }
 
