@@ -227,6 +227,7 @@ SRC_URI = " \
 	file://iwg20m/0058-ARM-DTS-iwg20m-add-power-and-backlight-support-for-L.patch \
 	file://iwg20m/0059-ARM-DTS-iwg20m-add-device-node-for-LCD-pannel-touch.patch \
 	file://iwg20m/0060-rcar-du-Work-around-to-enable-iwg20m-LCD-display.patch \
+	file://iwg20m/0061-ARM-DTS-iwg20m-add-aliases-for-SATA-version-board.patch \
 "
 
 
