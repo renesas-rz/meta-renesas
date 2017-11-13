@@ -230,6 +230,8 @@ SRC_URI = " \
 	file://iwg20m/0061-ARM-DTS-iwg20m-add-aliases-for-SATA-version-board.patch \
 	file://iwg20m/0062-dmaengine-ensure-dmaengine-helpers-check-valid-callback.patch \
 	file://iwg20m/0063-sh-sci.c-Fix-issue-exit-command-doesn-t-work-correctly.patch \
+	file://iwg20m/0064-phy-rcar_gen2-Support-USB-OTG-host-device-role.patch \
+	file://iwg20m/0065-ARM-DTS-iwg20m-Support-USB-OTG-feature.patch \
 "
 
 
@@ -291,6 +293,19 @@ do_configure_append_iwg20m() {
 	kernel_configure_variable USB_VIDEO_CLASS y
 	kernel_configure_variable SOC_CAMERA_OV772X y
 	kernel_configure_variable TOUCHSCREEN_EDT_FT5X06 y
+
+# configure for USB OTG
+	kernel_configure_variable USB_OHCI_LITTLE_ENDIAN y
+	kernel_configure_variable USB_GADGETFS m
+	kernel_configure_variable USB_LIBCOMPOSITE m
+	kernel_configure_variable USB_MASS_STORAGE m
+	kernel_configure_variable USB_F_MASS_STORAGE m
+	kernel_configure_variable USB_EHCI_ROOT_HUB_TT y
+	kernel_configure_variable USB_XHCI_HCD_DEBUGGING y
+	kernel_configure_variable USB_OTG y
+	kernel_configure_variable USB_ARCH_HAS_OHCI y
+	kernel_configure_variable USB_ARCH_HAS_EHCI y
+	kernel_configure_variable USB_ARCH_HAS_XHCI y
 
 	yes '' | oe_runmake oldconfig
 }
