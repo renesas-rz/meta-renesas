@@ -14,6 +14,9 @@ SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=rvc/g1e-dev \
 "
 
+SRC_URI_append_iwg22m = " \
+	file://iwg22m/0001-ethavb-workaround-to-fix-PHY-address.patch \
+"
 
 S = "${WORKDIR}/git"
 
