@@ -87,6 +87,19 @@ do_configure_append_iwg20m() {
 	kernel_configure_variable SOC_CAMERA_OV772X y
 	kernel_configure_variable TOUCHSCREEN_EDT_FT5X06 y
 
+# configure for USB OTG
+	kernel_configure_variable USB_OHCI_LITTLE_ENDIAN y
+	kernel_configure_variable USB_GADGETFS m
+	kernel_configure_variable USB_LIBCOMPOSITE m
+	kernel_configure_variable USB_MASS_STORAGE m
+	kernel_configure_variable USB_F_MASS_STORAGE m
+	kernel_configure_variable USB_EHCI_ROOT_HUB_TT y
+	kernel_configure_variable USB_XHCI_HCD_DEBUGGING y
+	kernel_configure_variable USB_OTG y
+	kernel_configure_variable USB_ARCH_HAS_OHCI y
+	kernel_configure_variable USB_ARCH_HAS_EHCI y
+	kernel_configure_variable USB_ARCH_HAS_XHCI y
+
 	yes '' | oe_runmake oldconfig
 }
 

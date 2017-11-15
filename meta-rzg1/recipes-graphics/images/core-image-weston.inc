@@ -19,4 +19,5 @@ IMAGE_INSTALL_append_lcb = " \
 
 IMAGE_INSTALL_append = " \
     iproute2 \
+    usb-otg-init \
 "
