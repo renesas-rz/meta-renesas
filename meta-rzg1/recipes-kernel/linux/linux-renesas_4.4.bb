@@ -88,6 +88,8 @@ do_configure_append_iwg20m() {
 }
 
 do_configure_append_iwg22m() {
+	configure_ravb
+
 	kernel_configure_variable STMPE_I2C y
 	kernel_configure_variable MFD_STMPE y
 	kernel_configure_variable TOUCHSCREEN_STMPE y
