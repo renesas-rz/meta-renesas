@@ -232,6 +232,7 @@ SRC_URI = " \
 	file://iwg20m/0063-sh-sci.c-Fix-issue-exit-command-doesn-t-work-correctly.patch \
 	file://iwg20m/0064-phy-rcar_gen2-Support-USB-OTG-host-device-role.patch \
 	file://iwg20m/0065-ARM-DTS-iwg20m-Support-USB-OTG-feature.patch \
+	file://iwg20m/0066-ARM-DTS-iwg20m-correct-pwm-channel-for-backlight.patch \
 "
 
 
