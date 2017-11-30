@@ -18,3 +18,9 @@ SRC_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;branch=2013.01.01/
 S = "${WORKDIR}/git"
 
 COMPATIBLE_MACHINE = "(iwg20m|iwg22m)"
+
+SRC_URI_append_iwg22m = " \
+        file://0001-Update-iwg22m-and-fix-several-compile-errors.patch \
+        file://0002-board-renesas-iwg22m_sm-remove-BSP-info.patch \
+        file://0003-iwg22m-u-boot-Fix-several-warnings.patch \
+"
