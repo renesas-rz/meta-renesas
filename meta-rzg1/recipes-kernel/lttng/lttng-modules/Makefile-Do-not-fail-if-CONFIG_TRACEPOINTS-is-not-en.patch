@@ -1,0 +1,50 @@
+diff --git a/Makefile b/Makefile
+index 731a386..6bf4d28 100644
+--- a/Makefile
++++ b/Makefile
+@@ -3,12 +3,7 @@
+ #
+ 
+ ifneq ($(KERNELRELEASE),)
+-
+-ifdef CONFIG_LOCALVERSION	# Check if dot-config is included.
+-ifeq ($(CONFIG_TRACEPOINTS),)
+-$(error The option CONFIG_TRACEPOINTS needs to be enabled in your kernel configuration)
+-endif # CONFIG_TRACEPOINTS
+-endif # ifdef CONFIG_LOCALVERSION
++ifneq ($(CONFIG_TRACEPOINTS),)
+ 
+ KERNELDIR = ${LTTNG_KERNELDIR}
+ MAKEFILEDIR = $(shell dirname $(lastword $(MAKEFILE_LIST)))
+@@ -28,13 +23,6 @@ $(error Duplicate version.h files found in $(lttng_check_linux_version) and $(lt
+ endif
+ endif
+ 
+-ifneq ($(shell \
+-	if [ $(VERSION) -ge 5 \
+-		-o \( $(VERSION) -eq 4 -a $(PATCHLEVEL) -ge 8 \) ] ; then \
+-		echo "true" ; fi;),)
+-$(warning You are entering uncharted territories adventurer! Proceed with utmost caution (also, lttng-modules 2.7 does not support Linux >= 4.8. You should upgrade to a newer lttng-modules version.))
+-endif
+-
+ include $(MAKEFILEDIR)/Makefile.ABI.workarounds
+ 
+ obj-m += lttng-ring-buffer-client-discard.o
+@@ -85,14 +73,14 @@ lttng-statedump-objs := lttng-statedump-impl.o wrapper/irqdesc.o \
+ obj-m += probes/
+ obj-m += lib/
+ 
++endif # CONFIG_TRACEPOINTS
++
+ else # KERNELRELEASE
+ 	KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+ 	PWD := $(shell pwd)
+ 	CFLAGS = $(EXTCFLAGS)
+ 
+-default: modules
+-
+-modules:
++default:
+ 	LTTNG_KERNELDIR=$(KERNELDIR) $(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+ 
+ modules_install:
