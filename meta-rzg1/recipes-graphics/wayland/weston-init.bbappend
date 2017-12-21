@@ -5,6 +5,8 @@ SRC_URI_append = " file://weston \
 		  file://weston.ini \
 "
 
+INITSCRIPT_PARAMS = "start 9 5 2 . stop 9 0 1 6 ."
+
 do_install_append() {
 	install -d ${D}/${sysconfdir}/default
 	install -m 755 ${WORKDIR}/weston ${D}/${sysconfdir}/default/weston
