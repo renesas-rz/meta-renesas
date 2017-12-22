@@ -51,6 +51,30 @@ do_configure_append() {
 	kernel_configure_variable RTC_INTF_PROC y
 	kernel_configure_variable RTC_INTF_DEV y
 
+	# Enable bluetooth suport
+	kernel_configure_variable   BT y
+	kernel_configure_variable   BT_RFCOMM y
+	kernel_configure_variable   BT_RFCOMM_TTY y
+	kernel_configure_variable   BT_BNEP y
+	kernel_configure_variable   BT_BNEP_MC_FILTER y
+	kernel_configure_variable   BT_BNEP_PROTO_FILTER y
+	kernel_configure_variable   BT_HIDP y
+	kernel_configure_variable   BT_HCIBTUSB y
+	kernel_configure_variable   BT_HCIBTSDIO y
+	kernel_configure_variable   BT_HCIUART y
+	kernel_configure_variable   BT_HCIUART_H4 y
+	kernel_configure_variable   BT_HCIUART_BCSP y
+	kernel_configure_variable   BT_HCIUART_ATH3K y
+	kernel_configure_variable   BT_HCIUART_LL y
+	kernel_configure_variable   BT_HCIUART_3WIRE y
+	kernel_configure_variable   BT_HCIBCM203X y
+	kernel_configure_variable   BT_HCIBPA10X y
+	kernel_configure_variable   BT_HCIBFUSB y
+	kernel_configure_variable   BT_HCIVHCI y
+	kernel_configure_variable   BT_MRVL y
+	kernel_configure_variable   BT_MRVL_SDIO y
+	kernel_configure_variable   BT_ATH3K y
+
 	yes '' | oe_runmake oldconfig
 }
 
