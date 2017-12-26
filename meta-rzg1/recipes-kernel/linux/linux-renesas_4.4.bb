@@ -126,6 +126,12 @@ do_configure_append_iwg22m() {
 	yes '' | oe_runmake oldconfig
 }
 
+do_configure_append_iwg23s() {
+	kernel_configure_variable DRM_I2C_SII902X y
+
+	yes '' | oe_runmake oldconfig
+}
+
 ## for gles-kernel-module
 do_compile_append() {
 	cp ${KBUILD_OUTPUT}/vmlinux ${STAGING_KERNEL_BUILDDIR}/vmlinux
