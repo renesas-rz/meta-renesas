@@ -17,7 +17,7 @@ SRC_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;branch=2013.01.01/
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(iwg20m|iwg22m)"
+COMPATIBLE_MACHINE = "(iwg20m|iwg22m|iwg23s)"
 
 SRC_URI_append_iwg22m = " \
         file://0001-Update-iwg22m-and-fix-several-compile-errors.patch \
