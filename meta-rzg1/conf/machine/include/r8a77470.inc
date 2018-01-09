@@ -1,4 +1,4 @@
-SOC_FAMILY = "rzg1:r8a7747x"
+SOC_FAMILY = "rzg1:r8a77470"
 require conf/machine/include/soc-family.inc
 DEFAULTTUNE ?= "cortexa7hf-neon"
 require conf/machine/include/tune-cortexa7.inc
@@ -9,4 +9,4 @@ PREFERRED_PROVIDER_nativesdk-linux-libc-headers ?= "nativesdk-linux-libc-headers
 PREFERRED_PROVIDER_u-boot ?= "u-boot"
 
 KERNEL_IMAGETYPE ?= "uImage"
-EXTRA_IMAGEDEPENDS += "u-boot"
+#EXTRA_IMAGEDEPENDS += "u-boot"
