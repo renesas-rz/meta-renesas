@@ -132,6 +132,15 @@ do_configure_append_iwg23s() {
 	yes '' | oe_runmake oldconfig
 }
 
+do_configure_append_iwg23s() {
+
+	kernel_configure_variable USB_OHCI_HCD_PLATFORM y
+	kernel_configure_variable USB_EHCI_HCD_PLATFORM y
+	kernel_configure_variable USB_EHCI_ROOT_HUB_TT y
+	kernel_configure_variable USB_ARCH_HAS_EHCI y
+
+	yes '' | oe_runmake oldconfig
+}
 ## for gles-kernel-module
 do_compile_append() {
 	cp ${KBUILD_OUTPUT}/vmlinux ${STAGING_KERNEL_BUILDDIR}/vmlinux
