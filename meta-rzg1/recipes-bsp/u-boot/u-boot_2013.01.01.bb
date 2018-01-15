@@ -14,6 +14,7 @@ SRC_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;branch=2013.01.01/
            file://0001-Enable-checking-PARTUUID-and-allow-booting-by-PARTUU.patch \
            file://0002-Add-alternative-default-name-for-iwg20m-board-dtb.patch \
            file://0001-u-boot-Add-iwg22m-support.patch \
+           file://0001-u-boot-Add-iwg23s-support.patch \
 "
 
 S = "${WORKDIR}/git"
