@@ -1,0 +1,26 @@
+From 4a26c817bf3d7dc36ad7775c56a533339f2eef13 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Wed, 31 Jan 2018 16:21:49 +0700
+Subject: [PATCH] ARM: shmobilel: setup-rcar-gen2: resize CMA area 1 for G1C
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ arch/arm/mach-shmobile/setup-rcar-gen2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-rcar-gen2.c b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+index 24ba03e..de93dc2 100644
+--- a/arch/arm/mach-shmobile/setup-rcar-gen2.c
++++ b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+@@ -193,7 +193,7 @@ void __init rcar_gen2_reserve(void)
+ 
+ 	/* reserve 256 MiB at the top of the physical legacy 32-bit space */
+ 	memset(&mrc, 0, sizeof(mrc));
+-	mrc.reserved = SZ_256M;
++	mrc.reserved = SZ_128M;
+ 
+ 	of_scan_flat_dt(rcar_gen2_scan_mem, &mrc);
+ #ifdef CONFIG_DMA_CMA
+-- 
+2.7.4
+

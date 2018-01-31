@@ -18,6 +18,10 @@ SRC_URI_append_iwg22m = " \
 	file://iwg22m/0001-ethavb-workaround-to-fix-PHY-address.patch \
 "
 
+SRC_URI_append_iwg22m = " \
+	file://iwg23s/0001-ARM-shmobilel-setup-rcar-gen2-resize-CMA-area-1-for-.patch \
+"
+
 S = "${WORKDIR}/git"
 
 
