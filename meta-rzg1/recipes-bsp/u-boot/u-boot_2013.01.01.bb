@@ -15,6 +15,7 @@ SRC_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;branch=2013.01.01/
            file://0002-Add-alternative-default-name-for-iwg20m-board-dtb.patch \
            file://0001-u-boot-Add-iwg22m-support.patch \
            file://0001-u-boot-Add-iwg23s-support.patch \
+           file://0002-u-boot-iwg23s-Add-QoS-support.patch \
 "
 
 S = "${WORKDIR}/git"
