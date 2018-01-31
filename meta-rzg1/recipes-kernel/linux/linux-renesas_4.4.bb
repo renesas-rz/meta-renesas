@@ -162,6 +162,14 @@ do_configure_append_iwg23s() {
 
 do_configure_append_iwg23s() {
 
+	kernel_configure_variable USB_OHCI_LITTLE_ENDIAN y
+	kernel_configure_variable USB_GADGETFS m
+	kernel_configure_variable USB_LIBCOMPOSITE m
+	kernel_configure_variable USB_MASS_STORAGE m
+	kernel_configure_variable USB_F_MASS_STORAGE m
+	kernel_configure_variable USB_EHCI_ROOT_HUB_TT y
+	kernel_configure_variable USB_OTG y
+	kernel_configure_variable USB_ARCH_HAS_OHCI y
 	kernel_configure_variable USB_OHCI_HCD_PLATFORM y
 	kernel_configure_variable USB_EHCI_HCD_PLATFORM y
 	kernel_configure_variable USB_EHCI_ROOT_HUB_TT y
