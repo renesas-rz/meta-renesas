@@ -3,17 +3,17 @@
 ### Note: To run this script, please stand on meta-rzg1 to run.
 
 if [ ! -d $1/RZG_Series_Software_Package_for_Linux ] &&
-   [ ! -d $1/RZG_Series_Evaluation_Software_Package_for_Linux ]
+   [ ! -d $1/RZG_Series*_Software_Package_for_Linux ]
 then
   tar -C $1 -zxf $1/RZG_Series_Software_Package_for_Linux*.tar.gz 2>/dev/null ||
-  tar -C $1 -zxf $1/RZG_Series_Evaluation_Software_Package_for_Linux*.tar.gz
+  tar -C $1 -zxf $1/RZG_Series*_Software_Package_for_Linux*.tar.gz
 fi
 
 if [ ! -d $1/RZG_Series_Software_Package_of_Linux_Drivers ] &&
-   [ ! -d $1/RZG_Series_Evaluation_Software_Package_of_Linux_Drivers ]
+   [ ! -d $1/RZG_Series*_Software_Package_of_Linux_Drivers ]
 then
   tar -C $1 -zxf $1/RZG_Series_Software_Package_of_Linux_Drivers*.tar.gz 2>/dev/null ||
-  tar -C $1 -zxf $1/RZG_Series_Evaluation_Software_Package_of_Linux_Drivers*.tar.gz
+  tar -C $1 -zxf $1/RZG_Series*_Software_Package_of_Linux_Drivers*.tar.gz
 fi
 
 SGX_KM=`find $1 -name *SGX_KM_C2.tar.bz2 | tail -1`

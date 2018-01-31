@@ -1,17 +1,17 @@
 #!/bin/sh
 
 if [ ! -d $1/RZG_Series_Software_Package_for_Linux ] &&
-   [ ! -d $1/RZG_Series_Evaluation_Software_Package_for_Linux ]
+   [ ! -d $1/RZG_Series*_Software_Package_for_Linux ]
 then
   tar -C $1 -zxf $1/RZG_Series_Software_Package_for_Linux*.tar.gz 2>/dev/null ||
-  tar -C $1 -zxf $1/RZG_Series_Evaluation_Software_Package_for_Linux*.tar.gz
+  tar -C $1 -zxf $1/RZG_Series*_Software_Package_for_Linux*.tar.gz
 fi
 
 if [ ! -d $1/RZG_Series_Software_Package_of_Linux_Drivers ] &&
-   [ ! -d $1/RZG_Series_Evaluation_Software_Package_of_Linux_Drivers ]
+   [ ! -d $1/RZG_Series*_Software_Package_of_Linux_Drivers ]
 then
   tar -C $1 -zxf $1/RZG_Series_Software_Package_of_Linux_Drivers*.tar.gz 2>/dev/null ||
-  tar -C $1 -zxf $1/RZG_Series_Evaluation_Software_Package_of_Linux_Drivers*.tar.gz
+  tar -C $1 -zxf $1/RZG_Series*_Software_Package_of_Linux_Drivers*.tar.gz
 fi
 
 TMPDIRS=
@@ -88,8 +88,8 @@ cp -rf $OMX_DRVs/* $OMXTMP
 if [ -f $OMXTMP/RTM0AC0000M264D100JPCL4.zip ];then
 	unzip -q -d $TMP $OMXTMP/RTM0AC0000M264D100JPCL4.zip
 else
-	unzip -q -d $TMP $OMXTMP/EVARTM0AC0000M264D100JPCL4.zip
-	mv $TMP/EVARTM0AC0000M264D100JPCL4 $TMP/RTM0AC0000M264D100JPCL4
+	unzip -q -d $TMP $OMXTMP/*RTM0AC0000M264D100JPCL4.zip
+	mv $TMP/*RTM0AC0000M264D100JPCL4 $TMP/RTM0AC0000M264D100JPCL4
 fi
 tar zxf $TMP/RTM0AC0000M264D100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000M264D100JPCL4/
 rm $TMP/RTM0AC0000M264D100JPCL4/Software.tar.gz
@@ -100,8 +100,8 @@ mv RTM0AC0000M264D100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 if [ -f $OMXTMP/RTM0AC0000M264E100JPCL4.zip ];then
 	unzip -q -d $TMP $OMXTMP/RTM0AC0000M264E100JPCL4.zip
 else
-	unzip -q -d $TMP $OMXTMP/EVARTM0AC0000M264E100JPCL4.zip
-	mv $TMP/EVARTM0AC0000M264E100JPCL4 $TMP/RTM0AC0000M264E100JPCL4
+	unzip -q -d $TMP $OMXTMP/*RTM0AC0000M264E100JPCL4.zip
+	mv $TMP/*RTM0AC0000M264E100JPCL4 $TMP/RTM0AC0000M264E100JPCL4
 fi
 tar zxf $TMP/RTM0AC0000M264E100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000M264E100JPCL4/
 rm $TMP/RTM0AC0000M264E100JPCL4/Software.tar.gz
@@ -112,8 +112,8 @@ mv RTM0AC0000M264E100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 if [ -f $OMXTMP/RTM0AC0000MVPL0100JPCL4.zip ];then
 	unzip -q -d $TMP $OMXTMP/RTM0AC0000MVPL0100JPCL4.zip
 else
-	unzip -q -d $TMP $OMXTMP/EVARTM0AC0000MVPL0100JPCL4.zip
-	mv $TMP/EVARTM0AC0000MVPL0100JPCL4 $TMP/RTM0AC0000MVPL0100JPCL4
+	unzip -q -d $TMP $OMXTMP/*RTM0AC0000MVPL0100JPCL4.zip
+	mv $TMP/*RTM0AC0000MVPL0100JPCL4 $TMP/RTM0AC0000MVPL0100JPCL4
 fi
 tar zxf $TMP/RTM0AC0000MVPL0100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000MVPL0100JPCL4/
 rm $TMP/RTM0AC0000MVPL0100JPCL4/Software.tar.gz
@@ -124,8 +124,8 @@ mv RTM0AC0000MVPL0100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 if [ -f $OMXTMP/RTM0AC0000MVRC0100JPCL4.zip ];then
 	unzip -q -d $TMP $OMXTMP/RTM0AC0000MVRC0100JPCL4.zip
 else
-	unzip -q -d $TMP $OMXTMP/EVARTM0AC0000MVRC0100JPCL4.zip
-	mv $TMP/EVARTM0AC0000MVRC0100JPCL4 $TMP/RTM0AC0000MVRC0100JPCL4
+	unzip -q -d $TMP $OMXTMP/*RTM0AC0000MVRC0100JPCL4.zip
+	mv $TMP/*RTM0AC0000MVRC0100JPCL4 $TMP/RTM0AC0000MVRC0100JPCL4
 fi
 tar zxf $TMP/RTM0AC0000MVRC0100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000MVRC0100JPCL4/
 rm $TMP/RTM0AC0000MVRC0100JPCL4/Software.tar.gz
@@ -136,8 +136,8 @@ mv RTM0AC0000MVRC0100JPCL4.tar.bz2 recipes-multimedia/omx-module/files/
 if [ -f $OMXTMP/RTM0AC0000ZMCL0100JPCL4.zip ];then
 	unzip -q -d $TMP $OMXTMP/RTM0AC0000ZMCL0100JPCL4.zip
 else
-	unzip -q -d $TMP $OMXTMP/EVARTM0AC0000ZMCL0100JPCL4.zip
-	mv $TMP/EVARTM0AC0000ZMCL0100JPCL4 $TMP/RTM0AC0000ZMCL0100JPCL4
+	unzip -q -d $TMP $OMXTMP/*RTM0AC0000ZMCL0100JPCL4.zip
+	mv $TMP/*RTM0AC0000ZMCL0100JPCL4 $TMP/RTM0AC0000ZMCL0100JPCL4
 fi
 tar zxf $TMP/RTM0AC0000ZMCL0100JPCL4/Software.tar.gz -C $TMP/RTM0AC0000ZMCL0100JPCL4/
 rm $TMP/RTM0AC0000ZMCL0100JPCL4/Software.tar.gz
