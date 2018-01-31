@@ -16,6 +16,7 @@ S = "${WORKDIR}/fdpm"
 
 FDPM_CFG_r8a7743 = "M2CONFIG"
 FDPM_CFG_r8a7745 = "E2CONFIG"
+FDPM_CFG_r8a77470 = "C2CONFIG"
 
 KERNEL_HEADER_PATH = "${KERNELSRC}/include/linux"
 FDPM_INSTALL_HEADERS="fdpm_drv.h fdpm_public.h fdpm_api.h"

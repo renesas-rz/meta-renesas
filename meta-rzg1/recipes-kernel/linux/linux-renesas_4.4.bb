@@ -4,7 +4,7 @@ require linux-dtb-append.inc
 require linux-config.inc
 
 DESCRIPTION = "Linux kernel for the R-Car Generation 2 based board"
-COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg22m)"
+COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg22m|iwg23s)"
 
 PV_append = "+git${SRCREV}"
 
@@ -150,6 +150,21 @@ do_configure_append_iwg22m() {
 	yes '' | oe_runmake oldconfig
 }
 
+do_configure_append_iwg23s() {
+	kernel_configure_variable DRM_I2C_SII902X y
+
+	yes '' | oe_runmake oldconfig
+}
+
+do_configure_append_iwg23s() {
+
+	kernel_configure_variable USB_OHCI_HCD_PLATFORM y
+	kernel_configure_variable USB_EHCI_HCD_PLATFORM y
+	kernel_configure_variable USB_EHCI_ROOT_HUB_TT y
+	kernel_configure_variable USB_ARCH_HAS_EHCI y
+
+	yes '' | oe_runmake oldconfig
+}
 ## for gles-kernel-module
 do_compile_append() {
 	cp ${KBUILD_OUTPUT}/vmlinux ${STAGING_KERNEL_BUILDDIR}/vmlinux

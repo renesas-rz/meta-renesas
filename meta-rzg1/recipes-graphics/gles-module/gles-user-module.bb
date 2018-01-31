@@ -6,7 +6,7 @@ LICENSE = "CLOSED"
 PN = "gles-user-module"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "(r8a7743|r8a7745)"
+COMPATIBLE_MACHINE = "(r8a7743|r8a7745|r8a77470)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 RDEPENDS_${PN} += " kernel-module-gles \
@@ -17,6 +17,8 @@ S_r8a7743 = "${WORKDIR}/eurasia"
 GLES_r8a7743 = "sgx"
 S_r8a7745 = "${WORKDIR}/eurasia"
 GLES_r8a7745 = "sgx"
+S_r8a77470 = "${WORKDIR}/eurasia"
+GLES_r8a77470 = "sgx"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
@@ -30,6 +32,11 @@ SRC_URI_append_r8a7743 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
 
 SRC_URI_r8a7745 = "file://r8a7745_linux_sgx_binaries_gles2.tar.bz2"
 SRC_URI_append_r8a7745 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
+    file://EGL_headers_for_wayland.patch \
+    ", "", d)}"
+
+SRC_URI_r8a77470 = "file://r8a77470_linux_sgx_binaries_gles2.tar.bz2"
+SRC_URI_append_r8a77470 = " ${@base_contains("DISTRO_FEATURES", "wayland", " \
     file://EGL_headers_for_wayland.patch \
     ", "", d)}"
 
