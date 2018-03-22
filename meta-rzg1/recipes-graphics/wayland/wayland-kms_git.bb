@@ -8,7 +8,7 @@ PV = "1.6.0+git${SRCREV}"
 SRCREV = "229a635a7972ac38532f944c799ecd16abf6aea2"
 SRC_URI = "git://github.com/thayama/wayland-kms;protocol=git;branch=master"
 
-COMPATIBLE_MACHINE = "(r8a7743|r8a7745|r8a77470)"
+COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7745|r8a77470)"
 S = "${WORKDIR}/git"
 DEPENDS = "libdrm wayland gles-user-module"
 
