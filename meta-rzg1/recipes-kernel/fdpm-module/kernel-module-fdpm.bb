@@ -11,9 +11,11 @@ PN = "kernel-module-fdpm"
 PR = "r0"
 SRC_URI = "file://fdpm-kernel.tar.bz2 \
 	file://0001-drv-fdpm_sub-move-check-NULL-before-dereferences.patch \
+	file://0002-fdpm-support-board-G1H-r8a7742.patch \
 "
 S = "${WORKDIR}/fdpm"
 
+FDPM_CFG_r8a7742 = "H2CONFIG"
 FDPM_CFG_r8a7743 = "M2CONFIG"
 FDPM_CFG_r8a7745 = "E2CONFIG"
 FDPM_CFG_r8a77470 = "C2CONFIG"
