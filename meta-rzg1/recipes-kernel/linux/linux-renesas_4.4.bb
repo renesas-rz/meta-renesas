@@ -177,6 +177,14 @@ do_configure_append_iwg23s() {
 
 	yes '' | oe_runmake oldconfig
 }
+
+do_configure_append_iwg21m() {
+
+	kernel_configure_variable TOUCHSCREEN_EDT_FT5X06 y
+
+	yes '' | oe_runmake oldconfig
+}
+
 ## for gles-kernel-module
 do_compile_append() {
 	cp ${KBUILD_OUTPUT}/vmlinux ${STAGING_KERNEL_BUILDDIR}/vmlinux
