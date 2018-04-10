@@ -15,6 +15,7 @@ SRC_URI = "file://vspm-kernel.tar.bz2 \
 
 S = "${WORKDIR}/vspm"
 
+VSPM_CFG_r8a7742 = "H2CONFIG"
 VSPM_CFG_r8a7743 = "M2CONFIG"
 VSPM_CFG_r8a7745 = "E2CONFIG"
 VSPM_CFG_r8a77470 = "C2CONFIG"
