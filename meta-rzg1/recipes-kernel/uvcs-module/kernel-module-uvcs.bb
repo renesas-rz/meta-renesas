@@ -2,25 +2,27 @@ require ../../include/rzg-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \
-    file://uvcs/include/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
-    file://uvcs/include/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
+    file://include/GPL-COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
+    file://include/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
 DEPENDS = "linux-renesas"
 PN = "kernel-module-uvcs"
 PR = "r0"
-SRC_URI = "file://uvcs-kernel.tar.bz2"
-S = "${WORKDIR}"
+SRC_URI = "file://uvcs-kernel.tar.bz2 \
+	file://0001-uvcs-support-board-G1H-r8a7742.patch \
+"
+S = "${WORKDIR}/uvcs"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 inherit autotools
 
-export UVCS_DRV_SRC_DIR = "${S}/uvcs/source/uvcs_lkm"
-export UVCS_CMN_SRC_DIR = "${S}/uvcs/source/uvcs_cmn"
-export UVCS_CMN_INC_DIR = "${S}/uvcs/include"
-export DRV_CORE_SRC_DIR = "${S}/uvcs/source/driver_core"
+export UVCS_DRV_SRC_DIR = "${S}/source/uvcs_lkm"
+export UVCS_CMN_SRC_DIR = "${S}/source/uvcs_cmn"
+export UVCS_CMN_INC_DIR = "${S}/include"
+export DRV_CORE_SRC_DIR = "${S}/source/driver_core"
 
 do_compile() {
-    cd ${S}/uvcs/source/makefile/linaro_5_2_1/
+    cd ${S}/source/makefile/linaro_5_2_1/
     make clean ARCH=arm
     make all ARCH=arm
 }
@@ -30,12 +32,12 @@ do_install() {
     mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include
 
     # Copy kernel module
-    cp -f ${S}/uvcs/source/makefile/linaro_5_2_1/uvcs_cmn.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/uvcs_cmn.ko
+    cp -f ${S}/source/makefile/linaro_5_2_1/uvcs_cmn.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/uvcs_cmn.ko
 
     # Copy shared header files
-    cp -f ${S}/uvcs/include/uvcs_cmn.h  ${D}/usr/src/kernel/include
-    cp -f ${S}/uvcs/include/uvcs_types.h  ${D}/usr/src/kernel/include
-    cp -f ${S}/uvcs/source/makefile/linaro_5_2_1/Module.symvers  ${D}/usr/src/kernel/include/uvcs.symvers
+    cp -f ${S}/include/uvcs_cmn.h  ${D}/usr/src/kernel/include
+    cp -f ${S}/include/uvcs_types.h  ${D}/usr/src/kernel/include
+    cp -f ${S}/source/makefile/linaro_5_2_1/Module.symvers  ${D}/usr/src/kernel/include/uvcs.symvers
 }
 
 # Append function to clean extract source
