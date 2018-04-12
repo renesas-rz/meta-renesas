@@ -181,6 +181,7 @@ do_configure_append_iwg23s() {
 do_configure_append_iwg21m() {
 
 	kernel_configure_variable TOUCHSCREEN_EDT_FT5X06 y
+	kernel_configure_variable DRM_I2C_CH7036 y
 
 	yes '' | oe_runmake oldconfig
 }
