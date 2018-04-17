@@ -1,0 +1,1 @@
+ACTION=="add",DEVPATH=="/devices/platform/ee000000.xhci/usb3/3-1/3-1:1.0/0003:0408:3001.0001/input/input1/event1", ENV{WL_OUTPUT}="LVDS-2"
