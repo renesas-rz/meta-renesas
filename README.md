@@ -8,7 +8,7 @@ GCC 5.2
 
 U-Boot 2015.07 (SKRZG1E/M)
 
-U-Boot 2013.01 (IWAVE-G1M)
+U-Boot 2013.01 (IWAVE-G1H/M/N/E/C)
 
 Linux kernel 4.4 - CIP
 
