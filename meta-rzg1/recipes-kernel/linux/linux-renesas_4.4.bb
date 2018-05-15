@@ -9,7 +9,7 @@ COMPATIBLE_MACHINE = "(skrzg1e|skrzg1m|iwg20m|iwg22m|iwg23s|iwg21m)"
 PV_append = "+git${SRCREV}"
 
 RENESAS_URL="git://github.com/renesas-rz/renesas-cip.git"
-SRCREV = "5a88da13f31bc5f2b300d1a50368a5b5985108a4"
+SRCREV = "79f8a920af486ed07283dbe7159e68ee3c19d19c"
 SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=v4.4.55-cip3 \
 "
