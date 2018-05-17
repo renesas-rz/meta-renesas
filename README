@@ -1,0 +1,21 @@
+Branch yocto_2.4
+--------------------------------------------------------------------------------------
+This branch supports building a Yocto 2.4.2 based BSP with the following components:
+
+GCC 7.2
+
+Linux kernel 4.4 - CIP
+
+This layer depends on:
+
+URI: git://git.yoctoproject.org/poky
+
+revision: 342fbd6a3e57021c8e28b124b3adb241936f3d9d
+
+URI: git://git.openembedded.org/meta-openembedded
+
+revision: dacfa2b1920e285531bec55cd2f08743390aaf57
+
+URI: git://git.linaro.org/openembedded/meta-linaro.git
+
+revision: 75dfb67bbb14a70cd47afda9726e2e1c76731885
