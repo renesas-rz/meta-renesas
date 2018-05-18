@@ -8,10 +8,10 @@ Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
  if/Makefile | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/if/Makefile b/if/Makefile
+diff --git a/vspm/if/Makefile b/vspm/if/Makefile
 index 9751621..b00b8cf 100755
---- a/if/Makefile
-+++ b/if/Makefile
+--- a/vspm/if/Makefile
++++ b/vspm/if/Makefile
 @@ -2,7 +2,7 @@ all:
  	$(CP) ../include/vspm_public.h $(BUILDDIR)/include
  	$(CP) ../include/vsp_drv.h $(BUILDDIR)/include
