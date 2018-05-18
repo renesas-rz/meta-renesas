@@ -3,7 +3,7 @@ DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE = "iwg21m"
+COMPATIBLE_MACHINE = "iwg20m|iwg21m"
 
 DEPENDS_append = " util-linux-native openssl-native"
 
