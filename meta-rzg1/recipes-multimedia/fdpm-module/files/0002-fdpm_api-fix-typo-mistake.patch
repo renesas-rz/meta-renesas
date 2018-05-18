@@ -1,0 +1,28 @@
+From 5a6733af8ed5ddcb53c7db1d1f5fea18cdb3718d Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 8 Sep 2017 14:44:36 +0700
+Subject: [PATCH 2/2] fdpm_api: fix typo mistake
+
+expect E_FDP_PARA_STATUS when occupy_vbest_flg == 0
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ if/fdpm_api.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/if/fdpm_api.c b/if/fdpm_api.c
+index 013bc82..b58d933 100755
+--- a/if/fdpm_api.c
++++ b/if/fdpm_api.c
+@@ -775,7 +775,7 @@ int drv_FDPM_Status(T_FDP_STATUS *fdp_status, int *sub_ercd)
+ 
+ #ifdef FDP_PAR_CHECK_MODE
+ 	if (fdp_status == NULL) {
+-		if (occupy_vbest_flg != 0) {
++		if (occupy_vbest_flg == 0) {
+ 			if (sub_ercd != NULL)
+ 				*sub_ercd = E_FDP_PARA_STATUS;
+ 		}
+-- 
+1.9.1
+
