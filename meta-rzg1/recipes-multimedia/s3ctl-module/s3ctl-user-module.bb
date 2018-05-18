@@ -27,6 +27,12 @@ do_install() {
     cp -f ${BUILDDIR}/include/s3ctl_user_private.h ${D}/usr/local/include/
 }
 
+
+sysroot_stage_all_append () {
+    # add shared header files
+    sysroot_stage_dir ${D}/usr/local/include/ ${SYSROOT_DESTDIR}${includedir} 
+}
+
 # Append function to clean extract source
 do_cleansstate_prepend() {
         bb.build.exec_func('do_clean_source', d)
