@@ -1,0 +1,26 @@
+From 2c2b103718a3709a9b65a6729c322561ba5b8068 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 18 May 2018 19:15:39 +0700
+Subject: [PATCH] Makefile: add Kernel source header reference
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ if/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/if/Makefile b/if/Makefile
+index 9751621..b00b8cf 100755
+--- a/if/Makefile
++++ b/if/Makefile
+@@ -2,7 +2,7 @@ all:
+ 	$(CP) ../include/vspm_public.h $(BUILDDIR)/include
+ 	$(CP) ../include/vsp_drv.h $(BUILDDIR)/include
+ 	$(CP) ../include/tddmac_drv.h $(BUILDDIR)/include
+-	${CC} -fPIC -c vspm_api.c -I$(BUILDDIR)/include -Wall
++	${CC} -fPIC -c vspm_api.c -I$(BUILDDIR)/include -Wall -I${KERNELSRC}/include
+ 	${CC} -shared -Wl,-soname=libvspm.so.1 -o libvspm.so.1.5.0 vspm_api.o
+ 	ln -s ./libvspm.so.1.5.0 libvspm.so.1
+ 	ln -s ./libvspm.so.1 libvspm.so
+-- 
+2.7.4
+
