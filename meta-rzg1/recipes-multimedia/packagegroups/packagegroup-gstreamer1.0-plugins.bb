@@ -33,7 +33,8 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-base = " \
     gstreamer1.0-plugins-base-videoconvert \
     gstreamer1.0-plugins-base-videotestsrc \
     gstreamer1.0-plugins-base-audiotestsrc \
-    gstreamer1.0-plugins-base-alsa \   
+    gstreamer1.0-plugins-base-alsa \
+    gstreamer1.0-plugins-base-vspmfilter \
 "
 
 RDEPENDS_packagegroup-gstreamer1.0-plugins-good = " \

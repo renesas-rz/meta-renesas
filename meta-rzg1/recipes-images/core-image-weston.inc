@@ -15,7 +15,11 @@ IMAGE_INSTALL_append_lcb = " \
     weston-bin \
 "
 
+# GStreamer Packages
+GST_PACKAGEGROUP = "packagegroup-gstreamer1.0-plugins"
+
 IMAGE_INSTALL_append = " \
+  ${GST_PACKAGEGROUP} \
   iproute2 \
   obexftp \
   bluez5 \
