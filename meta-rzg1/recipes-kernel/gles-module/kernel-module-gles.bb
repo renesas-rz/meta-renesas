@@ -115,3 +115,7 @@ FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/* \
     /lib/modules/${KERNEL_VERSION}/extra/* \
 "
+
+RPROVIDES_${PN} += " \
+    kernel-module-pvrsrvkm kernel-module-dc-linuxfb kernel-module-bc-example \
+"
