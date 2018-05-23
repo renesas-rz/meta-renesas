@@ -7,6 +7,12 @@ PR = "r0"
 S = "${WORKDIR}/mmngrbuf"
 SRC_URI = "file://mmngrbuf.tar.bz2"
 
+sysroot_stage_all_append () {
+    # add shared header files
+    sysroot_stage_dir ${D}/usr/local/include/ ${SYSROOT_DESTDIR}${includedir}
+    sysroot_stage_dir ${D}/usr/local/lib/ ${SYSROOT_DESTDIR}${libdir}
+}
+
 do_compile() {
     # Build shared library
     cd ${S}/if

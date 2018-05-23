@@ -6,6 +6,12 @@ PN = "mmngr-user-module"
 S = "${WORKDIR}/mmngr"
 SRC_URI = "file://mmngr.tar.bz2"
 
+sysroot_stage_all_append () {
+    # add shared header files
+    sysroot_stage_dir ${D}/usr/local/include/ ${SYSROOT_DESTDIR}${includedir}
+    sysroot_stage_dir ${D}/usr/local/lib/ ${SYSROOT_DESTDIR}${libdir}
+}
+
 do_compile() {
     # Build shared library
     cd ${S}/if
@@ -42,11 +48,15 @@ PACKAGES = "\
     ${PN}-dev \
 "
 
-FILES_${PN} = " \
+FILES_${PN} += " \
     /usr/local/lib/libmmngr.so.* \
+    ${libdir}/*.so \
+    ${libdir}/*.la \
+    /usr/local/include \
+    /usr/local/include\*.h \
 "
 
-FILES_${PN}-dev = " \
+FILES_${PN}-dev += " \
     /usr/local/include \
     /usr/local/include/*.h \
     /usr/local/lib \
@@ -63,3 +73,6 @@ do_configure[noexec] = "1"
 python do_package_ipk_prepend () {
     d.setVar('ALLOW_EMPTY', '1')
 }
+
+# Skip debug strip of do_populate_sysroot()
+INHIBIT_SYSROOT_STRIP = "1" 
