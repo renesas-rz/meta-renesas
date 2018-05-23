@@ -8,8 +8,8 @@ PR = "r0"
 
 COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7745|r8a77470)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
-
-RDEPENDS_${PN} += " kernel-module-gles bash libegl libegl-dev \
+DEPENDS += " kernel-module-gles "
+RDEPENDS_${PN} += "kernel-module-dc-linuxfb kernel-module-pvrsrvkm bash libegl libegl-dev \
     ${@bb.utils.contains("DISTRO_FEATURES", "wayland", " libdrm wayland-kms libgbm", "", d)} \
 "
 
