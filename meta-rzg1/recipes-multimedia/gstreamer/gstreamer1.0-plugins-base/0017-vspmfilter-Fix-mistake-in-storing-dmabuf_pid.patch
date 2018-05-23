@@ -1,0 +1,122 @@
+From 3bfbd570bb4e8cf2305c6164668fb2fb894d60e3 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 4 Nov 2016 22:13:41 +0700
+Subject: [PATCH] vspmfilter:Fix mistake in storing dmabuf_pid
+
+The dmabuf_pid (used for unexport/unimport dmabuf) are overwriten.
+This patch fixes this mistake.
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 37 ++++++++++++++++++++++++++++---------
+ gst/vspmfilter/gstvspmfilter.h |  2 +-
+ 2 files changed, 29 insertions(+), 10 deletions(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index b4ba910..3798d64 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -583,7 +583,6 @@ gst_vspm_filter_set_info (GstVideoFilter * filter,
+                                 &vspm_out->vspm[vspm_used].puser_virt_addr,
+                                 MMNGR_VA_SUPPORT)) {
+         vspm_out->used++;
+-        vspm_out->vspm[vspm_used].dmabuf_pid = -1;
+         g_array_append_val (outbuf_paddr_array,
+                             vspm_out->vspm[vspm_used].phard_addr);
+         g_array_append_val (outbuf_vaddr_array,
+@@ -721,7 +720,10 @@ gst_vspmfilter_buffer_pool_create_buffer_from_dmabuf (GstVspmFilter *space,
+ 
+   vspm_buf.buf = buffer;
+   vspm_buf.dmabuf_fd = dmabuf[0];
+-  if (R_MM_OK == mmngr_import_start_in_user(&vspm_buf.dmabuf_pid,
++  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
++    vspm_buf.dmabuf_pid[i] = -1;
++
++  if (R_MM_OK == mmngr_import_start_in_user(&vspm_buf.dmabuf_pid[0],
+ 			&psize,
+ 			&vspm_buf.phard_addr,
+ 			vspm_buf.dmabuf_fd))
+@@ -1037,7 +1039,7 @@ static GstFlowReturn gst_vspm_filter_prepare_output_buffer (GstBaseTransform * t
+                 plane_size[i] = vmeta->stride[i] * vmeta->height;
+ 
+                 res =
+-                    mmngr_export_start_in_user (&vspm_out->vspm[vspm_used].dmabuf_pid,
++                    mmngr_export_start_in_user (&vspm_out->vspm[vspm_used].dmabuf_pid[i],
+                     plane_size[i], (unsigned long) phys_addr, &dmabuf_fd[i]);
+                 if (res != R_MM_OK) {
+                   GST_ERROR_OBJECT (trans,
+@@ -1248,21 +1250,28 @@ gst_vspm_filter_finalize (GObject * obj)
+   while (vspm_in->used)
+   {
+     int i = vspm_in->used - 1;
++    int j;
++
+     vspm_in->used--;
+-    if(vspm_in->vspm[i].dmabuf_pid >= 0)
+-      mmngr_import_end_in_user(vspm_in->vspm[i].dmabuf_pid);
++    for (j = 0; j < GST_VIDEO_MAX_PLANES; j++)
++      if(vspm_in->vspm[i].dmabuf_pid[j] >= 0)
++        mmngr_import_end_in_user(vspm_in->vspm[i].dmabuf_pid[j]);
+   }
+-  
++
+   while (vspm_out->used)
+   {
+     int i = vspm_out->used - 1;
++    int j;
++
+     vspm_out->used--;
+-    if (vspm_out->vspm[i].dmabuf_pid >= 0)
+-      mmngr_export_end_in_user(vspm_out->vspm[i].dmabuf_pid );
++    for (j = 0; j < GST_VIDEO_MAX_PLANES; j++)
++      if (vspm_out->vspm[i].dmabuf_pid[j] >= 0)
++        mmngr_export_end_in_user(vspm_out->vspm[i].dmabuf_pid[j] );
++
+     if (vspm_out->vspm[i].mmng_pid >= 0)
+       mmngr_free_in_user(vspm_out->vspm[i].mmng_pid);
+   }
+-  
++
+   if (space->vspm_in)
+     g_free (space->vspm_in);
+   /* free buf_array when finalize */
+@@ -1287,6 +1296,7 @@ gst_vspm_filter_init (GstVspmFilter * space)
+   Vspm_mmng_ar *vspm_in;
+   Vspm_mmng_ar *vspm_out;
+   VspmbufArray *vspm_outbuf;
++  guint i, j;
+ 
+   space->vsp_info = g_malloc0 (sizeof (GstVspmFilterVspInfo));
+   space->vspm_in = g_malloc0 (sizeof (Vspm_mmng_ar));
+@@ -1330,6 +1340,15 @@ gst_vspm_filter_init (GstVspmFilter * space)
+   space->use_dmabuf = FALSE;
+   space->outbuf_allocate = FALSE;
+   space->first_buff = 1;
++
++  for (i = 0; i < sizeof(vspm_in->vspm)/sizeof(vspm_in->vspm[0]); i++) {
++    for (j = 0; j < GST_VIDEO_MAX_PLANES; j++)
++      vspm_in->vspm[i].dmabuf_pid[j] = -1;
++  }
++  for (i = 0; i < sizeof(vspm_out->vspm)/sizeof(vspm_out->vspm[0]); i++) {
++    for (j = 0; j < GST_VIDEO_MAX_PLANES; j++)
++      vspm_out->vspm[i].dmabuf_pid[j] = -1;
++  }
+ }
+ 
+ void
+diff --git a/gst/vspmfilter/gstvspmfilter.h b/gst/vspmfilter/gstvspmfilter.h
+index 4ad53da..e7c39f6 100755
+--- a/gst/vspmfilter/gstvspmfilter.h
++++ b/gst/vspmfilter/gstvspmfilter.h
+@@ -137,7 +137,7 @@ struct _GstVspmFilterVspInfo {
+ 
+ typedef struct {
+   int mmng_pid;
+-  int dmabuf_pid;
++  int dmabuf_pid[GST_VIDEO_MAX_PLANES];
+   unsigned long pphy_addr;
+   unsigned long phard_addr;
+   unsigned long puser_virt_addr;
+-- 
+1.9.1
+

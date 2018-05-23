@@ -1,0 +1,50 @@
+From 5eb7e280dc5bc90f7c327e8d27f1bc79afbd0900 Mon Sep 17 00:00:00 2001
+From: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+Date: Sun, 21 Aug 2016 11:24:22 +0700
+Subject: [PATCH 03/14] gst plugins base videoencoder fix error w I420 format
+
+Signed-off-by: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+---
+ gst-libs/gst/video/gstvideoencoder.c | 6 +++---
+ gst-libs/gst/video/gstvideoencoder.h | 1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/gst-libs/gst/video/gstvideoencoder.c b/gst-libs/gst/video/gstvideoencoder.c
+index 4c5b111..904eaaf 100644
+--- a/gst-libs/gst/video/gstvideoencoder.c
++++ b/gst-libs/gst/video/gstvideoencoder.c
+@@ -214,8 +214,8 @@ static GstFlowReturn gst_video_encoder_chain (GstPad * pad, GstObject * parent,
+     GstBuffer * buf);
+ static GstStateChangeReturn gst_video_encoder_change_state (GstElement *
+     element, GstStateChange transition);
+-static gboolean gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
+-    GstQuery * query);
++// static gboolean gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
++    // GstQuery * query);
+ static gboolean gst_video_encoder_src_query (GstPad * pad, GstObject * parent,
+     GstQuery * query);
+ static GstVideoCodecFrame *gst_video_encoder_new_frame (GstVideoEncoder *
+@@ -884,7 +884,7 @@ gst_video_encoder_sink_query_default (GstVideoEncoder * encoder,
+   return res;
+ }
+ 
+-static gboolean
++gboolean
+ gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
+     GstQuery * query)
+ {
+diff --git a/gst-libs/gst/video/gstvideoencoder.h b/gst-libs/gst/video/gstvideoencoder.h
+index aea119d..4dd855a 100644
+--- a/gst-libs/gst/video/gstvideoencoder.h
++++ b/gst-libs/gst/video/gstvideoencoder.h
+@@ -332,6 +332,7 @@ void                 gst_video_encoder_merge_tags  (GstVideoEncoder *encoder,
+ void                 gst_video_encoder_get_allocator (GstVideoEncoder *encoder,
+                                                       GstAllocator **allocator,
+                                                       GstAllocationParams *params);
++gboolean 			 gst_video_encoder_sink_query (GstPad * pad, GstObject * parent, GstQuery * query);
+ 
+ G_END_DECLS
+ 
+-- 
+1.9.1
+

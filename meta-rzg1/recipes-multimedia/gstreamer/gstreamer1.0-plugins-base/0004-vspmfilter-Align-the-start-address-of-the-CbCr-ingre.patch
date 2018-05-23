@@ -1,0 +1,100 @@
+From 2bb3ff34770af8a67fd5c130f096678bbbf5506b Mon Sep 17 00:00:00 2001
+From: Naoya Emori <naoya.emori.ay@ps.hitachi-solutions.com>
+Date: Mon, 25 May 2015 08:53:44 +0900
+Subject: [PATCH] vspmfilter: Align the start address of the CbCr ingredient
+
+Align to the least common multiple of 4096 and stride.
+
+Signed-off-by: Naoya Emori <naoya.emori.ay@ps.hitachi-solutions.com>
+---
+ gst/vspmfilter/gstvspmfilter.c |   52 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 48 insertions(+), 4 deletions(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index a011b83..e409f35 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -1177,6 +1177,34 @@ static void cb_func(
+   end_flag = 1;
+ }
+ 
++static gint
++get_uv_offset_aligned_to_page (gint page_size, gint stride, gint height)
++{
++  gint a, b, r;
++  gint lcm;
++
++  /*
++   * The following implementation uses the Euclidean Algorithm to obtain
++   * the least common multiple of stride and page size.
++   */
++
++  /* nStride is set to width, to achieve 4K aligned by adjusting
++     the nSliceHeight. */
++  /* (1) Calculate the GCD of stride and alignment */
++  b = stride;
++  a = page_size;
++  while ((r = a % b) != 0) {
++    a = b;
++    b = r;
++  }
++
++  /* (2) Calculate the LCM of stride and alignment */
++  lcm = stride * page_size / b;
++
++  /* (3) Calculate the offset of UV plane */
++  return (((stride * height) / lcm) + 1) * lcm;
++}
++
+ static GstFlowReturn
+ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     GstVideoFrame * in_frame, GstVideoFrame * out_frame)
+@@ -1275,12 +1303,20 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     /* YUV420 SemiPlanar */
+     case VSP_IN_YUV420_SEMI_NV21:
+     case VSP_IN_YUV420_SEMI_NV12:
+-      src_par.addr_c0		= ((guint8 *) p_adr[0].hard_addr + in_width * in_height);
++    {
++      gint uv_offset = 0;
++      if ((in_width * in_height) & (4096 - 1))
++        uv_offset = get_uv_offset_aligned_to_page (4096, in_width, in_height);
++      else
++        uv_offset = in_width * in_height;
++
++      src_par.addr_c0		= ((guint8 *) p_adr[0].hard_addr + uv_offset);
++
+       src_par.stride 		= in_width;
+       src_par.stride_c	= in_width;
+       src_par.csc       = VSP_CSC_ON;
+       break;
+-      
++    }
+     /* YUV422 Interleaved */
+     case VSP_IN_YUV422_INT0_YUY2:
+     case VSP_IN_YUV422_INT0_UYVY:
+@@ -1523,12 +1559,20 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+     /* YUV420 SemiPlanar */
+     case VSP_IN_YUV420_SEMI_NV21:
+     case VSP_IN_YUV420_SEMI_NV12:
+-      src_par.addr_c0		= ((guint8 *) p_adr[0].hard_addr + in_width * in_height);
++    {
++      gint uv_offset = 0;
++      if ((in_width * in_height) & (4096 - 1))
++        uv_offset = get_uv_offset_aligned_to_page (4096, in_width, in_height);
++      else
++        uv_offset = in_width * in_height;
++
++      src_par.addr_c0		= ((guint8 *) p_adr[0].hard_addr + uv_offset);
++
+       src_par.stride 		= in_width;
+       src_par.stride_c	= in_width;
+       src_par.csc       = VSP_CSC_ON;
+       break;
+-      
++    }
+     /* YUV422 Interleaved */
+     case VSP_IN_YUV422_INT0_YUY2:
+     case VSP_IN_YUV422_INT0_UYVY:
+-- 
+1.7.9.5
+

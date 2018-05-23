@@ -1,0 +1,192 @@
+From 06cb0c597aa974a8811762d6b98a00583219dd89 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Fri, 4 Nov 2016 22:18:17 +0700
+Subject: [PATCH 2/2] vspmfilter:Fix crash issue in dmabuf-use mode with some
+ resolutions
+
+In some output resolution such as 960x540 or 320x240, dmabuf-use mode
+causes kernel crash.
+
+This is because in dmabuf-use mode, waylandsink will map dmabuf created
+by this plugin, but it only allows memory areas that are page-aligned.
+In resolutions that UY plane is not page-aligned (such as above),
+mapping dmabuf will fail can cause kernel crash.
+
+This patch fixes this issue by increase the plane size to ensure
+page aligned in all resolutions.
+Besides, it also updates the transform_buffer function to
+convert correctly in the resolution that width is not
+dividable for 32 (such as 720x480)
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 105 ++++++++++++++++++++++++++---------------
+ 1 file changed, 68 insertions(+), 37 deletions(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index 3798d64..287f7d7 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -981,6 +981,34 @@ gst_vspm_filter_buffer_pool_request_videosink_buffer_creation (GstVspmFilter * s
+   return buffer;
+ }
+ 
++static gint
++get_uv_offset_aligned_to_page (gint page_size, gint stride, gint height)
++{
++  gint a, b, r;
++  gint lcm;
++
++  /*
++   * The following implementation uses the Euclidean Algorithm to obtain
++   * the least common multiple of stride and page size.
++   */
++
++  /* nStride is set to width, to achieve 4K aligned by adjusting
++     the nSliceHeight. */
++  /* (1) Calculate the GCD of stride and alignment */
++  b = stride;
++  a = page_size;
++  while ((r = a % b) != 0) {
++    a = b;
++    b = r;
++  }
++
++  /* (2) Calculate the LCM of stride and alignment */
++  lcm = stride * page_size / b;
++
++  /* (3) Calculate the offset of UV plane */
++  return (((stride * height) / lcm) + 1) * lcm;
++}
++
+ static GstFlowReturn gst_vspm_filter_prepare_output_buffer (GstBaseTransform * trans,
+                                           GstBuffer *inbuf, GstBuffer **outbuf)
+ {
+@@ -991,7 +1019,7 @@ static GstFlowReturn gst_vspm_filter_prepare_output_buffer (GstBaseTransform * t
+     Vspm_mmng_ar *vspm_out;
+     VspmbufArray *vspm_outbuf;
+ 
+-    vspm_out = space->vspm_out;
++    vspm_out    = space->vspm_out;
+     vspm_outbuf = space->vspm_outbuf;
+ 
+     if(space->use_dmabuf) {
+@@ -1002,18 +1030,43 @@ static GstFlowReturn gst_vspm_filter_prepare_output_buffer (GstBaseTransform * t
+               GstBuffer *new_buf;
+               GstVideoMeta *vmeta;
+               gint n_planes;
+-              gint size;
++              guint totalsize = 0;
+               gint vspm_used = vspm_out->used;
+               gint dmabuf_fd[GST_VIDEO_MAX_PLANES];
+-              gint plane_size[GST_VIDEO_MAX_PLANES];
++              guint plane_size[GST_VIDEO_MAX_PLANES];
++              guint stride[GST_VIDEO_MAX_PLANES];
++              guint offset[GST_VIDEO_MAX_PLANES];
++              GstVideoFormatInfo *out_finfo;
+ 
+               vmeta = gst_buffer_get_video_meta (buf);
++              n_planes = vmeta->n_planes;
++              space->vsp_info->out_nplane = n_planes;
++              out_finfo = gst_video_format_get_info (vmeta->format);
++
++              /* Calculate stride and size */
++              for (i = 0; i < n_planes; i++) {
++                guint slideheight;
++                offset[i] = totalsize;
++                stride[i] = GST_VIDEO_FORMAT_INFO_PSTRIDE(out_finfo, i) *
++                  GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (out_finfo, i, vmeta->width);
++
++                slideheight = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (
++                    out_finfo, i, vmeta->height);
++                plane_size[i] = stride[i] * slideheight;
++
++                /* Waylandsink requires alignment 4096 to ensure data correctness */
++                if (plane_size[i] % 4096)
++                  plane_size[i] = get_uv_offset_aligned_to_page (4096,
++                      stride[i], slideheight);
++
++                totalsize += plane_size[i];
++              }
++
+               switch(vmeta->format) {
+                 case GST_VIDEO_FORMAT_NV12:
+-                    size = (vmeta->width * vmeta->height ) * 2;
+ 
+                     if (R_MM_OK == mmngr_alloc_in_user(&vspm_out->vspm[vspm_used].mmng_pid,
+-                                        size,
++                                        totalsize,
+                                         &vspm_out->vspm[vspm_used].pphy_addr,
+                                         &vspm_out->vspm[vspm_used].phard_addr,
+                                         &vspm_out->vspm[vspm_used].puser_virt_addr,
+@@ -1028,15 +1081,12 @@ static GstFlowReturn gst_vspm_filter_prepare_output_buffer (GstBaseTransform * t
+                     break;
+               }
+ 
+-              n_planes = vmeta->n_planes; 
+-              space->vsp_info->out_nplane = n_planes;
+ 
+               for (i = 0; i < n_planes; i++) {
+                 gint res;
+                 guint phys_addr;
+ 
+-                phys_addr = (guint) vspm_out->vspm[vspm_used].phard_addr + vmeta->offset[i];
+-                plane_size[i] = vmeta->stride[i] * vmeta->height;
++                phys_addr = (guint) vspm_out->vspm[vspm_used].phard_addr + offset[i];
+ 
+                 res =
+                     mmngr_export_start_in_user (&vspm_out->vspm[vspm_used].dmabuf_pid[i],
+@@ -1408,33 +1458,6 @@ static void cb_func(
+   end_flag = 1;
+ }
+ 
+-static gint
+-get_uv_offset_aligned_to_page (gint page_size, gint stride, gint height)
+-{
+-  gint a, b, r;
+-  gint lcm;
+-
+-  /*
+-   * The following implementation uses the Euclidean Algorithm to obtain
+-   * the least common multiple of stride and page size.
+-   */
+-
+-  /* nStride is set to width, to achieve 4K aligned by adjusting
+-     the nSliceHeight. */
+-  /* (1) Calculate the GCD of stride and alignment */
+-  b = stride;
+-  a = page_size;
+-  while ((r = a % b) != 0) {
+-    a = b;
+-    b = r;
+-  }
+-
+-  /* (2) Calculate the LCM of stride and alignment */
+-  lcm = stride * page_size / b;
+-
+-  /* (3) Calculate the offset of UV plane */
+-  return (((stride * height) / lcm) + 1) * lcm;
+-}
+ 
+ static GstFlowReturn
+ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1872,7 +1895,15 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+     dst_par.addr        = (void *)p_adr[1].hard_addr;
+     dst_par.stride      = stride[0];
+     if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.stride_c = stride[1];
+-    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.addr_c0  = (void*) ((guint)dst_par.addr + offset[1]);
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) {
++        gint uv_offset = 0;
++        if (((out_width * out_height) & (4096 - 1))
++                && (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) == 2))
++            uv_offset = get_uv_offset_aligned_to_page (4096, out_width, out_height);
++        else
++            uv_offset = offset[1];
++        dst_par.addr_c0  = (void*) ((guint)dst_par.addr + uv_offset);
++    }
+     if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 2) dst_par.addr_c1  = (void*) ((guint)dst_par.addr + offset[2]);
+ 
+     /* convert if format in and out different in color space */
+-- 
+1.9.1
+
