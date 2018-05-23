@@ -24,7 +24,7 @@ IMAGE_INSTALL_append_rzg1 = " \
 "
 
 IMAGE_INSTALL_append_rzg1 = '${@bb.utils.contains("USE_GLES", "1", \
-    "kernel-module-gles gles-user-module", "", d)}'
+    "kernel-module-pvrsrvkm kernel-module-dc-linuxfb gles-user-module", "", d)}'
 
 # pkg groups for multimedia
 IMAGE_INSTALL_append_rzg1 = ' ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
