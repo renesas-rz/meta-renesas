@@ -29,10 +29,13 @@ do_compile() {
 
 do_install() {
     # Create destination folder
-    mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/
+    mkdir -p ${D}/lib/modules/${KERNEL_VERSION}/extra/ ${D}/usr/src/kernel/include
 
     # Copy kernel module
     cp -f ${S}/drv/vsp2.ko ${D}/lib/modules/${KERNEL_VERSION}/extra/
+
+    # Copy shared header files
+    cp -f ${S}/drv/Module.symvers ${D}/usr/src/kernel/include/vsp2.symvers
 }
 
 PACKAGES = "\
@@ -42,14 +45,15 @@ PACKAGES = "\
 
 FILES_${PN} = " \
     /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
-    ${sysconfdir}/* \
+"
+
+FILES_${PN}-dev = " \
+    /usr/src/kernel/include \
+    /usr/src/kernel/include/*.h \
+    /usr/src/kernel/include/vsp2.symvers \
 "
 
 RPROVIDES_${PN} += "kernel-module-vsp2"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
-
-python do_package_ipk_prepend () {
-    d.setVar('ALLOW_EMPTY', '1')
-}
 
 KERNEL_MODULE_AUTOLOAD = "vsp2"
