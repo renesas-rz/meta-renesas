@@ -1,0 +1,13 @@
+diff --git a/wrapper/writeback.h b/wrapper/writeback.h
+index 492cb75..e7f98df 100644
+--- a/wrapper/writeback.h
++++ b/wrapper/writeback.h
+@@ -41,7 +41,7 @@ unsigned long wrapper_global_dirty_limit(void)
+ 	if (global_dirty_limit_sym) {
+ 		return *global_dirty_limit_sym;
+ 	} else {
+-		printk(KERN_WARNING "LTTng: global_dirty_limit symbol lookup failed.\n");
++		printk_once(KERN_WARNING "LTTng: global_dirty_limit symbol lookup failed.\n");
+ 		return 0;
+ 	}
+ }
