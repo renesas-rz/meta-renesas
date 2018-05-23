@@ -1,0 +1,33 @@
+From 1f683739f7d36dee07d7351cda440dbe28ebcabf Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 8 Sep 2017 10:23:37 +0700
+Subject: [PATCH] config: vdcmn: increase V_DEC_STREAM_BUFF_SIZE
+
+one issue detected when decoding high bitrate video (40Mbps)
+some video frame have size bigger than default setting made
+decoding process hang up. Increase decode buffer size can help.
+
+this changing just sastified tested cases. when meet similar issue,
+recaculate and change the buffer size as needed
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ OMXR/config/omxr_config_vdcmn.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/OMXR/config/omxr_config_vdcmn.txt b/OMXR/config/omxr_config_vdcmn.txt
+index 98030d0..216cf71 100755
+--- a/OMXR/config/omxr_config_vdcmn.txt
++++ b/OMXR/config/omxr_config_vdcmn.txt
+@@ -22,7 +22,7 @@
+ # Video Decoder Common Configuration
+ 
+ $V_DEC_STREAM_BUFF_COUNT_DEFAULT  = 2
+-$V_DEC_STREAM_BUFF_SIZE           = 1572864
++$V_DEC_STREAM_BUFF_SIZE           = 2002944
+ $V_DEC_PICTURE_BUFF_COUNT_DEFAULT = 3
+ $V_DEC_PICTURE_BUFF_SIZE          = 3133440
+ 
+-- 
+1.9.1
+

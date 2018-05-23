@@ -62,10 +62,6 @@ export KERNELDIR = "${KBUILD_OUTPUT}"
 export LDFLAGS=""
 export CP = "cp"
 
-python do_package_ipk_prepend () {
-    d.setVar('ALLOW_EMPTY', '1')
-}
-
 # Append function to clean extract source
 do_cleansstate_prepend() {
         bb.build.exec_func('do_clean_source', d)
@@ -98,20 +94,10 @@ do_clean_source() {
     rm -Rf ${KERNELSRC}/include/${GLES}.symvers
 }
 
-ALLOW_EMPTY_kernel-module-bc-example = "1"
-ALLOW_EMPTY_kernel-module-dc-linuxfb = "1"
-ALLOW_EMPTY_kernel-module-pvrsrvkm = "1"
-
 FILES_${PN}-dev = " \
     /usr/src/kernel/include/${GLES}.symvers \
 "
 
 PACKAGES = "\
-    ${PN} \
     ${PN}-dev \
-"
-
-FILES_${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/* \
-    /lib/modules/${KERNEL_VERSION}/extra/* \
 "
