@@ -106,7 +106,7 @@ do_configure() {
     cd ${S}/UDF_Linux
     ./autogen.sh
     ./configure --prefix=${D}/usr/local/ --host=arm-linux \
-        CFLAGS="-I${BUILDDIR}/include -I${KERNELDIR}/include -I${KERNELDIR}/include/linux -I${STAGING_DIR_HOST}/include" \
+        CFLAGS="-I${BUILDDIR}/include -I${KERNELDIR}/include" \
         LDFLAGS="-L${LIBSHARED}" \
         OMXR_DEFAULT_CONFIG_FILE_NAME=/usr/local/config/omxr_config_base.txt
 }
