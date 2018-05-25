@@ -4,7 +4,7 @@ LICENSE = "MIT"
 #require include/omx-control.inc
 
 DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good"
-#DEPENDS += "gstreamer1.0-plugins-bad"
+DEPENDS += "gstreamer1.0-plugins-bad"
 #DEPENDS += "gstreamer1.0-plugins-ugly"
 #DEPENDS += "${@base_conditional("USE_OMX_COMMON", "1", "gstreamer1.0-omx", "", d)}"
 
@@ -28,6 +28,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins = " \
     packagegroup-gstreamer1.0-plugins-good \
 "
 
+# temp immerse omx
 RDEPENDS_packagegroup-gstreamer1.0-plugins-base = " \
     gstreamer1.0-plugins-base-videorate \
     gstreamer1.0-plugins-base-videoconvert \
@@ -35,6 +36,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-base = " \
     gstreamer1.0-plugins-base-audiotestsrc \
     gstreamer1.0-plugins-base-alsa \
     gstreamer1.0-plugins-base-vspmfilter \
+    gstreamer1.0-omx \
 "
 
 RDEPENDS_packagegroup-gstreamer1.0-plugins-good = " \
@@ -43,6 +45,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-good = " \
     gstreamer1.0-plugins-good-video4linux2 \
     gstreamer1.0-plugins-good-videocrop \
 "
+
 RDEPENDS_packagegroup-gstreamer1.0-plugins-bad = " \
     gstreamer1.0-plugins-bad-asfmux \
     gstreamer1.0-plugins-bad-fbdevsink \
