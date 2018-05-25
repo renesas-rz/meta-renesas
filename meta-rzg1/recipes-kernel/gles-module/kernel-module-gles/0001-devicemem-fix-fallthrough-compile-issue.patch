@@ -1,0 +1,33 @@
+From 845dabc4e5df6332a7eff105f50793e166de0b61 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Fri, 25 May 2018 09:27:50 +0700
+Subject: [PATCH] devicemem: fix fallthrough compile issue
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+---
+ services4/srvkm/common/devicemem.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/services4/srvkm/common/devicemem.c b/services4/srvkm/common/devicemem.c
+index ac68bcf..33d7b35 100644
+--- a/services4/srvkm/common/devicemem.c
++++ b/services4/srvkm/common/devicemem.c
+@@ -1052,6 +1052,7 @@ PVRSRV_ERROR FreeMemCallBackCommon(PVRSRV_KERNEL_MEM_INFO *psMemInfo,
+ 			case PVRSRV_MEMTYPE_WRAPPED:
+ 			case PVRSRV_MEMTYPE_ION:
+ 				freeExternal(psMemInfo);
++				__attribute__ ((fallthrough));
+ 			case PVRSRV_MEMTYPE_DEVICE:
+ 			case PVRSRV_MEMTYPE_DEVICECLASS:
+ #if defined(SUPPORT_ION)
+@@ -1075,6 +1076,7 @@ PVRSRV_ERROR FreeMemCallBackCommon(PVRSRV_KERNEL_MEM_INFO *psMemInfo,
+ 			default:
+ 				PVR_DPF((PVR_DBG_ERROR, "FreeMemCallBackCommon: Unknown memType"));
+ 				eError = PVRSRV_ERROR_INVALID_MEMINFO;
++				__attribute__ ((fallthrough));
+ 		}
+ 	}
+ 
+-- 
+2.7.4
+
