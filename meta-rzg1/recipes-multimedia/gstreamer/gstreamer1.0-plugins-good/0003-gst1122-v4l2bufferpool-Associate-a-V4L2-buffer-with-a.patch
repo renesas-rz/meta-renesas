@@ -1,0 +1,257 @@
+From 0cdbbc5293aa0340d36e808bc912998395a619df Mon Sep 17 00:00:00 2001
+From: "NGUYEN VAN TU [FGA.BU13.RZG]" <tunv16@fsoft.com.vn>
+Date: Mon, 23 Apr 2018 16:14:41 +0700
+Subject: [PATCH 3/8] gst145-v4l2bufferpool: Associate a V4L2 buffer with a 
+ videosink meta data obtained by sending a videosink_buffer_creation_request 
+ query
+
+Porting from a patch in Linux 3.10 environment made by Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+v4l2bufferpool: Send a videosink_buffer_creation_request query only when
+it is supported
+
+v4l2bufferpool: Send multiple dmabuf file descriptors with a
+videosink_buffer_creation_request query
+
+This change sends a dmabuf file descriptor exported from V4L2 to
+a videosink plugin with a videosink_buffer_creation_request query
+and obtains the GstBuffer associated with the dmabuf descriptor
+and the meta data of the videosink in reply. Also the meta data of
+the V4L2 plugin is attached to the buffer in order to share
+the same GstBuffer instances between the v4l2 plugin and the videosink.
+
+This function would be invoked when the io-mode property is specified as
+dmabuf.
+
+This query haven't supported planar color formats yet.
+
+Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
+
+Signed-off-by: NGUYEN VAN TU [FGA.BU13.RZG] <tunv16@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2bufferpool.c | 152 +++++++++++++++++++++++++++++++++++++++++++
+ sys/v4l2/gstv4l2bufferpool.h |  17 +++++
+ 2 files changed, 169 insertions(+)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index 48cda0f..fb5203b 100644
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -54,6 +54,38 @@ GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
+ 
+ 
+ /*
++ * GstV4l2Buffer:
++ */
++GType
++gst_v4l2_meta_api_get_type (void)
++{
++  static volatile GType type;
++  static const gchar *tags[] =
++      { GST_META_TAG_VIDEO_STR, GST_META_TAG_MEMORY_STR, NULL };
++
++  if (g_once_init_enter (&type)) {
++    GType _type = gst_meta_api_type_register ("GstV4l2MetaAPI", tags);
++    g_once_init_leave (&type, _type);
++  }
++  return type;
++}
++
++const GstMetaInfo *
++gst_v4l2_meta_get_info (void)
++{
++  static const GstMetaInfo *meta_info = NULL;
++
++  if (g_once_init_enter (&meta_info)) {
++    const GstMetaInfo *meta =
++        gst_meta_register (gst_v4l2_meta_api_get_type (), "GstV4l2Meta",
++        sizeof (GstV4l2Meta), (GstMetaInitFunction) NULL,
++        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
++    g_once_init_leave (&meta_info, meta);
++  }
++  return meta_info;
++}
++
++/*
+  * GstV4l2BufferPool:
+  */
+ #define gst_v4l2_buffer_pool_parent_class parent_class
+@@ -415,6 +447,119 @@ done:
+   return ret;
+ }
+ 
++static GstBuffer *
++gst_v4l2_buffer_pool_request_videosink_buffer_creation (GstV4l2BufferPool *
++    pool)
++{
++  GstV4l2Object *obj;
++  struct v4l2_exportbuffer expbuf;
++  GstQuery *query;
++  GstStructure *structure;
++  GstVideoInfo *info;
++  struct v4l2_buffer vbuffer;
++  gint width, height;
++  GValue val = { 0, };
++  const GValue *value;
++  GstBuffer *buffer;
++  GstV4l2Meta *meta;
++  struct v4l2_format format;
++  gint n_planes;
++  GArray *dmabuf_fd;
++  GArray *stride;
++  gint i;
++  gsize num_allocated;
++
++  num_allocated = gst_v4l2_allocator_num_allocated (pool->vallocator);
++
++  obj = pool->obj;
++  info = &obj->info;
++
++  memset (&format, 0, sizeof (struct v4l2_format));
++  format.type = obj->type;
++  if (v4l2_ioctl (pool->video_fd, VIDIOC_G_FMT, &format) < 0) {
++    GST_WARNING_OBJECT (pool, "Failed VIDIOC_G_FMT: %s", g_strerror (errno));
++    return NULL;
++  }
++
++  dmabuf_fd = g_array_new (FALSE, FALSE, sizeof (gint));
++  stride = g_array_new (FALSE, FALSE, sizeof (gint));
++
++  n_planes = GST_VIDEO_INFO_N_PLANES (info);
++  for (i = 0; i < n_planes; i++) {
++    memset (&expbuf, 0, sizeof (struct v4l2_exportbuffer));
++    expbuf.type = obj->type;
++    expbuf.index = num_allocated;
++    expbuf.plane = i;
++    expbuf.flags = O_CLOEXEC;
++    if (v4l2_ioctl (pool->video_fd, VIDIOC_EXPBUF, &expbuf) < 0) {
++      GST_WARNING_OBJECT (pool, "Failed EXPBUF: %s", g_strerror (errno));
++      return NULL;
++    }
++
++    g_array_append_val (dmabuf_fd, expbuf.fd);
++  }
++
++  if (n_planes == 1)
++    g_array_append_val (stride, format.fmt.pix.bytesperline);
++  else
++    for (i = 0; i < n_planes; i++)
++      g_array_append_val (stride, format.fmt.pix_mp.plane_fmt[i].bytesperline);
++
++  memset (&vbuffer, 0x0, sizeof (struct v4l2_buffer));
++  vbuffer.index = num_allocated;
++  vbuffer.type = obj->type;
++  vbuffer.memory = V4L2_MEMORY_MMAP;
++  if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &vbuffer) < 0) {
++    GST_WARNING_OBJECT (pool, "Failed QUERYBUF: %s", g_strerror (errno));
++    return NULL;
++  }
++
++  width = GST_VIDEO_INFO_WIDTH (info);
++  height = GST_VIDEO_INFO_HEIGHT (info);
++
++  g_value_init (&val, G_TYPE_POINTER);
++  g_value_set_pointer (&val, (gpointer) pool->allocator);
++
++  structure = gst_structure_new ("videosink_buffer_creation_request",
++      "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
++      "stride", G_TYPE_ARRAY, stride, "dmabuf", G_TYPE_ARRAY, dmabuf_fd,
++      "n_planes", G_TYPE_INT, n_planes, "allocator", G_TYPE_POINTER, &val,
++      "format", G_TYPE_STRING, gst_video_format_to_string (info->finfo->format),
++      NULL);
++
++  query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
++
++  GST_DEBUG_OBJECT (pool, "send a videosink_buffer_creation_request query");
++
++  if (!gst_pad_peer_query (GST_BASE_SRC_PAD (obj->element), query)) {
++    GST_WARNING_OBJECT (pool, "videosink_buffer_creation_request query failed");
++    return NULL;
++  }
++
++  value = gst_structure_get_value (structure, "buffer");
++  buffer = gst_value_get_buffer (value);
++  if (buffer == NULL) {
++    GST_WARNING_OBJECT (pool,
++        "could not get a buffer from videosink_buffer_creation query");
++    return NULL;
++  }
++
++  gst_query_unref (query);
++
++  g_array_free (dmabuf_fd, TRUE);
++  g_array_free (stride, TRUE);
++
++  buffer = gst_buffer_make_writable (buffer);
++
++  meta = GST_V4L2_META_ADD (buffer);
++
++  meta->vbuffer.index = num_allocated;
++  meta->vbuffer.type = obj->type;
++  meta->vbuffer.memory = V4L2_MEMORY_MMAP;
++
++  return buffer;
++}
++
+ static GstFlowReturn
+ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+     GstBufferPoolAcquireParams * params)
+@@ -439,6 +584,12 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+     case GST_V4L2_IO_DMABUF:
+       group = gst_v4l2_allocator_alloc_dmabuf (pool->vallocator,
+           pool->allocator);
++      if (pool->vsink_buf_req_supported) {
++        /*Downstreams has support creating request buffer*/
++        newbuf = gst_v4l2_buffer_pool_request_videosink_buffer_creation (pool);
++        if (newbuf)
++          goto skip;
++      }
+       break;
+     case GST_V4L2_IO_USERPTR:
+       group = gst_v4l2_allocator_alloc_userptr (pool->vallocator);
+@@ -469,6 +620,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
+         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+         info->offset, info->stride);
+ 
++skip:
+   *buffer = newbuf;
+ 
+   return GST_FLOW_OK;
+diff --git a/sys/v4l2/gstv4l2bufferpool.h b/sys/v4l2/gstv4l2bufferpool.h
+index 4949a22..3eb661f 100644
+--- a/sys/v4l2/gstv4l2bufferpool.h
++++ b/sys/v4l2/gstv4l2bufferpool.h
+@@ -90,6 +90,9 @@ struct _GstV4l2BufferPool
+   /* signal handlers */
+   gulong group_released_handler;
+ 
++  /* TRUE if the downstream buffer pool can handle
++     "videosink_buffer_creation_request" query */
++  gboolean vsink_buf_req_supported;
+   /* Control to warn only once on buggy feild driver bug */
+   gboolean has_warned_on_buggy_field;
+ };
+@@ -99,6 +102,20 @@ struct _GstV4l2BufferPoolClass
+   GstBufferPoolClass parent_class;
+ };
+ 
++struct _GstV4l2Meta {
++  GstMeta meta;
++
++  gpointer mem[GST_VIDEO_MAX_PLANES];
++  guint32  memsize[GST_VIDEO_MAX_PLANES];
++  struct v4l2_buffer vbuffer;
++
++  GstBuffer * ori_buf; /* Buffer send from upstream plugin */
++};
++
++GType gst_v4l2_meta_api_get_type (void);
++const GstMetaInfo * gst_v4l2_meta_get_info (void);
++#define GST_V4L2_META_ADD(buf) ((GstV4l2Meta *)gst_buffer_add_meta(buf,gst_v4l2_meta_get_info(),NULL))
++
+ GType gst_v4l2_buffer_pool_get_type (void);
+ 
+ GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, GstCaps *caps);
+-- 
+1.9.1
+

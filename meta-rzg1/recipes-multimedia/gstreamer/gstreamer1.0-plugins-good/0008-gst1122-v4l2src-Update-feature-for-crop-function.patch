@@ -1,0 +1,117 @@
+From 3b2ad6fae10fb0f4c068e0be46d2a5b9c4728875 Mon Sep 17 00:00:00 2001
+From: "NGUYEN VAN TU [FGA.BU13.RZG]" <tunv16@fsoft.com.vn>
+Date: Mon, 23 Apr 2018 16:28:25 +0700
+Subject: [PATCH 8/8] gst145 v4l2src Update feature for crop function
+
+Update crop-top and crop-left for crop function
+To use crop-top and crop-left, it is necessary to set crop-height and crop-width
+This patch file updates crop function so that it is unnecessary to set crop-height and crop-width
+when use crop-top and crop-left
+
+Signed-off-by: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+
+Signed-off-by: NGUYEN VAN TU [FGA.BU13.RZG] <tunv16@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2object.c | 72 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 37 insertions(+), 35 deletions(-)
+
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 3fb91a9..e880b02 100644
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -3342,26 +3342,27 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
+       "Failed to querry crop information or device does not support crop");
+     else
+     {
+-      if (v4l2object->crop.top !=0 || v4l2object->crop.left !=0 ||
+-          v4l2object->crop.width != 0 ||
+-          v4l2object->crop.height != 0) {
++      crop.c.top = cropcap.defrect.top;
++      crop.c.left = cropcap.defrect.left;
++      crop.c.width = cropcap.defrect.width;
++      crop.c.height = cropcap.defrect.height;
++
++      if (v4l2object->crop.top !=0)
+ 
+         crop.c.top = v4l2object->crop.top;
++
++      if (v4l2object->crop.left !=0)
+         crop.c.left = v4l2object->crop.left;
+-        if (v4l2object->crop.width == 0)
+-          crop.c.width = width;
+-        else
+-          crop.c.width = v4l2object->crop.width;
+-        if (v4l2object->crop.height == 0)
+-          crop.c.height = height;
+-        else
+-          crop.c.height = v4l2object->crop.height;
+-      } else {
+-        crop.c.top = cropcap.defrect.top;
+-        crop.c.left = cropcap.defrect.left;
+-        crop.c.width = cropcap.defrect.width;
+-        crop.c.height = cropcap.defrect.height;
+-      }
++
++      if (v4l2object->crop.width !=0)
++        crop.c.width = v4l2object->crop.width;
++
++      if (v4l2object->crop.height !=0)
++        crop.c.height = v4l2object->crop.height;
++
++      crop.c.width = crop.c.width - crop.c.left;
++      crop.c.height = crop.c.height - crop.c.top;
++
+       if (-1 == v4l2_ioctl (fd, VIDIOC_S_CROP, &crop))
+         GST_WARNING_OBJECT (v4l2object->element,
+         "Failed to set crop to %dx%d", width, height);
+@@ -3462,28 +3463,29 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
+   /*Reset clip area when field or format change*/
+   if ((v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) && (ret == 0)) {
+     crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+-    if (v4l2object->crop.top != 0 || v4l2object->crop.left != 0 ||
+-        v4l2object->crop.width != 0 ||
+-        v4l2object->crop.height != 0) {
++    crop.c.top = cropcap.defrect.top;
++    crop.c.left = cropcap.defrect.left;
++    crop.c.width = cropcap.defrect.width;
++    crop.c.height = cropcap.defrect.height;
+ 
++    if (v4l2object->crop.top !=0)
+       crop.c.top = v4l2object->crop.top;
++
++    if (v4l2object->crop.left !=0)
+       crop.c.left = v4l2object->crop.left;
+-      if (v4l2object->crop.width == 0)
+-        crop.c.width = width;
+-      else
+-        crop.c.width = v4l2object->crop.width;
+-      if (v4l2object->crop.height == 0)
+-        crop.c.height = height;
+-      else
+-        crop.c.height = v4l2object->crop.height;
+-    } else {
+-      crop.c.top = cropcap.defrect.top;
+-      crop.c.left = cropcap.defrect.left;
+-      crop.c.width = cropcap.defrect.width;
+-      crop.c.height = cropcap.defrect.height;
+-    }
++
++    if (v4l2object->crop.width !=0)
++      crop.c.width = v4l2object->crop.width;
++
++    if (v4l2object->crop.height !=0)
++      crop.c.height = v4l2object->crop.height;
++
++    crop.c.width = crop.c.width - crop.c.left;
++    crop.c.height = crop.c.height - crop.c.top;
++
+     if (-1 == v4l2_ioctl (fd, VIDIOC_S_CROP, &crop))
+-      GST_WARNING_OBJECT (v4l2object->element, "Failed to set crop to %dx%d", width, height);
++      GST_WARNING_OBJECT (v4l2object->element,
++      "Failed to set crop to %dx%d", width, height);
+   }
+ 
+ #ifndef GST_DISABLE_GST_DEBUG
+-- 
+1.9.1
+

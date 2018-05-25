@@ -1,0 +1,79 @@
+From b9887c46c787d62a5ede1ef6121744726c2f5d4b Mon Sep 17 00:00:00 2001
+From: "NGUYEN VAN TU [FGA.BU13.RZG]" <tunv16@fsoft.com.vn>
+Date: Mon, 23 Apr 2018 16:20:35 +0700
+Subject: [PATCH 6/8] gst145-Add the Copyright year
+
+Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
+
+Signed-off-by: NGUYEN VAN TU [FGA.BU13.RZG] <tunv16@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2bufferpool.c | 1 +
+ sys/v4l2/gstv4l2bufferpool.h | 1 +
+ sys/v4l2/gstv4l2object.c     | 1 +
+ sys/v4l2/gstv4l2object.h     | 1 +
+ sys/v4l2/gstv4l2src.c        | 1 +
+ 5 files changed, 5 insertions(+)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index bc0250e..bf26359 100644
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -3,6 +3,7 @@
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@gmail.com>
+  *               2009 Texas Instruments, Inc - http://www.ti.com/
++ *               2014-2016 Renesas Electronics Corporation
+  *
+  * gstv4l2bufferpool.c V4L2 buffer pool class
+  *
+diff --git a/sys/v4l2/gstv4l2bufferpool.h b/sys/v4l2/gstv4l2bufferpool.h
+index 3eb661f..d9b9983 100644
+--- a/sys/v4l2/gstv4l2bufferpool.h
++++ b/sys/v4l2/gstv4l2bufferpool.h
+@@ -3,6 +3,7 @@
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@gmail.com>
+  *               2009 Texas Instruments, Inc - http://www.ti.com/
++ *               2014-2016 Renesas Electronics Corporation
+  *
+  * gstv4l2bufferpool.h V4L2 buffer pool class
+  *
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 4ae81cd..4efafc5 100644
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@gmail.com>
++ *               2014-2016 Renesas Electronics Corporation
+  *
+  * gstv4l2object.c: base class for V4L2 elements
+  *
+diff --git a/sys/v4l2/gstv4l2object.h b/sys/v4l2/gstv4l2object.h
+index 231b1ab..76cc88d 100644
+--- a/sys/v4l2/gstv4l2object.h
++++ b/sys/v4l2/gstv4l2object.h
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@gmail.com>
++ *               2014-2016 Renesas Electronics Corporation
+  *
+  * gstv4l2object.h: base class for V4L2 elements
+  *
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index b156f1f..bb04346 100644
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -2,6 +2,7 @@
+  *
+  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+  *               2006 Edgard Lima <edgard.lima@gmail.com>
++ *               2014-2016 Renesas Electronics Corporation
+  *
+  * gstv4l2src.c: Video4Linux2 source element
+  *
+-- 
+1.9.1
+
