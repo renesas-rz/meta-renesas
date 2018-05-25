@@ -12,8 +12,8 @@ IMAGE_INSTALL_append_lcb = ' ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
 IMAGE_INSTALL_append_lcb = " \
     can-utils \
     libsocketcan \
-    weston-bin \
 "
+#weston-bin 
 
 # GStreamer Packages
 GST_PACKAGEGROUP = "packagegroup-gstreamer1.0-plugins"

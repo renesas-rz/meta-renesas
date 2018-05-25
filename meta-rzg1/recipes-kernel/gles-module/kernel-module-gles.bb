@@ -19,7 +19,8 @@ KERNEL_SRC_PATH_r8a7742 = "build/linux/r8a7742_linux"
 KERNEL_OLD_SRC_PATH_r8a7742 = "build/linux/r8a7790_linux/"
 TARGET_PATH_r8a7742 = "rogue_km/binary_r8a7742_linux_release/target/kbuild/"
 
-SRC_URI_r8a7743 = 'file://SGX_KM_M2.tar.bz2'
+SRC_URI_r8a7743 = 'file://SGX_KM_M2.tar.bz2 \
+		 file://0001-devicemem-fix-fallthrough-compile-issue.patch '
 S_r8a7743 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7743_linux/"
 KERNEL_OLD_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7791_linux/"
