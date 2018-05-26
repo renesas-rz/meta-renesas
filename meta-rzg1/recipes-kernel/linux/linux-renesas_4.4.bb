@@ -17,6 +17,8 @@ LINUX_VERSION ?= "4.4.55-cip3"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
+S = "${WORKDIR}/git"
+
 SRC_URI_append = " \
     file://defconfig \
 "
