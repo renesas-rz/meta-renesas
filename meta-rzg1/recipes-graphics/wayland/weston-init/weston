@@ -1,0 +1,3 @@
+#!/bin/sh
+
+OPTARGS="--idle-time=0 --use-v4l2"
