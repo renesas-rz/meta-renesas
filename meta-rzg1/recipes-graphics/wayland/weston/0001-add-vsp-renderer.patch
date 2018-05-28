@@ -1,0 +1,5922 @@
+From 4ac4b662070c8de9212e80b89bb1630592dc8cc2 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <linhNV25@fsoft.com.vn>
+Date: Wed, 23 May 2018 10:19:55 +0700
+Subject: [PATCH 1/2] add vsp renderer
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG] <linhNV25@fsoft.com.vn>
+---
+ Makefile.am                         |   36 +
+ compositor/main.c                   |    2 +
+ configure.ac                        |   10 +
+ libweston/compositor-drm.c          |  138 ++++
+ libweston/compositor-drm.h          |    2 +
+ libweston/media-ctl/libmediactl.c   |  955 +++++++++++++++++++++
+ libweston/media-ctl/libv4l2subdev.c |  759 +++++++++++++++++
+ libweston/media-ctl/mediactl-priv.h |   64 ++
+ libweston/media-ctl/mediactl.h      |  423 ++++++++++
+ libweston/media-ctl/tools.h         |   32 +
+ libweston/media-ctl/v4l2subdev.h    |  258 ++++++
+ libweston/v4l2-compat.h             |   68 ++
+ libweston/v4l2-renderer-device.h    |  118 +++
+ libweston/v4l2-renderer.c           | 1552 +++++++++++++++++++++++++++++++++++
+ libweston/v4l2-renderer.h           |   41 +
+ libweston/vsp-renderer.c            | 1184 ++++++++++++++++++++++++++
+ 16 files changed, 5642 insertions(+)
+ create mode 100644 libweston/media-ctl/libmediactl.c
+ create mode 100644 libweston/media-ctl/libv4l2subdev.c
+ create mode 100644 libweston/media-ctl/mediactl-priv.h
+ create mode 100644 libweston/media-ctl/mediactl.h
+ create mode 100644 libweston/media-ctl/tools.h
+ create mode 100644 libweston/media-ctl/v4l2subdev.h
+ create mode 100644 libweston/v4l2-compat.h
+ create mode 100644 libweston/v4l2-renderer-device.h
+ create mode 100644 libweston/v4l2-renderer.c
+ create mode 100644 libweston/v4l2-renderer.h
+ create mode 100644 libweston/vsp-renderer.c
+
+diff --git a/Makefile.am b/Makefile.am
+index cdf82ab..6638b86 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -326,6 +326,42 @@ gl_renderer_la_SOURCES =			\
+	shared/helpers.h
+ endif
+
++if ENABLE_V4L2
++module_LTLIBRARIES += v4l2-renderer.la
++v4l2_renderer_la_LDFLAGS = -module -avoid-version
++v4l2_renderer_la_LIBADD = $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
++v4l2_renderer_la_CFLAGS =				\
++	$(COMPOSITOR_CFLAGS)			\
++	$(V4L2_RENDERER_CFLAGS) \
++	$(GCC_CFLAGS)
++v4l2_renderer_la_SOURCES =			\
++	libweston/v4l2-renderer.c			\
++	libweston/v4l2-renderer.h			\
++	libweston/v4l2-device.h			\
++	libweston/media-ctl/libmediactl.c		\
++	libweston/media-ctl/libv4l2subdev.c		\
++	libweston/media-ctl/mediactl-priv.h		\
++	libweston/media-ctl/mediactl.h		\
++	libweston/media-ctl/tools.h			\
++	libweston/media-ctl/v4l2subdev.h
++
++module_LTLIBRARIES += v4l2-vsp-device.la
++v4l2_vsp_device_la_LDFLAGS = -module -avoid-version
++v4l2_vsp_device_la_LIBADD = $(COMPOSITOR_LIBS)
++v4l2_vsp_device_la_CFLAGS =				\
++	$(COMPOSITOR_CFLAGS)			\
++	$(GCC_CFLAGS)
++v4l2_vsp_device_la_SOURCES =			\
++	libweston/vsp-renderer.c			\
++	libweston/v4l2-device.h			\
++	libweston/media-ctl/libmediactl.c		\
++	libweston/media-ctl/libv4l2subdev.c		\
++	libweston/media-ctl/mediactl-priv.h		\
++	libweston/media-ctl/mediactl.h		\
++	libweston/media-ctl/tools.h			\
++	libweston/media-ctl/v4l2subdev.h
++endif
++
+ if ENABLE_X11_COMPOSITOR
+ libweston_module_LTLIBRARIES += x11-backend.la
+ x11_backend_la_LDFLAGS = -module -avoid-version
+diff --git a/compositor/main.c b/compositor/main.c
+index 72c3cd1..938f885 100644
+--- a/compositor/main.c
++++ b/compositor/main.c
+@@ -566,6 +566,7 @@ usage(int error_code)
+		"  --seat=SEAT\t\tThe seat that weston should run on\n"
+		"  --tty=TTY\t\tThe tty to use\n"
+		"  --use-pixman\t\tUse the pixman (CPU) renderer\n"
++		"  --use-v4l2\t\tUse the v4l2 renderer\n"
+		"  --current-mode\tPrefer current KMS mode over EDID preferred mode\n\n");
+ #endif
+
+@@ -1227,6 +1228,7 @@ load_drm_backend(struct weston_compositor *c,
+		{ WESTON_OPTION_INTEGER, "tty", 0, &config.tty },
+		{ WESTON_OPTION_BOOLEAN, "current-mode", 0, &wet->drm_use_current_mode },
+		{ WESTON_OPTION_BOOLEAN, "use-pixman", 0, &config.use_pixman },
++		{ WESTON_OPTION_BOOLEAN, "use-v4l2", 0, &config.use_v4l2 },
+	};
+
+	parse_options(options, ARRAY_LENGTH(options), argc, argv);
+diff --git a/configure.ac b/configure.ac
+index 7e84c14..e788201 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -138,6 +138,15 @@ if test x$enable_egl = xyes; then
+	PKG_CHECK_MODULES([GL_RENDERER], [libdrm])
+ fi
+
++AC_ARG_ENABLE(v4l2, [  --disable-v4l2],,
++              enable_v4l2=yes)
++AM_CONDITIONAL(ENABLE_V4L2, test x$enable_v4l2 = xyes)
++if test x$enable_v4l2 = xyes; then
++ AC_DEFINE([ENABLE_V4L2], [1], [Build Weston with V4L2 support])
++ PKG_CHECK_MODULES(V4L2_RENDERER, [libdrm libkms wayland-kms gbm])
++ PKG_CHECK_MODULES(LIBMEDIACTL_V4L2, [libmediactl-v4l2])
++fi
++
+ AC_ARG_ENABLE(xkbcommon,
+	      AS_HELP_STRING([--disable-xkbcommon], [Disable libxkbcommon
+			      support: This is only useful in environments
+@@ -693,6 +702,7 @@ AC_MSG_RESULT([
+
+	Cairo Renderer			${with_cairo}
+	EGL				${enable_egl}
++  V4L2        ${enable_v4l2}
+	libxkbcommon			${enable_xkbcommon}
+	xcb_xkb				${have_xcb_xkb}
+	XWayland			${enable_xwayland}
+diff --git a/libweston/compositor-drm.c b/libweston/compositor-drm.c
+index 1d38f05..32ec403 100644
+--- a/libweston/compositor-drm.c
++++ b/libweston/compositor-drm.c
+@@ -56,6 +56,7 @@
+ #include "pixman-renderer.h"
+ #include "libbacklight.h"
+ #include "libinput-seat.h"
++#include "v4l2-renderer.h"
+ #include "launcher-util.h"
+ #include "vaapi-recorder.h"
+ #include "presentation-time-server-protocol.h"
+@@ -113,6 +114,7 @@ struct drm_backend {
+
+	int use_pixman;
+
++	int use_v4l2;
+	struct udev_input input;
+
+	int32_t cursor_width;
+@@ -130,6 +132,7 @@ struct drm_fb {
+	uint32_t fb_id, stride, handle, size;
+	int width, height;
+	int fd;
++	int dmafd;
+	int is_client_buffer;
+	struct weston_buffer_reference buffer_ref;
+
+@@ -210,6 +213,7 @@ struct drm_sprite {
+ };
+
+ static struct gl_renderer_interface *gl_renderer;
++static struct v4l2_renderer_interface *v4l2_renderer;
+
+ static const char default_seat[] = "seat0";
+
+@@ -369,8 +373,17 @@ drm_fb_create_dumb(struct drm_backend *b, int width, int height,
+	if (fb->map == MAP_FAILED)
+		goto err_add_fb;
+
++	if (b->use_v4l2) {
++		ret = drmPrimeHandleToFD(b->drm.fd, fb->handle, DRM_CLOEXEC,
++					 &fb->dmafd);
++		if (ret)
++			goto err_export_handle;
++	}
++
+	return fb;
+
++err_export_handle:
++	munmap(fb->map, fb->size);
+ err_add_fb:
+	drmModeRmFB(b->drm.fd, fb->fb_id);
+ err_bo:
+@@ -635,6 +648,31 @@ drm_output_render_pixman(struct drm_output *output, pixman_region32_t *damage)
+ }
+
+ static void
++drm_output_render_v4l2(struct drm_output *output, pixman_region32_t *damage)
++{
++	struct weston_compositor *ec = output->base.compositor;
++	pixman_region32_t total_damage, previous_damage;
++
++	pixman_region32_init(&total_damage);
++	pixman_region32_init(&previous_damage);
++
++	pixman_region32_copy(&previous_damage, damage);
++
++	pixman_region32_union(&total_damage, damage, &output->previous_damage);
++	pixman_region32_copy(&output->previous_damage, &previous_damage);
++
++	output->current_image ^= 1;
++
++	output->next = output->dumb[output->current_image];
++	v4l2_renderer->set_output_buffer(&output->base, output->current_image);
++
++	ec->renderer->repaint_output(&output->base, &total_damage);
++
++	pixman_region32_fini(&total_damage);
++	pixman_region32_fini(&previous_damage);
++}
++
++static void
+ drm_output_render(struct drm_output *output, pixman_region32_t *damage)
+ {
+	struct weston_compositor *c = output->base.compositor;
+@@ -642,6 +680,8 @@ drm_output_render(struct drm_output *output, pixman_region32_t *damage)
+
+	if (b->use_pixman)
+		drm_output_render_pixman(output, damage);
++	else if (b->use_v4l2)
++		drm_output_render_v4l2(output, damage);
+	else
+		drm_output_render_gl(output, damage);
+
+@@ -903,6 +943,9 @@ vblank_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec,
+ }
+
+ static void
++drm_output_fini_v4l2(struct drm_output *output);
++
++static void
+ drm_output_destroy(struct weston_output *base);
+
+ static void
+@@ -1429,6 +1472,8 @@ static void
+ drm_output_fini_egl(struct drm_output *output);
+ static int
+ drm_output_init_pixman(struct drm_output *output, struct drm_backend *b);
++static int
++drm_output_init_v4l2(struct drm_output *output, struct drm_backend *b);
+ static void
+ drm_output_fini_pixman(struct drm_output *output);
+
+@@ -1479,6 +1524,13 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
+				   "new mode\n");
+			return -1;
+		}
++	} else if (b->use_v4l2) {
++		drm_output_fini_v4l2(output);
++		if (drm_output_init_v4l2(output, b) < 0) {
++			weston_log("failed to init output v4l2 state with "
++				   "new mode\n");
++			return -1;
++		}
+	} else {
+		drm_output_fini_egl(output);
+		if (drm_output_init_egl(output, b) < 0) {
+@@ -1654,6 +1706,16 @@ init_pixman(struct drm_backend *b)
+	return pixman_renderer_init(b->compositor);
+ }
+
++static int
++init_v4l2(struct drm_backend *b)
++{
++	v4l2_renderer = weston_load_module("v4l2-renderer.so",
++					   "v4l2_renderer_interface");
++	if (!v4l2_renderer)
++		return -1;
++
++	return v4l2_renderer->init(b->compositor, b->drm.fd, b->drm.filename);
++}
+ /**
+  * Add a mode to output's mode list
+  *
+@@ -2001,6 +2063,69 @@ drm_output_fini_pixman(struct drm_output *output)
+	}
+ }
+
++static int
++drm_output_init_v4l2(struct drm_output *output, struct drm_backend *c)
++{
++	int w = output->base.current_mode->width;
++	int h = output->base.current_mode->height;
++	uint32_t format = output->gbm_format;
++	uint32_t pixman_format;
++	unsigned int i;
++	struct v4l2_bo_state bo_state[ARRAY_LENGTH(output->dumb)];
++
++	switch (format) {
++		case GBM_FORMAT_XRGB8888:
++			pixman_format = PIXMAN_x8r8g8b8;
++			break;
++		case GBM_FORMAT_RGB565:
++			pixman_format = PIXMAN_r5g6b5;
++			break;
++		default:
++			weston_log("Unsupported pixman format 0x%x\n", format);
++			return -1;
++	}
++
++	for (i = 0; i < ARRAY_LENGTH(output->dumb); i++) {
++		output->dumb[i] = drm_fb_create_dumb(c, w, h, format);
++		if (!output->dumb[i])
++			goto err;
++		bo_state[i].dmafd = output->dumb[i]->dmafd;
++		bo_state[i].map = output->dumb[i]->map;
++		bo_state[i].stride = output->dumb[i]->stride;
++	}
++
++	if (v4l2_renderer->output_create(&output->base, bo_state, ARRAY_LENGTH(output->dumb)) < 0)
++		goto err;
++
++	pixman_region32_init_rect(&output->previous_damage,
++				  output->base.x, output->base.y, output->base.width, output->base.height);
++
++	return 0;
++
++err:
++	for (i = 0; i < ARRAY_LENGTH(output->dumb); i++) {
++		if (output->dumb[i])
++			drm_fb_destroy_dumb(output->dumb[i]);
++
++		output->dumb[i] = NULL;
++	}
++
++	return -1;
++}
++
++static void
++drm_output_fini_v4l2(struct drm_output *output)
++{
++	unsigned int i;
++
++	v4l2_renderer->output_destroy(&output->base);
++
++	for (i = 0; i < ARRAY_LENGTH(output->dumb); i++) {
++		drm_fb_destroy_dumb(output->dumb[i]);
++		output->dumb[i] = NULL;
++	}
++}
++
+ static void
+ edid_parse_string(const uint8_t *data, char text[])
+ {
+@@ -2439,6 +2564,11 @@ drm_output_enable(struct weston_output *base)
+			weston_log("Failed to init output pixman state\n");
+			goto err_free;
+		}
++	} else if (b->use_v4l2) {
++		if (drm_output_init_v4l2(output, b) < 0) {
++			weston_log("Failed to init output v4l2 state\n");
++			goto err_free;
++		}
+	} else if (drm_output_init_egl(output, b) < 0) {
+		weston_log("Failed to init output gl state\n");
+		goto err_free;
+@@ -2505,6 +2635,8 @@ drm_output_deinit(struct weston_output *base)
+
+	if (b->use_pixman)
+		drm_output_fini_pixman(output);
++	else if (b->use_v4l2)
++		drm_output_fini_v4l2(output);
+	else
+		drm_output_fini_egl(output);
+
+@@ -3217,6 +3349,7 @@ drm_backend_create(struct weston_compositor *compositor,
+	b->sprites_are_broken = 1;
+	b->compositor = compositor;
+	b->use_pixman = config->use_pixman;
++	b->use_v4l2 = config->use_v4l2;
+
+	if (parse_gbm_format(config->gbm_format, GBM_FORMAT_XRGB8888, &b->gbm_format) < 0)
+		goto err_compositor;
+@@ -3259,6 +3392,11 @@ drm_backend_create(struct weston_compositor *compositor,
+			weston_log("failed to initialize pixman renderer\n");
+			goto err_udev_dev;
+		}
++	} else if (b->use_v4l2) {
++		if (init_v4l2(b) < 0) {
++			weston_log("failed to initialize v4l2 renderer\n");
++			goto err_udev_dev;
++		}
+	} else {
+		if (init_egl(b) < 0) {
+			weston_log("failed to initialize egl\n");
+diff --git a/libweston/compositor-drm.h b/libweston/compositor-drm.h
+index 2e2995a..160805e 100644
+--- a/libweston/compositor-drm.h
++++ b/libweston/compositor-drm.h
+@@ -110,6 +110,8 @@ struct weston_drm_backend_config {
+	/** Whether to use the pixman renderer instead of the OpenGL ES renderer. */
+	bool use_pixman;
+
++	/** Whether to use the v4l2 renderer insted of the OpenGL ES renderer. */
++	bool use_v4l2;
+	/** The seat to be used for input and output.
+	 *
+	 * If NULL the default "seat0" will be used.  The backend will
+diff --git a/libweston/media-ctl/libmediactl.c b/libweston/media-ctl/libmediactl.c
+new file mode 100644
+index 0000000..f15b1a3
+--- /dev/null
++++ b/libweston/media-ctl/libmediactl.c
+@@ -0,0 +1,955 @@
++/*
++ * Media controller interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include "config.h"
++
++#include <sys/ioctl.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++
++#include <ctype.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++#include <linux/media.h>
++#include <linux/videodev2.h>
++
++#include "mediactl.h"
++#include "mediactl-priv.h"
++#include "tools.h"
++
++/* -----------------------------------------------------------------------------
++ * Graph access
++ */
++
++struct media_pad *media_entity_remote_source(struct media_pad *pad)
++{
++	unsigned int i;
++
++	if (!(pad->flags & MEDIA_PAD_FL_SINK))
++		return NULL;
++
++	for (i = 0; i < pad->entity->num_links; ++i) {
++		struct media_link *link = &pad->entity->links[i];
++
++		if (!(link->flags & MEDIA_LNK_FL_ENABLED))
++			continue;
++
++		if (link->sink == pad)
++			return link->source;
++	}
++
++	return NULL;
++}
++
++struct media_entity *media_get_entity_by_name(struct media_device *media,
++					      const char *name, size_t length)
++{
++	unsigned int i;
++
++	/* A match is impossible if the entity name is longer than the maximum
++	 * size we can get from the kernel.
++	 */
++	if (length >= FIELD_SIZEOF(struct media_entity_desc, name))
++		return NULL;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		if (strncmp(entity->info.name, name, length) == 0 &&
++		    entity->info.name[length] == '\0')
++			return entity;
++	}
++
++	return NULL;
++}
++
++struct media_entity *media_get_entity_by_id(struct media_device *media,
++					    __u32 id)
++{
++	bool next = id & MEDIA_ENT_ID_FLAG_NEXT;
++	unsigned int i;
++
++	id &= ~MEDIA_ENT_ID_FLAG_NEXT;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		if ((entity->info.id == id && !next) ||
++		    (entity->info.id > id && next))
++			return entity;
++	}
++
++	return NULL;
++}
++
++unsigned int media_get_entities_count(struct media_device *media)
++{
++	return media->entities_count;
++}
++
++struct media_entity *media_get_entity(struct media_device *media, unsigned int index)
++{
++	if (index >= media->entities_count)
++		return NULL;
++
++	return &media->entities[index];
++}
++
++const struct media_pad *media_entity_get_pad(struct media_entity *entity, unsigned int index)
++{
++	if (index >= entity->info.pads)
++		return NULL;
++
++	return &entity->pads[index];
++}
++
++unsigned int media_entity_get_links_count(struct media_entity *entity)
++{
++	return entity->num_links;
++}
++
++const struct media_link *media_entity_get_link(struct media_entity *entity, unsigned int index)
++{
++	if (index >= entity->num_links)
++		return NULL;
++
++	return &entity->links[index];
++}
++
++const char *media_entity_get_devname(struct media_entity *entity)
++{
++	return entity->devname[0] ? entity->devname : NULL;
++}
++
++struct media_entity *media_get_default_entity(struct media_device *media,
++					      unsigned int type)
++{
++	switch (type) {
++	case MEDIA_ENT_T_DEVNODE_V4L:
++		return media->def.v4l;
++	case MEDIA_ENT_T_DEVNODE_FB:
++		return media->def.fb;
++	case MEDIA_ENT_T_DEVNODE_ALSA:
++		return media->def.alsa;
++	case MEDIA_ENT_T_DEVNODE_DVB:
++		return media->def.dvb;
++	}
++
++	return NULL;
++}
++
++const struct media_device_info *media_get_info(struct media_device *media)
++{
++	return &media->info;
++}
++
++const char *media_get_devnode(struct media_device *media)
++{
++	return media->devnode;
++}
++
++const struct media_entity_desc *media_entity_get_info(struct media_entity *entity)
++{
++	return &entity->info;
++}
++
++/* -----------------------------------------------------------------------------
++ * Open/close
++ */
++
++static int media_device_open(struct media_device *media)
++{
++	int ret;
++
++	if (media->fd != -1)
++		return 0;
++
++	media_dbg(media, "Opening media device %s\n", media->devnode);
++
++	media->fd = open(media->devnode, O_RDWR);
++	if (media->fd < 0) {
++		ret = -errno;
++		media_dbg(media, "%s: Can't open media device %s\n",
++			  __func__, media->devnode);
++		return ret;
++	}
++
++	return 0;
++}
++
++static void media_device_close(struct media_device *media)
++{
++	if (media->fd != -1) {
++		close(media->fd);
++		media->fd = -1;
++	}
++}
++
++/* -----------------------------------------------------------------------------
++ * Link setup
++ */
++
++int media_setup_link(struct media_device *media,
++		     struct media_pad *source,
++		     struct media_pad *sink,
++		     __u32 flags)
++{
++	struct media_link *link;
++	struct media_link_desc ulink;
++	unsigned int i;
++	int ret;
++
++	ret = media_device_open(media);
++	if (ret < 0)
++		goto done;
++
++	for (i = 0; i < source->entity->num_links; i++) {
++		link = &source->entity->links[i];
++
++		if (link->source->entity == source->entity &&
++		    link->source->index == source->index &&
++		    link->sink->entity == sink->entity &&
++		    link->sink->index == sink->index)
++			break;
++	}
++
++	if (i == source->entity->num_links) {
++		media_dbg(media, "%s: Link not found\n", __func__);
++		ret = -ENOENT;
++		goto done;
++	}
++
++	/* source pad */
++	ulink.source.entity = source->entity->info.id;
++	ulink.source.index = source->index;
++	ulink.source.flags = MEDIA_PAD_FL_SOURCE;
++
++	/* sink pad */
++	ulink.sink.entity = sink->entity->info.id;
++	ulink.sink.index = sink->index;
++	ulink.sink.flags = MEDIA_PAD_FL_SINK;
++
++	ulink.flags = flags | (link->flags & MEDIA_LNK_FL_IMMUTABLE);
++
++	ret = ioctl(media->fd, MEDIA_IOC_SETUP_LINK, &ulink);
++	if (ret == -1) {
++		ret = -errno;
++		media_dbg(media, "%s: Unable to setup link (%s)\n",
++			  __func__, strerror(errno));
++		goto done;
++	}
++
++	link->flags = ulink.flags;
++	link->twin->flags = ulink.flags;
++
++	ret = 0;
++
++done:
++	return ret;
++}
++
++int media_reset_links(struct media_device *media)
++{
++	unsigned int i, j;
++	int ret;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		for (j = 0; j < entity->num_links; j++) {
++			struct media_link *link = &entity->links[j];
++
++			if (link->flags & MEDIA_LNK_FL_IMMUTABLE ||
++			    link->source->entity != entity)
++				continue;
++
++			ret = media_setup_link(media, link->source, link->sink,
++					       link->flags & ~MEDIA_LNK_FL_ENABLED);
++			if (ret < 0)
++				return ret;
++		}
++	}
++
++	return 0;
++}
++
++/* -----------------------------------------------------------------------------
++ * Entities, pads and links enumeration
++ */
++
++static struct media_link *media_entity_add_link(struct media_entity *entity)
++{
++	if (entity->num_links >= entity->max_links) {
++		struct media_link *links = entity->links;
++		unsigned int max_links = entity->max_links * 2;
++		unsigned int i;
++
++		links = realloc(links, max_links * sizeof *links);
++		if (links == NULL)
++			return NULL;
++
++		for (i = 0; i < entity->num_links; ++i)
++			links[i].twin->twin = &links[i];
++
++		entity->max_links = max_links;
++		entity->links = links;
++	}
++
++	return &entity->links[entity->num_links++];
++}
++
++static int media_enum_links(struct media_device *media)
++{
++	__u32 id;
++	int ret = 0;
++
++	for (id = 1; id <= media->entities_count; id++) {
++		struct media_entity *entity = &media->entities[id - 1];
++		struct media_links_enum links;
++		unsigned int i;
++
++		links.entity = entity->info.id;
++		links.pads = calloc(entity->info.pads, sizeof(struct media_pad_desc));
++		links.links = calloc(entity->info.links, sizeof(struct media_link_desc));
++
++		if (ioctl(media->fd, MEDIA_IOC_ENUM_LINKS, &links) < 0) {
++			ret = -errno;
++			media_dbg(media,
++				  "%s: Unable to enumerate pads and links (%s).\n",
++				  __func__, strerror(errno));
++			free(links.pads);
++			free(links.links);
++			return ret;
++		}
++
++		for (i = 0; i < entity->info.pads; ++i) {
++			entity->pads[i].entity = entity;
++			entity->pads[i].index = links.pads[i].index;
++			entity->pads[i].flags = links.pads[i].flags;
++		}
++
++		for (i = 0; i < entity->info.links; ++i) {
++			struct media_link_desc *link = &links.links[i];
++			struct media_link *fwdlink;
++			struct media_link *backlink;
++			struct media_entity *source;
++			struct media_entity *sink;
++
++			source = media_get_entity_by_id(media, link->source.entity);
++			sink = media_get_entity_by_id(media, link->sink.entity);
++
++			if (source == NULL || sink == NULL) {
++				media_dbg(media,
++					  "WARNING entity %u link %u from %u/%u to %u/%u is invalid!\n",
++					  id, i, link->source.entity,
++					  link->source.index,
++					  link->sink.entity,
++					  link->sink.index);
++				ret = -EINVAL;
++			} else {
++				fwdlink = media_entity_add_link(source);
++				fwdlink->source = &source->pads[link->source.index];
++				fwdlink->sink = &sink->pads[link->sink.index];
++				fwdlink->flags = link->flags;
++
++				backlink = media_entity_add_link(sink);
++				backlink->source = &source->pads[link->source.index];
++				backlink->sink = &sink->pads[link->sink.index];
++				backlink->flags = link->flags;
++
++				fwdlink->twin = backlink;
++				backlink->twin = fwdlink;
++			}
++		}
++
++		free(links.pads);
++		free(links.links);
++	}
++
++	return ret;
++}
++
++#ifdef HAVE_LIBUDEV
++
++#include <libudev.h>
++
++static inline int media_udev_open(struct udev **udev)
++{
++	*udev = udev_new();
++	if (*udev == NULL)
++		return -ENOMEM;
++	return 0;
++}
++
++static inline void media_udev_close(struct udev *udev)
++{
++	if (udev != NULL)
++		udev_unref(udev);
++}
++
++static int media_get_devname_udev(struct udev *udev,
++		struct media_entity *entity)
++{
++	struct udev_device *device;
++	dev_t devnum;
++	const char *p;
++	int ret = -ENODEV;
++
++	if (udev == NULL)
++		return -EINVAL;
++
++	devnum = makedev(entity->info.v4l.major, entity->info.v4l.minor);
++	media_dbg(entity->media, "looking up device: %u:%u\n",
++		  major(devnum), minor(devnum));
++	device = udev_device_new_from_devnum(udev, 'c', devnum);
++	if (device) {
++		p = udev_device_get_devnode(device);
++		if (p) {
++			strncpy(entity->devname, p, sizeof(entity->devname));
++			entity->devname[sizeof(entity->devname) - 1] = '\0';
++		}
++		ret = 0;
++	}
++
++	udev_device_unref(device);
++
++	return ret;
++}
++
++#else	/* HAVE_LIBUDEV */
++
++struct udev;
++
++static inline int media_udev_open(struct udev **udev) { return 0; }
++
++static inline void media_udev_close(struct udev *udev) { }
++
++static inline int media_get_devname_udev(struct udev *udev,
++		struct media_entity *entity)
++{
++	return -ENOTSUP;
++}
++
++#endif	/* HAVE_LIBUDEV */
++
++static int media_get_devname_sysfs(struct media_entity *entity)
++{
++	struct stat devstat;
++	char devname[32];
++	char sysname[32];
++	char target[1024];
++	char *p;
++	int ret;
++
++	sprintf(sysname, "/sys/dev/char/%u:%u", entity->info.v4l.major,
++		entity->info.v4l.minor);
++	ret = readlink(sysname, target, sizeof(target) - 1);
++	if (ret < 0)
++		return -errno;
++
++	target[ret] = '\0';
++	p = strrchr(target, '/');
++	if (p == NULL)
++		return -EINVAL;
++
++	sprintf(devname, "/dev/%s", p + 1);
++	ret = stat(devname, &devstat);
++	if (ret < 0)
++		return -errno;
++
++	/* Sanity check: udev might have reordered the device nodes.
++	 * Make sure the major/minor match. We should really use
++	 * libudev.
++	 */
++	if (major(devstat.st_rdev) == entity->info.v4l.major &&
++	    minor(devstat.st_rdev) == entity->info.v4l.minor)
++		strcpy(entity->devname, devname);
++
++	return 0;
++}
++
++static int media_enum_entities(struct media_device *media)
++{
++	struct media_entity *entity;
++	struct udev *udev;
++	unsigned int size;
++	__u32 id;
++	int ret;
++
++	ret = media_udev_open(&udev);
++	if (ret < 0)
++		media_dbg(media, "Can't get udev context\n");
++
++	for (id = 0, ret = 0; ; id = entity->info.id) {
++		size = (media->entities_count + 1) * sizeof(*media->entities);
++		media->entities = realloc(media->entities, size);
++
++		entity = &media->entities[media->entities_count];
++		memset(entity, 0, sizeof(*entity));
++		entity->fd = -1;
++		entity->info.id = id | MEDIA_ENT_ID_FLAG_NEXT;
++		entity->media = media;
++
++		ret = ioctl(media->fd, MEDIA_IOC_ENUM_ENTITIES, &entity->info);
++		if (ret < 0) {
++			ret = errno != EINVAL ? -errno : 0;
++			break;
++		}
++
++		/* Number of links (for outbound links) plus number of pads (for
++		 * inbound links) is a good safe initial estimate of the total
++		 * number of links.
++		 */
++		entity->max_links = entity->info.pads + entity->info.links;
++
++		entity->pads = malloc(entity->info.pads * sizeof(*entity->pads));
++		entity->links = malloc(entity->max_links * sizeof(*entity->links));
++		if (entity->pads == NULL || entity->links == NULL) {
++			ret = -ENOMEM;
++			break;
++		}
++
++		media->entities_count++;
++
++		if (entity->info.flags & MEDIA_ENT_FL_DEFAULT) {
++			switch (entity->info.type) {
++			case MEDIA_ENT_T_DEVNODE_V4L:
++				media->def.v4l = entity;
++				break;
++			case MEDIA_ENT_T_DEVNODE_FB:
++				media->def.fb = entity;
++				break;
++			case MEDIA_ENT_T_DEVNODE_ALSA:
++				media->def.alsa = entity;
++				break;
++			case MEDIA_ENT_T_DEVNODE_DVB:
++				media->def.dvb = entity;
++				break;
++			}
++		}
++
++		/* Find the corresponding device name. */
++		if (media_entity_type(entity) != MEDIA_ENT_T_DEVNODE &&
++		    media_entity_type(entity) != MEDIA_ENT_T_V4L2_SUBDEV)
++			continue;
++
++		/* Try to get the device name via udev */
++		if (!media_get_devname_udev(udev, entity))
++			continue;
++
++		/* Fall back to get the device name via sysfs */
++		media_get_devname_sysfs(entity);
++	}
++
++	media_udev_close(udev);
++	return ret;
++}
++
++int media_device_enumerate(struct media_device *media)
++{
++	int ret;
++
++	if (media->entities)
++		return 0;
++
++	ret = media_device_open(media);
++	if (ret < 0)
++		return ret;
++
++	ret = ioctl(media->fd, MEDIA_IOC_DEVICE_INFO, &media->info);
++	if (ret < 0) {
++		ret = -errno;
++		media_dbg(media, "%s: Unable to retrieve media device "
++			  "information for device %s (%s)\n", __func__,
++			  media->devnode, strerror(errno));
++		goto done;
++	}
++
++	media_dbg(media, "Enumerating entities\n");
++
++	ret = media_enum_entities(media);
++	if (ret < 0) {
++		media_dbg(media,
++			  "%s: Unable to enumerate entities for device %s (%s)\n",
++			  __func__, media->devnode, strerror(-ret));
++		goto done;
++	}
++
++	media_dbg(media, "Found %u entities\n", media->entities_count);
++	media_dbg(media, "Enumerating pads and links\n");
++
++	ret = media_enum_links(media);
++	if (ret < 0) {
++		media_dbg(media,
++			  "%s: Unable to enumerate pads and linksfor device %s\n",
++			  __func__, media->devnode);
++		goto done;
++	}
++
++	ret = 0;
++
++done:
++	return ret;
++}
++
++/* -----------------------------------------------------------------------------
++ * Create/destroy
++ */
++
++static void media_debug_default(void *ptr, ...)
++{
++}
++
++void media_debug_set_handler(struct media_device *media,
++			     void (*debug_handler)(void *, ...),
++			     void *debug_priv)
++{
++	if (debug_handler) {
++		media->debug_handler = debug_handler;
++		media->debug_priv = debug_priv;
++	} else {
++		media->debug_handler = media_debug_default;
++		media->debug_priv = NULL;
++	}
++}
++
++static struct media_device *__media_device_new(void)
++{
++	struct media_device *media;
++
++	media = calloc(1, sizeof(*media));
++	if (media == NULL)
++		return NULL;
++
++	media->fd = -1;
++	media->refcount = 1;
++
++	media_debug_set_handler(media, NULL, NULL);
++
++	return media;
++}
++
++struct media_device *media_device_new(const char *devnode)
++{
++	struct media_device *media;
++
++	media = __media_device_new();
++	if (media == NULL)
++		return NULL;
++
++	media->devnode = strdup(devnode);
++	if (media->devnode == NULL) {
++		media_device_unref(media);
++		return NULL;
++	}
++
++	return media;
++}
++
++struct media_device *media_device_new_emulated(struct media_device_info *info)
++{
++	struct media_device *media;
++
++	media = __media_device_new();
++	if (media == NULL)
++		return NULL;
++
++	media->info = *info;
++
++	return media;
++}
++
++struct media_device *media_device_ref(struct media_device *media)
++{
++	media->refcount++;
++	return media;
++}
++
++void media_device_unref(struct media_device *media)
++{
++	unsigned int i;
++
++	media->refcount--;
++	if (media->refcount > 0)
++		return;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++
++		free(entity->pads);
++		free(entity->links);
++		if (entity->fd != -1)
++			close(entity->fd);
++	}
++
++	free(media->entities);
++	free(media->devnode);
++	free(media);
++}
++
++int media_device_add_entity(struct media_device *media,
++			    const struct media_entity_desc *desc,
++			    const char *devnode)
++{
++	struct media_entity **defent = NULL;
++	struct media_entity *entity;
++	unsigned int size;
++
++	size = (media->entities_count + 1) * sizeof(*media->entities);
++	entity = realloc(media->entities, size);
++	if (entity == NULL)
++		return -ENOMEM;
++
++	media->entities = entity;
++	media->entities_count++;
++
++	entity = &media->entities[media->entities_count - 1];
++	memset(entity, 0, sizeof *entity);
++
++	entity->fd = -1;
++	entity->media = media;
++	strncpy(entity->devname, devnode, sizeof entity->devname);
++	entity->devname[sizeof entity->devname - 1] = '\0';
++
++	entity->info.id = 0;
++	entity->info.type = desc->type;
++	entity->info.flags = 0;
++	memcpy(entity->info.name, desc->name, sizeof entity->info.name);
++
++	switch (entity->info.type) {
++	case MEDIA_ENT_T_DEVNODE_V4L:
++		defent = &media->def.v4l;
++		entity->info.v4l = desc->v4l;
++		break;
++	case MEDIA_ENT_T_DEVNODE_FB:
++		defent = &media->def.fb;
++		entity->info.fb = desc->fb;
++		break;
++	case MEDIA_ENT_T_DEVNODE_ALSA:
++		defent = &media->def.alsa;
++		entity->info.alsa = desc->alsa;
++		break;
++	case MEDIA_ENT_T_DEVNODE_DVB:
++		defent = &media->def.dvb;
++		entity->info.dvb = desc->dvb;
++		break;
++	}
++
++	if (desc->flags & MEDIA_ENT_FL_DEFAULT) {
++		entity->info.flags |= MEDIA_ENT_FL_DEFAULT;
++		if (defent)
++			*defent = entity;
++	}
++
++	return 0;
++}
++
++struct media_pad *media_parse_pad(struct media_device *media,
++				  const char *p, char **endp)
++{
++	unsigned int entity_id, pad;
++	struct media_entity *entity;
++	char *end;
++
++	/* endp can be NULL. To avoid spreading NULL checks across the function,
++	 * set endp to &end in that case.
++	 */
++	if (endp == NULL)
++		endp = &end;
++
++	for (; isspace(*p); ++p);
++
++	if (*p == '"' || *p == '\'') {
++		for (end = (char *)p + 1; *end && *end != '"' && *end != '\''; ++end);
++		if (*end != '"' && *end != '\'') {
++			media_dbg(media, "missing matching '\"'\n");
++			*endp = end;
++			return NULL;
++		}
++
++		entity = media_get_entity_by_name(media, p + 1, end - p - 1);
++		if (entity == NULL) {
++			media_dbg(media, "no such entity \"%.*s\"\n", end - p - 1, p + 1);
++			*endp = (char *)p + 1;
++			return NULL;
++		}
++
++		++end;
++	} else {
++		entity_id = strtoul(p, &end, 10);
++		entity = media_get_entity_by_id(media, entity_id);
++		if (entity == NULL) {
++			media_dbg(media, "no such entity %d\n", entity_id);
++			*endp = (char *)p;
++			return NULL;
++		}
++	}
++	for (; isspace(*end); ++end);
++
++	if (*end != ':') {
++		media_dbg(media, "Expected ':'\n", *end);
++		*endp = end;
++		return NULL;
++	}
++
++	for (p = end + 1; isspace(*p); ++p);
++
++	pad = strtoul(p, &end, 10);
++
++	if (pad >= entity->info.pads) {
++		media_dbg(media, "No pad '%d' on entity \"%s\". Maximum pad number is %d\n",
++				pad, entity->info.name, entity->info.pads - 1);
++		*endp = (char *)p;
++		return NULL;
++	}
++
++	for (p = end; isspace(*p); ++p);
++	*endp = (char *)p;
++
++	return &entity->pads[pad];
++}
++
++struct media_link *media_parse_link(struct media_device *media,
++				    const char *p, char **endp)
++{
++	struct media_link *link;
++	struct media_pad *source;
++	struct media_pad *sink;
++	unsigned int i;
++	char *end;
++
++	source = media_parse_pad(media, p, &end);
++	if (source == NULL) {
++		*endp = end;
++		return NULL;
++	}
++
++	if (end[0] != '-' || end[1] != '>') {
++		*endp = end;
++		media_dbg(media, "Expected '->'\n");
++		return NULL;
++	}
++
++	p = end + 2;
++
++	sink = media_parse_pad(media, p, &end);
++	if (sink == NULL) {
++		*endp = end;
++		return NULL;
++	}
++
++	*endp = end;
++
++	for (i = 0; i < source->entity->num_links; i++) {
++		link = &source->entity->links[i];
++
++		if (link->source == source && link->sink == sink)
++			return link;
++	}
++
++	media_dbg(media, "No link between \"%s\":%d and \"%s\":%d\n",
++			source->entity->info.name, source->index,
++			sink->entity->info.name, sink->index);
++	return NULL;
++}
++
++int media_parse_setup_link(struct media_device *media,
++			   const char *p, char **endp)
++{
++	struct media_link *link;
++	__u32 flags;
++	char *end;
++
++	link = media_parse_link(media, p, &end);
++	if (link == NULL) {
++		media_dbg(media,
++			  "%s: Unable to parse link\n", __func__);
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end;
++	if (*p++ != '[') {
++		media_dbg(media, "Unable to parse link flags: expected '['.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	flags = strtoul(p, &end, 10);
++	for (p = end; isspace(*p); p++);
++	if (*p++ != ']') {
++		media_dbg(media, "Unable to parse link flags: expected ']'.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	for (; isspace(*p); p++);
++	*endp = (char *)p;
++
++	media_dbg(media,
++		  "Setting up link %u:%u -> %u:%u [%u]\n",
++		  link->source->entity->info.id, link->source->index,
++		  link->sink->entity->info.id, link->sink->index,
++		  flags);
++
++	return media_setup_link(media, link->source, link->sink, flags);
++}
++
++void media_print_streampos(struct media_device *media, const char *p,
++			   const char *end)
++{
++	int pos;
++
++	pos = end - p + 1;
++
++	if (pos < 0)
++		pos = 0;
++	if (pos > strlen(p))
++		pos = strlen(p);
++
++	media_dbg(media, "\n");
++	media_dbg(media, " %s\n", p);
++	media_dbg(media, " %*s\n", pos, "^");
++}
++
++int media_parse_setup_links(struct media_device *media, const char *p)
++{
++	char *end;
++	int ret;
++
++	do {
++		ret = media_parse_setup_link(media, p, &end);
++		if (ret < 0) {
++			media_print_streampos(media, p, end);
++			return ret;
++		}
++
++		p = end + 1;
++	} while (*end == ',');
++
++	return *end ? -EINVAL : 0;
++}
+diff --git a/libweston/media-ctl/libv4l2subdev.c b/libweston/media-ctl/libv4l2subdev.c
+new file mode 100644
+index 0000000..4ede4fa
+--- /dev/null
++++ b/libweston/media-ctl/libv4l2subdev.c
+@@ -0,0 +1,759 @@
++/*
++ * V4L2 subdev interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <sys/ioctl.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++
++#include <ctype.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++
++#include <linux/v4l2-subdev.h>
++
++#include "mediactl.h"
++#include "mediactl-priv.h"
++#include "tools.h"
++#include "v4l2subdev.h"
++
++int v4l2_subdev_open(struct media_entity *entity)
++{
++	if (entity->fd != -1)
++		return 0;
++
++	entity->fd = open(entity->devname, O_RDWR);
++	if (entity->fd == -1) {
++		int ret = -errno;
++		media_dbg(entity->media,
++			  "%s: Failed to open subdev device node %s\n", __func__,
++			  entity->devname);
++		return ret;
++	}
++
++	return 0;
++}
++
++void v4l2_subdev_close(struct media_entity *entity)
++{
++	close(entity->fd);
++	entity->fd = -1;
++}
++
++int v4l2_subdev_get_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which)
++{
++	struct v4l2_subdev_format fmt;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&fmt, 0, sizeof(fmt));
++	fmt.pad = pad;
++	fmt.which = which;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_FMT, &fmt);
++	if (ret < 0)
++		return -errno;
++
++	*format = fmt.format;
++	return 0;
++}
++
++int v4l2_subdev_set_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which)
++{
++	struct v4l2_subdev_format fmt;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&fmt, 0, sizeof(fmt));
++	fmt.pad = pad;
++	fmt.which = which;
++	fmt.format = *format;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_FMT, &fmt);
++	if (ret < 0)
++		return -errno;
++
++	*format = fmt.format;
++	return 0;
++}
++
++int v4l2_subdev_get_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which)
++{
++	union {
++		struct v4l2_subdev_selection sel;
++		struct v4l2_subdev_crop crop;
++	} u;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&u.sel, 0, sizeof(u.sel));
++	u.sel.pad = pad;
++	u.sel.target = target;
++	u.sel.which = which;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_SELECTION, &u.sel);
++	if (ret >= 0) {
++		*rect = u.sel.r;
++		return 0;
++	}
++	if (errno != ENOTTY || target != V4L2_SEL_TGT_CROP)
++		return -errno;
++
++	memset(&u.crop, 0, sizeof(u.crop));
++	u.crop.pad = pad;
++	u.crop.which = which;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_CROP, &u.crop);
++	if (ret < 0)
++		return -errno;
++
++	*rect = u.crop.rect;
++	return 0;
++}
++
++int v4l2_subdev_set_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which)
++{
++	union {
++		struct v4l2_subdev_selection sel;
++		struct v4l2_subdev_crop crop;
++	} u;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&u.sel, 0, sizeof(u.sel));
++	u.sel.pad = pad;
++	u.sel.target = target;
++	u.sel.which = which;
++	u.sel.r = *rect;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_SELECTION, &u.sel);
++	if (ret >= 0) {
++		*rect = u.sel.r;
++		return 0;
++	}
++	if (errno != ENOTTY || target != V4L2_SEL_TGT_CROP)
++		return -errno;
++
++	memset(&u.crop, 0, sizeof(u.crop));
++	u.crop.pad = pad;
++	u.crop.which = which;
++	u.crop.rect = *rect;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_CROP, &u.crop);
++	if (ret < 0)
++		return -errno;
++
++	*rect = u.crop.rect;
++	return 0;
++}
++
++#if 0
++int v4l2_subdev_get_dv_timings_caps(struct media_entity *entity,
++	struct v4l2_dv_timings_cap *caps)
++{
++	unsigned int pad = caps->pad;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(caps, 0, sizeof(*caps));
++	caps->pad = pad;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_DV_TIMINGS_CAP, caps);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++
++int v4l2_subdev_query_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings)
++{
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(timings, 0, sizeof(*timings));
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_QUERY_DV_TIMINGS, timings);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++
++int v4l2_subdev_get_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings)
++{
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(timings, 0, sizeof(*timings));
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_DV_TIMINGS, timings);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++
++int v4l2_subdev_set_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings)
++{
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_DV_TIMINGS, timings);
++	if (ret < 0)
++		return -errno;
++
++	return 0;
++}
++#endif
++
++int v4l2_subdev_get_frame_interval(struct media_entity *entity,
++				   struct v4l2_fract *interval)
++{
++	struct v4l2_subdev_frame_interval ival;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&ival, 0, sizeof(ival));
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_FRAME_INTERVAL, &ival);
++	if (ret < 0)
++		return -errno;
++
++	*interval = ival.interval;
++	return 0;
++}
++
++int v4l2_subdev_set_frame_interval(struct media_entity *entity,
++				   struct v4l2_fract *interval)
++{
++	struct v4l2_subdev_frame_interval ival;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&ival, 0, sizeof(ival));
++	ival.interval = *interval;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_FRAME_INTERVAL, &ival);
++	if (ret < 0)
++		return -errno;
++
++	*interval = ival.interval;
++	return 0;
++}
++
++static int v4l2_subdev_parse_format(struct media_device *media,
++				    struct v4l2_mbus_framefmt *format,
++				    const char *p, char **endp)
++{
++	enum v4l2_mbus_pixelcode code;
++	unsigned int width, height;
++	char *end;
++
++	/*
++	 * Compatibility with the old syntax: consider space as valid
++	 * separator between the media bus pixel code and the size.
++	 */
++	for (; isspace(*p); ++p);
++	for (end = (char *)p;
++	     *end != '/' && *end != ' ' && *end != '\0'; ++end);
++
++	code = v4l2_subdev_string_to_pixelcode(p, end - p);
++	if (code == (enum v4l2_mbus_pixelcode)-1) {
++		media_dbg(media, "Invalid pixel code '%.*s'\n", end - p, p);
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	width = strtoul(p, &end, 10);
++	if (*end != 'x') {
++		media_dbg(media, "Expected 'x'\n");
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	height = strtoul(p, &end, 10);
++	*endp = end;
++
++	memset(format, 0, sizeof(*format));
++	format->width = width;
++	format->height = height;
++	format->code = code;
++
++	return 0;
++}
++
++static int v4l2_subdev_parse_rectangle(struct media_device *media,
++				       struct v4l2_rect *r, const char *p,
++				       char **endp)
++{
++	char *end;
++
++	if (*p++ != '(') {
++		media_dbg(media, "Expected '('\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	r->left = strtoul(p, &end, 10);
++	if (*end != ',') {
++		media_dbg(media, "Expected ','\n");
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	r->top = strtoul(p, &end, 10);
++	if (*end++ != ')') {
++		media_dbg(media, "Expected ')'\n");
++		*endp = end - 1;
++		return -EINVAL;
++	}
++	if (*end != '/') {
++		media_dbg(media, "Expected '/'\n");
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	r->width = strtoul(p, &end, 10);
++	if (*end != 'x') {
++		media_dbg(media, "Expected 'x'\n");
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end + 1;
++	r->height = strtoul(p, &end, 10);
++	*endp = end;
++
++	return 0;
++}
++
++static int v4l2_subdev_parse_frame_interval(struct media_device *media,
++					    struct v4l2_fract *interval,
++					    const char *p, char **endp)
++{
++	char *end;
++
++	for (; isspace(*p); ++p);
++
++	interval->numerator = strtoul(p, &end, 10);
++
++	for (p = end; isspace(*p); ++p);
++	if (*p++ != '/') {
++		media_dbg(media, "Expected '/'\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	for (; isspace(*p); ++p);
++	interval->denominator = strtoul(p, &end, 10);
++
++	*endp = end;
++	return 0;
++}
++
++/*
++ * The debate over whether this function should be named icanhasstr() instead
++ * has been strong and heated. If you feel like this would be an important
++ * change, patches are welcome (or not).
++ */
++static bool strhazit(const char *str, const char **p)
++{
++	int len = strlen(str);
++
++	if (strncmp(str, *p, len))
++		return false;
++
++	for (*p += len; isspace(**p); ++*p);
++	return true;
++}
++
++static struct media_pad *v4l2_subdev_parse_pad_format(
++	struct media_device *media, struct v4l2_mbus_framefmt *format,
++	struct v4l2_rect *crop, struct v4l2_rect *compose,
++	struct v4l2_fract *interval, const char *p, char **endp)
++{
++	struct media_pad *pad;
++	bool first;
++	char *end;
++	int ret;
++
++	for (; isspace(*p); ++p);
++
++	pad = media_parse_pad(media, p, &end);
++	if (pad == NULL) {
++		*endp = end;
++		return NULL;
++	}
++
++	for (p = end; isspace(*p); ++p);
++	if (*p++ != '[') {
++		media_dbg(media, "Expected '['\n");
++		*endp = (char *)p - 1;
++		return NULL;
++	}
++
++	for (first = true; ; first = false) {
++		for (; isspace(*p); p++);
++
++		/*
++		 * Backward compatibility: if the first property starts with an
++		 * uppercase later, process it as a format description.
++		 */
++		if (strhazit("fmt:", &p) || (first && isupper(*p))) {
++			ret = v4l2_subdev_parse_format(media, format, p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			p = end;
++			continue;
++		}
++
++		/*
++		 * Backward compatibility: crop rectangles can be specified
++		 * implicitly without the 'crop:' property name.
++		 */
++		if (strhazit("crop:", &p) || *p == '(') {
++			ret = v4l2_subdev_parse_rectangle(media, crop, p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			p = end;
++			continue;
++		}
++
++		if (strhazit("compose:", &p)) {
++			ret = v4l2_subdev_parse_rectangle(media, compose, p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			for (p = end; isspace(*p); p++);
++			continue;
++		}
++
++		if (*p == '@') {
++			ret = v4l2_subdev_parse_frame_interval(media, interval, ++p, &end);
++			if (ret < 0) {
++				*endp = end;
++				return NULL;
++			}
++
++			p = end;
++			continue;
++		}
++
++		break;
++	}
++
++	if (*p != ']') {
++		media_dbg(media, "Expected ']'\n");
++		*endp = (char *)p;
++		return NULL;
++	}
++
++	*endp = (char *)p + 1;
++	return pad;
++}
++
++static int set_format(struct media_pad *pad,
++		      struct v4l2_mbus_framefmt *format)
++{
++	int ret;
++
++	if (format->width == 0 || format->height == 0)
++		return 0;
++
++	media_dbg(pad->entity->media,
++		  "Setting up format %s %ux%u on pad %s/%u\n",
++		  v4l2_subdev_pixelcode_to_string(format->code),
++		  format->width, format->height,
++		  pad->entity->info.name, pad->index);
++
++	ret = v4l2_subdev_set_format(pad->entity, format, pad->index,
++				     V4L2_SUBDEV_FORMAT_ACTIVE);
++	if (ret < 0) {
++		media_dbg(pad->entity->media,
++			  "Unable to set format: %s (%d)\n",
++			  strerror(-ret), ret);
++		return ret;
++	}
++
++	media_dbg(pad->entity->media,
++		  "Format set: %s %ux%u\n",
++		  v4l2_subdev_pixelcode_to_string(format->code),
++		  format->width, format->height);
++
++	return 0;
++}
++
++static int set_selection(struct media_pad *pad, unsigned int target,
++			 struct v4l2_rect *rect)
++{
++	int ret;
++
++	if (rect->left == -1 || rect->top == -1)
++		return 0;
++
++	media_dbg(pad->entity->media,
++		  "Setting up selection target %u rectangle (%u,%u)/%ux%u on pad %s/%u\n",
++		  target, rect->left, rect->top, rect->width, rect->height,
++		  pad->entity->info.name, pad->index);
++
++	ret = v4l2_subdev_set_selection(pad->entity, rect, pad->index,
++					target, V4L2_SUBDEV_FORMAT_ACTIVE);
++	if (ret < 0) {
++		media_dbg(pad->entity->media,
++			  "Unable to set selection rectangle: %s (%d)\n",
++			  strerror(-ret), ret);
++		return ret;
++	}
++
++	media_dbg(pad->entity->media,
++		  "Selection rectangle set: (%u,%u)/%ux%u\n",
++		  rect->left, rect->top, rect->width, rect->height);
++
++	return 0;
++}
++
++static int set_frame_interval(struct media_entity *entity,
++			      struct v4l2_fract *interval)
++{
++	int ret;
++
++	if (interval->numerator == 0)
++		return 0;
++
++	media_dbg(entity->media,
++		  "Setting up frame interval %u/%u on entity %s\n",
++		  interval->numerator, interval->denominator,
++		  entity->info.name);
++
++	ret = v4l2_subdev_set_frame_interval(entity, interval);
++	if (ret < 0) {
++		media_dbg(entity->media,
++			  "Unable to set frame interval: %s (%d)",
++			  strerror(-ret), ret);
++		return ret;
++	}
++
++	media_dbg(entity->media, "Frame interval set: %u/%u\n",
++		  interval->numerator, interval->denominator);
++
++	return 0;
++}
++
++
++static int v4l2_subdev_parse_setup_format(struct media_device *media,
++					  const char *p, char **endp)
++{
++	struct v4l2_mbus_framefmt format = { 0, 0, 0 };
++	struct media_pad *pad;
++	struct v4l2_rect crop = { -1, -1, -1, -1 };
++	struct v4l2_rect compose = crop;
++	struct v4l2_fract interval = { 0, 0 };
++	unsigned int i;
++	char *end;
++	int ret;
++
++	pad = v4l2_subdev_parse_pad_format(media, &format, &crop, &compose,
++					   &interval, p, &end);
++	if (pad == NULL) {
++		media_print_streampos(media, p, end);
++		media_dbg(media, "Unable to parse format\n");
++		return -EINVAL;
++	}
++
++	if (pad->flags & MEDIA_PAD_FL_SINK) {
++		ret = set_format(pad, &format);
++		if (ret < 0)
++			return ret;
++	}
++
++	ret = set_selection(pad, V4L2_SEL_TGT_CROP, &crop);
++	if (ret < 0)
++		return ret;
++
++	ret = set_selection(pad, V4L2_SEL_TGT_COMPOSE, &compose);
++	if (ret < 0)
++		return ret;
++
++	if (pad->flags & MEDIA_PAD_FL_SOURCE) {
++		ret = set_format(pad, &format);
++		if (ret < 0)
++			return ret;
++	}
++
++	ret = set_frame_interval(pad->entity, &interval);
++	if (ret < 0)
++		return ret;
++
++
++	/* If the pad is an output pad, automatically set the same format on
++	 * the remote subdev input pads, if any.
++	 */
++	if (pad->flags & MEDIA_PAD_FL_SOURCE) {
++		for (i = 0; i < pad->entity->num_links; ++i) {
++			struct media_link *link = &pad->entity->links[i];
++			struct v4l2_mbus_framefmt remote_format;
++
++			if (!(link->flags & MEDIA_LNK_FL_ENABLED))
++				continue;
++
++			if (link->source == pad &&
++			    link->sink->entity->info.type == MEDIA_ENT_T_V4L2_SUBDEV) {
++				remote_format = format;
++				set_format(link->sink, &remote_format);
++			}
++		}
++	}
++
++	*endp = end;
++	return 0;
++}
++
++int v4l2_subdev_parse_setup_formats(struct media_device *media, const char *p)
++{
++	char *end;
++	int ret;
++
++	do {
++		ret = v4l2_subdev_parse_setup_format(media, p, &end);
++		if (ret < 0)
++			return ret;
++
++		p = end + 1;
++	} while (*end == ',');
++
++	return *end ? -EINVAL : 0;
++}
++
++static struct {
++	const char *name;
++	enum v4l2_mbus_pixelcode code;
++} mbus_formats[] = {
++	{ "Y8", V4L2_MBUS_FMT_Y8_1X8},
++	{ "Y10", V4L2_MBUS_FMT_Y10_1X10 },
++	{ "Y12", V4L2_MBUS_FMT_Y12_1X12 },
++	{ "YUYV", V4L2_MBUS_FMT_YUYV8_1X16 },
++	{ "YUYV1_5X8", V4L2_MBUS_FMT_YUYV8_1_5X8 },
++	{ "YUYV2X8", V4L2_MBUS_FMT_YUYV8_2X8 },
++	{ "UYVY", V4L2_MBUS_FMT_UYVY8_1X16 },
++	{ "UYVY1_5X8", V4L2_MBUS_FMT_UYVY8_1_5X8 },
++	{ "UYVY2X8", V4L2_MBUS_FMT_UYVY8_2X8 },
++	{ "SBGGR8", V4L2_MBUS_FMT_SBGGR8_1X8 },
++	{ "SGBRG8", V4L2_MBUS_FMT_SGBRG8_1X8 },
++	{ "SGRBG8", V4L2_MBUS_FMT_SGRBG8_1X8 },
++	{ "SRGGB8", V4L2_MBUS_FMT_SRGGB8_1X8 },
++	{ "SBGGR10", V4L2_MBUS_FMT_SBGGR10_1X10 },
++	{ "SGBRG10", V4L2_MBUS_FMT_SGBRG10_1X10 },
++	{ "SGRBG10", V4L2_MBUS_FMT_SGRBG10_1X10 },
++	{ "SRGGB10", V4L2_MBUS_FMT_SRGGB10_1X10 },
++	{ "SBGGR10_DPCM8", V4L2_MBUS_FMT_SBGGR10_DPCM8_1X8 },
++	{ "SGBRG10_DPCM8", V4L2_MBUS_FMT_SGBRG10_DPCM8_1X8 },
++	{ "SGRBG10_DPCM8", V4L2_MBUS_FMT_SGRBG10_DPCM8_1X8 },
++	{ "SRGGB10_DPCM8", V4L2_MBUS_FMT_SRGGB10_DPCM8_1X8 },
++	{ "SBGGR12", V4L2_MBUS_FMT_SBGGR12_1X12 },
++	{ "SGBRG12", V4L2_MBUS_FMT_SGBRG12_1X12 },
++	{ "SGRBG12", V4L2_MBUS_FMT_SGRBG12_1X12 },
++	{ "SRGGB12", V4L2_MBUS_FMT_SRGGB12_1X12 },
++	{ "AYUV32", V4L2_MBUS_FMT_AYUV8_1X32 },
++	{ "ARGB32", V4L2_MBUS_FMT_ARGB8888_1X32 },
++};
++
++const char *v4l2_subdev_pixelcode_to_string(enum v4l2_mbus_pixelcode code)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(mbus_formats); ++i) {
++		if (mbus_formats[i].code == code)
++			return mbus_formats[i].name;
++	}
++
++	return "unknown";
++}
++
++enum v4l2_mbus_pixelcode v4l2_subdev_string_to_pixelcode(const char *string,
++							 unsigned int length)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(mbus_formats); ++i) {
++		if (strncmp(mbus_formats[i].name, string, length) == 0)
++			break;
++	}
++
++	if (i == ARRAY_SIZE(mbus_formats))
++		return (enum v4l2_mbus_pixelcode)-1;
++
++	return mbus_formats[i].code;
++}
+diff --git a/libweston/media-ctl/mediactl-priv.h b/libweston/media-ctl/mediactl-priv.h
+new file mode 100644
+index 0000000..a0d3a55
+--- /dev/null
++++ b/libweston/media-ctl/mediactl-priv.h
+@@ -0,0 +1,64 @@
++/*
++ * Media controller interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __MEDIA_PRIV_H__
++#define __MEDIA_PRIV_H__
++
++#include <linux/media.h>
++
++#include "mediactl.h"
++
++struct media_entity {
++	struct media_device *media;
++	struct media_entity_desc info;
++	struct media_pad *pads;
++	struct media_link *links;
++	unsigned int max_links;
++	unsigned int num_links;
++
++	char devname[32];
++	int fd;
++};
++
++struct media_device {
++	int fd;
++	int refcount;
++	char *devnode;
++
++	struct media_device_info info;
++	struct media_entity *entities;
++	unsigned int entities_count;
++
++	void (*debug_handler)(void *, ...);
++	void *debug_priv;
++
++	struct {
++		struct media_entity *v4l;
++		struct media_entity *fb;
++		struct media_entity *alsa;
++		struct media_entity *dvb;
++	} def;
++};
++
++#define media_dbg(media, ...) \
++	(media)->debug_handler((media)->debug_priv, __VA_ARGS__)
++
++#endif /* __MEDIA_PRIV_H__ */
+diff --git a/libweston/media-ctl/mediactl.h b/libweston/media-ctl/mediactl.h
+new file mode 100644
+index 0000000..77ac182
+--- /dev/null
++++ b/libweston/media-ctl/mediactl.h
+@@ -0,0 +1,423 @@
++/*
++ * Media controller interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __MEDIA_H__
++#define __MEDIA_H__
++
++#include <linux/media.h>
++
++struct media_link {
++	struct media_pad *source;
++	struct media_pad *sink;
++	struct media_link *twin;
++	__u32 flags;
++	__u32 padding[3];
++};
++
++struct media_pad {
++	struct media_entity *entity;
++	__u32 index;
++	__u32 flags;
++	__u32 padding[3];
++};
++
++struct media_device;
++struct media_entity;
++
++/**
++ * @brief Create a new media device.
++ * @param devnode - device node path.
++ *
++ * Create a media device instance for the given device node and return it. The
++ * device node is not accessed by this function, device node access errors will
++ * not be caught and reported here. The media device needs to be enumerated
++ * before it can be accessed, see media_device_enumerate().
++ *
++ * Media devices are reference-counted, see media_device_ref() and
++ * media_device_unref() for more information.
++ *
++ * @return A pointer to the new media device or NULL if memory cannot be
++ * allocated.
++ */
++struct media_device *media_device_new(const char *devnode);
++
++/**
++ * @brief Create a new emulated media device.
++ * @param info - device information.
++ *
++ * Emulated media devices are userspace-only objects not backed by a kernel
++ * media device. They are created for ALSA and V4L2 devices that are not
++ * associated with a media controller device.
++ *
++ * Only device query functions are available for media devices. Enumerating or
++ * setting up links is invalid.
++ *
++ * @return A pointer to the new media device or NULL if memory cannot be
++ * allocated.
++ */
++struct media_device *media_device_new_emulated(struct media_device_info *info);
++
++/**
++ * @brief Take a reference to the device.
++ * @param media - device instance.
++ *
++ * Media devices are reference-counted. Taking a reference to a device prevents
++ * it from being freed until all references are released. The reference count is
++ * initialized to 1 when the device is created.
++ *
++ * @return A pointer to @a media.
++ */
++struct media_device *media_device_ref(struct media_device *media);
++
++/**
++ * @brief Release a reference to the device.
++ * @param media - device instance.
++ *
++ * Release a reference to the media device. When the reference count reaches 0
++ * this function frees the device.
++ */
++void media_device_unref(struct media_device *media);
++
++/**
++ * @brief Add an entity to an existing media device
++ * @param media - device instance.
++ * @param desc - description of the entity to be added
++ * @param devnode - device node corresponding to the entity
++ *
++ * Entities are usually created and added to media devices automatically when
++ * the media device is enumerated through the media controller API. However,
++ * when an emulated media device (thus not backed with a kernel-side media
++ * controller device) is created, entities need to be manually added.
++ *
++ * Entities can also be manually added to a successfully enumerated media device
++ * to group several functions provided by separate kernel devices. The most
++ * common use case is to group the audio and video functions of a USB webcam in
++ * a single media device. Those functions are exposed through separate USB
++ * interfaces and handled through unrelated kernel drivers, they must thus be
++ * manually added to the same media device.
++ *
++ * This function adds a new entity to the given media device and initializes it
++ * from the given entity description and device node name. Only the following
++ * fields of the description are copied over to the new entity:
++ *
++ * - type
++ * - flags (MEDIA_ENT_FL_DEFAULT only)
++ * - name
++ * - v4l, fb, alsa or dvb (depending on the device type)
++ *
++ * All other fields of the newly created entity id are initialized to 0,
++ * including the entity ID.
++ *
++ * @return Zero on success or -ENOMEM if memory cannot be allocated.
++ */
++int media_device_add_entity(struct media_device *media,
++			    const struct media_entity_desc *desc,
++			    const char *devnode);
++
++/**
++ * @brief Set a handler for debug messages.
++ * @param media - device instance.
++ * @param debug_handler - debug message handler
++ * @param debug_priv - first argument to debug message handler
++ *
++ * Set a handler for debug messages that will be called whenever
++ * debugging information is to be printed. The handler expects an
++ * fprintf-like function.
++ */
++void media_debug_set_handler(
++	struct media_device *media, void (*debug_handler)(void *, ...),
++	void *debug_priv);
++
++/**
++ * @brief Enumerate the device topology
++ * @param media - device instance.
++ *
++ * Enumerate the media device entities, pads and links. Calling this function is
++ * mandatory before accessing the media device contents.
++ *
++ * @return Zero on success or a negative error code on failure.
++ */
++int media_device_enumerate(struct media_device *media);
++
++/**
++ * @brief Locate the pad at the other end of a link.
++ * @param pad - sink pad at one end of the link.
++ *
++ * Locate the source pad connected to @a pad through an enabled link. As only one
++ * link connected to a sink pad can be enabled at a time, the connected source
++ * pad is guaranteed to be unique.
++ *
++ * @return A pointer to the connected source pad, or NULL if all links connected
++ * to @a pad are disabled. Return NULL also if @a pad is not a sink pad.
++ */
++struct media_pad *media_entity_remote_source(struct media_pad *pad);
++
++/**
++ * @brief Get information about a media entity
++ * @param entity - media entity.
++ *
++ * The information structure is owned by the media entity object and will be
++ * freed when the object is destroyed.
++ *
++ * @return A pointer to the media entity information
++ */
++const struct media_entity_desc *media_entity_get_info(struct media_entity *entity);
++
++/**
++ * @brief Get an entity pad
++ * @param entity - media entity.
++ * @param index - pad index.
++ *
++ * This function returns a pointer to the pad object identified by its index
++ * for the given entity. If the pad index is out of bounds it will return NULL.
++ *
++ * @return A pointer to the pad
++ */
++const struct media_pad *media_entity_get_pad(struct media_entity *entity,
++					     unsigned int index);
++
++/**
++ * @brief Get the number of links
++ * @param entity - media entity.
++ *
++ * This function returns the total number of links that originate from or arrive
++ * at the the media entity.
++ *
++ * @return The number of links for the entity
++ */
++unsigned int media_entity_get_links_count(struct media_entity *entity);
++
++/**
++ * @brief Get an entity link
++ * @param entity - media entity.
++ * @param index - link index.
++ *
++ * This function returns a pointer to the link object identified by its index
++ * for the given entity. If the link index is out of bounds it will return NULL.
++ *
++ * @return A pointer to the link
++ */
++const struct media_link *media_entity_get_link(struct media_entity *entity,
++					       unsigned int index);
++
++/**
++ * @brief Get the device node name for an entity
++ * @param entity - media entity.
++ *
++ * This function returns the full path and name to the device node corresponding
++ * to the given entity.
++ *
++ * @return A pointer to the device node name or NULL if the entity has no
++ * associated device node
++ */
++const char *media_entity_get_devname(struct media_entity *entity);
++
++/**
++ * @brief Get the type of an entity.
++ * @param entity - the entity.
++ *
++ * @return The type of @a entity.
++ */
++static inline unsigned int media_entity_type(struct media_entity *entity)
++{
++	return media_entity_get_info(entity)->type & MEDIA_ENT_TYPE_MASK;
++}
++
++/**
++ * @brief Find an entity by its name.
++ * @param media - media device.
++ * @param name - entity name.
++ * @param length - size of @a name.
++ *
++ * Search for an entity with a name equal to @a name.
++ *
++ * @return A pointer to the entity if found, or NULL otherwise.
++ */
++struct media_entity *media_get_entity_by_name(struct media_device *media,
++	const char *name, size_t length);
++
++/**
++ * @brief Find an entity by its ID.
++ * @param media - media device.
++ * @param id - entity ID.
++ *
++ * This function searches for an entity based on its ID using an exact match or
++ * next ID method based on the given @a id. If @a id is ORed with
++ * MEDIA_ENT_ID_FLAG_NEXT, the function will return the entity with the smallest
++ * ID larger than @a id. Otherwise it will return the entity with an ID equal to
++ * @a id.
++ *
++ * @return A pointer to the entity if found, or NULL otherwise.
++ */
++struct media_entity *media_get_entity_by_id(struct media_device *media,
++	__u32 id);
++
++/**
++ * @brief Get the number of entities
++ * @param media - media device.
++ *
++ * This function returns the total number of entities in the media device. If
++ * entities haven't been enumerated yet it will return 0.
++ *
++ * @return The number of entities in the media device
++ */
++unsigned int media_get_entities_count(struct media_device *media);
++
++/**
++ * @brief Get the entities
++ * @param media - media device.
++ *
++ * This function returns a pointer to the array of entities for the media
++ * device. If entities haven't been enumerated yet it will return NULL.
++ *
++ * The array of entities is owned by the media device object and will be freed
++ * when the media object is destroyed.
++ *
++ * @return A pointer to an array of entities
++ */
++struct media_entity *media_get_entity(struct media_device *media, unsigned int index);
++
++/**
++ * @brief Get the default entity for a given type
++ * @param media - media device.
++ * @param type - entity type.
++ *
++ * This function returns the default entity of the requested type. @a type must
++ * be one of
++ *
++ *	MEDIA_ENT_T_DEVNODE_V4L
++ *	MEDIA_ENT_T_DEVNODE_FB
++ *	MEDIA_ENT_T_DEVNODE_ALSA
++ *	MEDIA_ENT_T_DEVNODE_DVB
++ *
++ * @return A pointer to the default entity for the type if it exists, or NULL
++ * otherwise.
++ */
++struct media_entity *media_get_default_entity(struct media_device *media,
++					      unsigned int type);
++
++/**
++ * @brief Get the media device information
++ * @param media - media device.
++ *
++ * The information structure is owned by the media device object and will be freed
++ * when the media object is destroyed.
++ *
++ * @return A pointer to the media device information
++ */
++const struct media_device_info *media_get_info(struct media_device *media);
++
++/**
++ * @brief Get the media device node name
++ * @param media - media device.
++ *
++ * The device node name string is owned by the media device object and will be
++ * freed when the media object is destroyed.
++ *
++ * @return A pointer to the media device node name
++ */
++const char *media_get_devnode(struct media_device *media);
++
++/**
++ * @brief Configure a link.
++ * @param media - media device.
++ * @param source - source pad at the link origin.
++ * @param sink - sink pad at the link target.
++ * @param flags - configuration flags.
++ *
++ * Locate the link between @a source and @a sink, and configure it by applying
++ * the new @a flags.
++ *
++ * Only the MEDIA_LINK_FLAG_ENABLED flag is writable.
++ *
++ * @return 0 on success, -1 on failure:
++ *	   -ENOENT: link not found
++ *	   - other error codes returned by MEDIA_IOC_SETUP_LINK
++ */
++int media_setup_link(struct media_device *media,
++	struct media_pad *source, struct media_pad *sink,
++	__u32 flags);
++
++/**
++ * @brief Reset all links to the disabled state.
++ * @param media - media device.
++ *
++ * Disable all links in the media device. This function is usually used after
++ * opening a media device to reset all links to a known state.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int media_reset_links(struct media_device *media);
++
++/**
++ * @brief Parse string to a pad on the media device.
++ * @param media - media device.
++ * @param p - input string
++ * @param endp - pointer to string where parsing ended
++ *
++ * Parse NULL terminated string describing a pad and return its struct
++ * media_pad instance.
++ *
++ * @return Pointer to struct media_pad on success, NULL on failure.
++ */
++struct media_pad *media_parse_pad(struct media_device *media,
++				  const char *p, char **endp);
++
++/**
++ * @brief Parse string to a link on the media device.
++ * @param media - media device.
++ * @param p - input string
++ * @param endp - pointer to p where parsing ended
++ *
++ * Parse NULL terminated string p describing a link and return its struct
++ * media_link instance.
++ *
++ * @return Pointer to struct media_link on success, NULL on failure.
++ */
++struct media_link *media_parse_link(struct media_device *media,
++				    const char *p, char **endp);
++
++/**
++ * @brief Parse string to a link on the media device and set it up.
++ * @param media - media device.
++ * @param p - input string
++ *
++ * Parse NULL terminated string p describing a link and its configuration
++ * and configure the link.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int media_parse_setup_link(struct media_device *media,
++			   const char *p, char **endp);
++
++/**
++ * @brief Parse string to link(s) on the media device and set it up.
++ * @param media - media device.
++ * @param p - input string
++ *
++ * Parse NULL terminated string p describing link(s) separated by
++ * commas (,) and configure the link(s).
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int media_parse_setup_links(struct media_device *media, const char *p);
++
++#endif
+diff --git a/libweston/media-ctl/tools.h b/libweston/media-ctl/tools.h
+new file mode 100644
+index 0000000..815534c
+--- /dev/null
++++ b/libweston/media-ctl/tools.h
+@@ -0,0 +1,32 @@
++/*
++ * Media controller test application
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __TOOLS_H__
++#define __TOOLS_H__
++
++#define ARRAY_SIZE(array)	(sizeof(array) / sizeof((array)[0]))
++#define FIELD_SIZEOF(t, f)	(sizeof(((t*)0)->f))
++
++void media_print_streampos(struct media_device *media, const char *p,
++			   const char *end);
++
++#endif /* __TOOLS_H__ */
++
+diff --git a/libweston/media-ctl/v4l2subdev.h b/libweston/media-ctl/v4l2subdev.h
+new file mode 100644
+index 0000000..1cb53ff
+--- /dev/null
++++ b/libweston/media-ctl/v4l2subdev.h
+@@ -0,0 +1,258 @@
++/*
++ * V4L2 subdev interface library
++ *
++ * Copyright (C) 2010-2014 Ideas on board SPRL
++ *
++ * Contact: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU Lesser General Public License as published
++ * by the Free Software Foundation; either version 2.1 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public License
++ * along with this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef __SUBDEV_H__
++#define __SUBDEV_H__
++
++#include <linux/v4l2-subdev.h>
++
++struct media_entity;
++
++/**
++ * @brief Open a sub-device.
++ * @param entity - sub-device media entity.
++ *
++ * Open the V4L2 subdev device node associated with @a entity. The file
++ * descriptor is stored in the media_entity structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_open(struct media_entity *entity);
++
++/**
++ * @brief Close a sub-device.
++ * @param entity - sub-device media entity.
++ *
++ * Close the V4L2 subdev device node associated with the @a entity and opened by
++ * a previous call to v4l2_subdev_open() (either explicit or implicit).
++ */
++void v4l2_subdev_close(struct media_entity *entity);
++
++/**
++ * @brief Retrieve the format on a pad.
++ * @param entity - subdev-device media entity.
++ * @param format - format to be filled.
++ * @param pad - pad number.
++ * @param which - identifier of the format to get.
++ *
++ * Retrieve the current format on the @a entity @a pad and store it in the
++ * @a format structure.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to retrieve the try format stored
++ * in the file handle, of V4L2_SUBDEV_FORMAT_ACTIVE to retrieve the current
++ * active format.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Set the format on a pad.
++ * @param entity - subdev-device media entity.
++ * @param format - format.
++ * @param pad - pad number.
++ * @param which - identifier of the format to set.
++ *
++ * Set the format on the @a entity @a pad to @a format. The driver is allowed to
++ * modify the requested format, in which case @a format is updated with the
++ * modifications.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to set the try format stored in the
++ * file handle, of V4L2_SUBDEV_FORMAT_ACTIVE to configure the device with an
++ * active format.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_format(struct media_entity *entity,
++	struct v4l2_mbus_framefmt *format, unsigned int pad,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Retrieve a selection rectangle on a pad.
++ * @param entity - subdev-device media entity.
++ * @param r - rectangle to be filled.
++ * @param pad - pad number.
++ * @param target - selection target
++ * @param which - identifier of the format to get.
++ *
++ * Retrieve the @a target selection rectangle on the @a entity @a pad
++ * and store it in the @a rect structure.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to retrieve the try
++ * selection rectangle stored in the file handle, or
++ * V4L2_SUBDEV_FORMAT_ACTIVE to retrieve the current active selection
++ * rectangle.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Set a selection rectangle on a pad.
++ * @param entity - subdev-device media entity.
++ * @param rect - crop rectangle.
++ * @param pad - pad number.
++ * @param target - selection target
++ * @param which - identifier of the format to set.
++ *
++ * Set the @a target selection rectangle on the @a entity @a pad to @a
++ * rect. The driver is allowed to modify the requested rectangle, in
++ * which case @a rect is updated with the modifications.
++ *
++ * @a which is set to V4L2_SUBDEV_FORMAT_TRY to set the try crop rectangle
++ * stored in the file handle, of V4L2_SUBDEV_FORMAT_ACTIVE to configure the
++ * device with an active crop rectangle.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_selection(struct media_entity *entity,
++	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
++	enum v4l2_subdev_format_whence which);
++
++/**
++ * @brief Query the digital video capabilities of a pad.
++ * @param entity - subdev-device media entity.
++ * @param cap - capabilities to be filled.
++ *
++ * Retrieve the digital video capabilities of the @a entity pad specified by
++ * @a cap.pad and store it in the @a cap structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_dv_timings_caps(struct media_entity *entity,
++	struct v4l2_dv_timings_cap *caps);
++
++/**
++ * @brief Query the digital video timings of a sub-device
++ * @param entity - subdev-device media entity.
++ * @param timings timings to be filled.
++ *
++ * Retrieve the detected digital video timings for the currently selected input
++ * of @a entity and store them in the @a timings structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_query_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings);
++
++/**
++ * @brief Get the current digital video timings of a sub-device
++ * @param entity - subdev-device media entity.
++ * @param timings timings to be filled.
++ *
++ * Retrieve the current digital video timings for the currently selected input
++ * of @a entity and store them in the @a timings structure.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_get_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings);
++
++/**
++ * @brief Set the digital video timings of a sub-device
++ * @param entity - subdev-device media entity.
++ * @param timings timings to be set.
++ *
++ * Set the digital video timings of @a entity to @a timings. The driver is
++ * allowed to modify the requested format, in which case @a timings is updated
++ * with the modifications.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_dv_timings(struct media_entity *entity,
++	struct v4l2_dv_timings *timings);
++
++/**
++ * @brief Retrieve the frame interval on a sub-device.
++ * @param entity - subdev-device media entity.
++ * @param interval - frame interval to be filled.
++ *
++ * Retrieve the current frame interval on subdev @a entity and store it in the
++ * @a interval structure.
++ *
++ * Frame interval retrieving is usually supported only on devices at the
++ * beginning of video pipelines, such as sensors.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++
++int v4l2_subdev_get_frame_interval(struct media_entity *entity,
++	struct v4l2_fract *interval);
++
++/**
++ * @brief Set the frame interval on a sub-device.
++ * @param entity - subdev-device media entity.
++ * @param interval - frame interval.
++ *
++ * Set the frame interval on subdev @a entity to @a interval. The driver is
++ * allowed to modify the requested frame interval, in which case @a interval is
++ * updated with the modifications.
++ *
++ * Frame interval setting is usually supported only on devices at the beginning
++ * of video pipelines, such as sensors.
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_set_frame_interval(struct media_entity *entity,
++	struct v4l2_fract *interval);
++
++/**
++ * @brief Parse a string and apply format, crop and frame interval settings.
++ * @param media - media device.
++ * @param p - input string
++ * @param endp - pointer to string p where parsing ended (return)
++ *
++ * Parse string @a p and apply format, crop and frame interval settings to a
++ * subdev pad specified in @a p. @a endp will be written a pointer where
++ * parsing of @a p ended.
++ *
++ * Format strings are separeted by commas (,).
++ *
++ * @return 0 on success, or a negative error code on failure.
++ */
++int v4l2_subdev_parse_setup_formats(struct media_device *media, const char *p);
++
++/**
++ * @brief Convert media bus pixel code to string.
++ * @param code - input string
++ *
++ * Convert media bus pixel code @a code to a human-readable string.
++ *
++ * @return A pointer to a string on success, NULL on failure.
++ */
++const char *v4l2_subdev_pixelcode_to_string(enum v4l2_mbus_pixelcode code);
++
++/**
++ * @brief Parse string to media bus pixel code.
++ * @param string - input string
++ * @param lenght - length of the string
++ *
++ * Parse human readable string @a string to an media bus pixel code.
++ *
++ * @return media bus pixelcode on success, -1 on failure.
++ */
++enum v4l2_mbus_pixelcode v4l2_subdev_string_to_pixelcode(const char *string,
++							 unsigned int length);
++#endif
+diff --git a/libweston/v4l2-compat.h b/libweston/v4l2-compat.h
+new file mode 100644
+index 0000000..6385877
+--- /dev/null
++++ b/libweston/v4l2-compat.h
+@@ -0,0 +1,68 @@
++/*
++ *  videodev2.h compatible header
++ *
++ *  Copyright (C) 1999-2007 the contributors
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  Alternatively you can redistribute this file under the terms of the
++ *  BSD license as stated below:
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions
++ *  are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *  3. The names of its contributors may not be used to endorse or promote
++ *     products derived from this software without specific prior written
++ *     permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
++ *  TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *  This file is based on <linux/videodev2.h>
++ */
++
++#ifndef __V4L2_COMPAT_H__
++#define __V4L2_COMPAT_H__
++
++#include <linux/videodev2.h>
++
++#ifndef V4L2_PIX_FMT_ABGR32
++#define V4L2_PIX_FMT_ABGR32  v4l2_fourcc('A', 'R', '2', '4') /* 32  BGRA-8-8-8-8  */
++#endif
++
++#ifndef V4L2_PIX_FMT_ARGB32
++#define V4L2_PIX_FMT_ARGB32  v4l2_fourcc('B', 'A', '2', '4') /* 32  ARGB-8-8-8-8  */
++#endif
++
++#ifndef V4L2_PIX_FMT_XRGB32
++#define V4L2_PIX_FMT_XRGB32  v4l2_fourcc('B', 'X', '2', '4') /* 32  XRGB-8-8-8-8  */
++#endif
++
++#ifndef V4L2_PIX_FMT_XBGR32
++#define V4L2_PIX_FMT_XBGR32  v4l2_fourcc('X', 'R', '2', '4') /* 32  BGRX-8-8-8-8  */
++#endif
++
++#endif /* !__V4L2_COMPAT_H__ */
+diff --git a/libweston/v4l2-renderer-device.h b/libweston/v4l2-renderer-device.h
+new file mode 100644
+index 0000000..f2fe7be
+--- /dev/null
++++ b/libweston/v4l2-renderer-device.h
+@@ -0,0 +1,118 @@
++/*
++ * Copyright © 2014 Renesas Electronics Corp.
++ *
++ * Permission to use, copy, modify, distribute, and sell this software and
++ * its documentation for any purpose is hereby granted without fee, provided
++ * that the above copyright notice appear in all copies and that both that
++ * copyright notice and this permission notice appear in supporting
++ * documentation, and that the name of the copyright holders not be used in
++ * advertising or publicity pertaining to distribution of the software
++ * without specific, written prior permission.  The copyright holders make
++ * no representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
++ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
++ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * Authors:
++ *	Takanari Hayama <taki@igel.co.jp>
++ */
++
++#include "config.h"
++
++#include "compositor.h"
++
++/*
++ * Enable gl-fallback feature.
++ */
++//#define V4L2_GL_FALLBACK
++
++struct v4l2_renderer_device {
++	struct media_device *media;
++	const char *device_name;
++};
++
++struct v4l2_renderer_output {
++	int width;
++	int height;
++};
++
++struct v4l2_renderer_plane {
++	int dmafd;
++	unsigned int stride;
++};
++
++#ifdef V4L2_GL_FALLBACK
++typedef enum {
++	V4L2_SURFACE_DEFAULT,
++	V4L2_SURFACE_GL_ATTACHED
++} v4l2_surface_t;
++
++struct v4l2_view {
++	struct weston_view *view;
++	struct v4l2_surface_state *state;
++};
++#endif
++
++struct v4l2_surface_state {
++	struct weston_surface *surface;
++	struct weston_buffer_reference buffer_ref;
++
++	struct v4l2_renderer *renderer;
++
++	struct kms_bo *bo;
++	void *addr;
++	int bpp;
++	int bo_stride;
++
++	int num_planes;
++	struct v4l2_renderer_plane planes[VIDEO_MAX_PLANES];
++
++	float alpha;
++	int width;
++	int height;
++	unsigned int pixel_format;
++
++	struct v4l2_rect src_rect;
++	struct v4l2_rect dst_rect;
++
++	struct v4l2_rect opaque_src_rect;
++	struct v4l2_rect opaque_dst_rect;
++
++	struct wl_listener buffer_destroy_listener;
++	struct wl_listener surface_destroy_listener;
++	struct wl_listener renderer_destroy_listener;
++
++#ifdef V4L2_GL_FALLBACK
++	void *gl_renderer_state;
++
++	v4l2_surface_t surface_type;
++
++	struct wl_listener surface_post_destroy_listener;
++	struct wl_listener renderer_post_destroy_listener;
++#endif
++};
++
++struct v4l2_device_interface {
++	struct v4l2_renderer_device *(*init)(struct media_device *media, struct weston_config *config);
++
++	struct v4l2_renderer_output *(*create_output)(struct v4l2_renderer_device *dev, int width, int height);
++	void (*set_output_buffer)(struct v4l2_renderer_output *out, struct v4l2_bo_state *bo);
++
++	struct v4l2_surface_state *(*create_surface)(struct v4l2_renderer_device *dev);
++	int (*attach_buffer)(struct v4l2_surface_state *vs);
++
++	void (*begin_compose)(struct v4l2_renderer_device *dev, struct v4l2_renderer_output *out);
++	void (*finish_compose)(struct v4l2_renderer_device *dev);
++	int (*draw_view)(struct v4l2_renderer_device *dev, struct v4l2_surface_state *vs);
++#ifdef V4L2_GL_FALLBACK
++	int (*can_compose)(struct v4l2_view *view_list, int count);
++#endif
++
++	uint32_t (*get_capabilities)(void);
++};
+diff --git a/libweston/v4l2-renderer.c b/libweston/v4l2-renderer.c
+new file mode 100644
+index 0000000..f020377
+--- /dev/null
++++ b/libweston/v4l2-renderer.c
+@@ -0,0 +1,1552 @@
++/*
++ * Copyright © 2014 Renesas Electronics Corp.
++ *
++ * Based on pixman-renderer by:
++ * Copyright © 2012 Intel Corporation
++ * Copyright © 2013 Vasily Khoruzhick <anarsoul@gmail.com>
++ *
++ * Permission to use, copy, modify, distribute, and sell this software and
++ * its documentation for any purpose is hereby granted without fee, provided
++ * that the above copyright notice appear in all copies and that both that
++ * copyright notice and this permission notice appear in supporting
++ * documentation, and that the name of the copyright holders not be used in
++ * advertising or publicity pertaining to distribution of the software
++ * without specific, written prior permission.  The copyright holders make
++ * no representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
++ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
++ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * Authors:
++ *	Takanari Hayama <taki@igel.co.jp>
++ */
++
++#include "config.h"
++
++#include <errno.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++
++#include <linux/videodev2.h>
++#include <linux/v4l2-subdev.h>
++#include "v4l2-renderer.h"
++#include "v4l2-renderer-device.h"
++
++#include <xf86drm.h>
++#include <libkms/libkms.h>
++
++#include <wayland-kms.h>
++#include <wayland-kms-server-protocol.h>
++
++#include "media-ctl/mediactl.h"
++#include "media-ctl/v4l2subdev.h"
++#include "media-ctl/tools.h"
++#include "shared/helpers.h"
++
++#ifdef V4L2_GL_FALLBACK
++#include <dlfcn.h>
++#include <gbm.h>
++#include <gbm_kmsint.h>
++#include "gl-renderer.h"
++#endif
++
++#include <linux/input.h>
++
++/* Required for a short term workaround */
++#include "v4l2-compat.h"
++
++#if 0
++#define DBG(...) weston_log(__VA_ARGS__)
++#define DBGC(...) weston_log_continue(__VA_ARGS__)
++#define DEBUG
++#else
++#define DBG(...) do {} while (0)
++#define DBGC(...) do {} while (0)
++#ifdef DEBUG
++#  undef DEBUG
++#endif
++#endif
++
++struct v4l2_output_state {
++	struct v4l2_renderer_output *output;
++	uint32_t stride;
++	void *map;
++	struct v4l2_bo_state *bo;
++	int bo_count;
++	int bo_index;
++#ifdef V4L2_GL_FALLBACK
++	void *gl_renderer_state;
++	struct gbm_surface *gbm_surface;
++#endif
++};
++
++struct v4l2_renderer {
++	struct weston_renderer base;
++
++	struct kms_driver *kms;
++	struct wl_kms *wl_kms;
++
++	struct media_device *media;
++	char *device_name;
++	int drm_fd;
++
++	struct v4l2_renderer_device *device;
++
++	int repaint_debug;
++	struct weston_binding *debug_binding;
++
++	struct wl_signal destroy_signal;
++
++#ifdef V4L2_GL_FALLBACK
++	int gl_fallback;
++	struct gbm_device *gbm;
++	struct weston_renderer *gl_renderer;
++#endif
++};
++
++static struct v4l2_device_interface *device_interface = NULL;
++static struct gl_renderer_interface *gl_renderer;
++
++static inline struct v4l2_output_state *
++get_output_state(struct weston_output *output)
++{
++	return (struct v4l2_output_state *)output->renderer_state;
++}
++
++static int
++v4l2_renderer_create_surface(struct weston_surface *surface);
++
++static inline struct v4l2_surface_state *
++get_surface_state(struct weston_surface *surface)
++{
++	if (!surface->renderer_state)
++		v4l2_renderer_create_surface(surface);
++
++	return (struct v4l2_surface_state *)surface->renderer_state;
++}
++
++static inline struct v4l2_renderer *
++get_renderer(struct weston_compositor *ec)
++{
++	return (struct v4l2_renderer *)ec->renderer;
++}
++
++#ifdef V4L2_GL_FALLBACK
++static struct gbm_device *
++v4l2_create_gbm_device(int fd)
++{
++	struct gbm_device *gbm;
++
++	gl_renderer = weston_load_module("gl-renderer.so",
++					 "gl_renderer_interface");
++	if (!gl_renderer)
++		return NULL;
++
++	/* GBM will load a dri driver, but even though they need symbols from
++	 * libglapi, in some version of Mesa they are not linked to it. Since
++	 * only the gl-renderer module links to it, the call above won't make
++	 * these symbols globally available, and loading the DRI driver fails.
++	 * Workaround this by dlopen()'ing libglapi with RTLD_GLOBAL. */
++	dlopen("libglapi.so.0", RTLD_LAZY | RTLD_GLOBAL);
++
++	gbm = gbm_create_device(fd);
++
++	return gbm;
++}
++
++static void
++v4l2_destroy_gbm_device(struct gbm_device *gbm)
++{
++	if (gbm)
++		gbm_device_destroy(gbm);
++}
++
++static int
++v4l2_create_gl_renderer(struct weston_compositor *ec, struct v4l2_renderer *renderer)
++{
++	EGLint format = GBM_FORMAT_XRGB8888;
++
++	if (gl_renderer->create(ec, renderer->gbm,
++				gl_renderer->opaque_attribs, &format) < 0) {
++		return -1;
++	}
++	renderer->gl_renderer = ec->renderer;
++
++	return 0;
++}
++
++static int
++v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer)
++{
++	EGLint format = GBM_FORMAT_XRGB8888;
++	struct v4l2_output_state *state = output->renderer_state;
++	int i;
++	pixman_format_code_t read_format;
++
++	state->gbm_surface = gbm_surface_create(renderer->gbm,
++						output->current_mode->width,
++						output->current_mode->height,
++						format,
++						GBM_BO_USE_SCANOUT |
++						GBM_BO_USE_RENDERING |
++						GBM_BO_CREATE_EMPTY);
++
++	if (!state->gbm_surface) {
++		weston_log("%s: failed to create gbm surface\n", __func__);
++		return -1;
++	}
++
++	for (i = 0; i < 2; i++) {
++		int n = i % state->bo_count;
++		gbm_kms_set_bo((struct gbm_kms_surface *)state->gbm_surface,
++			       n, state->bo[n].map, state->bo[n].stride);
++	}
++
++	output->compositor->renderer = renderer->gl_renderer;
++	output->renderer_state = NULL;
++	read_format = output->compositor->read_format;
++	if (gl_renderer->output_create(output, state->gbm_surface,
++				       gl_renderer->opaque_attribs, &format) < 0) {
++		weston_log("%s: failed to create gl renderer output state\n", __func__);
++		gbm_surface_destroy(state->gbm_surface);
++		return -1;
++	}
++	output->compositor->read_format = read_format;
++	state->gl_renderer_state = output->renderer_state;
++	output->renderer_state = state;
++	output->compositor->renderer = &renderer->base;
++
++	return 0;
++}
++
++static void
++v4l2_gl_flush_damage(struct weston_surface *surface)
++{
++	struct v4l2_surface_state *vs = get_surface_state(surface);
++	struct v4l2_renderer *renderer = vs->renderer;
++
++	surface->compositor->renderer = renderer->gl_renderer;
++	surface->renderer_state = vs->gl_renderer_state;
++
++	renderer->gl_renderer->flush_damage(surface);
++
++	vs->gl_renderer_state = surface->renderer_state;
++	surface->renderer_state = vs;
++	surface->compositor->renderer = &renderer->base;
++}
++
++static void
++v4l2_gl_surface_cleanup(struct v4l2_surface_state *vs)
++{
++	wl_list_remove(&vs->surface_post_destroy_listener.link);
++	wl_list_remove(&vs->renderer_post_destroy_listener.link);
++
++	vs->surface->compositor->renderer = &vs->renderer->base;
++	vs->surface->renderer_state = NULL;
++
++	free(vs);
++}
++
++static void
++v4l2_gl_surface_post_destroy(struct wl_listener *listener, void *data)
++{
++	struct v4l2_surface_state *vs;
++	vs = container_of(listener, struct v4l2_surface_state,
++			  surface_post_destroy_listener);
++	v4l2_gl_surface_cleanup(vs);
++}
++
++static void
++v4l2_gl_renderer_post_destroy(struct wl_listener *listener, void *data)
++{
++	struct v4l2_surface_state *vs;
++	vs = container_of(listener, struct v4l2_surface_state,
++			  renderer_post_destroy_listener);
++	v4l2_gl_surface_cleanup(vs);
++}
++
++static void
++v4l2_gl_attach(struct weston_surface *surface, struct weston_buffer *buffer)
++{
++	struct v4l2_surface_state *vs = get_surface_state(surface);
++	struct v4l2_renderer *renderer = vs->renderer;
++
++	surface->compositor->renderer = renderer->gl_renderer;
++	surface->renderer_state = vs->gl_renderer_state;
++
++	renderer->gl_renderer->attach(surface, buffer);
++
++	vs->gl_renderer_state = surface->renderer_state;
++	surface->renderer_state = vs;
++	surface->compositor->renderer = &renderer->base;
++
++	if (vs->surface_type != V4L2_SURFACE_GL_ATTACHED) {
++		vs->surface_post_destroy_listener.notify = v4l2_gl_surface_post_destroy;
++		wl_signal_add(&surface->destroy_signal, &vs->surface_post_destroy_listener);
++
++		vs->renderer_post_destroy_listener.notify = v4l2_gl_renderer_post_destroy;
++		wl_signal_add(&renderer->destroy_signal, &vs->renderer_post_destroy_listener);
++
++		vs->surface_type = V4L2_SURFACE_GL_ATTACHED;
++	}
++}
++
++struct stack {
++	int stack_size;
++	int element_size;
++	void *stack;
++};
++
++#define V4L2_STACK_INIT(size) { .stack_size = 0, .element_size = (size), .stack = NULL }
++
++static int
++v4l2_stack_realloc(struct stack *stack, int target_size)
++{
++	if (target_size > stack->stack_size)
++		target_size += 8;
++	else if (target_size < stack->stack_size / 2)
++		target_size = stack->stack_size / 2 + 1;
++	else
++		target_size = 0;
++
++	if (target_size) {
++		stack->stack = realloc(stack->stack, target_size * stack->element_size);
++
++		if (!stack->stack) {
++			weston_log("can't allocate memory for a stack. can't continue.\n");
++			return -1;
++		}
++
++		stack->stack_size = target_size;
++	}
++
++	return 0;
++}
++
++static void
++v4l2_gl_repaint(struct weston_output *output,
++		pixman_region32_t *output_damage)
++{
++	struct weston_compositor *ec = output->compositor;
++	struct v4l2_renderer *renderer = get_renderer(ec);
++	struct v4l2_output_state *state = output->renderer_state;;
++	struct weston_view *ev;
++	int view_count;
++	static struct stack stacker = V4L2_STACK_INIT(sizeof(void *));
++	void **stack;
++
++	if (v4l2_stack_realloc(&stacker, wl_list_length(&ec->view_list)) < 0)
++		return;
++	stack = (void**)stacker.stack;
++
++	view_count = 0;
++	wl_list_for_each(ev, &ec->view_list, link) {
++		struct v4l2_surface_state *vs = get_surface_state(ev->surface);
++		stack[view_count++] = ev->surface->renderer_state;
++		ev->surface->renderer_state = vs->gl_renderer_state;
++	}
++
++	ec->renderer = renderer->gl_renderer;
++	output->renderer_state = state->gl_renderer_state;
++	renderer->gl_renderer->repaint_output(output, output_damage);
++	ec->renderer = &renderer->base;
++	output->renderer_state = state;
++
++	view_count = 0;
++	wl_list_for_each(ev, &ec->view_list, link) {
++		ev->surface->renderer_state = stack[view_count++];
++	}
++}
++#endif
++
++static int
++v4l2_renderer_read_pixels(struct weston_output *output,
++			 pixman_format_code_t format, void *pixels,
++			 uint32_t x, uint32_t y,
++			 uint32_t width, uint32_t height)
++{
++	struct v4l2_output_state *vo = get_output_state(output);
++	struct v4l2_bo_state *bo = &vo->bo[vo->bo_index];
++	uint32_t v, len = width * 4;
++	void *src, *dst;
++
++	switch(format) {
++	case PIXMAN_a8r8g8b8:
++		break;
++	default:
++		return -1;
++	}
++
++#ifdef V4L2_GL_FALLBACK
++	if (output->compositor->capabilities & WESTON_CAP_CAPTURE_YFLIP) {
++		src = bo->map + x * 4 + y * bo->stride;
++		dst = pixels + len * (height - 1);
++		for (v = y; v < height; v++) {
++			memcpy(dst, src, len);
++			src += bo->stride;
++			dst -= len;
++		}
++		return 0;
++	}
++#endif
++
++	if (x == 0 && y == 0 &&
++	    width == (uint32_t)output->current_mode->width &&
++	    height == (uint32_t)output->current_mode->height &&
++	    bo->stride == len) {
++		DBG("%s: copy entire buffer at once\n", __func__);
++		// TODO: we may want to optimize this using underlying
++		// V4L2 MC hardware if possible.
++		memcpy(pixels, bo->map, bo->stride * height);
++		return 0;
++	}
++
++	src = bo->map + x * 4 + y * bo->stride;
++	dst = pixels;
++	for (v = y; v < height; v++) {
++		memcpy(dst, src, len);
++		src += bo->stride;
++		dst += len;
++	}
++
++	return 0;
++}
++
++static void
++region_global_to_output(struct weston_output *output, pixman_region32_t *region)
++{
++	pixman_region32_translate(region, -output->x, -output->y);
++	weston_transformed_region(output->width, output->height,
++				  output->transform, output->current_scale,
++				  region, region);
++}
++
++#define D2F(v) pixman_double_to_fixed((double)v)
++#define F2D(v) pixman_fixed_to_double(v)
++#define F2I(v) pixman_fixed_to_int(v)
++
++
++static void
++transform_apply_viewport(pixman_transform_t *transform,
++			 struct weston_surface *surface)
++{
++	struct weston_buffer_viewport *vp = &surface->buffer_viewport;
++	double src_width, src_height;
++	double src_x, src_y;
++
++	if (vp->buffer.src_width == wl_fixed_from_int(-1)) {
++		if (vp->surface.width == -1)
++			return;
++
++		src_x = 0.0;
++		src_y = 0.0;
++		src_width = surface->width_from_buffer;
++		src_height = surface->height_from_buffer;
++	} else {
++		src_x = wl_fixed_to_double(vp->buffer.src_x);
++		src_y = wl_fixed_to_double(vp->buffer.src_y);
++		src_width = wl_fixed_to_double(vp->buffer.src_width);
++		src_height = wl_fixed_to_double(vp->buffer.src_height);
++	}
++
++	pixman_transform_scale(transform, NULL,
++			       D2F(src_width / surface->width),
++			       D2F(src_height / surface->height));
++	pixman_transform_translate(transform, NULL, D2F(src_x), D2F(src_y));
++}
++
++static void
++transform_region(pixman_transform_t *transform, pixman_region32_t *src_region,
++		 pixman_region32_t *dst_region)
++{
++	pixman_box32_t *bbox;
++	pixman_vector_t q1, q2;
++
++	pixman_region32_init(dst_region);
++	if (!pixman_region32_not_empty(src_region))
++		return;
++
++	bbox = pixman_region32_extents(src_region);
++	q1.vector[0] = pixman_int_to_fixed(bbox->x1);
++	q1.vector[1] = pixman_int_to_fixed(bbox->y1);
++	q1.vector[2] = pixman_int_to_fixed(1);
++
++	q2.vector[0] = pixman_int_to_fixed(bbox->x2);
++	q2.vector[1] = pixman_int_to_fixed(bbox->y2);
++	q2.vector[2] = pixman_int_to_fixed(1);
++
++	DBG("bbox: (%d,%d)-(%d,%d)\n", bbox->x1, bbox->y1, bbox->x2, bbox->y2);
++	DBG("q1: (%f,%f,%f)\n", F2D(q1.vector[0]), F2D(q1.vector[1]), F2D(q1.vector[2]));
++	DBG("q2: (%f,%f,%f)\n", F2D(q2.vector[0]), F2D(q2.vector[1]), F2D(q2.vector[2]));
++
++	DBG("transform: (%f,%f,%f)(%f,%f,%f)(%f,%f,%f)\n",
++	    F2D(transform->matrix[0][0]), F2D(transform->matrix[1][0]), F2D(transform->matrix[2][0]),
++	    F2D(transform->matrix[0][1]), F2D(transform->matrix[1][1]), F2D(transform->matrix[2][1]),
++	    F2D(transform->matrix[0][2]), F2D(transform->matrix[1][2]), F2D(transform->matrix[2][2])
++	);
++
++	pixman_transform_point(transform, &q1);
++	pixman_transform_point(transform, &q2);
++
++	DBG("q1': (%f,%f,%f)\n", F2D(q1.vector[0]), F2D(q1.vector[1]), F2D(q1.vector[2]));
++	DBG("q2': (%f,%f,%f)\n", F2D(q2.vector[0]), F2D(q2.vector[1]), F2D(q2.vector[2]));
++
++	pixman_region32_init_rect(dst_region,
++				  F2I((q1.vector[0] < q2.vector[0]) ? q1.vector[0] : q2.vector[0]),
++				  F2I((q1.vector[1] < q2.vector[1]) ? q1.vector[1] : q2.vector[1]),
++				  abs(F2I(pixman_fixed_ceil(q2.vector[0] - q1.vector[0]))),
++				  abs(F2I(pixman_fixed_ceil(q2.vector[1] - q1.vector[1]))));
++}
++
++static void
++calculate_transform_matrix(struct weston_view *ev, struct weston_output *output,
++			   pixman_transform_t *transform)
++{
++	struct weston_buffer_viewport *vp = &ev->surface->buffer_viewport;
++	pixman_fixed_t fw, fh;
++
++	/* Set up the source transformation based on the surface
++	   position, the output position/transform/scale and the client
++	   specified buffer transform/scale */
++	pixman_transform_init_identity(transform);
++	pixman_transform_scale(transform, NULL,
++			       pixman_double_to_fixed((double)1.0 / output->current_scale),
++			       pixman_double_to_fixed((double)1.0 / output->current_scale));
++
++	fw = pixman_int_to_fixed(output->width);
++	fh = pixman_int_to_fixed(output->height);
++	switch (output->transform) {
++	default:
++	case WL_OUTPUT_TRANSFORM_NORMAL:
++	case WL_OUTPUT_TRANSFORM_FLIPPED:
++		break;
++	case WL_OUTPUT_TRANSFORM_90:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_90:
++		pixman_transform_rotate(transform, NULL, 0, -pixman_fixed_1);
++		pixman_transform_translate(transform, NULL, 0, fh);
++		break;
++	case WL_OUTPUT_TRANSFORM_180:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_180:
++		pixman_transform_rotate(transform, NULL, -pixman_fixed_1, 0);
++		pixman_transform_translate(transform, NULL, fw, fh);
++		break;
++	case WL_OUTPUT_TRANSFORM_270:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_270:
++		pixman_transform_rotate(transform, NULL, 0, pixman_fixed_1);
++		pixman_transform_translate(transform, NULL, fw, 0);
++		break;
++	}
++
++	switch (output->transform) {
++	case WL_OUTPUT_TRANSFORM_FLIPPED:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_90:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_180:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_270:
++		pixman_transform_scale(transform, NULL,
++				       pixman_int_to_fixed(-1),
++				       pixman_int_to_fixed(1));
++		pixman_transform_translate(transform, NULL, fw, 0);
++		break;
++	}
++
++        pixman_transform_translate(transform, NULL,
++				   pixman_double_to_fixed(output->x),
++				   pixman_double_to_fixed(output->y));
++
++	if (ev->transform.enabled) {
++		/* Pixman supports only 2D transform matrix, but Weston uses 3D,
++		 * so we're omitting Z coordinate here
++		 */
++		pixman_transform_t surface_transform = {{
++				{ D2F(ev->transform.matrix.d[0]),
++				  D2F(ev->transform.matrix.d[4]),
++				  D2F(ev->transform.matrix.d[12]),
++				},
++				{ D2F(ev->transform.matrix.d[1]),
++				  D2F(ev->transform.matrix.d[5]),
++				  D2F(ev->transform.matrix.d[13]),
++				},
++				{ D2F(ev->transform.matrix.d[3]),
++				  D2F(ev->transform.matrix.d[7]),
++				  D2F(ev->transform.matrix.d[15]),
++				}
++			}};
++
++		pixman_transform_invert(&surface_transform, &surface_transform);
++		pixman_transform_multiply(transform, &surface_transform, transform);
++	} else {
++		pixman_transform_translate(transform, NULL,
++					   pixman_double_to_fixed((double)-ev->geometry.x),
++					   pixman_double_to_fixed((double)-ev->geometry.y));
++	}
++
++	transform_apply_viewport(transform, ev->surface);
++
++	fw = pixman_int_to_fixed(ev->surface->width_from_buffer);
++	fh = pixman_int_to_fixed(ev->surface->height_from_buffer);
++
++	switch (vp->buffer.transform) {
++	case WL_OUTPUT_TRANSFORM_FLIPPED:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_90:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_180:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_270:
++		pixman_transform_scale(transform, NULL,
++				       pixman_int_to_fixed(-1),
++				       pixman_int_to_fixed(1));
++		pixman_transform_translate(transform, NULL, fw, 0);
++		break;
++	}
++
++	switch (vp->buffer.transform) {
++	default:
++	case WL_OUTPUT_TRANSFORM_NORMAL:
++	case WL_OUTPUT_TRANSFORM_FLIPPED:
++		break;
++	case WL_OUTPUT_TRANSFORM_90:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_90:
++		pixman_transform_rotate(transform, NULL, 0, pixman_fixed_1);
++		pixman_transform_translate(transform, NULL, fh, 0);
++		break;
++	case WL_OUTPUT_TRANSFORM_180:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_180:
++		pixman_transform_rotate(transform, NULL, -pixman_fixed_1, 0);
++		pixman_transform_translate(transform, NULL, fw, fh);
++		break;
++	case WL_OUTPUT_TRANSFORM_270:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_270:
++		pixman_transform_rotate(transform, NULL, 0, -pixman_fixed_1);
++		pixman_transform_translate(transform, NULL, 0, fw);
++		break;
++	}
++
++	pixman_transform_scale(transform, NULL,
++			       pixman_double_to_fixed(vp->buffer.scale),
++			       pixman_double_to_fixed(vp->buffer.scale));
++
++}
++
++static void
++set_v4l2_rect(pixman_region32_t *region, struct v4l2_rect *rect)
++{
++	pixman_box32_t *bbox;
++
++	bbox = pixman_region32_extents(region);
++	rect->left   = bbox->x1;
++	rect->top    = bbox->y1;
++	rect->width  = bbox->x2 - bbox->x1;
++	rect->height = bbox->y2 - bbox->y1;
++}
++
++static void
++draw_view(struct weston_view *ev, struct weston_output *output)
++{
++	struct v4l2_renderer *renderer = (struct v4l2_renderer*)output->compositor->renderer;
++	struct v4l2_surface_state *vs = get_surface_state(ev->surface);
++	pixman_region32_t dst_region, src_region;
++	pixman_region32_t region, opaque_src_region, opaque_dst_region;
++	pixman_transform_t transform;
++
++	/* a surface in the repaint area? */
++	pixman_region32_init(&region);
++	pixman_region32_intersect(&region,
++				  &ev->transform.boundingbox,
++				  &output->region);
++	pixman_region32_subtract(&region, &region, &ev->clip);
++	if (!pixman_region32_not_empty(&region)) {
++		DBG("%s: skipping a view: not visible: view=(%d,%d)-(%d,%d), repaint=(%d,%d)-(%d,%d)\n",
++		    __func__,
++		    ev->transform.boundingbox.extents.x1, ev->transform.boundingbox.extents.y1,
++		    ev->transform.boundingbox.extents.x2, ev->transform.boundingbox.extents.y2,
++		    output->region.extents.x1, output->region.extents.y1,
++		    output->region.extents.x2, output->region.extents.y2);
++		goto out;
++	}
++
++	/* you may sometime get not-yet-attached views */
++	if (vs->planes[0].dmafd == 0)
++		goto out;
++
++	/*
++	 * Check if the surface is still valid. OpenGL/ES apps may destroy
++	 * buffers before they destroy a surface. This check works in the
++	 * serialized world only.
++	 */
++	if (fcntl(vs->planes[0].dmafd, F_GETFD) < 0)
++		goto out;
++
++	if (output->zoom.active) {
++		weston_log("v4l2 renderer does not support zoom\n");
++		goto out;
++	}
++
++	/* we have to compute a transform matrix */
++	calculate_transform_matrix(ev, output, &transform);
++
++	pixman_region32_init(&opaque_src_region);
++	pixman_region32_init(&opaque_dst_region);
++
++	if (pixman_region32_not_empty(&ev->surface->opaque)) {
++		pixman_region32_t output_region;
++		pixman_transform_t inverse;
++
++		pixman_transform_invert(&inverse, &transform);
++		transform_region(&inverse, &ev->surface->opaque, &opaque_dst_region);
++
++		pixman_region32_init_rect(&output_region, 0, 0, output->width, output->height);
++
++		pixman_region32_intersect(&opaque_dst_region, &opaque_dst_region, &output_region);
++		transform_region(&transform, &opaque_dst_region, &opaque_src_region);
++	}
++
++	/* find out the final destination in the output coordinate */
++	pixman_region32_init(&dst_region);
++	pixman_region32_copy(&dst_region, &region);
++	region_global_to_output(output, &dst_region);
++
++	transform_region(&transform, &dst_region, &src_region);
++	set_v4l2_rect(&dst_region, &vs->dst_rect);
++	set_v4l2_rect(&src_region, &vs->src_rect);
++
++	/* setup opaque region */
++	set_v4l2_rect(&opaque_dst_region, &vs->opaque_dst_rect);
++	set_v4l2_rect(&opaque_src_region, &vs->opaque_src_rect);
++
++	vs->alpha = ev->alpha;
++
++	DBG("monitor: %dx%d@(%d,%d)\n", output->width, output->height, output->x, output->y);
++	DBG("composing from %dx%d@(%d,%d) to %dx%d@(%d,%d)\n",
++	    vs->src_rect.width, vs->src_rect.height, vs->src_rect.left, vs->src_rect.top,
++	    vs->dst_rect.width, vs->dst_rect.height, vs->dst_rect.left, vs->dst_rect.top);
++	DBG("composing from %dx%d@(%d,%d) to %dx%d@(%d,%d) [opaque region]\n",
++	    vs->opaque_src_rect.width, vs->opaque_src_rect.height, vs->opaque_src_rect.left, vs->opaque_src_rect.top,
++	    vs->opaque_dst_rect.width, vs->opaque_dst_rect.height, vs->opaque_dst_rect.left, vs->opaque_dst_rect.top);
++
++	device_interface->draw_view(renderer->device, vs);
++
++	pixman_region32_fini(&dst_region);
++	pixman_region32_fini(&src_region);
++	pixman_region32_fini(&opaque_src_region);
++	pixman_region32_fini(&opaque_dst_region);
++out:
++	pixman_region32_fini(&region);
++}
++
++static void
++repaint_surfaces(struct weston_output *output, pixman_region32_t *damage)
++{
++	struct weston_compositor *compositor = output->compositor;
++	struct v4l2_output_state *vo = get_output_state(output);
++	struct v4l2_renderer *renderer = (struct v4l2_renderer*)compositor->renderer;
++	struct weston_view *view;
++
++	device_interface->begin_compose(renderer->device, vo->output);
++
++	wl_list_for_each_reverse(view, &compositor->view_list, link) {
++		if (view->plane == &compositor->primary_plane)
++			draw_view(view, output);
++	}
++
++	device_interface->finish_compose(renderer->device);
++}
++
++#ifdef V4L2_GL_FALLBACK
++static int
++can_repaint(struct weston_compositor *c, pixman_region32_t *output_region)
++{
++	struct weston_view *ev;
++	pixman_region32_t region;
++	int need_repaint, view_count;
++	static struct stack stacker = V4L2_STACK_INIT(sizeof(struct v4l2_view));
++	struct v4l2_view *view_list;
++
++	DBG("%s: checking...\n", __func__);
++
++	/* we don't bother checking, if can_compose is not defined */
++	if (!device_interface->can_compose)
++		return 1;
++
++	/* if stack realloc fails, there's not many things we can do... */
++	if (v4l2_stack_realloc(&stacker, wl_list_length(&c->view_list)) < 0)
++		return 1;
++	view_list = (struct v4l2_view *)stacker.stack;
++
++	view_count = 0;
++	wl_list_for_each(ev, &c->view_list, link) {
++		/* in the primary plane? */
++		if (ev->plane != &c->primary_plane)
++			continue;
++
++		/* a surface in the repaint area? */
++		pixman_region32_init(&region);
++		pixman_region32_intersect(&region,
++					  &ev->transform.boundingbox,
++					  output_region);
++		pixman_region32_subtract(&region, &region, &ev->clip);
++		need_repaint = pixman_region32_not_empty(&region);
++		pixman_region32_fini(&region);
++
++		if (need_repaint) {
++			struct v4l2_surface_state *vs = get_surface_state(ev->surface);
++			view_list[view_count].view = ev;
++			view_list[view_count].state = vs;
++			view_count++;
++		}
++	}
++
++	return device_interface->can_compose(view_list, view_count);
++}
++#endif
++
++static void
++v4l2_renderer_repaint_output(struct weston_output *output,
++			    pixman_region32_t *output_damage)
++{
++#ifdef V4L2_GL_FALLBACK
++	struct v4l2_output_state *vo = get_output_state(output);
++	struct weston_compositor *compositor = output->compositor;
++	struct v4l2_renderer *renderer = (struct v4l2_renderer*)compositor->renderer;
++#endif
++	DBG("%s\n", __func__);
++
++#ifdef V4L2_GL_FALLBACK
++	if ((!renderer->gl_fallback) || (can_repaint(output->compositor, &output->region))) {
++#endif
++		// render all views
++		repaint_surfaces(output, output_damage);
++
++		// remember the damaged area
++		pixman_region32_copy(&output->previous_damage, output_damage);
++
++		// emits signal
++		wl_signal_emit(&output->frame_signal, output);
++#ifdef V4L2_GL_FALLBACK
++	} else {
++		gbm_kms_set_front((struct gbm_kms_surface *)vo->gbm_surface, (!vo->bo_index));
++
++		v4l2_gl_repaint(output, output_damage);
++	}
++#endif
++
++	/* Actual flip should be done by caller */
++}
++
++static inline void
++v4l2_renderer_copy_buffer(struct v4l2_surface_state *vs, struct weston_buffer *buffer)
++{
++	void *src, *dst;
++	int y, stride, bo_stride;
++
++	src = wl_shm_buffer_get_data(buffer->shm_buffer);
++	dst = vs->addr;
++
++	stride = vs->planes[0].stride;
++	bo_stride = vs->bo_stride;
++
++	wl_shm_buffer_begin_access(buffer->shm_buffer);
++	for (y = 0; y < buffer->height; y++) {
++		memcpy(dst, src, buffer->width * vs->bpp);
++		dst += bo_stride;
++		src += stride;
++	}
++	wl_shm_buffer_end_access(buffer->shm_buffer);
++
++}
++
++static void
++v4l2_renderer_flush_damage(struct weston_surface *surface)
++{
++	struct v4l2_surface_state *vs = get_surface_state(surface);
++	struct weston_buffer *buffer = vs->buffer_ref.buffer;
++
++	DBG("%s: flushing damage..\n", __func__);
++
++	v4l2_renderer_copy_buffer(vs, buffer);
++
++	/*
++	 * TODO: We may consider use of surface->damage to
++	 * optimize updates.
++	 */
++
++#ifdef V4L2_GL_FALLBACK
++	if (vs->renderer->gl_fallback)
++		v4l2_gl_flush_damage(surface);
++#endif
++}
++
++static void
++v4l2_release_kms_bo(struct v4l2_surface_state *vs)
++{
++	int i;
++
++	if (!vs)
++		return;
++
++	if (vs->bo) {
++		for (i = 0; i < vs->num_planes; i++) {
++			if (vs->planes[i].dmafd >= 0) {
++				close(vs->planes[i].dmafd);
++				vs->planes[i].dmafd = -1;
++			}
++		}
++
++		if (kms_bo_unmap(vs->bo))
++			weston_log("kms_bo_unmap failed.\n");
++
++		kms_bo_destroy(&vs->bo);
++		vs->addr = NULL;
++	}
++}
++
++static void
++buffer_state_handle_buffer_destroy(struct wl_listener *listener, void *data)
++{
++	struct v4l2_surface_state *vs;
++
++	vs = container_of(listener, struct v4l2_surface_state,
++			  buffer_destroy_listener);
++
++	v4l2_release_kms_bo(vs);
++
++	vs->buffer_destroy_listener.notify = NULL;
++}
++
++static int
++v4l2_renderer_attach_shm(struct v4l2_surface_state *vs, struct weston_buffer *buffer,
++			 struct wl_shm_buffer *shm_buffer)
++{
++	unsigned int pixel_format;
++	int bpp;
++	int fd = vs->renderer->drm_fd;
++	unsigned attr[] = {
++		KMS_BO_TYPE, KMS_BO_TYPE_SCANOUT_X8R8G8B8,
++		KMS_WIDTH, 0,
++		KMS_HEIGHT, 0,
++		KMS_TERMINATE_PROP_LIST
++	};
++	unsigned handle, stride, bo_stride;
++
++	switch (wl_shm_buffer_get_format(shm_buffer)) {
++	case WL_SHM_FORMAT_XRGB8888:
++		pixel_format = V4L2_PIX_FMT_XBGR32;
++		bpp = 4;
++		break;
++
++	case WL_SHM_FORMAT_ARGB8888:
++		pixel_format = V4L2_PIX_FMT_ABGR32;
++		bpp = 4;
++		break;
++
++	case WL_SHM_FORMAT_RGB565:
++		pixel_format = V4L2_PIX_FMT_RGB565;
++		bpp = 2;
++		break;
++
++	case WL_SHM_FORMAT_YUYV:
++		pixel_format = V4L2_PIX_FMT_YUYV;
++		bpp = 2;
++		break;
++
++	default:
++		weston_log("Unsupported SHM buffer format\n");
++		return -1;
++	}
++
++	buffer->shm_buffer = shm_buffer;
++	buffer->width = wl_shm_buffer_get_width(shm_buffer);
++	buffer->height = wl_shm_buffer_get_height(shm_buffer);
++	stride = wl_shm_buffer_get_stride(shm_buffer);
++
++	if (vs->width == buffer->width &&
++	    vs->height == buffer->height &&
++	    vs->planes[0].stride == stride && vs->bpp == bpp) {
++	    // no need to recreate buffer
++	    return 0;
++	}
++
++	// release if there's allocated buffer
++	v4l2_release_kms_bo(vs);
++
++	// create a reference to the shm_buffer.
++	vs->width = buffer->width;
++	vs->height = buffer->height;
++	vs->pixel_format = pixel_format;
++	vs->num_planes = 1;
++	vs->planes[0].stride = stride;
++	vs->planes[0].dmafd = -1;
++	vs->bpp = bpp;
++
++	if (device_interface->attach_buffer(vs) == -1)
++		return -1;
++
++	// create gbm_bo
++	attr[3] = (buffer->width + 1) * bpp / 4;
++	attr[5] = buffer->height;
++
++	if (kms_bo_create(vs->renderer->kms, attr, &vs->bo)) {
++		weston_log("kms_bo_create failed.\n");
++		goto error;
++	}
++
++	if (kms_bo_map(vs->bo, &vs->addr)) {
++		weston_log("kms_bo_map failed.\n");
++		goto error;
++	}
++
++	if (kms_bo_get_prop(vs->bo, KMS_PITCH, &bo_stride)) {
++		weston_log("kms_bo_get_prop failed.\n");
++		goto error;
++	}
++	vs->bo_stride = stride;
++
++	if (kms_bo_get_prop(vs->bo, KMS_HANDLE, &handle)) {
++		weston_log("kms_bo_get_prop failed.\n");
++		goto error;
++	}
++	drmPrimeHandleToFD(fd, handle, DRM_CLOEXEC, &vs->planes[0].dmafd);
++
++	v4l2_renderer_copy_buffer(vs, buffer);
++
++	DBG("%s: %dx%d buffer attached (dmafd=%d).\n", __func__, buffer->width, buffer->height, vs->planes[0].dmafd);
++
++	return 0;
++
++error:
++	v4l2_release_kms_bo(vs);
++	return -1;
++}
++
++static int
++v4l2_renderer_attach_dmabuf(struct v4l2_surface_state *vs, struct weston_buffer *buffer)
++{
++	unsigned int pixel_format;
++	struct wl_kms_buffer *kbuf;
++	int bpp, i;
++
++	buffer->legacy_buffer = (struct wl_buffer *)buffer->resource;
++
++	kbuf = wayland_kms_buffer_get(buffer->resource);
++
++	switch (kbuf->format) {
++	case WL_KMS_FORMAT_XRGB8888:
++		pixel_format = V4L2_PIX_FMT_XBGR32;
++		bpp = 4;
++		break;
++
++	case WL_KMS_FORMAT_ARGB8888:
++		pixel_format = V4L2_PIX_FMT_ABGR32;
++		bpp = 4;
++		break;
++
++	case WL_KMS_FORMAT_XBGR8888:
++		pixel_format = V4L2_PIX_FMT_XRGB32;
++		bpp = 4;
++		break;
++
++	case WL_KMS_FORMAT_ABGR8888:
++		pixel_format = V4L2_PIX_FMT_ARGB32;
++		bpp = 4;
++		break;
++
++	case WL_KMS_FORMAT_RGB888:
++		pixel_format = V4L2_PIX_FMT_RGB24;
++		bpp = 3;
++		break;
++
++	case WL_KMS_FORMAT_BGR888:
++		pixel_format = V4L2_PIX_FMT_BGR24;
++		bpp = 3;
++		break;
++
++	case WL_KMS_FORMAT_RGB565:
++		pixel_format = V4L2_PIX_FMT_RGB565;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_RGB332:
++		pixel_format = V4L2_PIX_FMT_RGB332;
++		bpp = 1;
++		break;
++
++	case WL_KMS_FORMAT_YUYV:
++		pixel_format = V4L2_PIX_FMT_YUYV;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_YVYU:
++		pixel_format = V4L2_PIX_FMT_YVYU;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_UYVY:
++		pixel_format = V4L2_PIX_FMT_UYVY;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_NV12:
++		pixel_format = V4L2_PIX_FMT_NV12M;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_NV16:
++		pixel_format = V4L2_PIX_FMT_NV16M;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_NV21:
++		pixel_format = V4L2_PIX_FMT_NV21M;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_NV61:
++		pixel_format = V4L2_PIX_FMT_NV61M;
++		bpp = 2;
++		break;
++
++	case WL_KMS_FORMAT_YUV420:
++		pixel_format = V4L2_PIX_FMT_YUV420M;
++		bpp = 2;
++		break;
++
++	default:
++		weston_log("Unsupported DMABUF buffer format\n");
++		return -1;
++	}
++
++	vs->width = buffer->width = kbuf->width;
++	vs->height = buffer->height = kbuf->height;
++	vs->pixel_format = pixel_format;
++	vs->bpp = bpp;
++	vs->num_planes = kbuf->num_planes;
++	for (i = 0; i < kbuf->num_planes; i++) {
++		vs->planes[i].stride = kbuf->planes[i].stride;
++		vs->planes[i].dmafd = kbuf->planes[i].fd;
++	}
++
++	if (device_interface->attach_buffer(vs) == -1)
++		return -1;
++
++	DBG("%s: %dx%d buffer attached (dmabuf=%d, stride=%d).\n", __func__, kbuf->width, kbuf->height, kbuf->fd, kbuf->stride);
++
++	return 0;
++}
++
++static void
++v4l2_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
++{
++	struct v4l2_surface_state *vs = get_surface_state(es);
++	struct wl_shm_buffer *shm_buffer;
++	int ret;
++
++	// refer the given weston_buffer. if there's an existing reference,
++	// release it first if not the same. if the buffer is the new one,
++	// increment the refrence counter. all done in weston_buffer_reference().
++	weston_buffer_reference(&vs->buffer_ref, buffer);
++
++	// clear the destroy listener if set.
++	if (vs->buffer_destroy_listener.notify) {
++		wl_list_remove(&vs->buffer_destroy_listener.link);
++		vs->buffer_destroy_listener.notify = NULL;
++	}
++
++	if (buffer) {
++		// for shm_buffer.
++		shm_buffer = wl_shm_buffer_get(buffer->resource);
++
++		if (shm_buffer) {
++			ret = v4l2_renderer_attach_shm(vs, buffer, shm_buffer);
++		} else {
++			ret = v4l2_renderer_attach_dmabuf(vs, buffer);
++		}
++
++		if (ret == -1) {
++			weston_buffer_reference(&vs->buffer_ref, NULL);
++			return;
++		}
++
++		// listen to the buffer destroy event.
++		vs->buffer_destroy_listener.notify =
++			buffer_state_handle_buffer_destroy;
++		wl_signal_add(&buffer->destroy_signal,
++			      &vs->buffer_destroy_listener);
++	}
++
++#ifdef V4L2_GL_FALLBACK
++	if (vs->renderer->gl_fallback)
++		v4l2_gl_attach(es, buffer);
++#endif
++}
++
++static void
++v4l2_renderer_surface_state_destroy(struct v4l2_surface_state *vs)
++{
++	wl_list_remove(&vs->surface_destroy_listener.link);
++	wl_list_remove(&vs->renderer_destroy_listener.link);
++	if (vs->buffer_destroy_listener.notify) {
++		wl_list_remove(&vs->buffer_destroy_listener.link);
++		vs->buffer_destroy_listener.notify = NULL;
++	}
++
++	// TODO: Release any resources associated to the surface here.
++
++	weston_buffer_reference(&vs->buffer_ref, NULL);
++#ifdef V4L2_GL_FALLBACK
++	if (vs->surface_type == V4L2_SURFACE_GL_ATTACHED) {
++		vs->surface->compositor->renderer = vs->renderer->gl_renderer;
++		vs->surface->renderer_state = vs->gl_renderer_state;
++	} else {
++#endif
++		vs->surface->renderer_state = NULL;
++		free(vs);
++#ifdef V4L2_GL_FALLBACK
++	}
++#endif
++}
++
++static void
++surface_state_handle_surface_destroy(struct wl_listener *listener, void *data)
++{
++	struct v4l2_surface_state *vs;
++
++	vs = container_of(listener, struct v4l2_surface_state,
++				     surface_destroy_listener);
++
++	v4l2_renderer_surface_state_destroy(vs);
++}
++
++static void
++surface_state_handle_renderer_destroy(struct wl_listener *listener, void *data)
++{
++	struct v4l2_surface_state *vs;
++
++	vs = container_of(listener, struct v4l2_surface_state,
++				     renderer_destroy_listener);
++
++	v4l2_renderer_surface_state_destroy(vs);
++}
++
++static int
++v4l2_renderer_create_surface(struct weston_surface *surface)
++{
++	struct v4l2_surface_state *vs;
++	struct v4l2_renderer *vr = get_renderer(surface->compositor);
++
++	vs = device_interface->create_surface(vr->device);
++	if (!vs)
++		return -1;
++
++	surface->renderer_state = vs;
++
++	vs->surface = surface;
++	vs->renderer = vr;
++
++	vs->surface_destroy_listener.notify =
++		surface_state_handle_surface_destroy;
++	wl_signal_add(&surface->destroy_signal,
++		      &vs->surface_destroy_listener);
++
++	vs->renderer_destroy_listener.notify =
++		surface_state_handle_renderer_destroy;
++	wl_signal_add(&vr->destroy_signal,
++		      &vs->renderer_destroy_listener);
++
++#ifdef V4L2_GL_FALLBACK
++	vs->surface_type = V4L2_SURFACE_DEFAULT;
++#endif
++	return 0;
++}
++
++static void
++v4l2_renderer_surface_set_color(struct weston_surface *es,
++				float red, float green, float blue, float alpha)
++{
++	DBG("%s\n", __func__);
++
++	// struct v4l2_surface_state *vs = get_surface_state(es);
++
++	// TODO: set solid color to the surface
++}
++
++static void
++v4l2_renderer_destroy(struct weston_compositor *ec)
++{
++	struct v4l2_renderer *vr = get_renderer(ec);
++
++	DBG("%s\n", __func__);
++
++	wl_signal_emit(&vr->destroy_signal, vr);
++	weston_binding_destroy(vr->debug_binding);
++	free(vr);
++
++	// TODO: release gl-renderer here.
++
++	ec->renderer = NULL;
++}
++
++static void
++debug_media_ctl(void *ignore, char *fmt, ...)
++{
++	char buffer[256];
++	va_list ap;
++
++	va_start(ap, fmt);
++	vsnprintf(buffer, sizeof(buffer), fmt, ap);
++	va_end(ap);
++
++	weston_log(buffer);
++}
++
++static void
++debug_binding(struct weston_seat *seat, uint32_t time, uint32_t key,
++	      void *data)
++{
++	struct weston_compositor *ec = data;
++	struct v4l2_renderer *vr = (struct v4l2_renderer *) ec->renderer;
++
++	vr->repaint_debug ^= 1;
++
++	if (vr->repaint_debug) {
++		// TODO: enable repaint debug
++
++                media_debug_set_handler(vr->media,
++					(void (*)(void *, ...))debug_media_ctl, NULL);
++
++	} else {
++		// TODO: disable repaint debug
++
++		weston_compositor_damage_all(ec);
++	}
++}
++
++static void
++v4l2_load_device_module(const char *device_name)
++{
++	char path[1024];
++
++	if (!device_name)
++		return;
++
++	snprintf(path, sizeof(path), "v4l2-%s-device.so", device_name);
++	device_interface =
++		(struct v4l2_device_interface*)weston_load_module(path, "v4l2_device_interface");
++}
++
++static char*
++v4l2_get_cname(const char *bus_info)
++{
++	char *p, *device_name;
++
++	if (!bus_info)
++		return NULL;
++
++	if ((p = strchr(bus_info, ':')))
++		device_name = strdup(p + 1);
++	else
++		device_name = strdup(bus_info);
++
++	p = strchr(device_name, '.');
++	*p = '\0';
++
++	return device_name;
++}
++
++static int
++v4l2_renderer_init(struct weston_compositor *ec, int drm_fd, char *drm_fn)
++{
++	struct v4l2_renderer *renderer;
++	char *device;
++	const char *device_name;
++	const struct media_device_info *info;
++	struct weston_config_section *section;
++
++	if (!drm_fn)
++		return -1;
++
++	renderer = calloc(1, sizeof *renderer);
++	if (renderer == NULL)
++		return -1;
++
++	renderer->wl_kms = wayland_kms_init(ec->wl_display, NULL, drm_fn, drm_fd);
++
++	/* Get V4L2 media controller device to use */
++	section = weston_config_get_section(ec->config,
++					    "media-ctl", NULL, NULL);
++	weston_config_section_get_string(section, "device", &device, "/dev/media0");
++#ifdef V4L2_GL_FALLBACK
++	weston_config_section_get_bool(section, "gl-fallback", &renderer->gl_fallback, 0);
++#endif
++
++	/* Initialize V4L2 media controller */
++	renderer->media = media_device_new(device);
++	if (!renderer->media) {
++		weston_log("Can't create a media controller.");
++		goto error;
++	}
++
++	/* Enumerate entities, pads and links */
++	if (media_device_enumerate(renderer->media)) {
++		weston_log("Can't enumerate %s.", device);
++		goto error;
++	}
++
++	/* Device info */
++	info = media_get_info(renderer->media);
++	weston_log("Media controller API version %u.%u.%u\n",
++		   (info->media_version >> 16) & 0xff,
++		   (info->media_version >>  8) & 0xff,
++		   (info->media_version)       & 0xff);
++	weston_log_continue("Media device information\n"
++			    "------------------------\n"
++			    "driver         %s\n"
++			    "model          %s\n"
++			    "serial         %s\n"
++			    "bus info       %s\n"
++			    "hw revision    0x%x\n"
++			    "driver version %u.%u.%u\n",
++			    info->driver, info->model,
++			    info->serial, info->bus_info,
++			    info->hw_revision,
++			    (info->driver_version >> 16) & 0xff,
++			    (info->driver_version >>  8) & 0xff,
++			    (info->driver_version)       & 0xff);
++
++	device_name = v4l2_get_cname(info->bus_info);
++	v4l2_load_device_module(device_name);
++	if (!device_interface)
++		goto error;
++
++	renderer->device = device_interface->init(renderer->media, ec->config);
++	if (!renderer->device)
++		goto error;
++
++	weston_log("V4L2 media controller device initialized.\n");
++
++	kms_create(drm_fd, &renderer->kms);
++
++	/* initialize renderer base */
++	renderer->drm_fd = drm_fd;
++	renderer->repaint_debug = 0;
++
++	renderer->base.read_pixels = v4l2_renderer_read_pixels;
++	renderer->base.repaint_output = v4l2_renderer_repaint_output;
++	renderer->base.flush_damage = v4l2_renderer_flush_damage;
++	renderer->base.attach = v4l2_renderer_attach;
++	renderer->base.surface_set_color = v4l2_renderer_surface_set_color;
++	renderer->base.destroy = v4l2_renderer_destroy;
++
++#ifdef V4L2_GL_FALLBACK
++	if (renderer->gl_fallback) {
++		/* we now initialize gl-renderer for fallback */
++		renderer->gbm = v4l2_create_gbm_device(drm_fd);
++		if (renderer->gbm) {
++			if (v4l2_create_gl_renderer(ec, renderer) < 0) {
++				weston_log("GL Renderer fallback failed to initialize.\n");
++				v4l2_destroy_gbm_device(renderer->gbm);
++				renderer->gbm = NULL;
++			}
++		}
++	}
++#endif
++
++	ec->renderer = &renderer->base;
++	ec->capabilities |= device_interface->get_capabilities();
++
++	ec->read_format = PIXMAN_a8r8g8b8;
++
++	renderer->debug_binding =
++		weston_compositor_add_debug_binding(ec, KEY_R,
++						    debug_binding, ec);
++
++	wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_RGB565);
++	wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_XRGB8888);
++	wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_ARGB8888);
++	wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_YUYV);
++
++	wl_signal_init(&renderer->destroy_signal);
++
++	return 0;
++
++error:
++	free(renderer);
++	weston_log("V4L2 renderer initialization failed.\n");
++	return -1;
++}
++
++static void
++v4l2_renderer_output_set_buffer(struct weston_output *output, int bo_index)
++{
++	struct v4l2_output_state *vo = get_output_state(output);
++
++	vo->bo_index = bo_index;
++	device_interface->set_output_buffer(vo->output, &vo->bo[bo_index]);
++	return;
++}
++
++static int
++v4l2_renderer_output_create(struct weston_output *output, struct v4l2_bo_state *bo_states, int count)
++{
++	struct v4l2_renderer *renderer = (struct v4l2_renderer*)output->compositor->renderer;
++	struct v4l2_output_state *vo;
++	struct v4l2_renderer_output *outdev;
++	int i;
++
++	if (!renderer)
++		return -1;
++
++	outdev = device_interface->create_output(renderer->device,
++						 output->current_mode->width,
++						 output->current_mode->height);
++	if (!outdev)
++		return -1;
++
++	if (!(vo = calloc(1, sizeof *vo)))
++		return -1;
++
++	vo->output = outdev;
++
++	output->renderer_state = vo;
++
++	if (!(vo->bo = calloc(1, sizeof(struct v4l2_bo_state) * count))) {
++		free(vo);
++		return -1;
++	}
++
++	for (i = 0; i < count; i++)
++		vo->bo[i] = bo_states[i];
++	vo->bo_count = count;
++
++#ifdef V4L2_GL_FALLBACK
++	if ((renderer->gl_fallback) && (v4l2_init_gl_output(output, renderer) < 0)) {
++		// error...
++		weston_log("gl fallback failed...\n");
++	}
++#endif
++
++	return 0;
++}
++
++static void
++v4l2_renderer_output_destroy(struct weston_output *output)
++{
++	struct v4l2_output_state *vo = get_output_state(output);
++	if (vo->bo)
++		free(vo->bo);
++	free(vo);
++}
++
++WL_EXPORT struct v4l2_renderer_interface v4l2_renderer_interface = {
++	.init = v4l2_renderer_init,
++	.output_create = v4l2_renderer_output_create,
++	.output_destroy = v4l2_renderer_output_destroy,
++	.set_output_buffer = v4l2_renderer_output_set_buffer
++};
+diff --git a/libweston/v4l2-renderer.h b/libweston/v4l2-renderer.h
+new file mode 100644
+index 0000000..8445bf1
+--- /dev/null
++++ b/libweston/v4l2-renderer.h
+@@ -0,0 +1,41 @@
++/*
++ * Copyright © 2014 Renesas Electronics Corp.
++ *
++ * Permission to use, copy, modify, distribute, and sell this software and
++ * its documentation for any purpose is hereby granted without fee, provided
++ * that the above copyright notice appear in all copies and that both that
++ * copyright notice and this permission notice appear in supporting
++ * documentation, and that the name of the copyright holders not be used in
++ * advertising or publicity pertaining to distribution of the software
++ * without specific, written prior permission.  The copyright holders make
++ * no representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
++ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
++ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * Authors:
++ *	Takanari Hayama <taki@igel.co.jp>
++ */
++
++#include "config.h"
++
++#include "compositor.h"
++
++struct v4l2_bo_state {
++	int dmafd;
++	void *map;
++	uint32_t stride;
++};
++
++struct v4l2_renderer_interface {
++	int (*init)(struct weston_compositor *ec, int drm_fd, char *drm_fn);
++	int (*output_create)(struct weston_output *output, struct v4l2_bo_state *bo_states, int count);
++	void (*output_destroy)(struct weston_output *output);
++	void (*set_output_buffer)(struct weston_output *output, int bo_index);
++};
+diff --git a/libweston/vsp-renderer.c b/libweston/vsp-renderer.c
+new file mode 100644
+index 0000000..2515302
+--- /dev/null
++++ b/libweston/vsp-renderer.c
+@@ -0,0 +1,1184 @@
++/*
++ * Copyright © 2014 Renesas Electronics Corp.
++ *
++ * Based on pixman-renderer by:
++ * Copyright © 2012 Intel Corporation
++ * Copyright © 2013 Vasily Khoruzhick <anarsoul@gmail.com>
++ *
++ * Permission to use, copy, modify, distribute, and sell this software and
++ * its documentation for any purpose is hereby granted without fee, provided
++ * that the above copyright notice appear in all copies and that both that
++ * copyright notice and this permission notice appear in supporting
++ * documentation, and that the name of the copyright holders not be used in
++ * advertising or publicity pertaining to distribution of the software
++ * without specific, written prior permission.  The copyright holders make
++ * no representations about the suitability of this software for any
++ * purpose.  It is provided "as is" without express or implied warranty.
++ *
++ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
++ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
++ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
++ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
++ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
++ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * Authors:
++ *	Takanari Hayama <taki@igel.co.jp>
++ */
++
++#include "config.h"
++
++#include <errno.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++
++#include <linux/videodev2.h>
++#include <linux/v4l2-subdev.h>
++#include "v4l2-renderer.h"
++#include "v4l2-renderer-device.h"
++
++#include "media-ctl/mediactl.h"
++#include "media-ctl/mediactl-priv.h"
++#include "media-ctl/v4l2subdev.h"
++#include "media-ctl/tools.h"
++
++#include <linux/input.h>
++
++/* Required for a short term workaround */
++#include "v4l2-compat.h"
++
++#if 0
++#define DBG(...) weston_log(__VA_ARGS__)
++#define DBGC(...) weston_log_continue(__VA_ARGS__)
++#else
++#define DBG(...) do {} while (0)
++#define DBGC(...) do {} while (0)
++#endif
++
++struct vsp_surface_state {
++	struct v4l2_surface_state base;
++
++	struct v4l2_format fmt;
++	enum v4l2_mbus_pixelcode mbus_code;
++};
++
++struct vsp_renderer_output {
++	struct v4l2_renderer_output base;
++	struct vsp_surface_state surface_state;
++};
++
++#define VSP_INPUT_MAX	4
++#define VSP_SCALER_MAX	1
++#define VSP_SCALER_MIN_PIXELS	4	// UDS can't take pixels smaller than this
++
++const char *vsp_input_links[] = {
++	"'%s rpf.0':1 -> '%s bru':0",
++	"'%s rpf.1':1 -> '%s bru':1",
++	"'%s rpf.2':1 -> '%s bru':2",
++	"'%s rpf.3':1 -> '%s bru':3"
++};
++
++const char *vsp_output_links[] = {
++	"'%s bru':4 -> '%s wpf.0':0",
++	"'%s wpf.0':1 -> '%s wpf.0 output':0"
++};
++
++const char *vsp_inputs[] = {
++	"%s rpf.0 input",
++	"%s rpf.1 input",
++	"%s rpf.2 input",
++	"%s rpf.3 input"
++};
++
++const char *vsp_output = {
++	"%s wpf.0 output"
++};
++
++const char *vsp_input_infmt[] = {
++	"'%s rpf.0':0",
++	"'%s rpf.1':0",
++	"'%s rpf.2':0",
++	"'%s rpf.3':0"
++};
++
++const char *vsp_input_outfmt[] = {
++	"'%s rpf.0':1",
++	"'%s rpf.1':1",
++	"'%s rpf.2':1",
++	"'%s rpf.3':1"
++};
++
++const char *vsp_input_composer[] = {
++	"'%s bru':0",
++	"'%s bru':1",
++	"'%s bru':2",
++	"'%s bru':3"
++};
++
++const char *vsp_input_subdev[] = {
++	"%s rpf.0",
++	"%s rpf.1",
++	"%s rpf.2",
++	"%s rpf.3"
++};
++
++const char *vsp_output_fmt[] = {
++	"'%s bru':4",
++	"'%s wpf.0':0",
++	"'%s wpf.0':1"
++};
++
++const char *vsp_scaler_links[] = {
++	"'%s rpf.%d':1 -> '%s uds.%d':0",
++	"'%s uds.%d':1 -> '%s bru':%d"
++};
++
++const char *vsp_scaler_infmt = "'%s uds.%d':0";
++const char *vsp_scaler_outfmt = "'%s uds.%d':1";
++
++struct vsp_media_pad {
++	struct media_pad	*infmt_pad;
++	struct media_pad	*outfmt_pad;
++	struct media_pad	*compose_pad;
++	struct media_entity	*input_entity;
++
++	struct media_link	*link;
++
++	int			fd;
++};
++
++struct vsp_scaler_template {
++	struct media_link *link0;	// rpf -> uds
++	struct media_link *link1;	// uds -> bru
++};
++
++struct vsp_scaler {
++	int input;
++
++	struct media_pad	*infmt_pad;
++	struct media_pad	*outfmt_pad;
++
++	struct vsp_scaler_template	templates[VSP_INPUT_MAX];
++};
++
++struct vsp_output {
++	struct media_pad	*pads[ARRAY_SIZE(vsp_output_fmt)];
++};
++
++typedef enum {
++	VSP_STATE_IDLE,
++	VSP_STATE_START,
++	VSP_STATE_COMPOSING,
++} vsp_state_t;
++
++struct vsp_input {
++	struct vsp_media_pad input_pads;
++	struct vsp_surface_state *input_surface_states;
++	struct vsp_scaler *use_scaler;
++	struct v4l2_rect src;
++	struct v4l2_rect dst;
++	int opaque;
++};
++
++struct vsp_device {
++	struct v4l2_renderer_device base;
++
++	vsp_state_t state;
++
++	struct vsp_media_pad output_pad;
++	struct vsp_surface_state *output_surface_state;
++
++	int input_count;
++	int input_max;
++	struct vsp_input inputs[VSP_INPUT_MAX];
++
++	int scaler_count;
++	int scaler_max;
++	struct vsp_scaler scalers[VSP_SCALER_MAX];
++
++	struct vsp_output output;
++};
++
++const char *supported_devices[] = {
++		"fe928000.vsp1", "vsp2"
++
++};
++
++#ifdef V4L2_GL_FALLBACK
++static int max_views_to_compose = -1;
++#endif
++
++static void
++video_debug_mediactl(void)
++{
++	FILE *p = popen("media-ctl -d /dev/media0 -p", "r");
++	char buf[BUFSIZ * 16];
++
++	if (!p)
++		return;
++
++	weston_log("====== output of media-ctl ======\n");
++	while(!feof(p)) {
++		fread(buf, sizeof(buf), 1, p);
++		weston_log_continue(buf);
++	}
++	weston_log_continue("\n================================\n");
++
++	pclose(p);
++}
++
++static int
++video_is_capture(__u32 cap)
++{
++	return ((cap & V4L2_CAP_VIDEO_CAPTURE) || (cap & V4L2_CAP_VIDEO_CAPTURE_MPLANE));
++}
++
++static int
++video_is_mplane(__u32 cap)
++{
++	return ((cap & V4L2_CAP_VIDEO_CAPTURE_MPLANE) || (cap & V4L2_CAP_VIDEO_OUTPUT_MPLANE));
++}
++
++static int
++video_is_streaming(__u32 cap)
++{
++	return (cap & V4L2_CAP_STREAMING);
++}
++
++static void
++vsp_check_capabiility(int fd, const char *devname)
++{
++	struct v4l2_capability cap;
++	int ret;
++
++	memset(&cap, 0, sizeof cap);
++	ret = ioctl(fd, VIDIOC_QUERYCAP, &cap);
++	if (ret < 0) {
++		weston_log("VIDIOC_QUERY_CAP on %s failed.\n", devname);
++		return;
++	}
++
++	weston_log("Device `%s'(%d) is a video %s (%s mplane and %s streaming support)\n",
++		   devname, fd,
++		   (video_is_capture(cap.device_caps) ? "capture" : "output"),
++		   (video_is_mplane(cap.device_caps) ? "w/" : "w/o"),
++		   (video_is_streaming(cap.device_caps) ? "w/" : "w/o"));
++}
++
++static struct v4l2_renderer_device*
++vsp_init(struct media_device *media, struct weston_config *config)
++{
++	struct vsp_device *vsp = NULL;
++	struct media_link *link;
++	struct media_entity *entity;
++	const struct media_device_info *info;
++	char buf[64], *p, *endp;
++	const char *device_name, *devname;
++	int i, j, res;
++	struct weston_config_section *section;
++
++	/* Get device name */
++	info = media_get_info(media);
++	if ((p = strchr(info->bus_info, ':')))
++		device_name = p + 1;
++	else
++		device_name = info->bus_info;
++
++	res = 0;
++	for(i=0; i<(sizeof(supported_devices)/sizeof(*supported_devices)); i++){
++		if (!strncmp(device_name, supported_devices[i], strlen(supported_devices[i]))) {
++			res = 1;
++			break;
++		}
++		weston_log("Dev name (%d) %s. Supported %s\n", i, device_name, supported_devices[i]);
++	}
++	if (!res)
++		goto error;
++
++	weston_log("Using the device %s\n", device_name);
++
++	vsp = calloc(1, sizeof(struct vsp_device));
++	if (!vsp)
++		goto error;
++	vsp->base.media = media;
++	vsp->base.device_name = device_name;
++	vsp->state = VSP_STATE_IDLE;
++	vsp->scaler_max = VSP_SCALER_MAX;
++
++	/* check configuration */
++	section = weston_config_get_section(config,
++					    "vsp-renderer", NULL, NULL);
++	weston_config_section_get_int(section, "max_inputs", &vsp->input_max, VSP_INPUT_MAX);
++#ifdef V4L2_GL_FALLBACK
++	weston_config_section_get_int(section, "max_views_to_compose", &max_views_to_compose, -1);
++#endif
++
++	if (vsp->input_max < 2)
++		vsp->input_max = 2;
++	if (vsp->input_max > VSP_INPUT_MAX)
++		vsp->input_max = VSP_INPUT_MAX;
++
++	/* Reset links */
++	if (media_reset_links(media)) {
++		weston_log("Reset media controller links failed.\n");
++		goto error;
++	}
++
++	/* Initialize inputs */
++	weston_log("Setting up inputs. Use %d inputs.\n", vsp->input_max);
++	for (i = 0; i < vsp->input_max; i++) {
++		struct vsp_media_pad *pads = &vsp->inputs[i].input_pads;
++
++		/* setup a link - do not enable yet */
++		snprintf(buf, sizeof(buf), vsp_input_links[i], device_name, device_name);
++		weston_log("setting up link: '%s'\n", buf);
++		link = media_parse_link(media, buf, &endp);
++		if (media_setup_link(media, link->source, link->sink, 0)) {
++			weston_log("link set up failed.\n");
++			goto error;
++		}
++		pads->link = link;
++
++		/* get a pad to configure the compositor */
++		snprintf(buf, sizeof(buf), vsp_input_infmt[i], device_name);
++		weston_log("get an input pad: '%s'\n", buf);
++		if (!(pads->infmt_pad = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++
++		snprintf(buf, sizeof(buf), vsp_input_outfmt[i], device_name);
++		weston_log("get an input sink: '%s'\n", buf);
++		if (!(pads->outfmt_pad = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++
++		snprintf(buf, sizeof(buf), vsp_input_composer[i], device_name);
++		weston_log("get a composer pad: '%s'\n", buf);
++		if (!(pads->compose_pad = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++
++		snprintf(buf, sizeof(buf), vsp_input_subdev[i], device_name);
++		weston_log("get a input subdev pad: '%s'\n", buf);
++		if (!(pads->input_entity = media_get_entity_by_name(media, buf, strlen(buf)))) {
++			weston_log("parse entity failed.\n");
++			goto error;
++		}
++
++		/* get a file descriptor for the input */
++		snprintf(buf, sizeof(buf), vsp_inputs[i], device_name);
++		entity = media_get_entity_by_name(media, buf, strlen(buf));
++		if (!entity) {
++			weston_log("error... '%s' not found.\n", buf);
++			goto error;
++		}
++
++		if (v4l2_subdev_open(entity)) {
++			weston_log("subdev '%s' open failed\n.", buf);
++			goto error;
++		}
++
++		pads->fd = entity->fd;
++		vsp_check_capabiility(pads->fd, media_entity_get_devname(entity));
++
++		/* set an input format for BRU to be ARGB (default) */
++		{
++			struct v4l2_mbus_framefmt format = {
++				.width = 256,		// a random number
++				.height = 256,		// a random number
++				.code = V4L2_MBUS_FMT_ARGB8888_1X32
++			};
++
++			if (v4l2_subdev_set_format(pads->compose_pad->entity, &format,
++						   pads->compose_pad->index,
++					           V4L2_SUBDEV_FORMAT_ACTIVE)) {
++				weston_log("setting default failed.\n");
++				goto error;
++			}
++
++			if (format.code != V4L2_MBUS_FMT_ARGB8888_1X32) {
++				weston_log("couldn't set to ARGB.\n");
++				goto error;
++			}
++		}
++	}
++
++	/* Initialize scaler */
++	weston_log("Setting up scaler(s).\n");
++	for (i = 0; i < vsp->scaler_max; i++) {
++		/* create link templates */
++		for (j = 0; j < vsp->input_max; j++) {
++			snprintf(buf, sizeof(buf), vsp_scaler_links[0], device_name, j, device_name, i);
++			weston_log("parsing link: '%s'\n", buf);
++			vsp->scalers[i].templates[j].link0 = media_parse_link(media, buf, &endp);
++
++			snprintf(buf, sizeof(buf), vsp_scaler_links[1], device_name, i, device_name, j);
++			weston_log("parsing link: '%s'\n", buf);
++			vsp->scalers[i].templates[j].link1 = media_parse_link(media, buf, &endp);
++		}
++
++		/* get pads to setup UDS */
++		snprintf(buf, sizeof(buf), vsp_scaler_infmt, device_name, i);
++		weston_log("get a scaler input pad: '%s'\n", buf);
++		if (!(vsp->scalers[i].infmt_pad = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++
++		snprintf(buf, sizeof(buf), vsp_scaler_outfmt, device_name, i);
++		weston_log("get a scaler output pad: '%s'\n", buf);
++		if (!(vsp->scalers[i].outfmt_pad = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++
++		/* initialize input */
++		vsp->scalers[i].input = -1;
++	}
++
++	/* Initialize output */
++	weston_log("Setting up an output.\n");
++
++	/* setup links for output - always on */
++	for (i = 0; i < (int)ARRAY_SIZE(vsp_output_links); i++) {
++		snprintf(buf, sizeof(buf), vsp_output_links[i], device_name, device_name);
++		weston_log("setting up link: '%s'\n", buf);
++		link = media_parse_link(media, buf, &endp);
++		if (media_setup_link(media, link->source, link->sink, 1)) {
++			weston_log("link set up failed.\n");
++			goto error;
++		}
++	}
++
++	/* get pads for output */
++	for (i = 0; i < (int)ARRAY_SIZE(vsp_output_fmt); i++) {
++		snprintf(buf, sizeof(buf), vsp_output_fmt[i], device_name);
++		weston_log("get an output pad: '%s'\n", buf);
++		if (!(vsp->output.pads[i] = media_parse_pad(media, buf, NULL))) {
++			weston_log("parse pad failed.\n");
++			goto error;
++		}
++	}
++
++	/* get a file descriptor for the output */
++	snprintf(buf, sizeof(buf), vsp_output, device_name);
++	entity = media_get_entity_by_name(media, buf, strlen(buf));
++	if (!entity) {
++		weston_log("error... '%s' not found.\n", buf);
++		goto error;
++	}
++
++	devname = media_entity_get_devname(entity);
++	weston_log("output '%s' is associated with '%s'\n", buf, devname);
++	vsp->output_pad.fd = open(devname, O_RDWR);
++	if (vsp->output_pad.fd < 0) {
++		weston_log("error... can't open '%s'.\n", devname);
++		goto error;
++	}
++	vsp_check_capabiility(vsp->output_pad.fd, devname);
++
++	return (struct v4l2_renderer_device*)vsp;
++
++error:
++	if (vsp)
++		free(vsp);
++	weston_log("VSP device init failed...\n");
++
++	return NULL;
++}
++
++static struct v4l2_surface_state*
++vsp_create_surface(struct v4l2_renderer_device *dev)
++{
++	return (struct v4l2_surface_state*)calloc(1, sizeof(struct vsp_surface_state));
++}
++
++static int
++vsp_attach_buffer(struct v4l2_surface_state *surface_state)
++{
++	struct vsp_surface_state *vs = (struct vsp_surface_state*)surface_state;
++	enum v4l2_mbus_pixelcode code;
++	int i;
++
++	if (vs->base.width > 8190 || vs->base.height > 8190)
++		return -1;
++
++	switch(vs->base.pixel_format) {
++	case V4L2_PIX_FMT_XRGB32:
++	case V4L2_PIX_FMT_ARGB32:
++	case V4L2_PIX_FMT_XBGR32:
++	case V4L2_PIX_FMT_ABGR32:
++	case V4L2_PIX_FMT_RGB24:
++	case V4L2_PIX_FMT_BGR24:
++	case V4L2_PIX_FMT_RGB565:
++	case V4L2_PIX_FMT_RGB332:
++		code = V4L2_MBUS_FMT_ARGB8888_1X32;
++		break;
++
++	case V4L2_PIX_FMT_YUYV:
++	case V4L2_PIX_FMT_YVYU:
++	case V4L2_PIX_FMT_UYVY:
++	case V4L2_PIX_FMT_NV12M:
++	case V4L2_PIX_FMT_NV21M:
++	case V4L2_PIX_FMT_NV16M:
++	case V4L2_PIX_FMT_NV61M:
++	case V4L2_PIX_FMT_YUV420M:
++		code = V4L2_MBUS_FMT_AYUV8_1X32;
++		break;
++
++	default:
++		return -1;
++	}
++
++	// create v4l2_fmt to use later
++	vs->mbus_code = code;
++	vs->fmt.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++	vs->fmt.fmt.pix_mp.width = vs->base.width;
++	vs->fmt.fmt.pix_mp.height = vs->base.height;
++	vs->fmt.fmt.pix_mp.pixelformat = vs->base.pixel_format;
++	vs->fmt.fmt.pix_mp.field = V4L2_FIELD_ANY;
++	vs->fmt.fmt.pix_mp.num_planes = vs->base.num_planes;
++
++	for (i = 0; i < vs->base.num_planes; i++)
++		vs->fmt.fmt.pix_mp.plane_fmt[i].bytesperline = vs->base.planes[i].stride;
++
++	return 0;
++}
++
++static int
++vsp_set_format(int fd, struct v4l2_format *fmt, int opaque)
++{
++	struct v4l2_format current_fmt;
++	int ret;
++	unsigned int original_pixelformat = fmt->fmt.pix_mp.pixelformat;
++
++	memset(&current_fmt, 0, sizeof(struct v4l2_format));
++	current_fmt.type = fmt->type;
++
++
++	if (ioctl(fd, VIDIOC_G_FMT, &current_fmt) == -1) {
++		weston_log("VIDIOC_G_FMT failed to %d (%s).\n", fd, strerror(errno));
++	}
++
++	DBG("Current video format: %d, %08x(%c%c%c%c) %ux%u (stride %u) field %08u buffer size %u\n",
++	    current_fmt.type,
++	    current_fmt.fmt.pix_mp.pixelformat,
++	    (current_fmt.fmt.pix_mp.pixelformat >> 24) & 0xff,
++	    (current_fmt.fmt.pix_mp.pixelformat >> 16) & 0xff,
++	    (current_fmt.fmt.pix_mp.pixelformat >>  8) & 0xff,
++	    current_fmt.fmt.pix_mp.pixelformat & 0xff,
++	    current_fmt.fmt.pix_mp.width, current_fmt.fmt.pix_mp.height, current_fmt.fmt.pix_mp.plane_fmt[0].bytesperline,
++	    current_fmt.fmt.pix_mp.field,
++	    current_fmt.fmt.pix_mp.plane_fmt[0].sizeimage);
++
++	switch (original_pixelformat) {
++	case V4L2_PIX_FMT_ABGR32:
++		if (opaque)
++			fmt->fmt.pix_mp.pixelformat = V4L2_PIX_FMT_XBGR32;
++		else
++			/* ABGR32 surfaces are premultiplied. */
++			fmt->fmt.pix_mp.flags = V4L2_PIX_FMT_FLAG_PREMUL_ALPHA;
++	}
++
++	ret = ioctl(fd, VIDIOC_S_FMT, fmt);
++
++	DBG("New video format: %d, %08x(%c%c%c%c) %ux%u (stride %u) field %08u buffer size %u\n",
++	    fmt->type,
++	    fmt->fmt.pix_mp.pixelformat,
++	    (fmt->fmt.pix_mp.pixelformat >> 24) & 0xff,
++	    (fmt->fmt.pix_mp.pixelformat >> 16) & 0xff,
++	    (fmt->fmt.pix_mp.pixelformat >>  8) & 0xff,
++	    fmt->fmt.pix_mp.pixelformat & 0xff,
++	    fmt->fmt.pix_mp.width, fmt->fmt.pix_mp.height, fmt->fmt.pix_mp.plane_fmt[0].bytesperline,
++	    fmt->fmt.pix_mp.field,
++	    fmt->fmt.pix_mp.plane_fmt[0].sizeimage);
++
++	fmt->fmt.pix_mp.pixelformat = original_pixelformat;
++
++	if (ret == -1) {
++		weston_log("VIDIOC_S_FMT failed to %d (%s).\n", fd, strerror(errno));
++		return -1;
++	}
++
++	return 0;
++}
++
++static int
++vsp_set_output(struct vsp_device *vsp, struct vsp_renderer_output *out)
++{
++	int i;
++	struct v4l2_mbus_framefmt format;
++
++	DBG("Setting output size to %dx%d\n", out->base.width, out->base.height);
++
++	/* set WPF output size  */
++	format.width  = out->base.width;
++	format.height = out->base.height;
++	format.code   = V4L2_MBUS_FMT_ARGB8888_1X32;	// TODO: does this have to be flexible?
++
++	for (i = 0; i < (int)ARRAY_SIZE(vsp->output.pads); i++) {
++		struct media_pad *pad = vsp->output.pads[i];
++		if (v4l2_subdev_set_format(pad->entity, &format, pad->index, V4L2_SUBDEV_FORMAT_ACTIVE)) {
++			weston_log("set sbudev format for failed at index %d.\n", i);
++			return -1;
++		}
++	}
++
++	return 0;
++}
++
++static struct v4l2_renderer_output*
++vsp_create_output(struct v4l2_renderer_device *dev, int width, int height)
++{
++	//struct vsp_device *vsp = (struct vsp_device*)dev;
++	struct vsp_renderer_output *outdev;
++	struct v4l2_format *fmt;
++
++	outdev = calloc(1, sizeof(struct vsp_renderer_output));
++	if (!outdev)
++		return NULL;
++
++	/* set output surface state */
++	outdev->base.width = width;
++	outdev->base.height = height;
++	outdev->surface_state.mbus_code = V4L2_MBUS_FMT_ARGB8888_1X32;
++	outdev->surface_state.base.width = width;
++	outdev->surface_state.base.height = height;
++	outdev->surface_state.base.num_planes = 1;
++	outdev->surface_state.base.src_rect.width = width;
++	outdev->surface_state.base.src_rect.height = height;
++	outdev->surface_state.base.dst_rect.width = width;
++	outdev->surface_state.base.dst_rect.height = height;
++
++	/* we use this later to let output to be input for composition */
++	fmt = &outdev->surface_state.fmt;
++	fmt->type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++	fmt->fmt.pix_mp.width = width;
++	fmt->fmt.pix_mp.height = height;
++	fmt->fmt.pix_mp.pixelformat = V4L2_PIX_FMT_ABGR32;
++	fmt->fmt.pix_mp.num_planes = 1;
++
++	return (struct v4l2_renderer_output*)outdev;
++}
++
++static int
++vsp_dequeue_buffer(int fd, int capture)
++{
++	struct v4l2_buffer buf;
++	struct v4l2_plane planes[VIDEO_MAX_PLANES];
++
++	memset(&buf, 0, sizeof buf);
++	buf.type = (capture) ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++	buf.memory = V4L2_MEMORY_DMABUF;
++	buf.index = 0;
++	buf.m.planes = planes;
++	buf.length = 1;
++	memset(planes, 0, sizeof(planes));
++
++	if (ioctl(fd, VIDIOC_DQBUF, &buf) == -1) {
++		weston_log("VIDIOC_DQBUF failed on %d (%s).\n", fd, strerror(errno));
++		return -1;
++	}
++
++	return 0;
++}
++
++static int
++vsp_queue_buffer(int fd, int capture, struct vsp_surface_state *vs)
++{
++	struct v4l2_buffer buf;
++	struct v4l2_plane planes[VIDEO_MAX_PLANES];
++	int i;
++
++	memset(&buf, 0, sizeof buf);
++	buf.type = (capture) ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++	buf.memory = V4L2_MEMORY_DMABUF;
++	buf.index = 0;
++	buf.m.planes = planes;
++	buf.length = vs->base.num_planes;
++	memset(planes, 0, sizeof(planes));
++	for (i = 0; i < vs->base.num_planes; i++)
++		buf.m.planes[i].m.fd = vs->base.planes[i].dmafd;
++
++	if (ioctl(fd, VIDIOC_QBUF, &buf) == -1) {
++		weston_log("VIDIOC_QBUF failed for dmafd=%d(%d planes) on %d (%s).\n",
++			   vs->base.planes[i].dmafd, vs->base.num_planes, fd, strerror(errno));
++		return -1;
++	}
++
++	return 0;
++}
++
++static int
++vsp_request_buffer(int fd, int capture, int count)
++{
++	struct v4l2_requestbuffers reqbuf;
++
++	memset(&reqbuf, 0, sizeof(reqbuf));
++	reqbuf.type = (capture) ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++	reqbuf.memory = V4L2_MEMORY_DMABUF;
++	reqbuf.count = count;
++	if (ioctl(fd, VIDIOC_REQBUFS, &reqbuf) == -1) {
++		weston_log("clearing VIDIOC_REQBUFS failed (%s).\n", strerror(errno));
++		return -1;
++	}
++
++	return 0;
++}
++
++static void
++vsp_comp_begin(struct v4l2_renderer_device *dev, struct v4l2_renderer_output *out)
++{
++	struct vsp_device *vsp = (struct vsp_device*)dev;
++	struct vsp_renderer_output *output = (struct vsp_renderer_output*)out;
++	struct v4l2_format *fmt = &output->surface_state.fmt;
++
++	DBG("start vsp composition.\n");
++
++	vsp->state = VSP_STATE_START;
++
++	vsp_set_output(vsp, output);
++
++	// just in case
++	vsp_request_buffer(vsp->output_pad.fd, 1, 0);
++
++	fmt->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
++	vsp_set_format(vsp->output_pad.fd, fmt, 0);
++	fmt->type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++
++	vsp->output_surface_state = &output->surface_state;
++
++	vsp_request_buffer(vsp->output_pad.fd, 1, 1);
++
++	DBG("output set to dmabuf=%d\n", vsp->output_surface_state->base.planes[0].dmafd);
++}
++
++static int
++vsp_set_alpha(struct media_entity *entity, float alpha)
++{
++	struct v4l2_control ctrl;
++
++	ctrl.id = V4L2_CID_ALPHA_COMPONENT;
++	ctrl.value = (__s32)(alpha * 0xff);
++
++	if (ioctl(entity->fd, VIDIOC_S_CTRL, &ctrl) == -1) {
++		weston_log("failed to set alpha value (%d)\n", ctrl.value);
++		return -1;
++	}
++
++	return 0;
++}
++
++static int
++vsp_comp_setup_inputs(struct vsp_device *vsp, struct vsp_input *input, int enable)
++{
++	struct v4l2_mbus_framefmt format;
++	struct vsp_media_pad *mpad = &input->input_pads;
++	struct vsp_scaler *scaler = input->use_scaler;
++	struct vsp_surface_state *vs = input->input_surface_states;
++	struct v4l2_rect *src = &input->src;
++	struct v4l2_rect *dst = &input->dst;
++
++	// enable link associated with this pad
++	if (!scaler) {
++		if (media_setup_link(vsp->base.media, mpad->link->source, mpad->link->sink, enable)) {
++			weston_log("enabling media link setup failed.\n");
++			return -1;
++		}
++	} else {
++		struct vsp_scaler_template *temp = &scaler->templates[scaler->input];
++
++		if (enable)
++			media_setup_link(vsp->base.media, mpad->link->source, mpad->link->sink, 0);
++
++		if (media_setup_link(vsp->base.media, temp->link0->source, temp->link0->sink, enable)) {
++			weston_log("enabling scaler link0 setup failed.\n");
++			return -1;
++		}
++
++		if (media_setup_link(vsp->base.media, temp->link1->source, temp->link1->sink, enable)) {
++			weston_log("enabling scaler link1 setup failed.\n");
++			return -1;
++		}
++	}
++
++	if (!enable)
++		return 0;
++
++	// set pixel format and size
++	format.width = vs->base.width;
++	format.height = vs->base.height;
++	format.code = vs->mbus_code;	// this is input format
++	if (v4l2_subdev_set_format(mpad->infmt_pad->entity, &format, mpad->infmt_pad->index,
++				   V4L2_SUBDEV_FORMAT_ACTIVE)) {
++		weston_log("set input format via subdev failed.\n");
++		return -1;
++	}
++
++	// set an alpha
++	if (vsp_set_alpha(mpad->input_entity, vs->base.alpha)) {
++		weston_log("setting alpha (=%f) failed.", vs->base.alpha);
++		return -1;
++	}
++
++	// set a crop paramters
++	if (v4l2_subdev_set_selection(mpad->infmt_pad->entity, src, mpad->infmt_pad->index,
++				      V4L2_SEL_TGT_CROP, V4L2_SUBDEV_FORMAT_ACTIVE)) {
++		weston_log("set crop parameter failed: %dx%d@(%d,%d).\n",
++			   src->width, src->height, src->left, src->top);
++		return -1;
++	}
++	format.width = src->width;
++	format.height = src->height;
++
++	// this is an output towards BRU. this shall be consistent among all inputs.
++	format.code = V4L2_MBUS_FMT_ARGB8888_1X32;
++	if (v4l2_subdev_set_format(mpad->outfmt_pad->entity, &format, mpad->outfmt_pad->index,
++				   V4L2_SUBDEV_FORMAT_ACTIVE)) {
++		weston_log("set output format via subdev failed.\n");
++		return -1;
++	}
++
++	// if we enabled the scaler, we should set resize parameters.
++	if (scaler) {
++		// a sink of UDS should be the same as a source of RPF.
++		if (v4l2_subdev_set_format(scaler->infmt_pad->entity, &format, scaler->infmt_pad->index,
++					   V4L2_SUBDEV_FORMAT_ACTIVE)) {
++			weston_log("set input format of UDS via subdev failed.\n");
++			return -1;
++		}
++
++		// a source of UDS should be the same as a sink of BRU.
++		format.width  = dst->width;
++		format.height = dst->height;
++		if (v4l2_subdev_set_format(scaler->outfmt_pad->entity, &format, scaler->outfmt_pad->index,
++					   V4L2_SUBDEV_FORMAT_ACTIVE)) {
++			weston_log("set output format of UDS via subdev failed.\n");
++			return -1;
++		}
++	}
++
++	// so does the BRU input
++	if (v4l2_subdev_set_format(mpad->compose_pad->entity, &format, mpad->compose_pad->index,
++				   V4L2_SUBDEV_FORMAT_ACTIVE)) {
++		weston_log("set composition format via subdev failed.\n");
++		return -1;
++	}
++
++	// set a composition paramters
++	if (v4l2_subdev_set_selection(mpad->compose_pad->entity, dst, mpad->compose_pad->index,
++				      V4L2_SEL_TGT_COMPOSE, V4L2_SUBDEV_FORMAT_ACTIVE)) {
++		weston_log("set compose parameter failed: %dx%d@(%d,%d).\n",
++			   dst->width, dst->height, dst->left, dst->top);
++		return -1;
++	}
++
++	// just in case
++	if (vsp_request_buffer(mpad->fd, 0, 0) < 0)
++		return -1;
++
++	// set input format
++	if (vsp_set_format(mpad->fd, &vs->fmt, input->opaque))
++		return -1;
++
++	// request a buffer
++	if (vsp_request_buffer(mpad->fd, 0, 1) < 0)
++		return -1;
++
++	// queue buffer
++	if (vsp_queue_buffer(mpad->fd, 0, vs) < 0)
++		return -1;
++
++	return 0;
++}
++
++static int
++vsp_comp_flush(struct vsp_device *vsp)
++{
++	int i, fd;
++	int type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++
++	DBG("flush vsp composition.\n");
++
++	// enable links and queue buffer
++	for (i = 0; i < vsp->input_count; i++) {
++		if (vsp_comp_setup_inputs(vsp, &vsp->inputs[i], 1) < 0) {
++			weston_log("Setup used input failed!\n");
++			goto error;
++		}
++	}
++
++	// disable unused inputs
++	for (i = vsp->input_count; i < vsp->input_max; i++)
++		vsp_comp_setup_inputs(vsp, &vsp->inputs[i], 0);
++
++	// get an output pad
++	fd = vsp->output_pad.fd;
++
++	// queue buffer
++	if (vsp_queue_buffer(fd, 1, vsp->output_surface_state) < 0)
++		goto error;
++
++//	video_debug_mediactl();
++
++	// stream on
++	type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++	for (i = 0; i < vsp->input_count; i++) {
++		if (ioctl(vsp->inputs[i].input_pads.fd, VIDIOC_STREAMON, &type) == -1) {
++			weston_log("VIDIOC_STREAMON failed for input %d. (%s)\n", i, strerror(errno));
++		}
++	}
++
++	type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
++	if (ioctl(fd, VIDIOC_STREAMON, &type) == -1) {
++		weston_log("VIDIOC_STREAMON failed for output (%s).\n", strerror(errno));
++		goto error;
++	}
++
++	// dequeue buffer
++	if (vsp_dequeue_buffer(fd, 1) < 0)
++		goto error;
++
++	type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
++	if (ioctl(fd, VIDIOC_STREAMOFF, &type) == -1) {
++		weston_log("%s: VIDIOC_STREAMOFF failed on %d (%s).\n", __func__, fd, strerror(errno));
++		goto error;
++	}
++
++	// stream off
++	type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
++	for (i = 0; i < vsp->input_count; i++) {
++		if (ioctl(vsp->inputs[i].input_pads.fd, VIDIOC_STREAMOFF, &type) == -1) {
++			weston_log("VIDIOC_STREAMOFF failed for input %d.\n", i);
++		}
++	}
++
++	// disable UDS if used
++	if (vsp->scaler_count) {
++		for (i = 0; i < vsp->input_count; i++) {
++			struct vsp_input *input = &vsp->inputs[i];
++			if (input->use_scaler) {
++				vsp_comp_setup_inputs(vsp, input, 0);
++				input->use_scaler->input = -1;
++				input->use_scaler = NULL;
++			}
++		}
++		vsp->scaler_count = 0;
++	}
++	vsp->input_count = 0;
++	return 0;
++
++error:
++	video_debug_mediactl();
++	vsp->input_count = 0;
++	return -1;
++}
++
++static void
++vsp_comp_finish(struct v4l2_renderer_device *dev)
++{
++	struct vsp_device *vsp = (struct vsp_device*)dev;
++
++	if (vsp->input_count > 0)
++		vsp_comp_flush(vsp);
++
++	vsp->state = VSP_STATE_IDLE;
++	DBG("complete vsp composition.\n");
++	vsp->output_surface_state = NULL;
++}
++
++#define IS_IDENTICAL_RECT(a, b) ((a)->width == (b)->width && (a)->height == (b)->height && \
++				 (a)->left  == (b)->left  && (a)->top    == (b)->top)
++
++static int
++vsp_do_draw_view(struct vsp_device *vsp, struct vsp_surface_state *vs, struct v4l2_rect *src, struct v4l2_rect *dst,
++		 int opaque)
++{
++	int should_use_scaler = 0;
++	struct vsp_input *input;
++
++	if (src->width < 1 || src->height < 1) {
++		DBG("ignoring the size of zeros < (%dx%d)\n", src->width, src->height);
++		return 0;
++	}
++
++	if (src->width > 8190 || src->height > 8190) {
++		weston_log("ignoring the size exceeding the limit (8190x8190) < (%dx%d)\n", src->width, src->height);
++		return 0;
++	}
++
++	if (dst->width != src->width || dst->height != src->height) {
++		if (src->width < VSP_SCALER_MIN_PIXELS || src->height < VSP_SCALER_MIN_PIXELS) {
++			weston_log("ignoring the size the scaler can't handle (input size=%dx%d).\n",
++				   src->width, src->height);
++			return 0;
++		}
++		should_use_scaler = 1;
++	}
++
++	if (src->left < 0) {
++		src->width += src->left;
++		src->left = 0;
++	}
++
++	if (src->top < 0) {
++		src->height += src->top;
++		src->top = 0;
++	}
++
++	DBG("set input %d (dmafd=%d): %dx%d@(%d,%d)->%dx%d@(%d,%d). alpha=%f\n",
++	    vsp->input_count,
++	    vs->base.planes[0].dmafd,
++	    src->width, src->height, src->left, src->top,
++	    dst->width, dst->height, dst->left, dst->top,
++	    vs->base.alpha);
++
++	switch(vsp->state) {
++	case VSP_STATE_START:
++		DBG("VSP_STATE_START -> COMPSOING\n");
++		vsp->state = VSP_STATE_COMPOSING;
++		break;
++
++	case VSP_STATE_COMPOSING:
++		if (vsp->input_count == 0) {
++			DBG("VSP_STATE_COMPOSING -> START (compose with output)\n");
++			vsp->state = VSP_STATE_START;
++			if (vsp_do_draw_view(vsp, vsp->output_surface_state,
++					     &vsp->output_surface_state->base.src_rect,
++					     &vsp->output_surface_state->base.dst_rect, 0) < 0)
++				return -1;
++		}
++		break;
++
++	default:
++		weston_log("unknown state... %d\n", vsp->state);
++		return -1;
++	}
++
++	input = &vsp->inputs[vsp->input_count];
++
++	/* check if we need to use a scaler */
++	if (should_use_scaler) {
++		DBG("We need to use a scaler. (%dx%d)->(%dx%d)\n",
++		    src->width, src->height, dst->width, dst->height);
++
++		// if all scalers are oocupied, flush and then retry.
++		if (vsp->scaler_count == vsp->scaler_max) {
++			vsp_comp_flush(vsp);
++			return vsp_do_draw_view(vsp, vs, src, dst, opaque);
++		}
++
++		vsp->scalers[vsp->scaler_count].input = vsp->input_count;
++		input->use_scaler = &vsp->scalers[vsp->scaler_count];
++		vsp->scaler_count++;
++	}
++
++	// get an available input pad
++	input->input_surface_states = vs;
++	input->src = *src;
++	input->dst = *dst;
++	input->opaque = opaque;
++
++	// check if we should flush now
++	vsp->input_count++;
++	if (vsp->input_count == vsp->input_max)
++		vsp_comp_flush(vsp);
++
++	return 0;
++}
++
++static int
++vsp_comp_draw_view(struct v4l2_renderer_device *dev, struct v4l2_surface_state *surface_state)
++{
++	struct vsp_device *vsp = (struct vsp_device*)dev;
++	struct vsp_surface_state *vs = (struct vsp_surface_state*)surface_state;
++
++	DBG("start rendering a view.\n");
++	if (!IS_IDENTICAL_RECT(&surface_state->dst_rect, &surface_state->opaque_dst_rect)) {
++		DBG("rendering non-opaque region.\n");
++		if (vsp_do_draw_view(vsp, vs, &surface_state->src_rect, &surface_state->dst_rect, 0) < 0)
++			return -1;
++	}
++
++	DBG("rendering opaque region if available.\n");
++	if (vsp_do_draw_view(vsp, vs, &surface_state->opaque_src_rect, &surface_state->opaque_dst_rect, 1) < 0)
++		return -1;
++
++	return 0;
++}
++
++static void
++vsp_set_output_buffer(struct v4l2_renderer_output *out, struct v4l2_bo_state *bo)
++{
++	struct vsp_renderer_output *output = (struct vsp_renderer_output*)out;
++	DBG("set output dmafd to %d\n", bo->dmafd);
++	output->surface_state.base.planes[0].dmafd = bo->dmafd;
++	output->surface_state.fmt.fmt.pix_mp.plane_fmt[0].bytesperline = bo->stride;
++}
++
++#ifdef V4L2_GL_FALLBACK
++static int
++vsp_can_compose(struct v4l2_view *view_list, int count)
++{
++	pixman_region32_t surface_blend;
++	int i, can_compose = 1;
++
++	if (max_views_to_compose > 0 && max_views_to_compose < count) {
++		can_compose = 0;
++		goto out;
++	}
++
++	for (i = 0; (can_compose) && (i < count); i++) {
++		struct weston_view *ev = view_list[i].view;
++		struct v4l2_surface_state *vs = view_list[i].state;
++
++		if (vs->pixel_format == V4L2_PIX_FMT_ABGR32 && ev->alpha != 1.0) {
++			pixman_region32_init_rect(&surface_blend, 0, 0,
++						  ev->surface->width, ev->surface->height);
++			pixman_region32_subtract(&surface_blend, &surface_blend, &ev->surface->opaque);
++
++			if (pixman_region32_not_empty(&surface_blend))
++				can_compose = 0;
++
++			pixman_region32_fini(&surface_blend);
++		}
++	}
++
++out:
++	return can_compose;
++}
++#endif
++
++static uint32_t
++vsp_get_capabilities(void)
++{
++	return 0;
++}
++
++WL_EXPORT struct v4l2_device_interface v4l2_device_interface = {
++	.init = vsp_init,
++
++	.create_output = vsp_create_output,
++	.set_output_buffer = vsp_set_output_buffer,
++
++	.create_surface = vsp_create_surface,
++	.attach_buffer = vsp_attach_buffer,
++
++	.begin_compose = vsp_comp_begin,
++	.finish_compose = vsp_comp_finish,
++	.draw_view = vsp_comp_draw_view,
++
++#ifdef V4L2_GL_FALLBACK
++	.can_compose = vsp_can_compose,
++#endif
++
++	.get_capabilities = vsp_get_capabilities,
++};
+--
+1.9.1

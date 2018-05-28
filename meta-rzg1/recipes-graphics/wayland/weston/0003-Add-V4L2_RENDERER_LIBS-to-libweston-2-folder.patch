@@ -1,0 +1,43 @@
+From 8fec53b4695a96c4c471c01c342783ede8336112 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13.RZG]" <LinhNV25@fsoft.com.vn>
+Date: Sat, 26 May 2018 12:50:30 +0700
+Subject: [PATCH] Add V4L2_RENDERER_LIBS to weston_2.0.0 package (/usr/lib/libweston-2/)
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13.RZG] <LinhNV25@fsoft.com.vn>
+---
+ Makefile.am | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 6638b86..4bd1c00 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -327,9 +327,9 @@ gl_renderer_la_SOURCES =			\
+ endif
+
+ if ENABLE_V4L2
+-module_LTLIBRARIES += v4l2-renderer.la
++libweston_module_LTLIBRARIES += v4l2-renderer.la
+ v4l2_renderer_la_LDFLAGS = -module -avoid-version
+-v4l2_renderer_la_LIBADD = $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
++v4l2_renderer_la_LIBADD = libweston-@LIBWESTON_MAJOR@.la $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
+ v4l2_renderer_la_CFLAGS =				\
+	$(COMPOSITOR_CFLAGS)			\
+	$(V4L2_RENDERER_CFLAGS) \
+@@ -345,11 +345,12 @@ v4l2_renderer_la_SOURCES =			\
+	libweston/media-ctl/tools.h			\
+	libweston/media-ctl/v4l2subdev.h
+
+-module_LTLIBRARIES += v4l2-vsp-device.la
++libweston_module_LTLIBRARIES += v4l2-vsp-device.la
+ v4l2_vsp_device_la_LDFLAGS = -module -avoid-version
+-v4l2_vsp_device_la_LIBADD = $(COMPOSITOR_LIBS)
++v4l2_vsp_device_la_LIBADD = libweston-@LIBWESTON_MAJOR@.la $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
+ v4l2_vsp_device_la_CFLAGS =				\
+	$(COMPOSITOR_CFLAGS)			\
++	$(LIBDRM_CFLAGS)			\
+	$(GCC_CFLAGS)
+ v4l2_vsp_device_la_SOURCES =			\
+	libweston/vsp-renderer.c			\
+--
+1.9.1
