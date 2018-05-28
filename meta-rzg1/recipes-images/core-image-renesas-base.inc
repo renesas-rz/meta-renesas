@@ -1,5 +1,5 @@
 require ../include/gles-control.inc
-#require ../include/multimedia-control.inc
+require ../include/multimedia-control.inc
 
 # common
 IMAGE_INSTALL_append_rzg1 = " \

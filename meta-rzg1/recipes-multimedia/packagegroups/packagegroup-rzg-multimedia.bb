@@ -7,8 +7,11 @@ LICENSE = "CLOSED"
 inherit packagegroup
 
 PACKAGES = "\
+    packagegroup-rzg-multimedia \
+    packagegroup-rzg-multimedia-tp \
     packagegroup-rzg-dtv \
 "
+
 PACKAGES_append_lcb = " packagegroup-lcb-oss-codecs"
 
 MULTIMEDIA_PACKAGES ="\
@@ -24,6 +27,11 @@ MULTIMEDIA_PACKAGES ="\
 
 MULTIMEDIA_PACKAGES_append = " \
     ${@ "kernel-module-vsp2 libmediactl-v4l2" if "${USE_GLES_MULTIMEDIA}" == "1" else "" } \
+"
+
+RDEPENDS_packagegroup-rzg-multimedia = "\
+    ${@ "${MULTIMEDIA_PACKAGES}" if "${USE_MULTIMEDIA}" == "1" else "" } \
+    media-ctl \
 "
 
 MULTIMEDIA_TEST_PACKAGES = "\
