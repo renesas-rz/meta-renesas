@@ -39,12 +39,7 @@ do_install() {
 }
 
 PACKAGES = "\
-    ${PN} \
     ${PN}-dev \
-"
-
-FILES_${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/extra/vsp2.ko \
 "
 
 FILES_${PN}-dev = " \

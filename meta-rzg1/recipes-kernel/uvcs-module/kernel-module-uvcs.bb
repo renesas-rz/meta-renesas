@@ -49,13 +49,7 @@ do_clean_source() {
 }
 
 PACKAGES = "\
-    ${PN} \
-    ${PN}-cmn \
     ${PN}-dev \
-"
-
-FILES_${PN}-cmn = " \
-    /lib/modules/${KERNEL_VERSION}/extra/uvcs_cmn.ko \
 "
 
 FILES_${PN}-dev = " \
@@ -64,10 +58,6 @@ FILES_${PN}-dev = " \
     /usr/src/kernel/include/uvcs.symvers \
 "
 
-RPROVIDES_${PN} += "kernel-module-uvcs"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
-python do_package_ipk_prepend () {
-    d.setVar('ALLOW_EMPTY', '1')
-}
 KERNEL_MODULE_AUTOLOAD = "uvcs_cmn"
