@@ -61,12 +61,7 @@ do_clean_source() {
 }
 
 PACKAGES = " \
-    ${PN} \
     ${PN}-dev \
-"
-
-FILES_${PN} = " \
-    /lib/modules/${KERNEL_VERSION}/extra/fdpm.ko \
 "
 
 FILES_${PN}-dev = " \

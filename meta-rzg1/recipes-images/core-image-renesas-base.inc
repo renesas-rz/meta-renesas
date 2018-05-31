@@ -1,5 +1,5 @@
 require ../include/gles-control.inc
-#require ../include/multimedia-control.inc
+require ../include/multimedia-control.inc
 
 # common
 IMAGE_INSTALL_append_rzg1 = " \
@@ -29,6 +29,3 @@ IMAGE_INSTALL_append_rzg1 = ' ${@bb.utils.contains("USE_GLES_TEST", "1", " \
     gles-test-module \
     ", "", d)}'
 
-
-#### temperary ####
-IMAGE_INSTALL_append_rzg1 = " kernel-module-vsp2 "
