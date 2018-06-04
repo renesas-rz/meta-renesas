@@ -9,7 +9,6 @@ inherit packagegroup
 PACKAGES = "\
     packagegroup-rzg-multimedia-tp \
     packagegroup-rzg-dtv \
-    packagegroup-rzg-multimedia \
 "
 
 PACKAGES_append_lcb = " packagegroup-lcb-oss-codecs"
@@ -51,10 +50,6 @@ DTV_PACKAGES = "\
 
 RDEPENDS_packagegroup-rzg-dtv = "\
     ${@ '${DTV_PACKAGES}' if '${USE_DTV}' == '1' else '' } \
-"
-
-RDEPENDS_packagegroup-rzg-multimedia = "\
-    ${@ '${MULTIMEDIA_PACKAGES}' if '${USE_MULTIMEDIA}' == '1' else '' } \
 "
 
 RDEPENDS_packagegroup-lcb-oss-codecs = "\
