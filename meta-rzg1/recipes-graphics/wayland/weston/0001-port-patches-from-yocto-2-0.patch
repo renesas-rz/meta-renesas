@@ -1,0 +1,87 @@
+From 5e4f91e2d57e26d1c36e06116fcc545e380349aa Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Wed, 23 May 2018 20:02:55 +0700
+Subject: [PATCH] port patches from yocto 2.0
+
+from : https://github.com/renesas-rz/meta-renesas-private/tree/cip-dev/meta-rzg1/recipes-graphics/wayland/weston
+- 0002-remove-unsupported-extensions.patch
+- 0003-notify-client-immediately-on-buffer-release.patch
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ libweston/compositor.c  |  2 +-
+ libweston/gl-renderer.c | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index 9ded23f..ec9fef1 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -1951,7 +1951,7 @@ weston_buffer_reference(struct weston_buffer_reference *ref,
+ 		ref->buffer->busy_count--;
+ 		if (ref->buffer->busy_count == 0) {
+ 			assert(wl_resource_get_client(ref->buffer->resource));
+-			wl_resource_queue_event(ref->buffer->resource,
++			wl_resource_post_event(ref->buffer->resource,
+ 						WL_BUFFER_RELEASE);
+ 		}
+ 		wl_list_remove(&ref->destroy_listener.link);
+diff --git a/libweston/gl-renderer.c b/libweston/gl-renderer.c
+index 037e46d..3bdfc80 100644
+--- a/libweston/gl-renderer.c
++++ b/libweston/gl-renderer.c
+@@ -2575,7 +2575,7 @@ match_config_to_visual(EGLDisplay egl_display,
+ 				&id))
+ 			continue;
+ 
+-		if (id == visual_id)
++		if (id == visual_id || id == 0)
+ 			return i;
+ 	}
+ 
+@@ -2672,7 +2672,7 @@ gl_renderer_create_window_surface(struct gl_renderer *gr,
+ 	weston_log("NB\n");
+ 	if (egl_choose_config(gr, config_attribs, visual_id,
+ 			      n_ids, &egl_config) == -1) {
+-		weston_log("failed to choose EGL config for output\n");
++		weston_log("failed to choose EGL config for output, eglGetError : 0x%x \n", eglGetError());
+ 		return EGL_NO_SURFACE;
+ 	}
+ 	weston_log("NB\n");
+@@ -2904,7 +2904,7 @@ gl_renderer_setup_egl_extensions(struct weston_compositor *ec)
+ 
+ 	if (weston_check_egl_extension(extensions, "EGL_KHR_surfaceless_context"))
+ 		gr->has_surfaceless_context = 1;
+-
++#if 0
+ 	if (weston_check_egl_extension(extensions, "EGL_EXT_image_dma_buf_import"))
+ 		gr->has_dmabuf_import = 1;
+ 
+@@ -2912,7 +2912,7 @@ gl_renderer_setup_egl_extensions(struct weston_compositor *ec)
+ 		gr->has_gl_texture_rg = 1;
+ 
+ 	renderer_setup_egl_client_extensions(gr);
+-
++#endif
+ 	return 0;
+ }
+ 
+@@ -3073,14 +3073,14 @@ gl_renderer_display_create(struct weston_compositor *ec, EGLenum platform,
+ 	struct gl_renderer *gr;
+ 	EGLint major, minor;
+ 	int supports = 0;
+-
++#if 0
+ 	if (platform) {
+ 		supports = gl_renderer_supports(
+ 			ec, platform_to_extension(platform));
+ 		if (supports < 0)
+ 			return -1;
+ 	}
+-
++#endif
+ 	gr = zalloc(sizeof *gr);
+ 	if (gr == NULL)
+ 		return -1;
+-- 
+2.7.4
+
