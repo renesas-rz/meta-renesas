@@ -9,8 +9,10 @@ inherit packagegroup
 PACKAGES = "\
     packagegroup-rzg-multimedia \
     packagegroup-rzg-multimedia-tp \
+    packagegroup-rzg-dtv \
 "
 
+PACKAGES_append_lcb = " packagegroup-lcb-oss-codecs"
 
 MULTIMEDIA_PACKAGES ="\
     kernel-module-mmngr mmngr-user-module \
@@ -41,8 +43,14 @@ MULTIMEDIA_TEST_PACKAGES = "\
     s3ctl-tp-user-module \
 "
 
-RDEPENDS_packagegroup-rzg-multimedia-tp = "\
-    ${@ "${MULTIMEDIA_TEST_PACKAGES}" if "${USE_MULTIMEDIA_TEST}" == "1" else "" } \
+DTV_PACKAGES = "\
+    ${MULTIMEDIA_PACKAGES} \
+    scu-kernel-module ssp-kernel-module \
+    dtv \
+"
+
+RDEPENDS_packagegroup-rzg-dtv = "\
+    ${@ '${DTV_PACKAGES}' if '${USE_DTV}' == '1' else '' } \
 "
 
 RDEPENDS_packagegroup-lcb-oss-codecs = "\
