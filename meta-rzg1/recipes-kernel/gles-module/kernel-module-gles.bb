@@ -100,5 +100,6 @@ FILES_${PN}-dev = " \
 "
 
 PACKAGES = "\
+    ${PN} \
     ${PN}-dev \
 "
