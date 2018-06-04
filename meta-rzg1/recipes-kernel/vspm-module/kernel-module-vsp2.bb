@@ -39,6 +39,7 @@ do_install() {
 }
 
 PACKAGES = "\
+    ${PN} \
     ${PN}-dev \
 "
 
