@@ -20,6 +20,4 @@ IMAGE_INSTALL_append_lcb = " \
 IMAGE_INSTALL_append = " \
   usb-otg-init \
   iproute2 \
-  obexftp \
-  bluez4 \
 "
