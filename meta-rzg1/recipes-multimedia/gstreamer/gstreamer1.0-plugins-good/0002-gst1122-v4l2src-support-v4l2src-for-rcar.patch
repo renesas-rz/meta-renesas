@@ -1,0 +1,84 @@
+From 3904b4efa7eb72ca93d93e70db8cc7a0ea0cf873 Mon Sep 17 00:00:00 2001
+From: "NGUYEN VAN TU [FGA.BU13.RZG]" <tunv16@fsoft.com.vn>
+Date: Mon, 23 Apr 2018 16:10:25 +0700
+Subject: [PATCH 2/8] gst145-v4l2src: support v4l2src for rcar
+
+Porting from a patch in Linux 3.10 environment made by Thao Luong <thao.luong.uw@rvc.renesas.com>
+                                                       Tomohiro Komagata <tomohiro.komagata.aj@renesas.com>
+
+Revise v4l2src to support for RcarGen2. v4l2src capture video through 2 port
+(RCA (/dev/video1) for analog signal and HDMI (/dev/video0) for digital signal)
+of RCarGen2.
+v4l2src support formats: v42src:src {UYVY, NV16, RGB16, ...}.
+User should provide target width, target height and format for output of v4l2src
+output width is even number [6 2048]
+output height is even number [2 2048]
+Ex:
+gst-launch-1.0 -e v4l2src device=/dev/video1 ! videorate ! video/x-raw,width=720,height=480,format=UYVY,framerate=30/1 ! videoconvert ! fbdevsink
+
+Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
+
+Signed-off-by: NGUYEN VAN TU [FGA.BU13.RZG] <tunv16@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2src.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index 8273af4..1846838 100644
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -78,6 +78,8 @@ enum
+   LAST_SIGNAL
+ };
+ 
++static GstVideoFormat vin_format;         /*Check format in cap*/
++
+ static guint gst_v4l2_signals[LAST_SIGNAL] = { 0 };
+ 
+ GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src);
+@@ -428,10 +430,15 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
+ {
+   GstV4l2Src *v4l2src;
+   GstV4l2Object *obj;
++  GstVideoInfo info;
+ 
+   v4l2src = GST_V4L2SRC (src);
+   obj = v4l2src->v4l2object;
+ 
++  /*Get format of cap to check in gst_v4l2src_decide_allocation function*/
++  gst_video_info_from_caps (&info, caps);
++  vin_format = GST_VIDEO_INFO_FORMAT (&info);
++
+   /* make sure the caps changed before doing anything */
+   if (gst_v4l2_object_caps_equal (obj, caps))
+     return TRUE;
+@@ -467,7 +474,26 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
+ {
+   GstV4l2Src *src = GST_V4L2SRC (bsrc);
+   gboolean ret = TRUE;
++  GstBufferPool *pool;
++
++  if (pool) {
++    GstStructure *config;
++
++    config = gst_buffer_pool_get_config (pool);
+ 
++    /*Check format of cap*/
++    if(vin_format == GST_VIDEO_FORMAT_NV16) {
++      /* support various metadata (neccesary when connect with videoconvert) */
++      gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
++    } else {
++      /* if downstream supports video metadata, add this to the pool config */
++      if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
++         GST_DEBUG_OBJECT (pool, "activate Video Meta");
++         gst_buffer_pool_config_add_option (config,
++                   GST_BUFFER_POOL_OPTION_VIDEO_META);
++      }
++    }
++  }
+   if (src->pending_set_fmt) {
+     GstCaps *caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc));
+ 
+-- 
+1.9.1
+

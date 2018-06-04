@@ -1,0 +1,29 @@
+From af11d9b614ab4bd0c10862c009b273a75669a983 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Fri, 11 May 2018 18:16:01 +0700
+Subject: [PATCH 1/8] gst145-v4l2src: Add NV16 color format support
+
+Porting from a patch in Linux 3.10 environment made by Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2object.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/gst-plugins-good-1.12.2/sys/v4l2/gstv4l2object.c b/gst-plugins-good-1.12.2/sys/v4l2/gstv4l2object.c
+index aae2c55..113146c 100644
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -1296,6 +1296,8 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
+       format = GST_VIDEO_FORMAT_YVYU;
+       break;
+     case V4L2_PIX_FMT_NV16:
++	  format = GST_VIDEO_FORMAT_NV16;
++      break;
+     case V4L2_PIX_FMT_NV16M:
+       format = GST_VIDEO_FORMAT_NV16;
+       break;
+-- 
+1.9.1
+

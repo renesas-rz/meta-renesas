@@ -70,7 +70,7 @@ USE_AUDIO_COMMON = "${@'1' if '1' in '${AUDIO_ENCODER_ARRAY}' or '1' in '${AUDIO
 # Please add new encoder config into list when have new encoder (e.g. as RESERVE_ENCODER_CONF)
 VIDEO_ENCODER_ARRAY = "${USE_H264AVC_ENCODER}"
 #VIDEO_ENCODER_ARRAY += "${RESERVE_ENCODER_CONF}"
-USE_VIDEO_COMMON_ENCODER = '${@base_contains("VIDEO_ENCODER_ARRAY", "1", "1", "0", d)}'
+USE_VIDEO_COMMON_ENCODER = '${@bb.utils.contains("VIDEO_ENCODER_ARRAY", "1", "1", "0", d)}'
 
 # Audio codec config
 ARMAACP2_MDW_DECODER = '${@base_conditional("USE_AACP2_DECODER", "1", "1", "${USE_ARMAACP2_MDW_DECODER}", d)}'

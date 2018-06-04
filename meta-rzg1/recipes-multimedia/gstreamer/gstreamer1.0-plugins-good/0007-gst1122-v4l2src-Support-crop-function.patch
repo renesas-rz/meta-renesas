@@ -1,0 +1,216 @@
+From 7bb80c8ee2742a16c53ea5f8d410d821ca612f2e Mon Sep 17 00:00:00 2001
+From: "NGUYEN VAN TU [FGA.BU13.RZG]" <tunv16@fsoft.com.vn>
+Date: Mon, 23 Apr 2018 16:24:05 +0700
+Subject: [PATCH 7/8] gst145-v4l2src: Support crop function
+
+Porting from a patch in Linux 3.10 environment made by Thao Luong <thao.luong.uw@rvc.renesas.com>
+
+Support crop function for v4l2src. Crop function will crop an area of VIN image
+Crop has 4 components:
+crop-top: The topmost (y) coordinate of the video crop, it must be even number.
+crop-left: The leftmost (x) coordinate of the video crop, it must be even number
+crop-width: The width of the video crop, it must be even number more than 6
+crop-height: The height of the video crop, it must be even number more than 2
+
+For example:
+gst-launch-1.0 v4l2src device=/dev/video1 io-mode=dmabuf crop-left=80 crop-top=160 crop-width=640 crop-height=320 ! video/x-raw,format=UYVY,interlace-mode=interleaved,width=640,height=320 ! vspfilter ! video/x-raw,format=BGRA ! waylandsink
+
+Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
+
+Signed-off-by: NGUYEN VAN TU [FGA.BU13.RZG] <tunv16@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2object.c | 70 ++++++++++++++++++++++++++++++++++++++++++++++++
+ sys/v4l2/gstv4l2object.h |  3 +++
+ sys/v4l2/gstv4l2src.c    | 46 ++++++++++++++++++++++++++++++-
+ 3 files changed, 118 insertions(+), 1 deletion(-)
+
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index 4efafc5..3fb91a9 100644
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -3151,6 +3151,9 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
+   gint i = 0;
+   gboolean is_mplane;
+   enum v4l2_colorspace colorspace = 0;
++  struct v4l2_crop crop;
++  struct v4l2_cropcap cropcap;
++  gint ret;
+   enum v4l2_quantization range = 0;
+   enum v4l2_ycbcr_encoding matrix = 0;
+   enum v4l2_xfer_func transfer = 0;
+@@ -3325,6 +3328,46 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
+   memset (&format, 0x00, sizeof (struct v4l2_format));
+   format.type = v4l2object->type;
+ 
++  /*Set clip area */
++  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
++    crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++
++    /*Check capability of crop*/
++    memset (&cropcap, 0, sizeof (cropcap));
++    cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++
++    ret = v4l2_ioctl (v4l2object->video_fd, VIDIOC_CROPCAP, &cropcap);
++    if (ret < 0)
++      GST_WARNING_OBJECT (v4l2object->element,
++      "Failed to querry crop information or device does not support crop");
++    else
++    {
++      if (v4l2object->crop.top !=0 || v4l2object->crop.left !=0 ||
++          v4l2object->crop.width != 0 ||
++          v4l2object->crop.height != 0) {
++
++        crop.c.top = v4l2object->crop.top;
++        crop.c.left = v4l2object->crop.left;
++        if (v4l2object->crop.width == 0)
++          crop.c.width = width;
++        else
++          crop.c.width = v4l2object->crop.width;
++        if (v4l2object->crop.height == 0)
++          crop.c.height = height;
++        else
++          crop.c.height = v4l2object->crop.height;
++      } else {
++        crop.c.top = cropcap.defrect.top;
++        crop.c.left = cropcap.defrect.left;
++        crop.c.width = cropcap.defrect.width;
++        crop.c.height = cropcap.defrect.height;
++      }
++      if (-1 == v4l2_ioctl (fd, VIDIOC_S_CROP, &crop))
++        GST_WARNING_OBJECT (v4l2object->element,
++        "Failed to set crop to %dx%d", width, height);
++    }
++  }
++
+   if (is_mplane) {
+     format.type = v4l2object->type;
+     format.fmt.pix_mp.pixelformat = pixelformat;
+@@ -3416,6 +3459,33 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
+       is_mplane ? format.fmt.pix_mp.num_planes : 1,
+       is_mplane ? format.fmt.pix_mp.colorspace : format.fmt.pix.colorspace);
+ 
++  /*Reset clip area when field or format change*/
++  if ((v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) && (ret == 0)) {
++    crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
++    if (v4l2object->crop.top != 0 || v4l2object->crop.left != 0 ||
++        v4l2object->crop.width != 0 ||
++        v4l2object->crop.height != 0) {
++
++      crop.c.top = v4l2object->crop.top;
++      crop.c.left = v4l2object->crop.left;
++      if (v4l2object->crop.width == 0)
++        crop.c.width = width;
++      else
++        crop.c.width = v4l2object->crop.width;
++      if (v4l2object->crop.height == 0)
++        crop.c.height = height;
++      else
++        crop.c.height = v4l2object->crop.height;
++    } else {
++      crop.c.top = cropcap.defrect.top;
++      crop.c.left = cropcap.defrect.left;
++      crop.c.width = cropcap.defrect.width;
++      crop.c.height = cropcap.defrect.height;
++    }
++    if (-1 == v4l2_ioctl (fd, VIDIOC_S_CROP, &crop))
++      GST_WARNING_OBJECT (v4l2object->element, "Failed to set crop to %dx%d", width, height);
++  }
++
+ #ifndef GST_DISABLE_GST_DEBUG
+   if (is_mplane) {
+     for (i = 0; i < format.fmt.pix_mp.num_planes; i++)
+diff --git a/sys/v4l2/gstv4l2object.h b/sys/v4l2/gstv4l2object.h
+index 76cc88d..2fc2f13 100644
+--- a/sys/v4l2/gstv4l2object.h
++++ b/sys/v4l2/gstv4l2object.h
+@@ -175,6 +175,9 @@ struct _GstV4l2Object {
+   /* Allow to skip reading initial format through G_FMT. Some devices
+    * just fails if you don't call S_FMT first. (ex: M2M decoders) */
+   gboolean no_initial_format;
++  /*Support Crop for v4l2src*/
++  struct v4l2_rect crop;
++ 
+ };
+ 
+ struct _GstV4l2ObjectClassHelper {
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index bb04346..c2c9045 100644
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -69,7 +69,11 @@ enum
+ {
+   PROP_0,
+   V4L2_STD_OBJECT_PROPS,
+-  PROP_LAST
++  PROP_LAST,
++  PROP_CROP_TOP,
++  PROP_CROP_LEFT,
++  PROP_CROP_WIDTH,
++  PROP_CROP_HEIGHT,
+ };
+ 
+ /* signals and args */
+@@ -145,6 +149,22 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
+ 
+   gst_v4l2_object_install_properties_helper (gobject_class,
+       DEFAULT_PROP_DEVICE);
++  g_object_class_install_property (gobject_class, PROP_CROP_TOP,
++      g_param_spec_int ("crop-top", "Crop top",
++          "The topmost (y) coordinate of the video crop, it must be even number",
++          0, 2048, 0, G_PARAM_READWRITE));
++  g_object_class_install_property (gobject_class, PROP_CROP_LEFT,
++      g_param_spec_int ("crop-left", "Crop left",
++          "The leftmost (x) coordinate of the video crop, it must be even number",
++          0, 2048 , 0, G_PARAM_READWRITE));
++  g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
++      g_param_spec_uint ("crop-width", "Crop width",
++          "The width of the video crop, it must be even number",
++          6, 2048, 6, G_PARAM_READWRITE));
++  g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
++      g_param_spec_uint ("crop-height", "Crop height",
++          "The height of the video crop, it must be even number",
++          2, 2048, 2, G_PARAM_READWRITE));
+ 
+   /**
+    * GstV4l2Src::prepare-format:
+@@ -226,6 +246,18 @@ gst_v4l2src_set_property (GObject * object,
+   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
+           prop_id, value, pspec)) {
+     switch (prop_id) {
++      case PROP_CROP_TOP:
++        v4l2src->v4l2object->crop.top = g_value_get_int (value);
++        break;
++      case PROP_CROP_LEFT:
++        v4l2src->v4l2object->crop.left = g_value_get_int (value);
++        break;
++      case PROP_CROP_WIDTH:
++        v4l2src->v4l2object->crop.width = g_value_get_uint (value);
++        break;
++      case PROP_CROP_HEIGHT:
++        v4l2src->v4l2object->crop.height = g_value_get_uint (value);
++        break;
+       default:
+         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+         break;
+@@ -242,6 +274,18 @@ gst_v4l2src_get_property (GObject * object,
+   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
+           prop_id, value, pspec)) {
+     switch (prop_id) {
++      case PROP_CROP_TOP:
++        g_value_set_int (value, v4l2src->v4l2object->crop.top);
++        break;
++      case PROP_CROP_LEFT:
++        g_value_set_int (value, v4l2src->v4l2object->crop.left);
++        break;
++      case PROP_CROP_WIDTH:
++        g_value_set_uint (value, v4l2src->v4l2object->crop.width);
++        break;
++      case PROP_CROP_HEIGHT:
++        g_value_set_uint (value, v4l2src->v4l2object->crop.height);
++        break;
+       default:
+         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+         break;
+-- 
+1.9.1
+

@@ -1,0 +1,54 @@
+From 79d31f35175752e8b2e1536286a8525562d3d9fe Mon Sep 17 00:00:00 2001
+From: "NGUYEN VAN TU [FGA.BU13.RZG]" <tunv16@fsoft.com.vn>
+Date: Mon, 23 Apr 2018 16:16:52 +0700
+Subject: [PATCH 4/8] gst145-v4l2src/v4l2bufferpool: Keep the information 
+ whether the videosink_buffer_creation_request query is supported in the 
+ downstream
+
+Porting from a patch in Linux 3.10 environment made by Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
+
+Signed-off-by: NGUYEN VAN TU [FGA.BU13.RZG] <tunv16@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2bufferpool.c | 1 +
+ sys/v4l2/gstv4l2src.c        | 5 +++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index fb5203b..f3267a2 100644
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -1754,6 +1754,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
+   pool->video_fd = fd;
+   pool->obj = obj;
+   pool->can_poll_device = TRUE;
++  pool->vsink_buf_req_supported = FALSE;
+ 
+   pool->vallocator =
+       gst_v4l2_allocator_new (GST_OBJECT (pool), obj->video_fd, &obj->format);
+diff --git a/sys/v4l2/gstv4l2src.c b/sys/v4l2/gstv4l2src.c
+index 1846838..b156f1f 100644
+--- a/sys/v4l2/gstv4l2src.c
++++ b/sys/v4l2/gstv4l2src.c
+@@ -475,12 +475,17 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
+   GstV4l2Src *src = GST_V4L2SRC (bsrc);
+   gboolean ret = TRUE;
+   GstBufferPool *pool;
++  GstV4l2Object *obj;
+ 
+   if (pool) {
+     GstStructure *config;
+ 
+     config = gst_buffer_pool_get_config (pool);
+ 
++    gst_structure_get_boolean (config,
++        "videosink_buffer_creation_request_supported",
++        &GST_V4L2_BUFFER_POOL (obj->pool)->vsink_buf_req_supported);
++
+     /*Check format of cap*/
+     if(vin_format == GST_VIDEO_FORMAT_NV16) {
+       /* support various metadata (neccesary when connect with videoconvert) */
+-- 
+1.9.1
+

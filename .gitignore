@@ -1,0 +1,3 @@
+##.gitgnore
+**.tar.bz2
+bitbake-cookerdaemon.log

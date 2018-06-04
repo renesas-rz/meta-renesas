@@ -1,0 +1,50 @@
+From 94f93062f5adb4af38f26f382221ba612cbaca7c Mon Sep 17 00:00:00 2001
+From: "NGUYEN VAN TU [FGA.BU13.RZG]" <tunv16@fsoft.com.vn>
+Date: Mon, 23 Apr 2018 16:17:36 +0700
+Subject: [PATCH 5/8] gst145-v4l2bufferpool: Change the buffer number to be 
+ queued into V4L2
+
+Porting from a patch in Linux 3.10 environment made by Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+Apparently the continuous frame capturing mode of VIN has to
+have at least 3 buffers to be queued into the driver in order to
+output frames and the GStreamer pipeline occupies up to 2 buffers
+, which correspond to the front and back buffers in the videosink.
+The total number to circulate the V4L2 buffers in the pipeline is 5,
+so this patch sets that as the buffer pool parameter.
+
+Also this change suppresses the buffer copying that occurs when
+running out of the remaining buffers in the queue.
+
+v4l2bufferpool: Set the minimum number of the buffers as the same
+with the maximum number
+
+This patch pre-allocates the buffers as many as the maximum number
+when the buffer pool is activated because the maximum number which
+has already been set is essential for the contiguous capturing mode
+and it would be efficient that all of the buffers are allocated
+at the initialization of this plugin.
+
+Signed-off-by: Tram Nguyen <tram.nguyen.xw@rvc.renesas.com>
+
+Signed-off-by: NGUYEN VAN TU [FGA.BU13.RZG] <tunv16@fsoft.com.vn>
+---
+ sys/v4l2/gstv4l2bufferpool.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+index f3267a2..bc0250e 100644
+--- a/sys/v4l2/gstv4l2bufferpool.c
++++ b/sys/v4l2/gstv4l2bufferpool.c
+@@ -1764,7 +1764,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
+   gst_object_ref (obj->element);
+ 
+   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+-  gst_buffer_pool_config_set_params (config, caps, obj->info.size, 0, 0);
++  gst_buffer_pool_config_set_params (config, caps, obj->info.size, 5, 5);
+   /* This will simply set a default config, but will not configure the pool
+    * because min and max are not valid */
+   gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), config);
+-- 
+1.9.1
+

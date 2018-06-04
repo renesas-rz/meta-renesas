@@ -1,0 +1,1 @@
+ACTION=="add",DEVPATH=="/devices/platform/e6530000.i2c/i2c-2/2-0038/input/input0/event0", ENV{WL_OUTPUT}="LVDS-1"
