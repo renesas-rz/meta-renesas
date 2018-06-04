@@ -27,4 +27,6 @@ do_configure_prepend() {
     cd ${B}
 }
 
-RDEPENDS_gstreamer1.0-plugins-bad += "libwayland-egl"
+RDEPENDS_gstreamer1.0-plugins-bad_append = " libwayland-egl "
+RDEPENDS_gstreamer1.0-plugins-bad-opengl_append = " gles-user-module "
+RDEPENDS_libgstgl-1.0_append = " gles-user-module "
