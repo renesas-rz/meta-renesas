@@ -20,10 +20,6 @@ IMAGE_INSTALL_append_rzg1 = ' ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
 IMAGE_INSTALL_append_rzg1 = ' ${@bb.utils.contains("USE_MULTIMEDIA_TEST", "1", " \
     packagegroup-rzg-multimedia-tp \
     ", "", d)}'
-# pkg groups for dtv
-IMAGE_INSTALL_append_rzg1 = ' ${@bb.utils.contains("USE_DTV", "1", " \
-    packagegroup-rzg-dtv \
-    ", "", d)}'
 # pkg groups for graphic test program
 IMAGE_INSTALL_append_rzg1 = ' ${@bb.utils.contains("USE_GLES_TEST", "1", " \
     gles-test-module \

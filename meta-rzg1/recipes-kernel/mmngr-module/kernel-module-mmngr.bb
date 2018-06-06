@@ -25,11 +25,8 @@ MMNGR_CFG_iwg23s = "MMNGR_IWG20M"
 
 do_compile() {
     export MMNGR_CONFIG=${MMNGR_CFG}
-    if [ "X${USE_DTV}" = "X1" ]; then
-        export MMNGR_SSP_CONFIG="MMNGR_SSP_ENABLE"
-    else
-        export MMNGR_SSP_CONFIG="MMNGR_SSP_DISABLE"
-    fi
+    # In case use "DTV", set MMNGR_SSP_CONFIG="MMNGR_SSP_ENABLE"
+    export MMNGR_SSP_CONFIG="MMNGR_SSP_DISABLE"
     cd ${S}/drv
     make all ARCH=arm
 }
