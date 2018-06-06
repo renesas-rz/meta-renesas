@@ -26,6 +26,7 @@ PACKAGES = " \
 RDEPENDS_packagegroup-gstreamer1.0-plugins = " \
     packagegroup-gstreamer1.0-plugins-base \
     packagegroup-gstreamer1.0-plugins-good \
+    packagegroup-gstreamer1.0-plugins-bad \
 "
 
 # temp immerse omx
