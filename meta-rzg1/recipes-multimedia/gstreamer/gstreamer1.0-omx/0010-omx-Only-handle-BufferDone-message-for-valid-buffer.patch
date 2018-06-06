@@ -1,0 +1,36 @@
+From 3fe49cb324d9018f7853c657dc32a6c42dedeaab Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Thu, 2 Nov 2017 10:08:55 +0700
+Subject: [PATCH 10/41] omx: Only handle BufferDone message for valid buffer
+
+BufferDone message will be sent by EmptyBufferDone and FillBufferDone.
+There will be case buffer is freed before message is handled
+and lead to issue "Caunght SIGSEGV" due to handle for NULL pointer
+So only handle for this message in case valid buffer.
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ omx/gstomx.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 03c7f5f..208bd8f 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -353,7 +353,11 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
+         GstOMXBuffer *buf = msg->content.buffer_done.buffer->pAppPrivate;
+         GstOMXPort *port;
+ 
+-        port = buf->port;
++        if (buf)
++          port = buf->port;
++        else
++          /* Buffer already freed */
++          break;
+ 
+         if (msg->content.buffer_done.empty) {
+           /* Input buffer is empty again and can be used to contain new input */
+-- 
+2.7.4
+

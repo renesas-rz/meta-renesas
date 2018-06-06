@@ -1,0 +1,69 @@
+From 0cd43c4928ff7bbef05811484de60b7dac6389fd Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Wed, 1 Nov 2017 19:18:41 +0700
+Subject: [PATCH 07/41] omxvideodec: Calculate timestamp manually if not
+ provided
+
+When video does not provide timestamp or duration, video will not play correctly
+This patch will manually calculate timestamp for it.
+Default fps used to calculate timestamp is 30
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ omx/gstomxvideodec.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 929c26d..c2ac523 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -110,6 +110,11 @@ enum
+ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstOMXVideoDec, gst_omx_video_dec,
+     GST_TYPE_VIDEO_DECODER, DEBUG_INIT);
+ 
++/* Default fps use to calculate for timestamp if video file doesn't
++ * propose framerate information */
++#define DEFAULT_FRAME_PER_SECOND  30
++
++
+ static void
+ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
+ {
+@@ -2413,6 +2418,11 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+         (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);
+   }
+ 
++  /* Workaround for timestamp issue: frame has dts but don't have pts */
++  if (!GST_CLOCK_TIME_IS_VALID (frame->pts) &&
++      GST_CLOCK_TIME_IS_VALID (frame->dts))
++    frame->pts = frame->dts;
++
+   timestamp = frame->pts;
+   duration = frame->duration;
+ 
+@@ -2568,7 +2578,20 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
+           gst_util_uint64_scale (timestamp, OMX_TICKS_PER_SECOND, GST_SECOND));
+       self->last_upstream_ts = timestamp;
+     } else {
+-      GST_OMX_SET_TICKS (buf->omx_buf->nTimeStamp, G_GUINT64_CONSTANT (0));
++      /* Increase timestamp base on duration */
++      GST_OMX_SET_TICKS (buf->omx_buf->nTimeStamp,
++          gst_util_uint64_scale (self->last_upstream_ts, OMX_TICKS_PER_SECOND,
++              GST_SECOND));
++      frame->pts = self->last_upstream_ts;
++      GST_DEBUG_OBJECT (self, "Timestamp of frame updated to %" GST_TIME_FORMAT,
++          GST_TIME_ARGS (frame->pts));
++    }
++
++    /* Workaround for timestamp issue: duration is invalid
++     * Calculate for duration base on DEFAULT_FRAME_PER_SECOND (30)*/
++    if (duration == GST_CLOCK_TIME_NONE) {
++      duration =
++          gst_util_uint64_scale (1, GST_SECOND, DEFAULT_FRAME_PER_SECOND);
+     }
+ 
+     if (duration != GST_CLOCK_TIME_NONE && offset == 0) {
+-- 
+2.7.4
+

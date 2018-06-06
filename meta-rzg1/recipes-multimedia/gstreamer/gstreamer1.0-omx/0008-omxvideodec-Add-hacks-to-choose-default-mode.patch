@@ -1,0 +1,163 @@
+From 65d7fb826fa422388084928a2d04273d1f43b8d1 Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Thu, 2 Nov 2017 09:43:47 +0700
+Subject: [PATCH 08/41] omxvideodec: Add hacks to choose default mode
+
+omx videodecoder support 3 modes to transfer decoded data (OMXBuffer)
+from OMXIL component to GstBuffer:
+ - copy mode: Use memcpy to copy decoded data to GstBuffer
+ - no-copy mode: Use GstBuffer of BufferPool, this buffer has
+been added mem of OMXBuffer so there is no copy here
+ - dmabuf mode: Use GstBufer of BufferPool, but this buffer
+has been added dmabuf_fd.
+
+Normally, default mode is dmabuf mode. This patch will support
+choosing default mode through setting in gstomx.conf
+
+To choose copy mode as default mode, add "use-copy-mode-as-defalut" into
+hacks in gstomx.conf
+Ex:
+[omxh264dec]
+...
+hacks=no-disable-outport;use-copy-mode-as-default
+
+To choose no-copy mode as default mode, add "use-no-copy-mode-as-default"
+into hacks in gstomx.conf
+Ex:
+[omxh264dec]
+...
+hacks=no-disable-outport;use-no-copy-mode-as-default
+
+If add both "use-copy-mode-as-default" and use-no-copy-mode-as-default"
+It will be invalid value, the normal mode (dmabuf) will be choosen
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ omx/gstomx.c         |  5 +++++
+ omx/gstomx.h         | 11 +++++++++++
+ omx/gstomxvideodec.c | 23 +++++++++++++++++++++++
+ omx/gstomxvideodec.h |  2 ++
+ 4 files changed, 41 insertions(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 214f618..9b3ad38 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -3,6 +3,7 @@
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+  * Copyright (C) 2013, Collabora Ltd.
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
++ * Copyright (C) 2017, Renesas Electronics Corporation
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -2492,6 +2493,10 @@ gst_omx_parse_hacks (gchar ** hacks)
+       hacks_flags |= GST_OMX_HACK_SIGNALS_PREMATURE_EOS;
+     else if (g_str_equal (*hacks, "height-multiple-16"))
+       hacks_flags |= GST_OMX_HACK_HEIGHT_MULTIPLE_16;
++    else if (g_str_equal (*hacks, "use-copy-mode-as-default"))
++      hacks_flags |= GST_OMX_HACK_USE_COPY_MODE_AS_DEFAULT;
++    else if (g_str_equal (*hacks, "use-no-copy-mode-as-default"))
++      hacks_flags |= GST_OMX_HACK_USE_NO_COPY_MODE_AS_DEFAULT;
+     else
+       GST_WARNING ("Unknown hack: %s", *hacks);
+     hacks++;
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index cafed89..912c2d5 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -3,6 +3,7 @@
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+  * Copyright (C) 2013, Collabora Ltd.
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
++ * Copyright (C) 2017, Renesas Electronics Corporation
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -139,6 +140,16 @@ G_BEGIN_DECLS
+  */
+ #define GST_OMX_HACK_HEIGHT_MULTIPLE_16             G_GUINT64_CONSTANT (0x0000000000000200)
+ 
++/* omx videodecoder support 3 modes (copy, no-copy(use buffer of Bufferpool), dmabuf) to choose.
++ * Default is dmabuf mode. This hack will choose copy mode is default mode
++ */
++#define GST_OMX_HACK_USE_COPY_MODE_AS_DEFAULT                         G_GUINT64_CONSTANT (0x0000000000000800)
++
++/* omx videodecoder support 3 modes (copy, no-copy(use buffer of Bufferpool), dmabuf) to choose.
++ * Default is dmabuf mode. This hack will choose no-copy mode is default mode
++ */
++#define GST_OMX_HACK_USE_NO_COPY_MODE_AS_DEFAULT                      G_GUINT64_CONSTANT (0x0000000000001000)
++
+ typedef struct _GstOMXCore GstOMXCore;
+ typedef struct _GstOMXPort GstOMXPort;
+ typedef enum _GstOMXPortDirection GstOMXPortDirection;
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index c2ac523..1265561 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -195,6 +195,7 @@ gst_omx_video_dec_init (GstOMXVideoDec * self)
+ #endif
+   self->no_reorder = FALSE;
+   self->lossy_compress = FALSE;
++  self->has_set_property = FALSE;
+ }
+ 
+ static gboolean
+@@ -299,6 +300,24 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
+   GST_DEBUG_OBJECT (self, "Opened EGL renderer");
+ #endif
+ 
++  /* Use hacks to choose default mode, normally default mode is dmabuf */
++  if (!((klass->cdata.hacks & GST_OMX_HACK_USE_COPY_MODE_AS_DEFAULT) &&
++          (klass->cdata.hacks & GST_OMX_HACK_USE_NO_COPY_MODE_AS_DEFAULT)) &&
++      (!self->has_set_property)) {
++    if (klass->cdata.hacks & GST_OMX_HACK_USE_COPY_MODE_AS_DEFAULT) {
++      GST_DEBUG_OBJECT (self, "Use copy mode as default");
++      self->no_copy = FALSE;
++      self->use_dmabuf = FALSE;
++    }
++    if (klass->cdata.hacks & GST_OMX_HACK_USE_NO_COPY_MODE_AS_DEFAULT) {
++      GST_DEBUG_OBJECT (self, "Use no-copy mode as default");
++      self->no_copy = TRUE;
++      self->use_dmabuf = FALSE;
++    }
++  } else
++    GST_DEBUG_OBJECT (self,
++        "Disable hacks due to option(s) from user or incorrect setting for hacks");
++
+   return TRUE;
+ }
+ 
+@@ -2902,11 +2921,15 @@ gst_omx_video_dec_set_property (GObject * object, guint prop_id,
+     {
+       self->no_copy = g_value_get_boolean (value);
+       self->use_dmabuf = FALSE;
++      self->has_set_property = TRUE;
+       break;
+     }
+     case PROP_USE_DMABUF:
++    {
+       self->use_dmabuf = g_value_get_boolean (value);
++      self->has_set_property = TRUE;
+       break;
++    }
+     case PROP_NO_REORDER:
+       self->no_reorder = g_value_get_boolean (value);
+       break;
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index f0697e8..76823ad 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -91,6 +91,8 @@ struct _GstOMXVideoDec
+   gboolean no_reorder;
+   /* Set TRUE to use lossy image compression  */
+   gboolean lossy_compress;
++  /* TRUE when set_property() runs */
++  gboolean has_set_property;
+ };
+ 
+ struct _GstOMXVideoDecClass
+-- 
+2.7.4
+

@@ -1,0 +1,26 @@
+From c8c1f1c38d901be5467d6d8ebee075164aa4eaf3 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 4 Jun 2018 14:29:06 +0700
+Subject: [PATCH] workaroud: add include omx/openmax
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+---
+ omx/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/omx/Makefile.am b/omx/Makefile.am
+index 7a252fb..fd1ac11 100644
+--- a/omx/Makefile.am
++++ b/omx/Makefile.am
+@@ -67,7 +67,7 @@ noinst_HEADERS = \
+ if !HAVE_EXTERNAL_OMX
+ OMX_INCLUDEPATH = -I$(abs_srcdir)/openmax
+ endif
+-
++OMX_INCLUDEPATH = -I$(abs_srcdir)/openmax
+ libgstomx_la_CFLAGS = \
+ 	-DGST_USE_UNSTABLE_API=1 \
+ 	$(OMX_INCLUDEPATH) \
+-- 
+2.7.4
+

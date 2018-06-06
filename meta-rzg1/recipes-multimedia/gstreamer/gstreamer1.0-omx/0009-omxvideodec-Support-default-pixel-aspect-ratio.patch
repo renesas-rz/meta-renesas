@@ -1,0 +1,75 @@
+From 68b313b66b8d0a1041c5cf9781d20af9fa73f15e Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Thu, 2 Nov 2017 10:06:55 +0700
+Subject: [PATCH 09/41] omxvideodec: Support default-pixel-aspect-ratio
+
+Pixel aspect ratio has affected to image when display, image can
+be smaller or larger than original image base on pixel aspect ratio.
+This patch file will support a default pixel aspect ratio (1:1).
+It means that always keep original image when display.
+
+Add "default-pix-aspect-ratio" into hacks on gstomx.conf to enable it.
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ omx/gstomx.c         | 2 ++
+ omx/gstomx.h         | 4 ++++
+ omx/gstomxvideodec.c | 6 ++++++
+ 3 files changed, 12 insertions(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 9b3ad38..03c7f5f 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -2497,6 +2497,8 @@ gst_omx_parse_hacks (gchar ** hacks)
+       hacks_flags |= GST_OMX_HACK_USE_COPY_MODE_AS_DEFAULT;
+     else if (g_str_equal (*hacks, "use-no-copy-mode-as-default"))
+       hacks_flags |= GST_OMX_HACK_USE_NO_COPY_MODE_AS_DEFAULT;
++    else if (g_str_equal (*hacks, "default-pix-aspect-ratio"))
++      hacks_flags |= GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO;
+     else
+       GST_WARNING ("Unknown hack: %s", *hacks);
+     hacks++;
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index 912c2d5..db069ca 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -150,6 +150,10 @@ G_BEGIN_DECLS
+  */
+ #define GST_OMX_HACK_USE_NO_COPY_MODE_AS_DEFAULT                      G_GUINT64_CONSTANT (0x0000000000001000)
+ 
++/* Support default pixel aspect ratio is 1:1.
++ */
++#define GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO                       G_GUINT64_CONSTANT (0x0000000000002000)
++
+ typedef struct _GstOMXCore GstOMXCore;
+ typedef struct _GstOMXPort GstOMXPort;
+ typedef enum _GstOMXPortDirection GstOMXPortDirection;
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 1265561..964a1cc 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1319,6 +1319,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+   GstOMXAcquireBufferReturn acq_return;
+   GstClockTimeDiff deadline;
+   OMX_ERRORTYPE err;
++  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
+ 
+ #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
+   port = self->eglimage ? self->egl_out_port : self->dec_out_port;
+@@ -1505,6 +1506,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+           port_def.format.video.nFrameHeight, self->input_state);
+ 
+       /* Take framerate and pixel-aspect-ratio from sinkpad caps */
++      if (klass->cdata.hacks & GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO) {
++        /* Set pixel-aspect-ratio is 1/1. It means that always keep
++         * original image when display   */
++        state->info.par_d = state->info.par_n;
++      }
+ 
+       if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+         if (buf)
+-- 
+2.7.4
+

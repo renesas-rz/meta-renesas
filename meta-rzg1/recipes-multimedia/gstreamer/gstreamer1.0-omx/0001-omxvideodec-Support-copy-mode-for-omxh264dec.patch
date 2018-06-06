@@ -1,0 +1,87 @@
+From 6b10108b0ab0c3c542ff5059413194083cb24f59 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Tue, 5 Jun 2018 11:20:44 +0700
+Subject: [PATCH 1/2] omxvideodec: Support copy mode for omxh264dec
+
+This patch if from RCar gen 2:
+0008-omxvideodec-Support-copy-mode-for-omxh264dec.patch
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+---
+ omx/gstomxvideodec.c | 46 ++++++++++++++++++++++++++++------------------
+ 1 file changed, 28 insertions(+), 18 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 964a1cc..583ec5d 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -501,22 +501,13 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
+     goto done;
+   }
+ 
+-  /* Same strides and everything */
+-  if (gst_buffer_get_size (outbuf) == inbuf->omx_buf->nFilledLen) {
+-    GstMapInfo map = GST_MAP_INFO_INIT;
+-
+-    if (!gst_buffer_map (outbuf, &map, GST_MAP_WRITE)) {
+-      GST_ERROR_OBJECT (self, "Failed to map output buffer");
+-      goto done;
+-    }
+-
+-    memcpy (map.data,
+-        inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset,
+-        inbuf->omx_buf->nFilledLen);
+-    gst_buffer_unmap (outbuf, &map);
+-    ret = TRUE;
+-    goto done;
+-  }
++/* Try using gst_video_frame_map() before use gst_buffer_map() because
++ * gst_buffer_map() could return the different pointer from the
++ * buffers received from the sink plugin. If sink plugin return multiple
++ * seperated blocks, gst_buffer_map() can create a new allocation to
++ * collect discontiguous data into a region.
++ * It is safety to use gst_video_frame_map() for all cases instead.
++ */
+ 
+   /* Different strides */
+   if (gst_video_frame_map (&frame, vinfo, outbuf, GST_MAP_WRITE)) {
+@@ -594,8 +585,25 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
+     gst_video_frame_unmap (&frame);
+     ret = TRUE;
+   } else {
+-    GST_ERROR_OBJECT (self, "Can't map output buffer to frame");
+-    goto done;
++    GST_WARNING_OBJECT (self, "Can't map output buffer to frame \
++                        Try with map output to buffer");
++    /* Try using gst_buffer_map() if gst_video_frame_map() fail */
++   /* Same strides and everything */
++    if (gst_buffer_get_size (outbuf) == inbuf->omx_buf->nFilledLen) {
++      GstMapInfo map = GST_MAP_INFO_INIT;
++
++     if (!gst_buffer_map (outbuf, &map, GST_MAP_WRITE)) {
++        GST_ERROR_OBJECT (self, "Failed to map output buffer");
++        goto done;
++      }
++
++      memcpy (map.data,
++          inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset,
++          inbuf->omx_buf->nFilledLen);
++      gst_buffer_unmap (outbuf, &map);
++      ret = TRUE;
++      goto done;
++    }
+   }
+ 
+ done:
+@@ -1505,6 +1513,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+           format, port_def.format.video.nFrameWidth,
+           port_def.format.video.nFrameHeight, self->input_state);
+ 
++      gst_omx_port_update_port_definition (self->dec_out_port, NULL);
++
+       /* Take framerate and pixel-aspect-ratio from sinkpad caps */
+       if (klass->cdata.hacks & GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO) {
+         /* Set pixel-aspect-ratio is 1/1. It means that always keep
+-- 
+2.7.4
+

@@ -1,0 +1,40 @@
+From 5a92a89a1edda9eb3fad0d60a119a855bdc863ed Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Tue, 5 Jun 2018 11:40:40 +0700
+Subject: [PATCH 2/2] gstomx: Once reinitialize an instance and then retry 
+ OMX_Init() if OMX_GetHandle() fails
+
+This commit is from RCar Gen 2:
+0023-gstomx-Once-reinitialize-an-instance-and-then-retry.patch
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+---
+ omx/gstomx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index 208bd8f..dff540b 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -674,7 +674,9 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
+   GstOMXCore *core;
+   GstOMXComponent *comp;
+   const gchar *dot;
++  gint retry = 1;
+ 
++reinit:
+   core = gst_omx_core_acquire (core_name);
+   if (!core)
+     return NULL;
+@@ -697,6 +699,8 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
+     gst_omx_core_release (core);
+     g_free (comp->name);
+     g_slice_free (GstOMXComponent, comp);
++    if (retry-- > 0)
++      goto reinit;
+     return NULL;
+   }
+   GST_DEBUG_OBJECT (parent,
+-- 
+2.7.4
+
