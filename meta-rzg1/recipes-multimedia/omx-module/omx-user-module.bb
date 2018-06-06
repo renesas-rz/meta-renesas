@@ -111,11 +111,6 @@ do_configure() {
         OMXR_DEFAULT_CONFIG_FILE_NAME=/usr/local/config/omxr_config_base.txt
 }
 
-sysroot_stage_all_append () {
-    # add shared header files
-    sysroot_stage_dir ${D}/usr/local/include/ ${SYSROOT_DESTDIR}${includedir}
-    #sysroot_stage_dir ${D}/usr/local/lib/ ${SYSROOT_DESTDIR}${libdir}
-}
 do_compile() {
     cd ${S}/UDF_Linux
     make
@@ -365,7 +360,8 @@ do_install() {
 SYSROOT_PREPROCESS_FUNCS += "do_populate_share_lib"
 
 do_populate_share_lib () {
-    sysroot_stage_dir ${D}/usr/local/lib ${SYSROOT_DESTDIR}/usr/lib
+    sysroot_stage_dir ${D}/usr/local/lib ${SYSROOT_DESTDIR}/usr/local/lib
+    sysroot_stage_dir ${D}/usr/local/include ${SYSROOT_DESTDIR}/usr/local/include
 }
 
 # Append function to clean extract source
