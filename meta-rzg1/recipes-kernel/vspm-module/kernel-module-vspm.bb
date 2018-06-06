@@ -20,6 +20,11 @@ VSPM_CFG_r8a7743 = "M2CONFIG"
 VSPM_CFG_r8a7745 = "E2CONFIG"
 VSPM_CFG_r8a77470 = "C2CONFIG"
 
+sysroot_stage_all_append () {
+    # add shared header files
+    sysroot_stage_dir ${D}/usr/src/kernel/include ${SYSROOT_DESTDIR}${includedir}
+}
+
 do_compile() {
     export VSPM_CONFIG=${VSPM_CFG}
     cd ${S}/drv
