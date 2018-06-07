@@ -1,0 +1,156 @@
+From e20bc5c7ccbb3dc80e369d409f489f17ea83e39e Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Wed, 1 Nov 2017 19:07:58 +0700
+Subject: [PATCH 03/41] omxvideodec: Add use-dmabuf option for omx video
+ decoders
+
+This option will share dmabuf_fd of OMXBuffer with downstream.
+
+mmngrbuf is used to export dmabuf_fd of decoded data (OMXBuffer)
+So this option will be enable as default when mmngrbuf is supported.
+Handling for creating buffer contain dmabuf_fd will be done on
+omxbufferpool which will be updated in next commit.
+This patch file only add use-dmabuf option to video decoder.
+
+Can disable support of mmngrbuf as well as dmabuf by setting
+"--disable-dmabuf" in built-in configure.
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ configure.ac         | 16 ++++++++++++++++
+ omx/gstomxvideodec.c | 26 ++++++++++++++++++++++----
+ omx/gstomxvideodec.h |  2 ++
+ 3 files changed, 40 insertions(+), 4 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 14247b1..38987a0 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -262,6 +262,22 @@ elif test x"$ac_cv_omx_target_struct_packing" != x"none"; then
+   AC_DEFINE_UNQUOTED(GST_OMX_STRUCT_PACKING, $ac_cv_omx_target_struct_packing, [The struct packing used for OpenMAX structures])
+ fi
+ 
++dnl check for dmabuf support
++AC_ARG_ENABLE([dmabuf],
++             [AS_HELP_STRING([--disable-dmabuf],
++                             [Disable dmabuf even if you have mmngrbuf library])],
++             [],
++             [enable_dmabuf=yes]
++             )
++
++if test "x${enable_dmabuf}" = "xyes"; then
++  dnl check mmngrbuf library to use dmabuf exporter
++  AC_CHECK_LIB([mmngrbuf], [mmngr_export_start_in_user],
++             [AC_DEFINE(HAVE_MMNGRBUF, 1, [Define if you have mmngrbuf library])
++              GST_LIBS="$GST_LIBS -lmmngrbuf"
++             ])
++fi
++
+ dnl *** set variables based on configure arguments ***
+ 
+ dnl set license and copyright notice
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 60b6394..38ef916 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -91,7 +91,8 @@ static void gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+ enum
+ {
+   PROP_0,
+-  PROP_NO_COPY
++  PROP_NO_COPY,
++  PROP_USE_DMABUF
+ };
+ 
+ /* class initialization */
+@@ -147,6 +148,11 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
+           "Whether or not to transfer decoded data without copy",
+           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+           GST_PARAM_MUTABLE_READY));
++  g_object_class_install_property (gobject_class, PROP_USE_DMABUF,
++      g_param_spec_boolean ("use-dmabuf", "Use dmabuffer ",
++          "Whether or not to transfer decoded data using dmabuf",
++          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
++          GST_PARAM_MUTABLE_READY));
+ }
+ 
+ static void
+@@ -160,6 +166,11 @@ gst_omx_video_dec_init (GstOMXVideoDec * self)
+   g_mutex_init (&self->drain_lock);
+   g_cond_init (&self->drain_cond);
+   self->no_copy = FALSE;
++#ifdef HAVE_MMNGRBUF
++  self->use_dmabuf = TRUE;
++#else
++  self->use_dmabuf = FALSE;
++#endif
+ }
+ 
+ static gboolean
+@@ -1368,7 +1379,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+         if (err != OMX_ErrorNone)
+           goto reconfigure_error;
+ 
+-        if (self->no_copy == TRUE) {
++        if ((self->no_copy == TRUE) || (self->use_dmabuf == TRUE)) {
+           /* Re-create new out_port_pool. The old one has been freed when
+            * deallocate output buffers */
+           self->out_port_pool =
+@@ -2140,7 +2151,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
+               5 * GST_SECOND) != OMX_ErrorNone)
+         return FALSE;
+     }
+-    if (self->no_copy == TRUE) {
++    if ((self->no_copy == TRUE) || (self->use_dmabuf == TRUE)) {
+       /* Re-create buffer pool for output port. The old one has been
+        * freed when deallocate output buffers */
+       self->out_port_pool =
+@@ -2185,7 +2196,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
+         return FALSE;
+     }
+ 
+-    if (self->no_copy == TRUE) {
++    if ((self->no_copy == TRUE) || (self->use_dmabuf == TRUE)) {
+       /* Create buffer pool for output port */
+       self->out_port_pool =
+           gst_omx_buffer_pool_new (GST_ELEMENT_CAST (self), self->dec,
+@@ -2806,8 +2817,12 @@ gst_omx_video_dec_set_property (GObject * object, guint prop_id,
+     case PROP_NO_COPY:
+     {
+       self->no_copy = g_value_get_boolean (value);
++      self->use_dmabuf = FALSE;
+       break;
+     }
++    case PROP_USE_DMABUF:
++      self->use_dmabuf = g_value_get_boolean (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -2824,6 +2839,9 @@ gst_omx_video_dec_get_property (GObject * object, guint prop_id,
+     case PROP_NO_COPY:
+       g_value_set_boolean (value, self->no_copy);
+       break;
++    case PROP_USE_DMABUF:
++      g_value_set_boolean (value, self->use_dmabuf);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+diff --git a/omx/gstomxvideodec.h b/omx/gstomxvideodec.h
+index 6c4d83b..7ad7294 100644
+--- a/omx/gstomxvideodec.h
++++ b/omx/gstomxvideodec.h
+@@ -85,6 +85,8 @@ struct _GstOMXVideoDec
+    * downstream
+    */
+   gboolean no_copy;
++  /* Set TRUE to use dmabuf to transfer decoded data */
++  gboolean use_dmabuf;
+ };
+ 
+ struct _GstOMXVideoDecClass
+-- 
+2.7.4
+
