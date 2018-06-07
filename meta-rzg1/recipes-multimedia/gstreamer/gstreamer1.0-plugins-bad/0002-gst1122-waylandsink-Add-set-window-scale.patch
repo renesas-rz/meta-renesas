@@ -1,0 +1,160 @@
+From 7227a1d66bf98fc79c0d0a73714e505cb3ace277 Mon Sep 17 00:00:00 2001
+From: AnNDP <AnNDP@fsoft.com.vn>
+Date: Wed, 6 Jun 2018 00:34:02 -0400
+Subject: [PATCH 2/9] gst145-waylandsink-Add-set-window-scale
+
+Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+---
+ ext/wayland/gstwaylandsink.c | 46 +++++++++++++++++++++++++++++++++++++++++---
+ ext/wayland/gstwaylandsink.h |  3 +++
+ ext/wayland/wlwindow.c       |  4 ++--
+ ext/wayland/wlwindow.h       |  2 +-
+ 4 files changed, 49 insertions(+), 6 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index bbcc77a..25a3388 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -63,7 +63,9 @@ enum
+   PROP_0,
+   PROP_DISPLAY,
+   PROP_WAYLAND_POSITION_X,    /* add property (position_x) */
+-  PROP_WAYLAND_POSITION_Y     /* add property (position_y) */
++  PROP_WAYLAND_POSITION_Y,    /* add property (position_y) */
++  PROP_WAYLAND_OUT_WIDTH,     /* add property (out_width)  */
++  PROP_WAYLAND_OUT_HEIGHT     /* add property (out_height) */
+ };
+ 
+ GST_DEBUG_CATEGORY (gstwayland_debug);
+@@ -185,6 +187,25 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+                         G_MAXINT,
+                         0,
+                         G_PARAM_READWRITE));
++    /* install property (out_width) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_OUT_WIDTH,
++      g_param_spec_int ("out_width",
++                        "Out_width",
++                        "Wayland  Out_width value from the application",
++                        0,
++                        G_MAXINT,
++                        0,
++                        G_PARAM_READWRITE));
++
++  /* install property (out_height) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_OUT_HEIGHT,
++      g_param_spec_int ("out_height",
++                        "Out_height",
++                        "Wayland  Out_height value from the application",
++                        0,
++                        G_MAXINT,
++                        0,
++                        G_PARAM_READWRITE));
+ }
+ 
+ static void
+@@ -195,6 +216,9 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+   sink->position_x = -1;
+   sink->position_y = -1;
+   sink->exist_position = 0;
++  sink->scale = 0;
++  sink->out_width = 0;
++  sink->out_height = 0;
+ }
+ 
+ static void
+@@ -217,6 +241,14 @@ gst_wayland_sink_get_property (GObject * object,
+       /* set position_y property */
+       g_value_set_int (value, sink->position_y);
+       break;
++    case PROP_WAYLAND_OUT_WIDTH:
++      /* set out_width property */
++      g_value_set_int (value, sink->out_width);
++      break;
++    case PROP_WAYLAND_OUT_HEIGHT:
++      /* set out_height property */
++      g_value_set_int (value, sink->out_height);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -243,6 +275,14 @@ gst_wayland_sink_set_property (GObject * object,
+       /* get position_y property */
+       sink->position_y = g_value_get_int (value);
+       break;
++    case PROP_WAYLAND_OUT_WIDTH:
++      /* get out_width property */
++      sink->out_width = g_value_get_int (value);
++      break;
++    case PROP_WAYLAND_OUT_HEIGHT:
++      /* get out_height property */
++      sink->out_height = g_value_get_int (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -658,11 +698,11 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+       /* set window position */
+       if ( (sink->position_x == -1) || (sink->position_y == -1) ) {
+         sink->window =
+-           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position);
++           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position, sink->scale);
+       } else {
+         sink->exist_position = 1;
+         sink->window =
+-           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position);
++           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position, sink->scale);
+       }
+     }
+   }
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index 1694738..458bc47 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -69,6 +69,9 @@ struct _GstWaylandSink
+   gint position_x;  /* property(position_x) */
+   gint position_y;  /* property(position_y) */
+   gint exist_position;
++  gint out_width;   /* property out_width */
++  gint out_height;  /* property out_height */
++  uint32_t scale;
+ };
+ 
+ struct _GstWaylandSinkClass
+diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
+index 05d6601..6812a57 100644
+--- a/ext/wayland/wlwindow.c
++++ b/ext/wayland/wlwindow.c
+@@ -152,7 +152,7 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
+ 
+ GstWlWindow *
+ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+-    GMutex * render_lock, gint posx, gint posy, gint exist_pos)
++    GMutex * render_lock, gint posx, gint posy, gint exist_pos, uint32_t scale)
+ {
+   GstWlWindow *window;
+   gint width;
+@@ -167,7 +167,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+     wl_shell_surface_add_listener (window->shell_surface,
+         &shell_surface_listener, window);
+     if (exist_pos){
+-        wl_shell_surface_set_transient (window->shell_surface, window->area_surface, posx, posy, 0);
++        wl_shell_surface_set_transient (window->shell_surface, window->area_surface, posx, posy, scale);
+     }
+     wl_shell_surface_set_toplevel (window->shell_surface);
+   } else {
+diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
+index 5c50957..c1481f6 100644
+--- a/ext/wayland/wlwindow.h
++++ b/ext/wayland/wlwindow.h
+@@ -75,7 +75,7 @@ struct _GstWlWindowClass
+ GType gst_wl_window_get_type (void);
+ 
+ GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
+-        const GstVideoInfo * info, GMutex * render_lock, gint posx, gint posy, gint exist_pos);
++        const GstVideoInfo * info, GMutex * render_lock, gint posx, gint posy, gint exist_pos, uint32_t scale);
+ GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
+         struct wl_surface * parent, GMutex * render_lock);
+ 
+-- 
+1.9.1
+

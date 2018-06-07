@@ -1,0 +1,166 @@
+From 09d30eb659657a5313e1788b798dcc6ff5299a9d Mon Sep 17 00:00:00 2001
+From: AnNDP <AnNDP@fsoft.com.vn>
+Date: Wed, 6 Jun 2018 00:00:59 -0400
+Subject: gst145-waylandsink-Add-set-window-position
+
+Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+---
+ ext/wayland/gstwaylandsink.c | 54 +++++++++++++++++++++++++++++++++++++++++---
+ ext/wayland/gstwaylandsink.h |  3 +++
+ ext/wayland/wlwindow.c       |  5 +++-
+ ext/wayland/wlwindow.h       |  2 +-
+ 4 files changed, 59 insertions(+), 5 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 46a710f..bbcc77a 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -61,7 +61,9 @@ enum
+ enum
+ {
+   PROP_0,
+-  PROP_DISPLAY
++  PROP_DISPLAY,
++  PROP_WAYLAND_POSITION_X,    /* add property (position_x) */
++  PROP_WAYLAND_POSITION_Y     /* add property (position_y) */
+ };
+ 
+ GST_DEBUG_CATEGORY (gstwayland_debug);
+@@ -163,6 +165,26 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+       g_param_spec_string ("display", "Wayland Display name", "Wayland "
+           "display name to connect to, if not supplied via the GstContext",
+           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++
++  /* install property (position_x) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_POSITION_X,
++      g_param_spec_int ("position_x",
++                        "Position_X",
++                        "Wayland  Position X value from the application ",
++                        0,
++                        G_MAXINT,
++                        0,
++                        G_PARAM_READWRITE));
++
++  /* install property (position_y) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_POSITION_Y,
++      g_param_spec_int ("position_y",
++                        "Position_Y",
++                        "Wayland  Position Y value from the application ",
++                        0,
++                        G_MAXINT,
++                        0,
++                        G_PARAM_READWRITE));
+ }
+ 
+ static void
+@@ -170,6 +192,9 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+ {
+   g_mutex_init (&sink->display_lock);
+   g_mutex_init (&sink->render_lock);
++  sink->position_x = -1;
++  sink->position_y = -1;
++  sink->exist_position = 0;
+ }
+ 
+ static void
+@@ -184,6 +209,14 @@ gst_wayland_sink_get_property (GObject * object,
+       g_value_set_string (value, sink->display_name);
+       GST_OBJECT_UNLOCK (sink);
+       break;
++    case PROP_WAYLAND_POSITION_X:
++      /* set position_x property */
++      g_value_set_int (value, sink->position_x);
++      break;
++    case PROP_WAYLAND_POSITION_Y:
++      /* set position_y property */
++      g_value_set_int (value, sink->position_y);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -202,6 +235,14 @@ gst_wayland_sink_set_property (GObject * object,
+       sink->display_name = g_value_dup_string (value);
+       GST_OBJECT_UNLOCK (sink);
+       break;
++    case PROP_WAYLAND_POSITION_X:
++      /* get position_x property */
++      sink->position_x = g_value_get_int (value);
++      break;
++    case PROP_WAYLAND_POSITION_Y:
++      /* get position_y property */
++      sink->position_y = g_value_get_int (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -614,8 +655,15 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+ 
+     if (!sink->window) {
+       /* if we were not provided a window, create one ourselves */
+-      sink->window = gst_wl_window_new_toplevel (sink->display,
+-          &sink->video_info, &sink->render_lock);
++      /* set window position */
++      if ( (sink->position_x == -1) || (sink->position_y == -1) ) {
++        sink->window =
++           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position);
++      } else {
++        sink->exist_position = 1;
++        sink->window =
++           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position);
++      }
+     }
+   }
+ 
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index 2704d00..1694738 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -66,6 +66,9 @@ struct _GstWaylandSink
+   gboolean redraw_pending;
+   GMutex render_lock;
+   GstBuffer *last_buffer;
++  gint position_x;  /* property(position_x) */
++  gint position_y;  /* property(position_y) */
++  gint exist_position;
+ };
+ 
+ struct _GstWaylandSinkClass
+diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
+index d08ed87..05d6601 100644
+--- a/ext/wayland/wlwindow.c
++++ b/ext/wayland/wlwindow.c
+@@ -152,7 +152,7 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
+ 
+ GstWlWindow *
+ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+-    GMutex * render_lock)
++    GMutex * render_lock, gint posx, gint posy, gint exist_pos)
+ {
+   GstWlWindow *window;
+   gint width;
+@@ -166,6 +166,9 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+   if (window->shell_surface) {
+     wl_shell_surface_add_listener (window->shell_surface,
+         &shell_surface_listener, window);
++    if (exist_pos){
++        wl_shell_surface_set_transient (window->shell_surface, window->area_surface, posx, posy, 0);
++    }
+     wl_shell_surface_set_toplevel (window->shell_surface);
+   } else {
+     GST_ERROR ("Unable to get wl_shell_surface");
+diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
+index e247b4e..5c50957 100644
+--- a/ext/wayland/wlwindow.h
++++ b/ext/wayland/wlwindow.h
+@@ -75,7 +75,7 @@ struct _GstWlWindowClass
+ GType gst_wl_window_get_type (void);
+ 
+ GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
+-        const GstVideoInfo * info, GMutex * render_lock);
++        const GstVideoInfo * info, GMutex * render_lock, gint posx, gint posy, gint exist_pos);
+ GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
+         struct wl_surface * parent, GMutex * render_lock);
+ 
+-- 
+1.9.1
+

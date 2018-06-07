@@ -1,0 +1,35 @@
+From 028d85b7b63ca380748a321357a411808d5e3726 Mon Sep 17 00:00:00 2001
+From: AnNDP <AnNDP@fsoft.com.vn>
+Date: Wed, 6 Jun 2018 22:19:44 -0400
+Subject: [PATCH] waylandsink: Fix a potential build issue caused by missing  linux-dmabuf-client-protocol.h
+
+Use BUILT_SOURCES to make sure to generate it.
+
+The detail of the build issue:
+
+* 
+http://elinux.org/Thread:Talk:R-Car/Boards/Yocto-Gen3/Error_in_Bitbake
+
+Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+---
+ ext/wayland/Makefile.am | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ext/wayland/Makefile.am b/ext/wayland/Makefile.am
+index 8442dbd..986e751 100644
+--- a/ext/wayland/Makefile.am
++++ b/ext/wayland/Makefile.am
+@@ -1,6 +1,10 @@
+ plugin_LTLIBRARIES = libgstwaylandsink.la
+ 
+ BUILT_SOURCES = \
++       scaler-protocol.c scaler-client-protocol.h \
++       linux-dmabuf-protocol.c linux-dmabuf-client-protocol.h
++
++BUILT_SOURCES = \
+ 	viewporter-protocol.c \
+ 	viewporter-client-protocol.h \
+ 	linux-dmabuf-unstable-v1-protocol.c \
+-- 
+1.9.1
+
