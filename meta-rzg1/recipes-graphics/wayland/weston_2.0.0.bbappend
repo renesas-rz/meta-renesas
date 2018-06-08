@@ -7,12 +7,13 @@ SRC_URI_append = "\
     file://0002-add-dmabuf-support-direct-renderring.patch      \
     file://0003-Add-V4L2_RENDERER_LIBS-to-libweston-2-folder.patch      \
     file://0001-port-patches-from-yocto-2-0.patch      \
+    file://0004-enable-gl-fallback-config-to-support-VSP+GPU-mode.patch      \
 "
 
 INSANE_SKIP_${PN} += "dev-so"
 INSANE_SKIP_${PN} += "installed-vs-shipped"
 TARGET_CC_ARCH += "${LDFLAGS}"
-FILES_${PN} += "${libdir}/* ${libdir}/${BPN}/v4l2-fe928000-device.so ${libdir}/libweston-2/v4l2-vsp2-device.so"
+FILES_${PN} += "${libdir}/* "
 
 RDEPENDS_weston-examples_append = " gles-user-module "
 RDEPENDS_libweston-2_append = " gles-user-module "

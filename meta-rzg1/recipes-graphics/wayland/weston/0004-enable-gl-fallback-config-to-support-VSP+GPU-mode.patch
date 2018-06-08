@@ -1,0 +1,45 @@
+From 289f87327a8a45e830b239e482f08fb8b884503d Mon Sep 17 00:00:00 2001
+From: "Thao M. Hoang" <thaohm2@fsoft.com.vn>
+Date: Fri, 8 Jun 2018 13:57:42 +0700
+Subject: weston: enable gl-fallback config to support (VSP+GPU) mode
+
+Signed-off-by: Thao M. Hoang <thaohm2@fsoft.com.vn>
+---
+ configure.ac | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/configure.ac b/configure.ac
+index e788201..5aab385 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -140,10 +140,19 @@ fi
+ 
+ AC_ARG_ENABLE(v4l2, [  --disable-v4l2],,
+               enable_v4l2=yes)
++AC_ARG_ENABLE(v4l2-gl-fallback, [  --disable-v4l2-gl-fallback],,
++              enable_v4l2_gl_fallback=yes)
+ AM_CONDITIONAL(ENABLE_V4L2, test x$enable_v4l2 = xyes)
+ if test x$enable_v4l2 = xyes; then
+  AC_DEFINE([ENABLE_V4L2], [1], [Build Weston with V4L2 support])
+  PKG_CHECK_MODULES(V4L2_RENDERER, [libdrm libkms wayland-kms gbm])
++	if test x$enable_v4l2_gl_fallback = xyes; then
++		if test x$enable_egl = xyes; then
++			AC_DEFINE([V4L2_GL_FALLBACK], [1],
++                                  [V4L2 renderer supports gl-fallback])
++		fi
++	fi
++
+  PKG_CHECK_MODULES(LIBMEDIACTL_V4L2, [libmediactl-v4l2])
+ fi
+ 
+@@ -703,6 +712,7 @@ AC_MSG_RESULT([
+ 	Cairo Renderer			${with_cairo}
+ 	EGL				${enable_egl}
+   V4L2        ${enable_v4l2}
++  V4L2 gl-fallback support	${enable_v4l2_gl_fallback}
+ 	libxkbcommon			${enable_xkbcommon}
+ 	xcb_xkb				${have_xcb_xkb}
+ 	XWayland			${enable_xwayland}
+-- 
+2.7.4
+
