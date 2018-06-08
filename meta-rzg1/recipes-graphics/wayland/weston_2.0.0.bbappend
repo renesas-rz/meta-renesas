@@ -8,6 +8,7 @@ SRC_URI_append = "\
     file://0003-Add-V4L2_RENDERER_LIBS-to-libweston-2-folder.patch      \
     file://0001-port-patches-from-yocto-2-0.patch      \
     file://0004-enable-gl-fallback-config-to-support-VSP+GPU-mode.patch      \
+    file://0005-weston-Fix-compilation-errors-once-enabling-gl-fallback.patch      \
 "
 
 INSANE_SKIP_${PN} += "dev-so"
