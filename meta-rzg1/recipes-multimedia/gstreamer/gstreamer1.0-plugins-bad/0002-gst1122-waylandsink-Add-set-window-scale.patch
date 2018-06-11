@@ -1,18 +1,18 @@
-From 7227a1d66bf98fc79c0d0a73714e505cb3ace277 Mon Sep 17 00:00:00 2001
-From: AnNDP <AnNDP@fsoft.com.vn>
-Date: Wed, 6 Jun 2018 00:34:02 -0400
+From 428ee066b0f8cc668d4e71c779a7db6e356b2a14 Mon Sep 17 00:00:00 2001
+From: AnNDP <anndp@fsoft.com.vn>
+Date: Sun, 10 Jun 2018 14:30:23 +0700
 Subject: [PATCH 2/9] gst145-waylandsink-Add-set-window-scale
 
-Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+Signed-off-by: AnNDP <anndp@fsoft.com.vn>
 ---
- ext/wayland/gstwaylandsink.c | 46 +++++++++++++++++++++++++++++++++++++++++---
+ ext/wayland/gstwaylandsink.c | 50 ++++++++++++++++++++++++++++++++++++++++----
  ext/wayland/gstwaylandsink.h |  3 +++
  ext/wayland/wlwindow.c       |  4 ++--
  ext/wayland/wlwindow.h       |  2 +-
- 4 files changed, 49 insertions(+), 6 deletions(-)
+ 4 files changed, 52 insertions(+), 7 deletions(-)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
-index bbcc77a..25a3388 100644
+index bbcc77a..358bba2 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
 @@ -63,7 +63,9 @@ enum
@@ -26,11 +26,12 @@ index bbcc77a..25a3388 100644
  };
  
  GST_DEBUG_CATEGORY (gstwayland_debug);
-@@ -185,6 +187,25 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+@@ -185,6 +187,26 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
                          G_MAXINT,
                          0,
                          G_PARAM_READWRITE));
-+    /* install property (out_width) */
++
++  /* install property (out_width) */
 +  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_OUT_WIDTH,
 +      g_param_spec_int ("out_width",
 +                        "Out_width",
@@ -52,7 +53,7 @@ index bbcc77a..25a3388 100644
  }
  
  static void
-@@ -195,6 +216,9 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+@@ -195,6 +217,9 @@ gst_wayland_sink_init (GstWaylandSink * sink)
    sink->position_x = -1;
    sink->position_y = -1;
    sink->exist_position = 0;
@@ -62,7 +63,7 @@ index bbcc77a..25a3388 100644
  }
  
  static void
-@@ -217,6 +241,14 @@ gst_wayland_sink_get_property (GObject * object,
+@@ -217,6 +242,14 @@ gst_wayland_sink_get_property (GObject * object,
        /* set position_y property */
        g_value_set_int (value, sink->position_y);
        break;
@@ -77,7 +78,7 @@ index bbcc77a..25a3388 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -243,6 +275,14 @@ gst_wayland_sink_set_property (GObject * object,
+@@ -243,6 +276,14 @@ gst_wayland_sink_set_property (GObject * object,
        /* get position_y property */
        sink->position_y = g_value_get_int (value);
        break;
@@ -92,8 +93,13 @@ index bbcc77a..25a3388 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -658,11 +698,11 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
-       /* set window position */
+@@ -655,14 +696,15 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+ 
+     if (!sink->window) {
+       /* if we were not provided a window, create one ourselves */
+-      /* set window position */
++      /* set window position and scale */
++      sink->scale = (sink->out_width << 16) | sink->out_height;
        if ( (sink->position_x == -1) || (sink->position_y == -1) ) {
          sink->window =
 -           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position);

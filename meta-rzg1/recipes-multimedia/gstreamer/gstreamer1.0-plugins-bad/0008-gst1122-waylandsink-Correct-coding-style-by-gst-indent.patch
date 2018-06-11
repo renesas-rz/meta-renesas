@@ -1,23 +1,24 @@
-From e28eb9deb178817a0111e7ada1a30f19157b7571 Mon Sep 17 00:00:00 2001
-From: AnNDP <AnNDP@fsoft.com.vn>
-Date: Wed, 6 Jun 2018 23:04:02 -0400
-Subject: [PATCH 7/9] waylandsink: Correct coding style by gst-indent
+From d25fe2f963ce43ea2fd4b36344e3a1d4bdf48c92 Mon Sep 17 00:00:00 2001
+From: AnNDP <anndp@fsoft.com.vn>
+Date: Sun, 10 Jun 2018 16:28:18 +0700
+Subject: PATCH 7/9] waylandsink: Correct coding style by gst-indent
 
 This patch porting from the commit f06a30285e32619ac817bd83951df680116626f0 of gstreamer version 1.2.3
 
-Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+Signed-off-by: AnNDP <anndp@fsoft.com.vn>
 ---
- ext/wayland/gstwaylandsink.c | 77 +++++++++++++++++++-------------------------
- ext/wayland/gstwaylandsink.h | 11 ++++---
- ext/wayland/wlbuffer.h       |  4 +--
+ ext/wayland/gstwaylandsink.c | 83 ++++++++++++++++++++------------------------
+ ext/wayland/gstwaylandsink.h | 12 ++++---
+ ext/wayland/wlbuffer.h       |  6 ++--
  ext/wayland/wldisplay.c      |  2 +-
  ext/wayland/wldisplay.h      |  2 +-
- ext/wayland/wlwindow.c       |  8 ++---
- ext/wayland/wlwindow.h       | 11 ++++---
- 7 files changed, 54 insertions(+), 61 deletions(-)
+ ext/wayland/wlvideoformat.h  |  3 +-
+ ext/wayland/wlwindow.c       |  7 ++--
+ ext/wayland/wlwindow.h       |  9 ++---
+ 8 files changed, 59 insertions(+), 65 deletions(-)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
-index 6a25295..4790bfb 100644
+index ff35464..d2dc28b 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
 @@ -62,11 +62,11 @@ enum
@@ -33,11 +34,11 @@ index 6a25295..4790bfb 100644
 +  PROP_WAYLAND_POSITION_Y,      /* add property (position_y) */
 +  PROP_WAYLAND_OUT_WIDTH,       /* add property (out_width)  */
 +  PROP_WAYLAND_OUT_HEIGHT,      /* add property (out_height) */
-+  PROP_FULLSCREEN
++  PROP_FULLSCREEN               /* add property (fullscreen) */
  };
  
  GST_DEBUG_CATEGORY (gstwayland_debug);
-@@ -170,43 +170,28 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+@@ -170,50 +170,34 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
            NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
  
    /* install property (position_x) */
@@ -67,8 +68,8 @@ index 6a25295..4790bfb 100644
 +      PROP_WAYLAND_POSITION_Y, g_param_spec_int ("position_y", "Position_Y",
 +          "Wayland  Position Y value from the application ", 0, G_MAXINT, 0,
 +          G_PARAM_READWRITE));
-+
-     /* install property (out_width) */
+ 
+   /* install property (out_width) */
 -  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_OUT_WIDTH,
 -      g_param_spec_int ("out_width",
 -                        "Out_width",
@@ -77,7 +78,7 @@ index 6a25295..4790bfb 100644
 -                        G_MAXINT,
 -                        0,
 -                        G_PARAM_READWRITE));
-+    g_object_class_install_property (G_OBJECT_CLASS (klass),
++  g_object_class_install_property (G_OBJECT_CLASS (klass),
 +      PROP_WAYLAND_OUT_WIDTH, g_param_spec_int ("out_width", "Out_width",
 +          "Wayland  Out_width value from the application", 0, G_MAXINT, 0,
 +          G_PARAM_READWRITE));
@@ -91,58 +92,84 @@ index 6a25295..4790bfb 100644
 -                        G_MAXINT,
 -                        0,
 -                        G_PARAM_READWRITE));
-+    g_object_class_install_property (G_OBJECT_CLASS (klass),
++  g_object_class_install_property (G_OBJECT_CLASS (klass),
 +      PROP_WAYLAND_OUT_HEIGHT, g_param_spec_int ("out_height", "Out_height",
 +          "Wayland  Out_height value from the application", 0, G_MAXINT, 0,
 +          G_PARAM_READWRITE));
  
    /* install property (fullscreen) */
    g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
-@@ -556,7 +541,8 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
+       g_param_spec_boolean ("fullscreen",
+           "Fullscreen", "Display fullscreen on top of weston bar. "
+-                        "Position will be at center of screen",
++          "Position will be at center of screen",
+           FALSE, G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+ }
+ 
+@@ -557,7 +541,8 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
    pool = gst_video_buffer_pool_new ();
  
    structure = gst_buffer_pool_get_config (pool);
 -  gst_buffer_pool_config_set_params (structure, caps, size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
-+  gst_buffer_pool_config_set_params (structure, caps, size,
++  gst_buffer_pool_config_set_params (structure, caps, size, 
 +      GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
    gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
        NULL);
  
-@@ -683,7 +669,7 @@ render_last_buffer (GstWaylandSink * sink)
+@@ -635,7 +620,8 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+     pool = gst_wayland_create_pool (sink, caps);
+ 
+   if (pool) {
+-    gst_query_add_allocation_pool (query, pool, sink->video_info.size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
++    gst_query_add_allocation_pool (query, pool, sink->video_info.size,
++        GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+     g_object_unref (pool);
+   }
+ 
+@@ -682,8 +668,8 @@ render_last_buffer (GstWaylandSink * sink)
+   if (G_UNLIKELY (sink->video_info_changed)) {
      info = &sink->video_info;
      sink->video_info_changed = FALSE;
-     if(sink->fullscreen)
+-    if(sink->fullscreen)
 -         gst_wl_window_set_fullscreen (sink->window);
++    if (sink->fullscreen)
 +      gst_wl_window_set_fullscreen (sink->window);
    }
    gst_wl_window_render (sink->window, wlbuffer, info);
  }
-@@ -714,14 +700,19 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
- 
-     if (!sink->window) {
+@@ -716,13 +702,17 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
        /* if we were not provided a window, create one ourselves */
--      /* set window position */
+       /* set window position and scale */
+       sink->scale = (sink->out_width << 16) | sink->out_height;
 -      if ( (sink->position_x == -1) || (sink->position_y == -1) ) {
-+      /* set window position and scale */
-+       sink->scale = (sink->out_width << 16) | sink->out_height;
 +      if ((sink->position_x == -1) || (sink->position_y == -1)) {
          sink->window =
 -           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position, sink->scale);
-+           gst_wl_window_new_toplevel (sink->display, &sink->video_info,
-+            &sink->render_lock, sink->position_x, sink->position_y,
-+            sink->exist_position, sink->scale);
++            gst_wl_window_new_toplevel (sink->display, &sink->video_info,
++            &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position,
++            sink->scale);
        } else {
          sink->exist_position = 1;
          sink->window =
 -           gst_wl_window_new_toplevel (sink->display, &sink->video_info, &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position, sink->scale);
-+           gst_wl_window_new_toplevel (sink->display, &sink->video_info,
-+            &sink->render_lock, sink->position_x, sink->position_y,
-+            sink->exist_position, sink->scale);
++            gst_wl_window_new_toplevel (sink->display, &sink->video_info,
++            &sink->render_lock, sink->position_x, sink->position_y, sink->exist_position,
++            sink->scale);
        }
      }
    }
+@@ -793,7 +783,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+ 
+         config = gst_buffer_pool_get_config (sink->pool);
+         gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
+-        gst_buffer_pool_config_set_params (config, caps, sink->video_info.size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
++        gst_buffer_pool_config_set_params (config, caps, sink->video_info.size,
++            GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
+ 
+         /* This is a video pool, it should not fail with basic setings */
+         if (!gst_buffer_pool_set_config (sink->pool, config) ||
 diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
-index f2383ed..0aedd6b 100644
+index f2383ed..a2414e1 100644
 --- a/ext/wayland/gstwaylandsink.h
 +++ b/ext/wayland/gstwaylandsink.h
 @@ -66,11 +66,11 @@ struct _GstWaylandSink
@@ -161,18 +188,19 @@ index f2383ed..0aedd6b 100644
    uint32_t scale;
    gboolean fullscreen;
  };
-@@ -80,7 +80,8 @@ struct _GstWaylandSinkClass
+@@ -80,7 +80,9 @@ struct _GstWaylandSinkClass
    GstVideoSinkClass parent;
  };
  
 -GType gst_wayland_sink_get_type (void) G_GNUC_CONST;
-+GType gst_wayland_sink_get_type (void) 
++GType 
++gst_wayland_sink_get_type (void) 
 +    G_GNUC_CONST;
  
  G_END_DECLS
  
 diff --git a/ext/wayland/wlbuffer.h b/ext/wayland/wlbuffer.h
-index f97ee3a..9259cd7 100644
+index f97ee3a..9d7ff19 100644
 --- a/ext/wayland/wlbuffer.h
 +++ b/ext/wayland/wlbuffer.h
 @@ -40,7 +40,7 @@ struct _GstWlBuffer
@@ -184,11 +212,13 @@ index f97ee3a..9259cd7 100644
    GstBuffer *gstbuffer;
  
    GstWlDisplay *display;
-@@ -57,7 +57,7 @@ GType gst_wl_buffer_get_type (void);
+@@ -56,8 +56,8 @@ struct _GstWlBufferClass
+ GType gst_wl_buffer_get_type (void);
  
  GstWlBuffer * gst_buffer_add_wl_buffer (GstBuffer * gstbuffer,
-     struct wl_buffer * wlbuffer, GstWlDisplay * display);
+-    struct wl_buffer * wlbuffer, GstWlDisplay * display);
 -GstWlBuffer * gst_buffer_get_wl_buffer (GstBuffer * gstbuffer);
++    struct wl_buffer *wlbuffer, GstWlDisplay * display);
 +GstWlBuffer *gst_buffer_get_wl_buffer (GstBuffer * gstbuffer);
  
  void gst_wl_buffer_force_release_and_unref (GstWlBuffer * self);
@@ -219,8 +249,22 @@ index 7c89212..db2a5eb 100644
      gboolean take_ownership, GError ** error);
  
  /* see wlbuffer.c for explanation */
+diff --git a/ext/wayland/wlvideoformat.h b/ext/wayland/wlvideoformat.h
+index 331f582..74a143e 100644
+--- a/ext/wayland/wlvideoformat.h
++++ b/ext/wayland/wlvideoformat.h
+@@ -28,8 +28,7 @@
+ #include <gst/video/video.h>
+ #include <drm_fourcc.h>
+ 
+-G_BEGIN_DECLS
+-
++G_BEGIN_DECLS guint gst_video_format_to_wayland_format (GstVideoFormat format);
+ enum wl_shm_format gst_video_format_to_wl_shm_format (GstVideoFormat format);
+ gint gst_video_format_to_wl_dmabuf_format (GstVideoFormat format);
+ GstVideoFormat gst_wl_shm_format_to_video_format (enum wl_shm_format wl_format);
 diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
-index 41b215a..e88776f 100644
+index 41b215a..e78e37a 100644
 --- a/ext/wayland/wlwindow.c
 +++ b/ext/wayland/wlwindow.c
 @@ -166,8 +166,9 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
@@ -230,35 +274,34 @@ index 41b215a..e88776f 100644
 -    if (exist_pos){
 -        wl_shell_surface_set_transient (window->shell_surface, window->area_surface, posx, posy, scale);
 +    if (exist_pos) {
-+        wl_shell_surface_set_transient (window->shell_surface, window->area_surface, 
-+          posx, posy, scale);
++        wl_shell_surface_set_transient (window->shell_surface, window->area_surface,
++            posx, posy, scale);
      }
      wl_shell_surface_set_toplevel (window->shell_surface);
    } else {
-@@ -206,8 +207,7 @@ gst_wl_window_set_fullscreen (GstWlWindow * window)
- }
- 
- GstWlWindow *
--gst_wl_window_new_in_surface (GstWlDisplay * display,
--    struct wl_surface * parent, GMutex * render_lock)
-+gst_wl_window_new_in_surface (GstWlDisplay * display, struct wl_surface * parent, GMutex * render_lock)
+@@ -200,7 +201,7 @@ gst_wl_window_set_fullscreen (GstWlWindow * window)
  {
-   GstWlWindow *window;
-   window = gst_wl_window_new_internal (display, render_lock);
+   struct wl_callback *callback;
+   wl_shell_surface_set_fullscreen (window->shell_surface,
+-     WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE  , 0, NULL);
++      WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, NULL);
+   callback = wl_display_sync (window->display->display);
+   wl_callback_add_listener (callback, &configure_callback_listener, window);
+ }
 diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
-index 603e22c..4a721a4 100644
+index a3acf48..63ee110 100644
 --- a/ext/wayland/wlwindow.h
 +++ b/ext/wayland/wlwindow.h
-@@ -75,20 +75,21 @@ struct _GstWlWindowClass
+@@ -75,18 +75,19 @@ struct _GstWlWindowClass
  GType gst_wl_window_get_type (void);
  
  GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
 -        const GstVideoInfo * info, GMutex * render_lock, gint posx, gint posy, gint exist_pos, uint32_t scale);
-+        const GstVideoInfo * info, GMutex * render_lock, gint posx, gint posy, gint exist_pos,
-+        uint32_t scale);
++    const GstVideoInfo * info, GMutex * render_lock, gint posx, gint posy, gint exist_pos,
++    uint32_t scale);
  GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
 -        struct wl_surface * parent, GMutex * render_lock);
-+        struct wl_surface *parent, GMutex * render_lock);
++    struct wl_surface * parent, GMutex * render_lock);
  
  GstWlDisplay *gst_wl_window_get_display (GstWlWindow * window);
  struct wl_surface *gst_wl_window_get_wl_surface (GstWlWindow * window);
@@ -269,13 +312,10 @@ index 603e22c..4a721a4 100644
          const GstVideoInfo * info);
  void gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
 -        gint w, gint h);
-+  gint w, gint h);
++    gint w, gint h);
+ 
  /* functions for FULLSCREEN setting */
--void gst_wl_window_set_fullscreen( GstWlWindow * window);
-+void gst_wl_window_set_fullscreen (GstWlWindow * window);
- 
- G_END_DECLS
- 
+ void gst_wl_window_set_fullscreen( GstWlWindow * window);
 -- 
 1.9.1
 

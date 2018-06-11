@@ -1,5 +1,5 @@
 From 028d85b7b63ca380748a321357a411808d5e3726 Mon Sep 17 00:00:00 2001
-From: AnNDP <AnNDP@fsoft.com.vn>
+From: AnNDP <anndp@fsoft.com.vn>
 Date: Wed, 6 Jun 2018 22:19:44 -0400
 Subject: [PATCH] waylandsink: Fix a potential build issue caused by missing  linux-dmabuf-client-protocol.h
 
@@ -10,7 +10,7 @@ The detail of the build issue:
 * 
 http://elinux.org/Thread:Talk:R-Car/Boards/Yocto-Gen3/Error_in_Bitbake
 
-Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+Signed-off-by: AnNDP <anndp@fsoft.com.vn>
 ---
  ext/wayland/Makefile.am | 4 ++++
  1 file changed, 4 insertions(+)

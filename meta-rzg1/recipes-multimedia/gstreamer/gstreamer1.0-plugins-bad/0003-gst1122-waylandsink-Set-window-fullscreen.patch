@@ -1,18 +1,18 @@
-From 34bf73a2f81ee1e82adfc94431ba6e0624c834c5 Mon Sep 17 00:00:00 2001
-From: AnNDP <AnNDP@fsoft.com.vn>
-Date: Wed, 6 Jun 2018 00:57:11 -0400
+From 04522f56f56da0617c358fce1916e8b7712fc5e9 Mon Sep 17 00:00:00 2001
+From: AnNDP <anndp@fsoft.com.vn>
+Date: Sun, 10 Jun 2018 15:35:16 +0700
 Subject: [PATCH 3/9] gst145-waylandsink-Set-window-fullscreen
 
-Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+Signed-off-by: AnNDP <anndp@fsoft.com.vn>
 ---
  ext/wayland/gstwaylandsink.c | 20 +++++++++++++++++++-
  ext/wayland/gstwaylandsink.h |  1 +
  ext/wayland/wlwindow.c       | 20 ++++++++++++++++++++
- ext/wayland/wlwindow.h       |  2 ++
- 4 files changed, 42 insertions(+), 1 deletion(-)
+ ext/wayland/wlwindow.h       |  3 +++
+ 4 files changed, 43 insertions(+), 1 deletion(-)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
-index 25a3388..98b7726 100644
+index 358bba2..1ac7d44 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
 @@ -65,7 +65,8 @@ enum
@@ -25,7 +25,7 @@ index 25a3388..98b7726 100644
  };
  
  GST_DEBUG_CATEGORY (gstwayland_debug);
-@@ -206,6 +207,13 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+@@ -207,6 +208,13 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
                          G_MAXINT,
                          0,
                          G_PARAM_READWRITE));
@@ -39,7 +39,7 @@ index 25a3388..98b7726 100644
  }
  
  static void
-@@ -219,6 +227,7 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+@@ -220,6 +228,7 @@ gst_wayland_sink_init (GstWaylandSink * sink)
    sink->scale = 0;
    sink->out_width = 0;
    sink->out_height = 0;
@@ -47,7 +47,7 @@ index 25a3388..98b7726 100644
  }
  
  static void
-@@ -249,6 +258,10 @@ gst_wayland_sink_get_property (GObject * object,
+@@ -250,6 +259,10 @@ gst_wayland_sink_get_property (GObject * object,
        /* set out_height property */
        g_value_set_int (value, sink->out_height);
        break;
@@ -58,7 +58,7 @@ index 25a3388..98b7726 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -283,6 +296,9 @@ gst_wayland_sink_set_property (GObject * object,
+@@ -284,6 +297,9 @@ gst_wayland_sink_set_property (GObject * object,
        /* get out_height property */
        sink->out_height = g_value_get_int (value);
        break;
@@ -68,7 +68,7 @@ index 25a3388..98b7726 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -665,6 +681,8 @@ render_last_buffer (GstWaylandSink * sink)
+@@ -666,6 +682,8 @@ render_last_buffer (GstWaylandSink * sink)
    if (G_UNLIKELY (sink->video_info_changed)) {
      info = &sink->video_info;
      sink->video_info_changed = FALSE;
@@ -121,18 +121,19 @@ index 6812a57..41b215a 100644
  gst_wl_window_new_in_surface (GstWlDisplay * display,
      struct wl_surface * parent, GMutex * render_lock)
 diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
-index c1481f6..603e22c 100644
+index c1481f6..a3acf48 100644
 --- a/ext/wayland/wlwindow.h
 +++ b/ext/wayland/wlwindow.h
-@@ -87,6 +87,8 @@ void gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
-         const GstVideoInfo * info);
+@@ -88,6 +88,9 @@ void gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
  void gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
          gint w, gint h);
+ 
 +/* functions for FULLSCREEN setting */
 +void gst_wl_window_set_fullscreen( GstWlWindow * window);
- 
++
  G_END_DECLS
  
+ #endif /* __GST_WL_WINDOW_H__ */
 -- 
 1.9.1
 

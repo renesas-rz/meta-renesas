@@ -1,5 +1,5 @@
 From 048a223f875f8123ab838ec526f3fc6e91bfe9aa Mon Sep 17 00:00:00 2001
-From: AnNDP <AnNDP@fsoft.com.vn>
+From: AnNDP <anndp@fsoft.com.vn>
 Date: Wed, 6 Jun 2018 03:51:57 -0400
 Subject: [PATCH 8/9] waylandsink: Change the color format mapping for XBGR8888
  in wl_kms
@@ -9,7 +9,7 @@ GStreamer and the wayland server side in wl_kms.
 The mapping for BGRX8888 is also changed to keep symmetry of
 the interpretation.
 
-Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+Signed-off-by: AnNDP <anndp@fsoft.com.vn>
 ---
  ext/wayland/wlvideoformat.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)

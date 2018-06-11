@@ -1,20 +1,20 @@
-From 32bb988d0b0e4ae87b4e3f4940c09b1a22c37c87 Mon Sep 17 00:00:00 2001
-From: AnNDP <AnNDP@fsoft.com.vn>
-Date: Wed, 6 Jun 2018 02:45:06 -0400
+From 77d0ba3dc3e4b57a6df9d7dd30bedac4d29939c8 Mon Sep 17 00:00:00 2001
+From: AnNDP <anndp@fsoft.com.vn>
+Date: Sun, 10 Jun 2018 15:40:28 +0700
 Subject: [PATCH 4/9]
  gst1122-waylandsink-Restrict-the-number-of-buffers-in-the-pool to be allocated
 
-Signed-off-by: AnNDP <AnNDP@fsoft.com.vn>
+Signed-off-by: AnNDP <anndp@fsoft.com.vn>
 ---
- ext/wayland/gstwaylandsink.c | 9 +++++----
+ ext/wayland/gstwaylandsink.c | 7 +++----
  ext/wayland/wlbuffer.h       | 1 +
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
-index 98b7726..111cdab 100644
+index 1ac7d44..dc03631 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
-@@ -556,7 +556,7 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
+@@ -557,7 +557,7 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
    pool = gst_video_buffer_pool_new ();
  
    structure = gst_buffer_pool_get_config (pool);
@@ -23,24 +23,22 @@ index 98b7726..111cdab 100644
    gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
        NULL);
  
-@@ -634,7 +634,8 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+@@ -635,7 +635,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
      pool = gst_wayland_create_pool (sink, caps);
  
    if (pool) {
 -    gst_query_add_allocation_pool (query, pool, sink->video_info.size, 2, 0);
-+    gst_query_add_allocation_pool (query, pool, sink->video_info.size,
-+        GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
++    gst_query_add_allocation_pool (query, pool, sink->video_info.size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
      g_object_unref (pool);
    }
  
-@@ -797,8 +798,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+@@ -799,8 +799,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
  
          config = gst_buffer_pool_get_config (sink->pool);
          gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
 -        gst_buffer_pool_config_set_params (config, caps, sink->video_info.size,
 -            2, 0);
-+        gst_buffer_pool_config_set_params (config, caps, sink->video_info.size, 
-+          GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
++        gst_buffer_pool_config_set_params (config, caps, sink->video_info.size, GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
  
          /* This is a video pool, it should not fail with basic setings */
          if (!gst_buffer_pool_set_config (sink->pool, config) ||
