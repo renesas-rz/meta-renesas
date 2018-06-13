@@ -7,6 +7,7 @@ SRC_URI_append = "\
     file://0002-add-dmabuf-support-direct-renderring.patch      \
     file://0003-Add-V4L2_RENDERER_LIBS-to-libweston-2-folder.patch      \
     file://0001-port-patches-from-yocto-2-0.patch      \
+    file://0006-weston-fix-No-usable-crtc-encoder-pair-for-connector.patch      \
 "
 
 INSANE_SKIP_${PN} += "dev-so"

@@ -1,0 +1,68 @@
+From c00de034ec3e97d882ba7698074fc0bb8c29c6d6 Mon Sep 17 00:00:00 2001
+From: "Thao M. Hoang" <thaohm2@fsoft.com.vn>
+Date: Wed, 13 Jun 2018 14:11:12 +0700
+Subject: weston: fix No usable crtc/encoder pair for connector
+         this leads to failure of Weston's display on HDMI
+         Connectors provide the appropriate physical plugs of HDMI and LVDS,
+         preserve a better choice for the existing CRTC -> encoder -> connector routing,
+         it makes initialisation faster.
+
+Signed-off-by: Thao M. Hoang <thaohm2@fsoft.com.vn>
+---
+ compositor-drm.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/libweston/compositor-drm.c b/libweston/compositor-drm.c
+index 5fe7836..6b4dbac 100644
+--- a/libweston/compositor-drm.c
++++ b/libweston/compositor-drm.c
+@@ -1986,16 +1986,20 @@ find_crtc_for_connector(struct drm_backend *b,
+ 			drmModeRes *resources, drmModeConnector *connector)
+ {
+ 	drmModeEncoder *encoder;
+-	uint32_t possible_crtcs;
+ 	int i, j;
++	int ret = -1;
+ 
+ 	for (j = 0; j < connector->count_encoders; j++) {
++		uint32_t possible_crtcs, encoder_id, crtc_id;
++
+ 		encoder = drmModeGetEncoder(b->drm.fd, connector->encoders[j]);
+ 		if (encoder == NULL) {
+ 			weston_log("Failed to get encoder.\n");
+-			return -1;
++			continue;
+ 		}
++		encoder_id = encoder->encoder_id;
+ 		possible_crtcs = encoder->possible_crtcs;
++		crtc_id = encoder->crtc_id;
+ 		drmModeFreeEncoder(encoder);
+ 
+ 		for (i = 0; i < resources->count_crtcs; i++) {
+@@ -2005,11 +2009,21 @@ find_crtc_for_connector(struct drm_backend *b,
+ 			if (drm_output_find_by_crtc(b, resources->crtcs[i]))
+ 				continue;
+ 
+-			return i;
++			/* Try to preserve the existing
++			 * CRTC -> encoder -> connector routing; it makes
++			 * initialisation faster, and also since we have a
++			 * very dumb picking algorithm, may preserve a better
++			 * choice. */
++			if (!connector->encoder_id ||
++			    (encoder_id == connector->encoder_id &&
++			     crtc_id == resources->crtcs[i]))
++				return i;
++
++			ret = i;
+ 		}
+ 	}
+ 
+-	return -1;
++	return ret;
+ }
+ 
+ /* Init output state that depends on gl or gbm */
+-- 
+2.7.4
+
