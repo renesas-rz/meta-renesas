@@ -18,4 +18,5 @@ IMAGE_INSTALL_append = " \
   iproute2 \
   obexftp \
   bluez5 \
+  packagegroup-qt5-examples \
 "
