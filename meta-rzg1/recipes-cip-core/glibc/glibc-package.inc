@@ -91,6 +91,7 @@ do_install_append () {
 	if [ -f ${D}${bindir}/mtrace ]; then
 		sed -i -e '1s,#!.*perl,#! ${USRBINPATH}/env perl,' -e '2s,exec.*perl,exec ${USRBINPATH}/env perl,' ${D}${bindir}/mtrace
 	fi
+	rm -rf ${D}${includedir}/rpcsvc/rquota*
 	# Info dir listing isn't interesting at this point so remove it if it exists.
 	if [ -e "${D}${infodir}/dir" ]; then
 		rm -f ${D}${infodir}/dir
@@ -99,6 +100,7 @@ do_install_append () {
 	if [ "${USE_LDCONFIG}" != "1" ]; then
 		# We won't ship this file (see FILES above) so let's not install it
 		rm -f ${D}${sysconfdir}/ld.so.conf
+		rm -f ${D}${base_sbindir}/ldconfig
 		# This directory will be empty now so remove it too.
 		# But check whether it exists first, since it won't for glibc-initial.
 		if [ -d ${D}${sysconfdir} ]; then

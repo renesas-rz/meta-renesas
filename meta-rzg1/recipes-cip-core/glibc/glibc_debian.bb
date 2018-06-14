@@ -49,6 +49,7 @@ SRC_URI += " \
 	file://grok_gold.patch \
 	file://0013-sysdeps-gnu-configure.ac-handle-correctly-libc_cv_ro.patch \
 	file://correct-valencia-locale-supported_debian.patch \
+	file://0001-Fix-error-undefined-reference-to-libgcc_s_resume.patch \
 "
 
 B = "${WORKDIR}/build-${TARGET_SYS}"

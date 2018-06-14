@@ -137,4 +137,6 @@ FILES_locales = " \
     ${sbindir}/* \
     ${datadir}/locale/locale.alias \
 "
+RDEPENDS_locales = "perl"
+
 FILES_${PN}-dbg += "${libdir}/gconv/.debug"

@@ -1,0 +1,73 @@
+From 44ddf2848962de7b289cc8c338f38bce7aa9f5bd Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Mon, 11 Jun 2018 19:30:59 +0700
+Subject: [PATCH] Fix error undefined reference to `libgcc_s_resume'
+
+This patch fixes the error "undefined reference to `libgcc_s_resume'",
+similar to commit 175cef4163dd60f95106cfd5f593b8a4e09d02c9
+
+https://sourceware.org/git/gitweb.cgi?p=glibc.git;a=commitdiff;h=175cef4163dd60f95106cfd5f593b8a4e09d02c9
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ nptl/sysdeps/pthread/unwind-forcedunwind.c                   | 2 +-
+ ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c | 2 +-
+ ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c       | 2 +-
+ sysdeps/gnu/unwind-resume.c                                  | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/nptl/sysdeps/pthread/unwind-forcedunwind.c b/nptl/sysdeps/pthread/unwind-forcedunwind.c
+index cb94ea6..4624659 100644
+--- a/nptl/sysdeps/pthread/unwind-forcedunwind.c
++++ b/nptl/sysdeps/pthread/unwind-forcedunwind.c
+@@ -24,7 +24,7 @@
+ #include <gnu/lib-names.h>
+ 
+ static void *libgcc_s_handle;
+-static void (*libgcc_s_resume) (struct _Unwind_Exception *exc);
++static void (*libgcc_s_resume) (struct _Unwind_Exception *exc) __attribute_used__;
+ static _Unwind_Reason_Code (*libgcc_s_personality)
+   (int, _Unwind_Action, _Unwind_Exception_Class, struct _Unwind_Exception *,
+    struct _Unwind_Context *);
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c b/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c
+index 6ccd9b4..8b7ccdd 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-forcedunwind.c
+@@ -22,7 +22,7 @@
+ #include <pthreadP.h>
+ 
+ static void *libgcc_s_handle;
+-static void (*libgcc_s_resume) (struct _Unwind_Exception *exc);
++static void (*libgcc_s_resume) (struct _Unwind_Exception *exc) __attribute_used__;
+ static _Unwind_Reason_Code (*libgcc_s_personality)
+   (_Unwind_State, struct _Unwind_Exception *, struct _Unwind_Context *);
+ static _Unwind_Reason_Code (*libgcc_s_forcedunwind)
+diff --git a/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c b/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c
+index bff3e2b..dcc748a 100644
+--- a/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c
++++ b/ports/sysdeps/unix/sysv/linux/arm/nptl/unwind-resume.c
+@@ -20,7 +20,7 @@
+ #include <stdio.h>
+ #include <unwind.h>
+ 
+-static void (*libgcc_s_resume) (struct _Unwind_Exception *exc);
++static void (*libgcc_s_resume) (struct _Unwind_Exception *exc) __attribute_used__;
+ static _Unwind_Reason_Code (*libgcc_s_personality)
+   (_Unwind_State, struct _Unwind_Exception *, struct _Unwind_Context *);
+ 
+diff --git a/sysdeps/gnu/unwind-resume.c b/sysdeps/gnu/unwind-resume.c
+index 8963bf6..4aec942 100644
+--- a/sysdeps/gnu/unwind-resume.c
++++ b/sysdeps/gnu/unwind-resume.c
+@@ -21,7 +21,7 @@
+ #include <unwind.h>
+ #include <gnu/lib-names.h>
+ 
+-static void (*libgcc_s_resume) (struct _Unwind_Exception *exc);
++static void (*libgcc_s_resume) (struct _Unwind_Exception *exc) __attribute_used__;
+ static _Unwind_Reason_Code (*libgcc_s_personality)
+   (int, _Unwind_Action, _Unwind_Exception_Class, struct _Unwind_Exception *,
+    struct _Unwind_Context *);
+-- 
+1.9.1
+
