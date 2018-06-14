@@ -1,0 +1,2 @@
+export XDG_RUNTIME_DIR=/var/run/user/0/
+export LD_PRELOAD=/usr/lib/libEGL.so

@@ -19,4 +19,5 @@ IMAGE_INSTALL_append = " \
   obexftp \
   bluez5 \
   packagegroup-qt5-examples \
+  configuration \
 "
