@@ -20,4 +20,9 @@ IMAGE_INSTALL_append_lcb = " \
 IMAGE_INSTALL_append = " \
   usb-otg-init \
   iproute2 \
+  util-linux \
+  util-linux-losetup \
+  util-linux-umount \
+  util-linux-swaponoff \
+  libsmartcols1 \
 "
