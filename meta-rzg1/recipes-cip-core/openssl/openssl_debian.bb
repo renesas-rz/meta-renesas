@@ -189,7 +189,19 @@ ${libdir}/libcrypto.so.* \
 ${libdir}/openssl-1.0.0/engines/*.so \
 "
 
+RDEPENDS_${PN} += "perl"
+INSANE_SKIP_${PN} += "file-rdeps"
+
 BBCLASSEXTEND = "native nativesdk"
+sysroot_stage_all_append_class-native() {
+       # This is a workaround to prevent poky report error in these
+       # absolute path symlink
+       echo ${SYSROOT_DESTDIR}${libdir}
+       rm -rf ${SYSROOT_DESTDIR}${libdir}/ssl/certs
+       rm -rf ${SYSROOT_DESTDIR}${libdir}/ssl/private
+       rm -rf ${SYSROOT_DESTDIR}${libdir}/ssl/openssl.cnf
+}
+
 
 inherit ptest
 
