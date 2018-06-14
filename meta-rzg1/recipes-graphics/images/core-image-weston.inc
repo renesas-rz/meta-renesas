@@ -24,5 +24,5 @@ IMAGE_INSTALL_append = " \
   util-linux-losetup \
   util-linux-umount \
   util-linux-swaponoff \
-  libsmartcols1 \
+  util-linux-libsmartcols \
 "
