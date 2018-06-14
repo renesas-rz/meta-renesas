@@ -30,3 +30,9 @@ PACKAGECONFIG_CONFARGS_append += " \
             "
 
 DEPENDS_append = " gles-user-module"
+
+# add necessary packages
+PACKAGECONFIG_append += " sm"
+
+# nis option is not supported anymore, disable it here
+PACKAGECONFIG[nis] = ""
