@@ -32,3 +32,7 @@ do_configure_prepend_iwg20m() {
 do_configure_prepend_iwg21m() {
     cp -f ${WORKDIR}/iwg21m_defconfig ${WORKDIR}/defconfig
 }
+
+SRC_URI_append_iwg20m = " \
+    file://iwg20m/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
+"

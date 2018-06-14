@@ -1,0 +1,65 @@
+From 862c55c4403d1e38aa33d1baded2afc31b70226a Mon Sep 17 00:00:00 2001
+From: "Thao M. Hoang" <thaohm2@fsoft.com.vn>
+Date: Thu, 14 Jun 2018 13:15:46 +0700
+Subject: v4l2-core: remove unhelpful kernel warning
+
+This warning might have been helpful in mainline or at early stage of
+3.14 kernel lifetime, but now it gets scooped into feedback reports
+and litters them.
+
+Signed-off-by: Thao M. Hoang <thaohm2@fsoft.com.vn>
+---
+ drivers/media/v4l2-core/videobuf2-v4l2.c | 23 -----------------------
+ 1 file changed, 23 deletions(-)
+
+diff --git a/drivers/media/v4l2-core/videobuf2-v4l2.c b/drivers/media/v4l2-core/videobuf2-v4l2.c
+index 6c441be..b6c802b 100644
+--- a/drivers/media/v4l2-core/videobuf2-v4l2.c
++++ b/drivers/media/v4l2-core/videobuf2-v4l2.c
+@@ -133,23 +133,6 @@ static int __set_timestamp(struct vb2_buffer *vb, const void *pb)
+ 	return 0;
+ };
+ 
+-static void vb2_warn_zero_bytesused(struct vb2_buffer *vb)
+-{
+-	static bool check_once;
+-
+-	if (check_once)
+-		return;
+-
+-	check_once = true;
+-	WARN_ON(1);
+-
+-	pr_warn("use of bytesused == 0 is deprecated and will be removed in the future,\n");
+-	if (vb->vb2_queue->allow_zero_bytesused)
+-		pr_warn("use VIDIOC_DECODER_CMD(V4L2_DEC_CMD_STOP) instead.\n");
+-	else
+-		pr_warn("use the actual size instead.\n");
+-}
+-
+ static int vb2_queue_or_prepare_buf(struct vb2_queue *q, struct v4l2_buffer *b,
+ 				    const char *opname)
+ {
+@@ -357,9 +340,6 @@ static int __fill_vb2_buffer(struct vb2_buffer *vb,
+ 				struct vb2_plane *pdst = &planes[plane];
+ 				struct v4l2_plane *psrc = &b->m.planes[plane];
+ 
+-				if (psrc->bytesused == 0)
+-					vb2_warn_zero_bytesused(vb);
+-
+ 				if (vb->vb2_queue->allow_zero_bytesused)
+ 					pdst->bytesused = psrc->bytesused;
+ 				else
+@@ -394,9 +374,6 @@ static int __fill_vb2_buffer(struct vb2_buffer *vb,
+ 		}
+ 
+ 		if (V4L2_TYPE_IS_OUTPUT(b->type)) {
+-			if (b->bytesused == 0)
+-				vb2_warn_zero_bytesused(vb);
+-
+ 			if (vb->vb2_queue->allow_zero_bytesused)
+ 				planes[0].bytesused = b->bytesused;
+ 			else
+-- 
+2.7.4
+
