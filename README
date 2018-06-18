@@ -19,3 +19,8 @@ revision: dacfa2b1920e285531bec55cd2f08743390aaf57
 URI: git://git.linaro.org/openembedded/meta-linaro.git
 
 revision: 75dfb67bbb14a70cd47afda9726e2e1c76731885
+
+URI: https://github.com/meta-qt5/meta-qt5.git
+
+revision: c1b0c9f546289b1592d7a895640de103723a0305
+
