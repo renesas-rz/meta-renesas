@@ -179,11 +179,11 @@ do_install() {
 	done
 }
 
-PACKAGES =+ "libssl1.0.0"
+PACKAGES =+ "libssl"
 
 FILES_${PN} += "${libdir}/ssl"
 FILES_${PN}-dbg += "${libdir}/openssl-1.0.0/engines/.debug"
-FILES_libssl1.0.0 = " \
+FILES_libssl = " \
 ${libdir}/libssl.so.* \
 ${libdir}/libcrypto.so.* \
 ${libdir}/openssl-1.0.0/engines/*.so \
