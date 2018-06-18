@@ -194,8 +194,9 @@ do_configure_append_iwg21m() {
 	kernel_configure_variable USB_ARCH_HAS_EHCI y
 	kernel_configure_variable USB_ARCH_HAS_XHCI y
 
-#override ohci kernel configuration
+#override ohci and sh_eth kernel configuration
 	kernel_configure_variable USB_OHCI_HCD m
+	kernel_configure_variable SH_ETH m
 
 	yes '' | oe_runmake oldconfig
 }
