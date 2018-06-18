@@ -13,7 +13,7 @@ SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=v4.4.130-cip23 \
 "
 
-LINUX_VERSION ?= "4.4.55-cip3"
+LINUX_VERSION ?= "4.4.130-cip23"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
