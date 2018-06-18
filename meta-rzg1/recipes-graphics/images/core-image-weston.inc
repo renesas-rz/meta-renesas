@@ -25,4 +25,5 @@ IMAGE_INSTALL_append = " \
   util-linux-umount \
   util-linux-swaponoff \
   util-linux-libsmartcols \
+  ohci-init \
 "
