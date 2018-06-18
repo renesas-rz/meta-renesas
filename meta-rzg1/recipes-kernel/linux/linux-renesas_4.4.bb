@@ -8,9 +8,9 @@ COMPATIBLE_MACHINE = "iwg20m|iwg21m"
 DEPENDS_append = " util-linux-native openssl-native"
 
 RENESAS_URL="git://github.com/renesas-rz/renesas-cip.git"
-SRCREV = "79f8a920af486ed07283dbe7159e68ee3c19d19c"
+SRCREV = "3e632bfaaef838eb7aefb0e050b9fde6243bbd79"
 SRC_URI = " \
-	${RENESAS_URL};protocol=git;branch=v4.4.55-cip3 \
+	${RENESAS_URL};protocol=git;branch=v4.4.130-cip23 \
 "
 
 LINUX_VERSION ?= "4.4.55-cip3"
