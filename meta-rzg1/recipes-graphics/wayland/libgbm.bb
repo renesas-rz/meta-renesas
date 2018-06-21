@@ -2,11 +2,15 @@ SUMMARY = "gbm library"
 LICENSE = "MIT"
 SECTION = "libs"
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
 LIC_FILES_CHKSUM = " \
     file://gbm.c;beginline=4;endline=22;md5=5cdaac262c876e98e47771f11c7036b5"
 
 SRCREV = "a0c7d6c97fe1fffe45eee524060cbb12767c6461"
-SRC_URI = "git://github.com/renesas-rcar/libgbm;branch=rcar-gen3"
+SRC_URI = "git://github.com/renesas-rcar/libgbm;branch=rcar-gen3 \
+			file://0001-Revert-backend_kms-do-not-allocate-KMS-BO-when-gbm-s.patch \
+"
 
 S = "${WORKDIR}/git"
 

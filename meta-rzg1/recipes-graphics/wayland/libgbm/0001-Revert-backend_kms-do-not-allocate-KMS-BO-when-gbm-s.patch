@@ -1,0 +1,65 @@
+From 8217907644777a728d75f9fc6317e61729dce693 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Thu, 21 Jun 2018 09:24:08 +0700
+Subject: [PATCH] Revert "backend_kms: do not allocate KMS BO when gbm surface
+ is created"
+
+We are having issue with old Graphic libraries. They require KMS BO pre-allocated
+ to do the mem-map, otherwise, no drawable buffer will be created
+
+This reverts commit 7bbd50e658abb61c41e8f429a72fca2dd00cbb5e.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ backend_kms.c | 16 ++++++++++++++++
+ gbm_kmsint.h  |  2 ++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/backend_kms.c b/backend_kms.c
+index a838de0..2692a10 100644
+--- a/backend_kms.c
++++ b/backend_kms.c
+@@ -331,11 +331,27 @@ static struct gbm_surface *gbm_kms_surface_create(struct gbm_device *gbm,
+ 	surface->base.format = format;
+ 	surface->base.flags = flags;
+ 
++	if (!(flags & GBM_BO_CREATE_EMPTY)) {
++		/* need to map BO */
++		flags |= GBM_BO_USE_WRITE;
++		surface->bo[0] = (struct gbm_kms_bo*)gbm_kms_bo_create(gbm, width, height, format, flags);
++		if (!surface->bo[0])
++			goto error;
++		surface->bo[1] = (struct gbm_kms_bo*)gbm_kms_bo_create(gbm, width, height, format, flags);
++		if (!surface->bo[1])
++			goto error;
++	}
++
+ 	GBM_DEBUG("%s: %s: %d: created surface %dx%d\n", __FILE__, __func__, __LINE__, width, height);
+ 	surface->front = -1;
+ 	surface->set_bo = gbm_kms_surface_set_bo;
+ 
+ 	return (struct gbm_surface*)surface;
++
++error:
++	GBM_DEBUG("%s: %s: %d: surface creation failed.\n", __FILE__, __func__, __LINE__);
++	gbm_kms_surface_destroy((struct gbm_surface*)surface);
++	return NULL;
+ }
+ 
+ static void gbm_kms_surface_destroy(struct gbm_surface *_surface)
+diff --git a/gbm_kmsint.h b/gbm_kmsint.h
+index 445d321..e7e78bf 100644
+--- a/gbm_kmsint.h
++++ b/gbm_kmsint.h
+@@ -68,6 +68,8 @@ struct gbm_kms_surface {
+ 	int (*set_bo)(struct gbm_kms_surface *, int, void *, int, uint32_t);
+ };
+ 
++#define GBM_BO_CREATE_EMPTY (1 << 31)
++
+ /* Internal API */
+ static inline struct gbm_kms_surface *gbm_kms_surface(struct gbm_surface *surface)
+ {
+-- 
+2.7.4
+
