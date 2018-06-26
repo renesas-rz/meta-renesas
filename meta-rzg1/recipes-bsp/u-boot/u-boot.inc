@@ -45,6 +45,7 @@ do_compile () {
     unset LDFLAGS
     unset CFLAGS
     unset CPPFLAGS
+    export LC_ALL="C"
     oe_runmake ${UBOOT_MACHINE}
     oe_runmake ${UBOOT_MAKE_TARGET}
 }
