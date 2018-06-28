@@ -1,0 +1,39 @@
+From b2a33c31b0318aa62cc3684d48ad929c8e8ca38a Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Thu, 28 Jun 2018 16:00:30 +0700
+Subject: [PATCH] quick: scenegraph: fix texture width alignment issue for
+ PowerVR G6400
+
+There was unclear crash issue when using PowerVR G6400 on iwg21m board
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ src/quick/scenegraph/qsgdefaultdistancefieldglyphcache.cpp | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/src/quick/scenegraph/qsgdefaultdistancefieldglyphcache.cpp b/src/quick/scenegraph/qsgdefaultdistancefieldglyphcache.cpp
+index 31275b3..6e39e01 100644
+--- a/src/quick/scenegraph/qsgdefaultdistancefieldglyphcache.cpp
++++ b/src/quick/scenegraph/qsgdefaultdistancefieldglyphcache.cpp
+@@ -167,8 +167,16 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField>
+         glyph_t glyphIndex = glyph.glyph();
+         TexCoord c = glyphTexCoord(glyphIndex);
+         TextureInfo *texInfo = m_glyphsTexture.value(glyphIndex);
+-
+-        resizeTexture(texInfo, texInfo->allocatedArea.width(), texInfo->allocatedArea.height());
++        /*
++        FIXME: There was unclear crash issue with PowerVR Rogue G6400 when width is odd.
++        Below add a workaround to prevent odd width when using PowerVR Rogue G6400.
++        */
++        if (!qstrcmp(reinterpret_cast<const char*>(m_funcs->glGetString(GL_RENDERER)),
++                                "PowerVR Rogue G6400") && texInfo->allocatedArea.width()%2 != 0){
++            resizeTexture(texInfo, texInfo->allocatedArea.width()+1, texInfo->allocatedArea.height());
++        } else {
++            resizeTexture(texInfo, texInfo->allocatedArea.width(), texInfo->allocatedArea.height());
++        }
+         m_funcs->glBindTexture(GL_TEXTURE_2D, texInfo->texture);
+ 
+         glyphTextures[texInfo].append(glyphIndex);
+-- 
+2.7.4
+
