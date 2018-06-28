@@ -12,7 +12,6 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngr"
 SRC_URI = "file://mmngr.tar.bz2 \
            file://0002-Add-physical-address-translating-feature.patch \
-           file://0003-Add-iwg20m-config.patch \
 "
 S = "${WORKDIR}/mmngr"
 

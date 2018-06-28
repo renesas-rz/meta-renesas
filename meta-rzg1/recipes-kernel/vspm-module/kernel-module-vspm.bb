@@ -10,7 +10,6 @@ PN = "kernel-module-vspm"
 PR = "r0"
 
 SRC_URI = "file://vspm-kernel.tar.bz2 \
-        file://0001-vsp-vsp_drv_par-correct-return-error-code-for-hgt_pa.patch \
 "
 
 S = "${WORKDIR}/vspm"

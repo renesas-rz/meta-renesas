@@ -4,8 +4,6 @@ LICENSE = "CLOSED"
 DEPENDS = "kernel-module-fdpm mmngr-user-module"
 PN = "fdpm-user-module"
 SRC_URI = "file://fdpm.tar.bz2 \
-	file://0001-fdpm_api_sub-check-even-for-in_width.patch \
-	file://0002-fdpm_api-fix-typo-mistake.patch \
 "
 
 S = "${WORKDIR}/fdpm"
