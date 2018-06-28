@@ -11,6 +11,7 @@ RENESAS_URL="git://github.com/renesas-rz/renesas-cip.git"
 SRCREV = "3e632bfaaef838eb7aefb0e050b9fde6243bbd79"
 SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=v4.4.130-cip23 \
+	file://0629-Fix-commit-add-DT-smp-sopport.patch \
 "
 
 LINUX_VERSION ?= "4.4.130-cip23"
