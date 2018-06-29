@@ -22,17 +22,15 @@ S = "${WORKDIR}/git"
 
 SRC_URI_append = " \
     file://defconfig \
-    file://iwg20m_defconfig \
-    file://iwg21m_defconfig \
 "
 
-do_configure_prepend_iwg20m() {
-    cp -f ${WORKDIR}/iwg20m_defconfig ${WORKDIR}/defconfig
-}
+SRC_URI_append_iwg20m = " \
+    file://iwg20m.cfg \
+"
 
-do_configure_prepend_iwg21m() {
-    cp -f ${WORKDIR}/iwg21m_defconfig ${WORKDIR}/defconfig
-}
+SRC_URI_append_iwg21m = " \
+    file://iwg21m.cfg \
+"
 
 SRC_URI_append_iwg20m = " \
     file://iwg20m/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
