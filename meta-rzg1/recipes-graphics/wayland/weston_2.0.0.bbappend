@@ -10,6 +10,7 @@ SRC_URI_append = "\
     file://0006-weston-fix-No-usable-crtc-encoder-pair-for-connector.patch \
     file://0007-v4l2-vsp-renderer-Improve-dmabuf-and-support-more-fo.patch \
     file://0018-weston-correct-warning-of-weston-not-start-if-no-input-devices.patch      \
+    file://0019-weston-add-weston-desktop-api-set-xwayland-position-.patch \
 "
 
 SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-at-GPU-mode.patch "
