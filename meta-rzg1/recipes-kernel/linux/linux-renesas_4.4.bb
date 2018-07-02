@@ -12,6 +12,7 @@ SRCREV = "3e632bfaaef838eb7aefb0e050b9fde6243bbd79"
 SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=v4.4.130-cip23 \
 	file://0629-Fix-commit-add-DT-smp-sopport.patch \
+	file://0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
 "
 
 LINUX_VERSION ?= "4.4.130-cip23"
@@ -32,6 +33,3 @@ SRC_URI_append_iwg21m = " \
     file://iwg21m.cfg \
 "
 
-SRC_URI_append_iwg20m = " \
-    file://iwg20m/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
-"
