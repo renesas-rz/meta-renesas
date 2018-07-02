@@ -1,0 +1,43 @@
+From 137f795072e55f0bf8474c04a0d884e59af4696d Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 2 Jul 2018 15:57:18 +0700
+Subject: [PATCH] qtmux: remove checking PTS in gst_qt_mux_add_buffer
+
+This commit fixes the issue pipeline can't create .mp4 file but inform:
+"Buffer has no PTS."
+In previous gst version(gst v1.4.5), this api does not check PTS field from input
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+---
+ gst/isomp4/gstqtmux.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/gst/isomp4/gstqtmux.c b/gst/isomp4/gstqtmux.c
+index c0c5608..7351392 100644
+--- a/gst/isomp4/gstqtmux.c
++++ b/gst/isomp4/gstqtmux.c
+@@ -3249,9 +3249,6 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
+     goto exit;
+   }
+ 
+-  if (!GST_BUFFER_PTS_IS_VALID (last_buf))
+-    goto no_pts;
+-
+   /* if this is the first buffer, store the timestamp */
+   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE)) {
+     if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
+@@ -3481,11 +3478,6 @@ fragmented_sample:
+         ("Audio buffer contains fragmented sample."));
+     goto bail;
+   }
+-no_pts:
+-  {
+-    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL), ("Buffer has no PTS."));
+-    goto bail;
+-  }
+ not_negotiated:
+   {
+     GST_ELEMENT_ERROR (qtmux, CORE, NEGOTIATION, (NULL),
+-- 
+2.7.4
+

@@ -6,4 +6,5 @@ SRC_URI += " \
     file://0006-gst1122-Add-the-Copyright-year.patch \
     file://0007-gst1122-v4l2src-Support-crop-function.patch \
     file://0008-gst1122-v4l2src-Update-feature-for-crop-function.patch \
+    file://0001-qtmux-remove-checking-PTS-in-gst_qt_mux_add_buffer.patch \
 "
