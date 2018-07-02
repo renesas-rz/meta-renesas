@@ -1,0 +1,61 @@
+From 82fae861ffeb84396ea3014299efef529bee1486 Mon Sep 17 00:00:00 2001
+From: Long Dang <long.dang.aj@rvc.renesas.com>
+Date: Sat, 20 Aug 2016 10:30:42 +0700
+Subject: [PATCH 2/2] gst145-omxh264enc: Support periodicty_idr and
+ interval_intraframes option use Renesas OMX IL library
+
+Reference by Thao Luong <thao.luong.uw@rvc.renesas.com> (refs #82645)
+
+Value of periodicty_idr and interval_intraframes option will be set for
+OMX_IndexConfigVideoAVCIntraPeriod.
+Currently, gstomxh264enc use Get/Set Param function to set for this OMX_Index
+However, Renesas OMX MC only support Get/Set Config function for this
+OMX_Index.
+This patch file will use Get/Set Config instead of Get/Set Param for
+this OMX_Index in case using Renesas OMX library
+
+Signed-off-by: Long Dang <long.dang.aj@rvc.renesas.com>
+---
+ omx/gstomxh264enc.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/omx/gstomxh264enc.c b/omx/gstomxh264enc.c
+index e7f0f52..0f1c470 100644
+--- a/omx/gstomxh264enc.c
++++ b/omx/gstomxh264enc.c
+@@ -288,9 +288,15 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
+     GST_OMX_INIT_STRUCT (&config_avcintraperiod);
+     config_avcintraperiod.nPortIndex =
+         GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
++#ifdef USE_OMX_TARGET_RCAR
++    err =
++        gst_omx_component_get_config (GST_OMX_VIDEO_ENC (self)->enc,
++        OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
++#else
+     err =
+         gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+         OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
++#endif
+     if (err != OMX_ErrorNone) {
+       GST_ERROR_OBJECT (self,
+           "can't get OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
+@@ -311,10 +317,15 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
+         GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT) {
+       config_avcintraperiod.nPFrames = self->interval_intraframes;
+     }
+-
++#ifdef USE_OMX_TARGET_RCAR
++    err =
++        gst_omx_component_set_config (GST_OMX_VIDEO_ENC (self)->enc,
++        OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
++#else
+     err =
+         gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
+         OMX_IndexConfigVideoAVCIntraPeriod, &config_avcintraperiod);
++#endif
+     if (err != OMX_ErrorNone) {
+       GST_ERROR_OBJECT (self,
+           "can't set OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",
+--
+1.9.1
+

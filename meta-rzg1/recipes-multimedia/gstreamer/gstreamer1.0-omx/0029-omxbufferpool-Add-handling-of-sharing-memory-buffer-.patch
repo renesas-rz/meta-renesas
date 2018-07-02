@@ -1,0 +1,134 @@
+From 44b808735b772a5413ba912a76fa6c1c93ca38d4 Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Fri, 3 Nov 2017 12:43:55 +0700
+Subject: [PATCH 29/41] omxbufferpool: Add handling of sharing memory buffer
+ for encoder
+
+This patch file will create GstBuffer contains OMXBuffer to propose to upstream
+element.
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ omx/gstomxbufferpool.c | 63 +++++++++++++++++++++++++++++++++++++++++++-------
+ omx/gstomxbufferpool.h |  2 ++
+ 2 files changed, 57 insertions(+), 8 deletions(-)
+
+diff --git a/omx/gstomxbufferpool.c b/omx/gstomxbufferpool.c
+index 0d5a0dd..4edb7cc 100644
+--- a/omx/gstomxbufferpool.c
++++ b/omx/gstomxbufferpool.c
+@@ -35,6 +35,7 @@
+ #include "OMXR_Extension_vdcmn.h"
+ #endif
+ #include <unistd.h>             /* getpagesize() */
++#include "gstomxvideoenc.h"
+ 
+ GST_DEBUG_CATEGORY_STATIC (gst_omx_buffer_pool_debug_category);
+ #define GST_CAT_DEFAULT gst_omx_buffer_pool_debug_category
+@@ -555,7 +556,14 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
+       }
+       GST_DEBUG_OBJECT (pool, "Using %s allocator", pool->allocator->mem_type);
+ 
+-      mem = gst_omx_memory_allocator_alloc (pool->allocator, 0, omx_buf);
++      if (GST_IS_OMX_VIDEO_ENC (pool->element) &&
++          pool->port->port_def.eDir == OMX_DirInput)
++        /* Propose actual area of encoder to upstream */
++        mem = gst_memory_new_wrapped (0, omx_buf->omx_buf->pBuffer,
++            omx_buf->omx_buf->nAllocLen, 0, 0, NULL, NULL);
++      else
++        mem = gst_omx_memory_allocator_alloc (pool->allocator, 0, omx_buf);
++
+       buf = gst_buffer_new ();
+       gst_buffer_append_memory (buf, mem);
+       g_ptr_array_add (pool->buffers, buf);
+@@ -654,10 +662,46 @@ gst_omx_buffer_pool_acquire_buffer (GstBufferPool * bpool,
+       mem->offset = ((GstOMXMemory *) mem)->buf->omx_buf->nOffset;
+     }
+   } else {
+-    /* Acquire any buffer that is available to be filled by upstream */
+-    ret =
+-        GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->acquire_buffer
+-        (bpool, buffer, params);
++    if (GST_IS_OMX_VIDEO_ENC (pool->element)) {
++      GstBuffer *buf;
++      GstOMXBuffer *omx_buf;
++      gint count = 0;
++
++      /* Search OMXBuffers of input port to find available GstBuffer
++       * (emptied OMXBuffer) to propose to upstream. If after 3 times searching,
++       * can not find target GstBuffer, return flow error to avoid endless loop
++       * when upstream still keep buffers
++       */
++      do {
++        buf = g_ptr_array_index (pool->buffers, pool->enc_buffer_index);
++        g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
++
++        omx_buf =
++            gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (buf),
++            gst_omx_buffer_data_quark);
++        pool->enc_buffer_index++;
++        if (pool->enc_buffer_index == pool->port->port_def.nBufferCountActual)
++          pool->enc_buffer_index = 0;
++
++        count += 1;
++      } while (omx_buf->used == TRUE &&
++          count < pool->port->port_def.nBufferCountActual * 3);
++
++      if (count == pool->port->port_def.nBufferCountActual * 3) {
++        ret = GST_FLOW_ERROR;
++        GST_ERROR_OBJECT (pool,
++            "Can not acquire buffer after 3 times searching");
++      } else {
++        *buffer = buf;
++        ret = GST_FLOW_OK;
++      }
++    } else {
++      /* Acquire any buffer that is available to be filled by upstream */
++      ret =
++          GST_BUFFER_POOL_CLASS
++          (gst_omx_buffer_pool_parent_class)->acquire_buffer (bpool, buffer,
++          params);
++    }
+   }
+ 
+   return ret;
+@@ -699,9 +743,11 @@ gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+        * a ref on the buffer in GstOMXBuffer until EmptyBufferDone... which
+        * would ensure that the buffer is always unused when this is called.
+        */
+-      g_assert_not_reached ();
+-      GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->release_buffer
+-          (bpool, buffer);
++      if (GST_OMX_VIDEO_ENC (pool->element)->no_copy == FALSE) {
++        g_assert_not_reached ();
++        GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->release_buffer
++            (bpool, buffer);
++      }
+     }
+   }
+ }
+@@ -779,6 +825,7 @@ gst_omx_buffer_pool_init (GstOMXBufferPool * pool)
+ #ifdef HAVE_MMNGRBUF
+   pool->id_array = g_array_new (FALSE, FALSE, sizeof (gint));
+ #endif
++  pool->enc_buffer_index = 0;
+ }
+ 
+ GstBufferPool *
+diff --git a/omx/gstomxbufferpool.h b/omx/gstomxbufferpool.h
+index fa489fa..79875ce 100644
+--- a/omx/gstomxbufferpool.h
++++ b/omx/gstomxbufferpool.h
+@@ -84,6 +84,8 @@ struct _GstOMXBufferPool
+   /* Array use to contain dma_id. It is used in export_end dmabuf area */
+   GArray *id_array;
+ #endif
++  /* Used during acquire for input port */
++  gint enc_buffer_index;
+ };
+ 
+ struct _GstOMXBufferPoolClass
+-- 
+2.7.4
+

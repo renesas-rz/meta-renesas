@@ -1,0 +1,85 @@
+From 3c6730b5899b517705260a94af9091b1f085ef27 Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Thu, 2 Nov 2017 13:17:09 +0700
+Subject: [PATCH 25/41] omxvideoenc: Support hack renesas-encmc-stride-align
+
+This hack support for Renesas OMXIL encoder library
+Renesas encoder MC requires nStride should align for 32 in case semi-planar
+(NV12) format and align for 64 in case planar (I420) format.
+Declare this hack in gstomx.conf to use it.
+For example:
+[omxh264enc]
+...
+hacks=no-disable-outport;renesas-encmc-stride-align
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+---
+ omx/gstomx.c         |  2 ++
+ omx/gstomx.h         |  7 +++++++
+ omx/gstomxvideoenc.c | 17 +++++++++++++++--
+ 3 files changed, 24 insertions(+), 2 deletions(-)
+
+
+diff --git a/omx/gstomx.c b/omx/gstomx.c
+index dff540b..51cf012 100644
+--- a/omx/gstomx.c
++++ b/omx/gstomx.c
+@@ -2507,6 +2507,8 @@ gst_omx_parse_hacks (gchar ** hacks)
+       hacks_flags |= GST_OMX_HACK_USE_NO_COPY_MODE_AS_DEFAULT;
+     else if (g_str_equal (*hacks, "default-pix-aspect-ratio"))
+       hacks_flags |= GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO;
++    else if (g_str_equal (*hacks, "renesas-encmc-stride-align"))
++      hacks_flags |= GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN;
+     else
+       GST_WARNING ("Unknown hack: %s", *hacks);
+     hacks++;
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index db069ca..70c2015 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -154,6 +154,13 @@ G_BEGIN_DECLS
+  */
+ #define GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO                       G_GUINT64_CONSTANT (0x0000000000002000)
+ 
++/* Align Stride for 32 in case support for NV12 format (Semi-planar)
++ * Align Stride for 64 in case support for I420 format (Planar).
++ * This alignment support for Renesas Video Encoder MC that have restriction
++ * of nStride in OMX.
++ */
++#define GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN                       G_GUINT64_CONSTANT (0x0000000000004000)
++
+ typedef struct _GstOMXCore GstOMXCore;
+ typedef struct _GstOMXPort GstOMXPort;
+ typedef enum _GstOMXPortDirection GstOMXPortDirection;
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index 3112125..3bef33d 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -1061,9 +1061,22 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+   if (port_def.nBufferAlignment)
+     port_def.format.video.nStride =
+         GST_ROUND_UP_N (info->width, port_def.nBufferAlignment);
+-  else
+-    port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);       /* safe (?) default */
+-
++  else {
++    if (klass->cdata.hacks & GST_OMX_HACK_RENESAS_ENCMC_STRIDE_ALIGN) {
++      switch (port_def.format.video.eColorFormat) 
++      {
++        case OMX_COLOR_FormatYUV420Planar:
++          port_def.format.video.nStride = GST_ROUND_UP_64 (info->width);
++          break;
++        case OMX_COLOR_FormatYUV420SemiPlanar:
++          port_def.format.video.nStride = GST_ROUND_UP_32 (info->width);
++          break;
++        default:
++          break;
++      }
++    } else
++      port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);     /* safe (?) default */
++  }
+   port_def.format.video.nFrameHeight = info->height;
+ 
+   if (klass->cdata.hacks & GST_OMX_HACK_HEIGHT_MULTIPLE_16)

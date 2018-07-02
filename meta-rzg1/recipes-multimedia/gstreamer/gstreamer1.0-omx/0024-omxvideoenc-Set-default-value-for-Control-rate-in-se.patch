@@ -1,0 +1,43 @@
+From 5a43fd926100645e227c39fae5c9f3d75413bcac Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Thu, 2 Nov 2017 12:50:08 +0700
+Subject: [PATCH 24/41] omxvideoenc: Set default value for Control rate in
+ set_format
+
+Setting TargetBitrate and ControlRate on set_format without checking
+value for ControlRate may let ControlRate goes with invalid value.
+This patch file set ControlRate with default value of OMX component
+if no setting from user.
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ omx/gstomxvideoenc.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index 4529d6b..3112125 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -1163,9 +1163,17 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+     OMX_ERRORTYPE err;
+ 
+     GST_OMX_INIT_STRUCT (&config);
++    /* Get default value of eControlRate to avoid setting an invalid value to it */
++    err = gst_omx_component_get_parameter (self->enc,
++        OMX_IndexParamVideoBitrate, &config);
++    if (err != OMX_ErrorNone)
++      GST_ERROR_OBJECT (self,
++          "Fail to get parameter of video bitrate: %s (0x%08x)",
++          gst_omx_error_to_string (err), err);
+     config.nPortIndex = self->enc_out_port->index;
+     config.nTargetBitrate = self->target_bitrate;
+-    config.eControlRate = self->control_rate;
++    if (self->control_rate != 0xffffffff)
++      config.eControlRate = self->control_rate;
+     err = gst_omx_component_set_parameter (self->enc,
+         OMX_IndexParamVideoBitrate, &config);
+     if (err != OMX_ErrorNone)
+-- 
+2.7.4
+

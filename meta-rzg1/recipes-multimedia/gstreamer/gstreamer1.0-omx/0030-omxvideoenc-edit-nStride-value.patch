@@ -1,0 +1,41 @@
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index da886dd..8906210 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -1159,12 +1159,22 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+       switch (port_def.format.video.eColorFormat) 
+       {
+         case OMX_COLOR_FormatYUV420Planar:
+-          port_def.format.video.nStride = GST_ROUND_UP_64 (info->width);
++          //port_def.format.video.nStride = GST_ROUND_UP_64 (info->width);
++               /*Renesas encode MC only support following strides*/
++        if (info->width <= 256)
++          port_def.format.video.nStride = 256;
++        else if ((info->width > 256) && (info->width <= 512))
++          port_def.format.video.nStride = 512;
++        else if ((info->width > 512) && (info->width <= 1024))
++          port_def.format.video.nStride = 1024;
++        else
++          port_def.format.video.nStride = 2048;
+           break;
+         case OMX_COLOR_FormatYUV420SemiPlanar:
+-          port_def.format.video.nStride = GST_ROUND_UP_32 (info->width);
++          port_def.format.video.nStride = GST_ROUND_UP_128 (info->width);
+           break;
+         default:
++        port_def.format.video.nStride = GST_ROUND_UP_4 (info->width);    /* Safe (?) default */
+           break;
+       }
+     } else
+@@ -1172,9 +1182,9 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+   }
+   port_def.format.video.nFrameHeight = info->height;
+ 
+-  if (klass->cdata.hacks & GST_OMX_HACK_HEIGHT_MULTIPLE_16)
++  /*if (klass->cdata.hacks & GST_OMX_HACK_HEIGHT_MULTIPLE_16)
+     port_def.format.video.nSliceHeight = GST_ROUND_UP_16 (info->height);
+-  else
++  else*/
+     port_def.format.video.nSliceHeight = info->height;
+ 
+   switch (port_def.format.video.eColorFormat) {

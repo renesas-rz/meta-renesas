@@ -1,0 +1,31 @@
+From 6ea98620f32d5e70c299dd4d2fc7696108a93ebf Mon Sep 17 00:00:00 2001
+From: Thao Luong <thao.luong.uw@rvc.renesas.com>
+Date: Wed, 27 May 2015 14:58:54 +0700
+Subject: [PATCH 1/1] omxbufferpool: Add the condition for returning a buffer 
+ to the input port
+
+This change avoids mistakenly testing to determine whether the buffer pool
+is for the input or output port.
+
+refs #69206
+Signed-off-by: Thao Luong <thao.luong.uw@rvc.renesas.com>
+---
+ omx/gstomxbufferpool.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/omx/gstomxbufferpool.c b/omx/gstomxbufferpool.c
+index 385c587..28effb0 100644
+--- a/omx/gstomxbufferpool.c
++++ b/omx/gstomxbufferpool.c
+@@ -745,7 +745,7 @@ gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+                 gst_omx_error_to_string (err), err));
+       }
+       vdbuf_data->already_acquired = FALSE;
+-    } else if (!omx_buf->used) {
++    } else if (pool->port->port_def.eDir == OMX_DirInput && !omx_buf->used) {
+       /* TODO: Implement.
+        *
+        * If not used (i.e. was not passed to the component) this should do
+-- 
+2.4.0
+
