@@ -40,5 +40,8 @@ SRC_URI += " \
     file://waylandsink-Fix-a-potential-build-issue-caused-by-mi.patch \
 "
 
-RDEPENDS_gstreamer1.0-plugins-bad += "libwayland-egl"
+RDEPENDS_gstreamer1.0-plugins-bad_append = " libwayland-egl gles-user-module "
+RDEPENDS_libgstgl-1.0_append = " gles-user-module "
+RDEPENDS_gstreamer1.0-plugins-bad-opengl_append = " gles-user-module "
+
 PACKAGECONFIG_append = " faac faad"
