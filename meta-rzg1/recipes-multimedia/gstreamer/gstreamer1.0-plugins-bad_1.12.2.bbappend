@@ -38,6 +38,7 @@ SRC_URI += " \
     file://0007-gst1122-waylandsink-Change-the-color-format-mapping-for-XBGR.patch \
     file://0008-gst1122-waylandsink-Correct-coding-style-by-gst-indent.patch \
     file://waylandsink-Fix-a-potential-build-issue-caused-by-mi.patch \
+    file://0009-camerabin2-solve-issue-horizontal-noise-from-camera-due-to-usin.patch \
 "
 
 RDEPENDS_gstreamer1.0-plugins-bad_append = " libwayland-egl gles-user-module "
