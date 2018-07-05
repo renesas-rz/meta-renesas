@@ -3,7 +3,7 @@ DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE = "iwg20m|iwg21m"
+COMPATIBLE_MACHINE = "iwg20m|iwg21m|iwg22m"
 
 DEPENDS_append = " util-linux-native openssl-native"
 
@@ -31,5 +31,9 @@ SRC_URI_append_iwg20m = " \
 
 SRC_URI_append_iwg21m = " \
     file://iwg21m.cfg \
+"
+
+SRC_URI_append_iwg22m = " \
+    file://iwg22m.cfg \
 "
 
