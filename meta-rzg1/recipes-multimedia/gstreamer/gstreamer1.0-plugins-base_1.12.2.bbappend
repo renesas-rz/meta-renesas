@@ -1,3 +1,5 @@
+require ../../include/multimedia-control.inc
+
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 DEPENDS += " kernel-module-mmngr mmngr-user-module kernel-module-mmngrbuf mmngrbuf-user-module vspm-user-module kernel-module-vspm"
@@ -19,4 +21,8 @@ SRC_URI_append += " \
     file://0018-vspmfilter-Fix-crash-issue-in-dmabuf-use-mode-with-s.patch \
 "
 
-
+SRC_URI_append += " ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
+    file://0014-gstvspmfilter-change-to-output-alloc-as-default.patch \
+    file://0015-gstplaybin-change-vspmfilter-as-default-converter.patch \
+    file://0019-Add-vspmfilter-replace-videoconvert.patch \
+    ", "", d)}"
