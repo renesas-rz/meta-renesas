@@ -10,7 +10,13 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE.FDL;md5=6d9f2a9af4c8b8c3c769f6cc1b6aaf7e \
 "
 
-PACKAGECONFIG_append = " gstreamer"
+PACKAGECONFIG_append = " gstreamer alsa"
+
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+SRC_URI_append = " \
+    file://0001-qtmultimedia-add-EGLImage-render-for-video-playback.patch \
+"
 
 RDEPENDS_${PN}-plugins += " \
                gstreamer1.0 \
