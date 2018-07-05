@@ -1,0 +1,46 @@
+From 3c7fa630a9a726d6c6f88076b65573029dcfcb14 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Fri, 13 Oct 2017 15:48:51 +0700
+Subject: [PATCH] qtmultimedia Fix "Internal data stream error" error when play
+ video on QWidget (workaround)
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ src/gsttools/qgstvideorenderersink.cpp         | 2 +-
+ src/multimediawidgets/qpaintervideosurface.cpp | 5 +++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/gsttools/qgstvideorenderersink.cpp b/src/gsttools/qgstvideorenderersink.cpp
+index 31ac94e..51f511d 100644
+--- a/src/gsttools/qgstvideorenderersink.cpp
++++ b/src/gsttools/qgstvideorenderersink.cpp
+@@ -240,7 +240,7 @@ GstFlowReturn QVideoSurfaceGstDelegate::render(GstBuffer *buffer)
+     m_renderReturn = GST_FLOW_OK;
+     m_renderBuffer = buffer;
+ 
+-    GstFlowReturn flowReturn = waitForAsyncEvent(&locker, &m_renderCondition, 300)
++    GstFlowReturn flowReturn = waitForAsyncEvent(&locker, &m_renderCondition, 500)
+                                                 ? m_renderReturn
+                                                 : GST_FLOW_ERROR;
+ 
+diff --git a/src/multimediawidgets/qpaintervideosurface.cpp b/src/multimediawidgets/qpaintervideosurface.cpp
+index affcace..6cb2753 100644
+--- a/src/multimediawidgets/qpaintervideosurface.cpp
++++ b/src/multimediawidgets/qpaintervideosurface.cpp
+@@ -1451,10 +1451,11 @@ void QPainterVideoSurface::stop()
+ */
+ bool QPainterVideoSurface::present(const QVideoFrame &frame)
+ {
+-    if (!m_ready) {
++    // Disable generate error when play video on QWidget
++    /*if (!m_ready) {
+         if (!isActive())
+             setError(StoppedError);
+-    } else if (frame.isValid()
++    } else*/ if (frame.isValid()
+             && (frame.pixelFormat() != m_pixelFormat || frame.size() != m_frameSize)) {
+         setError(IncorrectFormatError);
+ 
+-- 
+1.9.1
+

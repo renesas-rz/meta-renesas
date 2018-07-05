@@ -16,6 +16,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI_append = " \
     file://0001-qtmultimedia-add-EGLImage-render-for-video-playback.patch \
+    file://0002-change-position-video-format.patch \
+    file://0003-qtmultimedia-Fix-Internal-data-stream-error-error-wh.patch \
 "
 
 RDEPENDS_${PN}-plugins += " \
