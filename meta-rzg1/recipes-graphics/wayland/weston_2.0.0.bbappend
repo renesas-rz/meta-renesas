@@ -10,6 +10,7 @@ SRC_URI_append = "\
     file://0006-weston-fix-No-usable-crtc-encoder-pair-for-connector.patch      \
 "
 
+SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-at-GPU-mode.patch "
 INSANE_SKIP_${PN} += "dev-so"
 INSANE_SKIP_${PN} += "installed-vs-shipped"
 TARGET_CC_ARCH += "${LDFLAGS}"
