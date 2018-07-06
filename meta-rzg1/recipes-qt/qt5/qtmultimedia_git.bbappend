@@ -18,6 +18,8 @@ SRC_URI_append = " \
     file://0001-qtmultimedia-add-EGLImage-render-for-video-playback.patch \
     file://0002-change-position-video-format.patch \
     file://0003-qtmultimedia-Fix-Internal-data-stream-error-error-wh.patch \
+    file://0004-Add-camerarecordermode-service-for-using-omxh264enc.patch \
+    file://0005-Fix-binding-loop-for-declarative-camera.patch \
 "
 
 RDEPENDS_${PN}-plugins += " \
