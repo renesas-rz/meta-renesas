@@ -20,6 +20,7 @@ SRC_URI_append = " \
     file://0003-qtmultimedia-Fix-Internal-data-stream-error-error-wh.patch \
     file://0004-Add-camerarecordermode-service-for-using-omxh264enc.patch \
     file://0005-Fix-binding-loop-for-declarative-camera.patch \
+    file://0006-add_QtGstLaunch_service.patch \
 "
 
 RDEPENDS_${PN}-plugins += " \
