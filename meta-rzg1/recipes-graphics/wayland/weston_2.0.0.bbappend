@@ -26,20 +26,19 @@ RDEPENDS_${PN}_append = " gles-user-module xkeyboard-config"
 SRC_URI_append_iwg20m = " file://iwg20m-lvdstouch.rules "
 SRC_URI_append_iwg22m = " file://iwg22m-lvdstouch.rules "
 
+do_install_append () {
+    ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-fe928000-device.so
+    ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-vsp2-device.so
+}
+
 do_install_append_iwg20m () {
     install -d ${D}/${sysconfdir}/udev/rules.d/
     install ${WORKDIR}/iwg20m-lvdstouch.rules ${D}/${sysconfdir}/udev/rules.d/
-
-    ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-fe928000-device.so
-    ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-vsp2-device.so
 }
 
 do_install_append_iwg22m () {
     install -d ${D}/${sysconfdir}/udev/rules.d/
     install ${WORKDIR}/iwg22m-lvdstouch.rules ${D}/${sysconfdir}/udev/rules.d/
-
-    ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-fe928000-device.so
-    ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-vsp2-device.so
 }
 
 FILES_${PN}_append_iwg20m += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
