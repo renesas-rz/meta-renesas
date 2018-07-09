@@ -22,6 +22,7 @@ S = "${WORKDIR}/git"
 
 SRC_URI_append = " \
     file://defconfig \
+    file://common.cfg \
 "
 
 SRC_URI_append_iwg20m = " \
