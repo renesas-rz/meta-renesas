@@ -252,6 +252,14 @@ do_install () {
 		install -m 0755 ${WORKDIR}/hwclock.sh ${D}${sysconfdir}/init.d/
 	fi
 
+	if grep "CONFIG_UDHCPC=y" ${B}/.config; then
+		install -d ${D}${sysconfdir}/udhcpc.d
+		install -d ${D}${datadir}/udhcpc
+		install -m 0755 ${WORKDIR}/simple.script ${D}${sysconfdir}/udhcpc.d/50default
+		sed -i "s:/SBIN_DIR/:${base_sbindir}/:" ${D}${sysconfdir}/udhcpc.d/50default
+		install -m 0755 ${WORKDIR}/default.script ${D}${datadir}/udhcpc/default.script
+	fi
+
     # Remove the sysvinit specific configuration file for systemd systems to avoid confusion
     if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'false', 'true', d)}; then
 	rm -f ${D}${sysconfdir}/syslog-startup.conf
