@@ -20,4 +20,7 @@ IMAGE_INSTALL_append = " \
   bluez5 \
   packagegroup-qt5-examples \
   configuration \
+  usbutils \
+  util-linux \
+  usb-otg-init \
 "
