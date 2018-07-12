@@ -23,4 +23,8 @@ IMAGE_INSTALL_append = " \
   usbutils \
   util-linux \
   usb-otg-init \
+  usb-init-wl \
+  linux-firmware \
+  wpa-supplicant \
+  init-ifupdown \
 "
