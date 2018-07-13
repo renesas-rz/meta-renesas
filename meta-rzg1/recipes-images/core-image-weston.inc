@@ -32,4 +32,6 @@ IMAGE_INSTALL_append = " \
   kernel-module-libcomposite-${KERNEL_VERSION} \
   kernel-module-usb-f-mass-storage-${KERNEL_VERSION} \
   kernel-module-g-mass-storage-${KERNEL_VERSION} \
+  kernel-module-rtl-usb-${KERNEL_VERSION} \
+  kernel-module-rtl8192cu-${KERNEL_VERSION} \
 "
