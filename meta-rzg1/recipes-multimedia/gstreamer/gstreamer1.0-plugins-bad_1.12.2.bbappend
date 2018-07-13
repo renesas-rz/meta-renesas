@@ -2,9 +2,8 @@ FILESEXTRAPATHS_prepend_rzg1 := '${THISDIR}/${PN}:'
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
 SRC_URI_append = " git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.12.2"
 
-SRCREV = "0a4f4f7c2d0185c91ac3c768a8e8d20dc292f8ee"
-
-DEPENDS += "weston virtual/mesa"
+SRCREV = "db554fad172f2dabb0f7a75ef1e8e4cb35e172c9"
+DEPENDS += "weston virtual/mesa libdrm"
 
 
 S = "${WORKDIR}/git"
@@ -29,16 +28,10 @@ do_configure_prepend() {
 }
 
 SRC_URI += " \
-    file://0001-gst1122-waylandsink-Add-set-window-position.patch \
-    file://0002-gst1122-waylandsink-Add-set-window-scale.patch \
-    file://0003-gst1122-waylandsink-Set-window-fullscreen.patch \
-    file://0004-gst1122-waylandsink-Restrict-the-number-of-buffers-in.patch \
-    file://0005-gst1122-waylandsink-Ensure-wayland-display-create-queue-even.patch \
-    file://0006-gst1122-waylandsink-Don-t-wait-for-the-wl_surface_frame-call.patch \
-    file://0007-gst1122-waylandsink-Change-the-color-format-mapping-for-XBGR.patch \
-    file://0008-gst1122-waylandsink-Correct-coding-style-by-gst-indent.patch \
-    file://waylandsink-Fix-a-potential-build-issue-caused-by-mi.patch \
-    file://0009-camerabin2-solve-issue-horizontal-noise-from-camera-due-to-usin.patch \
+    file://0001-waylandsink-Add-set-window-position.patch \
+    file://0002-waylandsink-Add-set-window-scale-feature.patch \
+    file://0003-waylandsink-Add-fullscreen-display-feature.patch \
+    file://0004-Solve-issue-horizontal-noise-from-camera-due-to-usin.patch \
 "
 
 RDEPENDS_gstreamer1.0-plugins-bad_append = " libwayland-egl gles-user-module "
