@@ -1,4 +1,5 @@
 include core-image-renesas-base.inc
+require ../include/rzg-modules-common.inc
 
 IMAGE_INSTALL_append_rzg1 = '${@bb.utils.contains("USE_GLES", "1", \
     " libegl libegl-dev libgbm-dev", "", d)} \
@@ -27,4 +28,8 @@ IMAGE_INSTALL_append = " \
   linux-firmware \
   wpa-supplicant \
   init-ifupdown \
+  kernel-module-configfs-${KERNEL_VERSION} \
+  kernel-module-libcomposite-${KERNEL_VERSION} \
+  kernel-module-usb-f-mass-storage-${KERNEL_VERSION} \
+  kernel-module-g-mass-storage-${KERNEL_VERSION} \
 "
