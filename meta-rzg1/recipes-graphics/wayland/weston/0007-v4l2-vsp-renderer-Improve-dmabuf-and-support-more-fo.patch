@@ -1,0 +1,819 @@
+From 2ef2b5831f1ffa1253345bb2ffe86e6091c2e332 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Fri, 13 Jul 2018 10:53:05 +0700
+Subject: [PATCH] v4l2/vsp renderer: Improve dmabuf and support more formats
+
+Improve the dmabuf render, and add more formats support.
+This change is a support for waylandsink. After this change
+of Weston, waylandsink can render NV12 directly
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ libweston/v4l2-compat.h          |  16 ++
+ libweston/v4l2-renderer-device.h |  11 +
+ libweston/v4l2-renderer.c        | 456 ++++++++++++++++++++++++++++++++++-----
+ libweston/vsp-renderer.c         |  82 +++++++
+ 4 files changed, 509 insertions(+), 56 deletions(-)
+
+diff --git a/libweston/v4l2-compat.h b/libweston/v4l2-compat.h
+index 6385877..5434654 100644
+--- a/libweston/v4l2-compat.h
++++ b/libweston/v4l2-compat.h
+@@ -65,4 +65,20 @@
+ #define V4L2_PIX_FMT_XBGR32  v4l2_fourcc('X', 'R', '2', '4') /* 32  BGRX-8-8-8-8  */
+ #endif
+ 
++#ifndef V4L2_PIX_FMT_YUV422M
++#define V4L2_PIX_FMT_YUV422M  v4l2_fourcc('Y', 'M', '1', '6')
++#endif
++
++#ifndef V4L2_PIX_FMT_YVU422M
++#define V4L2_PIX_FMT_YVU422M  v4l2_fourcc('Y', 'M', '6', '1')
++#endif
++
++#ifndef V4L2_PIX_FMT_YUV444M
++#define V4L2_PIX_FMT_YUV444M  v4l2_fourcc('Y', 'M', '2', '4')
++#endif
++
++#ifndef V4L2_PIX_FMT_YVU444M
++#define V4L2_PIX_FMT_YVU444M  v4l2_fourcc('Y', 'M', '4', '2')
++#endif
++
+ #endif /* !__V4L2_COMPAT_H__ */
+diff --git a/libweston/v4l2-renderer-device.h b/libweston/v4l2-renderer-device.h
+index f2fe7be..eef8e80 100644
+--- a/libweston/v4l2-renderer-device.h
++++ b/libweston/v4l2-renderer-device.h
+@@ -45,6 +45,15 @@ struct v4l2_renderer_output {
+ struct v4l2_renderer_plane {
+ 	int dmafd;
+ 	unsigned int stride;
++        unsigned int length;
++        unsigned int bytesused;
++
++        /* for shm buffer */
++        struct kms_bo *bo;
++        void *addr;
++        int bo_stride;
++        int shm_buffer_image_data_stride;
++        int shm_buffer_image_data_height;
+ };
+ 
+ #ifdef V4L2_GL_FALLBACK
+@@ -87,6 +96,7 @@ struct v4l2_surface_state {
+ 	struct wl_listener buffer_destroy_listener;
+ 	struct wl_listener surface_destroy_listener;
+ 	struct wl_listener renderer_destroy_listener;
++        struct wl_listener dmabuf_buffer_destroy_listener;
+ 
+ #ifdef V4L2_GL_FALLBACK
+ 	void *gl_renderer_state;
+@@ -115,4 +125,5 @@ struct v4l2_device_interface {
+ #endif
+ 
+ 	uint32_t (*get_capabilities)(void);
++        bool (*check_format)(uint32_t color_format, int num_planes);
+ };
+diff --git a/libweston/v4l2-renderer.c b/libweston/v4l2-renderer.c
+index f020377..bbe30af 100644
+--- a/libweston/v4l2-renderer.c
++++ b/libweston/v4l2-renderer.c
+@@ -42,12 +42,15 @@
+ #include <linux/v4l2-subdev.h>
+ #include "v4l2-renderer.h"
+ #include "v4l2-renderer-device.h"
++#include "v4l2-compat.h"
+ 
+ #include <xf86drm.h>
+ #include <libkms/libkms.h>
++#include <drm_fourcc.h>
+ 
+ #include <wayland-kms.h>
+ #include <wayland-kms-server-protocol.h>
++#include <linux-dmabuf.h>
+ 
+ #include "media-ctl/mediactl.h"
+ #include "media-ctl/v4l2subdev.h"
+@@ -234,7 +237,12 @@ static void
+ v4l2_gl_flush_damage(struct weston_surface *surface)
+ {
+ 	struct v4l2_surface_state *vs = get_surface_state(surface);
+-	struct v4l2_renderer *renderer = vs->renderer;
++	struct v4l2_renderer *renderer;
++
++	if (!vs)
++		return;
++
++	renderer = vs->renderer;
+ 
+ 	surface->compositor->renderer = renderer->gl_renderer;
+ 	surface->renderer_state = vs->gl_renderer_state;
+@@ -845,22 +853,22 @@ static inline void
+ v4l2_renderer_copy_buffer(struct v4l2_surface_state *vs, struct weston_buffer *buffer)
+ {
+ 	void *src, *dst;
+-	int y, stride, bo_stride;
++	int i, y, stride, bo_stride;
+ 
+ 	src = wl_shm_buffer_get_data(buffer->shm_buffer);
+-	dst = vs->addr;
+-
+-	stride = vs->planes[0].stride;
+-	bo_stride = vs->bo_stride;
+ 
+ 	wl_shm_buffer_begin_access(buffer->shm_buffer);
+-	for (y = 0; y < buffer->height; y++) {
+-		memcpy(dst, src, buffer->width * vs->bpp);
+-		dst += bo_stride;
+-		src += stride;
++	for (i = 0; i < vs->num_planes; i++) {
++		dst = vs->planes[i].addr;
++		stride = vs->planes[i].stride;
++		bo_stride = vs->planes[i].bo_stride;
++		for (y = 0; y < vs->planes[i].shm_buffer_image_data_height; y++) {
++			memcpy(dst, src, (size_t)(vs->planes[i].shm_buffer_image_data_stride));
++			dst += bo_stride;
++			src += stride;
++		}
+ 	}
+ 	wl_shm_buffer_end_access(buffer->shm_buffer);
+-
+ }
+ 
+ static void
+@@ -892,19 +900,20 @@ v4l2_release_kms_bo(struct v4l2_surface_state *vs)
+ 	if (!vs)
+ 		return;
+ 
+-	if (vs->bo) {
+-		for (i = 0; i < vs->num_planes; i++) {
++	for (i = 0; i < vs->num_planes; i++) {
++		if (vs->planes[i].bo) {
+ 			if (vs->planes[i].dmafd >= 0) {
+ 				close(vs->planes[i].dmafd);
+ 				vs->planes[i].dmafd = -1;
+ 			}
+-		}
+ 
+-		if (kms_bo_unmap(vs->bo))
+-			weston_log("kms_bo_unmap failed.\n");
++			if (kms_bo_unmap(vs->planes[i].bo))
++				weston_log("kms_bo_unmap failed.\n");
+ 
+-		kms_bo_destroy(&vs->bo);
+-		vs->addr = NULL;
++			kms_bo_destroy(&vs->planes[i].bo);
++			vs->planes[i].addr = NULL;
++			vs->planes[i].bo = NULL;
++		}
+ 	}
+ }
+ 
+@@ -934,27 +943,78 @@ v4l2_renderer_attach_shm(struct v4l2_surface_state *vs, struct weston_buffer *bu
+ 		KMS_HEIGHT, 0,
+ 		KMS_TERMINATE_PROP_LIST
+ 	};
+-	unsigned handle, stride, bo_stride;
++	unsigned handle, stride[3], bo_stride;
++	int num_planes, width, height, plane_height[3];
++	unsigned bo_width[3], bo_height[3];
++	int image_data_stride[3];
++	int i;
++
++	width = wl_shm_buffer_get_width(shm_buffer);
++	height = wl_shm_buffer_get_height(shm_buffer);
++	stride[0] = (unsigned int)wl_shm_buffer_get_stride(shm_buffer);
++
++	num_planes = 1;
++	plane_height[0] = height;
++	bo_height[0] = (unsigned int)height;
+ 
+ 	switch (wl_shm_buffer_get_format(shm_buffer)) {
+ 	case WL_SHM_FORMAT_XRGB8888:
+ 		pixel_format = V4L2_PIX_FMT_XBGR32;
+ 		bpp = 4;
++		bo_width[0] = (unsigned int)((width + 1) * bpp / 4);
++		image_data_stride[0] = width * bpp;
+ 		break;
+ 
+ 	case WL_SHM_FORMAT_ARGB8888:
+ 		pixel_format = V4L2_PIX_FMT_ABGR32;
+ 		bpp = 4;
++		bo_width[0] = (unsigned int)((width + 1) * bpp / 4);
++		image_data_stride[0] = width * bpp;
+ 		break;
+ 
+ 	case WL_SHM_FORMAT_RGB565:
+ 		pixel_format = V4L2_PIX_FMT_RGB565;
+ 		bpp = 2;
++		bo_width[0] = (unsigned int)((width + 1) * bpp / 4);
++		image_data_stride[0] = width * bpp;
+ 		break;
+ 
+ 	case WL_SHM_FORMAT_YUYV:
+ 		pixel_format = V4L2_PIX_FMT_YUYV;
+ 		bpp = 2;
++		bo_width[0] = (unsigned int)((width + 1) * bpp / 4);
++		image_data_stride[0] = width * bpp;
++		break;
++
++	case WL_SHM_FORMAT_NV12:
++		pixel_format = V4L2_PIX_FMT_NV12M;
++		bpp = 2;
++		num_planes = 2;
++		plane_height[1] = height / 2;
++		stride[1] = stride[0];
++		bo_width[0] = (unsigned int)((width + 2) / 4);
++		bo_width[1] = bo_width[0];
++		bo_height[1] = (unsigned int)((height + 1) / 2);
++		image_data_stride[0] = width;
++		image_data_stride[1] = width;
++		break;
++
++	case WL_SHM_FORMAT_YUV420:
++		pixel_format = V4L2_PIX_FMT_YUV420M;
++		bpp = 2;
++		num_planes = 3;
++		plane_height[1] = height / 2;
++		plane_height[2] = height / 2;
++		stride[1] = stride[0] / 2;
++		stride[2] = stride[0] / 2;
++		bo_width[0] = (unsigned int)((width + 2) / 4);
++		bo_width[1] = (unsigned int)((width + 4) / 2 / 4);
++		bo_height[1] = (unsigned int)((height + 1) / 2);
++		bo_width[2] = bo_width[1];
++		bo_height[2] = bo_height[1];
++		image_data_stride[0] = width;
++		image_data_stride[1] = width / 2;
++		image_data_stride[2] = image_data_stride[1];
+ 		break;
+ 
+ 	default:
+@@ -963,57 +1023,74 @@ v4l2_renderer_attach_shm(struct v4l2_surface_state *vs, struct weston_buffer *bu
+ 	}
+ 
+ 	buffer->shm_buffer = shm_buffer;
+-	buffer->width = wl_shm_buffer_get_width(shm_buffer);
+-	buffer->height = wl_shm_buffer_get_height(shm_buffer);
+-	stride = wl_shm_buffer_get_stride(shm_buffer);
++	buffer->width = width;
++	buffer->height = height;
+ 
+-	if (vs->width == buffer->width &&
++	if (vs->bo && vs->width == buffer->width &&
+ 	    vs->height == buffer->height &&
+-	    vs->planes[0].stride == stride && vs->bpp == bpp) {
+-	    // no need to recreate buffer
+-	    return 0;
++	    vs->planes[0].stride == stride[0] && vs->bpp == bpp &&
++	    vs->pixel_format == pixel_format) {
++		// no need to recreate buffer
++		return 0;
+ 	}
+ 
+ 	// release if there's allocated buffer
+ 	v4l2_release_kms_bo(vs);
++	if (vs->dmabuf_buffer_destroy_listener.notify) {
++		wl_list_remove(&vs->dmabuf_buffer_destroy_listener.link);
++		vs->dmabuf_buffer_destroy_listener.notify = NULL;
++	}
+ 
+ 	// create a reference to the shm_buffer.
+ 	vs->width = buffer->width;
+ 	vs->height = buffer->height;
+ 	vs->pixel_format = pixel_format;
+-	vs->num_planes = 1;
+-	vs->planes[0].stride = stride;
+-	vs->planes[0].dmafd = -1;
++	vs->num_planes = num_planes;
++	for (i = 0; i < num_planes; i++) {
++		vs->planes[i].stride = stride[i];
++		vs->planes[i].dmafd = -1;
++		vs->planes[i].length = vs->planes[i].bytesused
++			= stride[i] * plane_height[i];
++		vs->planes[i].shm_buffer_image_data_stride = image_data_stride[i];
++		vs->planes[i].shm_buffer_image_data_height = plane_height[i];
++	}
+ 	vs->bpp = bpp;
+ 
+-	if (device_interface->attach_buffer(vs) == -1)
++	if (device_interface->attach_buffer(vs) == -1) {
++		weston_log("attach_buffer failed.\n");
+ 		return -1;
++	}
+ 
+ 	// create gbm_bo
+-	attr[3] = (buffer->width + 1) * bpp / 4;
+-	attr[5] = buffer->height;
++	for (i = 0; i < num_planes; i++) {
++		attr[3] = bo_width[i];
++		attr[5] = bo_height[i];
+ 
+-	if (kms_bo_create(vs->renderer->kms, attr, &vs->bo)) {
+-		weston_log("kms_bo_create failed.\n");
+-		goto error;
+-	}
++		if (kms_bo_create(vs->renderer->kms, attr, &vs->planes[i].bo)) {
++			weston_log("kms_bo_create failed.\n");
++			goto error;
++		}
+ 
+-	if (kms_bo_map(vs->bo, &vs->addr)) {
+-		weston_log("kms_bo_map failed.\n");
+-		goto error;
+-	}
++		if (kms_bo_map(vs->planes[i].bo, &vs->planes[i].addr)) {
++			weston_log("kms_bo_map failed.\n");
++			goto error;
++		}
+ 
+-	if (kms_bo_get_prop(vs->bo, KMS_PITCH, &bo_stride)) {
+-		weston_log("kms_bo_get_prop failed.\n");
+-		goto error;
+-	}
+-	vs->bo_stride = stride;
++		if (kms_bo_get_prop(vs->planes[i].bo, KMS_PITCH, &bo_stride)) {
++			weston_log("kms_bo_get_prop failed.\n");
++			goto error;
++		}
++		vs->planes[i].bo_stride = (int)stride[i];
+ 
+-	if (kms_bo_get_prop(vs->bo, KMS_HANDLE, &handle)) {
+-		weston_log("kms_bo_get_prop failed.\n");
+-		goto error;
++		if (kms_bo_get_prop(vs->planes[i].bo, KMS_HANDLE, &handle)) {
++			weston_log("kms_bo_get_prop failed.\n");
++			goto error;
++		}
++		if (drmPrimeHandleToFD(fd, handle, DRM_CLOEXEC, &vs->planes[i].dmafd)) {
++			weston_log("drmPrimeHandleToFD failed.\n");
++			goto error;
++		}
+ 	}
+-	drmPrimeHandleToFD(fd, handle, DRM_CLOEXEC, &vs->planes[0].dmafd);
+ 
+ 	v4l2_renderer_copy_buffer(vs, buffer);
+ 
+@@ -1026,16 +1103,214 @@ error:
+ 	return -1;
+ }
+ 
++static void
++dmabuf_buffer_state_handle_buffer_destroy(struct wl_listener *listener,
++                                        void *data)
++{
++        struct v4l2_surface_state *vs;
++
++        vs = container_of(listener, struct v4l2_surface_state,
++                          dmabuf_buffer_destroy_listener);
++        vs->planes[0].dmafd = 0;
++        vs->dmabuf_buffer_destroy_listener.notify = NULL;
++}
++
++static inline unsigned int
++v4l2_renderer_plane_height(int plane, int _height, unsigned int format)
++{
++	unsigned int height = (unsigned int)_height;
++
++	switch (plane) {
++	case 0:
++		return height;
++	case 1:
++		switch (format) {
++		case V4L2_PIX_FMT_NV12M:
++		case V4L2_PIX_FMT_NV21M:
++		case V4L2_PIX_FMT_YUV420M:
++		case V4L2_PIX_FMT_YVU420M:
++			return height / 2;
++		case V4L2_PIX_FMT_NV16M:
++		case V4L2_PIX_FMT_NV61M:
++		case V4L2_PIX_FMT_YUV422M:
++		case V4L2_PIX_FMT_YVU422M:
++		case V4L2_PIX_FMT_YUV444M:
++		case V4L2_PIX_FMT_YVU444M:
++			return height;
++		default:
++			break;
++		}
++		break;
++	case 2:
++		switch (format) {
++		case V4L2_PIX_FMT_YUV420M:
++		case V4L2_PIX_FMT_YVU420M:
++			return height / 2;
++		case V4L2_PIX_FMT_YUV422M:
++		case V4L2_PIX_FMT_YVU422M:
++		case V4L2_PIX_FMT_YUV444M:
++		case V4L2_PIX_FMT_YVU444M:
++			return height;
++		default:
++			break;
++		}
++		break;
++	default:
++		break;
++	}
++	return 0;
++}
+ static int
+-v4l2_renderer_attach_dmabuf(struct v4l2_surface_state *vs, struct weston_buffer *buffer)
++attach_linux_dmabuf_buffer(struct v4l2_surface_state *vs, struct weston_buffer *buffer,
++		struct linux_dmabuf_buffer *dmabuf)
+ {
+ 	unsigned int pixel_format;
+-	struct wl_kms_buffer *kbuf;
+ 	int bpp, i;
+ 
+-	buffer->legacy_buffer = (struct wl_buffer *)buffer->resource;
++	switch (dmabuf->attributes.format) {
++	case DRM_FORMAT_XRGB8888:
++		pixel_format = V4L2_PIX_FMT_XBGR32;
++		bpp = 4;
++		break;
++
++	case DRM_FORMAT_ARGB8888:
++		pixel_format = V4L2_PIX_FMT_ABGR32;
++		bpp = 4;
++		break;
++
++	case DRM_FORMAT_BGRX8888:
++	case DRM_FORMAT_XBGR8888: /* for backward compatibility */
++		pixel_format = V4L2_PIX_FMT_XRGB32;
++		bpp = 4;
++		break;
++
++	case DRM_FORMAT_BGRA8888:
++	case DRM_FORMAT_ABGR8888: /* for backward compatibility */
++		pixel_format = V4L2_PIX_FMT_ARGB32;
++		bpp = 4;
++		break;
++
++	case DRM_FORMAT_RGB888:
++		pixel_format = V4L2_PIX_FMT_RGB24;
++		bpp = 3;
++		break;
++
++	case DRM_FORMAT_BGR888:
++		pixel_format = V4L2_PIX_FMT_BGR24;
++		bpp = 3;
++		break;
++
++	case DRM_FORMAT_RGB565:
++		pixel_format = V4L2_PIX_FMT_RGB565;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_RGB332:
++		pixel_format = V4L2_PIX_FMT_RGB332;
++		bpp = 1;
++		break;
++
++	case DRM_FORMAT_YUYV:
++		pixel_format = V4L2_PIX_FMT_YUYV;
++		bpp = 2;
++		break;
+ 
+-	kbuf = wayland_kms_buffer_get(buffer->resource);
++	case DRM_FORMAT_YVYU:
++		pixel_format = V4L2_PIX_FMT_YVYU;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_UYVY:
++		pixel_format = V4L2_PIX_FMT_UYVY;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_VYUY:
++		pixel_format = V4L2_PIX_FMT_VYUY;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_NV12:
++		pixel_format = V4L2_PIX_FMT_NV12M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_NV16:
++		pixel_format = V4L2_PIX_FMT_NV16M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_NV21:
++		pixel_format = V4L2_PIX_FMT_NV21M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_NV61:
++		pixel_format = V4L2_PIX_FMT_NV61M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_YUV420:
++		pixel_format = V4L2_PIX_FMT_YUV420M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_YVU420:
++		pixel_format = V4L2_PIX_FMT_YVU420M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_YUV422:
++		pixel_format = V4L2_PIX_FMT_YUV422M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_YVU422:
++		pixel_format = V4L2_PIX_FMT_YVU422M;
++		bpp = 2;
++		break;
++
++	case DRM_FORMAT_YUV444:
++		pixel_format = V4L2_PIX_FMT_YUV444M;
++		bpp = 3;
++		break;
++
++	case DRM_FORMAT_YVU444:
++		pixel_format = V4L2_PIX_FMT_YVU444M;
++		bpp = 3;
++		break;
++
++	default:
++		weston_log("Unsupported DMABUF buffer format\n");
++		return -1;
++	}
++
++	vs->width = buffer->width = dmabuf->attributes.width;
++	vs->height = buffer->height = dmabuf->attributes.height;
++	vs->pixel_format = pixel_format;
++	vs->bpp = bpp;
++	vs->num_planes = dmabuf->attributes.n_planes;
++	for (i = 0; i < dmabuf->attributes.n_planes; i++) {
++		vs->planes[i].stride = dmabuf->attributes.stride[i];
++		vs->planes[i].dmafd = dmabuf->attributes.fd[i];
++		vs->planes[i].length = vs->planes[i].bytesused
++			= vs->planes[i].stride *
++				v4l2_renderer_plane_height(i, vs->height,
++							   vs->pixel_format);
++	}
++
++	DBG("%s: %dx%d buffer attached (dmabuf=%d, stride=%d).\n", __func__,
++		dmabuf->attributes.width, dmabuf->attributes.height, dmabuf->attributes.fd[0], dmabuf->attributes.stride);
++
++	return 0;
++}
++
++static int
++attach_wl_kms_buffer(struct v4l2_surface_state *vs, struct weston_buffer *buffer,
++		struct wl_kms_buffer *kbuf)
++{
++	unsigned int pixel_format;
++	int bpp, i;
+ 
+ 	switch (kbuf->format) {
+ 	case WL_KMS_FORMAT_XRGB8888:
+@@ -1131,12 +1406,51 @@ v4l2_renderer_attach_dmabuf(struct v4l2_surface_state *vs, struct weston_buffer
+ 	for (i = 0; i < kbuf->num_planes; i++) {
+ 		vs->planes[i].stride = kbuf->planes[i].stride;
+ 		vs->planes[i].dmafd = kbuf->planes[i].fd;
++		vs->planes[i].length = vs->planes[i].bytesused
++			= vs->planes[i].stride *
++				v4l2_renderer_plane_height(i, vs->height,
++							   vs->pixel_format);
++	}
++
++	DBG("%s: %dx%d buffer attached (dmabuf=%d, stride=%d).\n", __func__, kbuf->width, kbuf->height, kbuf->fd, kbuf->stride);
++
++	return 0;
++}
++
++static int
++v4l2_renderer_attach_dmabuf(struct v4l2_surface_state *vs, struct weston_buffer *buffer)
++{
++	struct linux_dmabuf_buffer *dmabuf;
++	struct wl_kms_buffer *kbuf;
++
++	buffer->legacy_buffer = (struct wl_buffer *)buffer->resource;
++
++	v4l2_release_kms_bo(vs);
++
++	if ((dmabuf = linux_dmabuf_buffer_get(buffer->resource))) {
++		if (attach_linux_dmabuf_buffer(vs, buffer, dmabuf) < 0)
++			return -1;
++	} else if ((kbuf = wayland_kms_buffer_get(buffer->resource))) {
++		if (attach_wl_kms_buffer(vs, buffer, kbuf) < 0)
++			return -1;
++	} else {
++		return -1;
+ 	}
+ 
+-	if (device_interface->attach_buffer(vs) == -1)
++	if (device_interface->attach_buffer(vs) == -1) {
++		vs->planes[0].dmafd = 0;
+ 		return -1;
++	}
+ 
+-	DBG("%s: %dx%d buffer attached (dmabuf=%d, stride=%d).\n", __func__, kbuf->width, kbuf->height, kbuf->fd, kbuf->stride);
++	if (vs->dmabuf_buffer_destroy_listener.notify) {
++		wl_list_remove(&vs->dmabuf_buffer_destroy_listener.link);
++		vs->dmabuf_buffer_destroy_listener.notify = NULL;
++	}
++
++	vs->dmabuf_buffer_destroy_listener.notify
++		= dmabuf_buffer_state_handle_buffer_destroy;
++	wl_resource_add_destroy_listener(buffer->resource,
++				&vs->dmabuf_buffer_destroy_listener);
+ 
+ 	return 0;
+ }
+@@ -1148,6 +1462,9 @@ v4l2_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
+ 	struct wl_shm_buffer *shm_buffer;
+ 	int ret;
+ 
++	if (!vs)
++		return;
++
+ 	// refer the given weston_buffer. if there's an existing reference,
+ 	// release it first if not the same. if the buffer is the new one,
+ 	// increment the refrence counter. all done in weston_buffer_reference().
+@@ -1197,8 +1514,13 @@ v4l2_renderer_surface_state_destroy(struct v4l2_surface_state *vs)
+ 		vs->buffer_destroy_listener.notify = NULL;
+ 	}
+ 
+-	// TODO: Release any resources associated to the surface here.
++	if (vs->dmabuf_buffer_destroy_listener.notify) {
++		wl_list_remove(&vs->dmabuf_buffer_destroy_listener.link);
++		vs->dmabuf_buffer_destroy_listener.notify = NULL;
++	}
+ 
++	// TODO: Release any resources associated to the surface here.
++	v4l2_release_kms_bo(vs);
+ 	weston_buffer_reference(&vs->buffer_ref, NULL);
+ #ifdef V4L2_GL_FALLBACK
+ 	if (vs->surface_type == V4L2_SURFACE_GL_ATTACHED) {
+@@ -1360,6 +1682,25 @@ v4l2_get_cname(const char *bus_info)
+ 	return device_name;
+ }
+ 
++static bool
++v4l2_renderer_import_dmabuf(struct weston_compositor *ec,
++                           struct linux_dmabuf_buffer *dmabuf)
++{
++        /* Reject all flags this renderer isn't supported. */
++        if (dmabuf->attributes.flags)
++                return false;
++
++#ifdef V4L2_GL_FALLBACK
++        struct v4l2_renderer *renderer = get_renderer(ec);
++        if (renderer->gl_fallback) {
++                return v4l2_gl_import_dmabuf(ec, dmabuf);
++        }
++#endif
++
++        return device_interface->check_format(dmabuf->attributes.format,
++                                              dmabuf->attributes.n_planes);
++}
++
+ static int
+ v4l2_renderer_init(struct weston_compositor *ec, int drm_fd, char *drm_fn)
+ {
+@@ -1443,6 +1784,7 @@ v4l2_renderer_init(struct weston_compositor *ec, int drm_fd, char *drm_fn)
+ 	renderer->base.attach = v4l2_renderer_attach;
+ 	renderer->base.surface_set_color = v4l2_renderer_surface_set_color;
+ 	renderer->base.destroy = v4l2_renderer_destroy;
++        renderer->base.import_dmabuf = v4l2_renderer_import_dmabuf;
+ 
+ #ifdef V4L2_GL_FALLBACK
+ 	if (renderer->gl_fallback) {
+@@ -1471,6 +1813,8 @@ v4l2_renderer_init(struct weston_compositor *ec, int drm_fd, char *drm_fn)
+ 	wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_XRGB8888);
+ 	wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_ARGB8888);
+ 	wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_YUYV);
++        wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_NV12);
++        wl_display_add_shm_format(ec->wl_display, WL_SHM_FORMAT_YUV420);
+ 
+ 	wl_signal_init(&renderer->destroy_signal);
+ 
+diff --git a/libweston/vsp-renderer.c b/libweston/vsp-renderer.c
+index a2fc811..6323fca 100644
+--- a/libweston/vsp-renderer.c
++++ b/libweston/vsp-renderer.c
+@@ -52,6 +52,15 @@
+ /* Required for a short term workaround */
+ #include "v4l2-compat.h"
+ 
++#if defined(V4L2_GL_FALLBACK_ENABLED) || defined(VSP2_SCALER_ENABLED)
++#include <unistd.h>
++#include <xf86drm.h>
++#include <libkms/libkms.h>
++#endif
++
++#include <drm_fourcc.h>
++
++
+ #if 0
+ #define DBG(...) weston_log(__VA_ARGS__)
+ #define DBGC(...) weston_log_continue(__VA_ARGS__)
+@@ -75,6 +84,54 @@ struct vsp_renderer_output {
+ #define VSP_INPUT_MAX	4
+ #define VSP_SCALER_MAX	1
+ #define VSP_SCALER_MIN_PIXELS	4	// UDS can't take pixels smaller than this
++#define SUPPORT_FORMATS_TERMINATOR    0xFFFFFFFF
++
++/* single plane */
++static uint32_t vsp2_support_formats_1p[] = {
++	DRM_FORMAT_XRGB8888,	/* V4L2_PIX_FMT_XBGR32 */
++	DRM_FORMAT_ARGB8888,	/* V4L2_PIX_FMT_ABGR32 */
++	DRM_FORMAT_BGRX8888,	/* V4L2_PIX_FMT_XRGB32 */
++	DRM_FORMAT_BGRA8888,	/* V4L2_PIX_FMT_ARGB32 */
++	DRM_FORMAT_RGB888,	/* V4L2_PIX_FMT_RGB24 */
++	DRM_FORMAT_BGR888,	/* V4L2_PIX_FMT_BGR24 */
++	DRM_FORMAT_RGB565,	/* V4L2_PIX_FMT_RGB565 */
++	DRM_FORMAT_RGB332,	/* 4L2_PIX_FMT_RGB332 */
++	DRM_FORMAT_YUYV,	/* V4L2_PIX_FMT_YUYV */
++	DRM_FORMAT_YVYU,	/* V4L2_PIX_FMT_YVYU */
++	DRM_FORMAT_UYVY,	/* V4L2_PIX_FMT_UYVY */
++	DRM_FORMAT_VYUY,	/* V4L2_PIX_FMT_VYUY */
++
++	/* for backward compatibility */
++	DRM_FORMAT_XBGR8888,	/* V4L2_PIX_FMT_XRGB32 */
++	DRM_FORMAT_ABGR8888,	/* V4L2_PIX_FMT_ARGB32 */
++	SUPPORT_FORMATS_TERMINATOR
++};
++
++/* 2 plane */
++static uint32_t vsp2_support_formats_2p[] = {
++	DRM_FORMAT_NV12,		/* V4L2_PIX_FMT_NV12M */
++	DRM_FORMAT_NV16,		/* V4L2_PIX_FMT_NV16M */
++	DRM_FORMAT_NV21,		/* V4L2_PIX_FMT_NV21M */
++	DRM_FORMAT_NV61,		/* V4L2_PIX_FMT_NV61M */
++	SUPPORT_FORMATS_TERMINATOR
++};
++
++/* 3 plane */
++static uint32_t vsp2_support_formats_3p[] = {
++	DRM_FORMAT_YUV420,		/* V4L2_PIX_FMT_YUV420M */
++	DRM_FORMAT_YVU420,		/* V4L2_PIX_FMT_YVU420M */
++	DRM_FORMAT_YUV422,		/* V4L2_PIX_FMT_YUV422M */
++	DRM_FORMAT_YVU422,		/* V4L2_PIX_FMT_YVU422M */
++	DRM_FORMAT_YUV444,		/* V4L2_PIX_FMT_YUV444M */
++	DRM_FORMAT_YVU444,		/* V4L2_PIX_FMT_YVU444M */
++	SUPPORT_FORMATS_TERMINATOR
++};
++
++static uint32_t *vsp2_support_formats[] = {
++	[0] = vsp2_support_formats_1p,
++	[1] = vsp2_support_formats_2p,
++	[2] = vsp2_support_formats_3p,
++};
+ 
+ const char *vsp_input_links[] = {
+ 	"'%s rpf.0':1 -> '%s bru':0",
+@@ -531,6 +588,11 @@ vsp_attach_buffer(struct v4l2_surface_state *surface_state)
+ 	case V4L2_PIX_FMT_NV16M:
+ 	case V4L2_PIX_FMT_NV61M:
+ 	case V4L2_PIX_FMT_YUV420M:
++        case V4L2_PIX_FMT_YVU420M:
++        case V4L2_PIX_FMT_YUV422M:
++        case V4L2_PIX_FMT_YVU422M:
++        case V4L2_PIX_FMT_YUV444M:
++        case V4L2_PIX_FMT_YVU444M:
+ 		code = V4L2_MBUS_FMT_AYUV8_1X32;
+ 		break;
+ 
+@@ -1163,6 +1225,25 @@ vsp_get_capabilities(void)
+ 	return 0;
+ }
+ 
++static bool
++vsp_check_format(uint32_t color_format, int num_planes)
++{
++        int i = 0;
++        uint32_t *format_list;
++
++        if (num_planes < 1 || 3 < num_planes)
++                return false;
++
++        format_list = vsp2_support_formats[num_planes - 1];
++        while (format_list[i] != SUPPORT_FORMATS_TERMINATOR) {
++                if (color_format == format_list[i])
++                        return true;
++                i++;
++        }
++
++        return false;
++}
++
+ WL_EXPORT struct v4l2_device_interface v4l2_device_interface = {
+ 	.init = vsp_init,
+ 
+@@ -1181,4 +1262,5 @@ WL_EXPORT struct v4l2_device_interface v4l2_device_interface = {
+ #endif
+ 
+ 	.get_capabilities = vsp_get_capabilities,
++	.check_format = vsp_check_format,
+ };
+-- 
+1.9.1
+
