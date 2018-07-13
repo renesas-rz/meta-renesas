@@ -8,7 +8,7 @@ COMPATIBLE_MACHINE = "iwg20m|iwg21m|iwg22m|iwg23s"
 DEPENDS_append = " util-linux-native openssl-native"
 
 RENESAS_URL="git://github.com/renesas-rz/renesas-cip.git"
-SRCREV = "0881785cea56afe8893fcb7efa0baa9f9adaf527"
+SRCREV = "0b8770ade7e3e4417ed475a366ea81bada73ae8d"
 SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=v4.4.138-cip25 \
 	file://0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
