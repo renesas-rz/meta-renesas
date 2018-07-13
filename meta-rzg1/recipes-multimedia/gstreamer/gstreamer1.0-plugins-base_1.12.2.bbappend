@@ -16,7 +16,6 @@ SRC_URI_append += " \
     file://0010-vspmfilter-Rewrite-caps-with-available-format-only.patch \
     file://0011-vspmfilter-Update-setting-in-out-params.patch \
     file://0012-gstvspmfilter-add-bufferpool.patch \
-    file://0013-gstvspmfilter-re-add-memory_alignment.patch \    
     file://0017-vspmfilter-Fix-mistake-in-storing-dmabuf_pid.patch \
     file://0018-vspmfilter-Fix-crash-issue-in-dmabuf-use-mode-with-s.patch \
 "
