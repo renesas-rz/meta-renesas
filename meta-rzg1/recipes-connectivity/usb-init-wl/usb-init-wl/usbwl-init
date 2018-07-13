@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+### BEGIN INIT INFO
+# Provides: USB-Wireles RTL8192CU Init
+# Default-Start:     5 12
+# Default-Stop:      0 1 6
+### END INIT INFO
+case "$1" in
+"start")
+        # insert multimedia modules
+	/sbin/modprobe -q -a rtl_usb rtl8192cu
+        ;;
+stop)
+        # remove multimedia modules
+	/sbin/modprobe -q -r -a rtl_usb rtl8192cu
+        ;;
+reload|restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+*)
+	echo "usage: $0 { start | stop | restart }"
+	;;
+esac
