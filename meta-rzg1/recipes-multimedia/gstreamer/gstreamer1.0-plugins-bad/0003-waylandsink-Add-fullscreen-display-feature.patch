@@ -6,28 +6,29 @@ Subject: [PATCH 3/4] waylandsink: Add fullscreen display feature
 Signed-off-by: AnNDP <anndp@fsoft.com.vn>
 Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
 ---
- ext/wayland/gstwaylandsink.c | 19 ++++++++++++++++++-
+ ext/wayland/gstwaylandsink.c | 19 +++++++++++++++++++
  ext/wayland/gstwaylandsink.h |  1 +
  ext/wayland/wlwindow.c       | 20 ++++++++++++++++++++
  ext/wayland/wlwindow.h       |  3 +++
- 4 files changed, 42 insertions(+), 1 deletion(-)
+ 4 files changed, 43 insertions(+)
 
 diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
 index 48a9ded..e2c9a8e 100644
 --- a/ext/wayland/gstwaylandsink.c
 +++ b/ext/wayland/gstwaylandsink.c
-@@ -70,6 +70,7 @@ enum
+@@ -68,6 +68,7 @@ enum
+   PROP_WAYLAND_POSITION_X,    /* add property (position_x) */
    PROP_WAYLAND_POSITION_Y,    /* add property (position_y) */
-   PROP_WAYLAND_OUT_WIDTH,     /* add property (out_width)  */
-   PROP_WAYLAND_OUT_HEIGHT,    /* add property (out_height) */
+   PROP_WAYLAND_SCALE,         /* add property (scale)  */
 +  PROP_FULLSCREEN,            /* add property (fullscreen) */
  };
  
  #define DEFAULT_USE_SUBSURFACE          TRUE
-@@ -208,6 +209,12 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
-                         "Wayland  Out_height value from the application",
-                         0, G_MAXINT, 0, G_PARAM_READWRITE));
- 
+@@ -200,6 +201,13 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+       g_param_spec_float ("scale", "Scale factor",
+                         "Scale factor for display size",
+                         0, G_MAXFLOAT, 0, G_PARAM_READWRITE));
++
 +  /* install property (fullscreen) */
 +  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
 +      g_param_spec_boolean ("fullscreen",
@@ -37,17 +38,17 @@ index 48a9ded..e2c9a8e 100644
  }
  
  static void
-@@ -223,6 +230,7 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+@@ -213,6 +221,7 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+   sink->position_x = -1;
+   sink->position_y = -1;
    sink->scale = 0;
-   sink->out_width = 0;
-   sink->out_height = 0;
 +  sink->fullscreen = FALSE;
  }
  
  
-@@ -260,6 +268,10 @@ gst_wayland_sink_get_property (GObject * object,
-       /* set out_height property */
-       g_value_set_int (value, sink->out_height);
+@@ -246,6 +255,10 @@ gst_wayland_sink_get_property (GObject * object,
+       /* set scale property */
+       g_value_set_float (value, sink->scale);
        break;
 +    case PROP_FULLSCREEN:
 +      /* set fullscreen property */
@@ -56,17 +57,18 @@ index 48a9ded..e2c9a8e 100644
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -300,6 +312,9 @@ gst_wayland_sink_set_property (GObject * object,
-       /* get out_height property */
-       sink->out_height = g_value_get_int (value);
+@@ -282,6 +295,10 @@ gst_wayland_sink_set_property (GObject * object,
+       /* get scale property */
+       sink->scale = g_value_get_float (value);
        break;
 +    case PROP_FULLSCREEN:
++      /* get fullscreeen property */
 +      sink->fullscreen = g_value_get_boolean (value);
 +      break;
      default:
        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
        break;
-@@ -710,6 +725,8 @@ render_last_buffer (GstWaylandSink * sink)
+@@ -692,6 +709,8 @@ render_last_buffer (GstWaylandSink * sink)
    if (G_UNLIKELY (sink->video_info_changed)) {
      info = &sink->video_info;
      sink->video_info_changed = FALSE;
@@ -79,10 +81,10 @@ diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
 index ff5c1ae..64d8c89 100644
 --- a/ext/wayland/gstwaylandsink.h
 +++ b/ext/wayland/gstwaylandsink.h
-@@ -77,6 +77,7 @@ struct _GstWaylandSink
-   gint out_width;   /* property out_width */
-   gint out_height;  /* property out_height */
-   guint scale;
+@@ -75,6 +75,7 @@ struct _GstWaylandSink
+   gint position_x;
+   gint position_y;
+   gfloat scale;
 +  gboolean fullscreen;
  };
  
@@ -91,7 +93,7 @@ diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
 index 011ecc7..9880d46 100644
 --- a/ext/wayland/wlwindow.c
 +++ b/ext/wayland/wlwindow.c
-@@ -201,6 +201,26 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+@@ -205,6 +205,26 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
    return window;
  }
  
