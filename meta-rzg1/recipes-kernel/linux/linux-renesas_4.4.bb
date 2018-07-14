@@ -12,6 +12,7 @@ SRCREV = "0b8770ade7e3e4417ed475a366ea81bada73ae8d"
 SRC_URI = " \
 	${RENESAS_URL};protocol=git;branch=v4.4.138-cip25 \
 	file://0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
+	file://0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
 "
 
 LINUX_VERSION ?= "4.4.138-cip25"
