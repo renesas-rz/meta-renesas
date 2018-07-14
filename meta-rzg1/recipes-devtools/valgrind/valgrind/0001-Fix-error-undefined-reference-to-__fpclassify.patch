@@ -1,0 +1,35 @@
+From ad40db41154cf9ccbc34afbd572bee794de6ab4c Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Thu, 21 Jun 2018 15:17:09 +0700
+Subject: [PATCH] Fix error undefined reference to "__fpclassify"
+
+This error happens because missing "-lm" in compiling
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ none/tests/arm/Makefile.am | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/none/tests/arm/Makefile.am b/none/tests/arm/Makefile.am
+index a932164..db91f37 100644
+--- a/none/tests/arm/Makefile.am
++++ b/none/tests/arm/Makefile.am
+@@ -61,11 +61,11 @@ v6intThumb_CFLAGS = $(AM_CFLAGS) -g -O0 -mthumb
+ 
+ v6media_CFLAGS    = $(AM_CFLAGS) -g -O0 -mthumb
+ 
+-v8crypto_a_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -marm
+-v8crypto_t_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -mthumb
++v8crypto_a_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -marm -lm
++v8crypto_t_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -mthumb -lm
+ 
+-v8fpsimd_a_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -marm
+-v8fpsimd_t_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -mthumb
++v8fpsimd_a_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -marm -lm
++v8fpsimd_t_CFLAGS = $(AM_CFLAGS) -g -O0 -mfpu=crypto-neon-fp-armv8 -mthumb -lm
+ 
+ v8memory_a_CFLAGS = $(AM_CFLAGS) -g -O0 \
+ 			-march=armv8-a -mfpu=crypto-neon-fp-armv8 -marm
+-- 
+1.9.1
+
