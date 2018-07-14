@@ -11,7 +11,12 @@ IMAGE_FEATURES += "dev-pkgs tools-sdk \
         tools-debug eclipse-debug tools-profile tools-testapps debug-tweaks ssh-server-openssh"
 
 # Add kernel source to allowing build kernel module
-TOOLCHAIN_TARGET_TASK_append = " kernel-devsrc"
+# Add libwayland-egl-dev to support building gles user library
+#     since it requires header wayland-egl-priv.h in this package
+TOOLCHAIN_TARGET_TASK_append = " kernel-devsrc libwayland-egl-dev"
+
+# Add some necessary tool
+TOOLCHAIN_HOST_TASK_append = " nativesdk-bison nativesdk-flex"
 
 
 # Current cross-compile SDK already included kernel source. But to support
