@@ -34,6 +34,9 @@ IMAGE_INSTALL_append = " \
   kernel-module-g-mass-storage-${KERNEL_VERSION} \
   kernel-module-rtl-usb-${KERNEL_VERSION} \
   kernel-module-rtl8192cu-${KERNEL_VERSION} \
+  kernel-module-ohci-hcd-${KERNEL_VERSION} \
+  kernel-module-ohci-pci-${KERNEL_VERSION} \
+  kernel-module-sh-eth-${KERNEL_VERSION} \
   dosfstools \
   evtest \
   e2fsprogs \
