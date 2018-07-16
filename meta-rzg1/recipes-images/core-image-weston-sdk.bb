@@ -28,7 +28,7 @@ echo "configuring scripts of kernel source for building .ko file..."\
 export OLD_PWD=-\
 cd $target_sdk_dir/sysroots/cortexa*/usr/src/kernel\
 $SUDO_EXEC bash -c "source $target_sdk_dir/environment-setup* && make silentoldconfig scripts"\
-cd $OLD_PWD' ${SDK_DEPLOY}/${TOOLCHAIN_OUTPUTNAME}.sh
+cd $OLD_PWD' ${SDKDEPLOYDIR}/${TOOLCHAIN_OUTPUTNAME}.sh
 }
 
 # Add below environments variables to support cross-compile kernel module
