@@ -179,6 +179,22 @@ do_install() {
 	done
 }
 
+do_install_append_class-native() {
+	# This is a workaround to prevent poky report error in these
+	# absolute path symlink
+	for f in certs openssl.cnf private; do
+                rm -rf ${D}${libdir}/ssl/${f}
+                ln -s ../../../etc/ssl/${f} ${D}${libdir}/ssl/${f}
+        done
+
+	create_wrapper ${D}${bindir}/openssl \
+	    OPENSSL_CONF=${libdir}/ssl/openssl.cnf \
+	    SSL_CERT_DIR=${libdir}/ssl/certs \
+	    SSL_CERT_FILE=${libdir}/ssl/cert.pem \
+	    OPENSSL_ENGINES=${libdir}/ssl/engines
+}
+
+
 PACKAGES =+ "libssl"
 
 FILES_${PN} += "${libdir}/ssl"
@@ -193,15 +209,6 @@ RDEPENDS_${PN} += "perl"
 INSANE_SKIP_${PN} += "file-rdeps"
 
 BBCLASSEXTEND = "native nativesdk"
-sysroot_stage_all_append_class-native() {
-       # This is a workaround to prevent poky report error in these
-       # absolute path symlink
-       echo ${SYSROOT_DESTDIR}${libdir}
-       rm -rf ${SYSROOT_DESTDIR}${libdir}/ssl/certs
-       rm -rf ${SYSROOT_DESTDIR}${libdir}/ssl/private
-       rm -rf ${SYSROOT_DESTDIR}${libdir}/ssl/openssl.cnf
-}
-
 
 inherit ptest
 

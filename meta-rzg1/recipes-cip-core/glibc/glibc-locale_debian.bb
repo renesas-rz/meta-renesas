@@ -134,3 +134,8 @@ FILES_locales = " \
 RDEPENDS_locales = "perl"
 
 FILES_${PN}-dbg += "${libdir}/gconv/.debug"
+
+# There are many many warning message related to locale-base-* packages
+# since they redepends on glibc-binary-localedata-* but not depend.
+# These warning messages are harmless, suppress them here.
+do_package_qa[noexec] = "1"
