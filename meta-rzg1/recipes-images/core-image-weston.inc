@@ -34,4 +34,26 @@ IMAGE_INSTALL_append = " \
   kernel-module-g-mass-storage-${KERNEL_VERSION} \
   kernel-module-rtl-usb-${KERNEL_VERSION} \
   kernel-module-rtl8192cu-${KERNEL_VERSION} \
+  dosfstools \
+  evtest \
+  e2fsprogs \
+  i2c-tools \
+  memtester \
+  python-subprocess \
+  python-datetime \
+  python-json \
+  ethtool \
+  mtd-utils \
+  mtd-utils-ubifs \
+  pciutils \
+  libsocketcan \
+  minicom \
+  lttng-tools \
+  lttng-modules \
+  lttng-ust \
+  util-linux-losetup \
+  util-linux-umount \
+  util-linux-swaponoff \
+  util-linux-libsmartcols \
+  ohci-init \
 "
