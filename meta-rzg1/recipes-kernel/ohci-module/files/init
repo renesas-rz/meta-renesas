@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+
+case "$1" in
+  start)
+  ;;
+
+  stop)
+        echo "Stopping ohci-pci"
+        rmmod ohci-pci
+	echo "Stopping ohci-hcd"
+        rmmod ohci-hcd
+  ;;
+
+  restart)
+	$0 stop
+        sleep 1
+        insmod /lib/modules/4.4.55-cip3/kernel/drivers/usb/host/ohci-hcd.ko
+	insmod /lib/modules/4.4.55-cip3/kernel/drivers/usb/host/ohci-pci.ko
+  ;;
+
+  *)
+        echo "usage: $0 { start | stop | restart }"
+  ;;
+esac
+
+exit 0
