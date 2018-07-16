@@ -1,9 +1,10 @@
 require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 
 RENESAS_URL="git://github.com/renesas-rz/renesas-cip.git"
-SRCREV = "3e632bfaaef838eb7aefb0e050b9fde6243bbd79"
+SRCREV = "0b8770ade7e3e4417ed475a366ea81bada73ae8d"
 SRC_URI = " \
-	${RENESAS_URL};protocol=git;branch=v4.4.130-cip23 \
+	${RENESAS_URL};protocol=git;branch=v4.4.138-cip25 \
+	file://0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
 "
 
 S = "${WORKDIR}/git"

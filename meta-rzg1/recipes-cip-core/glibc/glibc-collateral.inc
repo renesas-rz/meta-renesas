@@ -4,6 +4,10 @@ LIC_FILES_CHKSUM ?= "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd642
                      file://${COMMON_LICENSE_DIR}/LGPL-2.1;md5=1a6d268fd218675ffea8be556788b780"
 HOMEPAGE = "http://www.gnu.org/software/libc/index.html"
 
+inherit debian-package
+PV = "2.19"
+PR = "r1"
+
 # This needs to match with glibc.inc, otherwise glibc-scripts and glibc-locale
 # will fail to find main glibc, for details see
 # http://lists.openembedded.org/pipermail/openembedded-core/2015-January/100679.html
@@ -16,3 +20,7 @@ do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install[depends] += "virtual/${MLPREFIX}libc:do_populate_sysroot"
+
+do_debian_fix_timestamp[noexec] = "1"
+do_debian_patch[noexec] = "1"
+

@@ -1,0 +1,30 @@
+From d9a5e06ce162a8f24ce1c2041b2d9041e05fc94e Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 13 Jul 2018 16:22:59 +0700
+Subject: [PATCH] libweston: libinput-seat: Change Error input device to
+ Warning
+
+Weston will fail to load if there is no input devices (keyboard, mouse, touch,..)
+This commit let weston pass the usecase of no input device with warning message only.
+Please check weston log if needed.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ libweston/libinput-seat.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/libweston/libinput-seat.c b/libweston/libinput-seat.c
+index 0f002c4..adbf134 100644
+--- a/libweston/libinput-seat.c
++++ b/libweston/libinput-seat.c
+@@ -273,7 +273,6 @@ udev_input_enable(struct udev_input *input)
+ 			"\t- seats misconfigured "
+ 			"(Weston backend option 'seat', "
+ 			"udev device property ID_SEAT)\n");
+-		return -1;
+ 	}
+ 
+ 	return 0;
+-- 
+2.7.4
+

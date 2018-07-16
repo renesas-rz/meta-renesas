@@ -1,0 +1,2218 @@
+From d8bff500a44624fb8b13172918eb0eb8b3c3cd38 Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Sat, 5 Nov 2016 12:49:12 +0700
+Subject: [PATCH] Add camerarecordermode service for using omxh264enc
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ src/imports/multimedia/multimedia.cpp              |   3 +
+ src/imports/multimedia/multimedia.pro              |   6 +-
+ src/imports/multimedia/qdeclarativecamera.cpp      |   2 +
+ .../multimedia/qdeclarativecamerarecordermode.cpp  | 190 +++++++++++++
+ .../multimedia/qdeclarativecamerarecordermode_p.h  | 183 ++++++++++++
+ src/multimedia/controls/controls.pri               |   6 +-
+ .../controls/qcamerarecordermodecontrol.cpp        |  53 ++++
+ .../controls/qcamerarecordermodecontrol.h          |  95 +++++++
+ src/multimedia/qmediaserviceproviderplugin.h       |   6 +
+ src/multimedia/recording/qcamerarecordermode.cpp   | 285 +++++++++++++++++++
+ src/multimedia/recording/qcamerarecordermode.h     | 138 +++++++++
+ src/multimedia/recording/recording.pri             |   4 +-
+ .../camerarecordermode/camerarecordermode.json     |   4 +
+ .../camerarecordermode/camerarecordermode.pro      |  24 ++
+ .../qgstreamercamerarecordermodecontrol.cpp        | 186 ++++++++++++
+ .../qgstreamercamerarecordermodecontrol.h          |  66 +++++
+ .../qgstreamercamerarecordermodeservice.cpp        |  76 +++++
+ .../qgstreamercamerarecordermodeservice.h          |  68 +++++
+ .../qgstreamercamerarecordermodeserviceplugin.cpp  |  62 ++++
+ .../qgstreamercamerarecordermodeserviceplugin.h    |  60 ++++
+ .../qgstreamercamerarecordermodesession.cpp        | 311 +++++++++++++++++++++
+ .../qgstreamercamerarecordermodesession.h          | 123 ++++++++
+ src/plugins/gstreamer/gstreamer.json               |   2 +-
+ src/plugins/gstreamer/gstreamer.pro                |   3 +-
+ 24 files changed, 1949 insertions(+), 7 deletions(-)
+ create mode 100644 src/imports/multimedia/qdeclarativecamerarecordermode.cpp
+ create mode 100644 src/imports/multimedia/qdeclarativecamerarecordermode_p.h
+ create mode 100644 src/multimedia/controls/qcamerarecordermodecontrol.cpp
+ create mode 100644 src/multimedia/controls/qcamerarecordermodecontrol.h
+ create mode 100644 src/multimedia/recording/qcamerarecordermode.cpp
+ create mode 100644 src/multimedia/recording/qcamerarecordermode.h
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/camerarecordermode.json
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/camerarecordermode.pro
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.cpp
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.h
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.cpp
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.h
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.cpp
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.h
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
+ create mode 100644 src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h
+
+diff --git a/src/imports/multimedia/multimedia.cpp b/src/imports/multimedia/multimedia.cpp
+index 7d34672..4155d01 100644
+--- a/src/imports/multimedia/multimedia.cpp
++++ b/src/imports/multimedia/multimedia.cpp
+@@ -54,6 +54,7 @@
+ #include "qdeclarativecameraimageprocessing_p.h"
+ #include "qdeclarativecameraviewfinder_p.h"
+ #include "qdeclarativetorch_p.h"
++#include "qdeclarativecamerarecordermode_p.h"
+
+ QML_DECLARE_TYPE(QSoundEffect)
+
+@@ -84,6 +85,8 @@ public:
+         qmlRegisterType<QDeclarativeRadioData>(uri, 5, 0, "RadioData");
+         qmlRegisterType<QDeclarativeCamera>(uri, 5, 0, "Camera");
+         qmlRegisterType<QDeclarativeTorch>(uri, 5, 0, "Torch");
++		qmlRegisterType<QDeclarativeCameraRecorderMode>(uri, 5, 0, "CameraRecorderMode");
++
+         qmlRegisterUncreatableType<QDeclarativeCameraCapture>(uri, 5, 0, "CameraCapture",
+                                 trUtf8("CameraCapture is provided by Camera"));
+         qmlRegisterUncreatableType<QDeclarativeCameraRecorder>(uri, 5, 0, "CameraRecorder",
+diff --git a/src/imports/multimedia/multimedia.pro b/src/imports/multimedia/multimedia.pro
+index 606fb39..ce7febf 100644
+--- a/src/imports/multimedia/multimedia.pro
++++ b/src/imports/multimedia/multimedia.pro
+@@ -16,7 +16,8 @@ HEADERS += \
+         qdeclarativecamerapreviewprovider_p.h \
+         qdeclarativetorch_p.h \
+         qdeclarativecameraviewfinder_p.h \
+-        qdeclarativemultimediaglobal_p.h
++        qdeclarativemultimediaglobal_p.h \
++        qdeclarativecamerarecordermode_p.h
+
+ SOURCES += \
+         multimedia.cpp \
+@@ -34,7 +35,8 @@ SOURCES += \
+         qdeclarativecamerapreviewprovider.cpp \
+         qdeclarativetorch.cpp \
+         qdeclarativecameraviewfinder.cpp \
+-        qdeclarativemultimediaglobal.cpp
++        qdeclarativemultimediaglobal.cpp \
++		qdeclarativecamerarecordermode.cpp
+
+ QML_FILES += \
+     Video.qml
+diff --git a/src/imports/multimedia/qdeclarativecamera.cpp b/src/imports/multimedia/qdeclarativecamera.cpp
+index eac1c0c..eadcda9 100644
+--- a/src/imports/multimedia/qdeclarativecamera.cpp
++++ b/src/imports/multimedia/qdeclarativecamera.cpp
+@@ -603,6 +603,7 @@ void QDeclarativeCamera::setCameraState(QDeclarativeCamera::State state)
+ */
+ void QDeclarativeCamera::start()
+ {
++    setCameraState(QDeclarativeCamera::LoadedState);
+     setCameraState(QDeclarativeCamera::ActiveState);
+ }
+
+@@ -615,6 +616,7 @@ void QDeclarativeCamera::start()
+ void QDeclarativeCamera::stop()
+ {
+     setCameraState(QDeclarativeCamera::LoadedState);
++    setCameraState(QDeclarativeCamera::UnloadedState);
+ }
+
+
+diff --git a/src/imports/multimedia/qdeclarativecamerarecordermode.cpp b/src/imports/multimedia/qdeclarativecamerarecordermode.cpp
+new file mode 100644
+index 0000000..f89916b
+--- /dev/null
++++ b/src/imports/multimedia/qdeclarativecamerarecordermode.cpp
+@@ -0,0 +1,190 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++#include <QtQml/qqmlinfo.h>
++
++#include "qdeclarativecamerarecordermode_p.h"
++
++#include <qmediaservice.h>
++#include <private/qmediaserviceprovider_p.h>
++#include <qmetadatareadercontrol.h>
++#include <qmediaavailabilitycontrol.h>
++
++#include "qdeclarativemediametadata_p.h"
++
++#include <QTimerEvent>
++
++QT_BEGIN_NAMESPACE
++
++QDeclarativeCameraRecorderMode::QDeclarativeCameraRecorderMode(QObject *parent)
++    : QObject(parent)
++    , m_fsinklocation("\0")
++    , m_x_position("\0")
++    , m_y_position("\0")
++    , m_out_width("\0")
++    , m_out_height("\0")
++
++
++{
++    // qDebug() << Q_FUNC_INFO;
++}
++
++QDeclarativeCameraRecorderMode::~QDeclarativeCameraRecorderMode()
++{
++    // qDebug() << Q_FUNC_INFO;
++}
++
++QDeclarativeCameraRecorderMode::Error QDeclarativeCameraRecorderMode::error() const
++{
++    // qDebug() << Q_FUNC_INFO;
++    return Error(m_error);
++}
++
++void QDeclarativeCameraRecorderMode::classBegin()
++{
++    // qDebug() << Q_FUNC_INFO;
++
++    m_recorder = new QCameraRecorderMode(this);
++    connect(m_recorder, SIGNAL(mediaStatusChanged(QCameraRecorderMode::MediaStatus)),
++            this, SLOT(_q_statusChanged(QCameraRecorderMode::MediaStatus)));
++    emit mediaObjectChanged();
++}
++
++void QDeclarativeCameraRecorderMode::componentComplete()
++{
++    // qDebug() << Q_FUNC_INFO;
++    m_recorder->componentComplete();
++}
++
++void QDeclarativeCameraRecorderMode::start()
++{
++    // qDebug() << Q_FUNC_INFO;
++    m_recorder->start();
++}
++
++void QDeclarativeCameraRecorderMode::stop()
++{
++    // qDebug() << Q_FUNC_INFO;
++    m_recorder->stop();
++}
++
++void QDeclarativeCameraRecorderMode::pause()
++{
++    // qDebug() << Q_FUNC_INFO;
++    m_recorder->pause();
++}
++
++void QDeclarativeCameraRecorderMode::setFSinkLocation(QString fsinkloc)
++{
++    m_fsinklocation = fsinkloc;
++    m_recorder->setFSinkLocation(m_fsinklocation);
++}
++
++void QDeclarativeCameraRecorderMode::setX_position(QString xposloc)
++{
++    m_x_position = xposloc;
++    m_recorder->setX_position(m_x_position);
++}
++
++void QDeclarativeCameraRecorderMode::setY_position(QString yposloc)
++{
++    m_y_position = yposloc;
++    m_recorder->setY_position(m_y_position);
++}
++
++void QDeclarativeCameraRecorderMode::setOut_width(QString owitdhloc)
++{
++    m_out_width = owitdhloc;
++    m_recorder->setOut_width(m_out_width);
++}
++
++void QDeclarativeCameraRecorderMode::setOut_height(QString oheightloc)
++{
++    m_out_height = oheightloc;
++    m_recorder->setOut_height(m_out_height);
++}
++
++QString QDeclarativeCameraRecorderMode::fSinkLocation() const
++{
++    return m_fsinklocation;
++}
++
++QString QDeclarativeCameraRecorderMode::x_position() const
++{
++    return m_x_position;
++}
++
++QString QDeclarativeCameraRecorderMode::y_position() const
++{
++    return m_y_position;
++}
++
++QString QDeclarativeCameraRecorderMode::out_width() const
++{
++    return m_out_width;
++}
++
++QString QDeclarativeCameraRecorderMode::out_height() const
++{
++    return m_out_height;
++}
++
++void QDeclarativeCameraRecorderMode::_q_statusChanged(QCameraRecorderMode::MediaStatus mst)
++{
++    // qDebug() << Q_FUNC_INFO;
++    // switch(mst){
++        // case QEncoderMMPOC::UnknownMediaStatus: qDebug() << "UnknownMediaStatus"; break;
++        // case QEncoderMMPOC::NoMedia: qDebug() << "NoMedia"; break;
++        // case QEncoderMMPOC::LoadingMedia: qDebug() << "LoadingMedia"; break;
++        // case QEncoderMMPOC::LoadedMedia: qDebug() << "LoadedMedia"; break;
++        // case QEncoderMMPOC::StalledMedia: qDebug() << "StalledMedia"; break;
++        // case QEncoderMMPOC::BufferingMedia: qDebug() << "BufferingMedia"; break;
++        // case QEncoderMMPOC::BufferedMedia: qDebug() << "BufferedMedia"; break;
++        // case QEncoderMMPOC::EndOfMedia: qDebug() << "EndOfMedia"; break;
++        // case QEncoderMMPOC::InvalidMedia: qDebug() << "InvalidMedia"; break;
++        // case QEncoderMMPOC::Active: qDebug() << "Active"; break;
++    // }
++    m_status = mst;
++    emit statusChanged();
++}
++
++QDeclarativeCameraRecorderMode::Status QDeclarativeCameraRecorderMode::status() const
++{
++    // qDebug() << Q_FUNC_INFO;
++    // switch(m_encoder->mediaStatus()){
++        // case QEncoderMMPOC::EndOfMedia: return QDeclarativeCameraRecorderMode::EndOfMedia;
++    // }
++    // return QDeclarativeCameraRecorderMode::UnknownStatus;
++    return Status(m_status);
++}
++
++QT_END_NAMESPACE
+diff --git a/src/imports/multimedia/qdeclarativecamerarecordermode_p.h b/src/imports/multimedia/qdeclarativecamerarecordermode_p.h
+new file mode 100644
+index 0000000..9db1584
+--- /dev/null
++++ b/src/imports/multimedia/qdeclarativecamerarecordermode_p.h
+@@ -0,0 +1,183 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QDECLARATIVECAMERARECORDERMODE_P_H
++#define QDECLARATIVECAMERARECORDERMODE_P_H
++
++//
++//  W A R N I N G
++//  -------------
++//
++// This file is not part of the Qt API.  It exists for the convenience
++// of other Qt classes.  This header file may change from version to
++// version without notice, or even be removed.
++//
++// We mean it.
++//
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/types.h>
++#include <unistd.h>
++#include <signal.h>
++#include <sys/ipc.h>
++#include <sys/shm.h>
++#include <QtCore/qbasictimer.h>
++#include <QtQml/qqmlparserstatus.h>
++#include <QtQml/qqml.h>
++
++#include <qcamerarecordermode.h>
++// #include <qmediaplayerMMPOC.h>
++
++QT_BEGIN_NAMESPACE
++
++class QTimerEvent;
++class QMediaService;
++class QMediaServiceProvider;
++class QMetaDataReaderControl;
++class QDeclarativeMediaBaseAnimation;
++class QDeclarativeMediaMetaData;
++class QMediaAvailabilityControl;
++
++class QDeclarativeCameraRecorderMode : public QObject, public QQmlParserStatus
++{
++    Q_OBJECT
++    Q_PROPERTY(QString fSinkLocation READ fSinkLocation WRITE setFSinkLocation)
++	Q_PROPERTY(QString x_position READ x_position WRITE setX_position)
++	Q_PROPERTY(QString y_position READ y_position WRITE setY_position)
++	Q_PROPERTY(QString out_width READ out_width WRITE setOut_width)
++	Q_PROPERTY(QString out_height READ out_height WRITE setOut_height)
++    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
++    Q_PROPERTY(State state READ state NOTIFY stateChanged)
++    Q_PROPERTY(Error error READ error NOTIFY errorChanged)
++    Q_PROPERTY(QString errorString READ errorString NOTIFY errorChanged)
++    Q_PROPERTY(QObject *mediaObject READ mediaObject NOTIFY mediaObjectChanged SCRIPTABLE false DESIGNABLE false)
++    Q_ENUMS(Status)
++    Q_ENUMS(State)
++    Q_ENUMS(Error)
++    Q_INTERFACES(QQmlParserStatus)
++
++public:
++    enum Status {
++        UnknownStatus = QCameraRecorderMode::UnknownMediaStatus,
++        NoMedia       = QCameraRecorderMode::NoMedia,
++        LoadingMedia  = QCameraRecorderMode::LoadingMedia,
++        LoadedMedia   = QCameraRecorderMode::LoadedMedia,
++        EndOfMedia    = QCameraRecorderMode::EndOfMedia,
++        InvalidMedia  = QCameraRecorderMode::InvalidMedia,
++        Active        = QCameraRecorderMode::Active
++    };
++
++    enum State {
++        StoppedState = QCameraRecorderMode::StoppedState,
++        PlayingState = QCameraRecorderMode::StartedState,
++        PausedState  = QCameraRecorderMode::PausedState
++    };
++
++    enum Error
++    {
++        NoError             = QCameraRecorderMode::NoError,
++        InvalidRequestError = QCameraRecorderMode::InvalidRequestError,
++        InputArgumentError  = QCameraRecorderMode::InputArgumentError
++    };
++
++    QDeclarativeCameraRecorderMode(QObject *parent = Q_NULLPTR);
++    ~QDeclarativeCameraRecorderMode();
++
++    Status status() const;
++    State state() const;
++    Error error() const;
++
++    QObject *mediaObject() { return NULL; }
++
++    void classBegin();
++    void componentComplete();
++
++    QString errorString() const;
++
++    void setFSinkLocation(QString fsinkloc);
++    void setX_position(QString xposloc);
++    void setY_position(QString yposloc);
++    void setOut_width(QString owitdhloc);
++    void setOut_height(QString oheightloc);
++
++    QString fSinkLocation() const;
++    QString x_position() const;
++    QString y_position() const;
++    QString out_width() const;
++    QString out_height() const;
++
++public Q_SLOTS:
++    void pause();
++    void stop();
++    void start();
++    void _q_statusChanged(QCameraRecorderMode::MediaStatus);
++
++Q_SIGNALS:
++    void sourceChanged();
++    void autoLoadChanged();
++    void statusChanged();
++    void stateChanged();
++    void errorChanged();
++
++    void mediaObjectChanged();
++
++private Q_SLOTS:
++    void _q_error(QDeclarativeCameraRecorderMode::Error);
++    void _q_stateChanged();
++
++
++private:
++    Q_DISABLE_COPY(QDeclarativeCameraRecorderMode)
++
++    QDeclarativeCameraRecorderMode::Error m_error;
++    QUrl m_source;
++    bool m_autoLoad;
++    bool m_loaded;
++    QCameraRecorderMode::MediaStatus m_status;
++
++    QCameraRecorderMode *m_recorder;
++    QString m_fsinklocation;
++    QString m_x_position;
++    QString m_y_position;
++    QString m_out_width;
++    QString m_out_height;
++
++
++};
++
++QT_END_NAMESPACE
++
++QML_DECLARE_TYPE(QT_PREPEND_NAMESPACE(QDeclarativeCameraRecorderMode))
++
++#endif
+diff --git a/src/multimedia/controls/controls.pri b/src/multimedia/controls/controls.pri
+index 7ab2e51..4ff1b9e 100644
+--- a/src/multimedia/controls/controls.pri
++++ b/src/multimedia/controls/controls.pri
+@@ -37,7 +37,8 @@ PUBLIC_HEADERS += \
+     controls/qmediaaudioprobecontrol.h \
+     controls/qmediavideoprobecontrol.h \
+     controls/qmediaavailabilitycontrol.h \
+-    controls/qaudiorolecontrol.h
++    controls/qaudiorolecontrol.h \
++    controls/qcamerarecordermodecontrol.h
+
+ PRIVATE_HEADERS += \
+     controls/qmediaplaylistcontrol_p.h \
+@@ -81,5 +82,6 @@ SOURCES += \
+     controls/qaudioinputselectorcontrol.cpp \
+     controls/qaudiooutputselectorcontrol.cpp \
+     controls/qvideodeviceselectorcontrol.cpp \
+-    controls/qaudiorolecontrol.cpp
++    controls/qaudiorolecontrol.cpp \
++    controls/qcamerarecordermodecontrol.cpp
+
+diff --git a/src/multimedia/controls/qcamerarecordermodecontrol.cpp b/src/multimedia/controls/qcamerarecordermodecontrol.cpp
+new file mode 100644
+index 0000000..1e93830
+--- /dev/null
++++ b/src/multimedia/controls/qcamerarecordermodecontrol.cpp
+@@ -0,0 +1,53 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qcamerarecordermodecontrol.h"
++#include "qmediacontrol_p.h"
++#include "qcamerarecordermode.h"
++
++QT_BEGIN_NAMESPACE
++
++QCameraRecorderModeControl::~QCameraRecorderModeControl()
++{
++}
++
++/*!
++    Constructs a new media player control with the given \a parent.
++*/
++QCameraRecorderModeControl::QCameraRecorderModeControl(QObject *parent):
++    QMediaControl(*new QMediaControlPrivate, parent)
++{
++}
++
++#include "moc_qcamerarecordermodecontrol.cpp"
++QT_END_NAMESPACE
+diff --git a/src/multimedia/controls/qcamerarecordermodecontrol.h b/src/multimedia/controls/qcamerarecordermodecontrol.h
+new file mode 100644
+index 0000000..c77afbc
+--- /dev/null
++++ b/src/multimedia/controls/qcamerarecordermodecontrol.h
+@@ -0,0 +1,95 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QCAMERARECORDERMODECONTROL_H
++#define QCAMERARECORDERMODECONTROL_H
++
++#include <QtMultimedia/qmediacontrol.h>
++#include <QtMultimedia/qcamerarecordermode.h>
++#include <QtMultimedia/qmediatimerange.h>
++
++#include <QtCore/qpair.h>
++
++QT_BEGIN_NAMESPACE
++
++
++class QMediaPlaylist;
++
++class Q_MULTIMEDIA_EXPORT QCameraRecorderModeControl : public QMediaControl
++{
++    Q_OBJECT
++
++public:
++    ~QCameraRecorderModeControl();
++
++    virtual QCameraRecorderMode::State state() const = 0;
++
++    virtual QCameraRecorderMode::MediaStatus mediaStatus() const = 0;
++
++    virtual void setFSinkLocation(QString) = 0;
++    virtual void setX_position(QString) = 0;
++    virtual void setY_position(QString) = 0;
++    virtual void setOut_width(QString) = 0;
++    virtual void setOut_height(QString) = 0;
++    virtual void componentComplete() = 0;
++    virtual void start() = 0;
++    virtual void stop() = 0;
++    virtual void pause() = 0;
++
++Q_SIGNALS:
++    // void mediaChanged(const QMediaContent& content);
++    void durationChanged(qint64 duration);
++    void positionChanged(qint64 position);
++    void stateChanged(QCameraRecorderMode::State newState);
++    void mediaStatusChanged(QCameraRecorderMode::MediaStatus status);
++    void volumeChanged(int volume);
++    void mutedChanged(bool muted);
++    void audioAvailableChanged(bool audioAvailable);
++    void videoAvailableChanged(bool videoAvailable);
++    void bufferStatusChanged(int percentFilled);
++    void seekableChanged(bool);
++    void availablePlaybackRangesChanged(const QMediaTimeRange&);
++    void playbackRateChanged(qreal rate);
++    void error(int error, const QString &errorString);
++
++protected:
++    QCameraRecorderModeControl(QObject* parent = Q_NULLPTR);
++};
++
++#define QCameraRecorderModeControl_iid "org.qt-project.qt.CameraRecorderModecontrol/5.0"
++Q_MEDIA_DECLARE_CONTROL(QCameraRecorderModeControl, QCameraRecorderModeControl_iid)
++
++QT_END_NAMESPACE
++
++
++#endif  // QMEDIAPLAYERCONTROL_H
+diff --git a/src/multimedia/qmediaserviceproviderplugin.h b/src/multimedia/qmediaserviceproviderplugin.h
+index 6e8bdc5..0bb1991 100644
+--- a/src/multimedia/qmediaserviceproviderplugin.h
++++ b/src/multimedia/qmediaserviceproviderplugin.h
+@@ -194,6 +194,12 @@ public:
+ };
+
+ /*!
++    Service with support for media record (temporary for release)
++    Required Controls: QcamerarecordermodeControl
++*/
++#define Q_MEDIASERVICE_CAMERARECORDERMODE "org.qt-project.qt.camerarecordermode"
++
++/*!
+     Service with support for media playback
+     Required Controls: QMediaPlayerControl
+     Optional Controls: QMediaPlaylistControl, QAudioDeviceControl
+diff --git a/src/multimedia/recording/qcamerarecordermode.cpp b/src/multimedia/recording/qcamerarecordermode.cpp
+new file mode 100644
+index 0000000..c010a35
+--- /dev/null
++++ b/src/multimedia/recording/qcamerarecordermode.cpp
+@@ -0,0 +1,285 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qcamerarecordermode.h"
++
++#include "qmediaobject_p.h"
++#include <qmediaservice.h>
++#include <qcamerarecordermodecontrol.h>
++#include <qmediaserviceprovider_p.h>
++#include <qmetadatawritercontrol.h>
++#include <qaudioencodersettingscontrol.h>
++#include <qvideoencodersettingscontrol.h>
++#include <qmediacontainercontrol.h>
++#include <qmediaavailabilitycontrol.h>
++
++#include <QtCore/qdebug.h>
++#include <QtCore/qurl.h>
++#include <QtCore/qstringlist.h>
++#include <QtCore/qmetaobject.h>
++
++// #define DEBUG_ENCODER
++
++QT_BEGIN_NAMESPACE
++
++static void qRegisterMediaPlayerMetaTypes()
++{
++    qRegisterMetaType<QCameraRecorderMode::State>("QCameraRecorderMode::State");
++    qRegisterMetaType<QCameraRecorderMode::MediaStatus>("QCameraRecorderMode::MediaStatus");
++    qRegisterMetaType<QCameraRecorderMode::Error>("QCameraRecorderMode::Error");
++}
++Q_CONSTRUCTOR_FUNCTION(qRegisterMediaPlayerMetaTypes)
++
++class QCameraRecorderModePrivate : public QMediaObjectPrivate
++{
++    Q_DECLARE_NON_CONST_PUBLIC(QCameraRecorderMode)
++
++public:
++    QCameraRecorderModePrivate()
++        : provider(0)
++        , control(0)
++        , state(QCameraRecorderMode::StoppedState)
++        , error(QCameraRecorderMode::NoError)
++    {}
++
++    QCameraRecorderMode::State state;
++    QCameraRecorderMode::Error error;
++    QString errorString;
++    QMediaServiceProvider *provider;
++    QCameraRecorderModeControl* control;
++
++    void _q_stateChanged(QCameraRecorderMode::State);
++    void _q_mediaStatusChanged(QCameraRecorderMode::MediaStatus);
++    void _q_error(int, const QString &);
++};
++
++void QCameraRecorderModePrivate::_q_stateChanged(QCameraRecorderMode::State)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++void QCameraRecorderModePrivate::_q_mediaStatusChanged(QCameraRecorderMode::MediaStatus mst)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++    Q_Q(QCameraRecorderMode);
++    switch(mst){
++        case QCameraRecorderMode::UnknownMediaStatus: qDebug() << "UnknownMediaStatus"; break;
++        case QCameraRecorderMode::NoMedia: qDebug() << "NoMedia"; break;
++        case QCameraRecorderMode::LoadingMedia: qDebug() << "LoadingMedia"; break;
++        case QCameraRecorderMode::LoadedMedia: qDebug() << "LoadedMedia"; break;
++        case QCameraRecorderMode::StalledMedia: qDebug() << "StalledMedia"; break;
++        case QCameraRecorderMode::BufferingMedia: qDebug() << "BufferingMedia"; break;
++        case QCameraRecorderMode::BufferedMedia: qDebug() << "BufferedMedia"; break;
++        case QCameraRecorderMode::EndOfMedia: qDebug() << "EndOfMedia"; break;
++        case QCameraRecorderMode::InvalidMedia: qDebug() << "InvalidMedia"; break;
++        case QCameraRecorderMode::Active: qDebug() << "Active"; break;
++    }
++    emit q->mediaStatusChanged(mst);
++}
++
++void QCameraRecorderModePrivate::_q_error(int error, const QString &errorString)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++}
++
++static QMediaService *playerService()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    QMediaServiceProvider *provider = QMediaServiceProvider::defaultServiceProvider();
++    return provider->requestService(Q_MEDIASERVICE_CAMERARECORDERMODE);
++}
++
++/*!
++    Construct a QCameraRecorderMode instance
++    parented to \a parent.
++*/
++QCameraRecorderMode::QCameraRecorderMode(QObject *parent):
++    QMediaObject(*new QCameraRecorderModePrivate, parent, playerService())
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++    Q_D(QCameraRecorderMode);
++    d->provider = QMediaServiceProvider::defaultServiceProvider();
++    if (d->service == 0) {
++
++    }else{
++        d->control = qobject_cast<QCameraRecorderModeControl*>(d->service->requestControl(QCameraRecorderModeControl_iid));
++        if (d->control != 0) {
++            connect(d->control, SIGNAL(mediaStatusChanged(QCameraRecorderMode::MediaStatus)),
++                    SLOT(_q_mediaStatusChanged(QCameraRecorderMode::MediaStatus)));
++        }
++    }
++}
++
++/*!
++    Destroys the QCameraRecorderMode object.
++*/
++QCameraRecorderMode::~QCameraRecorderMode()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    if (d->service) {
++        if (d->control)
++            d->service->releaseControl(d->control);
++
++        d->provider->releaseService(d->service);
++    }
++}
++
++QCameraRecorderMode::State QCameraRecorderMode::state() const
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return d_func()->state;
++}
++
++QCameraRecorderMode::MediaStatus QCameraRecorderMode::mediaStatus() const
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return QCameraRecorderMode::UnknownMediaStatus;
++}
++
++QCameraRecorderMode::Error QCameraRecorderMode::error() const
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return d_func()->error;
++}
++
++QString QCameraRecorderMode::errorString() const
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return d_func()->errorString;
++}
++
++void QCameraRecorderMode::start()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->start();
++}
++
++void QCameraRecorderMode::stop()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->stop();
++}
++
++void QCameraRecorderMode::pause()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->pause();
++}
++
++void QCameraRecorderMode::setFSinkLocation(QString fsinklocation)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->setFSinkLocation(fsinklocation);
++}
++
++void QCameraRecorderMode::setX_position(QString xposition)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->setX_position(xposition);
++}
++
++void QCameraRecorderMode::setY_position(QString yposition)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->setY_position(yposition);
++}
++
++void QCameraRecorderMode::setOut_width(QString outwidth)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->setOut_width(outwidth);
++}
++
++void QCameraRecorderMode::setOut_height(QString outheight)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QCameraRecorderMode);
++    d->control->setOut_height(outheight);
++}
++
++void QCameraRecorderMode::componentComplete()
++{
++    // qDebug() << Q_FUNC_INFO;
++    Q_D(QCameraRecorderMode);
++    d->control->componentComplete();
++}
++
++#include "moc_qcamerarecordermode.cpp"
++QT_END_NAMESPACE
+diff --git a/src/multimedia/recording/qcamerarecordermode.h b/src/multimedia/recording/qcamerarecordermode.h
+new file mode 100644
+index 0000000..cbf90c9
+--- /dev/null
++++ b/src/multimedia/recording/qcamerarecordermode.h
+@@ -0,0 +1,138 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QCAMERARECORDERMODE_H
++#define QCAMERARECORDERMODE_H
++
++#include <QtMultimedia/qmultimedia.h>
++#include <QtMultimedia/qmediaobject.h>
++#include <QtMultimedia/qmediaencodersettings.h>
++#include <QtMultimedia/qmediabindableinterface.h>
++#include <QtMultimedia/qmediaenumdebug.h>
++
++#include <QtCore/qpair.h>
++
++QT_BEGIN_NAMESPACE
++
++class QCameraRecorderModePrivate;
++
++class Q_MULTIMEDIA_EXPORT QCameraRecorderMode : public QMediaObject
++{
++    Q_OBJECT
++    Q_PROPERTY(State state READ state NOTIFY stateChanged)
++    Q_PROPERTY(MediaStatus mediaStatus READ mediaStatus NOTIFY mediaStatusChanged)
++    Q_PROPERTY(QString error READ errorString)
++
++    Q_ENUMS(MediaStatus)
++    Q_ENUMS(State)
++    Q_ENUMS(Error)
++
++public:
++    enum MediaStatus
++    {
++        UnknownMediaStatus,
++        NoMedia,
++        LoadingMedia,
++        LoadedMedia,
++        StalledMedia,
++        BufferingMedia,
++        BufferedMedia,
++        EndOfMedia,
++        InvalidMedia,
++        Active
++    };
++
++    enum State {
++        StoppedState,
++        StartedState,
++        PausedState
++    };
++
++    enum Error
++    {
++        NoError,
++        ResourceError,
++        FormatError,
++        NetworkError,
++        AccessDeniedError,
++        ServiceMissingError,
++        MediaIsPlaylist,
++        InputArgumentError,
++        InvalidRequestError
++    };
++
++    QCameraRecorderMode(QObject *parent = Q_NULLPTR);
++    ~QCameraRecorderMode();
++
++    State state() const;
++    MediaStatus mediaStatus() const;
++    Error error() const;
++    QString errorString() const;
++
++
++public Q_SLOTS:
++
++    void start();
++    void stop();
++    void pause();
++    void setFSinkLocation(QString);
++    void setX_position(QString);
++    void setY_position(QString);
++    void setOut_width(QString);
++    void setOut_height(QString);
++
++    void componentComplete();
++
++Q_SIGNALS:
++    void stateChanged(QCameraRecorderMode::State);
++    void mediaStatusChanged(QCameraRecorderMode::MediaStatus);
++
++private:
++    Q_DISABLE_COPY(QCameraRecorderMode)
++    Q_DECLARE_PRIVATE(QCameraRecorderMode)
++    Q_PRIVATE_SLOT(d_func(), void _q_stateChanged(QCameraRecorderMode::State))
++    Q_PRIVATE_SLOT(d_func(), void _q_mediaStatusChanged(QCameraRecorderMode::MediaStatus))
++    Q_PRIVATE_SLOT(d_func(), void _q_error(int, const QString &))
++};
++
++QT_END_NAMESPACE
++
++Q_DECLARE_METATYPE(QCameraRecorderMode::State)
++Q_DECLARE_METATYPE(QCameraRecorderMode::MediaStatus)
++Q_DECLARE_METATYPE(QCameraRecorderMode::Error)
++
++Q_MEDIA_ENUM_DEBUG(QCameraRecorderMode, State)
++Q_MEDIA_ENUM_DEBUG(QCameraRecorderMode, MediaStatus)
++Q_MEDIA_ENUM_DEBUG(QCameraRecorderMode, Error)
++
++#endif  // QRECORDER_H
+diff --git a/src/multimedia/recording/recording.pri b/src/multimedia/recording/recording.pri
+index 20ed99e..2781e53 100644
+--- a/src/multimedia/recording/recording.pri
++++ b/src/multimedia/recording/recording.pri
+@@ -4,6 +4,7 @@ PUBLIC_HEADERS += \
+     recording/qaudiorecorder.h \
+     recording/qmediaencodersettings.h \
+     recording/qmediarecorder.h \
++    recording/qcamerarecordermode.h
+
+ PRIVATE_HEADERS += \
+     recording/qmediarecorder_p.h \
+@@ -11,4 +12,5 @@ PRIVATE_HEADERS += \
+ SOURCES += \
+     recording/qaudiorecorder.cpp \
+     recording/qmediaencodersettings.cpp \
+-    recording/qmediarecorder.cpp
++    recording/qmediarecorder.cpp \
++    recording/qcamerarecordermode.cpp
+diff --git a/src/plugins/gstreamer/camerarecordermode/camerarecordermode.json b/src/plugins/gstreamer/camerarecordermode/camerarecordermode.json
+new file mode 100644
+index 0000000..576c19b
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/camerarecordermode.json
+@@ -0,0 +1,4 @@
++{
++    "Keys": ["gstreamercamerarecordermode"],
++    "Services": ["org.qt-project.qt.camerarecordermode"]
++}
+diff --git a/src/plugins/gstreamer/camerarecordermode/camerarecordermode.pro b/src/plugins/gstreamer/camerarecordermode/camerarecordermode.pro
+new file mode 100644
+index 0000000..38810f3
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/camerarecordermode.pro
+@@ -0,0 +1,24 @@
++TARGET = gstcamerarecordermode
++
++PLUGIN_TYPE = mediaservice
++PLUGIN_CLASS_NAME = QGstreamerPlayerServicePlugin
++load(qt_plugin)
++
++include(../common.pri)
++
++INCLUDEPATH += $$PWD
++
++HEADERS += \
++    $$PWD/qgstreamercamerarecordermodecontrol.h \
++    $$PWD/qgstreamercamerarecordermodeservice.h \
++    $$PWD/qgstreamercamerarecordermodesession.h \
++    $$PWD/qgstreamercamerarecordermodeserviceplugin.h
++
++SOURCES += \
++    $$PWD/qgstreamercamerarecordermodecontrol.cpp \
++    $$PWD/qgstreamercamerarecordermodeservice.cpp \
++    $$PWD/qgstreamercamerarecordermodesession.cpp \
++    $$PWD/qgstreamercamerarecordermodeserviceplugin.cpp
++
++OTHER_FILES += \
++    camerarecordermode.json
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.cpp b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.cpp
+new file mode 100644
+index 0000000..a91cc3a
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.cpp
+@@ -0,0 +1,186 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qgstreamercamerarecordermodecontrol.h"
++#include "qgstreamercamerarecordermodesession.h"
++
++#include <private/qmediaplaylistnavigator_p.h>
++#include <private/qmediaresourcepolicy_p.h>
++#include <private/qmediaresourceset_p.h>
++
++#include <QtCore/qdir.h>
++#include <QtCore/qsocketnotifier.h>
++#include <QtCore/qurl.h>
++#include <QtCore/qdebug.h>
++
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++// #define DEBUG_ENCODER
++//#define DEBUG_PLAYBIN
++
++QT_BEGIN_NAMESPACE
++
++QGstreamerCameraRecorderModeControl::QGstreamerCameraRecorderModeControl(QGstreamerCameraRecorderModeSession *session, QObject *parent)
++    : QCameraRecorderModeControl(parent)
++    , m_session(session)
++    , m_currentState(QCameraRecorderMode::StoppedState)
++    , m_mediaStatus(QCameraRecorderMode::NoMedia)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    connect(m_session, SIGNAL(encodeFinished()), this, SLOT(processEOS()));
++
++}
++
++QGstreamerCameraRecorderModeControl::~QGstreamerCameraRecorderModeControl()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++}
++
++void QGstreamerCameraRecorderModeControl::setFSinkLocation(QString fsinkloc)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->setFSinkLocation(fsinkloc);
++}
++void QGstreamerCameraRecorderModeControl::setX_position(QString xposloc)
++{
++    m_session->setX_position(xposloc);
++}
++
++void QGstreamerCameraRecorderModeControl::setY_position(QString yposloc)
++{
++    m_session->setY_position(yposloc);
++}
++
++void QGstreamerCameraRecorderModeControl::setOut_width(QString owitdhloc)
++{
++    m_session->setOut_width(owitdhloc);
++}
++
++void QGstreamerCameraRecorderModeControl::setOut_height(QString oheightloc)
++{
++    m_session->setOut_height(oheightloc);
++}
++
++
++
++void QGstreamerCameraRecorderModeControl::componentComplete()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->componentComplete();
++
++}
++
++void QGstreamerCameraRecorderModeControl::start()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->start();
++}
++
++void QGstreamerCameraRecorderModeControl::stop()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->stop();
++}
++
++void QGstreamerCameraRecorderModeControl::pause()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->pause();
++}
++
++QMediaPlayerResourceSetInterface* QGstreamerCameraRecorderModeControl::resources() const
++{
++
++    return m_resources;
++}
++
++
++QCameraRecorderMode::State QGstreamerCameraRecorderModeControl::state() const
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_currentState;
++}
++
++QCameraRecorderMode::MediaStatus QGstreamerCameraRecorderModeControl::mediaStatus() const
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_mediaStatus;
++}
++
++void QGstreamerCameraRecorderModeControl::updateSessionState(QCameraRecorderMode::State state)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++}
++
++void QGstreamerCameraRecorderModeControl::processEOS()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_mediaStatus = QCameraRecorderMode::EndOfMedia;
++
++    emit mediaStatusChanged(m_mediaStatus);
++}
++
++void QGstreamerCameraRecorderModeControl::handleInvalidMedia()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_mediaStatus = QCameraRecorderMode::InvalidMedia;
++    m_currentState = QCameraRecorderMode::StoppedState;
++}
++
++QT_END_NAMESPACE
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.h b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.h
+new file mode 100644
+index 0000000..0511540
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodecontrol.h
+@@ -0,0 +1,66 @@
++#ifndef QGSTREAMERCAMERARECORDERMODECONTROL_H
++#define QGSTREAMERCAMERARECORDERMODECONTROL_H
++
++#include <QtCore/qobject.h>
++#include <QtCore/qstack.h>
++
++#include <qcamerarecordermodecontrol.h>
++#include <qcamerarecordermode.h>
++
++#include <limits.h>
++
++QT_BEGIN_NAMESPACE
++
++class QMediaPlayerResourceSetInterface;
++
++class QMediaPlaylist;
++class QMediaPlaylistNavigator;
++class QSocketNotifier;
++
++class QGstreamerCameraRecorderModeSession;
++class QGstreamerCameraRecorderModeService;
++
++class QGstreamerCameraRecorderModeControl : public QCameraRecorderModeControl
++{
++    Q_OBJECT
++
++public:
++    QGstreamerCameraRecorderModeControl(QGstreamerCameraRecorderModeSession *session, QObject *parent = Q_NULLPTR);
++    ~QGstreamerCameraRecorderModeControl();
++
++    QCameraRecorderMode::MediaStatus mediaStatus() const;
++    QCameraRecorderMode::State state() const;
++
++    QMediaPlayerResourceSetInterface* resources() const;
++
++    void setFSinkLocation(QString);
++    void setX_position(QString);
++    void setY_position(QString);
++    void setOut_width(QString);
++    void setOut_height(QString);
++    void componentComplete();
++    void start();
++    void stop();
++    void pause();
++
++public Q_SLOTS:
++
++private Q_SLOTS:
++    void updateSessionState(QCameraRecorderMode::State state);
++    // void updateMediaStatus();
++    void processEOS();
++    void handleInvalidMedia();
++
++private:
++    void playOrPause(QCameraRecorderMode::State state);
++
++    QGstreamerCameraRecorderModeSession *m_session;
++    QCameraRecorderMode::State m_currentState;
++    QCameraRecorderMode::MediaStatus m_mediaStatus;
++    QMediaPlayerResourceSetInterface *m_resources;
++
++};
++
++QT_END_NAMESPACE
++
++#endif
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.cpp b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.cpp
+new file mode 100644
+index 0000000..7003367
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.cpp
+@@ -0,0 +1,76 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include <QtCore/qvariant.h>
++#include <QtCore/qdebug.h>
++
++#include "qgstreamercamerarecordermodeservice.h"
++#include "qgstreamercamerarecordermodecontrol.h"
++#include "qgstreamercamerarecordermodesession.h"
++
++
++#include <private/qmediaplaylistnavigator_p.h>
++#include <qmediaplaylist.h>
++#include <private/qmediaresourceset_p.h>
++
++QT_BEGIN_NAMESPACE
++
++QGstreamerCameraRecorderModeService::QGstreamerCameraRecorderModeService(QObject *parent):
++     QMediaService(parent)
++{
++    // qDebug() << Q_FUNC_INFO;
++    m_session = new QGstreamerCameraRecorderModeSession(this);
++    m_control = new QGstreamerCameraRecorderModeControl(m_session, this);
++}
++
++QGstreamerCameraRecorderModeService::~QGstreamerCameraRecorderModeService()
++{
++    // qDebug() << Q_FUNC_INFO;
++}
++
++QMediaControl *QGstreamerCameraRecorderModeService::requestControl(const char *name)
++{
++    // qDebug() << Q_FUNC_INFO;
++    if (qstrcmp(name, QCameraRecorderModeControl_iid) == 0){
++        return m_control;
++    }
++
++    return 0;
++}
++
++void QGstreamerCameraRecorderModeService::releaseControl(QMediaControl *control)
++{
++    // qDebug() << Q_FUNC_INFO;
++}
++
++QT_END_NAMESPACE
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.h b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.h
+new file mode 100644
+index 0000000..2356a41
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeservice.h
+@@ -0,0 +1,68 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QGSTREAMERCAMERARECORDERMODESERVICE_H
++#define QGSTREAMERCAMERARECORDERMODESERVICE_H
++
++#include <QtCore/qobject.h>
++#include <QtCore/qiodevice.h>
++
++#include <qmediaservice.h>
++
++QT_BEGIN_NAMESPACE
++class QMediaPlayerControl;
++class QMediaPlaylist;
++class QMediaPlaylistNavigator;
++
++class QGstreamerMetaData;
++class QGstreamerCameraRecorderModeControl;
++class QGstreamerCameraRecorderModeSession;
++
++class QGstreamerCameraRecorderModeService : public QMediaService
++{
++    Q_OBJECT
++public:
++    QGstreamerCameraRecorderModeService(QObject *parent = Q_NULLPTR);
++    ~QGstreamerCameraRecorderModeService();
++
++    QMediaControl *requestControl(const char *name);
++    void releaseControl(QMediaControl *control);
++
++private:
++    QGstreamerCameraRecorderModeControl *m_control;
++    QGstreamerCameraRecorderModeSession *m_session;
++};
++
++QT_END_NAMESPACE
++
++#endif
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.cpp b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.cpp
+new file mode 100644
+index 0000000..cfb82c9
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.cpp
+@@ -0,0 +1,62 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include <QtCore/qstring.h>
++#include <QtCore/qdebug.h>
++#include <QtCore/QDir>
++#include <QtCore/QDebug>
++
++#include "qgstreamercamerarecordermodeserviceplugin.h"
++
++//#define QT_SUPPORTEDMIMETYPES_DEBUG
++
++#include "qgstreamercamerarecordermodeservice.h"
++#include <private/qgstutils_p.h>
++
++QMediaService* QGstreamerCameraRecorderModeServicePlugin::create(const QString &key)
++{
++    // qDebug() << Q_FUNC_INFO;
++    QGstUtils::initializeGst();
++
++    if (key == QLatin1String(Q_MEDIASERVICE_CAMERARECORDERMODE))
++        return new QGstreamerCameraRecorderModeService;
++
++    qWarning() << "Gstreamer service plugin: unsupported key:" << key;
++    return 0;
++}
++
++void QGstreamerCameraRecorderModeServicePlugin::release(QMediaService *service)
++{
++    // qDebug() << Q_FUNC_INFO;
++    delete service;
++}
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.h b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.h
+new file mode 100644
+index 0000000..9c6272f
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodeserviceplugin.h
+@@ -0,0 +1,60 @@
++
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++
++#ifndef QGSTREAMERCAMERARECORDERMODESERVICEPLUGIN_H
++#define QGSTREAMERCAMERARECORDERMODESERVICEPLUGIN_H
++
++#include <qmediaserviceproviderplugin.h>
++#include <QtCore/qset.h>
++#include <QtCore/QObject>
++
++QT_BEGIN_NAMESPACE
++
++
++class QGstreamerCameraRecorderModeServicePlugin
++    : public QMediaServiceProviderPlugin
++{
++    Q_OBJECT
++    Q_PLUGIN_METADATA(IID "org.qt-project.qt.mediaserviceproviderfactory/5.0" FILE "camerarecordermode.json")
++public:
++    QMediaService* create(QString const& key);
++    void release(QMediaService *service);
++
++private:
++};
++
++QT_END_NAMESPACE
++
++#endif // QGSTREAMERCAMERARECORDERMODESERVICEPLUGIN_H
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
+new file mode 100644
+index 0000000..94ff929
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
+@@ -0,0 +1,311 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++#include <sys/types.h>
++#include <sys/wait.h>
++#include <unistd.h>
++#include <stdio.h>
++#include "qgstreamercamerarecordermodesession.h"
++#include <private/qgstreamerbushelper_p.h>
++
++#include <private/qgstreameraudioprobecontrol_p.h>
++#include <private/qgstreamervideoprobecontrol_p.h>
++#include <private/qgstreamervideorendererinterface_p.h>
++#include <private/gstvideoconnector_p.h>
++#include <private/qgstutils_p.h>
++#include <private/playlistfileparser_p.h>
++#include <private/qgstutils_p.h>
++
++#include <gst/gstvalue.h>
++#include <gst/base/gstbasesrc.h>
++
++#include <QtMultimedia/qmediametadata.h>
++#include <QtCore/qdatetime.h>
++#include <QtCore/qdebug.h>
++#include <QtCore/qsize.h>
++#include <QtCore/qtimer.h>
++#include <QtCore/qdebug.h>
++#include <QtCore/qdir.h>
++#include <QtCore/qstandardpaths.h>
++
++// #define DEBUG_ENCODER
++// #define DEBUG_VO_BIN_DUMP
++
++QT_BEGIN_NAMESPACE
++
++QGstreamerCameraRecorderModeSession::QGstreamerCameraRecorderModeSession(QObject *parent)
++    :QObject(parent)
++    , m_x_position("\0")
++    , m_y_position("\0")
++    , m_out_width("\0")
++    , m_out_height("\0")
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_recorder = gst_pipeline_new ("CameraRecorderMode");
++
++    m_bus = gst_element_get_bus(m_recorder);
++    m_busHelper = new QGstreamerBusHelper(m_bus, this);
++    m_busHelper->installMessageFilter(this);
++
++}
++
++QGstreamerCameraRecorderModeSession::~QGstreamerCameraRecorderModeSession()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    if (m_recorder) {
++            gst_element_set_state(m_recorder, GST_STATE_NULL);
++
++            delete m_busHelper;
++            gst_object_unref(GST_OBJECT(m_bus));
++            gst_object_unref(GST_OBJECT(m_recorder));
++    }
++}
++
++bool QGstreamerCameraRecorderModeSession::processBusMessage(const QGstreamerMessage &message)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    GstMessage* gm = message.rawMessage();
++    if (gm) {
++        if (GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_recorder)) {
++            switch (GST_MESSAGE_TYPE(gm))  {
++                case GST_MESSAGE_STATE_CHANGED:
++                {
++
++                    GstState    oldState;
++                    GstState    newState;
++                    GstState    pending;
++
++                    gst_message_parse_state_changed(gm, &oldState, &newState, &pending);
++
++                    switch (newState) {
++                    case GST_STATE_VOID_PENDING:
++                    case GST_STATE_NULL:
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_NULL";
++#endif
++                        break;
++                    case GST_STATE_READY:
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_READY";
++#endif
++                        break;
++                    case GST_STATE_PAUSED:
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_PAUSED";
++#endif
++                        break;
++                    case GST_STATE_PLAYING:
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_PLAYING";
++#endif
++                        break;
++                    }
++                }
++                    break;
++
++                case GST_MESSAGE_EOS:{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_EOS";
++#endif
++                    gst_element_set_state(m_recorder, GST_STATE_NULL);
++                    emit encodeFinished();
++                    break;
++                }
++            }
++        }
++    }
++    return true;
++}
++
++void QGstreamerCameraRecorderModeSession::setFSinkLocation(QString fsinkloc)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO << fsinkloc;
++#endif
++    m_fsinklocation = fsinkloc;
++}
++
++void QGstreamerCameraRecorderModeSession::setX_position(QString xposloc)
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO << xposloc;
++#endif
++    m_x_position = xposloc;
++}
++
++void QGstreamerCameraRecorderModeSession::setY_position(QString yposloc)
++{
++    m_y_position = yposloc;
++}
++
++void QGstreamerCameraRecorderModeSession::setOut_width(QString owitdhloc)
++{
++    m_out_width = owitdhloc;
++}
++
++void QGstreamerCameraRecorderModeSession::setOut_height(QString oheightloc)
++{
++    m_out_height = oheightloc;
++}
++
++
++void QGstreamerCameraRecorderModeSession::componentComplete()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_v4l2src = gst_element_factory_make("v4l2src", "V4l2src");
++	m_v4l2src_capsfilter = gst_element_factory_make("capsfilter", "Caps-filter");
++    m_tee = gst_element_factory_make("tee", "Tee");
++    m_vspmfilter1 = gst_element_factory_make("vspmfilter", "Vspmfilter1");
++    m_v1_capsfilter = gst_element_factory_make("capsfilter", "V1_cap");
++    m_vspmfilter2 = gst_element_factory_make("vspmfilter", "Vspmfilter2");
++    m_v2_capsfilter = gst_element_factory_make("capsfilter", "V2_cap");
++    m_omxh264enc = gst_element_factory_make("omxh264enc", "Omxh264enc");
++    m_waylandsink = gst_element_factory_make("waylandsink", "Waylandsink");
++    m_filesink = gst_element_factory_make("filesink", "Filesink");
++
++    gst_bin_add_many (GST_BIN (m_recorder), m_v4l2src, m_v4l2src_capsfilter, m_tee, m_vspmfilter1, m_v1_capsfilter, m_omxh264enc, m_filesink, m_vspmfilter2, m_v2_capsfilter, m_waylandsink, NULL);
++    gst_element_link_many (m_v4l2src, m_v4l2src_capsfilter, m_tee, NULL);
++	gst_element_link_many (m_vspmfilter1, m_v1_capsfilter, m_omxh264enc, m_filesink, NULL);
++    gst_element_link_many (m_vspmfilter2, m_v2_capsfilter, m_waylandsink, NULL);
++
++    m_v4l2src_caps  = gst_caps_new_simple ("video/x-raw",
++									"format", G_TYPE_STRING, "UYVY",
++								    "width", G_TYPE_INT, 720,
++									"height", G_TYPE_INT, 480,
++                                     NULL);
++
++    m_v1_caps  = gst_caps_new_simple ("video/x-raw",
++									"format", G_TYPE_STRING, "NV12",
++								    "width", G_TYPE_INT, 640,
++									"height", G_TYPE_INT, 480,
++                                     NULL);
++
++    m_v2_caps  = gst_caps_new_simple ("video/x-raw",
++									"format", G_TYPE_STRING, "BGRA",
++								    "width", G_TYPE_INT, 800,
++									"height", G_TYPE_INT, 480,
++                                     NULL);
++
++    g_object_set (G_OBJECT (m_v4l2src_capsfilter), "caps", m_v4l2src_caps, NULL);
++    gst_caps_unref (m_v4l2src_caps);
++
++    g_object_set (G_OBJECT (m_v1_capsfilter), "caps", m_v1_caps, NULL);
++    gst_caps_unref (m_v1_caps);
++
++	g_object_set (G_OBJECT (m_v2_capsfilter), "caps", m_v2_caps, NULL);
++    gst_caps_unref (m_v2_caps);
++
++	GstPadTemplate *tee_src_pad_template;
++	GstPad *tee_v1_pad, *tee_v2_pad;
++	GstPad *v1_pad, *v2_pad;
++
++	/* Manually link the Tee, which has "Request" pads */
++	if ( !(tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (m_tee), "src_%u"))) {
++		gst_object_unref (m_recorder);
++		g_critical ("Unable to get pad template");
++	}
++    else {
++		/* Obtaining request pads for the tee elements*/
++		tee_v1_pad = gst_element_request_pad (m_tee, tee_src_pad_template, NULL, NULL);
++		g_print ("Obtained request pad %s for v1 branch.\n", gst_pad_get_name (tee_v1_pad));
++		v1_pad = gst_element_get_static_pad (m_vspmfilter1, "sink");
++
++		tee_v2_pad = gst_element_request_pad (m_tee, tee_src_pad_template, NULL, NULL);
++		g_print ("Obtained request pad %s for v2 branch.\n", gst_pad_get_name (tee_v2_pad));
++		v2_pad = gst_element_get_static_pad (m_vspmfilter2, "sink");
++
++		/* Link the tee to the vspmfilter 1 */
++		if (gst_pad_link (tee_v1_pad, v1_pad) != GST_PAD_LINK_OK ){
++			g_critical ("Tee for vspmfilter1 could not be linked.\n");
++			gst_object_unref (m_recorder);
++		}
++		else {
++			/* Link the tee to the vspmfilter 2 */
++			if (gst_pad_link (tee_v2_pad, v2_pad) != GST_PAD_LINK_OK) {
++				g_critical ("Tee for vspmfilter2 could not be linked.\n");
++				gst_object_unref (m_recorder);
++			}
++		}
++		gst_object_unref (v1_pad);
++		gst_object_unref (v2_pad);
++	}
++}
++// gst-launch-1.0 -e v4l2src num-buffers=300 ! video/x-raw,format=UYVY,width=720,height=480 ! tee name=t
++// t. ! vspmfilter outbuf-alloc=true ! video/x-raw,format=NV12,width=640,height=480 ! omxh264enc target-bitrate=10485760 ! filesink location=/home/root/enc1.h264
++// t. ! vspmfilter ! video/x-raw,format=BGRA,width=800,height=480 ! waylandsink position-x=100 position-y=100 qos=false
++
++void QGstreamerCameraRecorderModeSession::start()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++	 bool ok;
++	 g_object_set (G_OBJECT (m_filesink), "location", m_fsinklocation.toLatin1().constData(), NULL);
++	 g_object_set (G_OBJECT (m_vspmfilter1), "outbuf-alloc", 1, NULL);
++	 g_object_set (G_OBJECT (m_vspmfilter2), "outbuf-alloc", 0, NULL);
++	 g_object_set (G_OBJECT (m_omxh264enc), "target-bitrate", 10485760, NULL);
++     g_object_set (G_OBJECT (m_waylandsink), "position-x", m_x_position.toInt(&ok, 10), NULL);
++     g_object_set (G_OBJECT (m_waylandsink), "position-y", m_y_position.toInt(&ok, 10), NULL);
++     g_object_set (G_OBJECT (m_waylandsink), "out-width", m_out_width.toInt(&ok, 10), NULL);
++     g_object_set (G_OBJECT (m_waylandsink), "out-height", m_out_height.toInt(&ok, 10), NULL);
++
++	 g_object_set (G_OBJECT (m_waylandsink), "qos", 0, NULL);
++     gst_element_set_state(m_recorder, GST_STATE_PLAYING);
++    // gst_element_set_state(m_recorder, GST_STATE_PAUSED);
++}
++
++void QGstreamerCameraRecorderModeSession::stop()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    gst_element_send_event (m_recorder, gst_event_new_eos ());
++    // gst_element_set_state(m_recorder, GST_STATE_NULL);
++}
++
++void QGstreamerCameraRecorderModeSession::pause()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++QT_END_NAMESPACE
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h
+new file mode 100644
+index 0000000..6f25519
+--- /dev/null
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h
+@@ -0,0 +1,123 @@
++/****************************************************************************
++**
++** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
++** Contact: http://www.qt-project.org/legal
++**
++** This file is part of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and Digia. For licensing terms and
++** conditions see http://qt.digia.com/licensing. For further information
++** use the contact form at http://qt.digia.com/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** In addition, as a special exception, Digia gives you certain additional
++** rights. These rights are described in the Digia Qt LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QGSTREAMERCAMERARECORDERMODESESSION_H
++#define QGSTREAMERCAMERARECORDERMODESESSION_H
++
++#include <QObject>
++#include <QtCore/qmutex.h>
++#include <QtNetwork/qnetworkrequest.h>
++#include "qgstreamercamerarecordermodecontrol.h"
++#include <private/qgstreamerbushelper_p.h>
++#include <qmediastreamscontrol.h>
++#include <qaudioformat.h>
++
++#if defined(HAVE_GST_APPSRC)
++#include <private/qgstappsrc_p.h>
++#endif
++
++#include <gst/gst.h>
++
++QT_BEGIN_NAMESPACE
++
++class QGstreamerBusHelper;
++class QGstreamerMessage;
++
++class QGstreamerVideoRendererInterface;
++class QGstreamerVideoProbeControl;
++class QGstreamerAudioProbeControl;
++
++typedef enum {
++  GST_AUTOPLUG_SELECT_TRY,
++  GST_AUTOPLUG_SELECT_EXPOSE,
++  GST_AUTOPLUG_SELECT_SKIP
++} GstAutoplugSelectResult;
++
++class QGstreamerCameraRecorderModeSession : public QObject,
++                                public QGstreamerBusMessageFilter
++{
++Q_OBJECT
++Q_INTERFACES(QGstreamerBusMessageFilter)
++
++public:
++    QGstreamerCameraRecorderModeSession(QObject *parent);
++    virtual ~QGstreamerCameraRecorderModeSession();
++
++    bool processBusMessage(const QGstreamerMessage &message);
++    QGstreamerBusHelper *bus() const { return m_busHelper; }
++
++    void setFSinkLocation(QString);
++    void setX_position(QString);
++    void setY_position(QString);
++    void setOut_width(QString);
++    void setOut_height(QString);
++
++    void componentComplete();
++
++public slots:
++    void start();
++    void stop();
++    void pause();
++
++signals:
++    void encodeFinished();
++
++private:
++
++    QString m_fsinklocation;
++    QString m_x_position;
++    QString m_y_position;
++    QString m_out_width;
++    QString m_out_height;
++
++
++    GstBus* m_bus;
++    QGstreamerBusHelper* m_busHelper;
++    GstElement* m_recorder;
++
++    GstElement* m_v4l2src;
++    GstElement* m_v4l2src_capsfilter; GstCaps* m_v4l2src_caps;
++    GstElement* m_tee;
++    GstElement* m_vspmfilter1;
++	GstElement* m_v1_capsfilter; GstCaps* m_v1_caps;
++    GstElement* m_vspmfilter2;
++	GstElement* m_v2_capsfilter; GstCaps* m_v2_caps;
++    GstElement* m_omxh264enc;
++    GstElement* m_waylandsink;
++    GstElement* m_filesink;
++
++};
++
++QT_END_NAMESPACE
++
++#endif // QGSTREAMERCAMERARECORDERMODESESSION_H
+diff --git a/src/plugins/gstreamer/gstreamer.json b/src/plugins/gstreamer/gstreamer.json
+index 0656cce..4b20bc9 100644
+--- a/src/plugins/gstreamer/gstreamer.json
++++ b/src/plugins/gstreamer/gstreamer.json
+@@ -1,4 +1,4 @@
+ {
+     "Keys": ["gstreamer"],
+-    "Services": ["org.qt-project.qt.mediaplayer", "org.qt-project.qt.audiosource", "org.qt-project.qt.camera", "org.qt-project.qt.audiodecode"]
++    "Services": ["org.qt-project.qt.mediaplayer", "org.qt-project.qt.audiosource", "org.qt-project.qt.camera", "org.qt-project.qt.audiodecode", "org.qt-project.qt.camerarecordermode"]
+ }
+diff --git a/src/plugins/gstreamer/gstreamer.pro b/src/plugins/gstreamer/gstreamer.pro
+index 5fb8f83..3ae965f 100644
+--- a/src/plugins/gstreamer/gstreamer.pro
++++ b/src/plugins/gstreamer/gstreamer.pro
+@@ -4,7 +4,8 @@ SUBDIRS += \
+     audiodecoder \
+     camerabin \
+     mediaplayer \
+-    mediacapture
++    mediacapture \
++    camerarecordermode
+
+ OTHER_FILES += \
+     gstreamer.json
+--
+1.9.1

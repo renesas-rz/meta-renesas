@@ -1,0 +1,33 @@
+From 481e2de1769aa57b0f443822801a75848e12f8d2 Mon Sep 17 00:00:00 2001
+From: huytran <huy.tran.xd@rvc.renesas.com>
+Date: Fri, 6 Jul 2018 17:47:05 +0700
+Subject: [PATCH] libweston: fix issue can't display to LCD at GPU mode for
+ iwg23s
+
+Signed-off-by: huytran <huy.tran.xd@rvc.renesas.com>
+---
+ libweston/gl-renderer.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/libweston/gl-renderer.c b/libweston/gl-renderer.c
+index 0ea0768..dfe45d5 100755
+--- a/libweston/gl-renderer.c
++++ b/libweston/gl-renderer.c
+@@ -2918,10 +2918,10 @@ gl_renderer_setup_egl_extensions(struct weston_compositor *ec)
+ 
+ static const EGLint gl_renderer_opaque_attribs[] = {
+ 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+-	EGL_RED_SIZE, 1,
+-	EGL_GREEN_SIZE, 1,
+-	EGL_BLUE_SIZE, 1,
+-	EGL_ALPHA_SIZE, 0,
++	EGL_RED_SIZE, 8,
++	EGL_GREEN_SIZE, 8,
++	EGL_BLUE_SIZE, 8,
++	EGL_ALPHA_SIZE, 8,
+ 	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+ 	EGL_NONE
+ };
+-- 
+2.7.4
+

@@ -1,0 +1,43 @@
+From bf5d7ccd4c0678b4a53db0ffa9d9c384fdc1f51b Mon Sep 17 00:00:00 2001
+From: Thang Tran <ThangT@fsoft.com.vn>
+Date: Fri, 29 Jun 2018 10:20:41 +0700
+Subject: [PATCH] weston: add weston_desktop_api_set_xwayland_position to
+ wl-shell-surface-protocol-set-transient
+
+Description: wayland applications expect - geometry command line option to work for
+setting the initial window position, but currently this does not work.
+
+Call provision to relay the initial position through libweston-desktop:
+- weston_desktop_api gains a new entry set_xwayland_position
+
+Once wl-shell plugin starts calling weston_desktop_wl_shell_surface_protocol_set_transient(),
+libweston-desktop can relay that information to a shell if the shell
+wants to hear it.
+
+If a shell does not implement the set_xwayland_position hook, the
+old behaviour remains: the shell positions wl-shell toplevels like any
+other.
+
+Signed-off-by: Pekka Paalanen <pekka.paalanen at collabora.co.uk>
+Signed-off-by: Thang Tran <ThangT@fsoft.com.vn>
+---
+ libweston-desktop/wl-shell.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libweston-desktop/wl-shell.c b/libweston-desktop/wl-shell.c
+index 399139c..94a2b06 100644
+--- a/libweston-desktop/wl-shell.c
++++ b/libweston-desktop/wl-shell.c
+@@ -286,6 +286,9 @@ weston_desktop_wl_shell_surface_protocol_set_transient(struct wl_client *wl_clie
+ 		weston_desktop_api_set_parent(surface->desktop,
+ 					      surface->surface, parent);
+ 	}
++
++	weston_desktop_api_set_xwayland_position(surface->desktop, surface->surface,
++						     x, y);
+ }
+ 
+ static void
+-- 
+2.7.4
+

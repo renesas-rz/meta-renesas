@@ -1,0 +1,36 @@
+From c65251d0403d4d4457a5108a3530271978142f78 Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Tue, 11 Oct 2016 10:14:18 +0700
+Subject: [PATCH 4/4] Solve issue horizontal noise from camera due to using
+ videoconvert
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ gst/camerabin2/gstviewfinderbin.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/gst/camerabin2/gstviewfinderbin.c b/gst/camerabin2/gstviewfinderbin.c
+index 1d3da32..2cd6ec4 100644
+--- a/gst/camerabin2/gstviewfinderbin.c
++++ b/gst/camerabin2/gstviewfinderbin.c
+@@ -198,10 +198,14 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
+     gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), NULL);
+ 
+     /* add the elements, user wants them */
+-    csp = gst_element_factory_make ("videoconvert", "vfbin-csp");
++    csp = gst_element_factory_make ("vspmfilter", "vfbin-csp");
++	g_object_set(csp, "outbuf-alloc", 1, NULL);
+     if (!csp) {
+-      missing_element_name = "videoconvert";
+-      goto missing_element;
++      csp = gst_element_factory_make ("videoconvert", "vfbin-csp");
++      if (!csp) {
++        missing_element_name = "videoconvert";
++        goto missing_element;
++      }
+     }
+     gst_bin_add (GST_BIN_CAST (vfbin), csp);
+ 
+-- 
+1.9.1
+

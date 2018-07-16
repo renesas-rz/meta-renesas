@@ -15,6 +15,7 @@ SRC_URI = " \
     git://github.com/renesas-devel/vsp2driver.git;protocol=git;branch=RCAR-GEN2/1.0.0 \
     file://0001-port-vsp2-to-kernel-4.4.patch \
     file://0002-fix-vsp2_exit-call.patch \
+    file://0003-Support-exbuf-ioctl-command.patch \
 "
 S = "${WORKDIR}/git"
 

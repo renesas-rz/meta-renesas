@@ -1,0 +1,51 @@
+From 434a812cd9194bb5faf7b51c5a82982259a6ede7 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Tue, 18 Jul 2017 16:02:29 +0700
+Subject: [PATCH] change position VideoFormat
+
+---
+ src/gsttools/qgstutils.cpp                                    | 6 ++----
+ src/qtmultimediaquicktools/qdeclarativevideooutput_render.cpp | 3 +--
+ 2 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/src/gsttools/qgstutils.cpp b/src/gsttools/qgstutils.cpp
+index 8f9e063..d1bd5af 100644
+--- a/src/gsttools/qgstutils.cpp
++++ b/src/gsttools/qgstutils.cpp
+@@ -920,9 +920,8 @@ struct VideoFormat
+ 
+ static const VideoFormat qt_videoFormatLookup[] =
+ {
+-#ifdef EGLIMAGE_USING
+-    { QVideoFrame::Format_BGRA32 , GST_VIDEO_FORMAT_BGRA }
+-#else
++    { QVideoFrame::Format_BGRA32 , GST_VIDEO_FORMAT_BGRA },
++
+     { QVideoFrame::Format_YUV420P, GST_VIDEO_FORMAT_I420 },
+     { QVideoFrame::Format_YV12   , GST_VIDEO_FORMAT_YV12 },
+     { QVideoFrame::Format_UYVY   , GST_VIDEO_FORMAT_UYVY },
+@@ -944,7 +943,6 @@ static const VideoFormat qt_videoFormatLookup[] =
+     { QVideoFrame::Format_RGB24 ,  GST_VIDEO_FORMAT_RGB },
+     { QVideoFrame::Format_BGR24 ,  GST_VIDEO_FORMAT_BGR },
+     { QVideoFrame::Format_RGB565,  GST_VIDEO_FORMAT_RGB16 }
+-#endif
+ };
+ 
+ static int indexOfVideoFormat(QVideoFrame::PixelFormat format)
+diff --git a/src/qtmultimediaquicktools/qdeclarativevideooutput_render.cpp b/src/qtmultimediaquicktools/qdeclarativevideooutput_render.cpp
+index 9a88da6..d2c21af 100644
+--- a/src/qtmultimediaquicktools/qdeclarativevideooutput_render.cpp
++++ b/src/qtmultimediaquicktools/qdeclarativevideooutput_render.cpp
+@@ -439,8 +439,7 @@ QList<QVideoFrame::PixelFormat> QSGVideoItemSurface::supportedPixelFormats(
+             return formats;
+     }
+ 
+-    foreach (QSGVideoNodeFactoryInterface* factory, m_backend->m_videoNodeFactories)
+-        formats.append(factory->supportedPixelFormats(handleType));
++    formats << QVideoFrame::Format_BGRA32;
+ 
+     return formats;
+ }
+-- 
+1.9.1
+

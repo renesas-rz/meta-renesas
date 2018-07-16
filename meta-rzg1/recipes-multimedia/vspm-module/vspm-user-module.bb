@@ -5,7 +5,6 @@ DEPENDS = "kernel-module-vspm"
 PN = "vspm-user-module"
 PR = "r0"
 SRC_URI = "file://vspm-user.tar.bz2 \
-			file://0001-Makefile-add-Kernel-source-header-reference.patch \
 "
 
 S = "${WORKDIR}"

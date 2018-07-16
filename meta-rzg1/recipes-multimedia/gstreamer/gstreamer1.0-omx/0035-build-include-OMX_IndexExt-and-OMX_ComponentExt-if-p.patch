@@ -1,0 +1,79 @@
+From 9c776b8683a9b17050caea76d31cdb2bf4abd5a0 Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Wed, 10 Jan 2018 14:00:28 +0700
+Subject: [PATCH 35/41] build: include OMX_IndexExt and OMX_ComponentExt if
+ present
+
+These files may be used by OMX implementation to define custom extensions.
+Include them if present as we are already doing with OMX_VideoExt.h
+
+https://bugzilla.gnome.org/show_bug.cgi?id=784847
+
+This is backport from commit 4488ab97afa31600e262d199386547b8310883a6
+on master branch
+
+refs #150416
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ configure.ac | 14 +++++++++++++-
+ meson.build  | 22 +++++++++++++++++++++-
+ omx/gstomx.h | 10 +++++++++-
+ 3 files changed, 43 insertions(+), 3 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 824eeeb..da16161 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -174,9 +174,14 @@ AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [
+ AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
+ 
+ dnl Our internal OpenMAX IL headers have OMX_VideoExt.h
++dnl Our internal OpenMAX I headers have OMX_VideoExt.h, OMX_IndexExt.h and OMX_ComponentExt.h
+ HAVE_VIDEO_EXT=yes
++HAVE_INDEX_EXT=yes
++HAVE_COMPONENT_EXT=yes
+ if test "x$HAVE_EXTERNAL_OMX" = "xyes"; then
+     AC_CHECK_HEADER([OMX_VideoExt.h], [HAVE_VIDEO_EXT=yes], [HAVE_VIDEO_EXT=no], [AC_INCLUDES_DEFAULT])
++    AC_CHECK_HEADER([OMX_IndexExt.h], [HAVE_INDEX_EXT=yes], [HAVE_INDEX_EXT=no], [AC_INCLUDES_DEFAULT])
++    AC_CHECK_HEADER([OMX_ComponentExt.h], [HAVE_COMPONENT_EXT=yes], [HAVE_COMPONENT_EXT=no], [AC_INCLUDES_DEFAULT])
+ fi
+ 
+ VIDEO_HEADERS="#include <OMX_Video.h>"
+@@ -187,6 +192,15 @@ if test "x$HAVE_VIDEO_EXT" = "xyes"; then
+ "
+ fi
+ 
++if test "x$HAVE_INDEX_EXT" = "xyes"; then
++    AC_DEFINE(HAVE_INDEX_EXT, 1, [OpenMAX IL has OMX_IndexExt.h header])
++fi
++
++if test "x$HAVE_COMPONENT_EXT" = "xyes"; then
++    AC_DEFINE(HAVE_COMPONENT_EXT, 1, [OpenMAX IL has OMX_ComponentExt.h header])
++fi
++
++
+ AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],
+   [
+     AC_DEFINE(HAVE_VP8, 1, [OpenMAX IL has VP8 support])
+diff --git a/omx/gstomx.h b/omx/gstomx.h
+index 0204018..f229ca2 100644
+--- a/omx/gstomx.h
++++ b/omx/gstomx.h
+@@ -62,6 +62,14 @@
+ #include <OMX_VideoExt.h>
+ #endif
+ 
++#ifdef HAVE_INDEX_EXT
++#include <OMX_IndexExt.h>
++#endif
++
++#ifdef HAVE_COMPONENT_EXT
++#include <OMX_ComponentExt.h>
++#endif
++
+ #ifdef GST_OMX_STRUCT_PACKING
+ #pragma pack()
+ #endif
+-- 
+2.7.4
+

@@ -10,8 +10,6 @@ DEPENDS = "linux-renesas kernel-module-mmngr"
 PN = "kernel-module-fdpm"
 PR = "r0"
 SRC_URI = "file://fdpm-kernel.tar.bz2 \
-	file://0001-drv-fdpm_sub-move-check-NULL-before-dereferences.patch \
-	file://0002-fdpm-support-board-G1H-r8a7742.patch \
 "
 S = "${WORKDIR}/fdpm"
 

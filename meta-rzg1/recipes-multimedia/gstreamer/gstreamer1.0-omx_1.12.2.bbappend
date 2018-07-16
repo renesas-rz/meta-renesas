@@ -17,21 +17,27 @@ SRC_URI_append = " \
     file://0001-omxvideodec-Support-copy-mode-for-omxh264dec.patch \
     file://0002-gstomx-Once-reinitialize-an-instance-and-then-retry.patch \
     file://gstomx.conf \
+    file://0023-omxvideoenc-Handle-for-valid-output-frames-only.patch \
+    file://0024-omxvideoenc-Set-default-value-for-Control-rate-in-se.patch \
+    file://0025-omxvideoenc-Support-hack-renesas-encmc-stride-align.patch \
+    file://0026-omxvideoenc-Support-scan-type-option.patch \
+    file://0027-omxh264enc-Support-use-incaps-header-option.patch \
+    file://0028-omxvideoenc-Support-no-copy-option-for-video-encoder.patch \
+    file://0029-omxbufferpool-Add-handling-of-sharing-memory-buffer-.patch \
+    file://0030-omxvideoenc-edit-nStride-value.patch \
+    file://0035-build-include-OMX_IndexExt-and-OMX_ComponentExt-if-p.patch  \
+    file://0036-gst145-omxh264enc-Support-periodicty_idr-and-interva.patch \
+    file://0037-omxh264enc-Add-timestamp-information-for-buffer-cont.patch \
 "
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
 
-#HEAD
-#SRCREV = "6813dedbc9a61ea8a80e54fc373fa07d37114d4a"
 SRCREV = "d00664578bbef19091cfcaebc2caef17e30221af"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c \
     file://omx/gstomx.h;beginline=1;endline=22;md5=e2c6664eda77dc22095adbed9cb6c6e4 \
 "
     
-#file://omx/gstomx.h;beginline=1;endline=22;md5=41f577b291a84518889deaaaf2bcbc95 
-#file://omx/gstomx.h;beginline=1;endline=22;md5=d411057db0aa43d31f1ec9d6a980a216
-#file://omx/gstomx.h;beginline=1;endline=22;md5=e2c6664eda77dc22095adbed9cb6c6e4
 S = "${WORKDIR}/git"
 
 GSTREAMER_1_0_OMX_TARGET = "rcar"

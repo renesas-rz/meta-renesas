@@ -51,4 +51,6 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-bad = " \
     gstreamer1.0-plugins-bad-asfmux \
     gstreamer1.0-plugins-bad-fbdevsink \
     gstreamer1.0-plugins-bad-videoparsersbad \
+    gstreamer1.0-plugins-bad-faac \
+    gstreamer1.0-plugins-bad-faad \
 "

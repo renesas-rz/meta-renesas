@@ -20,9 +20,6 @@ PROVIDES = "virtual/${TARGET_PREFIX}libc-initial"
 PACKAGES = ""
 PACKAGES_DYNAMIC = ""
 
-STAGINGCC = "gcc-cross-initial-${TARGET_ARCH}"
-STAGINGCC_class-nativesdk = "gcc-crosssdk-initial-${TARGET_ARCH}"
-
 # Specify add-ons for glibc: nptl, libidn, ports
 do_configure () {
 	sed -ie 's,{ (exit 1); exit 1; }; },{ (exit 0); }; },g' ${S}/configure

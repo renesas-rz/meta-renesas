@@ -3,17 +3,19 @@ DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE = "iwg20m|iwg21m"
+COMPATIBLE_MACHINE = "iwg20m|iwg21m|iwg22m|iwg23s"
 
 DEPENDS_append = " util-linux-native openssl-native"
 
 RENESAS_URL="git://github.com/renesas-rz/renesas-cip.git"
-SRCREV = "3e632bfaaef838eb7aefb0e050b9fde6243bbd79"
+SRCREV = "0b8770ade7e3e4417ed475a366ea81bada73ae8d"
 SRC_URI = " \
-	${RENESAS_URL};protocol=git;branch=v4.4.130-cip23 \
+	${RENESAS_URL};protocol=git;branch=v4.4.138-cip25 \
+	file://0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
+	file://0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
 "
 
-LINUX_VERSION ?= "4.4.130-cip23"
+LINUX_VERSION ?= "4.4.138-cip25"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
@@ -21,18 +23,22 @@ S = "${WORKDIR}/git"
 
 SRC_URI_append = " \
     file://defconfig \
-    file://iwg20m_defconfig \
-    file://iwg21m_defconfig \
+    file://common.cfg \
 "
-
-do_configure_prepend_iwg20m() {
-    cp -f ${WORKDIR}/iwg20m_defconfig ${WORKDIR}/defconfig
-}
-
-do_configure_prepend_iwg21m() {
-    cp -f ${WORKDIR}/iwg21m_defconfig ${WORKDIR}/defconfig
-}
 
 SRC_URI_append_iwg20m = " \
-    file://iwg20m/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
+    file://iwg20m.cfg \
 "
+
+SRC_URI_append_iwg21m = " \
+    file://iwg21m.cfg \
+"
+
+SRC_URI_append_iwg22m = " \
+    file://iwg22m.cfg \
+"
+
+SRC_URI_append_iwg23s = " \
+    file://iwg23s.cfg \
+"
+

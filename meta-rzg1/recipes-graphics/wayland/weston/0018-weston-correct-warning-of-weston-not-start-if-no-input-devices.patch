@@ -1,0 +1,25 @@
+From dc4bc8789b64f6935d7823a13f5c9cf1edf4d78f Mon Sep 17 00:00:00 2001
+From: ThaoHM2 <thaohm2@fsoft.com.vn>
+Date: Mon, 18 Jun 2018 17:31:37 +0700
+Subject: weston: correct warning of weston not start if no input devices
+
+Signed-off-by: ThaoHM2 <thaohm2@fsoft.com.vn>
+---
+ libweston/libinput-seat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libweston/libinput-seat.c b/libweston/libinput-seat.c
+index 8cf5666..0f002c4 100644
+--- a/libweston/libinput-seat.c
++++ b/libweston/libinput-seat.c
+@@ -269,7 +269,7 @@ udev_input_enable(struct udev_input *input)
+		weston_log(
+			"warning: no input devices on entering Weston. "
+			"Possible causes:\n"
+-			"\t- no permissions to read /dev/input/event*\n"
++			"\t- no input device attached\n"
+			"\t- seats misconfigured "
+			"(Weston backend option 'seat', "
+			"udev device property ID_SEAT)\n");
+--
+2.7.4

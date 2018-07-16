@@ -1,0 +1,155 @@
+From 6ed12fd34dbd1e78f082f8aa088d41ebb114f761 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Fri, 13 Jul 2018 11:34:08 +0700
+Subject: [PATCH 1/4] waylandsink: Add set window position
+
+Signed-off-by: AnNDP <anndp@fsoft.com.vn>
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ ext/wayland/gstwaylandsink.c | 37 ++++++++++++++++++++++++++++++++++++-
+ ext/wayland/gstwaylandsink.h |  2 ++
+ ext/wayland/wlwindow.c       |  6 +++++-
+ ext/wayland/wlwindow.h       |  3 ++-
+ 4 files changed, 45 insertions(+), 3 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 2a9be5d..fb288a9 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -64,7 +64,9 @@ enum
+   PROP_0,
+   PROP_DISPLAY,
+   PROP_USE_SUBSURFACE,
+-  PROP_SUPPRESS_INTERLACE
++  PROP_SUPPRESS_INTERLACE,
++  PROP_WAYLAND_POSITION_X,    /* add property (position_x) */
++  PROP_WAYLAND_POSITION_Y,    /* add property (position_y) */
+ };
+ 
+ #define DEFAULT_USE_SUBSURFACE          TRUE
+@@ -181,6 +183,17 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+           "When enabled, dmabuf are created without flag of interlaced buffer",
+           DEFAULT_SUPPRESS_INTERLACE,
+           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  /* install property (position_x) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_POSITION_X,
++      g_param_spec_int ("position_x", "Position_X",
++                        "Wayland  Position X value from the application ",
++                        0, G_MAXINT, 0, G_PARAM_READWRITE));
++
++  /* install property (position_y) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_POSITION_Y,
++      g_param_spec_int ("position_y", "Position_Y",
++                        "Wayland  Position Y value from the application ",
++                        0, G_MAXINT, 0, G_PARAM_READWRITE));
+ }
+ 
+ static void
+@@ -191,8 +204,11 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+ 
+   sink->use_subsurface = DEFAULT_USE_SUBSURFACE;
+   sink->enable_interlace = !DEFAULT_SUPPRESS_INTERLACE;
++  sink->position_x = -1;
++  sink->position_y = -1;
+ }
+ 
++
+ static void
+ gst_wayland_sink_get_property (GObject * object,
+     guint prop_id, GValue * value, GParamSpec * pspec)
+@@ -211,6 +227,14 @@ gst_wayland_sink_get_property (GObject * object,
+     case PROP_SUPPRESS_INTERLACE:
+       g_value_set_boolean (value, !sink->enable_interlace);
+       break;
++    case PROP_WAYLAND_POSITION_X:
++      /* set position_x property */
++      g_value_set_int (value, sink->position_x);
++      break;
++    case PROP_WAYLAND_POSITION_Y:
++      /* set position_y property */
++      g_value_set_int (value, sink->position_y);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -235,6 +259,14 @@ gst_wayland_sink_set_property (GObject * object,
+     case PROP_SUPPRESS_INTERLACE:
+       sink->enable_interlace = !g_value_get_boolean (value);
+       break;
++    case PROP_WAYLAND_POSITION_X:
++      /* get position_x property */
++      sink->position_x = g_value_get_int (value);
++      break;
++    case PROP_WAYLAND_POSITION_Y:
++      /* get position_y property */
++      sink->position_y = g_value_get_int (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -675,8 +707,10 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+ 
+     if (!sink->window) {
+       /* if we were not provided a window, create one ourselves */
++      /* also set window position here */
+       sink->window = gst_wl_window_new_toplevel (sink->display,
+-          &sink->video_info, &sink->render_lock, sink->use_subsurface);
++          &sink->video_info, &sink->render_lock, sink->use_subsurface,
++          sink->position_x, sink->position_y);
+     }
+   }
+ 
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index 9dddaa9..7324d25 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -72,6 +72,8 @@ struct _GstWaylandSink
+   struct wl_callback *callback;
+   gboolean use_subsurface;
+   gboolean enable_interlace;
++  gint position_x;
++  gint position_y;
+ };
+ 
+ struct _GstWaylandSinkClass
+diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
+index 0e41f29..7de29c9 100644
+--- a/ext/wayland/wlwindow.c
++++ b/ext/wayland/wlwindow.c
+@@ -166,7 +166,7 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock,
+ 
+ GstWlWindow *
+ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+-    GMutex * render_lock, gboolean use_subsurface)
++    GMutex * render_lock, gboolean use_subsurface, gint posx, gint posy)
+ {
+   GstWlWindow *window;
+   gint width;
+@@ -181,6 +181,10 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+   if (window->shell_surface) {
+     wl_shell_surface_add_listener (window->shell_surface,
+         &shell_surface_listener, window);
++    if ((posx != -1) && (posy != -1)){
++        wl_shell_surface_set_transient (window->shell_surface, window->area_surface, posx, posy, 0);
++    }
++
+     wl_shell_surface_set_toplevel (window->shell_surface);
+   } else {
+     GST_ERROR ("Unable to get wl_shell_surface");
+diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
+index 369a208..933a800 100644
+--- a/ext/wayland/wlwindow.h
++++ b/ext/wayland/wlwindow.h
+@@ -79,7 +79,8 @@ struct _GstWlWindowClass
+ GType gst_wl_window_get_type (void);
+ 
+ GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
+-        const GstVideoInfo * info, GMutex * render_lock, gboolean use_subsurface);
++        const GstVideoInfo * info, GMutex * render_lock, gboolean use_subsurface,
++        gint posx, gint posy);
+ GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
+         struct wl_surface * parent, GMutex * render_lock, gboolean use_subsurface);
+ 
+-- 
+1.9.1
+

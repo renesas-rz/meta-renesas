@@ -1,0 +1,37 @@
+From 7c50ec8b75b79fa6a814adc93a30f238383ec4b7 Mon Sep 17 00:00:00 2001
+From: Thao Luong <thao.luong.uw@rvc.renesas.com>
+Date: Thu, 19 Jan 2017 21:27:29 +0700
+Subject: [PATCH 68/80] omxh264enc: Add timestamp information for buffer
+ contain codec data
+
+Buffer contain codec data will be sent in finsh_frame() with the
+first video frame. It should have timestamp similar as the first
+video frame to avoid downstream update incorrect timestamp when
+merging codec data with video frame data
+
+refs #112161
+Signed-off-by: Thao Luong <thao.luong.uw@rvc.renesas.com>
+---
+ omx/gstomxh264enc.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxh264enc.c b/omx/gstomxh264enc.c
+index 1585de5..42f06de 100644
+--- a/omx/gstomxh264enc.c
++++ b/omx/gstomxh264enc.c
+@@ -594,6 +594,12 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * enc, GstOMXPort * port,
+             buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+             buf->omx_buf->nFilledLen);
+         gst_buffer_unmap (hdrs, &map);
++        /* Update timestamp for codec buffer as timestamp of input buffer
++         * to avoid incorrect timestamp when megring in downstream
++         */
++        GST_BUFFER_PTS (hdrs) = frame->pts;
++        GST_BUFFER_DTS (hdrs) = GST_BUFFER_PTS (hdrs);
++        GST_BUFFER_DURATION (hdrs) = frame->duration;
+         self->headers = g_list_append (self->headers, hdrs);
+ 
+         if (frame)
+-- 
+2.7.4
+

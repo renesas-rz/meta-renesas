@@ -1,0 +1,39 @@
+From eafe92114308acf14e45c6c3d154a5dad5523d1a Mon Sep 17 00:00:00 2001
+From: Mikko Rapeli <mikko.rapeli@iki.fi>
+Date: Mon, 22 Aug 2016 20:32:43 +0200
+Subject: [PATCH] include/uapi/linux/if_pppox.h: include linux/in.h and
+ linux/in6.h
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Fixes userspace compilation errors:
+
+error: field ‘addr’ has incomplete type
+ struct sockaddr_in addr; /* IP address and port to send to */
+
+error: field ‘addr’ has incomplete type
+ struct sockaddr_in6 addr; /* IP address and port to send to */
+
+Signed-off-by: Mikko Rapeli <mikko.rapeli@iki.fi>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/uapi/linux/if_pppox.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/uapi/linux/if_pppox.h b/include/uapi/linux/if_pppox.h
+index 473c3c4..d37bbb1 100644
+--- a/include/uapi/linux/if_pppox.h
++++ b/include/uapi/linux/if_pppox.h
+@@ -23,6 +23,8 @@
+ #include <linux/socket.h>
+ #include <linux/if.h>
+ #include <linux/if_ether.h>
++#include <linux/in.h>
++#include <linux/in6.h>
+ #include <linux/if_pppol2tp.h>
+ 
+ /* For user-space programs to pick up these definitions
+-- 
+1.9.1
+

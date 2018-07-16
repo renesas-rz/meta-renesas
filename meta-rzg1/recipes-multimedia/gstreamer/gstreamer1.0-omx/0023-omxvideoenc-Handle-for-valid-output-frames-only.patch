@@ -1,0 +1,72 @@
+From de792c121fd3f795ea493ff2ce4b9095a9f63714 Mon Sep 17 00:00:00 2001
+From: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Date: Thu, 2 Nov 2017 12:44:43 +0700
+Subject: [PATCH 23/41] omxvideoenc: Handle for valid output frames only
+
+Nearest frame found bases on timestamp of OMXBuffer, which may include
+OMXBuffers have invalid data (nFilledLen = 0)
+
+This patch file will set condition to handle for valid output data
+(nFilledLen > 0) only.
+Without this condition, it may lead to issue: can not decode for
+encoded file due to a valid frame has been taken over by invalid OMXBuffer
+(nFilledLen=0).
+Besides, this patch also correct returned value of enc_finish() in prototype
+
+refs #138391
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+---
+ omx/gstomxvideoenc.c | 23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index c54d8a7..4529d6b 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
++ * Copyright (C) 2017, Renesas Electronics Corporation
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+@@ -82,7 +83,7 @@ static gboolean gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
+ static gboolean gst_omx_video_enc_flush (GstVideoEncoder * encoder);
+ static GstFlowReturn gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
+     GstVideoCodecFrame * frame);
+-static gboolean gst_omx_video_enc_finish (GstVideoEncoder * encoder);
++static GstFlowReturn gst_omx_video_enc_finish (GstVideoEncoder * encoder);
+ static gboolean gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
+     GstQuery * query);
+ static GstCaps *gst_omx_video_enc_getcaps (GstVideoEncoder * encoder,
+@@ -753,13 +754,19 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
+       (guint64) GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp));
+ 
+   GST_VIDEO_ENCODER_STREAM_LOCK (self);
+-  frame = gst_omx_video_find_nearest_frame (buf,
+-      gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self)));
+-
+-  g_assert (klass->handle_output_frame);
+-  flow_ret = klass->handle_output_frame (self, self->enc_out_port, buf, frame);
+-
+-  GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
++  if (buf->omx_buf->nFilledLen > 0) {
++    /* Find nearest frame incase valid buffer to avoid invalid buffers
++     * take over valid frame and lead to timestamp become incorrect from now.
++     */
++    frame = gst_omx_video_find_nearest_frame (buf,
++        gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self)));
++
++    g_assert (klass->handle_output_frame);
++    flow_ret =
++        klass->handle_output_frame (self, self->enc_out_port, buf, frame);
++
++    GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
++  }
+ 
+   err = gst_omx_port_release_buffer (port, buf);
+   if (err != OMX_ErrorNone)
+-- 
+2.7.4
+

@@ -1,14 +1,8 @@
-include glibc-collateral.inc
+require glibc-collateral.inc
 
 SUMMARY = "Locale data from glibc"
 
 BPN = "glibc"
-inherit debian-package
-PV = "2.19"
-PR = "r1"
-
-do_debian_fix_timestamp[noexec] = "1"
-do_debian_patch[noexec] = "1"
 
 # very rare case; glibc-locale doen't have source tree but
 # generates binary packages. DEBIAN_UNPACK_DIR should point
@@ -140,3 +134,8 @@ FILES_locales = " \
 RDEPENDS_locales = "perl"
 
 FILES_${PN}-dbg += "${libdir}/gconv/.debug"
+
+# There are many many warning message related to locale-base-* packages
+# since they redepends on glibc-binary-localedata-* but not depend.
+# These warning messages are harmless, suppress them here.
+do_package_qa[noexec] = "1"
