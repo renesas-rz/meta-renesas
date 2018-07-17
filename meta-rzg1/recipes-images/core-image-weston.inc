@@ -55,7 +55,6 @@ IMAGE_INSTALL_append = " \
   util-linux-umount \
   util-linux-swaponoff \
   util-linux-libsmartcols \
-  ohci-init \
   can-utils \
 "
 
@@ -63,4 +62,5 @@ IMAGE_INSTALL_append_iwg21m = " \
   kernel-module-ohci-hcd-${KERNEL_VERSION} \
   kernel-module-ohci-pci-${KERNEL_VERSION} \
   kernel-module-sh-eth-${KERNEL_VERSION} \
+  ohci-init \
 "
