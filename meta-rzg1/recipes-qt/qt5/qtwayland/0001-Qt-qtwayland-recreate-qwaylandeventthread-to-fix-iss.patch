@@ -1,0 +1,231 @@
+From 63493b3c8a057c93e6ad1d209721cea3169c5b04 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Tue, 22 May 2018 09:27:43 +0700
+Subject: [PATCH 1/2] Qt: qtwayland: recreate qwaylandeventthread to fix issue
+ failed to initialize EGL
+
+When Qt framework updates from Qt5.5 to Qt5.6, there is an issue which lead to can not display on Wayland compositor.
+Reason is Qt5.6 removed event thread due to no real reason to keep it (as description of Qt5.6).
+This patch file re-add event thread for a workaround to fix that issue
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ src/client/qwaylandeventthread.cpp | 112 +++++++++++++++++++++++++++++++++++++
+ src/client/qwaylandeventthread_p.h |  86 ++++++++++++++++++++++++++++
+ 2 files changed, 198 insertions(+)
+ create mode 100644 src/client/qwaylandeventthread.cpp
+ create mode 100644 src/client/qwaylandeventthread_p.h
+
+diff --git a/src/client/qwaylandeventthread.cpp b/src/client/qwaylandeventthread.cpp
+new file mode 100644
+index 0000000..e0a3edc
+--- /dev/null
++++ b/src/client/qwaylandeventthread.cpp
+@@ -0,0 +1,112 @@
++/****************************************************************************
++**
++** Copyright (C) 2015 The Qt Company Ltd.
++** Contact: http://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see http://www.qt.io/terms-conditions. For further
++** information use the contact form at http://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** As a special exception, The Qt Company gives you certain additional
++** rights. These rights are described in The Qt Company LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qwaylandeventthread_p.h"
++#include <QtCore/QSocketNotifier>
++#include <QCoreApplication>
++
++#include <unistd.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <errno.h>
++
++QT_BEGIN_NAMESPACE
++
++namespace QtWaylandClient {
++
++QWaylandEventThread::QWaylandEventThread(QObject *parent)
++    : QObject(parent)
++    , m_display(0)
++    , m_fileDescriptor(-1)
++    , m_readNotifier(0)
++    , m_displayLock(new QMutex)
++{
++}
++
++QWaylandEventThread::~QWaylandEventThread()
++{
++    delete m_displayLock;
++    wl_display_disconnect(m_display);
++}
++
++void QWaylandEventThread::displayConnect()
++{
++    m_displayLock->lock();
++    QMetaObject::invokeMethod(this, "waylandDisplayConnect", Qt::QueuedConnection);
++}
++
++// ### be careful what you do, this function may also be called from other
++// threads to clean up & exit.
++void QWaylandEventThread::checkError() const
++{
++    int ecode = wl_display_get_error(m_display);
++    if ((ecode == EPIPE || ecode == ECONNRESET)) {
++        // special case this to provide a nicer error
++        qWarning("The Wayland connection broke. Did the Wayland compositor die?");
++    } else {
++        qErrnoWarning(ecode, "The Wayland connection experienced a fatal error");
++    }
++}
++
++void QWaylandEventThread::readWaylandEvents()
++{
++    if (wl_display_prepare_read(m_display) == 0) {
++        wl_display_read_events(m_display);
++    }
++    emit newEventsRead();
++}
++
++void QWaylandEventThread::waylandDisplayConnect()
++{
++    m_display = wl_display_connect(NULL);
++    if (m_display == NULL) {
++        qErrnoWarning(errno, "Failed to create display");
++        ::exit(1);
++    }
++    m_displayLock->unlock();
++
++    m_fileDescriptor = wl_display_get_fd(m_display);
++
++    m_readNotifier = new QSocketNotifier(m_fileDescriptor, QSocketNotifier::Read, this);
++    connect(m_readNotifier, SIGNAL(activated(int)), this, SLOT(readWaylandEvents()));
++}
++
++wl_display *QWaylandEventThread::display() const
++{
++    QMutexLocker displayLock(m_displayLock);
++    return m_display;
++}
++
++}
++
++QT_END_NAMESPACE
+diff --git a/src/client/qwaylandeventthread_p.h b/src/client/qwaylandeventthread_p.h
+new file mode 100644
+index 0000000..94b05ea
+--- /dev/null
++++ b/src/client/qwaylandeventthread_p.h
+@@ -0,0 +1,86 @@
++/****************************************************************************
++**
++** Copyright (C) 2015 The Qt Company Ltd.
++** Contact: http://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL21$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see http://www.qt.io/terms-conditions. For further
++** information use the contact form at http://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 2.1 or version 3 as published by the Free
++** Software Foundation and appearing in the file LICENSE.LGPLv21 and
++** LICENSE.LGPLv3 included in the packaging of this file. Please review the
++** following information to ensure the GNU Lesser General Public License
++** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
++** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
++**
++** As a special exception, The Qt Company gives you certain additional
++** rights. These rights are described in The Qt Company LGPL Exception
++** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QWAYLANDEVENTTHREAD_H
++#define QWAYLANDEVENTTHREAD_H
++
++#include <QObject>
++#include <QMutex>
++#include <wayland-client.h>
++
++#include <QtWaylandClient/private/qwaylandclientexport_p.h>
++
++QT_BEGIN_NAMESPACE
++
++class QSocketNotifier;
++
++namespace QtWaylandClient {
++
++class Q_WAYLAND_CLIENT_EXPORT QWaylandEventThread : public QObject
++{
++    Q_OBJECT
++public:
++    explicit QWaylandEventThread(QObject *parent = Q_NULLPTR);
++    ~QWaylandEventThread();
++
++    void displayConnect();
++
++    wl_display *display() const;
++
++    void checkError() const;
++
++private slots:
++    void readWaylandEvents();
++
++    void waylandDisplayConnect();
++
++signals:
++    void newEventsRead();
++    void fatalError();
++
++private:
++
++    struct wl_display *m_display;
++    int m_fileDescriptor;
++
++    QSocketNotifier *m_readNotifier;
++
++    QMutex *m_displayLock;
++
++};
++
++}
++
++QT_END_NAMESPACE
++
++#endif // QWAYLANDEVENTTHREAD_H
+-- 
+1.9.1
+

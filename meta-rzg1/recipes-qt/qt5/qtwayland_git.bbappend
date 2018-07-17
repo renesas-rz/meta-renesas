@@ -10,6 +10,12 @@ LIC_FILES_CHKSUM = " \
     file://LICENSE.FDL;md5=6d9f2a9af4c8b8c3c769f6cc1b6aaf7e \
 "
 
+FILESEXTRAPATHS_append := "${THISDIR}/qtwayland:"
+SRC_URI_append  = " \
+    file://0001-Qt-qtwayland-recreate-qwaylandeventthread-to-fix-iss.patch \
+    file://0002-Qt-qtwayland-re-add-qwaylandeventthread-to-qwayland.patch \
+"
+
 DEP = " freetype fontconfig libwayland-egl"
 RDEPENDS_${PN} += "${DEP}"
 RDEPENDS_${PN}-plugins += "${DEP}"

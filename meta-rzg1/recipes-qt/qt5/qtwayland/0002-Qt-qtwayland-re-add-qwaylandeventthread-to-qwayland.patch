@@ -1,0 +1,168 @@
+From b325be28e1ee6fc025668b952654385845c9b709 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Tue, 22 May 2018 09:30:39 +0700
+Subject: [PATCH 2/2] Qt: qtwayland: re-add qwaylandeventthread to qwayland
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ src/client/client.pro              |  2 ++
+ src/client/qwaylanddisplay.cpp     | 41 ++++++++++++++++++--------------------
+ src/client/qwaylanddisplay_p.h     |  3 ++-
+ src/client/qwaylandintegration.cpp |  4 ----
+ 4 files changed, 23 insertions(+), 27 deletions(-)
+
+diff --git a/src/client/client.pro b/src/client/client.pro
+index 88b9ea1..3b284e3 100644
+--- a/src/client/client.pro
++++ b/src/client/client.pro
+@@ -73,6 +73,7 @@ SOURCES +=  qwaylandintegration.cpp \
+             qwaylandabstractdecoration.cpp \
+             qwaylanddecorationfactory.cpp \
+             qwaylanddecorationplugin.cpp \
++            qwaylandeventthread.cpp \
+             qwaylandwindowmanagerintegration.cpp \
+             qwaylandinputcontext.cpp \
+             qwaylanddatadevice.cpp \
+@@ -109,6 +110,7 @@ HEADERS +=  qwaylandintegration_p.h \
+             qwaylandabstractdecoration_p.h \
+             qwaylanddecorationfactory_p.h \
+             qwaylanddecorationplugin_p.h \
++            qwaylandeventthread_p.h \
+             qwaylandwindowmanagerintegration_p.h \
+             qwaylandinputcontext_p.h \
+             qwaylanddatadevice_p.h \
+diff --git a/src/client/qwaylanddisplay.cpp b/src/client/qwaylanddisplay.cpp
+index 534ae49..fae6193 100644
+--- a/src/client/qwaylanddisplay.cpp
++++ b/src/client/qwaylanddisplay.cpp
+@@ -33,6 +33,7 @@
+ 
+ #include "qwaylanddisplay_p.h"
+ 
++#include "qwaylandeventthread_p.h"
+ #include "qwaylandintegration_p.h"
+ #include "qwaylandwindow_p.h"
+ #include "qwaylandscreen_p.h"
+@@ -129,15 +130,21 @@ QWaylandDisplay::QWaylandDisplay(QWaylandIntegration *waylandIntegration)
+ {
+     qRegisterMetaType<uint32_t>("uint32_t");
+ 
+-    mDisplay = wl_display_connect(NULL);
+-    if (mDisplay == NULL) {
+-        qErrnoWarning(errno, "Failed to create display");
+-        ::exit(1);
+-    }
++    mEventThreadObject = new QWaylandEventThread(0);
++    mEventThread = new QThread(this);
++    mEventThread->setObjectName(QStringLiteral("QtWayland"));
++    mEventThreadObject->moveToThread(mEventThread);
++    mEventThread->start();
++
++    mEventThreadObject->displayConnect();
++    mDisplay = mEventThreadObject->display(); //blocks until display is available
+ 
+     struct ::wl_registry *registry = wl_display_get_registry(mDisplay);
+     init(registry);
+ 
++    connect(mEventThreadObject, SIGNAL(newEventsRead()), this, SLOT(flushRequests()));
++    connect(mEventThreadObject, &QWaylandEventThread::fatalError, this, &QWaylandDisplay::exitWithError);
++
+     mWindowManagerIntegration.reset(new QWaylandWindowManagerIntegration(this));
+ 
+     forceRoundTrip();
+@@ -155,28 +162,16 @@ QWaylandDisplay::~QWaylandDisplay(void)
+ #ifndef QT_NO_DRAGANDDROP
+     delete mDndSelectionHandler.take();
+ #endif
+-    wl_display_disconnect(mDisplay);
+-}
+-
+-void QWaylandDisplay::checkError() const
+-{
+-    int ecode = wl_display_get_error(mDisplay);
+-    if ((ecode == EPIPE || ecode == ECONNRESET)) {
+-        // special case this to provide a nicer error
+-        qWarning("The Wayland connection broke. Did the Wayland compositor die?");
+-    } else {
+-        qErrnoWarning(ecode, "The Wayland connection experienced a fatal error");
+-    }
++    mEventThread->quit();
++    mEventThread->wait();
++    delete mEventThreadObject;
+ }
+ 
+ void QWaylandDisplay::flushRequests()
+ {
+-    if (wl_display_prepare_read(mDisplay) == 0) {
+-        wl_display_read_events(mDisplay);
+-    }
+ 
+     if (wl_display_dispatch_pending(mDisplay) < 0) {
+-        checkError();
++        mEventThreadObject->checkError();
+         exitWithError();
+     }
+ 
+@@ -187,13 +182,15 @@ void QWaylandDisplay::flushRequests()
+ void QWaylandDisplay::blockingReadEvents()
+ {
+     if (wl_display_dispatch(mDisplay) < 0) {
+-        checkError();
++        mEventThreadObject->checkError();
+         exitWithError();
+     }
+ }
+ 
+ void QWaylandDisplay::exitWithError()
+ {
++    mEventThread->quit();
++    mEventThread->wait();
+     ::exit(1);
+ }
+ 
+diff --git a/src/client/qwaylanddisplay_p.h b/src/client/qwaylanddisplay_p.h
+index cc1308b..29947f6 100644
+--- a/src/client/qwaylanddisplay_p.h
++++ b/src/client/qwaylanddisplay_p.h
+@@ -179,7 +179,6 @@ public slots:
+ private:
+     void waitForScreens();
+     void exitWithError();
+-    void checkError() const;
+ 
+     void handleWaylandSync();
+     void requestWaylandSync();
+@@ -192,6 +191,8 @@ private:
+     struct wl_display *mDisplay;
+     QtWayland::wl_compositor mCompositor;
+     struct wl_shm *mShm;
++    QThread *mEventThread;
++    QWaylandEventThread *mEventThreadObject;
+     QList<QWaylandScreen *> mScreens;
+     QList<QWaylandInputDevice *> mInputDevices;
+     QList<Listener> mRegistryListeners;
+diff --git a/src/client/qwaylandintegration.cpp b/src/client/qwaylandintegration.cpp
+index 106e54c..fcbbbd8 100644
+--- a/src/client/qwaylandintegration.cpp
++++ b/src/client/qwaylandintegration.cpp
+@@ -54,7 +54,6 @@
+ #include <qpa/qplatformcursor.h>
+ #include <QtGui/QSurfaceFormat>
+ #include <QtGui/QOpenGLContext>
+-#include <QSocketNotifier>
+ 
+ #include <qpa/qplatforminputcontextfactory_p.h>
+ #include <qpa/qplatformaccessibility.h>
+@@ -206,9 +205,6 @@ void QWaylandIntegration::initialize()
+     QObject::connect(dispatcher, SIGNAL(aboutToBlock()), mDisplay, SLOT(flushRequests()));
+     QObject::connect(dispatcher, SIGNAL(awake()), mDisplay, SLOT(flushRequests()));
+ 
+-    int fd = wl_display_get_fd(mDisplay->wl_display());
+-    QSocketNotifier *sn = new QSocketNotifier(fd, QSocketNotifier::Read, mDisplay);
+-    QObject::connect(sn, SIGNAL(activated(int)), mDisplay, SLOT(flushRequests()));
+ }
+ 
+ QPlatformFontDatabase *QWaylandIntegration::fontDatabase() const
+-- 
+1.9.1
+
