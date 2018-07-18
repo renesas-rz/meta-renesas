@@ -34,5 +34,5 @@ do_install_append() {
     install -Dm 644 ${WORKDIR}/${VSPFILTER_CONF} ${D}/etc/gstvspfilter.conf
 }
 
-RDEPENDS_${PN} = "kernel-module-vsp2driver"
+RDEPENDS_${PN} = "kernel-module-vsp2"
 

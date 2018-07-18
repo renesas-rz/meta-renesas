@@ -37,6 +37,7 @@ RDEPENDS_packagegroup-gstreamer1.0-plugins-base = " \
     gstreamer1.0-plugins-base-audiotestsrc \
     gstreamer1.0-plugins-base-alsa \
     gstreamer1.0-plugins-base-vspmfilter \
+    gstreamer1.0-plugin-vspfilter \
     gstreamer1.0-omx \
 "
 
