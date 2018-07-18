@@ -1,0 +1,31 @@
+From 1e98f027b330f0d49486fe6a71e643c776490fc4 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Wed, 18 Jul 2018 20:02:15 +0700
+Subject: [PATCH] bufferpool: Fix mistake in memory size
+
+This commit fix a mistake in setting memory size.
+Without this fix, the memory size is set to 0 and thus
+buffer mapping will fail (happen in encode no-copy)
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ omx/gstomxbufferpool.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxbufferpool.c b/omx/gstomxbufferpool.c
+index a8abdfb..67642f6 100644
+--- a/omx/gstomxbufferpool.c
++++ b/omx/gstomxbufferpool.c
+@@ -560,7 +560,8 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
+           pool->port->port_def.eDir == OMX_DirInput)
+         /* Propose actual area of encoder to upstream */
+         mem = gst_memory_new_wrapped (0, omx_buf->omx_buf->pBuffer,
+-            omx_buf->omx_buf->nAllocLen, 0, 0, NULL, NULL);
++            omx_buf->omx_buf->nAllocLen, 0, omx_buf->omx_buf->nAllocLen,
++            NULL, NULL);
+       else
+         mem = gst_omx_memory_allocator_alloc (pool->allocator, 0, omx_buf);
+ 
+-- 
+1.9.1
+
