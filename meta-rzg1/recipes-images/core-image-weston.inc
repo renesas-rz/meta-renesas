@@ -56,6 +56,7 @@ IMAGE_INSTALL_append = " \
   util-linux-swaponoff \
   util-linux-libsmartcols \
   can-utils \
+  audio-init \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
