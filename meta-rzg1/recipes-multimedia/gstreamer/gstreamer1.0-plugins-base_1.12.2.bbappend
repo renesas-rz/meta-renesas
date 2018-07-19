@@ -24,4 +24,5 @@ SRC_URI_append += " ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
     file://0014-gstvspmfilter-change-to-output-alloc-as-default.patch \
     file://0015-gstplaybin-change-vspmfilter-as-default-converter.patch \
     file://0019-Add-vspmfilter-replace-videoconvert.patch \
+    file://0020-vspmfilter-Fix-wrong-stride-numbers.patch \
     ", "", d)}"
