@@ -26,4 +26,5 @@ SRC_URI_append += " ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
     file://0019-Add-vspmfilter-replace-videoconvert.patch \
     file://0020-vspmfilter-Fix-wrong-stride-numbers.patch \
     file://0021-vspmfilter-replace-old-dmabuf-query-method.patch \
+    file://0022-vspmfilter-prevent-issue-lack-of-property-dmabuf-use.patch \
     ", "", d)}"
