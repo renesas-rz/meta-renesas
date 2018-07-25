@@ -1,0 +1,25 @@
+From ac2ee32d59316f80313774dae2f122b1495dc6aa Mon Sep 17 00:00:00 2001
+From: Viet Nguyen <vietn@fsoft.com.vn>
+Date: Thu, 19 Jul 2018 10:11:09 +0700
+Subject: fdpm kernel module workaround fix error when compiling
+
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+---
+ drv/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drv/Makefile b/drv/Makefile
+index 1672008..29efe30 100755
+--- a/drv/Makefile
++++ b/drv/Makefile
+@@ -8,6 +8,7 @@ CP ?= cp
+ 
+ U_INCLUDE := -I$(PWD)
+ EXTRA_CFLAGS += -D$(FDPM_CONFIG) -Wno-date-time
++EXTRA_CFLAGS += -Wno-incompatible-pointer-types
+ EXTRA_CFLAGS += $(U_INCLUDE)
+ KERNELINC ?= $(KERNELDIR)/include/linux
+ EXTRA_CFLAGS += -I$(KERNELINC)
+-- 
+2.7.4
+

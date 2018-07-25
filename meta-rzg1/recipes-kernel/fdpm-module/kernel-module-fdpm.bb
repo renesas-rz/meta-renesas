@@ -10,6 +10,7 @@ DEPENDS = "linux-renesas kernel-module-mmngr"
 PN = "kernel-module-fdpm"
 PR = "r0"
 SRC_URI = "file://fdpm-kernel.tar.bz2 \
+           file://0001-fdpm-kernel-module-workaround-fix-error-when-compili.patch \
 "
 S = "${WORKDIR}/fdpm"
 
