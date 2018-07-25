@@ -11,6 +11,7 @@ LIC_FILES_CHKSUM = " \
 DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngr"
 SRC_URI = "file://mmngr.tar.bz2 \
+           file://0001-mmgr-kernel-module-workaround-fix-error-when-compili.patch \
            file://0002-Add-physical-address-translating-feature.patch \
 "
 S = "${WORKDIR}/mmngr"

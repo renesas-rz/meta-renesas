@@ -1,0 +1,25 @@
+From cce1037a984a779f0bf01f991326eed098209ef6 Mon Sep 17 00:00:00 2001
+From: viet nguyen <vietn@fsoft.com.vn>
+Date: Wed, 25 Jul 2018 15:30:51 +0700
+Subject: mmgr kernel module workaround fix error when compiling
+
+Signed-off-by: viet nguyen <vietn@fsoft.com.vn>
+---
+ drv/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drv/Makefile b/drv/Makefile
+index 9587786..8c96022 100644
+--- a/drv/Makefile
++++ b/drv/Makefile
+@@ -6,6 +6,7 @@ mmngr-objs := $(CFILES:.c=.o)
+ EXTRA_CFLAGS += -D$(MMNGR_CONFIG)
+ EXTRA_CFLAGS += -D$(MMNGR_SSP_CONFIG)
+ EXTRA_CFLAGS += -I$(KERNELSRC)/include
++EXTRA_CFLAGS += -Wno-incompatible-pointer-types
+ 
+ all:
+ 	$(CP) ../include/mmngr_public.h $(KERNELSRC)/include
+-- 
+2.7.4
+
