@@ -1,6 +1,6 @@
-From b35fe5730072856d7b0cabe3a199096283379e03 Mon Sep 17 00:00:00 2001
+From 861e9df06cf50bd670894cd043d15f13a0075f66 Mon Sep 17 00:00:00 2001
 From: Hung Tran <hung.tran.jy@renesas.com>
-Date: Thu, 19 Jul 2018 18:53:04 +0700
+Date: Wed, 25 Jul 2018 11:48:50 +0700
 Subject: [PATCH] vspmfilter: Fix wrong stride numbers
 
 Previously vspmfilter guesses the stride numbers from video foramt.
@@ -16,11 +16,11 @@ video meta at first)
 
 Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
 ---
- gst/vspmfilter/gstvspmfilter.c | 104 ++++++++++++++++++++++-------------------
- 1 file changed, 55 insertions(+), 49 deletions(-)
+ gst/vspmfilter/gstvspmfilter.c | 108 ++++++++++++++++++++++-------------------
+ 1 file changed, 59 insertions(+), 49 deletions(-)
 
 diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
-index 9a1c8da..b37b151 100644
+index 9a1c8da..b0c6837 100644
 --- a/gst/vspmfilter/gstvspmfilter.c
 +++ b/gst/vspmfilter/gstvspmfilter.c
 @@ -1458,6 +1458,32 @@ static void cb_func(
@@ -56,7 +56,7 @@ index 9a1c8da..b37b151 100644
  
  static GstFlowReturn
  gst_vspm_filter_transform_frame (GstVideoFilter * filter,
-@@ -1480,13 +1506,15 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1480,13 +1506,16 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
    gint irc;
    unsigned long use_module;
  
@@ -71,10 +71,21 @@ index 9a1c8da..b37b151 100644
 -  struct MM_PARAM	p_adr[2];
 +  void *src_addr[3] = { 0 };
 +  void *dst_addr[3] = { 0 };
++  guint in_n_planes, out_n_planes;
  
    space = GST_VIDEO_CONVERT_CAST (filter);
    vsp_info = space->vsp_info;
-@@ -1536,32 +1564,23 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1529,6 +1558,9 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   out_height = vsp_info->out_height;
+   vspm_out_vinfo = gst_video_format_get_info (vsp_info->gst_format_out);
+ 
++  in_n_planes = GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo);
++  out_n_planes = GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo);
++
+   if ((in_width == out_width) && (in_height == out_height)) {
+     use_module = 0;
+   } else {
+@@ -1536,32 +1568,23 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
      use_module = VSP_UDS_USE;
    }
  
@@ -91,12 +102,12 @@ index 9a1c8da..b37b151 100644
 +      out_frame->data[0], out_frame->map[0].data, &src_addr[0], &dst_addr[0]);
 +  if (ret != GST_FLOW_OK) return ret;
 +
-+  if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) >= 2) {
++  if (in_n_planes >= 2 || out_n_planes >= 2) {
 +    ret = find_physical_address (space, in_frame->data[1], in_frame->map[1].data,
 +        out_frame->data[1], out_frame->map[1].data, &src_addr[1], &dst_addr[1]);
 +    if (ret != GST_FLOW_OK) return ret;
 +  }
-+  if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) >= 3) {
++  if (in_n_planes >= 3 || out_n_planes >= 3) {
 +    ret = find_physical_address (space, in_frame->data[2], in_frame->map[2].data,
 +        out_frame->data[2], out_frame->map[2].data, &src_addr[2], &dst_addr[2]);
 +    if (ret != GST_FLOW_OK) return ret;
@@ -121,7 +132,7 @@ index 9a1c8da..b37b151 100644
      src_alpha_par.addr_a  = NULL;
      src_alpha_par.alphan  = VSP_ALPHA_NO;
      src_alpha_par.alpha1  = 0;
-@@ -1580,11 +1599,11 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1580,11 +1603,11 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
      src_alpha_par.mscolor0  = 0;
      src_alpha_par.mscolor1  = 0;
  
@@ -138,7 +149,7 @@ index 9a1c8da..b37b151 100644
  
      src_par.csc         = VSP_CSC_OFF;  /* do not convert colorspace */
      src_par.width       = in_width;
-@@ -1611,25 +1630,12 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1611,25 +1634,12 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
    }
  
    {
