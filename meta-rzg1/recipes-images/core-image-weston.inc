@@ -58,6 +58,8 @@ IMAGE_INSTALL_append = " \
   util-linux-libsmartcols \
   can-utils \
   audio-init \
+  rt-tests \
+  ltp \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
