@@ -62,6 +62,8 @@ IMAGE_INSTALL_append = " \
   kernel-module-ohci-hcd-${KERNEL_VERSION} \
   kernel-module-ohci-pci-${KERNEL_VERSION} \
   ohci-init \
+  rt-tests \
+  ltp \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
