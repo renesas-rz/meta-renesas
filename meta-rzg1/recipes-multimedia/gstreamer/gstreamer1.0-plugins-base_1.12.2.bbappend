@@ -30,4 +30,5 @@ SRC_URI_append += " ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
     file://0023-vspmfilter-Fix-wrong-color-due-to-wrong-physical-add.patch \
     file://0024-vspmfilter-only-add-dmabuf-when-user-enable-it.patch \
     file://0025-vspmfilter-disable-outbuf-alloc-mode-in-default-sett.patch \
+    file://0026-playback-set-TRUE-value-for-outbuf-alloc-property-on.patch \
     ", "", d)}"
