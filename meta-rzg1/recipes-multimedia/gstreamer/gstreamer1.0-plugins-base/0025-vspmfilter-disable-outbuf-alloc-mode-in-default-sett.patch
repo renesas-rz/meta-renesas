@@ -1,0 +1,29 @@
+From 56ebd346f13e42c0df5dffa05512b63c3e368dab Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Wed, 8 Aug 2018 15:57:14 +0700
+Subject: [PATCH] vspmfilter: disable outbuf-alloc mode in default setting
+
+let vspmfilter use buffers from downstream and upstream elements as default
+User should enable outbuf-alloc Or dmabuf-use when needed
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index e9a2b28..bf02a1e 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -926,7 +926,7 @@ gst_vspm_filter_init (GstVspmFilter * space)
+   vspm_outbuf->buf_array = g_ptr_array_new ();  
+   vspm_outbuf->current_buffer_index = 0;
+   space->allocator = gst_dmabuf_allocator_new ();
+-  space->outbuf_allocate = TRUE;
++  space->outbuf_allocate = FALSE;
+   space->use_dmabuf = FALSE;
+   space->first_buff = 1;
+ 
+-- 
+2.7.4
+
