@@ -1,0 +1,195 @@
+From 0a0235c97667a5ca348ef9ef55021cb6f1f9021d Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Wed, 8 Aug 2018 17:50:59 +0700
+Subject: [PATCH] encoding: add vspmfilter and omxh264enc caps in encodebin for
+ support encode on Qt
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ gst/encoding/gstencodebin.c | 126 +++++++++++++++++++++++++-------------------
+ 1 file changed, 73 insertions(+), 53 deletions(-)
+
+diff --git a/gst/encoding/gstencodebin.c b/gst/encoding/gstencodebin.c
+index 9910e80..cec0895 100644
+--- a/gst/encoding/gstencodebin.c
++++ b/gst/encoding/gstencodebin.c
+@@ -1211,10 +1211,10 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+   StreamGroup *sgroup = NULL;
+   GstPad *sinkpad, *srcpad, *muxerpad = NULL;
+   /* Element we will link to the encoder */
+-  GstElement *last = NULL;
++  GstElement *last = NULL, *m_video_capsfilter = NULL, *m_image_capsfilter = NULL;
+   GstElement *encoder = NULL;
+   GList *tmp, *tosync = NULL;
+-  GstCaps *format, *restriction;
++  GstCaps *format, *restriction, *m_video_caps, *m_image_caps;
+   const gchar *missing_element_name;
+ 
+   format = gst_encoding_profile_get_format (sprof);
+@@ -1402,6 +1402,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+   /* 1. Create the encoder */
+   GST_LOG ("Adding encoder");
+   sgroup->encoder = _get_encoder (ebin, sprof);
++  last = sgroup->encoder;
+   if (sgroup->encoder != NULL) {
+     gst_bin_add ((GstBin *) ebin, sgroup->encoder);
+     tosync = g_list_append (tosync, sgroup->encoder);
+@@ -1416,6 +1417,12 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+       goto encoder_link_failure;
+     g_object_unref (sinkpad);
+     g_object_unref (srcpad);
++
++    if ( strcmp(gst_element_get_name(sgroup->encoder),"omxh264enc-omxh264enc0") == 0) {
++      g_object_set (sgroup->encoder, "target-bitrate", 10485760, "control-rate", (guint32) 0xffffffff,  NULL);
++      g_object_set (sgroup->encoder, "no-copy", TRUE, NULL);
++    }
++
+   } else if (gst_encoding_profile_get_preset (sgroup->profile)
+       || gst_encoding_profile_get_preset_name (sgroup->profile)) {
+ 
+@@ -1435,26 +1442,27 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+   GST_LOG ("Adding capsfilter for restriction caps : %" GST_PTR_FORMAT,
+       restriction);
+ 
+-  last = sgroup->capsfilter = gst_element_factory_make ("capsfilter", NULL);
+-  if (restriction && !gst_caps_is_any (restriction))
++  if (restriction && !gst_caps_is_any (restriction)) {
++    last = sgroup->capsfilter = gst_element_factory_make ("capsfilter", NULL);
+     g_object_set (sgroup->capsfilter, "caps", restriction, NULL);
+-  gst_bin_add ((GstBin *) ebin, sgroup->capsfilter);
+-  tosync = g_list_append (tosync, sgroup->capsfilter);
+-  if (sgroup->encoder == NULL) {
+-    /* no encoder available but it might be possible to just do passthrough, so
+-     * let's just set up a fake pad to detect that encoding was attempted and
+-     * if so it posts the missing plugin message */
+-    sgroup->fakesink = gst_element_factory_make ("fakesink", NULL);
+-    g_object_set (sgroup->fakesink, "async", FALSE, NULL);
+-    gst_bin_add (GST_BIN_CAST (ebin), sgroup->fakesink);
+-    tosync = g_list_append (tosync, sgroup->fakesink);
+-    encoder = sgroup->fakesink;
+-
+-    _set_up_fake_encoder_pad_probe (ebin, sgroup);
+-  } else {
+-    encoder = sgroup->encoder;
++    gst_bin_add ((GstBin *) ebin, sgroup->capsfilter);
++    tosync = g_list_append (tosync, sgroup->capsfilter);
++    if (sgroup->encoder == NULL) {
++      /* no encoder available but it might be possible to just do passthrough, so
++       * let's just set up a fake pad to detect that encoding was attempted and
++       * if so it posts the missing plugin message */
++      sgroup->fakesink = gst_element_factory_make ("fakesink", NULL);
++      g_object_set (sgroup->fakesink, "async", FALSE, NULL);
++      gst_bin_add (GST_BIN_CAST (ebin), sgroup->fakesink);
++      tosync = g_list_append (tosync, sgroup->fakesink);
++      encoder = sgroup->fakesink;
++
++      _set_up_fake_encoder_pad_probe (ebin, sgroup);
++    } else {
++      encoder = sgroup->encoder;
++    }
++    fast_element_link (sgroup->capsfilter, encoder);
+   }
+-  fast_element_link (sgroup->capsfilter, encoder);
+   sgroup->restriction_sid = g_signal_connect (sprof, "notify::restriction-caps",
+       G_CALLBACK (_profile_restriction_caps_cb), sgroup);
+ 
+@@ -1464,6 +1472,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+     const gboolean native_video =
+         ! !(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
+     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
++    GstElement *vspmfilter1 = NULL;
+ 
+     GST_LOG ("Adding conversion elements for video stream");
+ 
+@@ -1483,44 +1492,55 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
+         goto missing_element;
+       }
+ 
+-      gst_bin_add_many ((GstBin *) ebin, cspace, scale, cspace2, NULL);
+-      tosync = g_list_append (tosync, cspace);
+-      tosync = g_list_append (tosync, scale);
+-      tosync = g_list_append (tosync, cspace2);
++//-----Add vspmfilter convert for encode-----------------------------------
++      vspmfilter1 = gst_element_factory_make ("vspmfilter",NULL);
+ 
+-      sgroup->converters = g_list_prepend (sgroup->converters, cspace);
+-      sgroup->converters = g_list_prepend (sgroup->converters, scale);
+-      sgroup->converters = g_list_prepend (sgroup->converters, cspace2);
++      if(!vspmfilter1) {
++               missing_element_name = "vspmfilter";
++               goto missing_element;
++      }
+ 
+-      if (!fast_element_link (cspace, scale) ||
+-          !fast_element_link (scale, cspace2))
+-        goto converter_link_failure;
+-    }
++      g_object_set (vspmfilter1, "outbuf-alloc", FALSE, NULL);
++      g_object_set (vspmfilter1, "dmabuf-use", FALSE, NULL);
+ 
+-    if (!gst_encoding_video_profile_get_variableframerate
+-        (GST_ENCODING_VIDEO_PROFILE (sprof))) {
+-      vrate = gst_element_factory_make ("videorate", NULL);
+-      if (!vrate) {
+-        missing_element_name = "videorate";
+-        goto missing_element;
++      m_video_capsfilter = gst_element_factory_make("capsfilter", "video_caps");
++      m_image_capsfilter = gst_element_factory_make("capsfilter", "image_caps");
++
++      if(!m_video_capsfilter || !m_image_capsfilter) {
++               missing_element_name = "capsfilter for vspmfilter";
++               goto missing_element;
+       }
+ 
+-      gst_bin_add ((GstBin *) ebin, vrate);
+-      tosync = g_list_prepend (tosync, vrate);
+-      sgroup->converters = g_list_prepend (sgroup->converters, vrate);
+-
+-      if ((!native_video && !fast_element_link (cspace2, vrate))
+-          || !fast_element_link (vrate, last))
+-        goto converter_link_failure;
+-
+-      if (!native_video)
+-        last = cspace;
+-      else
+-        last = vrate;
+-    } else if (!native_video) {
+-      if (!fast_element_link (cspace2, last))
+-        goto converter_link_failure;
+-      last = cspace;
++      m_video_caps  = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "NV12", "width", G_TYPE_INT, 640, "height", G_TYPE_INT, 480, NULL);
++      g_object_set (G_OBJECT (m_video_capsfilter), "caps", m_video_caps, NULL);
++      gst_caps_unref (m_video_caps);
++
++      m_image_caps  = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "YUY2", "width", G_TYPE_INT, 640, "height", G_TYPE_INT, 480, NULL);
++      g_object_set (G_OBJECT (m_image_capsfilter), "caps", m_image_caps, NULL);
++      gst_caps_unref (m_image_caps);
++
++      if ( strcmp(gst_element_get_name(last),"omxh264enc-omxh264enc0") == 0 ){
++               gst_bin_add_many ((GstBin *) ebin, vspmfilter1, m_video_capsfilter, NULL);
++               tosync = g_list_append (tosync, vspmfilter1);
++               tosync = g_list_append (tosync, m_video_capsfilter);
++
++               sgroup->converters = g_list_prepend (sgroup->converters, vspmfilter1);
++               sgroup->converters = g_list_prepend (sgroup->converters, m_video_capsfilter);
++               gst_element_link_many (vspmfilter1, m_video_capsfilter, last, NULL);
++      }
++      else {
++               gst_bin_add_many ((GstBin *) ebin, vspmfilter1, m_image_capsfilter, NULL);
++               tosync = g_list_append (tosync, vspmfilter1);
++               tosync = g_list_append (tosync, m_image_capsfilter);
++
++               sgroup->converters = g_list_prepend (sgroup->converters, vspmfilter1);
++               sgroup->converters = g_list_prepend (sgroup->converters, m_image_capsfilter);
++               gst_element_link_many (vspmfilter1, m_image_capsfilter, last, NULL);
++      }
++  }
++
++    if (!native_video) {
++        last = vspmfilter1;
+     }
+ 
+   } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)
+-- 
+1.9.1
+
