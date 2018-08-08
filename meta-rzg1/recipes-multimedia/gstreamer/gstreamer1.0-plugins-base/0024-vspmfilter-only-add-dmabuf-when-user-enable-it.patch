@@ -1,0 +1,138 @@
+From a29bc0e99d82f857e6a948a471700f5e95560879 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Wed, 8 Aug 2018 14:57:48 +0700
+Subject: [PATCH] vspmfilter: only add dmabuf when user enable it
+
+Before, dmabuf was added as default when outbuf-alloc mode was set.
+There should be a case that user want to use output buffer without dmabuf.
+This commit enable user to choose whether dmabuf is needed or not.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 74 ++++++++++++++++++++++++------------------
+ 1 file changed, 42 insertions(+), 32 deletions(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index f9016b1..0fde63a 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -556,7 +556,7 @@ gst_vspm_filter_set_info (GstVideoFilter * filter,
+     }
+ 
+     for (i = 0; i < 5; i++){
+-      GstBuffer *buf = gst_buffer_new ();;
++      GstBuffer *buf;
+       vspm_used = vspm_out->used;
+       if (R_MM_OK == mmngr_alloc_in_user(&vspm_out->vspm[vspm_used].mmng_pid,
+                                 size,
+@@ -569,36 +569,42 @@ gst_vspm_filter_set_info (GstVideoFilter * filter,
+                             vspm_out->vspm[vspm_used].phard_addr);
+         g_array_append_val (outbuf_vaddr_array,
+                             vspm_out->vspm[vspm_used].puser_virt_addr);
+-
+-        for (j = 0; j < n_planes; j++) {
+-          gint res;
+-          guint phys_addr;
+-          GstMemory *mem;
+-          phys_addr = (guint) vspm_out->vspm[vspm_used].phard_addr + offset[j];
+-          /* Calculate offset between physical address and page boundary */
+-          page_offset[j] = phys_addr & (page_size - 1);
+-          /* When downstream plugins do mapping from dmabuf fd it requires
+-          * mapping from boundary page and size align for page size so
+-          * memory for plane must increase to handle for this case */
+-          plane_size_ext[j] = GST_ROUND_UP_N (plane_size[j] + page_offset[j],
+-                    page_size);
+-          res =
+-            mmngr_export_start_in_user (&vspm_out->vspm[vspm_used].dmabuf_pid[j],
+-          plane_size_ext[j], (unsigned long) phys_addr, &dmabuf_fd[j]);
+-          if (res != R_MM_OK) {
+-            GST_ERROR_OBJECT (space,
+-              "mmngr_export_start_in_user failed (phys_addr:0x%08x)",
+-              phys_addr);
+-            return GST_FLOW_ERROR;
++        if (space->use_dmabuf) {
++          buf = gst_buffer_new ();
++          for (j = 0; j < n_planes; j++) {
++            gint res;
++            guint phys_addr;
++            GstMemory *mem;
++            phys_addr = (guint) vspm_out->vspm[vspm_used].phard_addr + offset[j];
++            /* Calculate offset between physical address and page boundary */
++            page_offset[j] = phys_addr & (page_size - 1);
++            /* When downstream plugins do mapping from dmabuf fd it requires
++            * mapping from boundary page and size align for page size so
++            * memory for plane must increase to handle for this case */
++            plane_size_ext[j] = GST_ROUND_UP_N (plane_size[j] + page_offset[j],
++                      page_size);
++            res =
++              mmngr_export_start_in_user (&vspm_out->vspm[vspm_used].dmabuf_pid[j],
++            plane_size_ext[j], (unsigned long) phys_addr, &dmabuf_fd[j]);
++            if (res != R_MM_OK) {
++              GST_ERROR_OBJECT (space,
++                "mmngr_export_start_in_user failed (phys_addr:0x%08x)",
++                phys_addr);
++              return GST_FLOW_ERROR;
++            }
++
++            /* Set offset's information */
++            mem = gst_dmabuf_allocator_alloc (space->allocator, dmabuf_fd[j],
++                     plane_size_ext[j]);
++            mem->offset = page_offset[j];
++            /* Only allow to access plane size */
++            mem->size = plane_size[j];
++            gst_buffer_append_memory (buf, mem);
+           }
+-
+-          /* Set offset's information */
+-          mem = gst_dmabuf_allocator_alloc (space->allocator, dmabuf_fd[j],
+-                   plane_size_ext[j]);
+-          mem->offset = page_offset[j];
+-          /* Only allow to access plane size */
+-          mem->size = plane_size[j];
+-          gst_buffer_append_memory (buf, mem);
++        } else {
++          buf = gst_buffer_new_wrapped (
++                  (gpointer)vspm_out->vspm[vspm_used].puser_virt_addr,
++                  (gsize)size);
+         }
+       } else {
+         GST_ERROR_OBJECT (space,
+@@ -785,7 +791,7 @@ gst_vspm_filter_class_init (GstVspmFilterClass * klass)
+         FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+   g_object_class_install_property (gobject_class, PROP_VSPM_DMABUF,
+       g_param_spec_boolean ("dmabuf-use", "Use DMABUF mode",
+-        "This setting was removed",
++        "Whether or not to use dmabuf for output buffer",
+         FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+   gstelement_class->change_state = gst_vspmfilter_change_state;
+   gstbasetransform_class->transform_caps =
+@@ -921,6 +927,7 @@ gst_vspm_filter_init (GstVspmFilter * space)
+   vspm_outbuf->current_buffer_index = 0;
+   space->allocator = gst_dmabuf_allocator_new ();
+   space->outbuf_allocate = TRUE;
++  space->use_dmabuf = FALSE;
+   space->first_buff = 1;
+ 
+   for (i = 0; i < sizeof(vspm_in->vspm)/sizeof(vspm_in->vspm[0]); i++) {
+@@ -946,7 +953,9 @@ gst_vspm_filter_set_property (GObject * object, guint property_id,
+       space->outbuf_allocate = g_value_get_boolean (value);
+       break;
+     case PROP_VSPM_DMABUF:
+-      printf ("WARNING: vspmfilter: dmabuf-use was removed, dmabuf is now supported in mode outbuf-alloc=true\n");
++      space->use_dmabuf = g_value_get_boolean (value);
++      if (space->use_dmabuf)
++          space->outbuf_allocate = TRUE;
+       break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+@@ -964,6 +973,7 @@ gst_vspm_filter_get_property (GObject * object, guint property_id,
+       g_value_set_boolean (value, space->outbuf_allocate);
+       break;
+     case PROP_VSPM_DMABUF:
++      g_value_set_boolean (value, space->use_dmabuf);
+       break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+-- 
+2.7.4
+

@@ -28,4 +28,5 @@ SRC_URI_append += " ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
     file://0021-vspmfilter-replace-old-dmabuf-query-method.patch \
     file://0022-vspmfilter-prevent-issue-lack-of-property-dmabuf-use.patch \
     file://0023-vspmfilter-Fix-wrong-color-due-to-wrong-physical-add.patch \
+    file://0024-vspmfilter-only-add-dmabuf-when-user-enable-it.patch \
     ", "", d)}"
