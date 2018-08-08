@@ -32,6 +32,9 @@ SRC_URI += " \
     file://0002-waylandsink-Add-set-window-scale-feature.patch \
     file://0003-waylandsink-Add-fullscreen-display-feature.patch \
     file://0004-Solve-issue-horizontal-noise-from-camera-due-to-usin.patch \
+    file://0005-camerabin-add-capsfilter-into-wrapper-camerabin-for-.patch \
+    file://0006-Change-encode-element-from-theora-to-omxh264enc.patch \
+    file://0007-Temperory-disable-audio-as-RCA-camera-do-not-use-it.patch \
 "
 
 RDEPENDS_gstreamer1.0-plugins-bad_append = " libwayland-egl gles-user-module "

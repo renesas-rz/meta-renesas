@@ -1,0 +1,41 @@
+From 8da98041cb7bd422f54d2961752564010d374152 Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Fri, 23 Dec 2016 15:01:09 +0700
+Subject: [PATCH 3/3] Temperory disable audio as RCA camera do not use it
+
+If we don't disable audio, it will lead to failed to run video record mode and failed to record.
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ gst/camerabin2/gstcamerabin2.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/gst/camerabin2/gstcamerabin2.c b/gst/camerabin2/gstcamerabin2.c
+index c82826a..bd50867 100644
+--- a/gst/camerabin2/gstcamerabin2.c
++++ b/gst/camerabin2/gstcamerabin2.c
+@@ -1556,13 +1556,14 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
+       }
+       gst_caps_unref (caps);
+ 
+-      caps = gst_caps_new_empty_simple ("audio/mpeg");
+-      if (!gst_encoding_container_profile_add_profile (prof,
+-              (GstEncodingProfile *) gst_encoding_audio_profile_new (caps,
+-                  NULL, NULL, 1))) {
+-        GST_WARNING_OBJECT (camera, "Failed to create encoding profiles");
+-      }
+-      gst_caps_unref (caps);
++//    DEBUG: Temporary disable audio for debug:
++//      caps = gst_caps_new_empty_simple ("audio/mpeg");
++//      if (!gst_encoding_container_profile_add_profile (prof,
++//              (GstEncodingProfile *) gst_encoding_audio_profile_new (caps,
++//                  NULL, NULL, 1))) {
++//        GST_WARNING_OBJECT (camera, "Failed to create encoding profiles");
++//      }
++//      gst_caps_unref (caps);
+ 
+       camera->video_profile = (GstEncodingProfile *) prof;
+       camera->video_profile_switch = TRUE;
+-- 
+1.9.1
+
