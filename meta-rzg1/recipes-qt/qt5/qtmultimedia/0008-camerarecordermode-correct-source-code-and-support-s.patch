@@ -1,0 +1,82 @@
+From 2bac6178ce1616c614634a6b6fa7ed0b75c38f8c Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Thu, 9 Aug 2018 11:21:02 +0700
+Subject: [PATCH] camerarecordermode: correct source code and support show
+ pipeline graph
+
+correct caps position
+set default property for vspmfilter
+remove out-height property and out-width property
+support show pipeline graph
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ .../qgstreamercamerarecordermodesession.cpp        | 33 +++++++++++++---------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
+
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
+index 94ff929..39ebea1 100644
+--- a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
+@@ -200,11 +200,6 @@ void QGstreamerCameraRecorderModeSession::componentComplete()
+     m_waylandsink = gst_element_factory_make("waylandsink", "Waylandsink");
+     m_filesink = gst_element_factory_make("filesink", "Filesink");
+ 
+-    gst_bin_add_many (GST_BIN (m_recorder), m_v4l2src, m_v4l2src_capsfilter, m_tee, m_vspmfilter1, m_v1_capsfilter, m_omxh264enc, m_filesink, m_vspmfilter2, m_v2_capsfilter, m_waylandsink, NULL);
+-    gst_element_link_many (m_v4l2src, m_v4l2src_capsfilter, m_tee, NULL);
+-	gst_element_link_many (m_vspmfilter1, m_v1_capsfilter, m_omxh264enc, m_filesink, NULL);
+-    gst_element_link_many (m_vspmfilter2, m_v2_capsfilter, m_waylandsink, NULL);
+-
+     m_v4l2src_caps  = gst_caps_new_simple ("video/x-raw",
+ 									"format", G_TYPE_STRING, "UYVY",
+ 								    "width", G_TYPE_INT, 720,
+@@ -223,6 +218,11 @@ void QGstreamerCameraRecorderModeSession::componentComplete()
+ 									"height", G_TYPE_INT, 480,
+                                      NULL);
+ 
++    gst_bin_add_many (GST_BIN (m_recorder), m_v4l2src, m_v4l2src_capsfilter, m_tee, m_vspmfilter1, m_v1_capsfilter, m_omxh264enc, m_filesink, m_vspmfilter2, m_v2_capsfilter, m_waylandsink, NULL);
++    gst_element_link_many (m_v4l2src, m_v4l2src_capsfilter, m_tee, NULL);
++    gst_element_link_many (m_vspmfilter1, m_v1_capsfilter, m_omxh264enc, m_filesink, NULL);
++    gst_element_link_many (m_vspmfilter2, m_v2_capsfilter, m_waylandsink, NULL);
++
+     g_object_set (G_OBJECT (m_v4l2src_capsfilter), "caps", m_v4l2src_caps, NULL);
+     gst_caps_unref (m_v4l2src_caps);
+ 
+@@ -276,19 +276,26 @@ void QGstreamerCameraRecorderModeSession::start()
+ #ifdef DEBUG_ENCODER
+     qDebug() << Q_FUNC_INFO;
+ #endif
+-	 bool ok;
+-	 g_object_set (G_OBJECT (m_filesink), "location", m_fsinklocation.toLatin1().constData(), NULL);
+-	 g_object_set (G_OBJECT (m_vspmfilter1), "outbuf-alloc", 1, NULL);
+-	 g_object_set (G_OBJECT (m_vspmfilter2), "outbuf-alloc", 0, NULL);
+-	 g_object_set (G_OBJECT (m_omxh264enc), "target-bitrate", 10485760, NULL);
++     bool ok;
++     g_object_set (G_OBJECT (m_filesink), "location", m_fsinklocation.toLatin1().constData(), NULL);
++     g_object_set (G_OBJECT (m_vspmfilter1), "outbuf-alloc", 0, NULL);
++     g_object_set (G_OBJECT (m_vspmfilter1), "dmabuf-use", 0, NULL);
++     g_object_set (G_OBJECT (m_vspmfilter2), "outbuf-alloc", 1, NULL);
++     g_object_set (G_OBJECT (m_vspmfilter2), "dmabuf-use", 1, NULL);
++     g_object_set (G_OBJECT (m_omxh264enc), "target-bitrate", 10485760, NULL);
++     g_object_set (G_OBJECT (m_omxh264enc), "no-copy", 1, NULL);
+      g_object_set (G_OBJECT (m_waylandsink), "position-x", m_x_position.toInt(&ok, 10), NULL);
+      g_object_set (G_OBJECT (m_waylandsink), "position-y", m_y_position.toInt(&ok, 10), NULL);
+-     g_object_set (G_OBJECT (m_waylandsink), "out-width", m_out_width.toInt(&ok, 10), NULL);
+-     g_object_set (G_OBJECT (m_waylandsink), "out-height", m_out_height.toInt(&ok, 10), NULL);
+ 
+-	 g_object_set (G_OBJECT (m_waylandsink), "qos", 0, NULL);
++     g_object_set (G_OBJECT (m_waylandsink), "qos", 0, NULL);
+      gst_element_set_state(m_recorder, GST_STATE_PLAYING);
+     // gst_element_set_state(m_recorder, GST_STATE_PAUSED);
++
++#ifdef DEBUG_VO_BIN_DUMP
++     gst_debug_bin_to_dot_file_with_ts(GST_BIN(m_recorder),
++                                  GstDebugGraphDetails(GST_DEBUG_GRAPH_SHOW_ALL /*GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE | GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS | GST_DEBUG_GRAPH_SHOW_STATES*/),
++                                  "camerarecordermode");
++#endif
+ }
+ 
+ void QGstreamerCameraRecorderModeSession::stop()
+-- 
+1.9.1
+
