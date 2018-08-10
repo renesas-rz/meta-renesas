@@ -23,6 +23,7 @@ SRC_URI_append = " \
     file://0006-add_QtGstLaunch_service.patch \
     file://0007-declarative-camera-correct-framerate-to-fix-not-nego.patch \
     file://0008-camerarecordermode-correct-source-code-and-support-s.patch \
+    file://0009-gstlaunch-fix-null-pointer-issue-when-enable-develop.patch \
 "
 
 RDEPENDS_${PN}-plugins += " \

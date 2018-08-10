@@ -1,0 +1,47 @@
+From dbfc34b7379f197dfea68b2ca90a5491112e2424 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Thu, 9 Aug 2018 18:50:22 +0700
+Subject: [PATCH] gstlaunch: fix null pointer issue when enable developer mode
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ src/multimedia/gstlaunch/qgstlaunch.h        | 4 ++--
+ src/multimedia/gstlaunch/qgstlaunchcontrol.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/multimedia/gstlaunch/qgstlaunch.h b/src/multimedia/gstlaunch/qgstlaunch.h
+index f106a77..e02362f 100644
+--- a/src/multimedia/gstlaunch/qgstlaunch.h
++++ b/src/multimedia/gstlaunch/qgstlaunch.h
+@@ -113,7 +113,7 @@ public:
+         PluginError
+     };
+     
+-    QGstLaunch(QObject *parent = 0);
++    QGstLaunch(QObject *parent = Q_NULLPTR);
+     ~QGstLaunch();
+     
+     //properties processing
+@@ -181,4 +181,4 @@ Q_MEDIA_ENUM_DEBUG(QGstLaunch, Error)
+ Q_MEDIA_ENUM_DEBUG(QGstLaunch, MediaFormat)
+ Q_MEDIA_ENUM_DEBUG(QGstLaunch, MediaCodecs)
+ 
+-#endif  // QGSTLAUNCH_H
+\ No newline at end of file
++#endif  // QGSTLAUNCH_H
+diff --git a/src/multimedia/gstlaunch/qgstlaunchcontrol.h b/src/multimedia/gstlaunch/qgstlaunchcontrol.h
+index b532fde..9744066 100644
+--- a/src/multimedia/gstlaunch/qgstlaunchcontrol.h
++++ b/src/multimedia/gstlaunch/qgstlaunchcontrol.h
+@@ -44,7 +44,7 @@ Q_SIGNALS:
+     void signal_controlFpsChanged();
+     
+ protected:
+-    QGstLaunchControl(QObject* parent = 0);
++    QGstLaunchControl(QObject* parent = Q_NULLPTR);
+ };
+ 
+ #define QGstLaunchControl_iid "org.qt-project.qt.gstlaunchcontrol/5.0"
+-- 
+1.9.1
+
