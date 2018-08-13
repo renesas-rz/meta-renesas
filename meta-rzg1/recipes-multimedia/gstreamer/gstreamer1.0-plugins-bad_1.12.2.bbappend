@@ -35,6 +35,7 @@ SRC_URI += " \
     file://0005-camerabin-add-capsfilter-into-wrapper-camerabin-for-.patch \
     file://0006-Change-encode-element-from-theora-to-omxh264enc.patch \
     file://0007-Temperory-disable-audio-as-RCA-camera-do-not-use-it.patch \
+    file://0005-waylandsink-Don-t-wait-for-the-wl_surface_frame-call.patch \
 "
 
 RDEPENDS_gstreamer1.0-plugins-bad_append = " libwayland-egl gles-user-module "

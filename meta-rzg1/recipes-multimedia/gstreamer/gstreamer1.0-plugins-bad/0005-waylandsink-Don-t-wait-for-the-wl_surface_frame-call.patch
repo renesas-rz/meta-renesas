@@ -1,0 +1,38 @@
+From cc4b740a8703110605c6d6703c651d242a62dc8d Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 13 Aug 2018 14:13:37 +0700
+Subject: [PATCH] waylandsink: Don't wait for the wl_surface_frame callback  to
+ notify the compositor of a wl_buffer
+
+When the frame rendering delays, the weston compositor can drop frames
+and catch up with the on-time processing by itself.
+
+This commit refers to a commit from Tung-Dang for Gstreamer v1.4.5
+originally it was made by Kazunori Kobayashi <kkobayas@igel.co.jp>
+in Gstreamer v1.2.3
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ ext/wayland/gstwaylandsink.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 34d0d62..f0f135a 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -752,12 +752,6 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+   wl_display_dispatch_queue_pending (sink->display->display, sink->frame_queue);
+   g_mutex_lock (&sink->render_lock);
+ 
+-  while (sink->redraw_pending == TRUE) {
+-    g_mutex_unlock (&sink->render_lock);
+-    wl_display_dispatch_queue (sink->display->display, sink->frame_queue);
+-    g_mutex_lock (&sink->render_lock);
+-  }
+-
+   /* make sure that the application has called set_render_rectangle() */
+   if (G_UNLIKELY (sink->window->render_rectangle.w == 0))
+     goto no_window_size;
+-- 
+2.7.4
+
