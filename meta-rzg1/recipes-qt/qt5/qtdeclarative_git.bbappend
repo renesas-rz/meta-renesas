@@ -11,6 +11,9 @@ LIC_FILES_CHKSUM = " \
 "
 FILESEXTRAPATHS_prepend := "${THISDIR}/qtdeclarative:"
 SRC_URI += " \
-    file://0001-quick-scenegraph-fix-texture-width-alignment-issue-f.patch \
     file://0001-Build-developer-mode.patch \
+"
+
+SRC_URI_iwg21m += " \
+    file://0001-quick-scenegraph-fix-texture-width-alignment-issue-f.patch \
 "
