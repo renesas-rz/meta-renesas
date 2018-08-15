@@ -21,18 +21,8 @@ QT5_WAYLAND_PACKAGES = " \
 
 QT5_EXAMPLES = " \
 	qtbase-examples \
-	qtconnectivity-examples \
 	qtdeclarative-examples \
-	qt3d-examples \
 	qtmultimedia-examples \	
-	qt5ledscreen \
-	qt5nmapcarousedemo \
-	qt5nmapper \
-	qt5-opengles2-test \
-	qtsmarthome \
-	quitbattery \
-	qt5everywheredemo \
-	cinematicexperience \
 "
 
 RDEPENDS_${PN} += " \
