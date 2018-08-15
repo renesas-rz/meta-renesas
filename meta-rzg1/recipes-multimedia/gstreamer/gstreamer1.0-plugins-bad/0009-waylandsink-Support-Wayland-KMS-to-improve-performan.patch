@@ -1,0 +1,503 @@
+From ae117ec080e7f484a26349d7c8b8deffe6d156d7 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Wed, 15 Aug 2018 18:38:53 +0700
+Subject: [PATCH] waylandsink: Support Wayland KMS to improve performance
+
+This commit adds support for wayland-kms.
+With this update, if wayland-kms is available,
+waylandsink will always use it instead of SHM.
+Note that dmabuf mode is unaffected.
+
+By creating buffers from wayland-kms, wayland
+buffers are ensured to be contiguous and thus
+can be used by hardare elements like vspmfilter.
+This improve performance when using with those elements.
+(Before this, waylandsink needs to copy data to
+SHM buffers, thus the performance is low).
+
+A sameple pipeline where performance improve is:
+gst-launch-1.0 filesrc location=videos/RenesasElectronics_1920x1080_60fps.mp4 ! qtdemux ! h264parse ! omxh264dec  ! vspmfilter outbuf-alloc=false ! video/x-raw,format=BGRA  ! waylandsink
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ configure.ac                 |  7 ++++
+ ext/wayland/Makefile.am      | 15 +++++++++
+ ext/wayland/gstwaylandsink.c | 73 ++++++++++++++++++++++++++++++++++++----
+ ext/wayland/wldisplay.c      | 59 +++++++++++++++++++++++++++++++++
+ ext/wayland/wldisplay.h      |  6 ++++
+ ext/wayland/wlvideoformat.c  | 79 ++++++++++++++++++++++++++++++++++++++++++++
+ ext/wayland/wlvideoformat.h  |  4 +++
+ 7 files changed, 237 insertions(+), 6 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index e9a64e9..d2cdb4a 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2280,6 +2280,13 @@ AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
+     ],
+     [ HAVE_WAYLAND="no"
+   ])
++  PKG_CHECK_MODULES(WAYLAND_KMS, libdrm libkms wayland-kms gstreamer-allocators-1.0,
++    [HAVE_WAYLAND="yes"
++        AC_DEFINE(HAVE_WAYLAND_KMS, 1, [Define if wayland KMS protocol is available])],
++       [HAVE_WAYLAND_KMS="no"])
++  PKG_CHECK_MODULES(WAYLAND_PROTOCOLS, [wayland-protocols],
++      [ac_wayland_protocols_pkgdatadir=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`])
++  AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, $PKG_CONFIG_SYSROOT_DIR$ac_wayland_protocols_pkgdatadir)
+ ])
+ 
+ dnl **** WebP ****
+diff --git a/ext/wayland/Makefile.am b/ext/wayland/Makefile.am
+index 8442dbd..afbe619 100644
+--- a/ext/wayland/Makefile.am
++++ b/ext/wayland/Makefile.am
+@@ -15,6 +15,10 @@ libgstwaylandsink_la_SOURCES =  \
+ 	wlvideoformat.c \
+ 	wllinuxdmabuf.c
+ 
++libgstwaylandsink_la_SOURCES += \
++	waylandpool.c \
++	waylandkmspool.c
++
+ nodist_libgstwaylandsink_la_SOURCES = \
+ 	viewporter-protocol.c \
+ 	linux-dmabuf-unstable-v1-protocol.c
+@@ -24,12 +28,19 @@ libgstwaylandsink_la_CFLAGS = \
+ 	$(GST_PLUGINS_BASE_CFLAGS) \
+ 	$(GST_CFLAGS) \
+ 	$(WAYLAND_CFLAGS)
++
++libgstwaylandsink_la_CFLAGS += \
++	$(WAYLAND_KMS_CFLAGS)
++
+ libgstwaylandsink_la_LIBADD = \
+ 	$(top_builddir)/gst-libs/gst/wayland/libgstwayland-$(GST_API_VERSION).la \
+ 	$(GST_PLUGINS_BASE_LIBS) \
+ 	-lgstvideo-$(GST_API_VERSION) \
+ 	-lgstallocators-$(GST_API_VERSION) \
+ 	$(WAYLAND_LIBS)
++
++libgstwaylandsink_la_LIBADD += $(WAYLAND_KMS_LIBS)
++
+ libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+ libgstwaylandsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+ 
+@@ -42,6 +53,10 @@ noinst_HEADERS = \
+ 	wlvideoformat.h \
+ 	wllinuxdmabuf.h
+ 
++noinst_HEADERS += \
++	waylandpool.h \
++	waylandkmspool.h
++
+ CLEANFILES = $(BUILT_SOURCES)
+ 
+ .SECONDEXPANSION:
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 77f38f3..b3cbe3d 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -51,6 +51,9 @@
+ #include <gst/wayland/wayland.h>
+ #include <gst/video/videooverlay.h>
+ 
++#include "waylandpool.h"
++#include "waylandkmspool.h"
++
+ /* signals */
+ enum
+ {
+@@ -392,6 +395,13 @@ gst_wayland_sink_find_display (GstWaylandSink * sink)
+           g_error_free (error);
+           ret = FALSE;
+         }
++        else {
++          /* inform the world about the new display */
++          context =
++              gst_wayland_display_handle_context_new (sink->display->display);
++          msg = gst_message_new_have_context (GST_OBJECT_CAST (sink), context);
++          gst_element_post_message (GST_ELEMENT_CAST (sink), msg);
++        }
+       }
+     }
+   }
+@@ -515,14 +525,30 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+     GArray *formats;
+     gint i;
+     guint fmt;
++#ifdef HAVE_WAYLAND_KMS
++    GValue kms_list = G_VALUE_INIT;
++#endif
+ 
+     g_value_init (&shm_list, GST_TYPE_LIST);
+     g_value_init (&dmabuf_list, GST_TYPE_LIST);
++    g_value_init (&value, G_TYPE_STRING);
++#ifdef HAVE_WAYLAND_KMS
++    g_value_init (&kms_list, GST_TYPE_LIST);
++
++    /* Add corresponding KMS formats, not use shm if KMS is available */
++    formats = sink->display->kms_formats;
++    for (i = 0; i < formats->len; i++) {
++      fmt = g_array_index (formats, uint32_t, i);
++      g_value_set_static_string (&value, gst_wl_kms_format_to_string (fmt));
++      gst_value_list_append_and_take_value (&kms_list, &value);
++    }
+ 
++    gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
++        &kms_list);
++#else
+     /* Add corresponding shm formats */
+     formats = sink->display->shm_formats;
+     for (i = 0; i < formats->len; i++) {
+-      g_value_init (&value, G_TYPE_STRING);
+       fmt = g_array_index (formats, uint32_t, i);
+       g_value_set_static_string (&value, gst_wl_shm_format_to_string (fmt));
+       gst_value_list_append_and_take_value (&shm_list, &value);
+@@ -530,11 +556,11 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+ 
+     gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
+         &shm_list);
++#endif
+ 
+     /* Add corresponding dmabuf formats */
+     formats = sink->display->dmabuf_formats;
+     for (i = 0; i < formats->len; i++) {
+-      g_value_init (&value, G_TYPE_STRING);
+       fmt = g_array_index (formats, uint32_t, i);
+       g_value_set_static_string (&value, gst_wl_dmabuf_format_to_string (fmt));
+       gst_value_list_append_and_take_value (&dmabuf_list, &value);
+@@ -568,18 +594,21 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
+   gsize size = sink->video_info.size;
+   GstAllocator *alloc;
+ 
+-  pool = gst_video_buffer_pool_new ();
++  pool = gst_wayland_buffer_pool_new(sink->display);
+ 
+   structure = gst_buffer_pool_get_config (pool);
+   gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
+ 
++#ifndef HAVE_WAYLAND_KMS
+   alloc = gst_wl_shm_allocator_get ();
+   gst_buffer_pool_config_set_allocator (structure, alloc, NULL);
++  g_object_unref (alloc);
++#endif
++
+   if (!gst_buffer_pool_set_config (pool, structure)) {
+     g_object_unref (pool);
+     pool = NULL;
+   }
+-  g_object_unref (alloc);
+ 
+   return pool;
+ }
+@@ -621,9 +650,16 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+   if (use_dmabuf) {
+     if (!gst_wl_display_check_format_for_dmabuf (sink->display, format))
+       goto unsupported_format;
+-  } else if (!gst_wl_display_check_format_for_shm (sink->display, format)) {
++  }
++#ifdef HAVE_WAYLAND_KMS
++  else if (!gst_wl_display_check_format_for_kms (sink->display, format)) {
++    goto unsupported_format;
++  }
++#else
++  else if (!gst_wl_display_check_format_for_shm (sink->display, format)) {
+     goto unsupported_format;
+   }
++#endif
+ # endif
+ 
+   sink->use_dmabuf = use_dmabuf;
+@@ -654,6 +690,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+   GstBufferPool *pool = NULL;
+   gboolean need_pool;
+   GstAllocator *alloc;
++  GstStructure *config;
+ 
+   gst_query_parse_allocation (query, &caps, &need_pool);
+ 
+@@ -662,9 +699,26 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+ 
+   if (pool) {
+     gst_query_add_allocation_pool (query, pool, sink->video_info.size, 2, 0);
++
++    config = gst_buffer_pool_get_config (pool);
++    gst_buffer_pool_config_set_params (config, caps, sink->video_info.size,
++        GST_WAYLAND_BUFFER_POOL_NUM, GST_WAYLAND_BUFFER_POOL_NUM);
++
++    /*
++     * Add the default allocator for the plugins that can't use dmabuf
++     * descriptors.
++     */
++    gst_query_add_allocation_param (query, gst_allocator_find (NULL), NULL);
++
+     g_object_unref (pool);
+   }
+-  alloc = gst_wl_shm_allocator_get ();
++
++#ifdef HAVE_WAYLAND_KMS
++    alloc = gst_dmabuf_allocator_new ();
++#else
++    alloc = gst_wl_shm_allocator_get ();
++#endif
++
+   gst_query_add_allocation_param (query, alloc, NULL);
+   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+   g_object_unref (alloc);
+@@ -801,11 +855,18 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+           &sink->video_info, sink->enable_interlace);
+   }
+ 
++#ifdef HAVE_WAYLAND_KMS
++  /* Reuse below code of SHM for KMS */
++  if (!wbuf) {
++    {
++#else
+   if (!wbuf && gst_wl_display_check_format_for_shm (sink->display, format)) {
++
+     if (gst_is_fd_memory (mem)) {
+       wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
+           &sink->video_info);
+     } else {
++#endif
+       GstVideoFrame src, dst;
+       GstVideoInfo src_info = sink->video_info;
+ 
+diff --git a/ext/wayland/wldisplay.c b/ext/wayland/wldisplay.c
+index 468c361..76a494b 100644
+--- a/ext/wayland/wldisplay.c
++++ b/ext/wayland/wldisplay.c
+@@ -29,6 +29,15 @@
+ 
+ #include <errno.h>
+ 
++#include <unistd.h>
++#include <fcntl.h>
++#include <string.h>
++
++#include "drm.h"
++#include "xf86drm.h"
++
++#include "wlvideoformat.h"
++
+ GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
+ #define GST_CAT_DEFAULT gstwayland_debug
+ 
+@@ -47,6 +56,7 @@ static void
+ gst_wl_display_init (GstWlDisplay * self)
+ {
+   self->shm_formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
++  self->kms_formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
+   self->dmabuf_formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
+   self->wl_fd_poll = gst_poll_new (TRUE);
+   self->buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
+@@ -153,7 +163,53 @@ shm_format (void *data, struct wl_shm *wl_shm, uint32_t format)
+ static const struct wl_shm_listener shm_listener = {
+   shm_format
+ };
++static void
++kms_device (void *data, struct wl_kms *kms, const char *device)
++{
++  GstWlDisplay *self = data;
++  drm_magic_t magic;
++
++  if ((self->drm_fd = open (device, O_RDWR | O_CLOEXEC)) < 0) {
++    GST_ERROR ("%s open failed (%s)", device, strerror (errno));
++    return;
++  }
++
++  drmGetMagic (self->drm_fd, &magic);
++  wl_kms_authenticate (self->kms, magic);
++}
++
++static void
++kms_format (void *data, struct wl_kms *kms, uint32_t format)
++{
++  GstWlDisplay *self = data;
++  GstVideoFormat fmt;
+ 
++  fmt = gst_wl_kms_format_to_video_format (format);
++  if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
++    GST_WARNING ("waylandsink doesn't support %" GST_FOURCC_FORMAT,
++        GST_FOURCC_ARGS (format));
++    return;
++  }
++  g_array_append_val (self->kms_formats, format);
++  GST_DEBUG ("%" GST_FOURCC_FORMAT " was added to the supported formats list",
++      GST_FOURCC_ARGS (format));
++}
++
++static void
++kms_handle_authenticated (void *data, struct wl_kms *kms)
++{
++  GstWlDisplay *self = data;
++
++  GST_DEBUG ("wl_kms has been authenticated");
++
++  self->authenticated = TRUE;
++}
++
++static const struct wl_kms_listener kms_listenter = {
++  .device = kms_device,
++  .format = kms_format,
++  .authenticated = kms_handle_authenticated
++};
+ static void
+ dmabuf_format (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
+     uint32_t format)
+@@ -226,6 +282,9 @@ registry_handle_global (void *data, struct wl_registry *registry,
+         wl_registry_bind (registry, id, &wl_subcompositor_interface, 1);
+   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
+     self->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
++  } else if (strcmp (interface, "wl_kms") == 0) {
++    self->kms = wl_registry_bind (registry, id, &wl_kms_interface, version);
++    wl_kms_add_listener (self->kms, &kms_listenter, self);
+   } else if (g_strcmp0 (interface, "wl_shm") == 0) {
+     self->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
+     wl_shm_add_listener (self->shm, &shm_listener, self);
+diff --git a/ext/wayland/wldisplay.h b/ext/wayland/wldisplay.h
+index 7c4f17e..7d86e1a 100644
+--- a/ext/wayland/wldisplay.h
++++ b/ext/wayland/wldisplay.h
+@@ -27,6 +27,7 @@
+ #include <wayland-client.h>
+ #include "viewporter-client-protocol.h"
+ #include "linux-dmabuf-unstable-v1-client-protocol.h"
++#include "wayland-kms-client-protocol.h"
+ 
+ G_BEGIN_DECLS
+ 
+@@ -56,9 +57,14 @@ struct _GstWlDisplay
+   struct wl_shm *shm;
+   struct wp_viewporter *viewporter;
+   struct zwp_linux_dmabuf_v1 *dmabuf;
++
+   GArray *shm_formats;
+   GArray *dmabuf_formats;
++  GArray *kms_formats;
+ 
++  struct wl_kms *kms;
++  gint drm_fd;
++  gboolean authenticated;
+   /* private */
+   gboolean own_display;
+   GThread *thread;
+diff --git a/ext/wayland/wlvideoformat.c b/ext/wayland/wlvideoformat.c
+index 77cfac8..46b1ffb 100644
+--- a/ext/wayland/wlvideoformat.c
++++ b/ext/wayland/wlvideoformat.c
+@@ -26,6 +26,7 @@
+ #endif
+ 
+ #include "wlvideoformat.h"
++#include "wayland-kms-client-protocol.h"
+ 
+ GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
+ #define GST_CAT_DEFAULT gstwayland_debug
+@@ -42,6 +43,53 @@ typedef struct
+   GstVideoFormat gst_format;
+ } wl_DmabufVideoFormat;
+ 
++typedef struct
++{
++  guint wl_format;
++  GstVideoFormat gst_format;
++} wl_KmsVideoFormat;
++
++static const wl_KmsVideoFormat kms_formats[] = {
++#if G_BYTE_ORDER == G_BIG_ENDIAN
++  {WL_KMS_FORMAT_XRGB8888, GST_VIDEO_FORMAT_xRGB},
++  {WL_KMS_FORMAT_ARGB8888, GST_VIDEO_FORMAT_ARGB},
++  {WL_KMS_FORMAT_XBGR8888, GST_VIDEO_FORMAT_BGRx},
++  {WL_KMS_FORMAT_RGBX8888, GST_VIDEO_FORMAT_RGBx},
++  {WL_KMS_FORMAT_BGRX8888, GST_VIDEO_FORMAT_xBGR},
++  {WL_KMS_FORMAT_ABGR8888, GST_VIDEO_FORMAT_ABGR},
++  {WL_KMS_FORMAT_RGBA8888, GST_VIDEO_FORMAT_RGBA},
++  {WL_KMS_FORMAT_BGRA8888, GST_VIDEO_FORMAT_BGRA},
++#else
++  {WL_KMS_FORMAT_XRGB8888, GST_VIDEO_FORMAT_BGRx},
++  {WL_KMS_FORMAT_ARGB8888, GST_VIDEO_FORMAT_BGRA},
++  {WL_KMS_FORMAT_XBGR8888, GST_VIDEO_FORMAT_xRGB},
++  {WL_KMS_FORMAT_RGBX8888, GST_VIDEO_FORMAT_xBGR},
++  {WL_KMS_FORMAT_BGRX8888, GST_VIDEO_FORMAT_RGBx},
++  {WL_KMS_FORMAT_ABGR8888, GST_VIDEO_FORMAT_RGBA},
++  {WL_KMS_FORMAT_RGBA8888, GST_VIDEO_FORMAT_ABGR},
++  {WL_KMS_FORMAT_BGRA8888, GST_VIDEO_FORMAT_ARGB},
++#endif
++  {WL_KMS_FORMAT_RGB888, GST_VIDEO_FORMAT_RGB},
++  {WL_KMS_FORMAT_BGR888, GST_VIDEO_FORMAT_BGR},
++  {WL_KMS_FORMAT_RGB565, GST_VIDEO_FORMAT_RGB16},
++  {WL_KMS_FORMAT_BGR565, GST_VIDEO_FORMAT_BGR16},
++
++  {WL_KMS_FORMAT_YUYV, GST_VIDEO_FORMAT_YUY2},
++  {WL_KMS_FORMAT_YVYU, GST_VIDEO_FORMAT_YVYU},
++  {WL_KMS_FORMAT_UYVY, GST_VIDEO_FORMAT_UYVY},
++  {WL_KMS_FORMAT_AYUV, GST_VIDEO_FORMAT_AYUV},
++  {WL_KMS_FORMAT_NV12, GST_VIDEO_FORMAT_NV12},
++  {WL_KMS_FORMAT_NV21, GST_VIDEO_FORMAT_NV21},
++  {WL_KMS_FORMAT_NV16, GST_VIDEO_FORMAT_NV16},
++  {WL_KMS_FORMAT_YUV410, GST_VIDEO_FORMAT_YUV9},
++  {WL_KMS_FORMAT_YVU410, GST_VIDEO_FORMAT_YVU9},
++  {WL_KMS_FORMAT_YUV411, GST_VIDEO_FORMAT_Y41B},
++  {WL_KMS_FORMAT_YUV420, GST_VIDEO_FORMAT_I420},
++  {WL_KMS_FORMAT_YVU420, GST_VIDEO_FORMAT_YV12},
++  {WL_KMS_FORMAT_YUV422, GST_VIDEO_FORMAT_Y42B},
++  {WL_KMS_FORMAT_YUV444, GST_VIDEO_FORMAT_v308},
++};
++
+ static const wl_ShmVideoFormat shm_formats[] = {
+ #if G_BYTE_ORDER == G_BIG_ENDIAN
+   {WL_SHM_FORMAT_XRGB8888, GST_VIDEO_FORMAT_xRGB},
+@@ -175,3 +223,34 @@ gst_wl_dmabuf_format_to_string (guint wl_format)
+   return gst_video_format_to_string
+       (gst_wl_dmabuf_format_to_video_format (wl_format));
+ }
++
++GstVideoFormat
++gst_wl_kms_format_to_video_format (guint wl_format)
++{
++  guint i;
++
++  for (i = 0; i < G_N_ELEMENTS (kms_formats); i++)
++    if (kms_formats[i].wl_format == wl_format)
++      return kms_formats[i].gst_format;
++
++  GST_WARNING ("gst video format not found");
++  return GST_VIDEO_FORMAT_UNKNOWN;
++}
++
++const gchar *
++gst_wl_kms_format_to_string (guint wl_format)
++{
++  return gst_video_format_to_string
++      (gst_wl_kms_format_to_video_format (wl_format));
++}
++guint
++gst_video_format_to_wl_kms_format (GstVideoFormat format)
++{
++  guint i;
++  for (i = 0; i < G_N_ELEMENTS (kms_formats); i++)
++    if (kms_formats[i].gst_format == format)
++      return kms_formats[i].wl_format;
++
++  GST_WARNING ("wayland video format not found");
++  return -1;
++}
+diff --git a/ext/wayland/wlvideoformat.h b/ext/wayland/wlvideoformat.h
+index 331f582..a2bb594 100644
+--- a/ext/wayland/wlvideoformat.h
++++ b/ext/wayland/wlvideoformat.h
+@@ -37,6 +37,10 @@ GstVideoFormat gst_wl_dmabuf_format_to_video_format (guint wl_format);
+ const gchar *gst_wl_shm_format_to_string (enum wl_shm_format wl_format);
+ const gchar *gst_wl_dmabuf_format_to_string (guint wl_format);
+ 
++guint gst_video_format_to_wl_kms_format (GstVideoFormat format);
++GstVideoFormat gst_wl_kms_format_to_video_format (guint wl_format);
++const gchar *gst_wl_kms_format_to_string (enum wl_shm_format wl_format);
++
+ G_END_DECLS
+ 
+ #endif
+-- 
+1.9.1
+
