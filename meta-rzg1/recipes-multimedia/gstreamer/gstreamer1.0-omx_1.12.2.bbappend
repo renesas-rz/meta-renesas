@@ -30,6 +30,7 @@ SRC_URI_append = " \
     file://0037-omxh264enc-Add-timestamp-information-for-buffer-cont.patch \
     file://0038-bufferpool-Fix-mistake-in-memory-size.patch \
     file://0039-omxh264dec-fix-issue-a-FHD-stream-failed-to-displaye.patch \
+    file://0040-omxvideodec-don-t-drop-frame-if-it-contains-header-d.patch \
 "
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
