@@ -1,0 +1,54 @@
+From 98aded9f873fc8d4f7f7f5af97fb1040478184e1 Mon Sep 17 00:00:00 2001
+From: Loc Nguyen <loc.nguyen.ks@renesas.com>
+Date: Thu, 16 Aug 2018 10:51:11 +0700
+Subject: [PATCH] omxh264dec: fix issue a FHD stream failed to displayed after
+ decoding
+
+One FHD-stream was failed to display after decoding due to wrong resolution.
+This commit fix the issue by disable RCAR's code to always reconfigure MC outport.
+
+Signed-off-by: Loc Nguyen <loc.nguyen.ks@renesas.com>
+---
+ omx/gstomxvideodec.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index 69bc9c0..ae3df0a 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1003,6 +1003,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
+   GstVideoCodecState *state;
+   OMX_PARAM_PORTDEFINITIONTYPE port_def;
+   GstVideoFormat format;
++  GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
+ 
+   /* At this point the decoder output port is disabled */
+ 
+@@ -1214,6 +1215,12 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
+       format, port_def.format.video.nFrameWidth,
+       port_def.format.video.nFrameHeight, self->input_state);
+ 
++  if (klass->cdata.hacks & GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO) {
++    /* Set pixel-aspect-ratio is 1/1. It means that always keep
++     * original image when display   */
++    state->info.par_d = state->info.par_n;
++  }
++
+   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+     gst_video_codec_state_unref (state);
+     GST_ERROR_OBJECT (self, "Failed to negotiate");
+@@ -1373,7 +1380,10 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+     }
+ 
+     if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+-#ifdef USE_OMX_TARGET_RCAR
++/* Orriginally, it was #ifdef USE_OMX_TARGET_RCAR
++ * some FHD streams already had wrong caps before entering function gst_omx_video_dec_loop.
++ * disable this #ifdef will help to reconfigure the caps. */
++#ifdef USE_OMX_TARGET_RCAR_disabled
+       gboolean use_target_RCar = TRUE;
+       if (use_target_RCar) {
+         gboolean was_enabled = TRUE;
+-- 
+2.7.4
+

@@ -29,6 +29,7 @@ SRC_URI_append = " \
     file://0036-gst145-omxh264enc-Support-periodicty_idr-and-interva.patch \
     file://0037-omxh264enc-Add-timestamp-information-for-buffer-cont.patch \
     file://0038-bufferpool-Fix-mistake-in-memory-size.patch \
+    file://0039-omxh264dec-fix-issue-a-FHD-stream-failed-to-displaye.patch \
 "
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"
