@@ -1,0 +1,32 @@
+From a94c104dc558d88f51b72e930fe5fbf4929a7d34 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Thu, 16 Aug 2018 11:38:24 +0700
+Subject: kernel-module-gles fix issue compile for the real time kernel
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ services/server/env/linux/mutex.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/services/server/env/linux/mutex.c b/services/server/env/linux/mutex.c
+index 1976441..e1973b5 100755
+--- a/services/server/env/linux/mutex.c
++++ b/services/server/env/linux/mutex.c
+@@ -141,14 +141,6 @@ IMG_VOID LinuxUnLockMutex(PVRSRV_LINUX_MUTEX *psPVRSRVMutex)
+     psPVRSRVMutex->hHeldBy = 0;
+     mutex_unlock(&psPVRSRVMutex->sMutex);
+ 
+-#if defined(LINUX_DEBUG_MUTEX_CALLS)
+-    if (psPVRSRVMutex->sMutex.count.counter >= 2)
+-    {
+-        PVR_TRACE(("ASSERT Mutex counter %p: %d >= 2", psPVRSRVMutex, psPVRSRVMutex->sMutex.count.counter));
+-    }
+-#endif
+-
+-    PVR_ASSERT(psPVRSRVMutex->sMutex.count.counter < 2);
+ }
+ 
+ IMG_BOOL LinuxIsLockedMutex(PVRSRV_LINUX_MUTEX *psPVRSRVMutex)
+-- 
+2.7.4
+

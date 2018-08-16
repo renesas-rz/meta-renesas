@@ -11,7 +11,10 @@ PR = "r0"
 COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7745|r8a77470)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-SRC_URI_r8a7742 = 'file://RGX_KM_H2.tar.bz2'
+SRC_URI_r8a7742 = "file://RGX_KM_H2.tar.bz2 \
+                   file://0001-kernel-module-gles-fix-issue-compile-for-the-real-ti.patch \
+"
+
 S_r8a7742 = "${WORKDIR}/rogue_km"
 KERNEL_SRC_PATH_r8a7742 = "build/linux/r8a7742_linux"
 KERNEL_OLD_SRC_PATH_r8a7742 = "build/linux/r8a7790_linux/"
