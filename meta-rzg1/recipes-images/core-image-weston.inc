@@ -1,15 +1,17 @@
 include core-image-renesas-base.inc
 require ../include/rzg-modules-common.inc
 
-IMAGE_INSTALL_append_rzg1 = '${@bb.utils.contains("USE_GLES", "1", \
+IMAGE_INSTALL_append_rzg1 = '${@base_conditional("USE_GLES", "1", \
     " libegl libegl-dev libgbm-dev", "", d)} \
+'
+IMAGE_INSTALL_append_rzg1 = '${@base_conditional("ENABLE_QT_FRAMEWORK", "1", \
+    " packagegroup-qt5-examples", "", d)} \
 '
 
 IMAGE_INSTALL_append_lcb = " \
     can-utils \
     libsocketcan \
 "
-#weston-bin 
 
 # GStreamer Packages
 GST_PACKAGEGROUP = "packagegroup-gstreamer1.0-plugins"
@@ -19,7 +21,6 @@ IMAGE_INSTALL_append = " \
   iproute2 \
   obexftp \
   bluez5 \
-  packagegroup-qt5-examples \
   configuration \
   usbutils \
   util-linux \
