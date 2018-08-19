@@ -32,16 +32,16 @@ sdk_post_process () {
 	if [ $? != '0' ];then
 		echo "workaround: fix rpath of executable files under native sysroot"
 		native_sysroot=$($SUDO_EXEC cat $env_setup_script |grep 'OECORE_NATIVE_SYSROOT='|cut -d'=' -f2|tr -d '"')
-		LD_LIBRARY_PATH_OLD=$LD_LIBRARY_PATH
-		export LD_LIBRARY_PATH=$native_sysroot/usr/lib:$native_sysroot/lib/
-		cd $native_sysroot/
-		for exefile in bin/* sbin/* usr/bin/* usr/bin/*/* usr/libexec/arm-poky-linux-gnueabi/gcc/arm-poky-linux-gnueabi/*/*; do
-			if [ -x "$exefile" ] && [ ! -L "$exefile" ] && [ ! "$exefile" = "usr/bin/patchelf" ]; then
-				usr/bin/patchelf --set-rpath "$native_sysroot/lib:$native_sysroot/usr/lib" "$exefile" &>/dev/null
-			fi
-		done
-		if [ ! -z $LD_LIBRARY_PATH_OLD ];then export LD_LIBRARY_PATH=$LD_LIBRARY_PATH_OLD;
-		else unset LD_LIBRARY_PATH;fi
+		$SUDO_EXEC bash -c '
+			sysroot=$0
+			export LD_LIBRARY_PATH=$sysroot/usr/lib:$sysroot/lib/;
+			cd $sysroot/
+			for xfile in bin/* sbin/* usr/bin/* usr/bin/*/* usr/libexec/arm-poky-linux-gnueabi/gcc/arm-poky-linux-gnueabi/*/*
+			do
+				if [ -x "$xfile" ] && [ ! -L "$xfile" ] && [ ! "$xfile" = "usr/bin/patchelf" ]; then
+					usr/bin/patchelf --set-rpath "$sysroot/lib:$sysroot/usr/lib" "$xfile" &>/dev/null
+				fi
+			done' $native_sysroot
 	fi
 
 	# Set up kernel for building kernel config now
