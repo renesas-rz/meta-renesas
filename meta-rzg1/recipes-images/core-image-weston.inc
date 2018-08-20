@@ -35,6 +35,7 @@ IMAGE_INSTALL_append = " \
   kernel-module-g-mass-storage-${KERNEL_VERSION} \
   kernel-module-rtl-usb-${KERNEL_VERSION} \
   kernel-module-rtl8192cu-${KERNEL_VERSION} \
+  kernel-module-backfire-${KERNEL_VERSION} \
   dosfstools \
   evtest \
   e2fsprogs \
