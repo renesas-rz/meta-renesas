@@ -1,0 +1,113 @@
+From 24ef589aa2650421e2607a4cef460d7cd817a0f4 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Thu, 6 Sep 2018 10:37:11 +0700
+Subject: [PATCH] v4l2-renderer : enable gl-fallback
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ libweston/v4l2-renderer-device.h |  2 +-
+ libweston/v4l2-renderer.c        | 28 +++++++++++++++-------------
+ 2 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/libweston/v4l2-renderer-device.h b/libweston/v4l2-renderer-device.h
+index eef8e80..952aa6b 100644
+--- a/libweston/v4l2-renderer-device.h
++++ b/libweston/v4l2-renderer-device.h
+@@ -30,7 +30,7 @@
+ /*
+  * Enable gl-fallback feature.
+  */
+-//#define V4L2_GL_FALLBACK
++#define V4L2_GL_FALLBACK
+ 
+ struct v4l2_renderer_device {
+ 	struct media_device *media;
+diff --git a/libweston/v4l2-renderer.c b/libweston/v4l2-renderer.c
+index 655ea0c..68a379e 100644
+--- a/libweston/v4l2-renderer.c
++++ b/libweston/v4l2-renderer.c
+@@ -180,8 +180,9 @@ v4l2_create_gl_renderer(struct weston_compositor *ec, struct v4l2_renderer *rend
+ {
+ 	EGLint format = GBM_FORMAT_XRGB8888;
+ 
+-	if (gl_renderer->create(ec, renderer->gbm,
+-				gl_renderer->opaque_attribs, &format) < 0) {
++	if (gl_renderer->display_create(ec, 0, renderer->gbm,
++					NULL, gl_renderer->opaque_attribs,
++					&format, 1) < 0) {
+ 		return -1;
+ 	}
+ 	renderer->gl_renderer = ec->renderer;
+@@ -213,14 +214,17 @@ v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer
+ 	for (i = 0; i < 2; i++) {
+ 		int n = i % state->bo_count;
+ 		gbm_kms_set_bo((struct gbm_kms_surface *)state->gbm_surface,
+-			       n, state->bo[n].map, state->bo[n].stride);
++			       n, state->bo[n].map, state->bo[n].dmafd, state->bo[n].stride);
+ 	}
+ 
+ 	output->compositor->renderer = renderer->gl_renderer;
+ 	output->renderer_state = NULL;
+ 	read_format = output->compositor->read_format;
+-	if (gl_renderer->output_create(output, state->gbm_surface,
+-				       gl_renderer->opaque_attribs, &format) < 0) {
++	if (gl_renderer->output_window_create(output,
++					      (EGLNativeDisplayType)state->gbm_surface,
++					      state->gbm_surface,
++					      gl_renderer->opaque_attribs,
++					      &format, 1) < 0) {
+ 		weston_log("%s: failed to create gl renderer output state\n", __func__);
+ 		gbm_surface_destroy(state->gbm_surface);
+ 		return -1;
+@@ -376,6 +380,7 @@ v4l2_gl_repaint(struct weston_output *output,
+ 		ev->surface->renderer_state = stack[view_count++];
+ 	}
+ }
++
+ #endif
+ 
+ static int
+@@ -1461,6 +1466,7 @@ v4l2_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
+ 	struct v4l2_surface_state *vs = get_surface_state(es);
+ 	struct wl_shm_buffer *shm_buffer;
+ 	int ret;
++	int dmabuf_use = 0;
+ 
+ 	if (!vs)
+ 		return;
+@@ -1484,6 +1490,7 @@ v4l2_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
+ 			ret = v4l2_renderer_attach_shm(vs, buffer, shm_buffer);
+ 		} else {
+ 			ret = v4l2_renderer_attach_dmabuf(vs, buffer);
++			dmabuf_use = 1;
+ 		}
+ 
+ 		if (ret == -1) {
+@@ -1499,7 +1506,9 @@ v4l2_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
+ 	}
+ 
+ #ifdef V4L2_GL_FALLBACK
+-	if (vs->renderer->gl_fallback)
++	//disable gl_fallback when dmabuf used
++	//since gl-renderer does not support dmabuf
++	if (vs->renderer->gl_fallback && !dmabuf_use)
+ 		v4l2_gl_attach(es, buffer);
+ #endif
+ }
+@@ -1690,13 +1699,6 @@ v4l2_renderer_import_dmabuf(struct weston_compositor *ec,
+         if (dmabuf->attributes.flags)
+                 return false;
+ 
+-#ifdef V4L2_GL_FALLBACK
+-        struct v4l2_renderer *renderer = get_renderer(ec);
+-        if (renderer->gl_fallback) {
+-                return v4l2_gl_import_dmabuf(ec, dmabuf);
+-        }
+-#endif
+-
+         return device_interface->check_format(dmabuf->attributes.format,
+                                               dmabuf->attributes.n_planes);
+ }
+-- 
+2.7.4
+
