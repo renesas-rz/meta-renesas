@@ -1,0 +1,158 @@
+From 0504081f4ebca3346b508bd10d3980df9e1d058c Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Tue, 4 Sep 2018 20:02:11 +0700
+Subject: [PATCH 1/2] v4l2-renderer: fix issue can not read setting from
+ weston.ini
+
+Due to the changing on weston version 2.0, the setting for v4l2-renderer
+in weston.ini can not be read in v4l2-renderer loading state.
+This commit fix the issue by moving the implement code for v4l2-renderer
+setting to compositor loading state.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ compositor/main.c          | 11 ++++++++++-
+ libweston/compositor-drm.c | 12 +++++++++++-
+ libweston/compositor-drm.h |  5 +++++
+ libweston/v4l2-renderer.c  |  8 +++-----
+ libweston/v4l2-renderer.h  |  7 ++++++-
+ 5 files changed, 35 insertions(+), 8 deletions(-)
+
+diff --git a/compositor/main.c b/compositor/main.c
+index 938f885..98cb2f9 100644
+--- a/compositor/main.c
++++ b/compositor/main.c
+@@ -1218,7 +1218,7 @@ load_drm_backend(struct weston_compositor *c,
+ 	struct weston_drm_backend_config config = {{ 0, }};
+ 	struct weston_config_section *section;
+ 	struct wet_compositor *wet = to_wet_compositor(c);
+-	int ret = 0;
++	int is_enable, ret = 0;
+ 
+ 	wet->drm_use_current_mode = false;
+ 
+@@ -1238,6 +1238,14 @@ load_drm_backend(struct weston_compositor *c,
+ 					 "gbm-format", &config.gbm_format,
+ 					 NULL);
+ 
++	/* for v4l2 renderer */
++	section = weston_config_get_section(wc, "media-ctl", NULL, NULL);
++	weston_config_section_get_string(section, "device",
++					 &config.v4l2ops.device, "/dev/media0");
++	weston_config_section_get_bool(section, "gl-fallback", &is_enable,
++				       false);
++	config.v4l2ops.gl_fallback = is_enable;
++
+ 	config.base.struct_version = WESTON_DRM_BACKEND_CONFIG_VERSION;
+ 	config.base.struct_size = sizeof(struct weston_drm_backend_config);
+ 	config.configure_device = configure_input_device;
+@@ -1249,6 +1257,7 @@ load_drm_backend(struct weston_compositor *c,
+ 
+ 	free(config.gbm_format);
+ 	free(config.seat_id);
++	free(config.v4l2ops.device);
+ 
+ 	return ret;
+ }
+diff --git a/libweston/compositor-drm.c b/libweston/compositor-drm.c
+index 6b4dbac..adba4c5 100644
+--- a/libweston/compositor-drm.c
++++ b/libweston/compositor-drm.c
+@@ -115,6 +115,8 @@ struct drm_backend {
+ 	int use_pixman;
+ 
+ 	int use_v4l2;
++	struct v4l2_renderer_config v4l2_config;
++
+ 	struct udev_input input;
+ 
+ 	int32_t cursor_width;
+@@ -1796,7 +1798,7 @@ init_v4l2(struct drm_backend *b)
+ 	if (!v4l2_renderer)
+ 		return -1;
+ 
+-	return v4l2_renderer->init(b->compositor, b->drm.fd, b->drm.filename);
++	return v4l2_renderer->init(b->compositor, &b->v4l2_config, b->drm.fd, b->drm.filename);
+ }
+ /**
+  * Add a mode to output's mode list
+@@ -3447,6 +3449,14 @@ drm_backend_create(struct weston_compositor *compositor,
+ 	b->use_pixman = config->use_pixman;
+ 	b->use_v4l2 = config->use_v4l2;
+ 
++	/* for v4l2 renderer */
++	if (b->use_v4l2) {
++		struct v4l2_renderer_config *cfg = &b->v4l2_config;
++		if (config->v4l2ops.device)
++			cfg->device = config->v4l2ops.device;
++		cfg->gl_fallback = config->v4l2ops.gl_fallback;
++	}
++
+ 	if (parse_gbm_format(config->gbm_format, GBM_FORMAT_XRGB8888, &b->gbm_format) < 0)
+ 		goto err_compositor;
+ 
+diff --git a/libweston/compositor-drm.h b/libweston/compositor-drm.h
+index 160805e..7a40d02 100644
+--- a/libweston/compositor-drm.h
++++ b/libweston/compositor-drm.h
+@@ -112,6 +112,11 @@ struct weston_drm_backend_config {
+ 
+ 	/** Whether to use the v4l2 renderer insted of the OpenGL ES renderer. */
+ 	bool use_v4l2;
++	/** Options of the v4l2 renderer. */
++	struct {
++		char *device;
++		bool gl_fallback;
++	} v4l2ops;
+ 	/** The seat to be used for input and output.
+ 	 *
+ 	 * If NULL the default "seat0" will be used.  The backend will
+diff --git a/libweston/v4l2-renderer.c b/libweston/v4l2-renderer.c
+index bbe30af..655ea0c 100644
+--- a/libweston/v4l2-renderer.c
++++ b/libweston/v4l2-renderer.c
+@@ -1702,7 +1702,7 @@ v4l2_renderer_import_dmabuf(struct weston_compositor *ec,
+ }
+ 
+ static int
+-v4l2_renderer_init(struct weston_compositor *ec, int drm_fd, char *drm_fn)
++v4l2_renderer_init(struct weston_compositor *ec, struct v4l2_renderer_config *config, int drm_fd, char *drm_fn)
+ {
+ 	struct v4l2_renderer *renderer;
+ 	char *device;
+@@ -1720,11 +1720,9 @@ v4l2_renderer_init(struct weston_compositor *ec, int drm_fd, char *drm_fn)
+ 	renderer->wl_kms = wayland_kms_init(ec->wl_display, NULL, drm_fn, drm_fd);
+ 
+ 	/* Get V4L2 media controller device to use */
+-	section = weston_config_get_section(ec->config,
+-					    "media-ctl", NULL, NULL);
+-	weston_config_section_get_string(section, "device", &device, "/dev/media0");
++	device = config->device;
+ #ifdef V4L2_GL_FALLBACK
+-	weston_config_section_get_bool(section, "gl-fallback", &renderer->gl_fallback, 0);
++	renderer->gl_fallback = config->gl_fallback;
+ #endif
+ 
+ 	/* Initialize V4L2 media controller */
+diff --git a/libweston/v4l2-renderer.h b/libweston/v4l2-renderer.h
+index 8445bf1..7f7ba78 100644
+--- a/libweston/v4l2-renderer.h
++++ b/libweston/v4l2-renderer.h
+@@ -33,8 +33,13 @@ struct v4l2_bo_state {
+ 	uint32_t stride;
+ };
+ 
++struct v4l2_renderer_config {
++	char *device;
++	bool gl_fallback;
++};
++
+ struct v4l2_renderer_interface {
+-	int (*init)(struct weston_compositor *ec, int drm_fd, char *drm_fn);
++	int (*init)(struct weston_compositor *ec, struct v4l2_renderer_config *config, int drm_fd, char *drm_fn);
+ 	int (*output_create)(struct weston_output *output, struct v4l2_bo_state *bo_states, int count);
+ 	void (*output_destroy)(struct weston_output *output);
+ 	void (*set_output_buffer)(struct weston_output *output, int bo_index);
+-- 
+2.7.4
+
