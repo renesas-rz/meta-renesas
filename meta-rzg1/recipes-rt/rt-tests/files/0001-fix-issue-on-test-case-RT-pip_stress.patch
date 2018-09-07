@@ -1,0 +1,26 @@
+From ae06624a0fb0c20ce9bbdb5f80847d6c40f5cb29 Mon Sep 17 00:00:00 2001
+From: Nguyen Duc Tam <tamnd8@fsoft.com.vn>
+Date: Thu, 6 Sep 2018 18:47:58 +0700
+Subject: fix-issue-on-test-case-RT-pip_stress
+
+Signed-off-by: Nguyen Duc Tam <tamnd8@fsoft.com.vn>
+---
+ src/pi_tests/pip_stress.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/pi_tests/pip_stress.c b/src/pi_tests/pip_stress.c
+index e6cf0ce..c627f44 100644
+--- a/src/pi_tests/pip_stress.c
++++ b/src/pi_tests/pip_stress.c
+@@ -60,7 +60,7 @@
+ #include <getopt.h>
+ 
+ /* default time for low priority thread usleep */
+-useconds_t usleep_val = 500;
++useconds_t usleep_val = 3500;
+ 
+ pthread_mutex_t *resource;
+ 
+-- 
+2.7.4
+
