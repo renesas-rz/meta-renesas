@@ -41,7 +41,6 @@ RDEPENDS_${PN} += " \
 	qtconnectivity-qmlplugins \
 	qtlocation-plugins \
 	qtlocation-qmlplugins \
-	qtquickcontrols-qmlplugins \
 	qtmultimedia \
 	qtmultimedia-plugins \
 	qtmultimedia-qmlplugins \
@@ -51,8 +50,12 @@ RDEPENDS_${PN} += " \
 	qtsensors-plugins \
 	qtsensors-qmlplugins \
 	qtscript \
-	qt3d \
-	qt3d-qmlplugins \
+	qtserialport \
+	qtserialport-qmlplugins \
+	qtwebchannel \
+	qtwebchannel-qmlplugins \
+	qtwebsockets \
+	qtwebsockets-qmlplugins \
 	${QT5_EXAMPLES} \
 "
 
