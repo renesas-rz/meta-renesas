@@ -1,0 +1,35 @@
+From 65e84cdb26ecf7bbc7251945c69aa5f4ee588db4 Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Thu, 12 May 2016 14:22:52 +0700
+Subject: [PATCH] qtdeclarative flexible size for qmlscene
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+
+diff --git a/tools/qmlscene/main.cpp b/tools/qmlscene/main.cpp
+index fc4fc3e..f9f54d5 100644
+--- a/tools/qmlscene/main.cpp
++++ b/tools/qmlscene/main.cpp
+@@ -41,6 +41,7 @@
+
+ #include <QtGui/QGuiApplication>
+ #include <QtGui/QOpenGLFunctions>
++#include <QtGui/QScreen>
+
+ #include <QtQml/qqml.h>
+ #include <QtQml/qqmlengine.h>
+@@ -552,6 +553,13 @@ int main(int argc, char ** argv)
+             // TODO: as soon as the engine construction completes, the debug service is
+             // listening for connections.  But actually we aren't ready to debug anything.
+             QQmlEngine engine;
++            QScreen *screen = QGuiApplication::screens().at(1);
++		    if (screen == NULL)
++				screen = QGuiApplication::screens().at(0);
++			engine.rootContext()->setContextProperty("screenWidth", screen->availableSize().width());
++			engine.rootContext()->setContextProperty("screenHeight", screen->availableSize().height());
++
++
+             QPointer<QQmlComponent> component = new QQmlComponent(&engine);
+             for (int i = 0; i < imports.size(); ++i)
+                 engine.addImportPath(imports.at(i));
+--
+1.9.1

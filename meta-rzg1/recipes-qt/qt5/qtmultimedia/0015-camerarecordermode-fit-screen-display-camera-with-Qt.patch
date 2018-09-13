@@ -1,0 +1,96 @@
+From 43c8b08ea16b4ef941e6e5ada426c4886847a5d4 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Tue, 28 Aug 2018 14:49:50 +0700
+Subject: [PATCH] camerarecordermode: fit screen display camera with Qt app
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ .../qgstreamercamerarecordermodesession.cpp        | 34 +++++++++++++++-------
+ .../qgstreamercamerarecordermodesession.h          |  1 +
+ 2 files changed, 25 insertions(+), 10 deletions(-)
+
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
+index 39ebea1..db361ab 100644
+--- a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.cpp
+@@ -199,6 +199,15 @@ void QGstreamerCameraRecorderModeSession::componentComplete()
+     m_omxh264enc = gst_element_factory_make("omxh264enc", "Omxh264enc");
+     m_waylandsink = gst_element_factory_make("waylandsink", "Waylandsink");
+     m_filesink = gst_element_factory_make("filesink", "Filesink");
++}
++
++void QGstreamerCameraRecorderModeSession::elementLink()
++{
++#ifdef DEBUG_ENCODER
++    qDebug() << Q_FUNC_INFO;
++#endif
++    int width =  m_out_width.toDouble();
++    int height =  m_out_height.toDouble();
+ 
+     m_v4l2src_caps  = gst_caps_new_simple ("video/x-raw",
+ 									"format", G_TYPE_STRING, "UYVY",
+@@ -211,11 +220,11 @@ void QGstreamerCameraRecorderModeSession::componentComplete()
+ 								    "width", G_TYPE_INT, 640,
+ 									"height", G_TYPE_INT, 480,
+                                      NULL);
+-
++                                     
+     m_v2_caps  = gst_caps_new_simple ("video/x-raw",
+-									"format", G_TYPE_STRING, "BGRA",
+-								    "width", G_TYPE_INT, 800,
+-									"height", G_TYPE_INT, 480,
++									"format", G_TYPE_STRING, "BGRx",
++								    "width", G_TYPE_INT, width,
++									"height", G_TYPE_INT, height,
+                                      NULL);
+ 
+     gst_bin_add_many (GST_BIN (m_recorder), m_v4l2src, m_v4l2src_capsfilter, m_tee, m_vspmfilter1, m_v1_capsfilter, m_omxh264enc, m_filesink, m_vspmfilter2, m_v2_capsfilter, m_waylandsink, NULL);
+@@ -270,22 +279,27 @@ void QGstreamerCameraRecorderModeSession::componentComplete()
+ // gst-launch-1.0 -e v4l2src num-buffers=300 ! video/x-raw,format=UYVY,width=720,height=480 ! tee name=t
+ // t. ! vspmfilter outbuf-alloc=true ! video/x-raw,format=NV12,width=640,height=480 ! omxh264enc target-bitrate=10485760 ! filesink location=/home/root/enc1.h264
+ // t. ! vspmfilter ! video/x-raw,format=BGRA,width=800,height=480 ! waylandsink position-x=100 position-y=100 qos=false
+-
++bool ok=true;
+ void QGstreamerCameraRecorderModeSession::start()
+ {
+ #ifdef DEBUG_ENCODER
+     qDebug() << Q_FUNC_INFO;
+ #endif
+-     bool ok;
++     int x_position = m_x_position.toDouble();
++     int y_position = m_y_position.toDouble();
++     if(ok) {
++       elementLink();
++       ok=false;
++     }
+      g_object_set (G_OBJECT (m_filesink), "location", m_fsinklocation.toLatin1().constData(), NULL);
+      g_object_set (G_OBJECT (m_vspmfilter1), "outbuf-alloc", 0, NULL);
+      g_object_set (G_OBJECT (m_vspmfilter1), "dmabuf-use", 0, NULL);
+-     g_object_set (G_OBJECT (m_vspmfilter2), "outbuf-alloc", 1, NULL);
+-     g_object_set (G_OBJECT (m_vspmfilter2), "dmabuf-use", 1, NULL);
++//     g_object_set (G_OBJECT (m_vspmfilter2), "outbuf-alloc", 1, NULL);
++//     g_object_set (G_OBJECT (m_vspmfilter2), "dmabuf-use", 1, NULL);
+      g_object_set (G_OBJECT (m_omxh264enc), "target-bitrate", 10485760, NULL);
+      g_object_set (G_OBJECT (m_omxh264enc), "no-copy", 1, NULL);
+-     g_object_set (G_OBJECT (m_waylandsink), "position-x", m_x_position.toInt(&ok, 10), NULL);
+-     g_object_set (G_OBJECT (m_waylandsink), "position-y", m_y_position.toInt(&ok, 10), NULL);
++     g_object_set (G_OBJECT (m_waylandsink), "position-x", x_position, NULL);
++     g_object_set (G_OBJECT (m_waylandsink), "position-y", y_position, NULL);
+ 
+      g_object_set (G_OBJECT (m_waylandsink), "qos", 0, NULL);
+      gst_element_set_state(m_recorder, GST_STATE_PLAYING);
+diff --git a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h
+index 6f25519..cb2974a 100644
+--- a/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h
++++ b/src/plugins/gstreamer/camerarecordermode/qgstreamercamerarecordermodesession.h
+@@ -83,6 +83,7 @@ public:
+     void setOut_height(QString);
+ 
+     void componentComplete();
++    void elementLink();
+ 
+ public slots:
+     void start();
+-- 
+1.9.1
+

@@ -1,0 +1,35 @@
+From 2bd61c3ace46dae6ba1ed823f21ac816e3e00bc2 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 18 Mar 2016 11:06:56 +0700
+Subject: [PATCH 2/3] qtmultimedia: qmlvideo add fullscreen display support
+
+run qmlvideo with --fullscreen
+display in fullscreen can give better performance
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+---
+ examples/multimedia/video/qmlvideo/main.cpp | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/examples/multimedia/video/qmlvideo/main.cpp b/examples/multimedia/video/qmlvideo/main.cpp
+index cc4437f..670547f 100644
+--- a/examples/multimedia/video/qmlvideo/main.cpp
++++ b/examples/multimedia/video/qmlvideo/main.cpp
+@@ -130,8 +130,13 @@ int main(int argc, char *argv[])
+
+     QMetaObject::invokeMethod(rootObject, "init");
+
+-    viewer.setMinimumSize(QSize(640, 360));
+-    viewer.show();
++    const QString lowerArgument = QString::fromLatin1(argv[1]).toLower();
++    if (lowerArgument == QLatin1String("--fullscreen")) {
++        viewer.showFullScreen();
++    } else {
++        viewer.setMinimumSize(QSize(640, 360));
++        viewer.show();
++    }
+
+     return app.exec();
+ }
+--
+1.9.1

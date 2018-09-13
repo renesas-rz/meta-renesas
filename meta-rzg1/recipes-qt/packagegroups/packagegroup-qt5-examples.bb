@@ -56,6 +56,7 @@ RDEPENDS_${PN} += " \
 	qtwebchannel-qmlplugins \
 	qtwebsockets \
 	qtwebsockets-qmlplugins \
+	qt5-qml-presentation-system \
 	${QT5_EXAMPLES} \
 "
 

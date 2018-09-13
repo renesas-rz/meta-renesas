@@ -1,0 +1,113 @@
+From 50ea1f1200ad4b442f7c46c036ee3d4198fe854b Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Tue, 10 May 2016 18:57:25 +0700
+Subject: [PATCH] qt multimedia qmlvideofx update GUI compatible iWave
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ examples/multimedia/video/qmlvideofx/main.cpp       | 14 ++++++++++----
+ .../video/qmlvideofx/qml/qmlvideofx/Button.qml      |  2 ++
+ .../video/qmlvideofx/qml/qmlvideofx/Main.qml        | 21 +++++++++++++++++++--
+ 3 files changed, 31 insertions(+), 6 deletions(-)
+
+diff --git a/examples/multimedia/video/qmlvideofx/main.cpp b/examples/multimedia/video/qmlvideofx/main.cpp
+index 626139f..3c8329f 100644
+--- a/examples/multimedia/video/qmlvideofx/main.cpp
++++ b/examples/multimedia/video/qmlvideofx/main.cpp
+@@ -34,6 +34,7 @@
+ #include <QtCore/QStandardPaths>
+ #include <QtCore/QStringList>
+ #include <QtQml/QQmlContext>
++#include <QtQml/QQmlEngine>
+ #include <QtGui/QGuiApplication>
+ #include <QtQuick/QQuickItem>
+ #include <QtQuick/QQuickView>
+@@ -89,6 +90,7 @@ int main(int argc, char *argv[])
+     QQuickItem *rootObject = viewer.rootObject();
+     rootObject->setProperty("fileName", fileName);
+     viewer.rootObject()->setProperty("volume", volume);
++    QObject::connect(viewer.engine(), SIGNAL(quit()), &app, SLOT(quit()));
+
+ #ifdef PERFORMANCEMONITOR_SUPPORT
+     if (performanceMonitorState.valid) {
+@@ -114,10 +116,14 @@ int main(int argc, char *argv[])
+     viewer.setTitle("qmlvideofx");
+     viewer.setFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint |
+                           Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+-    viewer.setMinimumSize(QSize(1280, 720));
+-    viewer.setResizeMode(QQuickView::SizeRootObjectToView);
+-
+-    viewer.show();
++    const QString lowerArgument = QString::fromLatin1(argv[1]).toLower();
++    if (lowerArgument == QLatin1String("--fullscreen")) {
++		viewer.showFullScreen();
++    } else {
++		viewer.setMinimumSize(QSize(1280, 720));
++		viewer.setResizeMode(QQuickView::SizeRootObjectToView);
++	    viewer.show();
++    }
+
+     // Delay invocation of init until the event loop has started, to work around
+     // a GL context issue on Harmattan: without this, we get the following error
+diff --git a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml
+index aa2df98..d35a6e4 100644
+--- a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml
++++ b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml
+@@ -46,6 +46,8 @@ Rectangle {
+     property alias enabled: mouseArea.enabled
+     property bool active: true
+     property alias horizontalAlign: text.horizontalAlignment
++    property alias label: text.text;
++	property alias label_size: text.font.pixelSize;
+
+     signal clicked
+
+diff --git a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml
+index 55d0f02..0410782 100644
+--- a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml
++++ b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml
+@@ -47,7 +47,7 @@ Rectangle {
+     property int windowWidth: Screen.desktopAvailableWidth
+     property int windowHeight: Screen.desktopAvailableHeight
+     property int scaledMargin: 2 * pixDens
+-    property int fontSize: 5 * pixDens
++    property int fontSize: 4 * pixDens
+
+     QtObject {
+         id: d
+@@ -91,8 +91,9 @@ Rectangle {
+                 }
+
+         text: "No effect"
+-        width: itemWidth * 2
++        width: itemWidth
+         height: itemHeight
++        opacity: 0.8
+         onClicked: {
+             effectName.visible = false
+             listview.visible = true
+@@ -101,6 +102,22 @@ Rectangle {
+         color: "#303030"
+     }
+
++    Button {
++       id: exitButton
++       anchors.right: root.right
++       anchors.margins: scaledMargin
++	   y: root.height/100 + 5
++       label: "Exit"
++       width: itemWidth/2;
++       height: itemHeight
++       opacity: 0.6
++       onClicked: {
++          Qt.quit()
++       }
++       color: "#303030"
++    }
++
++
+     Rectangle {
+         id: lvbg
+         width: itemWidth * 2
+--
+1.9.1
