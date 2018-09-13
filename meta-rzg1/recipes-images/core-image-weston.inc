@@ -58,6 +58,7 @@ IMAGE_INSTALL_append = " \
   util-linux-libsmartcols \
   can-utils \
   audio-init \
+  pulseaudio-init \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
