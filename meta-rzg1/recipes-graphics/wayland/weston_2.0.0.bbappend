@@ -14,6 +14,7 @@ SRC_URI_append = "\
     file://0020-libweston-libinput-seat-Change-Error-input-device-to.patch \
     file://0021-v4l2-renderer-fix-issue-can-not-read-setting-from-we.patch \
     file://0022-v4l2-renderer-enable-gl-fallback.patch \
+    file://0023-desktop-shell-check-NULL-pointer-when-setting-xwayla.patch \
 "
 
 SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-at-GPU-mode.patch "
