@@ -51,7 +51,6 @@ RDEPENDS_${PN} += " \
 	qtsensors-qmlplugins \
 	qtscript \
 	qtserialport \
-	qtserialport-qmlplugins \
 	qtwebchannel \
 	qtwebchannel-qmlplugins \
 	qtwebsockets \
