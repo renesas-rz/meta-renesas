@@ -19,8 +19,8 @@ index 6638b86..4bd1c00 100644
 -module_LTLIBRARIES += v4l2-renderer.la
 +libweston_module_LTLIBRARIES += v4l2-renderer.la
  v4l2_renderer_la_LDFLAGS = -module -avoid-version
--v4l2_renderer_la_LIBADD = $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
-+v4l2_renderer_la_LIBADD = libweston-@LIBWESTON_MAJOR@.la $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
+-v4l2_renderer_la_LIBADD = $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
++v4l2_renderer_la_LIBADD = libweston-@LIBWESTON_MAJOR@.la $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
  v4l2_renderer_la_CFLAGS =				\
 	$(COMPOSITOR_CFLAGS)			\
 	$(V4L2_RENDERER_CFLAGS) \
@@ -31,8 +31,8 @@ index 6638b86..4bd1c00 100644
 -module_LTLIBRARIES += v4l2-vsp-device.la
 +libweston_module_LTLIBRARIES += v4l2-vsp-device.la
  v4l2_vsp_device_la_LDFLAGS = -module -avoid-version
--v4l2_vsp_device_la_LIBADD = $(COMPOSITOR_LIBS)
-+v4l2_vsp_device_la_LIBADD = libweston-@LIBWESTON_MAJOR@.la $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
+-v4l2_vsp_device_la_LIBADD = $(COMPOSITOR_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
++v4l2_vsp_device_la_LIBADD = libweston-@LIBWESTON_MAJOR@.la $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
  v4l2_vsp_device_la_CFLAGS =				\
 	$(COMPOSITOR_CFLAGS)			\
 +	$(LIBDRM_CFLAGS)			\
