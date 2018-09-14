@@ -29,7 +29,7 @@ SRC_URI_append = " \
     file://0036-gst145-omxh264enc-Support-periodicty_idr-and-interva.patch \
     file://0037-omxh264enc-Add-timestamp-information-for-buffer-cont.patch \
     file://0038-bufferpool-Fix-mistake-in-memory-size.patch \
-    file://0039-omxh264dec-fix-issue-a-FHD-stream-failed-to-displaye.patch \
+    file://0039-omxvideodec-Support-dynamic-change-in-src-pad.patch \
     file://0040-omxvideodec-don-t-drop-frame-if-it-contains-header-d.patch \
     file://0041-omxvideoenc-Correct-handling-for-alignment-au.patch \
 "
