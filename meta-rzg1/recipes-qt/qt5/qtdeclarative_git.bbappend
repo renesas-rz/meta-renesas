@@ -12,6 +12,7 @@ LIC_FILES_CHKSUM = " \
 FILESEXTRAPATHS_prepend := "${THISDIR}/qtdeclarative:"
 SRC_URI_append = " \
     file://0001-Build-developer-mode.patch \
+    file://0001-qtdeclarative-flexible-size-for-qmlscene.patch \
 "
 
 SRC_URI_append_iwg21m = " \

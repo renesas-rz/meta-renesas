@@ -1,6 +1,8 @@
 require recipes-graphics/images/core-image-weston.bb
 include core-image-weston.inc
 
+inherit populate_sdk_qt5_base
+
 DESCRIPTION = " \
     Image with weston support that includes everything within \
     core-image-weston plus meta-toolchain, development headers and libraries to \
@@ -61,4 +63,32 @@ IMAGE_INSTALL_append = " \
 	gstreamer1.0-plugins-base-app \
 	gstreamer1.0-rtsp-server \
 "
+
+### For cross-compile Qt ###
+TOOLCHAIN_HOST_TASK_append = '${@base_conditional("ENABLE_QT_FRAMEWORK", "1", \
+    " nativesdk-qtbase-tools", "", d)} \
+'
+
+### For self-compile Qt ###
+IMAGE_INSTALL_append = '${@base_conditional("ENABLE_QT_FRAMEWORK", "1", \
+    " packagegroup-qt5-toolchain-target ", "", d)} \
+'
+
+# Set up environment variables for self-compiling
+setup_qt_env () {
+	if [ ! -e ${IMAGE_ROOTFS}${sysconfdir}/profile.d/setup_qt_env ]
+	then
+		echo 'export PATH=$PATH:/usr/bin/qt5' > ${IMAGE_ROOTFS}${sysconfdir}/profile.d/setup_qt_env
+		echo 'export INCLUDEPATH=$INCLUDEPATH:/usr/include/qt5' >> ${IMAGE_ROOTFS}${sysconfdir}/profile.d/setup_qt_env
+	fi
+}
+ROOTFS_POSTPROCESS_COMMAND_append = '${@base_conditional("ENABLE_QT_FRAMEWORK", "1", \
+    " setup_qt_env", "", d)} \
+'
+
+# qt multimedia needs alsa-dev when self-compiling
+IMAGE_INSTALL_append = " alsa-dev "
+
+# weston drm-backend need xkeyboard-config
+IMAGE_INSTALL_append = " xkeyboard-config "
 

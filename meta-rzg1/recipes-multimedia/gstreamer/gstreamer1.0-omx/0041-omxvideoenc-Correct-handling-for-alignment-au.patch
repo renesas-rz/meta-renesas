@@ -1,0 +1,102 @@
+From b2573c3e8e4d688458f4bb4a4e83fe4281c8e208 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Tue, 21 Aug 2018 19:51:40 +0700
+Subject: [PATCH] omxvideoenc : Correct handling for alignment=au
+
+refer to commit fd8c1fb7a4f4e8f4a4c6519e6311ae145ba14808
+from https://github.com/renesas-rcar/gst-omx.git
+
+With element has alignment=au (omxh264enc), each buffer must contain
+completed frame.
+Sending SPS/PPS in seperated buffer, it can lead to issue when
+h264parse parse data.
+This patch will merge SPS/PPS with data frame before send to
+downstream if OMX send headers in separated buffers.
+
+Signed-off-by: Anh Ha <anh.ha.wz@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ omx/gstomxh264enc.c  |  3 ++-
+ omx/gstomxvideoenc.c | 30 ++++++++++++++++++++++++++++--
+ omx/gstomxvideoenc.h |  1 +
+ 3 files changed, 31 insertions(+), 3 deletions(-)
+
+diff --git a/omx/gstomxh264enc.c b/omx/gstomxh264enc.c
+index fd20f58..e061117 100644
+--- a/omx/gstomxh264enc.c
++++ b/omx/gstomxh264enc.c
+@@ -607,7 +607,8 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * enc, GstOMXPort * port,
+         return GST_FLOW_OK;
+       }
+     } else if (self->headers) {
+-      gst_video_encoder_set_headers (GST_VIDEO_ENCODER (self), self->headers);
++      /* When alignment=au, headers should be sent with data frame */
++      enc->headers = self->headers;
+       self->headers = NULL;
+     }
+   } else {
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index 2c2e364..952c81a 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -250,6 +250,7 @@ gst_omx_video_enc_init (GstOMXVideoEnc * self)
+   self->quant_b_frames = GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT;
+   self->scan_type = GST_OMX_VIDEO_ENC_SCAN_TYPE_DEFAULT;
+   self->no_copy = FALSE;
++  self->headers = NULL;
+ 
+   g_mutex_init (&self->drain_lock);
+   g_cond_init (&self->drain_cond);
+@@ -680,10 +681,35 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
+     GST_DEBUG_OBJECT (self, "Handling output data");
+ 
+     if (buf->omx_buf->nFilledLen > 0) {
+-      outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
++      guint hdrs_size = 0;
++      if (self->headers) {
++        GList *tmp;
++        for (tmp = self->headers; tmp; tmp = tmp->next) {
++          GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
++          hdrs_size += gst_buffer_get_size (tmpbuf);
++        }
++      }
++      outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen + hdrs_size);
+ 
+       gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+-      memcpy (map.data,
++      if (self->headers) {
++        /* When OMX send headers in separated buffers, merge these headers
++         * with data frame to created completed frame which satisfies with
++         * elements have alignment=au */
++        GList *tmp;
++        guint size = 0;
++        for (tmp = self->headers; tmp; tmp = tmp->next) {
++          GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
++          GstMapInfo info;
++          gst_buffer_map (tmpbuf, &info, GST_MAP_READ);
++          memcpy (map.data + size, info.data, gst_buffer_get_size (tmpbuf));
++          size += gst_buffer_get_size (tmpbuf);
++          gst_buffer_unmap (tmpbuf, &info);
++        }
++        g_list_free_full (self->headers, (GDestroyNotify) gst_buffer_unref);
++        self->headers = NULL;
++      }
++      memcpy (map.data + hdrs_size,
+           buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+           buf->omx_buf->nFilledLen);
+       gst_buffer_unmap (outbuf, &map);
+diff --git a/omx/gstomxvideoenc.h b/omx/gstomxvideoenc.h
+index fc47552..7727633 100644
+--- a/omx/gstomxvideoenc.h
++++ b/omx/gstomxvideoenc.h
+@@ -78,6 +78,7 @@ struct _GstOMXVideoEnc
+   guint32 scan_type;
+   /* TRUE to share buffers (userptr) to upstream */
+   gboolean no_copy;
++  GList *headers;
+ 
+   GstFlowReturn downstream_flow_ret;
+ };
+-- 
+2.7.4
+

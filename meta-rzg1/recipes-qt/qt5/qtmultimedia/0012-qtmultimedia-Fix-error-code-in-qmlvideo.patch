@@ -1,0 +1,13 @@
+diff --git a/examples/multimedia/video/qmlvideo/qml/qmlvideo/SceneMulti.qml b/examples/multimedia/video/qmlvideo/qml/qmlvideo/SceneMulti.qml
+index 0c56963..9b1eccf 100644
+--- a/examples/multimedia/video/qmlvideo/qml/qmlvideo/SceneMulti.qml
++++ b/examples/multimedia/video/qmlvideo/qml/qmlvideo/SceneMulti.qml
+@@ -125,7 +125,7 @@ Scene {
+             id: cameraLoader
+             onLoaded: {
+                 item.parent = cameraHolder
+-                item.centerIn = cameraHolder
++                item.anchors.centerIn = cameraHolder
+                 item.contentType = "camera"
+                 item.showFrameRate = true
+                 item.width = itemWidth

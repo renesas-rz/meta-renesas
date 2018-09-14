@@ -1,0 +1,40 @@
+From b935babe698ede98923f58d45a7c3f87e380d60a Mon Sep 17 00:00:00 2001
+From: TraHT <traht@fsoft.com.vn>
+Date: Wed, 27 Jun 2018 15:56:33 +0700
+Subject: Handle apply enlarge-max-file-path-size.patch to fix hunk
+
+Signed-off-by: TraHT <traht@fsoft.com.vn>
+---
+ testcases/kernel/fs/doio/doio.h                           | 2 +-
+ testcases/kernel/security/prot_hsymlinks/prot_hsymlinks.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/testcases/kernel/fs/doio/doio.h b/testcases/kernel/fs/doio/doio.h
+index 28c4feb..dbce804 100644
+--- a/testcases/kernel/fs/doio/doio.h
++++ b/testcases/kernel/fs/doio/doio.h
+@@ -129,7 +129,7 @@
+  *		This is an allowed assumption in C.
+  */
+ 
+-#define MAX_FNAME_LENGTH    128
++#define MAX_FNAME_LENGTH    256
+ 
+ struct read_req {
+     char    r_file[MAX_FNAME_LENGTH];
+diff --git a/testcases/kernel/security/prot_hsymlinks/prot_hsymlinks.c b/testcases/kernel/security/prot_hsymlinks/prot_hsymlinks.c
+index 1d615ae..5e0e93f 100644
+--- a/testcases/kernel/security/prot_hsymlinks/prot_hsymlinks.c
++++ b/testcases/kernel/security/prot_hsymlinks/prot_hsymlinks.c
+@@ -50,7 +50,7 @@ int TST_TOTAL = 396;
+ 
+ /* create 3 files and 1 dir in each base dir */
+ #define MAX_FILES_CREATED	4
+-#define MAX_PATH		128
++#define MAX_PATH		256
+ #define MAX_CMD_LEN		64
+ #define MAX_USER_NAME		16
+ 
+-- 
+2.7.4
+

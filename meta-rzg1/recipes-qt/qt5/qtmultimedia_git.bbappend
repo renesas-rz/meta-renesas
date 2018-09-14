@@ -25,6 +25,11 @@ SRC_URI_append = " \
     file://0008-camerarecordermode-correct-source-code-and-support-s.patch \
     file://0009-gstlaunch-fix-null-pointer-issue-when-enable-develop.patch \
     file://0010-qtmultimedia-replace-playbin-by-playbin3-to-play-vid.patch \
+    file://0011-qtmultimedia-qmlvideo-add-fullscreen-display-support.patch \
+    file://0012-qtmultimedia-Fix-error-code-in-qmlvideo.patch \
+    file://0013-qtmultimedia-qmlvideofx-update-GUI-compatible-iWave.patch \
+    file://0014-qtmultimedia-qmlvideofx-correct-Fullscreen-setting-f.patch \
+    file://0015-camerarecordermode-fit-screen-display-camera-with-Qt.patch \
 "
 
 RDEPENDS_${PN}-plugins += " \

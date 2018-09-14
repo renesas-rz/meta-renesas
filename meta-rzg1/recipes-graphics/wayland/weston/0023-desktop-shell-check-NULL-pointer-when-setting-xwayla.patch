@@ -1,0 +1,37 @@
+From 3e9e4a9b611040ff47c84537d011353151b46bfa Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Thu, 13 Sep 2018 13:05:00 +0700
+Subject: [PATCH] desktop-shell: check NULL pointer when setting xwayland
+ position
+
+weston will die when shsurf variable returns a NULL pointer on
+desktop_surface_set_xwayland_position function. We can add code to check
+NULL pointer to prevent this issue
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ desktop-shell/shell.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/desktop-shell/shell.c b/desktop-shell/shell.c
+index f80088f..2b0bc75 100644
+--- a/desktop-shell/shell.c
++++ b/desktop-shell/shell.c
+@@ -2821,9 +2821,11 @@ desktop_surface_set_xwayland_position(struct weston_desktop_surface *surface,
+ 	struct shell_surface *shsurf =
+ 		weston_desktop_surface_get_user_data(surface);
+ 
+-	shsurf->xwayland.x = x;
+-	shsurf->xwayland.y = y;
+-	shsurf->xwayland.is_set = true;
++	if (shsurf) {
++		shsurf->xwayland.x = x;
++		shsurf->xwayland.y = y;
++		shsurf->xwayland.is_set = true;
++	}
+ }
+ 
+ static const struct weston_desktop_api shell_desktop_api = {
+-- 
+1.9.1
+

@@ -61,6 +61,7 @@ IMAGE_INSTALL_append = " \
   audio-init \
   rt-tests \
   ltp \
+  pulseaudio-init \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
