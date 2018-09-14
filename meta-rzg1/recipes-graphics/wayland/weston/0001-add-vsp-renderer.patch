@@ -33,7 +33,7 @@ index cdf82ab..6638b86 100644
 +if ENABLE_V4L2
 +module_LTLIBRARIES += v4l2-renderer.la
 +v4l2_renderer_la_LDFLAGS = -module -avoid-version
-+v4l2_renderer_la_LIBADD = $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS)
++v4l2_renderer_la_LIBADD = $(COMPOSITOR_LIBS) $(V4L2_RENDERER_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
 +v4l2_renderer_la_CFLAGS =				\
 +	$(COMPOSITOR_CFLAGS)			\
 +	$(V4L2_RENDERER_CFLAGS) \
@@ -45,7 +45,7 @@ index cdf82ab..6638b86 100644
 +
 +module_LTLIBRARIES += v4l2-vsp-device.la
 +v4l2_vsp_device_la_LDFLAGS = -module -avoid-version
-+v4l2_vsp_device_la_LIBADD = $(COMPOSITOR_LIBS)
++v4l2_vsp_device_la_LIBADD = $(COMPOSITOR_LIBS) $(LIBMEDIACTL_V4L2_LIBS)
 +v4l2_vsp_device_la_CFLAGS =				\
 +	$(COMPOSITOR_CFLAGS)			\
 +	$(GCC_CFLAGS)
