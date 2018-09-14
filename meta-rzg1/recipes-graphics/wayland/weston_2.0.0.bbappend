@@ -27,6 +27,8 @@ RDEPENDS_weston-examples_append = " gles-user-module "
 RDEPENDS_libweston-2_append = " gles-user-module "
 RDEPENDS_${PN}_append = " gles-user-module xkeyboard-config"
 
+DEPENDS += "libmediactl-v4l2"
+
 # Rule for indentify LVDS touch device.
 # Without this rule, if users connect HDMI touch device, they cannot touch
 #    correctly on LVDS (all touch event will go to HDMI screen)
