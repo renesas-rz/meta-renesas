@@ -1,6 +1,7 @@
-DESCRIPTION = "Linux kernel for the R-Car Generation 3 based board"
+DESCRIPTION = "Linux kernel for the RZ/G based board"
 
 require recipes-kernel/linux/linux-yocto.inc
+include linux.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE = "iwg20m|iwg21m|iwg22m|iwg23s"
@@ -42,3 +43,8 @@ SRC_URI_append_iwg23s = " \
     file://iwg23s.cfg \
 "
 
+do_configure_append() {
+	# If kernel_configure_variable or similar functions is used, add here.
+	# Note that the settings here has higher priority than cfg files above.
+
+}
