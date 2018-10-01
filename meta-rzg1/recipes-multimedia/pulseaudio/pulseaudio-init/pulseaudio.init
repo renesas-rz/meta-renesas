@@ -10,7 +10,7 @@ DESC="PulseAudio"
 do_start() {
     amixer set 'PCM' 70%
     amixer set 'Headphone' 100%
-    amixer set 'Mic' 70%
+    amixer set 'Mic' 50%
 
     # It's not recommended to run pulseaudio as a system service,
     # while we need it. Here, use home directory of 'root' user
