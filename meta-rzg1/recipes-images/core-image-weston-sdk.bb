@@ -83,7 +83,7 @@ setup_qt_env () {
 	fi
 }
 ROOTFS_POSTPROCESS_COMMAND_append = '${@base_conditional("ENABLE_QT_FRAMEWORK", "1", \
-    " setup_qt_env", "", d)} \
+    " setup_qt_env;", "", d)} \
 '
 
 # qt multimedia needs alsa-dev when self-compiling
