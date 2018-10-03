@@ -1,22 +1,39 @@
 #!/bin/sh
 #
 
+name=0
+
 case "$1" in
   start)
+	modprobe ohci-hcd
+	name=`uname -a | grep -c "iwg23s"`
+	if [ $name -gt 0 ]
+	then
+		modprobe ohci-platform
+	else
+		modprobe ohci-pci
+	fi
   ;;
 
   stop)
-        echo "Stopping ohci-pci"
-        rmmod ohci-pci
+	name=`uname -a | grep -c "iwg23s"`
+	if [ $name -gt 0 ]
+	then
+		echo "Stopping ohci-platform"
+		rmmod ohci-platform
+	else
+		echo "Stopping ohci-pci"
+		rmmod ohci-pci
+	fi
+
 	echo "Stopping ohci-hcd"
-        rmmod ohci-hcd
+	rmmod ohci-hcd
   ;;
 
   restart)
 	$0 stop
-        sleep 1
-        insmod /lib/modules/4.4.55-cip3/kernel/drivers/usb/host/ohci-hcd.ko
-	insmod /lib/modules/4.4.55-cip3/kernel/drivers/usb/host/ohci-pci.ko
+	sleep 1
+	$0 start
   ;;
 
   *)
