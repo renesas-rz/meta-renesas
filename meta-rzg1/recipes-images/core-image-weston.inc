@@ -62,11 +62,15 @@ IMAGE_INSTALL_append = " \
   rt-tests \
   ltp \
   pulseaudio-init \
+  kernel-module-ohci-hcd-${KERNEL_VERSION} \
+  kernel-module-ohci-pci-${KERNEL_VERSION} \
+  ohci-init \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
-  kernel-module-ohci-hcd-${KERNEL_VERSION} \
-  kernel-module-ohci-pci-${KERNEL_VERSION} \
   kernel-module-sh-eth-${KERNEL_VERSION} \
-  ohci-init \
+"
+
+IMAGE_INSTALL_append_iwg23s = " \
+  kernel-module-ohci-platform-${KERNEL_VERSION} \
 "
