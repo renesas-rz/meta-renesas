@@ -29,4 +29,5 @@ SRC_URI_append += " ${@bb.utils.contains("USE_MULTIMEDIA", "1", " \
     file://0025-vspmfilter-disable-outbuf-alloc-mode-in-default-sett.patch \
     file://0026-playback-set-TRUE-value-for-outbuf-alloc-property-on.patch \
     file://0027-encoding-add-vspmfilter-and-omxh264enc-caps-in-encod.patch \
+    file://0028-vspmfilter-enable-passthrough.patch \
     ", "", d)}"
