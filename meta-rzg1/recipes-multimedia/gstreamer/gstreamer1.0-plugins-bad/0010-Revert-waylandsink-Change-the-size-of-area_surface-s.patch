@@ -1,0 +1,33 @@
+From 4b25ebc3c8b3f91d129408a90ab7f71939a02076 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Tue, 9 Oct 2018 15:07:00 +0700
+Subject: [PATCH] Revert "waylandsink: Change the size of area_surface size to
+ 2x2"
+
+This reverts commit 4af96347a1a7264c68e3d29fe5d0347d671259dd.
+
+The commit 4af96347 caused a random issue not display correctly with format BGRA.
+The commit's description is to fix a limitation on Rcar gen3, but we are using gen2 SoC,
+we may not need it, so revert it.
+
+Signed-off-by: LamPhamPhuocLoc <loc.lam.px@rvc.renesas.com>
+---
+ ext/wayland/wlwindow.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
+index 3af0d42..0e5825c 100644
+--- a/ext/wayland/wlwindow.c
++++ b/ext/wayland/wlwindow.c
+@@ -390,7 +390,7 @@ gst_wl_window_update_borders (GstWlWindow * window)
+     return;
+ 
+   if (window->display->viewporter) {
+-    width = height = 2;
++    width = height = 1;
+     window->no_border_update = TRUE;
+   } else {
+     width = window->render_rectangle.w;
+-- 
+2.7.4
+
