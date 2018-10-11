@@ -16,7 +16,7 @@ S = "${WORKDIR}/git"
 
 do_install() {
      install -d ${D}${libdir}/qt5/qml/Qt/labs/presentation
-     cp -a  ${S}/src/* ${D}${libdir}/qt5/qml/Qt/labs/presentation/
+     install -m 755 ${S}/src/* ${D}${libdir}/qt5/qml/Qt/labs/presentation/
 }
 
 #FILES_${PN}-dbg += "${datadir}/${P}/.debug"
