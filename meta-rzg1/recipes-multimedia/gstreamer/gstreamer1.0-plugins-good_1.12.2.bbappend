@@ -7,4 +7,6 @@ SRC_URI += " \
     file://0007-gst1122-v4l2src-Support-crop-function.patch \
     file://0008-gst1122-v4l2src-Update-feature-for-crop-function.patch \
     file://0001-qtmux-remove-checking-PTS-in-gst_qt_mux_add_buffer.patch \
+    file://0009-v4l2object-Support-enable-cont-frame-capture-configu.patch \
 "
+EXTRA_OECONF_append = " --enable-cont-frame-capture"

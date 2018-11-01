@@ -1,0 +1,80 @@
+From d6e99a230c4e588e19f26889db74d2b0150da19b Mon Sep 17 00:00:00 2001
+From: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Date: Thu, 4 Oct 2018 15:01:13 +0700
+Subject: [PATCH] v4l2object: Support --enable-cont-frame-capture configure
+
+This configure support for RCar VIN only
+RCarVIN driver support 2 transmission modes:
+Single frame capture mode: require 3 or less buffers
+Continuous frame capture mode: require 4 or more buffers
+Continuous mode will have better performance (fps)
+
+This configure will will check min buffer to ensure min buffer
+satisfy with continuous frame capture mode of VIN driver.
+This is building configure, set --enable-cont-frame-capture when
+building.
+
+This commit is refered from:
+https://github.com/renesas-rcar/gst-plugins-good/commit/a0e52dc828f068bd5dce4efc3fc6f103faa83ebf
+
+Signed-off-by: Thao Luong <thao.luong.xh@renesas.com>
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+---
+ configure.ac             | 11 +++++++++++
+ sys/v4l2/gstv4l2object.c | 12 +++++++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 6b44cea..333ecd7 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -287,6 +287,17 @@ fi
+ AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
+ AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
+ 
++dnl check for continuous frame capture mode
++AC_ARG_ENABLE([cont-frame-capture],
++             [AS_HELP_STRING([--enable-cont-frame-capture],
++                             [Enable continuous frame capture mode])],
++             [enable_cont_fr_capture=yes],
++             []
++             )
++if test "x${enable_cont_fr_capture}" = "xyes"; then
++  AC_DEFINE(CONT_FRAME_CAPTURE, 1, [Define if you enable option --enable-cont-frame-capture])
++fi
++
+ # set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
+ dnl make sure it doesn't complain about unused variables if debugging is disabled
+ NO_WARNINGS=""
+diff --git a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+index e8cc5d0..40caf06 100644
+--- a/sys/v4l2/gstv4l2object.c
++++ b/sys/v4l2/gstv4l2object.c
+@@ -40,7 +40,7 @@
+ #include "v4l2_calls.h"
+ #include "gstv4l2tuner.h"
+ #include "gstv4l2colorbalance.h"
+-
++#include "gstv4l2src.h"
+ #include "gst/gst-i18n-plugin.h"
+ 
+ #include <gst/video/video.h>
+@@ -3391,6 +3391,16 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
+       min += own_min;
+   }
+ 
++#ifdef CONT_FRAME_CAPTURE
++  if (GST_IS_V4L2SRC (obj->element) == TRUE) {
++	    /* RCarVIN driver support 2 transmission modes:
++	    * Single frame capture mode: require 3 or less buffers
++	    * Continuous frame capture mode: require 4 or more buffers
++	    */
++      if (own_min < 5)
++	      own_min = 5;              /* 4 buf required from driver + 1 for handling  */
++ }
++#endif
+   /* Request a bigger max, if one was suggested but it's too small */
+   if (max != 0)
+     max = MAX (min, max);
+-- 
+2.7.4
