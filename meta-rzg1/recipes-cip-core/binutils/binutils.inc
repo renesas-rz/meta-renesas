@@ -10,6 +10,7 @@ inherit debian-package
 PV = "2.25"
 
 DPN = "binutils"
+SRCREV = "612e69aa722e6fb78bd25704e3afd51bc4bbbd79"
 
 LICENSE = "GPLv2+ & GPLv3+ & LGPLv2 & LGPLv3"
 LIC_FILES_CHKSUM=" \

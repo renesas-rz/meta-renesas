@@ -6,6 +6,7 @@
 inherit debian-package
 PV = "2.19"
 DPN = "glibc"
+SRCREV = "e2c178d0fc01a2909d14d3b64f2a285c06990310"
 
 require glibc-ld.inc
 require glibc-testing.inc
