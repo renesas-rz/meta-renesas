@@ -7,6 +7,7 @@ HOMEPAGE = "http://www.gnu.org/software/libc/index.html"
 inherit debian-package
 PV = "2.19"
 PR = "r1"
+SRCREV = "e2c178d0fc01a2909d14d3b64f2a285c06990310"
 
 # This needs to match with glibc.inc, otherwise glibc-scripts and glibc-locale
 # will fail to find main glibc, for details see
