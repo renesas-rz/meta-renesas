@@ -32,7 +32,8 @@ DEPENDS += "libmediactl-v4l2"
 # Rule for indentify LVDS touch device.
 # Without this rule, if users connect HDMI touch device, they cannot touch
 #    correctly on LVDS (all touch event will go to HDMI screen)
-SRC_URI_append_iwg20m = " file://iwg20m-lvdstouch.rules "
+SRC_URI_append_iwg20m-g1m = " file://iwg20m-lvdstouch.rules "
+SRC_URI_append_iwg20m-g1n = " file://iwg20m-lvdstouch.rules "
 SRC_URI_append_iwg21m = " file://iwg21m-hdmitouch.rules "
 
 do_install_append () {
@@ -40,7 +41,12 @@ do_install_append () {
     ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-vsp2-device.so
 }
 
-do_install_append_iwg20m () {
+do_install_append_iwg20m-g1m () {
+    install -d ${D}/${sysconfdir}/udev/rules.d/
+    install ${WORKDIR}/iwg20m-lvdstouch.rules ${D}/${sysconfdir}/udev/rules.d/
+}
+
+do_install_append_iwg20m-g1n () {
     install -d ${D}/${sysconfdir}/udev/rules.d/
     install ${WORKDIR}/iwg20m-lvdstouch.rules ${D}/${sysconfdir}/udev/rules.d/
 }
@@ -51,5 +57,6 @@ do_install_append_iwg21m () {
 }
 
 
-FILES_${PN}_append_iwg20m += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
+FILES_${PN}_append_iwg20m-g1m += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
+FILES_${PN}_append_iwg20m-g1n += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
 FILES_${PN}_append_iwg21m += " ${sysconfdir}/udev/rules.d/iwg21m-hdmitouch.rules "

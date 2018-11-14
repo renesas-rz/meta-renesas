@@ -4,7 +4,7 @@ require recipes-kernel/linux/linux-yocto.inc
 include linux.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE = "iwg20m|iwg21m|iwg22m|iwg23s"
+COMPATIBLE_MACHINE = "iwg20m-g1m|iwg20m-g1n|iwg21m|iwg22m|iwg23s"
 
 DEPENDS_append = " util-linux-native openssl-native"
 
@@ -27,7 +27,11 @@ SRC_URI_append = " \
     file://common.cfg \
 "
 
-SRC_URI_append_iwg20m = " \
+SRC_URI_append_iwg20m-g1m = " \
+    file://iwg20m.cfg \
+"
+
+SRC_URI_append_iwg20m-g1n = " \
     file://iwg20m.cfg \
 "
 
