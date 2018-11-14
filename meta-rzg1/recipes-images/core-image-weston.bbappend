@@ -26,19 +26,13 @@ update_issue() {
       BSP_SOC="RZG1M"
       BSP_BOARD="RZG1M-SK"
       ;;
-    iwg20m)
-      case "${SOC_FAMILY}" in
-        *r8a7743*)
-          BSP_SOC="RZG1M"
-          BSP_BOARD="iWave"
-        ;;
-        *)
-          BSP_SOC="RZG1N"
-          BSP_BOARD="iWave"
-        ;;
-      esac
+    iwg20m-g1m)
+      BSP_SOC="RZG1M"
+      BSP_BOARD="iWave"
       ;;
-    *)
+    iwg20m-g1n)
+      BSP_SOC="RZG1N"
+      BSP_BOARD="iWave"
       ;;
     esac
 

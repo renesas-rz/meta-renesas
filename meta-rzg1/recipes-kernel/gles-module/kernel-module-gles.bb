@@ -8,7 +8,7 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-gles"
 PR = "r0"
 
-COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7745|r8a77470)"
+COMPATIBLE_MACHINE = "(r8a7742|r8a7743|r8a7744|r8a7745|r8a77470)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI_r8a7742 = "file://RGX_KM_H2.tar.bz2 \
@@ -25,6 +25,12 @@ S_r8a7743 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7743_linux/"
 KERNEL_OLD_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7791_linux/"
 TARGET_PATH_r8a7743 = "eurasia_km/eurasiacon/binary2_r8a7743_linux_release/target/kbuild"
+
+SRC_URI_r8a7744 = 'file://SGX_KM_M2.tar.bz2'
+S_r8a7744 = "${WORKDIR}/eurasia_km"
+KERNEL_SRC_PATH_r8a7744 = "eurasiacon/build/linux2/r8a7743_linux/"
+KERNEL_OLD_SRC_PATH_r8a7744 = "eurasiacon/build/linux2/r8a7791_linux/"
+TARGET_PATH_r8a7744 = "eurasia_km/eurasiacon/binary2_r8a7743_linux_release/target/kbuild"
 
 
 SRC_URI_r8a7745 = 'file://SGX_KM_E2.tar.bz2'
