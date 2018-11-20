@@ -17,7 +17,9 @@ SRC_URI_append = "\
     file://0023-desktop-shell-check-NULL-pointer-when-setting-xwayla.patch \
 "
 
-SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-at-GPU-mode.patch "
+SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-at-GPU-mode.patch \
+                          file://0001-v4l2-renderer-add-more-formats-for-gl-fallback.patch \
+"
 INSANE_SKIP_${PN} += "dev-so"
 INSANE_SKIP_${PN} += "installed-vs-shipped"
 TARGET_CC_ARCH += "${LDFLAGS}"

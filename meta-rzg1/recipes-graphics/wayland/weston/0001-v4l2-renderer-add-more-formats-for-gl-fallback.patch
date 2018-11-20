@@ -1,0 +1,70 @@
+From 917b84122ab91a3e31273353bba881ad32b2f64e Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Tue, 20 Nov 2018 11:04:43 +0700
+Subject: [PATCH] v4l2-renderer: add more formats for gl-fallback
+
+gl-renderer was failed to initialized due to not compatible format
+passed from v4l2-renderer. This commit add more formats for gl-renderer.
+It can use different format with v4l2-renderer in gl-fallback mode
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ libweston/v4l2-renderer.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/libweston/v4l2-renderer.c b/libweston/v4l2-renderer.c
+index 04f58c0..a0db3ac 100644
+--- a/libweston/v4l2-renderer.c
++++ b/libweston/v4l2-renderer.c
+@@ -178,11 +178,15 @@ v4l2_destroy_gbm_device(struct gbm_device *gbm)
+ static int
+ v4l2_create_gl_renderer(struct weston_compositor *ec, struct v4l2_renderer *renderer)
+ {
+-	EGLint format = GBM_FORMAT_XRGB8888;
++	EGLint format[3] = {
++		GBM_FORMAT_XRGB8888,
++		GBM_FORMAT_ARGB8888,
++		0,
++	};
+ 
+ 	if (gl_renderer->display_create(ec, 0, renderer->gbm,
+ 					NULL, gl_renderer->opaque_attribs,
+-					&format, 1) < 0) {
++					format, 3) < 0) {
+ 		return -1;
+ 	}
+ 	renderer->gl_renderer = ec->renderer;
+@@ -193,7 +197,11 @@ v4l2_create_gl_renderer(struct weston_compositor *ec, struct v4l2_renderer *rend
+ static int
+ v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer)
+ {
+-	EGLint format = GBM_FORMAT_XRGB8888;
++	EGLint format[3] = {
++		GBM_FORMAT_XRGB8888,
++		GBM_FORMAT_ARGB8888,
++		0,
++	};
+ 	struct v4l2_output_state *state = output->renderer_state;
+ 	int i;
+ 	pixman_format_code_t read_format;
+@@ -201,7 +209,7 @@ v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer
+ 	state->gbm_surface = gbm_surface_create(renderer->gbm,
+ 						output->current_mode->width,
+ 						output->current_mode->height,
+-						format,
++						format[0],
+ 						GBM_BO_USE_SCANOUT |
+ 						GBM_BO_USE_RENDERING |
+ 						GBM_BO_CREATE_EMPTY);
+@@ -224,7 +232,7 @@ v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer
+ 					      (EGLNativeDisplayType)state->gbm_surface,
+ 					      state->gbm_surface,
+ 					      gl_renderer->opaque_attribs,
+-					      &format, 1) < 0) {
++					      &format, 3) < 0) {
+ 		weston_log("%s: failed to create gl renderer output state\n", __func__);
+ 		gbm_surface_destroy(state->gbm_surface);
+ 		return -1;
+-- 
+2.7.4
+
