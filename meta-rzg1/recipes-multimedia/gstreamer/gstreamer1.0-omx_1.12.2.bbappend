@@ -32,6 +32,7 @@ SRC_URI_append = " \
     file://0039-omxvideodec-Support-dynamic-change-in-src-pad.patch \
     file://0040-omxvideodec-don-t-drop-frame-if-it-contains-header-d.patch \
     file://0041-omxvideoenc-Correct-handling-for-alignment-au.patch \
+    file://0042-omxvideoenc-add-nPFrames-for-AVCINTRAPERIOD-c.patch \
 "
 
 DEPENDS += "omx-user-module mmngrbuf-user-module"

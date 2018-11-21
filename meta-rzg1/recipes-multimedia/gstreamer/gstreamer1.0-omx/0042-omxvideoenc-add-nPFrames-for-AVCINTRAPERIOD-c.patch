@@ -1,0 +1,132 @@
+From 436b4a6ee1ca43eb6ebd6542f2c3f7dd2fac9ad5 Mon Sep 17 00:00:00 2001
+From: TraHT <traht@fsoft.com.vn>
+Date: Tue, 14 Aug 2018 17:28:16 +0700
+Subject: omxvideoenc: Add nPFrames for AVCINTRAPERIOD config
+
+Porting from a patch in Linux 3.10 environment
+
+Signed-off: Long Dang <long.dang.aj@rvc.renesas.com>
+Signed-off-by: TraHT <traht@fsoft.com.vn>
+---
+ omx/gstomxvideoenc.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ omx/gstomxvideoenc.h |  1 +
+ 2 files changed, 51 insertions(+)
+
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index 05d867f..070d658 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -131,6 +131,7 @@ enum
+   PROP_QUANT_I_FRAMES,
+   PROP_QUANT_P_FRAMES,
+   PROP_QUANT_B_FRAMES,
++  PROP_NUM_P_FRAMES,
+   PROP_SCAN_TYPE,
+   PROP_NO_COPY
+ };
+@@ -141,6 +142,7 @@ enum
+ #define GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT (0xffffffff)
+ #define GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT (0xffffffff)
+ #define GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT (0xffffffff)
++#define GST_OMX_VIDEO_ENC_NUM_P_FRAMES_DEFAULT (0xffffffff)
+ #define GST_OMX_VIDEO_ENC_SCAN_TYPE_DEFAULT (0xffffffff)
+ 
+ /* class initialization */
+@@ -213,6 +215,12 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
+           "Whether or not to share input buffer (userptr) with upstream element",
+           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+           GST_PARAM_MUTABLE_READY));
++  g_object_class_install_property (gobject_class, PROP_NUM_P_FRAMES,
++      g_param_spec_uint ("num-p-frames", "P-Frames between each I frame",
++          "Number of P frames between each I frame (0xffffffff=component default)",
++          0, G_MAXUINT, GST_OMX_VIDEO_ENC_NUM_P_FRAMES_DEFAULT,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
++          GST_PARAM_MUTABLE_READY));
+ 
+   element_class->change_state =
+       GST_DEBUG_FUNCPTR (gst_omx_video_enc_change_state);
+@@ -248,6 +256,7 @@ gst_omx_video_enc_init (GstOMXVideoEnc * self)
+   self->quant_i_frames = GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT;
+   self->quant_p_frames = GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT;
+   self->quant_b_frames = GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT;
++  self->num_p_frames = GST_OMX_VIDEO_ENC_NUM_P_FRAMES_DEFAULT;
+   self->scan_type = GST_OMX_VIDEO_ENC_SCAN_TYPE_DEFAULT;
+   self->no_copy = FALSE;
+ 
+@@ -424,6 +433,41 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
+           "scan-type is invalid now due to MC does not support");
+ #endif
+     }
++    if (self->num_p_frames != 0xffffffff) {
++      OMX_VIDEO_CONFIG_AVCINTRAPERIOD avcintraperiod_config;
++
++      GST_OMX_INIT_STRUCT (&avcintraperiod_config);
++      avcintraperiod_config.nPortIndex = self->enc_out_port->index;
++
++      err = gst_omx_component_get_config (self->enc,
++          OMX_IndexConfigVideoAVCIntraPeriod, &avcintraperiod_config);
++      if (err == OMX_ErrorNone) {
++
++        if (self->num_p_frames != 0xffffffff)
++          avcintraperiod_config.nPFrames = self->num_p_frames;
++
++        err =
++            gst_omx_component_set_config (self->enc,
++            OMX_IndexConfigVideoAVCIntraPeriod, &avcintraperiod_config);
++        if (err == OMX_ErrorUnsupportedIndex) {
++          GST_WARNING_OBJECT (self,
++              "Setting AvcIntraPeriod config not supported by the component");
++        } else if (err == OMX_ErrorUnsupportedSetting) {
++          GST_WARNING_OBJECT (self,
++              "Setting AvcIntraPeriod config nPframe=%u not supported by the component",
++              self->num_p_frames );
++        } else if (err != OMX_ErrorNone) {
++          GST_ERROR_OBJECT (self,
++              "Failed to set AvcIntraPeriod config: %s (0x%08x)",
++              gst_omx_error_to_string (err), err);
++          return FALSE;
++        }
++      } else {
++        GST_ERROR_OBJECT (self,
++            "Failed to get AvcIntraPeriod config: %s (0x%08x)",
++            gst_omx_error_to_string (err), err);
++      }
++    }
+   }
+ 
+   return TRUE;
+@@ -532,6 +576,9 @@ gst_omx_video_enc_set_property (GObject * object, guint prop_id,
+     case PROP_QUANT_B_FRAMES:
+       self->quant_b_frames = g_value_get_uint (value);
+       break;
++    case PROP_NUM_P_FRAMES:
++      self->num_p_frames = g_value_get_uint (value);
++      break;
+     case PROP_SCAN_TYPE:
+       self->scan_type = g_value_get_enum (value);
+       break;
+@@ -566,6 +613,9 @@ gst_omx_video_enc_get_property (GObject * object, guint prop_id, GValue * value,
+     case PROP_QUANT_B_FRAMES:
+       g_value_set_uint (value, self->quant_b_frames);
+       break;
++    case PROP_NUM_P_FRAMES:
++      g_value_set_uint (value, self->num_p_frames);
++      break;
+     case PROP_SCAN_TYPE:
+       g_value_set_enum (value, self->scan_type);
+       break;
+diff --git a/omx/gstomxvideoenc.h b/omx/gstomxvideoenc.h
+index fc47552..6474bf4 100644
+--- a/omx/gstomxvideoenc.h
++++ b/omx/gstomxvideoenc.h
+@@ -75,6 +75,7 @@ struct _GstOMXVideoEnc
+   guint32 quant_i_frames;
+   guint32 quant_p_frames;
+   guint32 quant_b_frames;
++  guint32 num_p_frames;
+   guint32 scan_type;
+   /* TRUE to share buffers (userptr) to upstream */
+   gboolean no_copy;
+-- 
+2.7.4
+
