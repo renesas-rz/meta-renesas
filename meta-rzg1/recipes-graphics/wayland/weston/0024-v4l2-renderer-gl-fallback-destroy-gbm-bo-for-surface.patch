@@ -1,0 +1,84 @@
+From a45077f861363424b0b21f35541c2210654380ef Mon Sep 17 00:00:00 2001
+From: tamnn1 <tamnn1@fsoft.com.vn>
+Date: Tue, 27 Nov 2018 10:00:19 +0700
+Subject: v4l2-renderer: gl-fallback: destroy gbm bo for surface and gbm
+ surface
+
+Missing destroy gbm surface and its bo when gl-fallback is enabled
+
+Signed-off-by: tamnn1 <tamnn1@fsoft.com.vn>
+---
+ libweston/v4l2-renderer.c | 36 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/libweston/v4l2-renderer.c b/libweston/v4l2-renderer.c
+index a0db3ac..ec2e52e 100644
+--- a/libweston/v4l2-renderer.c
++++ b/libweston/v4l2-renderer.c
+@@ -194,6 +194,19 @@ v4l2_create_gl_renderer(struct weston_compositor *ec, struct v4l2_renderer *rend
+ 	return 0;
+ }
+ 
++static void
++v4l2_gl_gbm_surface_destroy(struct v4l2_output_state *state)
++{
++	int i;
++	struct gbm_kms_surface *surface = (struct gbm_kms_surface *)state->gbm_surface;
++	for (i = 0; i < 2; i++) {
++		int n = i % state->bo_count;
++		if (surface->bo[n])
++			gbm_bo_destroy((struct gbm_bo *)surface->bo[n]);
++	}
++	gbm_surface_destroy(state->gbm_surface);
++}
++
+ static int
+ v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer)
+ {
+@@ -234,7 +247,7 @@ v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer
+ 					      gl_renderer->opaque_attribs,
+ 					      &format, 3) < 0) {
+ 		weston_log("%s: failed to create gl renderer output state\n", __func__);
+-		gbm_surface_destroy(state->gbm_surface);
++		v4l2_gl_gbm_surface_destroy(state);
+ 		return -1;
+ 	}
+ 	output->compositor->read_format = read_format;
+@@ -244,6 +257,19 @@ v4l2_init_gl_output(struct weston_output *output, struct v4l2_renderer *renderer
+ 
+ 	return 0;
+ }
++static void
++v4l2_gl_output_destroy(struct weston_output *output,
++		       struct v4l2_renderer *renderer)
++{
++	struct v4l2_output_state *state = get_output_state(output);
++	output->compositor->renderer = renderer->gl_renderer;
++	output->renderer_state = state->gl_renderer_state;
++	gl_renderer->output_destroy(output);
++	output->renderer_state = state;
++	output->compositor->renderer = &renderer->base;
++
++	v4l2_gl_gbm_surface_destroy(state);
++}
+ 
+ static void
+ v4l2_gl_flush_damage(struct weston_surface *surface)
+@@ -1891,6 +1917,14 @@ static void
+ v4l2_renderer_output_destroy(struct weston_output *output)
+ {
+ 	struct v4l2_output_state *vo = get_output_state(output);
++#ifdef V4L2_GL_FALLBACK
++	struct v4l2_renderer *renderer =
++		(struct v4l2_renderer*)output->compositor->renderer;
++
++	if (renderer->gl_fallback)
++		v4l2_gl_output_destroy(output, renderer);
++#endif
++
+ 	if (vo->bo)
+ 		free(vo->bo);
+ 	free(vo);
+-- 
+2.7.4
+
