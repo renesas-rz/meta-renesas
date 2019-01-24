@@ -1,0 +1,36 @@
+From fb7108b0b773dd44b30db563a2877496dac70c3c Mon Sep 17 00:00:00 2001
+From: Danh Duong <danhdc1@fsoft.com.vn>
+Date: Wed, 23 Jan 2019 17:26:02 +0700
+Subject: fdpm : Remove unused variable and correct type of variable pointer
+
+There is a declared variable but not be used and there is a wrong type
+of variable. This leads the compiler can not execute successfully.
+
+Signed-off-by: Danh Duong <danhdc1@fsoft.com.vn>
+---
+ drv/fdpm_main.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drv/fdpm_main.c b/drv/fdpm_main.c
+index aa77ebf..4f86366 100755
+--- a/drv/fdpm_main.c
++++ b/drv/fdpm_main.c
+@@ -298,7 +298,6 @@ static int fdpm_close(struct inode *inode, struct file *filp)
+ static int fdpm_fdp_remove(struct platform_device *pdev)
+ {
+	struct fdpm_drvdata *pdrv = p_fdpm_drvdata;
+-	struct device_node *np = pdev->dev.of_node;
+
+	DPRINT("fdpm_fdp_remove. called(id=%d)\n", pdev->id);
+
+@@ -374,7 +373,7 @@ static int fdpm_fdp_probe(struct platform_device *pdev)
+	int                 ret   = 0;
+	static int channel = 0;
+
+-	const struct device_node *node = pdev->dev.of_node;
++	const struct of_device_id *node;
+	struct fdpm_drvdata *pdrv;
+
+	DPRINT("This is module probe - START - %s %d\n",__func__,__LINE__);
+--
+2.7.4
