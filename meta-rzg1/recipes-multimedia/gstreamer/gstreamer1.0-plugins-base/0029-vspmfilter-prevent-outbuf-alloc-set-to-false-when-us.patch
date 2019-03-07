@@ -1,0 +1,32 @@
+From 7fc3e0d7f0a0c898d88373d0002452455c3f5f9b Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Thu, 7 Mar 2019 09:47:01 +0700
+Subject: [PATCH] vspmfilter: prevent outbuf-alloc set to false when use
+ dmabuf-use
+
+dmabuf-use require outbuf-alloc, so this commit prevent user to disable
+outbuf-alloc when using dmabuf-use
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index f2601e0..51afbb0 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -961,6 +961,10 @@ gst_vspm_filter_set_property (GObject * object, guint property_id,
+   switch (property_id) {
+     case PROP_VSPM_OUTBUF:
+       space->outbuf_allocate = g_value_get_boolean (value);
++      if (space->use_dmabuf == TRUE && space->outbuf_allocate == FALSE){
++          GST_WARNING_OBJECT (space, "dmabuf-use require outbuf-alloc, outbuf-alloc will be set to true!");
++          space->outbuf_allocate = TRUE;
++      }
+       break;
+     case PROP_VSPM_DMABUF:
+       space->use_dmabuf = g_value_get_boolean (value);
+-- 
+2.7.4
+
