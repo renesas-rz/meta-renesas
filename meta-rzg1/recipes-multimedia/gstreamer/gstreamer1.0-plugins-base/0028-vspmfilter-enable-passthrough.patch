@@ -1,0 +1,38 @@
+From 8ec0824e032a5790f5518e4e76694dff72693704 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Wed, 3 Oct 2018 19:15:43 +0700
+Subject: [PATCH] vspmfilter: enable passthrough
+
+This commit enables passthrough mode.
+After enabled, vspmfilter will passthrough the buffer without
+processing if input caps and output caps are same.
+This improve performance in that case.
+
+Besides, this fixes the wrong output image issue happens when
+2 instances of vspmfilter are used as a same time (which happens
+a lot in playbin3).
+As a result, playbin3 can run with good performance after
+this commit with below command:
+    gst-launch-1.0 playbin uri=file:///<video> video-sink=waylandsink
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index bf02a1e..afa28a3 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -803,6 +803,8 @@ gst_vspm_filter_class_init (GstVspmFilterClass * klass)
+   gstbasetransform_class->transform_meta =
+       GST_DEBUG_FUNCPTR (gst_vspm_filter_transform_meta);
+ 
++  gstbasetransform_class->passthrough_on_same_caps = TRUE;
++
+   gstbasetransform_class->prepare_output_buffer = 
+       GST_DEBUG_FUNCPTR (gst_vspm_filter_prepare_output_buffer);
+   gstvideofilter_class->set_info =
+-- 
+1.9.1
+
