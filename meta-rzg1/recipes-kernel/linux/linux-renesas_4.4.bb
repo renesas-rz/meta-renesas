@@ -196,6 +196,7 @@ do_configure_append() {
 	configure_LVDS_panel
 	configure_common
 
+	configure_usb_cam
 	yes '' | oe_runmake oldconfig
 }
 
