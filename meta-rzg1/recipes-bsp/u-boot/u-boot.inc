@@ -97,3 +97,6 @@ do_deploy_append() {
 }
 
 addtask deploy before do_build after do_compile
+
+# Let Yocto build u-boot in machine dir to prevent conflict between boards
+PACKAGE_ARCH = "${MACHINE_ARCH}"
