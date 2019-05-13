@@ -13,6 +13,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI_r8a7742 = "file://RGX_KM_H2.tar.bz2 \
                    file://0001-kernel-module-gles-fix-issue-compile-for-the-real-ti.patch \
+                   file://0002-kernel-modules-gles-correct-number-of-argument-when-.patch \
 "
 
 S_r8a7742 = "${WORKDIR}/rogue_km"
@@ -20,27 +21,39 @@ KERNEL_SRC_PATH_r8a7742 = "build/linux/r8a7742_linux"
 KERNEL_OLD_SRC_PATH_r8a7742 = "build/linux/r8a7790_linux/"
 TARGET_PATH_r8a7742 = "rogue_km/binary_r8a7742_linux_release/target/kbuild/"
 
-SRC_URI_r8a7743 = 'file://SGX_KM_M2.tar.bz2'
+SRC_URI_r8a7743 = " \
+    file://SGX_KM_M2.tar.bz2 \
+    file://0003-kernel-modules-gles-correct-number-of-argument-when-.patch \
+"
 S_r8a7743 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7743_linux/"
 KERNEL_OLD_SRC_PATH_r8a7743 = "eurasiacon/build/linux2/r8a7791_linux/"
 TARGET_PATH_r8a7743 = "eurasia_km/eurasiacon/binary2_r8a7743_linux_release/target/kbuild"
 
-SRC_URI_r8a7744 = 'file://SGX_KM_M2.tar.bz2'
+SRC_URI_r8a7744 = " \
+    file://SGX_KM_M2.tar.bz2 \
+    file://0003-kernel-modules-gles-correct-number-of-argument-when-.patch \
+"
 S_r8a7744 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7744 = "eurasiacon/build/linux2/r8a7743_linux/"
 KERNEL_OLD_SRC_PATH_r8a7744 = "eurasiacon/build/linux2/r8a7791_linux/"
 TARGET_PATH_r8a7744 = "eurasia_km/eurasiacon/binary2_r8a7743_linux_release/target/kbuild"
 
 
-SRC_URI_r8a7745 = 'file://SGX_KM_E2.tar.bz2'
+SRC_URI_r8a7745 = " \
+    file://SGX_KM_E2.tar.bz2 \
+    file://0003-kernel-modules-gles-correct-number-of-argument-when-.patch \
+"
 S_r8a7745 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a7745 = "eurasiacon/build/linux2/r8a7745_linux/"
 KERNEL_OLD_SRC_PATH_r8a7745 = "eurasiacon/build/linux2/r8a7794_linux/"
 TARGET_PATH_r8a7745 = "eurasia_km/eurasiacon/binary2_r8a7745_linux_release/target/kbuild"
 
 
-SRC_URI_r8a77470 = 'file://SGX_KM_C2.tar.bz2'
+SRC_URI_r8a77470 = " \
+    file://SGX_KM_C2.tar.bz2 \
+    file://0003-kernel-modules-gles-correct-number-of-argument-when-.patch \
+"
 S_r8a77470 = "${WORKDIR}/eurasia_km"
 KERNEL_SRC_PATH_r8a77470 = "eurasiacon/build/linux2/r8a77470_linux/"
 KERNEL_OLD_SRC_PATH_r8a77470 = "eurasiacon/build/linux2/r8a7794X_linux/"
