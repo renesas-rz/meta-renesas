@@ -1,0 +1,84 @@
+From 9a8c522ed7fbc04706e2cb80314b1015df298a73 Mon Sep 17 00:00:00 2001
+From: Le Hoang Minh Thuan <ThuanLHM@fsoft.com.vn>
+Date: Mon, 1 Apr 2019 09:19:46 +0700
+Subject: [PATCH] Pass through functions if keyboard is not inserted
+
+From commit 880ebc7ed9c16fc3aa4c1cf0601909c72a9348e9 branch master
+of weston repos, the weston_pointer_set_focus(...) function was
+changed at: struct wl_display *display = keyboard->seat->compositor->wl_display;
+which causes the weston was failed when the keyboard variable is NULL
+in weston-dnd app.
+
+Hence, this patch will check NULL of variable before accessing the value
+of structer to avoid the invalid memory.
+
+Signed-off-by: Le Hoang Minh Thuan <ThuanLHM@fsoft.com.vn>
+Signed-off-by: DanhDC1 <danhdc1@fsoft.com.vn>
+---
+ libweston/data-device.c | 26 ++++++++++++++++++--------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/libweston/data-device.c b/libweston/data-device.c
+index cba1e11..bcc59fb 100644
+--- a/libweston/data-device.c
++++ b/libweston/data-device.c
+@@ -628,7 +628,9 @@ data_device_end_pointer_drag_grab(struct weston_pointer_drag *drag)
+ 
+ 	data_device_end_drag_grab(&drag->base, pointer->seat);
+ 	weston_pointer_end_grab(pointer);
+-	weston_keyboard_end_grab(keyboard);
++	if (keyboard) {
++		weston_keyboard_end_grab(keyboard);
++	}
+ 	free(drag);
+ }
+ 
+@@ -725,7 +727,9 @@ data_device_end_touch_drag_grab(struct weston_touch_drag *drag)
+ 
+ 	data_device_end_drag_grab(&drag->base, touch->seat);
+ 	weston_touch_end_grab(touch);
+-	weston_keyboard_end_grab(keyboard);
++	if (keyboard) {
++		weston_keyboard_end_grab(keyboard);
++	}
+ 	free(drag);
+ }
+ 
+@@ -934,10 +938,13 @@ weston_pointer_start_drag(struct weston_pointer *pointer,
+ 	}
+ 
+ 	weston_pointer_clear_focus(pointer);
+-	weston_keyboard_set_focus(keyboard, NULL);
+-
++	if (keyboard) {
++		weston_keyboard_set_focus(keyboard, NULL);
++	}
+ 	weston_pointer_start_grab(pointer, &drag->grab);
+-	weston_keyboard_start_grab(keyboard, &drag->base.keyboard_grab);
++	if (keyboard) {
++		weston_keyboard_start_grab(keyboard, &drag->base.keyboard_grab);
++	}
+ 
+ 	return 0;
+ }
+@@ -994,11 +1001,14 @@ weston_touch_start_drag(struct weston_touch *touch,
+ 			      &drag->base.data_source_listener);
+ 	}
+ 
+-	weston_keyboard_set_focus(keyboard, NULL);
++	if (keyboard) {
++		weston_keyboard_set_focus(keyboard, NULL);
++	}
+ 
+ 	weston_touch_start_grab(touch, &drag->grab);
+-	weston_keyboard_start_grab(keyboard, &drag->base.keyboard_grab);
+-
++	if (keyboard) {
++		weston_keyboard_start_grab(keyboard, &drag->base.keyboard_grab);
++	}
+ 	drag_grab_touch_focus(drag);
+ 
+ 	return 0;
+-- 
+2.7.4
+
