@@ -1,0 +1,50 @@
+From 545700692f13827821e64d172a257f0391f3f87b Mon Sep 17 00:00:00 2001
+From: TamNN1 <tamnn1@fsoft.com.vn>
+Date: Tue, 16 Apr 2019 09:24:52 +0700
+Subject: kernel-modules-gles: correct number of argument when using the
+ get_user_pages() function.
+
+When upgrading the Linux kernel from cip-29 to cip-31 realtime
+The number of argument for get_user_pages() function has been
+changed from 8 to 7 arguments.That leads the compiler will be
+terminated when compiling the kernel-module-gles package.
+
+This patch is to correct the value and the number of argument
+when using the get_user_pages() function on iWave G1M/N/E/C
+
+Signed-off-by: TamNN1 <tamnn1@fsoft.com.vn>
+Signed-off-by: DanhDC1 <danhdc1@fsoft.com.vn>
+---
+ services4/3rdparty/dc_linuxfb/memwrap.c | 2 +-
+ services4/srvkm/env/linux/osfunc.c      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/services4/3rdparty/dc_linuxfb/memwrap.c b/services4/3rdparty/dc_linuxfb/memwrap.c
+index a2d0cc4..ede2da4 100644
+--- a/services4/3rdparty/dc_linuxfb/memwrap.c
++++ b/services4/3rdparty/dc_linuxfb/memwrap.c
+@@ -381,7 +381,7 @@ PVRSRV_ERROR DC_OSAcquirePhysPageAddr(IMG_VOID *pvCPUVAddr,
+     bMMapSemHeld = IMG_TRUE;
+ 
+     /* Get page list */
+-    psInfo->iNumPagesMapped = get_user_pages(current, current->mm, uStartAddr, psInfo->iNumPages, 1, 0, psInfo->ppsPages, NULL);
++    psInfo->iNumPagesMapped = get_user_pages(current, current->mm, uStartAddr, psInfo->iNumPages, FOLL_WRITE, psInfo->ppsPages, NULL);
+ 
+     if (psInfo->iNumPagesMapped >= 0)
+     {
+diff --git a/services4/srvkm/env/linux/osfunc.c b/services4/srvkm/env/linux/osfunc.c
+index 0f71945..b90e666 100644
+--- a/services4/srvkm/env/linux/osfunc.c
++++ b/services4/srvkm/env/linux/osfunc.c
+@@ -3634,7 +3634,7 @@ PVRSRV_ERROR OSAcquirePhysPageAddr(IMG_VOID *pvCPUVAddr,
+     bMMapSemHeld = IMG_TRUE;
+ 
+     /* Get page list */
+-    psInfo->iNumPagesMapped = get_user_pages(current, current->mm, uStartAddr, psInfo->iNumPages, 1, 0, psInfo->ppsPages, NULL);
++    psInfo->iNumPagesMapped = get_user_pages(current, current->mm, uStartAddr, psInfo->iNumPages, FOLL_WRITE, psInfo->ppsPages, NULL);
+ 
+     if (psInfo->iNumPagesMapped >= 0)
+     {
+-- 
+2.7.4
+

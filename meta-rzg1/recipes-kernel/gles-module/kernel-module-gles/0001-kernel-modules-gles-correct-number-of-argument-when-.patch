@@ -1,0 +1,36 @@
+From 3f3c204c051647d78145aed30d3954ba4605ea0a Mon Sep 17 00:00:00 2001
+From: TamNN1 <tamnn1@fsoft.com.vn>
+Date: Tue, 16 Apr 2019 10:09:01 +0700
+Subject: kernel-modules-gles: correct number of argument when using the
+ get_user_pages() function.
+
+When upgrading the Linux kernel from cip-29 to cip-31 realtime
+The number of argument for get_user_pages() function has been
+changed from 8 to 7 arguments.That leads the compiler will be
+terminated when compiling the kernel-module-gles package.
+
+This patch is to correct the value and the number of argument
+when using the get_user_pages() function on iWave G1H only
+
+Signed-off-by: TamNN1 <tamnn1@fsoft.com.vn>
+Signed-off-by: DanhDC1 <danhdc1@fsoft.com.vn>
+---
+ services/server/env/linux/wrapextmem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/services/server/env/linux/wrapextmem.c b/services/server/env/linux/wrapextmem.c
+index 162575a..1cf09d9 100755
+--- a/services/server/env/linux/wrapextmem.c
++++ b/services/server/env/linux/wrapextmem.c
+@@ -226,7 +226,7 @@ static PVRSRV_ERROR OSAcquirePhysPageAddr(PMR_WRAPEXT_DATA  *psAllocPriv)
+ 	bMMapSemHeld = IMG_TRUE;
+ 
+ 	/* Get page list */
+-	psAllocPriv->i32NumPageMapped = get_user_pages(current, current->mm, uStartAddr, psAllocPriv->i32PageCount, 1, 0, psAllocPriv->ppsPages, NULL);
++	psAllocPriv->i32NumPageMapped = get_user_pages(current, current->mm, uStartAddr, psAllocPriv->i32PageCount, FOLL_WRITE, psAllocPriv->ppsPages, NULL);
+ 	if (psAllocPriv->i32NumPageMapped >= 0)
+ 	{
+ 		/* See if we got all the pages we wanted */
+-- 
+2.7.4
+
