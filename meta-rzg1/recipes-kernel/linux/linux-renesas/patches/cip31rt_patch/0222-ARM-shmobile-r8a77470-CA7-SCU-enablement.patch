@@ -1,0 +1,48 @@
+From c7bee507027510bb1e3704f4cbc7a030552e353a Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Thu, 21 Dec 2017 14:22:36 +0700
+Subject: [PATCH 222/642] ARM: shmobile: r8a77470 CA7-SCU enablement
+
+Power on CA7 SCU
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/mach-shmobile/smp-r8a77470.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/smp-r8a77470.c b/arch/arm/mach-shmobile/smp-r8a77470.c
+index 0a9e0df..b3ad7c42 100644
+--- a/arch/arm/mach-shmobile/smp-r8a77470.c
++++ b/arch/arm/mach-shmobile/smp-r8a77470.c
+@@ -17,6 +17,7 @@
+ #include <linux/init.h>
+ #include <linux/smp.h>
+ #include <linux/io.h>
++#include <linux/soc/renesas/rcar-sysc.h>
+ 
+ #include <asm/smp_plat.h>
+ 
+@@ -25,6 +26,11 @@
+ #include "r8a77470.h"
+ #include "rcar-gen2.h"
+ 
++static struct rcar_sysc_ch r8a77470_ca7_scu = {
++	.chan_offs = 0x100, /* PWRSR3 .. PWRER3 */
++	.isr_bit = 21, /* CA7-SCU */
++};
++
+ static struct rcar_apmu_config r8a77470_apmu_config[] = {
+ 	{
+ 		.iomem = DEFINE_RES_MEM(0xe6151000, 0x188),
+@@ -40,6 +46,7 @@ static void __init r8a77470_smp_prepare_cpus(unsigned int max_cpus)
+ 				       ARRAY_SIZE(r8a77470_apmu_config));
+ 
+ 	rcar_gen2_pm_init();
++	rcar_sysc_power_up(&r8a77470_ca7_scu);
+ }
+ 
+ struct smp_operations r8a77470_smp_ops __initdata = {
+-- 
+2.7.4
+

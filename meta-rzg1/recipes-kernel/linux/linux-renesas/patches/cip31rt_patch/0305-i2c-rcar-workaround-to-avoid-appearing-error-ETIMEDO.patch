@@ -1,0 +1,33 @@
+From 447ab4adc6e8390353323cf120caa352ea0893df Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 14:53:26 +0700
+Subject: [PATCH 305/642] i2c: rcar: workaround to avoid appearing error
+ ETIMEDOUT and EBUSY
+
+i2c has randomly error ETIMEDOUT, and after that error EBUSY appears many times.
+So, add msleep(100) to function rcar_i2c_master_xfer for workaround this issue.
+The result: i2c has error ETIMEDOUT rarely, and does not have error EBUSY anymore.
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/i2c/busses/i2c-rcar.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 36c605a..f622003 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -508,6 +508,7 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+ 	time_left = wait_event_timeout(priv->wait,
+ 				     rcar_i2c_flags_has(priv, ID_DONE),
+ 				     num * adap->timeout);
++	msleep(100);
+ 	if (!time_left) {
+ 		rcar_i2c_init(priv);
+ 		ret = -ETIMEDOUT;
+-- 
+2.7.4
+

@@ -1,0 +1,28 @@
+From f92449fca9bb7808e3c362bb470207dcd17b44a5 Mon Sep 17 00:00:00 2001
+From: AnhTran <anh.tran.jc@renesas.com>
+Date: Mon, 15 Jan 2018 14:56:37 +0700
+Subject: [PATCH 292/642] ARM: dts: r8a77470: Enable SDHI-dma
+
+Signed-off-by: AnhTran <anh.tran.jc@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index ac3e738..2672e8f 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -503,6 +503,9 @@
+ 	sdhi2: sd@ee160000 {
+ 		compatible = "renesas,sdhi-r8a77470";
+ 		reg = <0 0xee160000 0 0x200>;
++		dmas =	<&dmac1 0xd3>, <&dmac1 0xd4>,
++			<&dmac0 0xd3>, <&dmac0 0xd4>;
++		dma-names = "tx", "rx";
+ 		interrupts = <0 167 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A77470_CLK_SDHI2>;
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+-- 
+2.7.4
+

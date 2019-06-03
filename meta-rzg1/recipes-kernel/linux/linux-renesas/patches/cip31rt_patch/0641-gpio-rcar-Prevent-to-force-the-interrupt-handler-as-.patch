@@ -1,0 +1,33 @@
+From 7c9717e0e57c9c8c8d53492828261a25777bb2a9 Mon Sep 17 00:00:00 2001
+From: Danh Duong <danhdc1@fsoft.com.vn>
+Date: Wed, 14 Nov 2018 11:14:43 +0700
+Subject: [PATCH 641/642] gpio-rcar: Prevent to force the interrupt handler as
+ threaded
+
+  On RT system, when kernel is booting with CONFIG_IRQ_FORCED_THREADING
+ flag, the gpio_rcar_irq_handler() will be forced as threaded and then
+ will generate a WARNING relating to interrupt handlers.
+  To prevent to force the interrupt handler as threaded, we will add
+ IRQF_NO_THREAD flag when requesting an interrupt for gpio-rcar driver.
+
+Signed-off-by: Danh Duong <danhdc1@fsoft.com.vn>
+---
+ drivers/gpio/gpio-rcar.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index e96dc3b..f027559 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -547,7 +547,7 @@ static int gpio_rcar_probe(struct platform_device *pdev)
+ 
+ 	p->irq_parent = irq->start;
+ 	if (devm_request_irq(dev, irq->start, gpio_rcar_irq_handler,
+-			     IRQF_SHARED, name, p)) {
++			     IRQF_SHARED | IRQF_NO_THREAD, name, p)) {
+ 		dev_err(dev, "failed to request IRQ\n");
+ 		ret = -ENOENT;
+ 		goto err1;
+-- 
+2.7.4
+

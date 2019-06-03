@@ -1,0 +1,27 @@
+From 30094841d43e0f30d6288f111dd3b841cbe63842 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Thu, 21 Dec 2017 13:54:29 +0700
+Subject: [PATCH 221/642] mach-shmobile: smp: Fix apmu base address
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/mach-shmobile/smp-r8a77470.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/smp-r8a77470.c b/arch/arm/mach-shmobile/smp-r8a77470.c
+index 9d870da..0a9e0df 100644
+--- a/arch/arm/mach-shmobile/smp-r8a77470.c
++++ b/arch/arm/mach-shmobile/smp-r8a77470.c
+@@ -27,7 +27,7 @@
+ 
+ static struct rcar_apmu_config r8a77470_apmu_config[] = {
+ 	{
+-		.iomem = DEFINE_RES_MEM(0xe6152000, 0x188),
++		.iomem = DEFINE_RES_MEM(0xe6151000, 0x188),
+ 		.cpus = { 0, 1 },
+ 	}
+ };
+-- 
+2.7.4
+

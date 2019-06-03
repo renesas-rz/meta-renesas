@@ -1,0 +1,65 @@
+From d5cd456c8f1c0c6b337b16709f5942fba527a22d Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Wed, 14 Nov 2018 16:11:34 +0700
+Subject: [PATCH 228/642] ARM: DTS: iwg23s: add Ethernet AVB and PHY device
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s.dts | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s.dts b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+index c19d0df..770c87a 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+@@ -22,6 +22,7 @@
+ 		serial4 = &scif5;
+ 		serial5 = &hscif1;
+ 		serial6 = &hscif2;
++		ethernet0 = &avb;
+ 	};
+ 
+ 	memory@40000000 {
+@@ -124,6 +125,16 @@
+ 		renesas,function = "hscif2";
+ 	};
+ 
++	avb_pins: avb {
++		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
++		renesas,function = "avb";
++	};
++
++	phy0_pins: phy0 {
++		renesas,groups = "intc_irq8";
++		renesas,function = "intc";
++	};
++
+ 	sdhi2_pins: sd1 {
+ 		renesas,groups = "sdhi2_data4", "sdhi2_ctrl", "sdhi2_cd";
+ 		renesas,function = "sdhi2";
+@@ -173,6 +184,21 @@
+ 	status = "okay";
+ };
+ 
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	phy-handle = <&phy0>;
++	renesas,no-ether-link;
++	status = "okay";
++
++	phy0: ethernet-phy@0 {
++		reg = <3>;
++		micrel,led-mode = <1>;
++	};
++};
++
+ &sdhi2 {
+ 		pinctrl-0 = <&sdhi2_pins>;
+ 		pinctrl-names = "default";
+-- 
+2.7.4
+

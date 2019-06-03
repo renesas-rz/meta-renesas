@@ -1,0 +1,32 @@
+From 8980c1b5f8128298476222b260ef37e6c29fc030 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 18:10:36 +0700
+Subject: [PATCH 194/642] usb: gadget: composite: check and return if cdev is
+ NULL
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/usb/gadget/composite.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/usb/gadget/composite.c b/drivers/usb/gadget/composite.c
+index 58f5fbd..af91f66 100644
+--- a/drivers/usb/gadget/composite.c
++++ b/drivers/usb/gadget/composite.c
+@@ -1883,6 +1883,10 @@ void composite_disconnect(struct usb_gadget *gadget)
+ 	struct usb_composite_dev	*cdev = get_gadget_data(gadget);
+ 	unsigned long			flags;
+ 
++	/*workaround: check if cdev is NULL. Exit function*/
++	if (!cdev)
++		return;
++
+ 	/* REVISIT:  should we have config and device level
+ 	 * disconnect callbacks?
+ 	 */
+-- 
+2.7.4
+

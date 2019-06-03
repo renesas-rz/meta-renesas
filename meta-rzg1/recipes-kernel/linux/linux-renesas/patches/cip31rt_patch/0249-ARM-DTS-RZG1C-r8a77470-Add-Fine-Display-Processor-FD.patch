@@ -1,0 +1,36 @@
+From 00a2522a53aca867c10a6fd5033e2ad5184a14ab Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Tue, 9 Jan 2018 19:38:10 +0700
+Subject: [PATCH 249/642] ARM: DTS: RZG1C r8a77470: Add Fine Display Processor
+ (FDP1 module) node to device tree
+
+This patch support Renesas FDP1 kernel module probe.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index affc7ae..9252758 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -507,6 +507,14 @@
+ 		renesas,#ch = <0>;
+ 	};
+ 
++	fdp0: fdpm@fe940000 {
++		compatible = "renesas,fdp1";
++		reg = <0 0xfe940000 0 0x2400>;
++		interrupts = <0 262 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A77470_CLK_FDP0>;
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++	};
++
+ 	vspdu0: vspdu0@fe930000 {
+ 		compatible = "renesas,vsp2";
+ 		reg = <0 0xfe930000 0 0x7404>;
+-- 
+2.7.4
+

@@ -26,6 +26,7 @@ SRC_URI_append = " \
 	file://patches/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
 	file://patches/0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
 	file://patches/0002-rt-add-kernel-module-backfire-for-rt-tests.patch \
+	file://patches.scc \
 "
 
 SRC_URI_append_iwg20m-g1m = " \

@@ -1,0 +1,52 @@
+From 3dfd73963fac034cc6624c98f22275080e00c704 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 14:19:47 +0700
+Subject: [PATCH 213/642] ARM: dts: r8a77470: Add CPU Voltage parameters into
+ cpu0 node for r8a77470
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s.dts | 12 ++++++++++++
+ arch/arm/boot/dts/r8a77470.dtsi       |  1 +
+ 2 files changed, 13 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s.dts b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+index d767bcc..87f3a9e 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+@@ -28,6 +28,18 @@
+ 		reg = <0 0x40000000 0 0x20000000>;
+ 	};
+ 
++	reg_1p0v: 1p0v {
++		compatible = "regulator-fixed";
++		regulator-name = "1P0V";
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++};
++
++&cpu0 {
++		cpu0-supply = <&reg_1p0v>;
+ };
+ 
+ &extal_clk {
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 0a50407..36a2bc5 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -28,6 +28,7 @@
+ 			reg = <0>;
+ 			clock-frequency = <1000000000>;
+ 			voltage-tolerance = <1>; /* 1% */
++			clocks = <&z2_clk>;
+ 			clock-latency = <300000>; /* 300 us */
+ 
+ 			/* kHz - uV - OPPs unknown yet */
+-- 
+2.7.4
+

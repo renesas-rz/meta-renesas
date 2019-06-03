@@ -1,0 +1,34 @@
+From f599121d4bf0f8849c5629ae7a61e9365adfc5cc Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Mon, 9 Apr 2018 18:56:29 +0700
+Subject: [PATCH 246/642] ARM: DTS: iwg23s: set cap-mmc-wait-busy for mmc
+
+iwg23s using rzg1c which use SDHI and MMC as same module/driver
+MMC_CAP_WAIT_WHILE_BUSY is lacked, compared with mmc driver.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s.dts | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s.dts b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+index 094c6c2..41972f9 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+@@ -243,9 +243,10 @@
+ 
+ 	vmmc-supply = <&fixedregulator3v3>;
+ 	vqmmc-supply = <&fixedregulator3v3>;
+-	cap-mmc-highspeed;
+ 	bus-width = <8>;
+ 	non-removable;
++	cap-mmc-highspeed;
++	cap-mmc-wait-busy;
+ 	status = "okay";
+ };
+ 
+-- 
+2.7.4
+

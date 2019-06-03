@@ -1,0 +1,29 @@
+From 8ac71a1aa06ef567580768971b29aa1c7a6f3f06 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renesas.com>
+Date: Wed, 27 Dec 2017 16:55:05 +0700
+Subject: [PATCH 234/642] clk: r8a77470: Modify clock to support CAN module
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ include/dt-bindings/clock/r8a77470-clock.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/dt-bindings/clock/r8a77470-clock.h b/include/dt-bindings/clock/r8a77470-clock.h
+index c40c9d7..cb623ed 100644
+--- a/include/dt-bindings/clock/r8a77470-clock.h
++++ b/include/dt-bindings/clock/r8a77470-clock.h
+@@ -109,8 +109,8 @@
+ #define R8A77470_CLK_GPIO2		10
+ #define R8A77470_CLK_GPIO1		11
+ #define R8A77470_CLK_GPIO0		12
+-#define R8A77470_CLK_RCAN0		15
+-#define R8A77470_CLK_RCAN1		16
++#define R8A77470_CLK_RCAN1		15
++#define R8A77470_CLK_RCAN0		16
+ #define R8A77470_CLK_QSPI_MOD1		17
+ #define R8A77470_CLK_QSPI_MOD0		18
+ #define R8A77470_CLK_ADG		22
+-- 
+2.7.4
+
