@@ -8,16 +8,13 @@ COMPATIBLE_MACHINE = "iwg20m-g1m|iwg20m-g1n|iwg21m|iwg22m|iwg23s"
 
 DEPENDS_append = " util-linux-native openssl-native"
 
-RENESAS_URL="git://github.com/renesas-rz/renesas-cip.git"
-SRCREV = "54596ca208c1bdafb83050baf8c721c21018851c"
-SRC_URI = " \
-	${RENESAS_URL};protocol=git;branch=v4.4.166-cip29-rt \
-	file://0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
-	file://0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
-	file://0002-rt-add-kernel-module-backfire-for-rt-tests.patch \
-"
+KERNEL_URL = " \
+	git://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git"
+BRANCH = "linux-4.4.y-cip-rt"
+SRCREV = "b51a171ad762ba4a78b0ed0c7ec83fb9f6fb135f"
+SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
-LINUX_VERSION ?= "4.4.166-cip29-rt"
+LINUX_VERSION ?= "4.4.176-cip31-rt"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
@@ -26,6 +23,9 @@ S = "${WORKDIR}/git"
 SRC_URI_append = " \
     file://defconfig \
     file://common.cfg \
+	file://patches/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
+	file://patches/0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
+	file://patches/0002-rt-add-kernel-module-backfire-for-rt-tests.patch \
 "
 
 SRC_URI_append_iwg20m-g1m = " \
