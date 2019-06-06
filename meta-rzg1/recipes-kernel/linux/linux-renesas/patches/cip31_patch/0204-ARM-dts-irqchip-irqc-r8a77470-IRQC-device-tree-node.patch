@@ -1,0 +1,62 @@
+From 264fd264e36a43f3d27fd78b8431f9c14761b229 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Wed, 1 Nov 2017 15:46:08 +0700
+Subject: [PATCH 204/641] ARM: dts: irqchip: irqc r8a77470 IRQC device tree
+ node
+
+Enable a r8a77470 IRQC block by adding a device tree
+node for the IRQC hardware and pins IRQ0 to IRQ9.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 2f093948..3f6448f 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -54,6 +54,24 @@
+ 		interrupts = <1 9 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
+ 	};
+ 
++	irqc0: interrupt-controller@e61c0000 {
++		compatible = "renesas,irqc-r8a77470", "renesas,irqc";
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		reg = <0 0xe61c0000 0 0x200>;
++		interrupts = <0 0 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 1 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 2 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 3 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 12 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 13 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 14 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 15 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 16 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 17 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp4_clks R8A77470_CLK_IRQC>;
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+@@ -291,6 +309,14 @@
+ 				"usbdmac0_1", "usbdmac1_1",
+ 				"cmt1", "usbdmac0_0", "usbdmac1_0";
+ 		};
++		mstp4_clks: mstp4_clks@e6150140 {
++			compatible = "renesas,r8a77470-mstp-clocks", "renesas,cpg-mstp-clocks";
++			reg = <0 0xe6150140 0 4>, <0 0xe615004c 0 4>;
++			clocks = <&cp_clk>, <&rclk_clk>;
++			#clock-cells = <1>;
++			clock-indices = <R8A77470_CLK_IRQC R8A77470_CLK_RWDT>;
++			clock-output-names = "irqc", "wdt0";
++		};
+ 		mstp5_clks: mstp5_clks@e6150144 {
+ 			compatible = "renesas,r8a77470-mstp-clocks", "renesas,cpg-mstp-clocks";
+ 			reg = <0 0xe6150144 0 4>, <0 0xe615003c 0 4>;
+-- 
+2.7.4
+

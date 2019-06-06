@@ -1,0 +1,66 @@
+From 79f4a48de16500bfb9c72140fbc050da2cc59ab5 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Tue, 10 Apr 2018 08:44:23 +0700
+Subject: [PATCH 287/641] ARM: DTS: iwg23s: enable PWM module
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s.dts | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s.dts b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+index 4945c58..b4e4348 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+@@ -181,6 +181,21 @@
+ 						"du0_cde_disp";
+ 		renesas,function = "du0";
+ 	};
++
++	pwm0_pins: pwm0 {
++		renesas,groups = "pwm0_c";
++		renesas,function = "pwm0";
++	};
++
++	pwm2_pins: pwm2 {
++		renesas,groups = "pwm2_d";
++		renesas,function = "pwm2";
++	};
++
++	pwm6_pins: pwm6 {
++		renesas,groups = "pwm6_c";
++		renesas,function = "pwm6";
++	};
+ };
+ 
+ &scif1 {
+@@ -300,6 +315,24 @@
+ 	};
+ };
+ 
++&pwm0 {
++	pinctrl-0 = <&pwm0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm2 {
++	pinctrl-0 = <&pwm2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm6 {
++	pinctrl-0 = <&pwm6_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &qspi0 {
+ 	pinctrl-0 = <&qspi0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

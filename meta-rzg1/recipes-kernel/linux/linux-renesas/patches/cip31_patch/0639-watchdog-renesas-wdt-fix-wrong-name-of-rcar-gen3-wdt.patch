@@ -1,0 +1,29 @@
+From b89f349f0c980cd0b24481007d321d08f0982a07 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Fri, 25 Jan 2019 14:46:10 +0700
+Subject: [PATCH 639/641] watchdog: renesas-wdt: fix wrong name of rcar gen3
+ wdt
+
+	- Fix wrong name of rcar gen3 wdt
+
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/watchdog/renesas_wdt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/watchdog/renesas_wdt.c b/drivers/watchdog/renesas_wdt.c
+index efe264c..a43ddb0 100644
+--- a/drivers/watchdog/renesas_wdt.c
++++ b/drivers/watchdog/renesas_wdt.c
+@@ -336,7 +336,7 @@ static SIMPLE_DEV_PM_OPS(rwdt_pm_ops, rwdt_suspend, rwdt_resume);
+ 
+ static const struct of_device_id rwdt_ids[] = {
+ 	{ .compatible = "renesas,rcar-gen2-wdt", },
+-	{ .compatible = "renesas,rcar-gen2-wdt", },
++	{ .compatible = "renesas,rcar-gen3-wdt", },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, rwdt_ids);
+-- 
+2.7.4
+

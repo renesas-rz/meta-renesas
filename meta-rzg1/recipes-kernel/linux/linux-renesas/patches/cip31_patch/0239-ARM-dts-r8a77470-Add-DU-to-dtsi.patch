@@ -1,0 +1,51 @@
+From 2286907ce19a94fcab22a5f22909c95de545c01e Mon Sep 17 00:00:00 2001
+From: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Date: Tue, 26 Dec 2017 16:17:17 +0700
+Subject: [PATCH 239/641] ARM: dts: r8a77470: Add DU to dtsi
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index df0dfb1..f93abe2 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -448,6 +448,32 @@
+ 		status = "disabled";
+ 	};
+ 
++	vspdu0: vspdu0@fe930000 {
++		compatible = "renesas,vsp2";
++		reg = <0 0xfe930000 0 0x7404>;
++		interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A77470_CLK_VSP1_DU0>;
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++	};
++
++	du: display@feb00000 {
++		compatible = "renesas,du-r8a77470";
++		reg = <0 0xfeb00000 0 0x40000>;
++		reg-names = "du";
++		interrupts = <0 256 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A77470_CLK_DU0>;
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		clock-names = "du.0";
++		status = "disabled";
++
++		vsps = <&vspdu0>;
++
++		port@0 {
++			du_out_rgb0: endpoint {
++			};
++		};
++	};
++
+ 	/* The memory map in the User's Manual maps the cores to bus numbers */
+ 	i2c0: i2c@e6508000 {
+ 		#address-cells = <1>;
+-- 
+2.7.4
+

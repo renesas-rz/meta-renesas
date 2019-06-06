@@ -1,0 +1,39 @@
+From 8120612e966531b2b1edd653bbbc7034b61fe3c5 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Wed, 1 Nov 2017 16:15:36 +0700
+Subject: [PATCH 206/641] ARM: dts: r8a77470 Arch timer device tree node
+
+Add r8a77470 arch timer device tree information.
+
+This needs to be used together with r8a77470 support
+code that ties in the R-Car Gen2 arch timer workarounds.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 3f6448f..30fdd60 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -54,6 +54,15 @@
+ 		interrupts = <1 9 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
+ 	};
+ 
++
++	timer {
++		compatible = "arm,armv7-timer";
++		interrupts = <1 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
++			     <1 14 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
++			     <1 11 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,
++			     <1 10 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>;
++	};
++
+ 	irqc0: interrupt-controller@e61c0000 {
+ 		compatible = "renesas,irqc-r8a77470", "renesas,irqc";
+ 		#interrupt-cells = <2>;
+-- 
+2.7.4
+

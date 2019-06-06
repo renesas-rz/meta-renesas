@@ -1,0 +1,28 @@
+From fc452c64f990e0d6384be2a50a33ec315aaa054a Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Wed, 10 Jan 2018 10:54:05 +0700
+Subject: [PATCH 250/641] ARM: DTS: RZG1C r8a77470: Fix FDP1 module clock to
+ match FDP1 package
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 9252758..8741ee3 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -800,7 +800,7 @@
+ 				R8A77470_CLK_VSP1_DU0 R8A77470_CLK_VSP1_S
+ 			>;
+ 			clock-output-names =
+-				"vcp0", "vpc0", "tmu1", "pvrsrvkm", "tddmac", "fdp0",
++				"vcp0", "vpc0", "tmu1", "pvrsrvkm", "tddmac", "fdp1-0",
+ 				"tmu3", "tmu2", "cmt0", "vsp1-du0", "vsps";
+ 		};
+ 		mstp2_clks: mstp2_clks@e6150138 {
+-- 
+2.7.4
+

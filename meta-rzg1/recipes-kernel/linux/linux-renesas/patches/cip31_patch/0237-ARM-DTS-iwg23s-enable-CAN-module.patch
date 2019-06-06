@@ -1,0 +1,44 @@
+From adf90775dda92717c408075352771ad31ecfbc88 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Mon, 9 Apr 2018 18:21:46 +0700
+Subject: [PATCH 237/641] ARM: DTS: iwg23s: enable CAN module
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s.dts b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+index 770c87a..f5dd032 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s.dts
+@@ -144,6 +144,11 @@
+ 		renesas,groups = "mmc_data8", "mmc_ctrl";
+ 		renesas,function = "mmc";
+ 	};
++
++	can0_pins: can0 {
++		renesas,groups = "can0_data_a";
++		renesas,function = "can0";
++	};
+ };
+ 
+ &scif1 {
+@@ -220,4 +225,11 @@
+ 	bus-width = <8>;
+ 	non-removable;
+ 	status = "okay";
++};
++
++&can0 {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	status = "okay";
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

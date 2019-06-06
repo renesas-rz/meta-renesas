@@ -1,0 +1,33 @@
+From e201bc0614bf0bc498e82f543f976dd8a8ddfa6b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 15:25:38 +0700
+Subject: [PATCH 313/641] Revert "i2c: rcar: workaround to avoid appearing
+ error ETIMEDOUT and EBUSY"
+
+This reverts commit 8754257be5ec ("i2c: rcar: workaround to avoid
+appearing error ETIMEDOUT and EBUSY")
+The commit make issue not probe on VIN module on iWave G1M/N
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/i2c/busses/i2c-rcar.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index f622003..36c605a 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -508,7 +508,6 @@ static int rcar_i2c_master_xfer(struct i2c_adapter *adap,
+ 	time_left = wait_event_timeout(priv->wait,
+ 				     rcar_i2c_flags_has(priv, ID_DONE),
+ 				     num * adap->timeout);
+-	msleep(100);
+ 	if (!time_left) {
+ 		rcar_i2c_init(priv);
+ 		ret = -ETIMEDOUT;
+-- 
+2.7.4
+

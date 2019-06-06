@@ -1,0 +1,93 @@
+From 3cc92c3b9f921c2de23f52da2417f5d112f919ec Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 5 Jan 2018 14:09:47 +0700
+Subject: [PATCH 288/641] ARM: dts: r8a77470: Add USB2.0 to dtsi
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 68 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index dc20663..ac3e738 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -521,6 +521,74 @@
+ 		status = "disabled";
+ 	};
+ 
++	usbphy0: usb-phy0@e6590100 {
++		compatible = "renesas,usb-phy-r8a77470";
++		reg = <0 0xe6590100 0 0x0ff>,
++			<0 0xee080200 0 0x6ff>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		clocks = <&mstp7_clks R8A77470_CLK_HSUSB0>;
++		clock-names = "hsusb0";
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		status = "disable";
++
++		usb0: usb-channel@0 {
++			reg = <0>;
++			#phy-cells = <1>;
++		};
++	};
++
++	usbphy1: usb-phy1@e6598100 {
++		compatible = "renesas,usb-phy-r8a77470";
++		reg = <0 0xe6598100 0 0x0ff>,
++			<0 0xee0c0200 0 0x6ff>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		clocks = <&mstp7_clks R8A77470_CLK_HSUSB1>;
++		clock-names = "hsusb1";
++		status = "disable";
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++
++		usb2: usb-channel@2 {
++			reg = <2>;
++			#phy-cells = <1>;
++		};
++	};
++
++	hsusb: hsusb@e6590000 {
++		compatible = "renesas,usbhs-r8a77470";
++		reg = <0 0xe6590000 0 0x0ff>;
++		interrupts = <0 107 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A77470_CLK_EHCI0>;
++		renesas,buswait = <4>;
++		phys = <&usb0 0>;
++		phy-names = "usb";
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		status = "disable";
++	};
++
++	ohci_1: ohci-platform.1@ee0c0000 {
++		compatible = "generic-ohci";
++		reg = <0 0xee0c0000 0 0x0ff>;
++		interrupts = <0 113 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A77470_CLK_EHCI1>;
++		phys = <&usb2 0>;
++		phy-names = "usb";
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		status = "disable";
++	};
++
++	ehci_1: ehci-platform.1@ee0c0100 {
++		compatible = "generic-ehci";
++		reg = <0 0xee0c0100 0 0x0ff>;
++		interrupts = <0 113 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A77470_CLK_EHCI1>;
++		phys = <&usb2 0>;
++		phy-names = "usb";
++		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		status = "disable";
++	};
++
+ 	can0: can@e6e80000 {
+ 		compatible = "renesas,can-r8a77470";
+ 		reg = <0 0xe6e80000 0 0x1000>;
+-- 
+2.7.4
+

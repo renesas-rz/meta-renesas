@@ -1,0 +1,33 @@
+From 4aae149dd0e2202d245bf3fbe5362ae41e0efce6 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Wed, 1 Nov 2017 16:20:03 +0700
+Subject: [PATCH 207/641] ARM: dts: r8a77470 PFC device tree node
+
+Add a DT node for the r8a77470 PFC device.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 30fdd60..f4f64a9 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -81,6 +81,12 @@
+ 		clocks = <&mstp4_clks R8A77470_CLK_IRQC>;
+ 	};
+ 
++	pfc: pfc@e6060000 {
++		compatible = "renesas,pfc-r8a77470";
++		reg = <0 0xe6060000 0 0x250>;
++		#gpio-range-cells = <3>;
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+-- 
+2.7.4
+

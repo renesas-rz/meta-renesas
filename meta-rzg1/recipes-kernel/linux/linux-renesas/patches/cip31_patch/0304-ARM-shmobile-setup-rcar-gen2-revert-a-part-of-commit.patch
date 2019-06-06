@@ -1,0 +1,41 @@
+From a015ad0c8296e5012f528d9136bcc1f80ae52669 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 14:52:48 +0700
+Subject: [PATCH 304/641] ARM: shmobile: setup-rcar-gen2: revert a part of
+ commit 0f939e40
+
+revert a part of commit 0f939e400deb ("ARM: shmobile: Initial
+	r8a77470 SoC support")
+
+    Add initial support for the r8a77470 SoC including:
+     - 2 Cortex-A7 CPU Core
+     - GIC
+revert CMA size to 256MB as it is default for all Rcar gen2 SoC
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/mach-shmobile/setup-rcar-gen2.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-rcar-gen2.c b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+index 31f3519..55d26d5 100644
+--- a/arch/arm/mach-shmobile/setup-rcar-gen2.c
++++ b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+@@ -179,10 +179,7 @@ void __init rcar_gen2_reserve(void)
+ 	/* reserve 256 MiB at the top of the physical legacy 32-bit space */
+ 	memset(&mrc, 0, sizeof(mrc));
+ 
+-	if (of_machine_is_compatible("renesas,r8a77470"))
+-		mrc.reserved = SZ_128M;
+-	else
+-		mrc.reserved = SZ_256M;
++	mrc.reserved = SZ_256M;
+ 
+ 	of_scan_flat_dt(rcar_gen2_scan_mem, &mrc);
+ #ifdef CONFIG_DMA_CMA
+-- 
+2.7.4
+

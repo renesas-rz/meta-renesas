@@ -1,0 +1,99 @@
+From 4aeb569f0268f0d33a598255424db6e1abe42ab7 Mon Sep 17 00:00:00 2001
+From: tungvo <tung.vo.eb@rvc.renesas.com>
+Date: Sat, 9 Dec 2017 04:44:19 +0700
+Subject: [PATCH 232/641] ARM: DTS: r8a77470: Enable DMA for serial ports
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 9f95bf9..a4f3647 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -285,6 +285,8 @@
+ 		interrupts = <0 152 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_SCIF0>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0x29>, <&dmac0 0x2a>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -295,6 +297,8 @@
+ 		interrupts = <0 153 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_SCIF1>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0x2d>, <&dmac0 0x2e>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -305,6 +309,8 @@
+ 		interrupts = <0 22 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_SCIF2>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0x2b>, <&dmac0 0x2c>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -315,6 +321,8 @@
+ 		interrupts = <0 23 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_SCIF3>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0x2f>, <&dmac0 0x30>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -325,6 +333,8 @@
+ 		interrupts = <0 24 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_SCIF4>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0xfb>, <&dmac0 0xfc>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -335,6 +345,8 @@
+ 		interrupts = <0 25 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_SCIF5>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0xfd>, <&dmac0 0xfe>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -345,6 +357,8 @@
+ 		interrupts = <0 154 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_HSCIF0>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0x39>, <&dmac0 0x3a>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -355,6 +369,8 @@
+ 		interrupts = <0 155 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_HSCIF1>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0x4d>, <&dmac0 0x4e>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -365,6 +381,8 @@
+ 		interrupts = <0 21 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A77470_CLK_HSCIF2>;
+ 		clock-names = "sci_ick";
++		dmas = <&dmac0 0x3b>, <&dmac0 0x3c>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+-- 
+2.7.4
+
