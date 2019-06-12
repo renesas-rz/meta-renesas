@@ -34,6 +34,7 @@ DEPENDS += "gperf-native"
 # correct-valencia-locale-supported_debian.patch:
 # 	This patch is fix "QA Issue: locale-base-ca-es is listed in PACKAGES multiple times"
 SRC_URI += " \
+	${NATIVESDKFIXES} \
 	file://eglibc-svn-arm-lowlevellock-include-tls.patch \
 	file://IO-acquire-lock-fix.patch \
 	file://etc/ld.so.conf \
@@ -50,6 +51,14 @@ SRC_URI += " \
 	file://0013-sysdeps-gnu-configure.ac-handle-correctly-libc_cv_ro.patch \
 	file://correct-valencia-locale-supported_debian.patch \
 	file://0001-Fix-error-undefined-reference-to-libgcc_s_resume.patch \
+"
+
+NATIVESDKFIXES ?= ""
+NATIVESDKFIXES_class-nativesdk = "\
+	file://0001-nativesdk-glibc-Look-for-host-system-ld.so.cache-as-.patch \
+	file://0002-nativesdk-glibc-Fix-buffer-overrun-with-a-relocated-.patch \
+	file://0003-nativesdk-glibc-Raise-the-size-of-arrays-containing-.patch \
+	file://relocate-locales.patch \
 "
 
 B = "${WORKDIR}/build-${TARGET_SYS}"
