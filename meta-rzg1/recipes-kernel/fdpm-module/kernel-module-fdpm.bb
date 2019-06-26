@@ -9,7 +9,9 @@ LIC_FILES_CHKSUM = " \
 DEPENDS = "linux-renesas kernel-module-mmngr"
 PN = "kernel-module-fdpm"
 PR = "r0"
-SRC_URI = "file://fdpm-kernel.tar.bz2 \
+SRC_URI = " \
+    file://fdpm-kernel.tar.bz2 \
+    file://0001-fdpm-Remove-unsed-variable-and-correct-type-of-varia.patch \
 "
 S = "${WORKDIR}/fdpm"
 

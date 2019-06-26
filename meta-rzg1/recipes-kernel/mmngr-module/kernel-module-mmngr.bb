@@ -11,7 +11,8 @@ LIC_FILES_CHKSUM = " \
 DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngr"
 SRC_URI = "file://mmngr.tar.bz2 \
-           file://0002-Add-physical-address-translating-feature.patch \
+    file://0002-Add-physical-address-translating-feature.patch \
+    file://0001-mmngr-Fix-invalid-type-for-argument-variable-of-func.patch \
 "
 S = "${WORKDIR}/mmngr"
 
