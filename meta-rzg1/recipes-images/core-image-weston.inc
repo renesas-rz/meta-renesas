@@ -29,12 +29,12 @@ IMAGE_INSTALL_append = " \
   linux-firmware \
   wpa-supplicant \
   init-ifupdown \
-  kernel-module-configfs-${KERNEL_VERSION} \
-  kernel-module-libcomposite-${KERNEL_VERSION} \
-  kernel-module-usb-f-mass-storage-${KERNEL_VERSION} \
-  kernel-module-g-mass-storage-${KERNEL_VERSION} \
-  kernel-module-rtl-usb-${KERNEL_VERSION} \
-  kernel-module-rtl8192cu-${KERNEL_VERSION} \
+  kernel-module-configfs \
+  kernel-module-libcomposite \
+  kernel-module-usb-f-mass-storage \
+  kernel-module-g-mass-storage \
+  kernel-module-rtl-usb \
+  kernel-module-rtl8192cu \
   dosfstools \
   evtest \
   e2fsprogs \
@@ -59,17 +59,17 @@ IMAGE_INSTALL_append = " \
   can-utils \
   audio-init \
   pulseaudio-init \
-  kernel-module-ohci-hcd-${KERNEL_VERSION} \
-  kernel-module-ohci-pci-${KERNEL_VERSION} \
+  kernel-module-ohci-hcd \
+  kernel-module-ohci-pci \
   ohci-init \
   rt-tests \
   ltp \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
-  kernel-module-sh-eth-${KERNEL_VERSION} \
+  kernel-module-sh-eth \
 "
 
 IMAGE_INSTALL_append_iwg23s = " \
-  kernel-module-ohci-platform-${KERNEL_VERSION} \
+  kernel-module-ohci-platform \
 "
