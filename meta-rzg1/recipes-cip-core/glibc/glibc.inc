@@ -16,18 +16,21 @@ STAGINGCC_class-nativesdk = "gcc-crosssdk-initial-${SDK_SYS}"
 PATH_prepend = "${STAGING_BINDIR_TOOLCHAIN}.${STAGINGCC}:"
 
 # glibc can't be built without optimization, if someone tries to compile an
-# entire image as -O0, we override it with -O2 here and give a note about it.
-def get_optimization(d):
-    selected_optimization = d.getVar("SELECTED_OPTIMIZATION", True)
-    if bb.utils.contains("SELECTED_OPTIMIZATION", "-O0", "x", "", d) == "x":
-        bb.note("glibc can't be built with -O0, -O2 will be used instead.")
-        return selected_optimization.replace("-O0", "-O2")
-    return selected_optimization
-
-SELECTED_OPTIMIZATION := "${@get_optimization(d)}"
+# entire image as -O0, add -Wno-error to make it buildable
+python () {
+    opt_effective = "-O"
+    for opt in d.getVar('SELECTED_OPTIMIZATION').split():
+        if opt in ("-O0", "-O", "-O1", "-O2", "-O3", "-Os"):
+            opt_effective = opt
+    if opt_effective == "-O0":
+        bb.fatal("%s can't be built with %s, try -O1 instead" % (d.getVar('PN'), opt_effective))
+    if opt_effective in ("-O", "-O1", "-Os"):
+        bb.note("%s doesn't build cleanly with %s, adding -Wno-error to SELECTED_OPTIMIZATION" % (d.getVar('PN'), opt_effective))
+        d.appendVar("SELECTED_OPTIMIZATION", " -Wno-error")
+}
 
 # siteconfig.bbclass runs configure which needs a working compiler
-# For the compiler to work we need a working libc yet libc isn't 
+# For the compiler to work we need a working libc yet libc isn't
 # in the sysroots directory at this point. This means the libc.so
 # linker script won't work as the --sysroot setting isn't correct.
 # Here we create a hacked up libc linker script and pass in the right
