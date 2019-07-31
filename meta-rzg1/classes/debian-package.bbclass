@@ -2,6 +2,8 @@
 # debian-package.bbclass
 #
 
+BB_HASHBASE_WHITELIST += "DEBIAN_UNPACK_DIR"
+
 DISTRO_CODENAME = "jessie"
 DEBIAN_GIT_URI ??= "git://github.com/ystk"
 DEBIAN_GIT_PROTOCOL ??= "https"
