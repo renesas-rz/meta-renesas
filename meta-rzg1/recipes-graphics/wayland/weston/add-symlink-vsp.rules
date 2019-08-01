@@ -1,0 +1,2 @@
+KERNELS=="vsp2.0" SUBSYSTEM=="media" SYMLINK+="media-vsp2.0"
+KERNELS=="vsp2.1" SUBSYSTEM=="media" SYMLINK+="media-vsp2.1"
