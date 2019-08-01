@@ -17,6 +17,8 @@ SRC_URI_append = "\
     file://0023-desktop-shell-check-NULL-pointer-when-setting-xwayla.patch \
     file://0024-v4l2-renderer-gl-fallback-destroy-gbm-bo-for-surface.patch \
     file://0025-Pass-through-functions-if-keyboard-is-not-inserted.patch \
+    file://add-symlink-vsp.rules \
+    file://0026-Change-default-name-of-weston-device-node-in-vsp-mode.patch \
 "
 
 SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-at-GPU-mode.patch \
@@ -43,6 +45,8 @@ SRC_URI_append_iwg21m = " file://iwg21m-hdmitouch.rules "
 do_install_append () {
     ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-fe928000-device.so
     ln -sf v4l2-vsp-device.so ${D}/${libdir}/libweston-2/v4l2-vsp2-device.so
+    install -d ${D}/${sysconfdir}/udev/rules.d/
+    install ${WORKDIR}/add-symlink-vsp.rules ${D}/${sysconfdir}/udev/rules.d/
 }
 
 do_install_append_iwg20m-g1m () {
@@ -64,3 +68,4 @@ do_install_append_iwg21m () {
 FILES_${PN}_append_iwg20m-g1m += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
 FILES_${PN}_append_iwg20m-g1n += " ${sysconfdir}/udev/rules.d/iwg20m-lvdstouch.rules "
 FILES_${PN}_append_iwg21m += " ${sysconfdir}/udev/rules.d/iwg21m-hdmitouch.rules "
+FILES_${PN}_append += " ${sysconfdir}/udev/rules.d/add-symlink-vsp.rules "

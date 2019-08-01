@@ -1,0 +1,30 @@
+From ed6af2b93d2af3bab5212a07268c2b81a2c1b442 Mon Sep 17 00:00:00 2001
+From: Duy Nguyen <duynt26@fsoft.com.vn>
+Date: Fri, 28 Jun 2019 15:48:59 +0700
+Subject: Change default name of weston device node in vsp mode
+
+Because the name of device node of vsp driver which is defined
+as /dev/media-vsp2.0 and /dev/media-vsp2.1. So the name of device
+node will is changed to /dev/media-vsp2.0 of wesoton in vsp mode only.
+
+Signed-off-by: Duy Nguyen <duynt26@fsoft.com.vn>
+---
+ compositor/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/compositor/main.c b/compositor/main.c
+index 98cb2f9..36f2341 100644
+--- a/compositor/main.c
++++ b/compositor/main.c
+@@ -1241,7 +1241,7 @@ load_drm_backend(struct weston_compositor *c,
+ 	/* for v4l2 renderer */
+ 	section = weston_config_get_section(wc, "media-ctl", NULL, NULL);
+ 	weston_config_section_get_string(section, "device",
+-					 &config.v4l2ops.device, "/dev/media0");
++					 &config.v4l2ops.device, "/dev/media-vsp2.0");
+ 	weston_config_section_get_bool(section, "gl-fallback", &is_enable,
+ 				       false);
+ 	config.v4l2ops.gl_fallback = is_enable;
+-- 
+2.7.4
+
