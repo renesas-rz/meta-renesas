@@ -1,0 +1,31 @@
+From 743f30b1a3c9b74bba4e213a04b8c63eef0821e3 Mon Sep 17 00:00:00 2001
+From: ThaoHM2 <thaohm2@fsoft.com.vn>
+Date: Fri, 1 Jun 2018 16:05:11 +0700
+Subject: [PATCH 572/628] iwg21m enable configs PCIE
+
+Signed-off-by: ThaoHM2 <thaohm2@fsoft.com.vn>
+---
+ arch/arm/configs/shmobile_defconfig | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 9d5f757..18171dd 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -35,6 +35,13 @@ CONFIG_ARM_ERRATA_754322=y
+ CONFIG_PCI=y
+ CONFIG_PCI_RCAR_GEN2=y
+ CONFIG_PCI_RCAR_GEN2_PCIE=y
++CONFIG_PCI_HOST_GENERIC=y
++CONFIG_PCIEPORTBUS=y
++CONFIG_PCIEAER=y
++CONFIG_PCIEASPM=y
++CONFIG_PCIEASPM_DEFAULT=y
++CONFIG_PCIE_PME=y
++CONFIG_R8169=y
+ CONFIG_SMP=y
+ CONFIG_SCHED_MC=y
+ CONFIG_HAVE_ARM_ARCH_TIMER=y
+-- 
+2.7.4
+

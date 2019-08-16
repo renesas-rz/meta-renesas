@@ -1,0 +1,68 @@
+From 3f52c33bf1c0e0d5a5483d4a4a93ee03cb2865ce Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 21:09:02 +0700
+Subject: [PATCH 444/628] ARM: DTS: iwg21m: enable eMMC
+
+enable onboard eMMC 4GB, which connected to MMC1
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 7f3ab0e..52f6701 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -48,6 +48,15 @@
+ 		regulator-always-on;
+ 	};
+ 
++	reg_3p3v: 3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "3P3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
+ 	panel_edt: panel@0 {
+ 		compatible = "edt,etm0700g0dh6", "simple-panel";
+ 		power-supply = <&vcc_lvds>;
+@@ -150,6 +159,16 @@
+ 		renesas,groups = "du_rgb666", "du_sync_1", "du_clk_out_0";
+ 		renesas,function = "du";
+ 	};
++
++	mmc1_4_pins: mmc1_4 {
++		renesas,groups = "mmc1_data4", "mmc1_ctrl";
++		renesas,function = "mmc1";
++	};
++
++	mmc1_8_pins: mmc1_8 {
++		renesas,groups = "mmc1_data8", "mmc1_ctrl";
++		renesas,function = "mmc1";
++	};
+ };
+ 
+ &scifa2 {
+@@ -243,3 +262,14 @@
+ 		line-name = "lcd-power-eb-gpio";
+ 	};
+ };
++
++&mmcif1 {
++	pinctrl-0 = <&mmc1_4_pins>;
++	pinctrl-1 = <&mmc1_8_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&reg_3p3v>;
++	bus-width = <4>;
++	non-removable;
++	status = "okay";
++};
+-- 
+2.7.4
+

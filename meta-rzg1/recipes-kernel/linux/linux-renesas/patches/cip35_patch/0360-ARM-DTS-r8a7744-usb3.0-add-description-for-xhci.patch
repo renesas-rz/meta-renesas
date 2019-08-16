@@ -1,0 +1,37 @@
+From 04dcf60fa0082a95b11ff8e0ed0f015c483bbc1a Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 18:45:32 +0700
+Subject: [PATCH 360/628] ARM: DTS: r8a7744: usb3.0: add description for xhci
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 22ac1d5..494cd09 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1273,6 +1273,17 @@
+ 		status = "disabled";
+ 	};
+ 
++	xhci: usb@ee000000 {
++		compatible = "renesas,xhci-r8a7744";
++		reg = <0 0xee000000 0 0xc00>;
++		interrupts = <0 101 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7744_CLK_SSUSB>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		phys = <&usb2 1>;
++		phy-names = "usb";
++		status = "disabled";
++	};
++
+ 	pwm0: pwm@e6e30000 {
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e30000 0 0x8>;
+-- 
+2.7.4
+

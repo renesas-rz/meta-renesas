@@ -1,0 +1,90 @@
+From c92e055cabe59230a360c1098e25cb41976609ac Mon Sep 17 00:00:00 2001
+From: Danh Duong <danhdc1@fsoft.com.vn>
+Date: Fri, 2 Nov 2018 19:00:00 +0700
+Subject: [PATCH 031/628] ARM: DTS: VSPM modify device tree for adapting with
+ VSPM update
+
+This patch file modify device tree of RZ/G1M and RZ/G1E for adapting with VSPM update
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 39 ++++++++++++---------------------------
+ 1 file changed, 12 insertions(+), 27 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index c9025d9..1c25acb 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -1712,54 +1712,39 @@
+ 			status = "disabled";
+ 		};
+ 
+-		dmac2d: dma-controller@fea00000 {
+-			compatible = "renesas,2ddmac-r8a7743";
+-			reg = <0 0xfea00000 0 0x0200>;
++		tddmac@0xfea00000 {
++			compatible = "renesas,vspm-tddmac","renesas,vspm";
++			reg = <0 0xfea00000 0 0x200>;
+ 			interrupts = <0 285 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7743_CLK_2DDMAC>;
+ 			power-domains = <&cpg_clocks>;
+ 		};
+ 
+-		vsps: vspm@fe928000 {
+-			compatible = "renesas,vsps";
+-			reg = <0 0xfe928000 0 0x8000>;
++		vsps@fe928000 {
++			compatible = "renesas,vspm-vsps","renesas-vspm";
++			reg = <0 0xfe928000 0 0x7404>;
+ 			interrupts = <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7743_CLK_VSP1_S>;
+ 			power-domains = <&cpg_clocks>;
+ 
+-			renesas,has-lut;
+-			renesas,has-sru;
+-			renesas,#rpf = <5>;
+-			renesas,#uds = <1>;
+-			renesas,#wpf = <4>;
+ 		};
+ 
+-		vspd0: vspm@fe930000 {
+-			compatible = "renesas,vspd0";
+-			reg = <0 0xfe930000 0 0x8000>;
++		vspd0@fe930000 {
++			compatible = "renesas,vspm-vspd0","renesas-vspm";
++			reg = <0 0xfe930000 0 0x7404>;
+ 			interrupts = <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7743_CLK_VSP1_DU0>;
+ 			power-domains = <&cpg_clocks>;
+ 
+-			renesas,has-lif;
+-			renesas,has-lut;
+-			renesas,#rpf = <4>;
+-			renesas,#uds = <1>;
+-			renesas,#wpf = <1>;
+ 		};
+ 
+-		vspd1: vspm@fe938000 {
+-			compatible = "renesas,vspd1";
+-			reg = <0 0xfe938000 0 0x8000>;
++		vspd1@fe938000 {
++			compatible = "renesas,vspm-vspd1","renesas-vspm";
++			reg = <0 0xfe938000 0 0x7404>;
+ 			interrupts = <GIC_SPI 247 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7743_CLK_VSP1_DU1>;
+ 			power-domains = <&cpg_clocks>;
+ 
+-			renesas,has-lif;
+-			renesas,has-lut;
+-			renesas,#rpf = <4>;
+-			renesas,#uds = <1>;
+-			renesas,#wpf = <1>;
+ 		};
+ 
+ 		vcp0: vcp0@fe900000 {
+-- 
+2.7.4
+

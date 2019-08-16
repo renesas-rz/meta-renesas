@@ -1,0 +1,43 @@
+From 85d79a47269be7bf5e273c4c2aff23c76a20f0c3 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 15:52:37 +0700
+Subject: [PATCH 335/628] i2c: rcar: add support for r8a7744
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ Documentation/devicetree/bindings/i2c/i2c-rcar.txt | 1 +
+ drivers/i2c/busses/i2c-rcar.c                      | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/i2c/i2c-rcar.txt b/Documentation/devicetree/bindings/i2c/i2c-rcar.txt
+index f6cb9e5..20fb2db 100644
+--- a/Documentation/devicetree/bindings/i2c/i2c-rcar.txt
++++ b/Documentation/devicetree/bindings/i2c/i2c-rcar.txt
+@@ -12,6 +12,7 @@ Required properties:
+ 	"renesas,i2c-r8a7793" if the device is a part of a R8A7793 SoC.
+ 	"renesas,i2c-r8a7794" if the device is a part of a R8A7794 SoC.
+ 	"renesas,i2c-r8a7795" if the device is a part of a R8A7795 SoC.
++	"renesas,i2c-r8a7744" if the device is a part of a R8A7744 SoC.
+ 	"renesas,rcar-gen1-i2c" for a generic R-Car Gen1 compatible device.
+ 	"renesas,rcar-gen2-i2c" for a generic R-Car Gen2 or RZ/G1 compatible
+ 				device.
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 36c605a..761d402 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -588,6 +588,7 @@ static const struct of_device_id rcar_i2c_dt_ids[] = {
+ 	{ .compatible = "renesas,i2c-r8a7794", .data = (void *)I2C_RCAR_GEN2 },
+ 	{ .compatible = "renesas,i2c-r8a77470", .data = (void *)I2C_RCAR_GEN2 },
+ 	{ .compatible = "renesas,i2c-r8a7745", .data = (void *)I2C_RCAR_GEN2 },
++	{ .compatible = "renesas,i2c-r8a7744", .data = (void *)I2C_RCAR_GEN2 },
+ 	{ .compatible = "renesas,i2c-r8a7795", .data = (void *)I2C_RCAR_GEN3 },
+ 	{ .compatible = "renesas,i2c-rcar", .data = (void *)I2C_RCAR_GEN1 },	/* Deprecated */
+ 	{ .compatible = "renesas,rcar-gen1-i2c", .data = (void *)I2C_RCAR_GEN1 },
+-- 
+2.7.4
+

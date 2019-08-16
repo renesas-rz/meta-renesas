@@ -1,0 +1,31 @@
+From 02a8c0f31e391b12de9ffeb6fc05b4beb4fc4c74 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 15:53:20 +0700
+Subject: [PATCH 547/628] ARM: DTS: iwg20m: enable tmu2 and tmu3 for r8a7743
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 3f2cf86..4575a6a 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -398,3 +398,11 @@
+ &tmu1 {
+ 	status = "okay";
+ };
++
++&tmu2 {
++	status = "okay";
++};
++
++&tmu3 {
++	status = "okay";
++};
+-- 
+2.7.4
+

@@ -1,0 +1,62 @@
+From 08c5bc385c507fd66009821d077d676d2bfc6228 Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Wed, 14 Mar 2018 13:01:16 +0700
+Subject: [PATCH 501/628] ARM: DTS: iwg21m: enable CAN module
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index f290337..1a3efb2 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -295,6 +295,16 @@
+ 		renesas,groups = "ssi34_ctrl", "ssi3_data", "ssi4_data";
+ 		renesas,function = "ssi";
+ 	};
++
++	can0_pins: can0 {
++		renesas,groups = "can0_data_d";
++		renesas,function = "can0";
++	};
++
++	can1_pins: can1 {
++		renesas,groups = "can1_data_b";
++		renesas,function = "can1";
++	};
+ };
+ 
+ &scif0 {
+@@ -546,3 +556,26 @@
+ &ssi4 {
+ 	shared-pin;
+ };
++
++&can0 {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	status = "okay";
++};
++
++&can1 {
++	pinctrl-0 = <&can1_pins>;
++	pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	status = "okay";
++};
++
++&gpio1 {
++	can1-trx-en-gpio{
++		gpio-hog;
++		gpios = <28 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can1-trx-en-gpio";
++	};
++};
+-- 
+2.7.4
+

@@ -1,0 +1,29 @@
+From 2af595b1e128281c03ac6657de1fdf80fd0d44e3 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 18:31:19 +0700
+Subject: [PATCH 358/628] ARM: DTS: r8a7744-iwg20m: enable USB PHY
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 6a1ebe8..51aab47 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -247,6 +247,10 @@
+ 	};
+ };
+ 
++&usbphy {
++	status = "okay";
++};
++
+ &pci0 {
+ 	status = "okay";
+ 	pinctrl-0 = <&usb0_pins>;
+-- 
+2.7.4
+

@@ -1,0 +1,46 @@
+From 0aed8fc76f12573b668b8bdc23511c786ca12c93 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 19:46:37 +0700
+Subject: [PATCH 369/628] ARM: DTS: r8a7744: add DVC support for sound
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index b04c106..cf53a91 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1541,17 +1541,26 @@
+ 			 <&mstp10_clks R8A7744_CLK_SCU_SRC5>, <&mstp10_clks R8A7744_CLK_SCU_SRC4>,
+ 			 <&mstp10_clks R8A7744_CLK_SCU_SRC3>, <&mstp10_clks R8A7744_CLK_SCU_SRC2>,
+ 			 <&mstp10_clks R8A7744_CLK_SCU_SRC1>, <&mstp10_clks R8A7744_CLK_SCU_SRC0>,
++			<&mstp10_clks R8A7744_CLK_SCU_DVC0>, <&mstp10_clks R8A7744_CLK_SCU_DVC1>,
+ 			 <&audio_clk_a>, <&audio_clk_b>, <&audio_clk_c>, <&m2_clk>;
+ 		clock-names = "ssi-all",
+ 				"ssi.9", "ssi.8", "ssi.7", "ssi.6", "ssi.5",
+ 				"ssi.4", "ssi.3", "ssi.2", "ssi.1", "ssi.0",
+ 				"src.9", "src.8", "src.7", "src.6", "src.5",
+ 				"src.4", "src.3", "src.2", "src.1", "src.0",
++				"dvc.0", "dvc.1",
+ 				"clk_a", "clk_b", "clk_c", "clk_i";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 
+ 		status = "disabled";
+ 
++		rcar_sound,dvc {
++			dvc0: dvc@0 {
++			};
++			dvc1: dvc@1 {
++			};
++		};
++
+ 		rcar_sound,src {
+ 			src0: src@0 {
+ 			};
+-- 
+2.7.4
+

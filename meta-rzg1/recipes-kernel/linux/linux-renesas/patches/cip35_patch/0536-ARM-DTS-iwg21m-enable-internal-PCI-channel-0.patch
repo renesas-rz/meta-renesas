@@ -1,0 +1,29 @@
+From fbb1b03fab40e00a8b0fe17aa72c518b243d26fd Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 20 Apr 2018 10:26:17 +0700
+Subject: [PATCH 536/628] ARM: DTS: iwg21m: enable internal PCI channel 0
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 779c241..0b65944 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -397,6 +397,10 @@
+ 	status = "okay";
+ };
+ 
++&pci0 {
++	status = "okay";
++};
++
+ &pci1 {
+ 	status = "okay";
+ };
+-- 
+2.7.4
+

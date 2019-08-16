@@ -1,0 +1,46 @@
+From fbe8c97d2dcec43a60ebff15c006231a7f8d459b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 13:27:24 +0700
+Subject: [PATCH 436/628] gpio: rcar: Add subsys_initcall for early timing
+ startup
+
+commit 77aa57b1e3c0 ("gpio: rcar: Add subsys_initcall for early ...")
+git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git
+
+This patch changes subsys_initcall from module_platform_driver
+in order to start a GPIO driver early.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/gpio/gpio-rcar.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index d0bba5d..5c65685 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -629,7 +629,17 @@ static struct platform_driver gpio_rcar_device_driver = {
+ 	}
+ };
+ 
+-module_platform_driver(gpio_rcar_device_driver);
++static int __init gpio_rcar_init(void)
++{
++	return platform_driver_register(&gpio_rcar_device_driver);
++}
++subsys_initcall(gpio_rcar_init);
++
++static void __exit gpio_rcar_exit(void)
++{
++	platform_driver_unregister(&gpio_rcar_device_driver);
++}
++module_exit(gpio_rcar_exit);
+ 
+ MODULE_AUTHOR("Magnus Damm");
+ MODULE_DESCRIPTION("Renesas R-Car GPIO Driver");
+-- 
+2.7.4
+

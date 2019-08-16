@@ -1,0 +1,31 @@
+From f48778a67adef7657bd50fe16aaa2b993748ac2e Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 13:59:53 +0700
+Subject: [PATCH 297/628] ARM: DTS: iwg23s: enable wdt0
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 54e2f03..2609ecc 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -120,6 +120,10 @@
+ 	};
+ };
+ 
++&wdt0 {
++	status = "okay";
++};
++
+ &extal_clk {
+ 	clock-frequency = <20000000>;
+ };
+-- 
+2.7.4
+

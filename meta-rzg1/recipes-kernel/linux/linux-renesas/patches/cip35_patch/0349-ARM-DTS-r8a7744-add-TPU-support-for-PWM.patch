@@ -1,0 +1,37 @@
+From cc61f41e84c9a9720fdb2bfaea3ec2770aa65031 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 17:54:48 +0700
+Subject: [PATCH 349/628] ARM: DTS: r8a7744: add TPU support for PWM
+
+Add the one TPU instance found in the r8a7744 to DT with a disabled status.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 98eb6dd..ee47425 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1309,6 +1309,15 @@
+ 		#pwm-cells = <2>;
+ 	};
+ 
++	tpu: pwm@e60f0000 {
++		compatible = "renesas,tpu-r8a7744", "renesas,tpu";
++		reg = <0 0xe60f0000 0 0x40>;
++		interrupts = <0 135 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7744_CLK_TPU0>;
++		status = "disabled";
++		#pwm-cells = <3>;
++	};
++
+ 	ipmmu_sy0: mmu@e6280000 {
+ 		compatible = "renesas,ipmmu-vmsa";
+ 		reg = <0 0xe6280000 0 0x1000>;
+-- 
+2.7.4
+

@@ -1,0 +1,60 @@
+From e1e87845f28be605f462631d99dfb00c9db46cb4 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Fri, 19 Jan 2018 17:38:30 +0700
+Subject: [PATCH 307/628] ARM: DTS: irqchip: irqc r8a7744 IRQC device tree node
+
+Enable a r8a7744 IRQC block by adding a device tree
+node for the IRQC hardware and pins IRQ0 to IRQ9.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi     | 18 ++++++++++++++++++
+ drivers/irqchip/irq-renesas-irqc.c |  1 +
+ 2 files changed, 19 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 4826329..6d1c646 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -58,6 +58,24 @@
+ 		interrupts = <1 9 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
+ 	};
+ 
++	irqc0: interrupt-controller@e61c0000 {
++		compatible = "renesas,irqc-r8a7744", "renesas,irqc";
++		#interrupt-cells = <2>;
++		interrupt-controller;
++		reg = <0 0xe61c0000 0 0x200>;
++		interrupts = <0 0 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 1 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 2 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 3 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 12 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 13 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 14 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 15 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 16 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 17 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp4_clks R8A7744_CLK_IRQC>;
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+diff --git a/drivers/irqchip/irq-renesas-irqc.c b/drivers/irqchip/irq-renesas-irqc.c
+index 52304b1..d029f1d 100644
+--- a/drivers/irqchip/irq-renesas-irqc.c
++++ b/drivers/irqchip/irq-renesas-irqc.c
+@@ -278,6 +278,7 @@ static int irqc_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id irqc_dt_ids[] = {
+ 	{ .compatible = "renesas,irqc", },
++	{ .compatible = "renesas,irqc-r8a7744", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, irqc_dt_ids);
+-- 
+2.7.4
+

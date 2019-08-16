@@ -1,0 +1,56 @@
+From 30e1ad3245fb9e32959fe7022dc1cd69314baf15 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Wed, 14 Mar 2018 13:55:28 +0700
+Subject: [PATCH 419/628] ARM: DTS: iwg21m: add Ethernet AVB and PHY device
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 4f00d9d..b84e1e3 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -21,6 +21,7 @@
+ 
+ 	aliases {
+ 		serial2 = &scifa2;
++		eth = &avb;
+ 	};
+ 
+ 	memory@40000000 {
+@@ -48,6 +49,11 @@
+ 		renesas,groups = "scifa2_data_c";
+ 		renesas,function = "scifa2";
+ 	};
++
++	avb_pins: avb {
++		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
++		renesas,function = "avb";
++	};
+ };
+ 
+ &scifa2 {
+@@ -55,3 +61,17 @@
+ 	pinctrl-names = "default";
+ 	status = "okay";
+ };
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++
++	phy-handle = <&phy0>;
++	renesas,no-ether-link;
++	status = "okay";
++
++	phy0: ethernet-phy@0 {
++		reg = <3>;
++		micrel,led-mode = <1>;
++	};
++};
+-- 
+2.7.4
+

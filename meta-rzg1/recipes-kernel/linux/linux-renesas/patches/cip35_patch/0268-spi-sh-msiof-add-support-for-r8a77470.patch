@@ -1,0 +1,28 @@
+From 684b33536555212f846b7cb7cb3844fe1744f75c Mon Sep 17 00:00:00 2001
+From: Viet Nguyen <vietn@fsoft.com.vn>
+Date: Thu, 24 May 2018 03:01:22 +0700
+Subject: [PATCH 268/628] spi: sh-msiof: add support for r8a77470
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/spi/spi-sh-msiof.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index d26e303..fa0e9f6 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -978,6 +978,7 @@ static const struct of_device_id sh_msiof_match[] = {
+ 	{ .compatible = "renesas,sh-mobile-msiof", .data = &sh_data },
+ 	{ .compatible = "renesas,msiof-r8a7743",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7745",   .data = &r8a779x_data },
++	{ .compatible = "renesas,msiof-r8a77470",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7790",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7791",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7792",   .data = &r8a779x_data },
+-- 
+2.7.4
+

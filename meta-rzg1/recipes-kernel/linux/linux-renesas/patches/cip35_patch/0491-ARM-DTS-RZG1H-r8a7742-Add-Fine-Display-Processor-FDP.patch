@@ -1,0 +1,63 @@
+From 5c07fe4480fd4f21078770ef41b7e909e6f273de Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Wed, 28 Mar 2018 11:15:54 +0700
+Subject: [PATCH 491/628] ARM: DTS: RZG1H r8a7742: Add Fine Display Processor
+ (FDP1 module) node to device tree
+
+This patch support Renesas FDP1 kernel module probe.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 97db87e..81b752a 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -661,6 +661,30 @@
+ 		power-domains = <&sysc R8A7742_PD_RGX>;
+ 	};
+ 
++	fdp0: fdpm@fe940000 {
++		compatible = "renesas,fdp1";
++		reg = <0 0xfe940000 0 0x2400>;
++		interrupts = <0 262 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_FDP1_0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++	};
++
++	fdp1: fdpm@fe944000 {
++		compatible = "renesas,fdp1";
++		reg = <0 0xfe944000 0 0x2400>;
++		interrupts = <0 263 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_FDP1_1>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++	};
++
++	fdp2: fdpm@fe948000 {
++		compatible = "renesas,fdp1";
++		reg = <0 0xfe948000 0 0x2400>;
++		interrupts = <0 264 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_FDP1_2>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++	};
++
+ 	vspd0: vspd0@fe930000 {
+ 		compatible = "renesas,vsp2";
+ 		reg = <0 0xfe930000 0 0x7404>;
+@@ -1072,8 +1096,8 @@
+ 			>;
+ 			clock-output-names =
+ 				"vcp1", "vcp0", "vpc1", "vpc0", "ssp_dev",
+-				"tmu1", "pvrsrvkm", "tddmac", "fdp2", "fdp1",
+-				"fdp0", "tmu3", "tmu2", "cmt0", "tmu0",
++				"tmu1", "pvrsrvkm", "tddmac", "fdp1-2", "fdp1-1",
++				"fdp1-0", "tmu3", "tmu2", "cmt0", "tmu0",
+ 				"vsp1-du1", "vsp1-du0", "vspr", "vsps";
+ 		};
+ 		mstp2_clks: mstp2_clks@e6150138 {
+-- 
+2.7.4
+

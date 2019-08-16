@@ -1,0 +1,43 @@
+From adee7c5f378e9234b06aa892fec8ee87ab79e123 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 7 Nov 2018 17:45:46 +0700
+Subject: [PATCH 165/628] ARM: DTS: iwg22m: enable leds GPIO
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22m.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+index 29b6e10..f8d1989 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
++++ b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+@@ -19,6 +19,22 @@
+ 		reg = <0 0x40000000 0 0x20000000>;
+ 	};
+ 
++	leds {
++		compatible = "gpio-leds";
++		led1 {
++			gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
++		};
++		led2 {
++			gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>;
++		};
++		led3 {
++			gpios = <&gpio5 7 GPIO_ACTIVE_HIGH>;
++		};
++		led4 {
++			gpios = <&gpio5 8 GPIO_ACTIVE_HIGH>;
++		};
++	};
++
+ 	reg_3p3v: 3p3v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "3P3V";
+-- 
+2.7.4
+

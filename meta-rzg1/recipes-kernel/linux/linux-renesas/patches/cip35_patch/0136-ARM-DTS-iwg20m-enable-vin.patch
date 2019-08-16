@@ -1,0 +1,89 @@
+From 4f5c980e29152aee59ea1d4f8c556c4bbb22960e Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 10:52:34 +0700
+Subject: [PATCH 136/628] ARM: DTS: iwg20m: enable vin
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi | 41 ++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+index 3959877..718e035 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+@@ -81,6 +81,13 @@
+ 		output-low;
+ 		line-name = "can1-trx-en-gpio";
+ 	};
++
++	tvp-power{
++		gpio-hog;
++		gpios = <22 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "tvp-power";
++	};
+ };
+ 
+ &du {
+@@ -145,6 +152,19 @@
+ 			};
+ 		};
+ 	};
++
++	composite-in@5d {
++		compatible = "ti,tvp5150";
++		reg = <0x5d>;
++		remote = <&vin0>;
++
++		port {
++			tvp5150: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin0ep>;
++			};
++		};
++	};
+ };
+ 
+ &pfc {
+@@ -167,6 +187,11 @@
+ 		groups = "scif1_data_d";
+ 		function = "scif1";
+ 	};
++
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data8", "vin0_clk";
++		renesas,function = "vin0";
++	};
+ };
+ 
+ &scif1 {
+@@ -175,3 +200,19 @@
+ 
+ 	status = "okay";
+ };
++
++&vin0 {
++	status = "okay";
++	pinctrl-0 = <&vin0_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin0ep: endpoint {
++			remote-endpoint = <&tvp5150>;
++			bus-width = <8>;
++		};
++	};
++};
+-- 
+2.7.4
+

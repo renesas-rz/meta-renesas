@@ -1,0 +1,84 @@
+From 6606cabfb5413828701f1ebca1e2681ecdaa032c Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 09:33:35 +0700
+Subject: [PATCH 378/628] ARM: DTS: r8a7744: Add description for DU
+
+Add the DU device with a disabled state. Boards that want to enable the
+DU need to specify the output topology
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 55 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index b4389ca..2e07caf 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -829,6 +829,61 @@
+ 		};
+ 	};
+ 
++	vspm@fe928000 {
++		compatible = "renesas,vspm-vsps","renesas-vspm";
++		reg = <0 0xfe928000 0 0x7404>;
++		interrupts = <0 267 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7744_CLK_VSP1_S>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++	};
++
++	vspd0: vspd0@fe930000 {
++		compatible = "renesas,vsp2";
++		reg = <0 0xfe930000 0 0x7404>;
++		interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7744_CLK_VSP1_DU0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++	};
++
++	vspd1: vspd1@fe938000 {
++		compatible = "renesas,vsp2";
++		reg = <0 0xfe938000 0 0x7404>;
++		interrupts = <0 247 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7744_CLK_VSP1_DU1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++	};
++
++	du: display@feb00000 {
++		compatible = "renesas,du-r8a7744";
++		reg = <0 0xfeb00000 0 0x40000>,
++		      <0 0xfeb90000 0 0x1c>;
++		reg-names = "du", "lvds.0";
++		interrupts = <0 256 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 268 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7744_CLK_DU0>,
++			 <&mstp7_clks R8A7744_CLK_DU1>,
++			 <&mstp7_clks R8A7744_CLK_LVDS0>;
++		clock-names = "du.0", "du.1", "lvds.0";
++		status = "disabled";
++
++		vsps = <&vspd0 &vspd1>;
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				du_out_rgb: endpoint {
++				};
++			};
++			port@1 {
++				reg = <1>;
++				du_out_lvds0: endpoint {
++				};
++			};
++		};
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+-- 
+2.7.4
+

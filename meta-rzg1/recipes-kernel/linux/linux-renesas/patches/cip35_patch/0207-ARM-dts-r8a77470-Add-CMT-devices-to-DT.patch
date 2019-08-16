@@ -1,0 +1,61 @@
+From 08414c55db7e7da1515d39f3de94f196c0845065 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Wed, 14 Aug 2019 14:45:05 +0700
+Subject: [PATCH 207/628] ARM: dts: r8a77470: Add CMT devices to DT
+
+Add the CMT0 and CMT1 counters to the r8a77470 device tree and make them
+ disabled by default.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 53ae2b0..d039a65 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -171,6 +171,38 @@
+ 			reg = <0 0xe6160000 0 0x100>;
+ 		};
+ 
++		cmt0: timer@ffca0000 {
++			compatible = "renesas,cmt-48-r8a77470",
++				     "renesas,cmt-48-gen2";
++			reg = <0 0xffca0000 0 0x1004>;
++			interrupts = <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A77470_CLK_CMT0>;
++			clock-names = "fck";
++			power-domains = <&cpg_clocks>;
++			renesas,channels-mask = <0x60>;
++			status = "disabled";
++		};
++
++		cmt1: timer@e6130000 {
++			compatible = "renesas,cmt-48-r8a77470",
++				     "renesas,cmt-48-gen2";
++			reg = <0 0xe6130000 0 0x1004>;
++			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A77470_CLK_CMT1>;
++			clock-names = "fck";
++			power-domains = <&cpg_clocks>;
++			renesas,channels-mask = <0xff>;
++			status = "disabled";
++		};
++
+ 		irqc: interrupt-controller@e61c0000 {
+ 			compatible = "renesas,irqc-r8a77470", "renesas,irqc";
+ 			#interrupt-cells = <2>;
+-- 
+2.7.4
+

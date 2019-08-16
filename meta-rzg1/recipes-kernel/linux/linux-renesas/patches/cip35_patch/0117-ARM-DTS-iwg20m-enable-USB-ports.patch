@@ -1,0 +1,37 @@
+From cf1929cf092d3d130f4e473a74e0a1c708b20725 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Wed, 23 May 2018 16:14:22 +0700
+Subject: [PATCH 117/628] ARM: DTS: iwg20m: enable USB ports
+
+Signed-off-by: Loc Pham <loc.pham.xh@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 6920e3f..a181dab 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -149,6 +149,7 @@
+ };
+ 
+ &pci0 {
++	status = "okay";
+ 	pinctrl-0 = <&usb0_pins>;
+ 	pinctrl-names = "default";
+ };
+@@ -264,3 +265,7 @@
+ &usbphy {
+ 	status = "okay";
+ };
++
++&xhci {
++	status = "okay";
++};
+\ No newline at end of file
+-- 
+2.7.4
+

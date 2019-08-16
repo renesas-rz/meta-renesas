@@ -1,0 +1,61 @@
+From 50415111c70bc361766026f29a2fb70369788cea Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 20 Apr 2018 08:51:53 +0700
+Subject: [PATCH 533/628] ARM: DTS: r8a7742: add description for internal PCI
+ bridge channel 0
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 6b5fccb..8346ba1 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -930,6 +930,41 @@
+ 		status = "disabled";
+ 	};
+ 
++	pci0: pci@ee090000 {
++		compatible = "renesas,pci-r8a7742";
++		device_type = "pci";
++		reg = <0 0xee090000 0 0xc00>,
++		      <0 0xee080000 0 0x1100>;
++		interrupts = <0 108 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7742_CLK_EHCI>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		status = "disabled";
++
++		bus-range = <0 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		ranges = <0x02000000 0 0xee080000 0 0xee080000 0 0x00010000>;
++		interrupt-map-mask = <0xff00 0 0 0x7>;
++		interrupt-map = <0x0000 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
++				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
++				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
++
++		usb@0,1 {
++			reg = <0x800 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb0 0>;
++			phy-names = "usb";
++		};
++
++		usb@0,2 {
++			reg = <0x1000 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb0 0>;
++			phy-names = "usb";
++		};
++	};
++
+ 	pci1: pci@ee0b0000 {
+ 		compatible = "renesas,pci-r8a7742";
+ 		device_type = "pci";
+-- 
+2.7.4
+

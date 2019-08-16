@@ -1,0 +1,94 @@
+From 5364875c8cb73d636aecf2d9f0de955d5729803b Mon Sep 17 00:00:00 2001
+From: Dmitry Shifrin <dmitry.shifrin@cogentembedded.com>
+Date: Thu, 6 Oct 2016 11:30:44 +0300
+Subject: [PATCH 105/628] add hann start panel
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7743-skrzg1m.dts | 34 +++++++++++++++++++++++++++++++++-
+ drivers/gpu/drm/panel/panel-simple.c  |  4 ++--
+ 2 files changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743-skrzg1m.dts b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+index aacba39..cf6b484 100644
+--- a/arch/arm/boot/dts/r8a7743-skrzg1m.dts
++++ b/arch/arm/boot/dts/r8a7743-skrzg1m.dts
+@@ -116,6 +116,15 @@
+ 			  1800000 0>;
+ 	};
+ 
++	vcc_lvds: regulator@4 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "panel vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
+ 	hdmi-out {
+ 		compatible = "hdmi-connector";
+ 		type = "a";
+@@ -127,6 +136,24 @@
+ 		};
+ 	};
+ 
++	panel_hannstar: panel@0 {
++		compatible = "hannstar,hsd070pww1", "simple-panel";
++		power-supply = <&vcc_lvds>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				panel_input: endpoint {
++					reg = <0>;
++					remote-endpoint = <&du_out_lvds0>;
++				};
++			};
++		};
++	};
++
+ 	x3_clk: x3-clock {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+@@ -485,11 +512,16 @@
+ 		      "dclkin.0", "dclkin.1";
+ 
+ 	ports {
+-		port@1 {
++		port@0 {
+ 			endpoint {
+ 				remote-endpoint = <&adv7511_in>;
+ 			};
+ 		};
++		port@1 {
++			endpoint {
++				remote-endpoint = <&panel_input>;
++			};
++		};
+ 	};
+ };
+ 
+diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
+index f418c00..4d31271 100644
+--- a/drivers/gpu/drm/panel/panel-simple.c
++++ b/drivers/gpu/drm/panel/panel-simple.c
+@@ -723,9 +723,9 @@ static const struct display_timing hannstar_hsd070pww1_timing = {
+ 	.hsync_len = { 58, 158, 661 },
+ 	.vactive = { 800, 800, 800 },
+ 	.vfront_porch = { 1, 1, 10 },
+-	.vback_porch = { 1, 1, 10 },
++	.vback_porch = { 2, 2, 10 },
+ 	.vsync_len = { 1, 21, 203 },
+-	.flags = DISPLAY_FLAGS_DE_HIGH,
++	.flags = /*DISPLAY_FLAGS_DE_HIGH*/0,
+ };
+ 
+ static const struct panel_desc hannstar_hsd070pww1 = {
+-- 
+2.7.4
+

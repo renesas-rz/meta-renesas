@@ -1,0 +1,27 @@
+From 46398010d3955f6dac0b059b8b65202a8a92b4ef Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Tue, 6 Feb 2018 09:56:34 +0700
+Subject: [PATCH 401/628] ARM: DTS: r8a7744: add alias eth and xhci
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index ec4a211..859b787 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -22,6 +22,8 @@
+ 		serial2 = &scif4;
+ 		serial3 = &scifb1;
+ 		serial4 = &hscif1;
++		eth	= &avb;
++		xhci	= &xhci;
+ 	};
+ 	memory@40000000 {
+ 		device_type = "memory";
+-- 
+2.7.4
+

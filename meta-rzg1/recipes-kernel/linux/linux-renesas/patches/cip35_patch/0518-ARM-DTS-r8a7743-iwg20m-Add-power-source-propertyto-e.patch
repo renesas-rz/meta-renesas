@@ -1,0 +1,43 @@
+From fcc070982128cdc69a5843426e208be1e1571f9f Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 13:59:47 +0700
+Subject: [PATCH 518/628] ARM: DTS: r8a7743: iwg20m: Add power-source
+ propertyto enable UHS SDR50 for sdhi1
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index d5b4e91..59fcade 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -272,6 +272,12 @@
+ 		function = "ssi";
+ 	};
+ 
++	sdhi1_pins_uhs: sd2_uhs {
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,function = "sdhi1";
++		power-source = <1800>;
++	};
++
+ 	usb0_pins: usb0 {
+ 		groups = "usb0";
+ 		function = "usb0";
+@@ -337,7 +343,8 @@
+ 
+ &sdhi1 {
+ 	pinctrl-0 = <&sdhi1_pins>;
+-	pinctrl-names = "default";
++	pinctrl-1 = <&sdhi1_pins_uhs>;
++	pinctrl-names = "default", "uhs";
+ 
+ 	vmmc-supply = <&vcc_sdhi1>;
+ 	vqmmc-supply = <&vccq_sdhi1>;
+-- 
+2.7.4
+

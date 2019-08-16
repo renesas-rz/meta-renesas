@@ -1,0 +1,28 @@
+From 636dc61bcd1f447c66b6846c4e90b02fa6f49e7a Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@rvc.renesas.com>
+Date: Mon, 23 Apr 2018 14:25:52 +0700
+Subject: [PATCH 520/628] ARM: DTS: r8a7744: Enable UHS SDR50 for sdhi1
+
+Signed-off-by: Hien Huynh <hien.huynh.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index d19061a..2857e32 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -562,6 +562,9 @@
+ 		dmas = <&dmac1 0xc1>, <&dmac1 0xc2>;
+ 		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		renesas,clk-rate = <97500000>;
++		renesas,mmc-scc-tapnum = <8>;
++		sd-uhs-sdr50;
+ 		status = "disabled";
+ 	};
+ 
+-- 
+2.7.4
+

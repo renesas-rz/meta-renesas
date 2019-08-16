@@ -1,0 +1,29 @@
+From a6522b43969a3ddd54e772225d48598bbbea64f0 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 8 Nov 2018 09:32:03 +0700
+Subject: [PATCH 567/628] ARM: DTS: r8a7745: Enable UHS SDR104 for sdhi0
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index ffaa7d1..4464fb9 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -1317,6 +1317,9 @@
+ 			dma-names = "tx", "rx", "tx", "rx";
+ 			max-frequency = <195000000>;
+ 			power-domains = <&cpg_clocks>;
++			renesas,mmc-scc-tapnum = <8>;
++			sd-uhs-sdr50;
++			sd-uhs-sdr104;
+ 			status = "disabled";
+ 		};
+ 
+-- 
+2.7.4
+

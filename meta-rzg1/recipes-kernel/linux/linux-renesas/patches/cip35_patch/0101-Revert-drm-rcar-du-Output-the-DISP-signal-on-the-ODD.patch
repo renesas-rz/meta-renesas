@@ -1,0 +1,63 @@
+From da9e99a3ab0d405e44c8f827edc093f460655e01 Mon Sep 17 00:00:00 2001
+From: Roman Meshkevich <roman.meshkevich@cogentembedded.com>
+Date: Thu, 22 Sep 2016 17:57:26 +0300
+Subject: [PATCH 101/628] Revert "drm: rcar-du: Output the DISP signal on the
+ ODDF pin"
+
+We use Gen2 boards which have control only on disp pin.
+This reverts commit a5e18b2b7d5d ("drm: rcar-du: Output the DISP signal on the
+ ODDF pin").
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_group.c | 12 ------------
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  |  2 +-
+ 2 files changed, 1 insertion(+), 13 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.c b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+index 33b2fc5..c2efcd2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+@@ -44,16 +44,6 @@ void rcar_du_group_write(struct rcar_du_group *rgrp, u32 reg, u32 data)
+ 	rcar_du_write(rgrp->dev, rgrp->mmio_offset + reg, data);
+ }
+ 
+-static void rcar_du_group_setup_pins(struct rcar_du_group *rgrp)
+-{
+-	u32 defr6 = DEFR6_CODE | DEFR6_ODPM12_DISP;
+-
+-	if (rgrp->num_crtcs > 1)
+-		defr6 |= DEFR6_ODPM22_DISP;
+-
+-	rcar_du_group_write(rgrp, DEFR6, defr6);
+-}
+-
+ static void rcar_du_group_setup_defr8(struct rcar_du_group *rgrp)
+ {
+ 	struct rcar_du_device *rcdu = rgrp->dev;
+@@ -100,8 +90,6 @@ static void rcar_du_group_setup(struct rcar_du_group *rgrp)
+ 	}
+ 	rcar_du_group_write(rgrp, DEFR5, DEFR5_CODE | DEFR5_DEFE5);
+ 
+-	rcar_du_group_setup_pins(rgrp);
+-
+ 	if (rcar_du_has(rgrp->dev, RCAR_DU_FEATURE_EXT_CTRL_REGS)) {
+ 		rcar_du_group_setup_defr8(rgrp);
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+index d2f6606..2a62e9f 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_regs.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -187,7 +187,7 @@
+ 
+ #define DEFR6			0x000e8
+ #define DEFR6_CODE		(0x7778 << 16)
+-#define DEFR6_ODPM22_DSMR	(0 << 10)
++#define DEFR6_ODPM22_D2SMR	(0 << 10)
+ #define DEFR6_ODPM22_DISP	(2 << 10)
+ #define DEFR6_ODPM22_CDE	(3 << 10)
+ #define DEFR6_ODPM22_MASK	(3 << 10)
+-- 
+2.7.4
+

@@ -1,0 +1,26 @@
+From b35d86719d14be94976aac21cc016b116b506b1a Mon Sep 17 00:00:00 2001
+From: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 13 Aug 2018 18:12:15 +0700
+Subject: [PATCH 596/628] rcar_vin: configure RZ/G1C data mode reg
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen.yb@renesas.com>
+---
+ drivers/media/platform/soc_camera/rcar_vin.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index ac32287..d6671a0 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -682,7 +682,7 @@ static int rcar_vin_setup(struct rcar_vin_priv *priv)
+ 		break;
+ 	case V4L2_PIX_FMT_RGB32:
+ 		if (priv->chip == RCAR_GEN2 || priv->chip == RCAR_H1 ||
+-		    priv->chip == RCAR_E1) {
++		    priv->chip == RCAR_E1 || priv->chip == RZ_G1C) {
+ 			dmr = VNDMR_EXRGB;
+ 			break;
+ 		}
+-- 
+2.7.4
+

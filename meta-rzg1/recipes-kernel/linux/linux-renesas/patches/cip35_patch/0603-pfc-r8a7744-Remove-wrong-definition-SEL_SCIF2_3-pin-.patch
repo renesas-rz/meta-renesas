@@ -1,0 +1,54 @@
+From 945238db3757bdf45418c3502790f15b3ab01f14 Mon Sep 17 00:00:00 2001
+From: Tri Luong <tri.luong.te@rvc.renesas.com>
+Date: Tue, 7 Aug 2018 00:44:39 +0700
+Subject: [PATCH 603/628] pfc-r8a7744: Remove wrong definition SEL_SCIF2_3 pin
+ function.
+
+Signed-off-by: Tri Luong <tri.luong.te@rvc.renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7744.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+index 7ea1d44..a80b7a0 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+@@ -483,7 +483,7 @@ enum {
+ 	FN_SEL_SOF1_4,
+ 	FN_SEL_HSCIF0_0, FN_SEL_HSCIF0_1, FN_SEL_HSCIF0_2,
+ 	FN_SEL_DIS_0, FN_SEL_DIS_1, FN_SEL_DIS_2,
+-	FN_SEL_SCIF2_0, FN_SEL_SCIF2_1, FN_SEL_SCIF2_2, FN_SEL_SCIF2_3, FN_SEL_SCIF2_4,
++	FN_SEL_SCIF2_0, FN_SEL_SCIF2_1, FN_SEL_SCIF2_2, FN_SEL_SCIF2_4,
+ 	FN_SEL_SOF2_0, FN_SEL_SOF2_1, FN_SEL_SOF2_2, FN_SEL_SOF2_3,
+ 	FN_SEL_SOF2_4,
+ 	FN_SEL_SSI1_0, FN_SEL_SSI1_1,
+@@ -5458,7 +5458,7 @@ static const struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 	},
+ 	{ PINMUX_CFG_REG_VAR("IPSR2", 0xE6060028, 32,
+ 			     2, 3, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 3) {
+-		/* IP2_31_20 [2] */
++		/* IP2_31_30 [2] */
+ 		0, 0, 0, 0,
+ 		/* IP2_29_27 [3] */
+ 		FN_EX_CS3_N, FN_ATADIR0_N, FN_MSIOF2_TXD,
+@@ -5478,7 +5478,7 @@ static const struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 		/* IP2_15_13 [3] */
+ 		FN_A24, FN_DREQ2, FN_IO3, FN_TX1, FN_SCIFA1_TXD,
+ 		0, 0, 0,
+-		/* IP2_12_0 [3] */
++		/* IP2_12_10 [3] */
+ 		FN_A23, FN_IO2, 0, FN_RX0, FN_SCIFA0_RXD,
+ 		0, 0, 0,
+ 		/* IP2_9_7 [3] */
+@@ -6216,7 +6216,7 @@ static const struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 		0, 0,
+ 		/* SEL_SCIF2 [3] */
+ 		FN_SEL_SCIF2_0, FN_SEL_SCIF2_1, FN_SEL_SCIF2_2,
+-		FN_SEL_SCIF2_3, FN_SEL_SCIF2_4,
++		0, FN_SEL_SCIF2_4,
+ 		0, 0, 0,
+ 		/* RESERVED [2] */
+ 		0, 0, 0, 0,
+-- 
+2.7.4
+

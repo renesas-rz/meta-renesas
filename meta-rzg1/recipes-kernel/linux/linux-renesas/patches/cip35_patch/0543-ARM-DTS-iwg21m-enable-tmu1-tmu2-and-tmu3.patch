@@ -1,0 +1,34 @@
+From f0f48520303ff12d0d8eeee93011f0aba27d6fef Mon Sep 17 00:00:00 2001
+From: khatran <kha.tran.px@rvc.renesas.com>
+Date: Mon, 23 Apr 2018 16:38:58 +0700
+Subject: [PATCH 543/628] ARM: DTS: iwg21m: enable tmu1, tmu2 and tmu3
+
+Signed-off-by: khatran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 16c1735..1a4b899 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -813,3 +813,15 @@
+ &cmt1{
+ 	status = "okay";
+ };
++
++&tmu1 {
++	status = "okay";
++};
++
++&tmu2 {
++	status = "okay";
++};
++
++&tmu3 {
++	status = "okay";
++};
+-- 
+2.7.4
+

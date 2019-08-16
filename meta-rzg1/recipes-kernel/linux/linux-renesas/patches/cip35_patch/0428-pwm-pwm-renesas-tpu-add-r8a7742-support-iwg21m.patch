@@ -1,0 +1,27 @@
+From e0fd7b889ff6e7cef0e02e94484983e9ffb60d74 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 13:23:17 +0700
+Subject: [PATCH 428/628] pwm: pwm-renesas-tpu: add r8a7742 support iwg21m
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/pwm/pwm-renesas-tpu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pwm/pwm-renesas-tpu.c b/drivers/pwm/pwm-renesas-tpu.c
+index a2953a8..3e8096b 100644
+--- a/drivers/pwm/pwm-renesas-tpu.c
++++ b/drivers/pwm/pwm-renesas-tpu.c
+@@ -455,6 +455,7 @@ static const struct of_device_id tpu_of_table[] = {
+ 	{ .compatible = "renesas,tpu-r8a73a4", },
+ 	{ .compatible = "renesas,tpu-r8a7740", },
+ 	{ .compatible = "renesas,tpu-r8a7790", },
++	{ .compatible = "renesas,tpu-r8a7742", },
+ 	{ .compatible = "renesas,tpu-r8a7745", },
+ 	{ .compatible = "renesas,tpu-r8a7744", },
+ 	{ .compatible = "renesas,tpu-sh7372", },
+-- 
+2.7.4
+

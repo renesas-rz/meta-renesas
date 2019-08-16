@@ -1,0 +1,50 @@
+From 752bece284cb3629d19dd3b6590314c55d384b03 Mon Sep 17 00:00:00 2001
+From: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Date: Tue, 13 Mar 2018 20:33:13 +0700
+Subject: [PATCH 489/628] ARM: DTS: r8a7742: add power domain for I2C
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index f5f038d..190809d 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -1259,6 +1259,7 @@
+ 		reg = <0 0xe6508000 0 0x40>;
+ 		interrupts = <0 287 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp9_clks R8A7742_CLK_I2C0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -1269,6 +1270,7 @@
+ 		reg = <0 0xe6518000 0 0x40>;
+ 		interrupts = <0 288 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp9_clks R8A7742_CLK_I2C1>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -1279,6 +1281,7 @@
+ 		reg = <0 0xe6530000 0 0x40>;
+ 		interrupts = <0 286 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp9_clks R8A7742_CLK_I2C2>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -1289,6 +1292,7 @@
+ 		reg = <0 0xe6540000 0 0x40>;
+ 		interrupts = <0 290 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp9_clks R8A7742_CLK_I2C3>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+-- 
+2.7.4
+

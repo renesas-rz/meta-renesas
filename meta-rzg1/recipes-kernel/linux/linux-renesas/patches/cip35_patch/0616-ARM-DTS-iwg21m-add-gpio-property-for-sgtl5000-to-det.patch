@@ -1,0 +1,30 @@
+From a2d7abe4c7cf0c57ca9895052fe52b950b231158 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Thu, 4 Oct 2018 16:54:01 +0700
+Subject: [PATCH 616/628] ARM: DTS: iwg21m: add gpio property for sgtl5000 to
+ detect sound jack
+
+Add hp-det-gpios to detect headphone jack plugging state.
+Add mic-det-gpios to detect mic jack plugging state.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index e000b0f..1f339a0 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -573,6 +573,8 @@
+ 		VDDA-supply = <&reg_2p5v>;
+ 		VDDIO-supply = <&reg_3p3v>;
+ 		VDDD-supply = <&reg_0p0v>;
++		hp-det-gpios = <&gpio4 19 GPIO_ACTIVE_LOW>;
++		mic-det-gpios = <&gpio0 26 GPIO_ACTIVE_LOW>;
+ 		clocks = <&x9_clk 1>;
+ 	};
+ 
+-- 
+2.7.4
+

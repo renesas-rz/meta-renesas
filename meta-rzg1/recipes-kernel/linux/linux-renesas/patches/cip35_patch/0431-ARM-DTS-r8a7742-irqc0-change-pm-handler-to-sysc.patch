@@ -1,0 +1,27 @@
+From 271e91c2fa91bcdd95a81255dea4aec006ab0283 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 20:20:18 +0700
+Subject: [PATCH 431/628] ARM: DTS: r8a7742: irqc0: change pm handler to sysc
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index a121068..d6b1246b 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -135,7 +135,7 @@
+ 				<0 2 IRQ_TYPE_LEVEL_HIGH>,
+ 				<0 3 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp4_clks R8A7742_CLK_IRQC>;
+-		power-domains = <&cpg_clocks>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	pfc: pfc@e6060000 {
+-- 
+2.7.4
+

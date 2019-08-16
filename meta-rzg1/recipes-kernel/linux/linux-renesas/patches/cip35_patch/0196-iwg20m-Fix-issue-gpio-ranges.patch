@@ -1,0 +1,28 @@
+From 8809b7b810475f484db92c0d51d5da790303f723 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 18:12:10 +0700
+Subject: [PATCH 196/628] iwg20m: Fix issue gpio ranges
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index a80fac1c..5bc157c 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -160,7 +160,7 @@
+ 			interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
+ 			#gpio-cells = <2>;
+ 			gpio-controller;
+-			gpio-ranges = <&pfc 0 32 26>;
++			gpio-ranges = <&pfc 0 32 32>;
+ 			#interrupt-cells = <2>;
+ 			interrupt-controller;
+ 			clocks = <&mstp9_clks R8A7743_CLK_GPIO1>;
+-- 
+2.7.4
+

@@ -1,0 +1,57 @@
+From c57757af9a1c30077c5902552533922cd39d1281 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 16:37:11 +0700
+Subject: [PATCH 340/628] ARM: DTS: r8a7744-iwg20m: Enable MSIOF support
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 7d265d6..3f2d3c4 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -132,6 +132,18 @@
+ 		renesas,function = "qspi";
+ 	};
+ 
++	msiof1_pins: spi2 {
++		renesas,groups = "msiof1_ss2_b", "msiof1_rx_b", "msiof1_tx_b",
++				 "msiof1_clk_b" , "msiof1_sync_b";
++		renesas,function = "msiof1";
++	};
++
++	msiof2_pins: spi3 {
++		renesas,groups = "msiof2_clk", "msiof2_tx_d", "msiof2_rx_d",
++				 "msiof2_ss1_d", "msiof2_sync_d";
++		renesas,function = "msiof2";
++	};
++
+ 	i2c2_pins: i2c2 {
+ 		renesas,groups = "i2c2";
+ 		renesas,function = "i2c2";
+@@ -240,6 +252,19 @@
+ 	};
+ };
+ 
++&msiof1 {
++	pinctrl-0 = <&msiof1_pins>;
++	pinctrl-names = "default";
++
++};
++
++&msiof2 {
++	pinctrl-0 = <&msiof2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
+ &i2c2 {
+ 	pinctrl-0 = <&i2c2_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

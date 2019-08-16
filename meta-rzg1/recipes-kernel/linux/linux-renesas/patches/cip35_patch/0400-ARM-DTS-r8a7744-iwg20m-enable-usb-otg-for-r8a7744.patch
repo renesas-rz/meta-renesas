@@ -1,0 +1,40 @@
+From 330adc0595a2a10c67dba6f1cc8d3deb084919d0 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Mon, 29 Jan 2018 10:15:23 +0700
+Subject: [PATCH 400/628] ARM: DTS: r8a7744-iwg20m: enable usb otg for r8a7744
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 16bd164..ec4a211 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -363,6 +363,10 @@
+ 
+ &usbphy {
+ 	status = "okay";
++	renesas,id-gpio = <&gpio1 11 GPIO_ACTIVE_LOW>;
++	renesas,vbus-gpio = <&gpio7 24 GPIO_ACTIVE_LOW>;
++	renesas,vbus-pwr-gpio = <&gpio7 23 GPIO_ACTIVE_LOW>;
++	renesas,wakeup;
+ };
+ 
+ &xhci {
+@@ -375,6 +379,10 @@
+ 	pinctrl-names = "default";
+ };
+ 
++&hsusb {
++	status = "okay";
++};
++
+ &qspi {
+ 	pinctrl-0 = <&qspi_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

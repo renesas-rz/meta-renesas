@@ -1,0 +1,153 @@
+From 28536610d4efc85bd8327c9a1aa229cb600711b2 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Thu, 25 Jul 2019 11:02:29 +0700
+Subject: [PATCH 316/628] ARM: DTS: r8a7744-iwg20m: Initial support
+
+Create r8a7744-iwg20m.dts support for r8a7744-iwg20m board
+Add initial support for SCIF0 serial, pinctrl and CA15 with
+CMT timer
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/Makefile           |  1 +
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 97 ++++++++++++++++++++++++++++++++++++
+ arch/arm/configs/shmobile_defconfig  |  1 +
+ 3 files changed, 99 insertions(+)
+ create mode 100644 arch/arm/boot/dts/r8a7744-iwg20m.dts
+
+diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
+index 119ee5c..c0a4320 100644
+--- a/arch/arm/boot/dts/Makefile
++++ b/arch/arm/boot/dts/Makefile
+@@ -546,6 +546,7 @@ dtb-$(CONFIG_ARCH_SHMOBILE_MULTI) += \
+ 	r8a7740-armadillo800eva.dtb \
+ 	r8a7743-iwg20d-q7.dtb \
+ 	r8a7743-iwg20d-q7-dbcm-ca.dtb \
++	r8a7744-iwg20m.dtb \
+ 	r8a7745-iwg22d-sodimm.dtb \
+ 	r8a7745-iwg22d-sodimm-dbhd-ca.dtb \
+ 	r8a77470-iwg23s-sbc.dtb \
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+new file mode 100644
+index 0000000..e167995
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -0,0 +1,97 @@
++/*
++ * Copyright (c) 2015 iWave Systems Technologies Pvt. Ltd.
++ *
++ * The code contained herein is licensed under the GNU General Public
++ * License. You may obtain a copy of the GNU General Public License
++ * Version 2 or later at the following locations:
++ *
++ * http://www.opensource.org/licenses/gpl-license.html
++ * http://www.gnu.org/copyleft/gpl.html
++ */
++
++/dts-v1/;
++#include "r8a7744.dtsi"
++
++/ {
++	model = "iwg20m";
++	compatible = "iw,iwg20m", "renesas,r8a7744";
++	aliases {
++		serial0 = &scif0;
++		serial1 = &scif1;
++		serial2 = &scif4;
++		serial3 = &scifb1;
++		serial4 = &hscif1;
++	};
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0 0x40000000 0 0x40000000>;
++	};
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&pfc {
++	scif0_pins: serial0 {
++		renesas,groups = "scif0_data_d";
++		renesas,function = "scif0";
++	};
++
++	scif1_pins: serial1 {
++		renesas,groups = "scif1_data_d";
++		renesas,function = "scif1";
++	};
++
++	scif4_pins: serial2 {
++		renesas,groups = "scif4_data_c";
++		renesas,function = "scif4";
++	};
++
++	scifb1_pins: serial3 {
++		renesas,groups = "scifb1_data_d", "scifb1_ctrl";
++		renesas,function = "scifb1";
++	};
++
++	hscif1_pins: serial4 {
++		renesas,groups = "hscif1_data_c", "hscif1_ctrl_c";
++		renesas,function = "hscif1";
++	};
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif4 {
++	pinctrl-0 = <&scif4_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scifb1 {
++	pinctrl-0 = <&scifb1_pins>;
++	pinctrl-names = "default";
++	ctsrts;
++
++	status = "okay";
++};
++
++&hscif1 {
++	pinctrl-0 = <&hscif1_pins>;
++	pinctrl-names = "default";
++	ctsrts;
++
++	status = "okay";
++};
+\ No newline at end of file
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index b6b691e..6798768 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -18,6 +18,7 @@ CONFIG_ARCH_R7S72100=y
+ CONFIG_ARCH_R8A73A4=y
+ CONFIG_ARCH_R8A7740=y
+ CONFIG_ARCH_R8A7743=y
++CONFIG_ARCH_R8A7744=y
+ CONFIG_ARCH_R8A7745=y
+ CONFIG_ARCH_R8A77470=y
+ CONFIG_ARCH_R8A7778=y
+-- 
+2.7.4
+

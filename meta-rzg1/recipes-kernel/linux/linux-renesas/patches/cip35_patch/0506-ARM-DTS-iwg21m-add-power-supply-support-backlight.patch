@@ -1,0 +1,26 @@
+From 33f821c452227fb405fe1180fafed7dc076bb58b Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Fri, 16 Mar 2018 15:29:14 +0700
+Subject: [PATCH 506/628] ARM: DTS: iwg21m: add power-supply support backlight
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 1a3efb2..d5b1488 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -160,6 +160,7 @@
+ 		pwms = <&tpu 2 5000000 GPIO_ACTIVE_HIGH>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
++		power-supply = <&vcc_lvds>;
+ 		pinctrl-0 = <&backlight_pins>;
+ 		pinctrl-names = "default";
+ 	};
+-- 
+2.7.4
+

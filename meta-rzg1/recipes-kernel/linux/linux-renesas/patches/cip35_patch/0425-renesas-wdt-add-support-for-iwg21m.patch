@@ -1,0 +1,31 @@
+From 7734764f19a65e0b1571b8ef2e4ab7174180d8b0 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 11:47:43 +0700
+Subject: [PATCH 425/628] renesas-wdt: add support for iwg21m
+
+This patch add restart handler support reboot feature for iwg21m
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/watchdog/renesas_wdt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/watchdog/renesas_wdt.c b/drivers/watchdog/renesas_wdt.c
+index f32bdff..efe264c 100644
+--- a/drivers/watchdog/renesas_wdt.c
++++ b/drivers/watchdog/renesas_wdt.c
+@@ -265,7 +265,8 @@ static int rwdt_probe(struct platform_device *pdev)
+ 	 * same ARM core architecture (e.g ARM cortex A15) can use same handler
+ 	 */
+ 	if (of_machine_is_compatible("renesas,r8a7743") ||
+-	    of_machine_is_compatible("renesas,r8a7744")) {
++	    of_machine_is_compatible("renesas,r8a7744") ||
++	    of_machine_is_compatible("renesas,r8a7742")) {
+ 		priv->restart_handler.notifier_call = rwdt_restart_handler_ca15;
+ 		/* 255: Highest priority restart handler */
+ 		priv->restart_handler.priority = 255;
+-- 
+2.7.4
+

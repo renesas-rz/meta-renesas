@@ -1,0 +1,50 @@
+From bd42c96e78cb5c3dda56b48fa158ef4ae3d7c09a Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Thu, 24 May 2018 15:08:41 +0700
+Subject: [PATCH 361/628] xhci: USB: add support for r8a7744
+
+Add device tree probing support to the USB3.0 'xhci_plat' driver.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/usb/host/xhci-plat.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
+index 152e33b..0c99e8a 100644
+--- a/drivers/usb/host/xhci-plat.c
++++ b/drivers/usb/host/xhci-plat.c
+@@ -66,7 +66,8 @@ static int xhci_plat_setup(struct usb_hcd *hcd)
+ 
+ 	if (of_device_is_compatible(of_node, "renesas,xhci-r8a7790") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7791") ||
+-	    of_device_is_compatible(of_node, "renesas,xhci-r8a7743")) {
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7743") ||
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7744")) {
+ 		ret = xhci_rcar_init_quirk(hcd);
+ 		if (ret)
+ 			return ret;
+@@ -81,7 +82,8 @@ static int xhci_plat_start(struct usb_hcd *hcd)
+ 
+ 	if (of_device_is_compatible(of_node, "renesas,xhci-r8a7790") ||
+ 	    of_device_is_compatible(of_node, "renesas,xhci-r8a7791") ||
+-	    of_device_is_compatible(of_node, "renesas,xhci-r8a7743"))
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7743") ||
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7744"))
+ 		xhci_rcar_start(hcd);
+ 
+ 	return xhci_run(hcd);
+@@ -282,6 +284,7 @@ static const struct of_device_id usb_xhci_of_match[] = {
+ 	{ .compatible = "marvell,armada-375-xhci"},
+ 	{ .compatible = "marvell,armada-380-xhci"},
+ 	{ .compatible = "renesas,xhci-r8a7743"},
++	{ .compatible = "renesas,xhci-r8a7744"},
+ 	{ .compatible = "renesas,xhci-r8a7790"},
+ 	{ .compatible = "renesas,xhci-r8a7791"},
+ 	{ },
+-- 
+2.7.4
+

@@ -1,0 +1,25 @@
+From 568b4102a15ec8132e30eae9673c86a7dcc5103e Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Tue, 17 Jul 2018 10:22:49 +0700
+Subject: [PATCH 592/628] rcar_vin: add compatible value for r8a7743
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+---
+ drivers/media/platform/soc_camera/rcar_vin.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 8f1daf9..07f7226 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -2279,6 +2279,7 @@ static struct soc_camera_host_ops rcar_vin_host_ops = {
+ #ifdef CONFIG_OF
+ static const struct of_device_id rcar_vin_of_table[] = {
+ 	{ .compatible = "renesas,vin-r8a7794", .data = (void *)RCAR_GEN2 },
++	{ .compatible = "renesas,vin-r8a7743", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7744", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7745", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7793", .data = (void *)RCAR_GEN2 },
+-- 
+2.7.4
+

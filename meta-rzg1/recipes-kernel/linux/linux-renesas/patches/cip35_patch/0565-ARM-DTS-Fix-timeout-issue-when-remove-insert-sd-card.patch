@@ -1,0 +1,109 @@
+From 2d6946034cfc4c04a6dad460cd83a69bf1159a91 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 14:22:55 +0700
+Subject: [PATCH 565/628] ARM: DTS: Fix timeout issue when remove/insert sd
+ card for iwg20m and iwg21m
+
+The issue involves with CD pin of SDHI interface.
+This pin can not switch voltage between 3.3V and 1.8V when remove/insert.
+
+Remove "cd-gpio" property in sdhi node and add "sdhi_cd" in pfc.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 5 ++---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts    | 5 ++---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts    | 5 ++---
+ 3 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index b4c5f81..f279f15 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -262,7 +262,7 @@
+ 	};
+ 
+ 	sdhi1_pins: sd1 {
+-		groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
+ 		function = "sdhi1";
+ 		power-source = <3300>;
+ 	};
+@@ -273,7 +273,7 @@
+ 	};
+ 
+ 	sdhi1_pins_uhs: sd2_uhs {
+-		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
+ 		renesas,function = "sdhi1";
+ 		power-source = <1800>;
+ 	};
+@@ -348,7 +348,6 @@
+ 
+ 	vmmc-supply = <&vcc_sdhi1>;
+ 	vqmmc-supply = <&vccq_sdhi1>;
+-	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
+ 	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
+ };
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index b2bebf8..951555a 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -327,13 +327,13 @@
+ 	};
+ 
+ 	sdhi2_pins: sd2 {
+-		renesas,groups = "sdhi2_data4", "sdhi2_ctrl";
++		renesas,groups = "sdhi2_data4", "sdhi2_ctrl", "sdhi2_cd";
+ 		renesas,function = "sdhi2";
+ 		power-source = <3300>;
+ 	};
+ 
+ 	sdhi2_pins_uhs: sd2_uhs {
+-		renesas,groups = "sdhi2_data4", "sdhi2_ctrl";
++		renesas,groups = "sdhi2_data4", "sdhi2_ctrl", "sdhi2_cd";
+ 		renesas,function = "sdhi2";
+ 		power-source = <1800>;
+ 	};
+@@ -637,7 +637,6 @@
+ 	vmmc-supply = <&vcc_sdhi2>;
+ 	vqmmc-supply = <&vccq_sdhi2>;
+ 	bus-width = <4>;
+-	cd-gpios = <&gpio3 22 GPIO_ACTIVE_LOW>;
+ 	wp-gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
+ 	led-gpios = <&gpio5 22 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index ce88cbd4..e508e1b 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -205,13 +205,13 @@
+ 	};
+ 
+ 	sdhi1_pins: sd2 {
+-		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
+ 		renesas,function = "sdhi1";
+ 		power-source = <3300>;
+ 	};
+ 
+ 	sdhi1_pins_uhs: sd2_uhs {
+-		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
+ 		renesas,function = "sdhi1";
+ 		power-source = <1800>;
+ 	};
+@@ -353,7 +353,6 @@
+ 
+ 	vmmc-supply = <&vcc_sdhi1>;
+ 	vqmmc-supply = <&vccq_sdhi1>;
+-	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
+ 	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
+ };
+-- 
+2.7.4
+

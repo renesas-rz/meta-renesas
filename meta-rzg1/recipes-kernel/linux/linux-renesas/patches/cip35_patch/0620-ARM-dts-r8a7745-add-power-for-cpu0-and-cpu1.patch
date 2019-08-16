@@ -1,0 +1,55 @@
+From d7a653f2c8c13bf8679d8cd42343807ef2ec6dbe Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Fri, 9 Nov 2018 11:11:50 +0700
+Subject: [PATCH 620/628] ARM: dts: r8a7745: add power for cpu0 and cpu1
+
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 7a11c60..6eb5e12 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -75,6 +75,7 @@
+ 			reg = <0>;
+ 			clock-frequency = <1000000000>;
+ 			clocks = <&z2_clk>;
++			power-domains = <&sysc R8A7745_PD_CA7_CPU0>;
+ 			operating-points = <1000000 1000000>;
+ 			next-level-cache = <&L2_CA7>;
+ 		};
+@@ -85,6 +86,7 @@
+ 			reg = <1>;
+ 			clock-frequency = <1000000000>;
+ 			clocks = <&z2_clk>;
++			power-domains = <&sysc R8A7745_PD_CA7_CPU1>;
+ 			next-level-cache = <&L2_CA7>;
+ 		};
+ 
+@@ -208,6 +210,12 @@
+ 			power-domains = <&cpg_clocks>;
+ 		};
+ 
++		sysc: system-controller@e6180000 {
++			compatible = "renesas,r8a7745-sysc";
++			reg = <0 0xe6180000 0 0x0200>;
++			#power-domain-cells = <1>;
++		};
++
+ 		pfc: pin-controller@e6060000 {
+ 			compatible = "renesas,pfc-r8a7745";
+ 			reg = <0 0xe6060000 0 0x11c>;
+@@ -1558,7 +1566,7 @@
+ 				compatible = "fixed-factor-clock";
+ 				clocks = <&cpg_clocks R8A7745_CLK_PLL0>;
+ 				#clock-cells = <0>;
+-				clock-div = <1>;
++				clock-div = <3>;
+ 				clock-mult = <1>;
+ 				clock-output-names = "z2";
+ 			};
+-- 
+2.7.4
+

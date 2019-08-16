@@ -1,0 +1,35 @@
+From 79c7f74b6ec1ca20444157faf032245792e2f418 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 15:42:24 +0700
+Subject: [PATCH 222/628] ARM: DTS: iwg23s: add Ethernet AVB and PHY device
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 768a1eb..7654bb4 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -115,8 +115,13 @@
+ 
+ &pfc {
+ 	avb_pins: avb {
+-		groups = "avb_mdio", "avb_gmii_tx_rx";
+-		function = "avb";
++		renesas,groups = "avb_mdio", "avb_gmii_tx_rx", "avb_phy_int";
++		renesas,function = "avb";
++	};
++
++	phy0_pins: phy0 {
++		renesas,groups = "intc_irq8";
++		renesas,function = "intc";
+ 	};
+ 
+ 	scif1_pins: serial1 {
+-- 
+2.7.4
+

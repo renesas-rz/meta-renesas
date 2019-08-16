@@ -1,0 +1,37 @@
+From 393ac115c3bed22b4a3a26b3b0aa82225f90ce96 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Tue, 23 Jul 2019 08:51:21 +0700
+Subject: [PATCH 243/628] ARM: DTS: RZG1C r8a77470: Add Image Extraction Direct
+ Memory Access Controller (tddmac module) node to device tree
+
+This patch support Renesas tddmac kernel module probe.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 0754320..4dec273 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -568,6 +568,14 @@
+ 			renesas,#ch = <0>;
+ 		};
+ 
++		tddmac@0xfea00000 {
++			compatible = "renesas,vspm-tddmac","renesas,vspm";
++			reg = <0 0xfea00000 0 0x200>;
++			interrupts = <0 285 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A77470_CLK_2DDMAC>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		};
++
+ 		vspm@fe928000 {
+ 			compatible = "renesas,vspm-vsps", "renesas-vspm";
+ 			reg = <0 0xfe928000 0 0x7404>;
+-- 
+2.7.4
+

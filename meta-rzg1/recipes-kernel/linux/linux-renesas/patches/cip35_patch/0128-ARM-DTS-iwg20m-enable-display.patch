@@ -1,0 +1,77 @@
+From a909a7ca79c8ee64326eef61adfb7a66d1073476 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Thu, 21 Jun 2018 09:17:05 +0700
+Subject: [PATCH 128/628] ARM: DTS: iwg20m: enable display
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi | 40 ++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+index e643064..639b940 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+@@ -20,6 +20,41 @@
+ 		clock-frequency = <12000000>;
+ 	};
+ 
++	vcc_lvds: regulator@4 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "panel vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
++	x3_clk: x3-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <148500000>;
++	};
++
++	panel_hannstar: panel@0 {
++		compatible = "hannstar,hsd070pww1", "simple-panel";
++		power-supply = <&vcc_lvds>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <0>;
++				panel_input: endpoint {
++					reg = <0>;
++					remote-endpoint = <&du_out_lvds0>;
++				};
++			};
++		};
++	};
++
+ 	hdmi-out {
+ 		compatible = "hdmi-connector";
+ 		type = "a";
+@@ -50,6 +85,11 @@
+ 				remote-endpoint = <&adv7511_in>;
+ 			};
+ 		};
++		port@1 {
++			endpoint {
++				remote-endpoint = <&panel_input>;
++			};
++		};
+ 	};
+ };
+ 
+-- 
+2.7.4
+

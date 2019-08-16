@@ -1,0 +1,40 @@
+From ac1162d6ea36cfc2480f84b18f9c1ab859e10225 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Tue, 3 Apr 2018 16:34:46 +0700
+Subject: [PATCH 549/628] ARM: DTS: r8a7744: add description for tmu
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 2857e32..33ad1de 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -253,6 +253,21 @@
+ 		status = "disabled";
+ 	};
+ 
++	tmu1: timer@fff60000 {
++		compatible = "renesas,tmu-r8a7744", "renesas,tmu";
++		reg = <0 0xfff60000 0 0x30>;
++		interrupts = <0 128 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 129 IRQ_TYPE_LEVEL_HIGH>,
++			     <0 130 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7744_CLK_TMU1>;
++		clock-names = "fck";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++
++		#renesas,channels = <3>;
++
++		status = "disabled";
++	};
++
+ 	irqc0: interrupt-controller@e61c0000 {
+ 		compatible = "renesas,irqc-r8a7744", "renesas,irqc";
+ 		#interrupt-cells = <2>;
+-- 
+2.7.4
+

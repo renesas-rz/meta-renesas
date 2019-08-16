@@ -1,0 +1,50 @@
+From 23ed9c66a582e22be631767047fd68f5f35d94ff Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 19:00:38 +0700
+Subject: [PATCH 366/628] ARM: DTS: r8a7744: add USB-DMAC devices
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 7a2ddc7..2ef8201 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -312,6 +312,30 @@
+ 		dma-channels = <15>;
+ 	};
+ 
++	usb_dmac0: dma-controller@e65a0000 {
++		compatible = "renesas,usb-dmac";
++		reg = <0 0xe65a0000 0 0x100>;
++		interrupts = <0 109 IRQ_TYPE_LEVEL_HIGH
++			      0 109 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "ch0", "ch1";
++		clocks = <&mstp3_clks R8A7744_CLK_USBDMAC0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		#dma-cells = <1>;
++		dma-channels = <2>;
++	};
++
++	usb_dmac1: dma-controller@e65b0000 {
++		compatible = "renesas,usb-dmac";
++		reg = <0 0xe65b0000 0 0x100>;
++		interrupts = <0 110 IRQ_TYPE_LEVEL_HIGH
++			      0 110 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "ch0", "ch1";
++		clocks = <&mstp3_clks R8A7744_CLK_USBDMAC1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		#dma-cells = <1>;
++		dma-channels = <2>;
++	};
++
+ 	/* The memory map in the User's Manual maps the cores to bus numbers */
+ 	i2c0: i2c@e6508000 {
+ 		#address-cells = <1>;
+-- 
+2.7.4
+

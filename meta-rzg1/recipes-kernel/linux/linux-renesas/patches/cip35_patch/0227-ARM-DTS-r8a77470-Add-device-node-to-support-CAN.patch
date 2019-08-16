@@ -1,0 +1,36 @@
+From e2d3c1692db58190ea1f22d647b972868720ebc0 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Tue, 23 Jul 2019 08:36:32 +0700
+Subject: [PATCH 227/628] ARM: DTS: r8a77470: Add device node to support CAN
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 72890cf..eabcb0e 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -499,6 +499,16 @@
+ 			status = "disabled";
+ 		};
+ 
++		can0: can@e6e80000 {
++			compatible = "renesas,can-r8a77470";
++			reg = <0 0xe6e80000 0 0x1000>;
++			interrupts = <0 186 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A77470_CLK_CAN0>;
++			clock-names = "clkp1";
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++			status = "disabled";
++		};
++
+ 		/* The memory map in the User's Manual maps the cores to bus numbers */
+ 		i2c0: i2c@e6508000 {
+ 			#address-cells = <1>;
+-- 
+2.7.4
+

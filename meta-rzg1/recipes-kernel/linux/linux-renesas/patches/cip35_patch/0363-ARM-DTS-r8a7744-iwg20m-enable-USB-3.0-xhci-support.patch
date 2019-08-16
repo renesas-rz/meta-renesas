@@ -1,0 +1,33 @@
+From eab33b43f58ce6c0707f7b2510f152c1813647af Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 18:49:47 +0700
+Subject: [PATCH 363/628] ARM: DTS: r8a7744-iwg20m: enable USB 3.0 (xhci)
+ support
+
+Enable USB3.0 (XHCI) controllers
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 51aab47..6486856 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -251,6 +251,10 @@
+ 	status = "okay";
+ };
+ 
++&xhci {
++	status = "okay";
++};
++
+ &pci0 {
+ 	status = "okay";
+ 	pinctrl-0 = <&usb0_pins>;
+-- 
+2.7.4
+

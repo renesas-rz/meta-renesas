@@ -1,0 +1,32 @@
+From 1e1af9a6e28d89174c6f13a4ea14a9c1d1a8d26f Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 15:07:20 +0700
+Subject: [PATCH 323/628] ARM: DTS: r8a7744: add device node for thermal
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index fb6581e..2b8f904 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -154,6 +154,13 @@
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO7>;
+ 	};
+ 
++	thermal@e61f0000 {
++		compatible = "renesas,thermal-r8a7744", "renesas,rcar-thermal";
++		reg = <0 0xe61f0000 0 0x14>, <0 0xe61f0100 0 0x38>;
++		interrupts = <0 69 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp5_clks R8A7744_CLK_THERMAL>;
++	};
++
+ 	timer {
+ 		compatible = "arm,armv7-timer";
+ 		interrupts = <1 13 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
+-- 
+2.7.4
+

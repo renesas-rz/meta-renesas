@@ -1,0 +1,35 @@
+From b6a812507322c85730bcd4ee06f50fbc73e70f01 Mon Sep 17 00:00:00 2001
+From: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 15:38:47 +0700
+Subject: [PATCH 527/628] ARM: DTS: iwg21m: enable edt-ft5406 touchscreen
+ support
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 1cd2648..8f8f098 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -466,6 +466,15 @@
+ 	clock-frequency = <400000>;
+ 	pinctrl-0 = <&i2c2_pins>;
+ 	pinctrl-names = "default";
++
++	ft5x06@38 {
++		compatible = "edt,edt-ft5406";
++		reg = <0x38>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <24 IRQ_TYPE_EDGE_FALLING>;
++		reset-gpios = <&gpio1 29 GPIO_ACTIVE_LOW>;
++	};
++
+ 	codec: sgtl5000@a {
+ 		#sound-dai-cells = <0>;
+ 		compatible = "fsl,sgtl5000";
+-- 
+2.7.4
+

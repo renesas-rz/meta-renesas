@@ -1,0 +1,46 @@
+From 1b55f944917b370351f2a050b110044a643f5ebf Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Tue, 13 Mar 2018 18:22:03 +0700
+Subject: [PATCH 418/628] ARM: DTS: iwg21m: enable serial debug port (scifa2)
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 779a705..4f00d9d 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -19,6 +19,10 @@
+ 	model = "iwg21m";
+ 	compatible = "iw,iwg21m", "renesas,r8a7742";
+ 
++	aliases {
++		serial2 = &scifa2;
++	};
++
+ 	memory@40000000 {
+ 		device_type = "memory";
+ 		reg = <0 0x40000000 0 0x40000000>;
+@@ -38,3 +42,16 @@
+ &extal_clk {
+ 	clock-frequency = <20000000>;
+ };
++
++&pfc {
++	scifa2_pins: serial2 {
++		renesas,groups = "scifa2_data_c";
++		renesas,function = "scifa2";
++	};
++};
++
++&scifa2 {
++	pinctrl-0 = <&scifa2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
+-- 
+2.7.4
+

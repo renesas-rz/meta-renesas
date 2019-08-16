@@ -1,0 +1,29 @@
+From b9e05998256d0653464cfba8d616cbf5f2c64874 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNv25@fsoft.com.vn>
+Date: Wed, 11 Apr 2018 23:22:08 +0700
+Subject: [PATCH 311/628] gpio: rcar: Add support for r8a7744
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/gpio/gpio-rcar.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index cfec3d3..144bbc5 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -389,6 +389,9 @@ static const struct of_device_id gpio_rcar_of_table[] = {
+ 		.compatible = "renesas,gpio-r8a7791",
+ 		.data = &gpio_rcar_info_gen2,
+ 	}, {
++		.compatible = "renesas,gpio-r8a7744",
++		.data = &gpio_rcar_info_gen2,
++	}, {
+ 		.compatible = "renesas,gpio-r8a7793",
+ 		.data = &gpio_rcar_info_gen2,
+ 	}, {
+-- 
+2.7.4
+

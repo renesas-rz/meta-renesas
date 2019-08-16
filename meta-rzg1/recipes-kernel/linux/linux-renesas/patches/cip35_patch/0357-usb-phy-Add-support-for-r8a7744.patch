@@ -1,0 +1,28 @@
+From 46dc6ffcdededd22dfe53b178b1da928253aa240 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 11:41:16 +0700
+Subject: [PATCH 357/628] usb: phy: Add support for r8a7744
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/phy/phy-rcar-gen2.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/phy/phy-rcar-gen2.c b/drivers/phy/phy-rcar-gen2.c
+index 9d090b3..e2e4458 100644
+--- a/drivers/phy/phy-rcar-gen2.c
++++ b/drivers/phy/phy-rcar-gen2.c
+@@ -297,6 +297,7 @@ static const struct of_device_id rcar_gen2_phy_match_table[] = {
+ 	{ .compatible = "renesas,usb-phy-r8a7794" },
+ 	{ .compatible = "renesas,usb-phy-r8a7745" },
+ 	{ .compatible = "renesas,usb-phy-r8a77470" },
++	{ .compatible = "renesas,usb-phy-r8a7744" },
+ 	{ .compatible = "renesas,rcar-gen2-usb-phy" },
+ 	{ }
+ };
+-- 
+2.7.4
+

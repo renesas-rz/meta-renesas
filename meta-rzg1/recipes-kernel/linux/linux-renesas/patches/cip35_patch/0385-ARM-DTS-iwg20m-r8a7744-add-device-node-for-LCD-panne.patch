@@ -1,0 +1,35 @@
+From a30b95f4b9b7eedffff0c79623277b4cab9533e8 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 10:19:13 +0700
+Subject: [PATCH 385/628] ARM: DTS: iwg20m r8a7744: add device node for LCD
+ pannel touch
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index b10724a..88b2fbd 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -410,6 +410,14 @@
+ 		clocks = <&x9_clk 1>;
+ 	};
+ 
++	ft5x06@38 {
++		compatible = "edt,edt-ft5406";
++		reg = <0x38>;
++		interrupt-parent = <&gpio2>;
++		interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
++		reset-gpios = <&gpio2 13 GPIO_ACTIVE_LOW>;
++	};
++
+ };
+ 
+ &i2c5 {
+-- 
+2.7.4
+

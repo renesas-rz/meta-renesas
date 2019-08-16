@@ -1,0 +1,57 @@
+From 6432cd0c065441b2da62295f5e850a790e04b2ea Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 8 Nov 2018 09:25:55 +0700
+Subject: [PATCH 556/628] ARM: DTS: r8a7745: add description for tmu2 and tmu3
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 00d8463..ffaa7d1 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -459,6 +459,37 @@
+ 			status = "disabled";
+ 		};
+ 
++		tmu2: timer@fff70000 {
++			compatible = "renesas,tmu-r8a7745", "renesas,tmu";
++			reg = <0 0xfff70000 0 0x30>;
++			interrupts = <0 303 IRQ_TYPE_LEVEL_HIGH>,
++				<0 304 IRQ_TYPE_LEVEL_HIGH>,
++				<0 305 IRQ_TYPE_LEVEL_HIGH>,
++				<0 306 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7745_CLK_TMU2>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
++
++			#renesas,channels = <3>;
++
++			status = "disabled";
++		};
++
++		tmu3: timer@fff80000 {
++			compatible = "renesas,tmu-r8a7745", "renesas,tmu";
++			reg = <0 0xfff80000 0 0x30>;
++			interrupts = <0 131 IRQ_TYPE_LEVEL_HIGH>,
++				<0 132 IRQ_TYPE_LEVEL_HIGH>,
++				<0 133 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7745_CLK_TMU3>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
++
++			#renesas,channels = <3>;
++
++			status = "disabled";
++		};
++
+ 		timer {
+ 			compatible = "arm,armv7-timer";
+ 			interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(2) |
+-- 
+2.7.4
+

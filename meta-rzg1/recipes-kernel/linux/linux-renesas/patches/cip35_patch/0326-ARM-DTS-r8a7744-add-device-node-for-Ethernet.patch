@@ -1,0 +1,40 @@
+From 36dbbbc005ff0cd1da3a11d7b60b12796f7e23e5 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 15:30:23 +0700
+Subject: [PATCH 326/628] ARM: DTS: r8a7744: add device node for Ethernet
+
+Define the generic R8A7744 part of the Ether device node.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 8603718..81e8170 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -458,6 +458,18 @@
+ 		status = "disabled";
+ 	};
+ 
++	ether: ethernet@ee700000 {
++		compatible = "renesas,ether-r8a7744";
++		reg = <0 0xee700000 0 0x400>;
++		interrupts = <0 162 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7744_CLK_ETHER>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		phy-mode = "rmii";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+-- 
+2.7.4
+

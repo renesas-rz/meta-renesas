@@ -1,0 +1,71 @@
+From 57d692c77549bdac3809a8e823cf866048e42a7d Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 18:10:42 +0700
+Subject: [PATCH 353/628] ARM: DTS: r8a7744: add device nodes for internal PCI
+ bridge
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 44 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index ee47425..1c4a3a4 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1318,6 +1318,50 @@
+ 		#pwm-cells = <3>;
+ 	};
+ 
++	pci0: pci@ee090000 {
++		compatible = "renesas,pci-r8a7744";
++		device_type = "pci";
++		reg = <0 0xee090000 0 0xc00>,
++		      <0 0xee080000 0 0x1100>;
++		interrupts = <0 108 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7744_CLK_EHCI>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++
++		bus-range = <0 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		ranges = <0x02000000 0 0xee080000 0 0xee080000 0 0x00010000>;
++		interrupt-map-mask = <0xff00 0 0 0x7>;
++		interrupt-map = <0x0000 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
++				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
++				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
++
++	};
++
++	pci1: pci@ee0d0000 {
++		compatible = "renesas,pci-r8a7744";
++		device_type = "pci";
++		reg = <0 0xee0d0000 0 0xc00>,
++		      <0 0xee0c0000 0 0x1100>;
++		interrupts = <0 113 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7744_CLK_EHCI>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++
++		bus-range = <1 1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		ranges = <0x02000000 0 0xee0c0000 0 0xee0c0000 0 0x00010000>;
++		interrupt-map-mask = <0xff00 0 0 0x7>;
++		interrupt-map = <0x0000 0 0 1 &gic 0 113 IRQ_TYPE_LEVEL_HIGH
++				 0x0800 0 0 1 &gic 0 113 IRQ_TYPE_LEVEL_HIGH
++				 0x1000 0 0 2 &gic 0 113 IRQ_TYPE_LEVEL_HIGH>;
++
++	};
++
+ 	ipmmu_sy0: mmu@e6280000 {
+ 		compatible = "renesas,ipmmu-vmsa";
+ 		reg = <0 0xe6280000 0 0x1000>;
+-- 
+2.7.4
+

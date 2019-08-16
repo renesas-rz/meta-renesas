@@ -1,0 +1,125 @@
+From 2476f228306d508f3b59e0fd8109485637f17d92 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 09:52:11 +0700
+Subject: [PATCH 381/628] ARM: DTS: r8a7744-iwg20m: Enable DU HDMI device for
+ r8a7742
+
+Specify the DU output topology, enable the DU HDMI device and configure the
+related pins.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 74 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 6581d82..2f98bbf 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -76,6 +76,12 @@
+ 				  1800000 0>;
+ 	};
+ 
++	x3_clk: x3-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <148500000>;
++	};
++
+ 	x9_clk: x9-clock {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+@@ -83,6 +89,17 @@
+ 		clock-output-names = "audio_clock";
+ 	};
+ 
++	hdmi-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_con: endpoint {
++				remote-endpoint = <&adv7511_out>;
++			};
++		};
++	};
++
+ 	sound {
+ 		compatible = "simple-audio-card";
+ 
+@@ -188,6 +205,11 @@
+ 		renesas,function = "i2c2";
+ 	};
+ 
++	du_pins: du {
++		renesas,groups = "du_rgb888", "du_sync", "du_disp", "du_clk_out_0";
++		renesas,function = "du";
++	};
++
+ 	sound_pins: sound {
+ 		renesas,groups = "ssi0129_ctrl", "ssi0_data", "ssi1_data";
+ 		renesas,function = "ssi";
+@@ -357,6 +379,58 @@
+ 	status = "okay";
+ 	clock-frequency = <400000>;
+ 
++	hdmi@39 {
++		compatible = "adi,adv7511w";
++		reg = <0x39>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <5 IRQ_TYPE_LEVEL_LOW>;
++
++		adi,input-depth = <8>;
++		adi,input-colorspace = "rgb";
++		adi,input-clock = "1x";
++		adi,input-style = <1>;
++		adi,input-justification = "evenly";
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7511_in: endpoint {
++					remote-endpoint = <&du_out_rgb>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				adv7511_out: endpoint {
++					remote-endpoint = <&hdmi_con>;
++				};
++			};
++		};
++	};
++};
++
++&du {
++	pinctrl-0 = <&du_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	clocks = <&mstp7_clks R8A7744_CLK_DU0>,
++		 <&mstp7_clks R8A7744_CLK_DU1>,
++		 <&mstp7_clks R8A7744_CLK_LVDS0>,
++		 <&x3_clk>;
++	clock-names = "du.0", "du.1", "lvds.0",
++		      "dclkin.0";
++
++	ports {
++		port@0 {
++			endpoint {
++				remote-endpoint = <&adv7511_in>;
++			};
++		};
++	};
+ };
+ 
+ &rcar_sound {
+-- 
+2.7.4
+

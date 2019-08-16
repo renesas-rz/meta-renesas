@@ -1,0 +1,110 @@
+From 4b51407dc1cbc016821972e0200af9c58749f736 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Fri, 19 Jul 2019 16:57:17 +0700
+Subject: [PATCH 209/628] ARM: dts: iwg23s board support
+
+Modify r8a77470-iwg23s-sbc.dts file follow to renesas CIP31
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 68 +++++++++++++++++++++++++++++--
+ 1 file changed, 65 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 4ceff9c..b3b1406 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -14,6 +14,11 @@
+ 	aliases {
+ 		ethernet0 = &avb;
+ 		serial1 = &scif1;
++		serial2 = &scif2;
++		serial3 = &scif4;
++		serial4 = &scif5;
++		serial5 = &hscif1;
++		serial6 = &hscif2;
+ 	};
+ 
+ 	chosen {
+@@ -54,9 +59,34 @@
+ 		function = "avb";
+ 	};
+ 
+-	scif1_pins: scif1 {
+-		groups = "scif1_data_b";
+-		function = "scif1";
++	scif1_pins: serial1 {
++		renesas,groups = "scif1_data_b";
++		renesas,function = "scif1";
++	};
++
++	scif2_pins: serial2 {
++		renesas,groups = "scif2_data_b";
++		renesas,function = "scif2";
++	};
++
++	scif4_pins: serial3 {
++		renesas,groups = "scif4_data_b";
++		renesas,function = "scif4";
++	};
++
++	scif5_pins: serial4 {
++		renesas,groups = "scif5_data_b";
++		renesas,function = "scif5";
++	};
++
++	hscif1_pins: serial5 {
++		renesas,groups = "hscif1_data", "hscif1_ctrl_a";
++		renesas,function = "hscif1";
++	};
++
++	hscif2_pins: serial6 {
++		renesas,groups = "hscif2_data", "hscif2_clk", "hscif2_ctrl";
++		renesas,function = "hscif2";
+ 	};
+ };
+ 
+@@ -66,3 +96,35 @@
+ 
+ 	status = "okay";
+ };
++
++&scif2 {
++	pinctrl-0 = <&scif2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif4 {
++	pinctrl-0 = <&scif4_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif5 {
++	pinctrl-0 = <&scif5_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&hscif1 {
++	pinctrl-0 = <&hscif1_pins>;
++	pinctrl-names = "default";
++	ctsrts;
++	status = "okay";
++};
++
++&hscif2 {
++	pinctrl-0 = <&hscif2_pins>;
++	pinctrl-names = "default";
++	ctsrts;
++	status = "okay";
++};
+\ No newline at end of file
+-- 
+2.7.4
+

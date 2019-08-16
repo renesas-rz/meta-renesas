@@ -1,0 +1,34 @@
+From f89bc627d2cd0f60e7ca31f2ec7c8e2d8da67dcc Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNv25@fsoft.com.vn>
+Date: Thu, 12 Apr 2018 00:16:18 +0700
+Subject: [PATCH 362/628] usb: host: xhci-plat: Support r8a7744: fix cannot
+ work if R-Car Gen2/3 run above 4GB phys
+
+This patch references the commit (usb: host: xhci-plat: fix cannot work
+if R-Car Gen2/3 run on above 4GB phys).
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/usb/host/xhci-plat.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/usb/host/xhci-plat.c b/drivers/usb/host/xhci-plat.c
+index 0c99e8a..219d782 100644
+--- a/drivers/usb/host/xhci-plat.c
++++ b/drivers/usb/host/xhci-plat.c
+@@ -54,7 +54,8 @@ static void xhci_plat_quirks(struct device *dev, struct xhci_hcd *xhci)
+ 	 * to call dma_set_coherent_mask(dev, DMA_BIT_MASK(32)) in
+ 	 * xhci_gen_setup().
+ 	 */
+-	if (of_device_is_compatible(of_node, "renesas,xhci-r8a7743"))
++	if (of_device_is_compatible(of_node, "renesas,xhci-r8a7743") ||
++	    of_device_is_compatible(of_node, "renesas,xhci-r8a7744"))
+ 		xhci->quirks |= XHCI_NO_64BIT_SUPPORT;
+ }
+ 
+-- 
+2.7.4
+

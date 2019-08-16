@@ -1,0 +1,47 @@
+From 4d8791c4aa1c6e71e9c08d1fb62abee90cfb0ce5 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 09:11:56 +0700
+Subject: [PATCH 376/628] ARM: DTS: r8a7744: Add Audio MIX support
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 0d048bc..1f1a5e9 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1603,6 +1603,7 @@
+ 			 <&mstp10_clks R8A7744_CLK_SCU_SRC3>, <&mstp10_clks R8A7744_CLK_SCU_SRC2>,
+ 			 <&mstp10_clks R8A7744_CLK_SCU_SRC1>, <&mstp10_clks R8A7744_CLK_SCU_SRC0>,
+ 			 <&mstp10_clks R8A7744_CLK_SCU_CTU0_MIX0>, <&mstp10_clks R8A7744_CLK_SCU_CTU1_MIX1>,
++			 <&mstp10_clks R8A7744_CLK_SCU_CTU0_MIX0>, <&mstp10_clks R8A7744_CLK_SCU_CTU1_MIX1>,
+ 			 <&mstp10_clks R8A7744_CLK_SCU_DVC0>, <&mstp10_clks R8A7744_CLK_SCU_DVC1>,
+ 			 <&audio_clk_a>, <&audio_clk_b>, <&audio_clk_c>, <&m2_clk>;
+ 		clock-names = "ssi-all",
+@@ -1611,6 +1612,7 @@
+ 				"src.9", "src.8", "src.7", "src.6", "src.5",
+ 				"src.4", "src.3", "src.2", "src.1", "src.0",
+ 				"ctu.0", "ctu.1",
++				"mix.0", "mix.1",
+ 				"dvc.0", "dvc.1",
+ 				"clk_a", "clk_b", "clk_c", "clk_i";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+@@ -1624,6 +1626,11 @@
+ 			};
+ 		};
+ 
++		rcar_sound,mix {
++			mix0: mix@0 { };
++			mix1: mix@1 { };
++		};
++
+ 		rcar_sound,ctu {
+ 			ctu00: ctu@0 { };
+ 			ctu01: ctu@1 { };
+-- 
+2.7.4
+

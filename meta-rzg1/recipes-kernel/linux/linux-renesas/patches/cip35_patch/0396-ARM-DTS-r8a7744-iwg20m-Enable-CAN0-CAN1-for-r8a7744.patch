@@ -1,0 +1,85 @@
+From e2634dfd661638a5557cc8b8df899440c82abe2f Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 16:17:03 +0700
+Subject: [PATCH 396/628] ARM: DTS: r8a7744-iwg20m: Enable CAN0/CAN1 for
+ r8a7744
+
+Enable CAN0/CAN1 module by GPIO3-pin3 and GPIO0-pin4 respectively.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 40 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 968a4ca..a94ce2b 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -253,6 +253,16 @@
+ 		renesas,function = "ssi";
+ 	};
+ 
++	can0_pins: can0 {
++		renesas,groups = "can0_data_d";
++		renesas,function = "can0";
++	};
++
++	can1_pins: can1 {
++		renesas,groups = "can1_data_d";
++		renesas,function = "can1";
++	};
++
+ 	vin0_pins: vin0 {
+ 		renesas,groups = "vin0_data8", "vin0_clk";
+ 		renesas,function = "vin0";
+@@ -540,6 +550,20 @@
+ 	shared-pin;
+ };
+ 
++&can0 {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	status = "okay";
++};
++
++&can1 {
++	pinctrl-0 = <&can1_pins>;
++	pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	status = "okay";
++};
++
+ &gpio7 {
+ 	lcd-power-eb-gpio{
+ 		gpio-hog;
+@@ -556,7 +580,23 @@
+ 	};
+ };
+ 
++&gpio2 {
++	can0-trx-en-gpio{
++		gpio-hog;
++		gpios = <3 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can0-trx-en-gpio";
++	};
++};
++
++
+ &gpio0 {
++	can1-trx-en-gpio{
++		gpio-hog;
++		gpios = <4 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can1-trx-en-gpio";
++	};
+ 	tvp-power{
+ 		gpio-hog;
+ 		gpios = <22 GPIO_ACTIVE_HIGH>;
+-- 
+2.7.4
+

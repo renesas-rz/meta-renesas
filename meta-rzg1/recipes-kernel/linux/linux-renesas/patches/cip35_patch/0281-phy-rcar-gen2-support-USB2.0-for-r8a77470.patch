@@ -1,0 +1,282 @@
+From 04e447adfdd528aa979debddf56a00497492fae5 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 10:25:06 +0700
+Subject: [PATCH 281/628] phy: rcar-gen2: support USB2.0 for r8a77470
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/phy/phy-rcar-gen2.c | 144 ++++++++++++++++++++++++++++++++------------
+ 1 file changed, 104 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/phy/phy-rcar-gen2.c b/drivers/phy/phy-rcar-gen2.c
+index 9fb1110..69f3b33 100644
+--- a/drivers/phy/phy-rcar-gen2.c
++++ b/drivers/phy/phy-rcar-gen2.c
+@@ -43,10 +43,29 @@
+ #define USBHS_UGCTRL2_USB0SEL		0x00000030
+ #define USBHS_UGCTRL2_USB0SEL_PCI	0x00000010
+ #define USBHS_UGCTRL2_USB0SEL_HS_USB	0x00000030
++#define USBHS_UGCTRL2_USB0SEL_USB20	0x00000010
+ 
+ /* USB General status register (UGSTS) */
+ #define USBHS_UGSTS_LOCK		0x00000100 /* From technical update */
+ 
++/* USB Control register */
++#define USB20_USBCTR_REG		0x00c
++#define USB20_USBCTR_PLL_RST		(1 << 1)
++
++/* Overcurrent Detection Timer Setting register */
++#define USB20_OC_TIMSET_REG		0x110
++#define USB20_OC_TIMSET_INIT		0x000209ab
++
++/* Suspend/Resume Timer Setting register */
++#define USB20_SPD_RSM_TIMSET_REG	0x10c
++#define USB20_SPD_RSM_TIMSET_INIT	0x014e029b
++
++#define USB20_INT_ENABLE_REG		0x000
++#define USB20_INT_ENABLE_USBH_INTB_EN	(1 << 2)
++#define USB20_INT_ENABLE_USBH_INTA_EN	(1 << 1)
++#define USB20_INT_ENABLE_INIT		(USB20_INT_ENABLE_USBH_INTB_EN | \
++						USB20_INT_ENABLE_USBH_INTA_EN)
++
+ #define PHYS_PER_CHANNEL	2
+ 
+ struct rcar_gen2_phy {
+@@ -82,7 +101,8 @@ struct rcar_gen2_channel {
+ };
+ 
+ struct rcar_gen2_phy_driver {
+-	void __iomem *base;
++	void __iomem *usbhs_base;
++	void __iomem *usb20_base;
+ 	struct clk *clk;
+ 	spinlock_t lock;
+ 	int num_channels;
+@@ -97,10 +117,10 @@ static void rcar_gen2_phy_switch(struct rcar_gen2_channel *channel,
+ 	u32 ugctrl2;
+ 
+ 	spin_lock_irqsave(&drv->lock, flags);
+-	ugctrl2 = readl(drv->base + USBHS_UGCTRL2);
++	ugctrl2 = readl(drv->usbhs_base + USBHS_UGCTRL2);
+ 	ugctrl2 &= ~channel->select_mask;
+ 	ugctrl2 |= select_value;
+-	writel(ugctrl2, drv->base + USBHS_UGCTRL2);
++	writel(ugctrl2, drv->usbhs_base + USBHS_UGCTRL2);
+ 	spin_unlock_irqrestore(&drv->lock, flags);
+ }
+ 
+@@ -137,6 +157,14 @@ static int rcar_gen2_phy_init(struct phy *p)
+ 		return -EBUSY;
+ 
+ 	clk_prepare_enable(drv->clk);
++
++	if (of_machine_is_compatible("renesas,r8a77470")) {
++		/* Initialize USB2 part */
++		writel(USB20_INT_ENABLE_INIT, drv->usb20_base + USB20_INT_ENABLE_REG);
++		writel(USB20_SPD_RSM_TIMSET_INIT, drv->usb20_base + USB20_SPD_RSM_TIMSET_REG);
++		writel(USB20_OC_TIMSET_INIT, drv->usb20_base + USB20_OC_TIMSET_REG);
++	}
++
+ 	rcar_gen2_phy_switch(channel, phy->select_value);
+ #endif
+ 	return 0;
+@@ -158,7 +186,8 @@ static int rcar_gen2_phy_power_on(struct phy *p)
+ {
+ 	struct rcar_gen2_phy *phy = phy_get_drvdata(p);
+ 	struct rcar_gen2_phy_driver *drv = phy->channel->drv;
+-	void __iomem *base = drv->base;
++	void __iomem *usbhs_base = drv->usbhs_base;
++	void __iomem *usb20_base = drv->usb20_base;
+ 	unsigned long flags;
+ 	u32 value;
+ 	int err = 0, i;
+@@ -172,28 +201,39 @@ static int rcar_gen2_phy_power_on(struct phy *p)
+ 	spin_lock_irqsave(&drv->lock, flags);
+ 
+ 	/* Power on USBHS PHY */
+-	value = readl(base + USBHS_UGCTRL);
++	value = readl(usbhs_base + USBHS_UGCTRL);
+ 	value &= ~USBHS_UGCTRL_PLLRESET;
+-	writel(value, base + USBHS_UGCTRL);
++	writel(value, usbhs_base + USBHS_UGCTRL);
++
++	if (of_machine_is_compatible("renesas,r8a77470")) {
++		/* Power on USB20 PHY */
++		value = readl(usb20_base + USB20_USBCTR_REG);
++		value |= USB20_USBCTR_PLL_RST;
++		writel(value, usb20_base + USB20_USBCTR_REG);
++		value &= ~USB20_USBCTR_PLL_RST;
++		writel(value, usb20_base + USB20_USBCTR_REG);
++	}
+ 
+-	value = readw(base + USBHS_LPSTS);
++	value = readw(usbhs_base + USBHS_LPSTS);
+ 	value |= USBHS_LPSTS_SUSPM;
+-	writew(value, base + USBHS_LPSTS);
+-
+-	for (i = 0; i < 20; i++) {
+-		value = readl(base + USBHS_UGSTS);
+-		if ((value & USBHS_UGSTS_LOCK) == USBHS_UGSTS_LOCK) {
+-			value = readl(base + USBHS_UGCTRL);
+-			value |= USBHS_UGCTRL_CONNECT;
+-			writel(value, base + USBHS_UGCTRL);
+-			goto out;
++	writew(value, usbhs_base + USBHS_LPSTS);
++
++	/* USBHS_UGCTRL_CONNECT bit only exists on RZG1H,M,N,E SoC USBHS_UGSTS reg */
++	if (of_machine_is_compatible("renesas,r8a7743") || of_machine_is_compatible("renesas,r8a7745")) {
++		for (i = 0; i < 20; i++) {
++			value = readl(usbhs_base + USBHS_UGSTS);
++			if ((value & USBHS_UGSTS_LOCK) == USBHS_UGSTS_LOCK) {
++				value = readl(usbhs_base + USBHS_UGCTRL);
++				value |= USBHS_UGCTRL_CONNECT;
++				writel(value, usbhs_base + USBHS_UGCTRL);
++				goto out;
++			}
++			udelay(1);
+ 		}
+-		udelay(1);
++		/* Timed out waiting for the PLL lock */
++		err = -ETIMEDOUT;
+ 	}
+ 
+-	/* Timed out waiting for the PLL lock */
+-	err = -ETIMEDOUT;
+-
+ out:
+ 	spin_unlock_irqrestore(&drv->lock, flags);
+ 
+@@ -204,7 +244,7 @@ static int rcar_gen2_phy_power_off(struct phy *p)
+ {
+ 	struct rcar_gen2_phy *phy = phy_get_drvdata(p);
+ 	struct rcar_gen2_phy_driver *drv = phy->channel->drv;
+-	void __iomem *base = drv->base;
++	void __iomem *usbhs_base = drv->usbhs_base;
+ 	unsigned long flags;
+ 	u32 value;
+ 
+@@ -217,17 +257,19 @@ static int rcar_gen2_phy_power_off(struct phy *p)
+ 	spin_lock_irqsave(&drv->lock, flags);
+ 
+ 	/* Power off USBHS PHY */
+-	value = readl(base + USBHS_UGCTRL);
+-	value &= ~USBHS_UGCTRL_CONNECT;
+-	writel(value, base + USBHS_UGCTRL);
++	if (of_machine_is_compatible("renesas,r8a7743") || of_machine_is_compatible("renesas,r8a7745")) {
++		value = readl(usbhs_base + USBHS_UGCTRL);
++		value &= ~USBHS_UGCTRL_CONNECT;
++		writel(value, usbhs_base + USBHS_UGCTRL);
++	}
+ 
+-	value = readw(base + USBHS_LPSTS);
++	value = readw(usbhs_base + USBHS_LPSTS);
+ 	value &= ~USBHS_LPSTS_SUSPM;
+-	writew(value, base + USBHS_LPSTS);
++	writew(value, usbhs_base + USBHS_LPSTS);
+ 
+-	value = readl(base + USBHS_UGCTRL);
++	value = readl(usbhs_base + USBHS_UGCTRL);
+ 	value |= USBHS_UGCTRL_PLLRESET;
+-	writel(value, base + USBHS_UGCTRL);
++	writel(value, usbhs_base + USBHS_UGCTRL);
+ 
+ 	spin_unlock_irqrestore(&drv->lock, flags);
+ 
+@@ -247,6 +289,7 @@ static const struct of_device_id rcar_gen2_phy_match_table[] = {
+ 	{ .compatible = "renesas,usb-phy-r8a7791" },
+ 	{ .compatible = "renesas,usb-phy-r8a7794" },
+ 	{ .compatible = "renesas,usb-phy-r8a7745" },
++	{ .compatible = "renesas,usb-phy-r8a77470" },
+ 	{ .compatible = "renesas,rcar-gen2-usb-phy" },
+ 	{ }
+ };
+@@ -448,9 +491,12 @@ static int rcar_gen2_phy_probe(struct platform_device *pdev)
+ 	struct rcar_gen2_phy_driver *drv;
+ 	struct phy_provider *provider;
+ 	struct device_node *np;
+-	struct resource *res;
+-	void __iomem *base;
++	struct resource *res_usbhs, *res_usb20;
++	void __iomem *usbhs_base = NULL;
++	void __iomem *usb20_base = NULL;
++	const char *clk_name;
+ 	struct clk *clk;
++	int phys_per_channel = 0;
+ 	int i = 0;
+ 
+ #ifdef CONFIG_USB_OTG
+@@ -467,16 +513,24 @@ static int rcar_gen2_phy_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	clk = devm_clk_get(dev, "usbhs");
++	of_property_read_string(dev->of_node, "clock-names", &clk_name);
++	clk = devm_clk_get(dev, clk_name);
+ 	if (IS_ERR(clk)) {
+-		dev_err(dev, "Can't get USBHS clock\n");
++		dev_err(dev, "Can't get clock\n");
+ 		return PTR_ERR(clk);
+ 	}
+ 
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	base = devm_ioremap_resource(dev, res);
+-	if (IS_ERR(base))
+-		return PTR_ERR(base);
++	res_usbhs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	usbhs_base = devm_ioremap_resource(dev, res_usbhs);
++	if (IS_ERR(usbhs_base))
++		return PTR_ERR(usbhs_base);
++
++	if (of_machine_is_compatible("renesas,r8a77470")) {
++		res_usb20 = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++		usb20_base = devm_ioremap_resource(dev, res_usb20);
++		if (IS_ERR(usb20_base))
++			return PTR_ERR(usb20_base);
++	}
+ 
+ 	drv = devm_kzalloc(dev, sizeof(*drv), GFP_KERNEL);
+ 	if (!drv)
+@@ -485,7 +539,8 @@ static int rcar_gen2_phy_probe(struct platform_device *pdev)
+ 	spin_lock_init(&drv->lock);
+ 
+ 	drv->clk = clk;
+-	drv->base = base;
++	drv->usbhs_base = usbhs_base;
++	drv->usb20_base = usb20_base;
+ 
+ 	drv->num_channels = of_get_child_count(dev->of_node);
+ 	drv->channels = devm_kcalloc(dev, drv->num_channels,
+@@ -636,14 +691,23 @@ static int rcar_gen2_phy_probe(struct platform_device *pdev)
+ 			dev_err(dev, "Invalid \"reg\" property\n");
+ 			return error;
+ 		}
+-		channel->select_mask = select_mask[channel_num];
++		if (of_machine_is_compatible("renesas,r8a7743") || of_machine_is_compatible("renesas,r8a7745")) {
++			channel->select_mask = select_mask[channel_num];
++			phys_per_channel = PHYS_PER_CHANNEL;
++		} else if (of_machine_is_compatible("renesas,r8a77470")) {
++			channel->select_mask = USBHS_UGCTRL2_USB0SEL;
++			phys_per_channel = 1;
++		}
+ 
+-		for (n = 0; n < PHYS_PER_CHANNEL; n++) {
++		for (n = 0; n < phys_per_channel; n++) {
+ 			struct rcar_gen2_phy *phy = &channel->phys[n];
+ 
+ 			phy->channel = channel;
+ 			phy->number = n;
+-			phy->select_value = select_value[channel_num][n];
++			if (of_machine_is_compatible("renesas,r8a7743") || of_machine_is_compatible("renesas,r8a7745"))
++				phy->select_value = select_value[channel_num][n];
++			else if (of_machine_is_compatible("renesas,r8a77470"))
++				phy->select_value = USBHS_UGCTRL2_USB0SEL_USB20;
+ 
+ 			phy->phy = devm_phy_create(dev, NULL,
+ 						   &rcar_gen2_phy_ops);
+-- 
+2.7.4
+

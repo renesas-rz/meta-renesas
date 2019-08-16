@@ -1,0 +1,79 @@
+From c43d23f04d2faa18b750b6af4c2592e0feddb76c Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Thu, 25 Jul 2019 17:11:03 +0700
+Subject: [PATCH 301/628] clk: shmobile: add support for r8a77470
+
+The previous commit (4be22c15) removed commpatible defined for r8a77470
+This commit add it again, and prevent conflict with other SoCs
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ drivers/clk/shmobile/Makefile        |  1 +
+ drivers/clk/shmobile/clk-rcar-gen2.c | 14 ++++++++++++--
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/shmobile/Makefile b/drivers/clk/shmobile/Makefile
+index b339c0b..2412eb9 100644
+--- a/drivers/clk/shmobile/Makefile
++++ b/drivers/clk/shmobile/Makefile
+@@ -4,6 +4,7 @@ obj-$(CONFIG_ARCH_R8A73A4)		+= clk-r8a73a4.o
+ obj-$(CONFIG_ARCH_R8A7740)		+= clk-r8a7740.o
+ obj-$(CONFIG_ARCH_R8A7743)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7745)		+= clk-rcar-gen2.o
++obj-$(CONFIG_ARCH_R8A77470)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7778)		+= clk-r8a7778.o
+ obj-$(CONFIG_ARCH_R8A7779)		+= clk-r8a7779.o
+ obj-$(CONFIG_ARCH_R8A7790)		+= clk-rcar-gen2.o
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 5b59952..6f06399 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -376,6 +376,11 @@ static const struct of_device_id cpg_of_match[] = {
+ 		.compatible = "renesas,r8a7745-cpg-clocks",
+ 		.data = &fix_pll0_ratio,
+ 	},
++
++	{
++		.compatible = "renesas,r8a77470-cpg-clocks",
++		.data = &var_pll0_ratio,
++	},
+ 	{}
+ };
+ 
+@@ -426,7 +431,10 @@ rcar_gen2_cpg_register_clock(struct device_node *np, struct rcar_gen2_cpg *cpg,
+ 		mult = config->pll3_mult;
+ 	} else if (!strcmp(name, "lb")) {
+ 		parent_name = "pll1";
+-		div = cpg_mode & BIT(18) ? 36 : 24;
++		if (of_device_is_compatible(np, r8a77470_compat))
++			div = 12;
++		else
++			div = cpg_mode & BIT(18) ? 36 : 24;
+ 	} else if (!strcmp(name, "qspi")) {
+ 		parent_name = "pll1_div2";
+ 		div = (cpg_mode & (BIT(3) | BIT(2) | BIT(1))) == BIT(2)
+@@ -436,6 +444,7 @@ rcar_gen2_cpg_register_clock(struct device_node *np, struct rcar_gen2_cpg *cpg,
+ 		table = cpg_sdh_div_table;
+ 		shift = 8;
+ 	} else if (!strcmp(name, "sd0")) {
++		parent_name = "pll1";
+ 		table = cpg_sd01_div_table;
+ 		if (of_device_is_compatible(np, r8a77470_compat))
+ 			table++;
+@@ -531,7 +540,8 @@ static void __init rcar_gen2_cpg_clocks_init(struct device_node *np)
+ 
+ 	of_clk_add_provider(np, of_clk_src_onecell_get, &cpg->data);
+ 
+-	cpg_mstp_add_clk_domain(np);
++	if (!of_device_is_compatible(np, r8a77470_compat))
++		cpg_mstp_add_clk_domain(np);
+ }
+ CLK_OF_DECLARE(rcar_gen2_cpg_clks, "renesas,rcar-gen2-cpg-clocks",
+ 	       rcar_gen2_cpg_clocks_init);
+-- 
+2.7.4
+

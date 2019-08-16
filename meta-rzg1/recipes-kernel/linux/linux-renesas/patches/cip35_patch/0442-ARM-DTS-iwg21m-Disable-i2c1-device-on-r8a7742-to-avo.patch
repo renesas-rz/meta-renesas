@@ -1,0 +1,28 @@
+From b235b500baf8ee46792c13a58fdebc243949515f Mon Sep 17 00:00:00 2001
+From: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Date: Thu, 22 Mar 2018 16:29:15 +0700
+Subject: [PATCH 442/628] ARM: DTS: iwg21m: Disable i2c1 device on r8a7742 to
+ avoid pin conflict with DU module
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 2ffdd58..7f3ab0e 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -193,7 +193,7 @@
+ 	pinctrl-0 = <&i2c1_pins>;
+ 	pinctrl-names = "default";
+ 
+-	status = "okay";
++	status = "disabled";
+ 	clock-frequency = <400000>;
+ };
+ 
+-- 
+2.7.4
+

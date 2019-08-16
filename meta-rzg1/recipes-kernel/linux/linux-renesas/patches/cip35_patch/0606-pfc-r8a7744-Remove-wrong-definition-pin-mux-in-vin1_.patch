@@ -1,0 +1,36 @@
+From 7f4c3e1c5edf5a6199833fbc2b38a70c8b84f55a Mon Sep 17 00:00:00 2001
+From: Tri Luong <tri.luong.te@rvc.renesas.com>
+Date: Sun, 12 Aug 2018 16:42:36 +0700
+Subject: [PATCH 606/628] pfc-r8a7744: Remove wrong definition pin mux in
+ vin1_b_data18
+
+Signed-off-by: Tri Luong <tri.luong.te@rvc.renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7744.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+index ca4f031..1180bcd 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+@@ -4087,17 +4087,14 @@ static const unsigned int vin1_b_data18_pins[] = {
+ };
+ static const unsigned int vin1_b_data18_mux[] = {
+ 	/* B */
+-	VI1_DATA0_B_MARK, VI1_DATA1_B_MARK,
+ 	VI1_DATA2_B_MARK, VI1_DATA3_B_MARK,
+ 	VI1_DATA4_B_MARK, VI1_DATA5_B_MARK,
+ 	VI1_DATA6_B_MARK, VI1_DATA7_B_MARK,
+ 	/* G */
+-	VI1_G0_B_MARK, VI1_G1_B_MARK,
+ 	VI1_G2_B_MARK, VI1_G3_B_MARK,
+ 	VI1_G4_B_MARK, VI1_G5_B_MARK,
+ 	VI1_G6_B_MARK, VI1_G7_B_MARK,
+ 	/* R */
+-	VI1_R0_B_MARK, VI1_R1_B_MARK,
+ 	VI1_R2_B_MARK, VI1_R3_B_MARK,
+ 	VI1_R4_B_MARK, VI1_R5_B_MARK,
+ 	VI1_R6_B_MARK, VI1_R7_B_MARK,
+-- 
+2.7.4
+

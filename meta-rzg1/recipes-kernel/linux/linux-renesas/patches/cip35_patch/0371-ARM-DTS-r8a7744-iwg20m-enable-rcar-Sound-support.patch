@@ -1,0 +1,112 @@
+From 747efcd4644455789d4908e9191cfd8ae22ba30e Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 19:52:43 +0700
+Subject: [PATCH 371/628] ARM: DTS: r8a7744-iwg20m: enable rcar Sound support
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 65 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 6486856..6c27b9e 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -75,6 +75,35 @@
+ 		states = <3300000 1
+ 				  1800000 0>;
+ 	};
++
++	x9_clk: x9-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <26000000>;
++		clock-output-names = "audio_clock";
++	};
++
++	sound {
++		compatible = "simple-audio-card";
++
++		simple-audio-card,format = "i2s";
++		simple-audio-card,bitclock-master = <&soundcodec>;
++		simple-audio-card,frame-master = <&soundcodec>;
++		simple-audio-card,routing =
++					"MIC_IN", "Mic Jack",
++					"Mic Jack", "Mic Bias",
++					"Headphone Jack", "HP_OUT";
++
++		simple-audio-card,cpu {
++			sound-dai = <&rcar_sound>;
++		};
++
++		soundcodec: simple-audio-card,codec {
++			sound-dai = <&codec>;
++			clocks = <&x9_clk>;
++			system-clock-frequency = <26000000>;
++		};
++	};
+ };
+ 
+ &extal_clk {
+@@ -159,6 +188,11 @@
+ 		renesas,function = "i2c2";
+ 	};
+ 
++	sound_pins: sound {
++		renesas,groups = "ssi0129_ctrl", "ssi0_data", "ssi1_data";
++		renesas,function = "ssi";
++	};
++
+ 	pwm3_pins: pwm3 {
+ 		renesas,groups = "pwm3";
+ 		renesas,function = "pwm3";
+@@ -306,6 +340,16 @@
+ 		reg = <0x68>;
+ 	};
+ 
++	codec: sgtl5000@0a {
++		#sound-dai-cells = <0>;
++		compatible = "fsl,sgtl5000";
++		reg = <0x0a>;
++		VDDA-supply = <&reg_2p5v>;
++		VDDIO-supply = <&reg_3p3v>;
++		VDDD-supply = <&reg_0p0v>;
++		clocks = <&x9_clk 1>;
++	};
++
+ };
+ 
+ &i2c5 {
+@@ -315,6 +359,27 @@
+ 
+ };
+ 
++&rcar_sound {
++	pinctrl-0 = <&sound_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	/* Single DAI */
++	#sound-dai-cells = <0>;
++
++	rcar_sound,dai {
++		dai0 {
++			playback = <&ssi1>;
++			capture = <&ssi0>;
++		};
++	};
++};
++
++&ssi1 {
++	shared-pin;
++};
++
++
+ &pwm3 {
+ 	pinctrl-0 = <&pwm3_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

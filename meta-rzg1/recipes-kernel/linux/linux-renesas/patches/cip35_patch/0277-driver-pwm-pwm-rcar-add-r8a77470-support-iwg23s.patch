@@ -1,0 +1,27 @@
+From 4b2efa072a9e85b70307c44e861868f1abc1bffc Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Tue, 10 Apr 2018 08:41:55 +0700
+Subject: [PATCH 277/628] driver: pwm: pwm-rcar: add r8a77470 support iwg23s
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/pwm/pwm-rcar.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pwm/pwm-rcar.c b/drivers/pwm/pwm-rcar.c
+index b942010..b49288b 100644
+--- a/drivers/pwm/pwm-rcar.c
++++ b/drivers/pwm/pwm-rcar.c
+@@ -250,6 +250,7 @@ static int rcar_pwm_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id rcar_pwm_of_table[] = {
+ 	{ .compatible = "renesas,pwm-rcar", },
++	{ .compatible = "renesas,pwm-r8a77470", },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, rcar_pwm_of_table);
+-- 
+2.7.4
+

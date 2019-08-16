@@ -1,0 +1,35 @@
+From 0449961ce37a3880ab88022f894220eee0576d35 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 11:11:28 +0700
+Subject: [PATCH 334/628] i2c: sh_mobile: fix clock calculation for r8a7744 SoC
+
+i2c: sh_mobile: fix clock calculation for r8a7744 SoC
+
+r8a7744 SoC have so fast input clocks that the ICCL/H registers only
+count every second clock to have a meaningful 9-bit range. The driver
+was already prepared for that happening, but didn't use it so far.
+Add the proper DT configuration for r8a7744 SoC that need it.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/i2c/busses/i2c-sh_mobile.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/i2c/busses/i2c-sh_mobile.c b/drivers/i2c/busses/i2c-sh_mobile.c
+index 3eb5167..e0fccc43 100644
+--- a/drivers/i2c/busses/i2c-sh_mobile.c
++++ b/drivers/i2c/busses/i2c-sh_mobile.c
+@@ -835,6 +835,7 @@ static const struct of_device_id sh_mobile_i2c_dt_ids[] = {
+ 	{ .compatible = "renesas,iic-r8a7792", .data = &fast_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7793", .data = &fast_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7794", .data = &fast_clock_dt_config },
++	{ .compatible = "renesas,iic-r8a7744", .data = &fast_clock_dt_config },
+ 	{ .compatible = "renesas,rcar-gen2-iic", .data = &fast_clock_dt_config },
+ 	{ .compatible = "renesas,iic-r8a7795", .data = &fast_clock_dt_config },
+ 	{ .compatible = "renesas,rcar-gen3-iic", .data = &fast_clock_dt_config },
+-- 
+2.7.4
+

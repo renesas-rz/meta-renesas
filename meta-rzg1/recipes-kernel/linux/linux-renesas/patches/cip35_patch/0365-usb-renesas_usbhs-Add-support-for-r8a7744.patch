@@ -1,0 +1,34 @@
+From 22904dd80470a95d2b11d7ae80b8c8ba9331f655 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNv25@fsoft.com.vn>
+Date: Thu, 12 Apr 2018 00:18:51 +0700
+Subject: [PATCH 365/628] usb: renesas_usbhs: Add support for r8a7744
+
+This driver supports other SoCs, but they need boards/Soc depend code.
+So, this patch adds device tree support for r8a7744 initially.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/usb/renesas_usbhs/common.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/usb/renesas_usbhs/common.c b/drivers/usb/renesas_usbhs/common.c
+index d46c9e4..7d0759a 100644
+--- a/drivers/usb/renesas_usbhs/common.c
++++ b/drivers/usb/renesas_usbhs/common.c
+@@ -473,6 +473,10 @@ static const struct of_device_id usbhs_of_match[] = {
+ 		.data = (void *)USBHS_TYPE_RCAR_GEN2,
+ 	},
+ 	{
++		.compatible = "renesas,usbhs-r8a7744",
++		.data = (void *)USBHS_TYPE_RCAR_GEN2,
++	},
++	{
+ 		.compatible = "renesas,usbhs-r8a7794",
+ 		.data = (void *)USBHS_TYPE_RCAR_GEN2,
+ 	},
+-- 
+2.7.4
+

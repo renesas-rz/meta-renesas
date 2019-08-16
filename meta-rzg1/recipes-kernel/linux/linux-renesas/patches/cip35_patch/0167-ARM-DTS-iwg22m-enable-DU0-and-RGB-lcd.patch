@@ -1,0 +1,138 @@
+From 0497f110fc6fb713a46515d0c3132d6b5036bf1d Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 13 Nov 2018 13:49:43 +0700
+Subject: [PATCH 167/628] ARM: DTS: iwg22m: enable DU0 and RGB lcd
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 48 +++++++++++++++++++++++++++++
+ arch/arm/boot/dts/r8a7745-iwg22m.dtsi       | 46 +++++++++++++++++++++++++++
+ 2 files changed, 94 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index f03b670..28177e9 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -132,6 +132,22 @@
+ 		function = "i2c5";
+ 	};
+ 
++	stmp_pins: stmpe811 {
++		renesas,groups = "intc_irq0";
++		renesas,function = "intc";
++	};
++
++	backlight_pins: backlight {
++		renesas,groups = "tpu_to3_c";
++		renesas,function = "tpu";
++	};
++
++	du0_pins: du0 {
++		renesas,groups = "du0_rgb888", "du0_sync", "du0_disp",
++				"du0_clk0_out";
++		renesas,function = "du0";
++	};
++
+ 	scif4_pins: scif4 {
+ 		groups = "scif4_data_b";
+ 		function = "scif4";
+@@ -248,3 +264,35 @@
+ &usbphy {
+ 	status = "okay";
+ };
++
++&tpu {
++	status = "okay";
++};
++
++&gpio1 {
++	lcd-power-eb-gpio{
++		gpio-hog;
++		gpios = <13 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "lcd-power-eb-gpio";
++	};
++};
++
++&du {
++	pinctrl-0 = <&du0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	clocks = <&mstp7_clks R8A7745_CLK_DU0>,
++		<&mstp7_clks R8A7745_CLK_DU1>,
++		<&x2_clk>;
++	clock-names = "du.0","du.1","dclkin.0";
++
++	ports {
++		port@0 {
++			endpoint {
++				remote-endpoint = <&lcd_in>;
++			};
++		};
++	};
++};
+\ No newline at end of file
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+index f8d1989..68e9e2a 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
++++ b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+@@ -43,6 +43,52 @@
+ 		regulator-always-on;
+ 		regulator-boot-on;
+ 	};
++
++	vcc_lcd: regulator@4 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "panel vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
++	backlight {
++		compatible = "pwm-backlight";
++		pwms = <&tpu 3 5000000 GPIO_ACTIVE_LOW>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		pinctrl-0 = <&backlight_pins>;
++		pinctrl-names = "default";
++	};
++
++	lcd@20 {
++		compatible = "edt,et043080dh6-gp", "simple-panel";
++		power-supply = <&vcc_lcd>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				reg = <0>;
++				lcd_in: endpoint {
++					reg = <0>;
++					remote-endpoint = <&du_out_rgb0>;
++				};
++			};
++
++		};
++	};
++
++	x2_clk: x2-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <10800000>;
++	};
+ };
+ 
+ &cmt0 {
+-- 
+2.7.4
+

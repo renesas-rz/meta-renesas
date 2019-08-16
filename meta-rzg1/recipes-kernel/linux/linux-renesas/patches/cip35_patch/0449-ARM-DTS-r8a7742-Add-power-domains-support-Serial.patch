@@ -1,0 +1,98 @@
+From ac5067b731a0de597845229c36e3b3757e146ca7 Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Thu, 5 Apr 2018 11:09:08 +0700
+Subject: [PATCH 449/628] ARM: DTS: r8a7742: Add power-domains support Serial
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index c6b5b4c..8462433 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -361,6 +361,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x21>, <&dmac0 0x22>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -372,6 +373,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x25>, <&dmac0 0x26>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -383,6 +385,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x27>, <&dmac0 0x28>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -394,6 +397,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x3d>, <&dmac0 0x3e>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -405,6 +409,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x19>, <&dmac0 0x1a>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -416,6 +421,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x1d>, <&dmac0 0x1e>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -427,6 +433,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x29>, <&dmac0 0x2a>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -438,6 +445,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x2d>, <&dmac0 0x2e>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -449,6 +457,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x39>, <&dmac0 0x3a>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -460,6 +469,7 @@
+ 		clock-names = "sci_ick";
+ 		dmas = <&dmac0 0x4d>, <&dmac0 0x4e>;
+ 		dma-names = "tx", "rx";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+-- 
+2.7.4
+

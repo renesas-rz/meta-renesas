@@ -1,0 +1,31 @@
+From 201b5e8d406c99acdf52361175fca6b931b193bb Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 16:38:34 +0700
+Subject: [PATCH 397/628] watchdog: renesas-wdt: add restart handler support
+ for r8a7744
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/watchdog/renesas_wdt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/watchdog/renesas_wdt.c b/drivers/watchdog/renesas_wdt.c
+index e27ad5a..c086afe 100644
+--- a/drivers/watchdog/renesas_wdt.c
++++ b/drivers/watchdog/renesas_wdt.c
+@@ -276,7 +276,8 @@ static int rwdt_probe(struct platform_device *pdev)
+ 	 * register restart handler base on machine here
+ 	 * same ARM core architecture (e.g ARM cortex A15) can use same handler
+ 	 */
+-	if (of_machine_is_compatible("renesas,r8a7743")) {
++	if (of_machine_is_compatible("renesas,r8a7743") ||
++	    of_machine_is_compatible("renesas,r8a7744")) {
+ 		priv->restart_handler.notifier_call = rwdt_restart_handler_ca15;
+ 		/* 255: Highest priority restart handler */
+ 		priv->restart_handler.priority = 255;
+-- 
+2.7.4
+

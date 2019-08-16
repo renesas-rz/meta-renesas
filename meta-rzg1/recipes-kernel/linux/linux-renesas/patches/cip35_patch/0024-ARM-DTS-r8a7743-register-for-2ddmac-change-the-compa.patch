@@ -1,0 +1,62 @@
+From db07a2a241dbd160412a1bd71741cd622b901fae Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 13:35:05 +0700
+Subject: [PATCH 024/628] ARM: DTS: r8a7743: register for 2ddmac, change the
+ compatible name for vsp1
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index b08a1bf..a12b9f1 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -1696,8 +1696,16 @@
+ 			status = "disabled";
+ 		};
+ 
+-		vsp@fe928000 {
+-			compatible = "renesas,vsp1";
++		dmac2d: dma-controller@fea00000 {
++			compatible = "renesas,2ddmac-r8a7743";
++			reg = <0 0xfea00000 0 0x0200>;
++			interrupts = <0 285 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_2DDMAC>;
++			power-domains = <&cpg_clocks>;
++		};
++
++		vsps: vspm@fe928000 {
++			compatible = "renesas,vsps";
+ 			reg = <0 0xfe928000 0 0x8000>;
+ 			interrupts = <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7743_CLK_VSP1_S>;
+@@ -1710,8 +1718,8 @@
+ 			renesas,#wpf = <4>;
+ 		};
+ 
+-		vsp@fe930000 {
+-			compatible = "renesas,vsp1";
++		vspd0: vspm@fe930000 {
++			compatible = "renesas,vspd0";
+ 			reg = <0 0xfe930000 0 0x8000>;
+ 			interrupts = <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7743_CLK_VSP1_DU0>;
+@@ -1724,8 +1732,8 @@
+ 			renesas,#wpf = <1>;
+ 		};
+ 
+-		vsp@fe938000 {
+-			compatible = "renesas,vsp1";
++		vspd1: vspm@fe938000 {
++			compatible = "renesas,vspd1";
+ 			reg = <0 0xfe938000 0 0x8000>;
+ 			interrupts = <GIC_SPI 247 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7743_CLK_VSP1_DU1>;
+-- 
+2.7.4
+

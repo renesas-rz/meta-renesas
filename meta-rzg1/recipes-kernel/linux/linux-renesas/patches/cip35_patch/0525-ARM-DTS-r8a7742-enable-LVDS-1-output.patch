@@ -1,0 +1,56 @@
+From 498b8eb3709d4adc8f4bb77122d84c38b7a1b26c Mon Sep 17 00:00:00 2001
+From: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Date: Tue, 17 Apr 2018 18:45:14 +0700
+Subject: [PATCH 525/628] ARM: DTS: r8a7742: enable LVDS-1 output
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 9bf124d..7f0fc17 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -812,15 +812,18 @@
+ 
+ 	du: display@feb00000 {
+ 		compatible = "renesas,du-r8a7742";
+-		reg = <0 0xfeb00000 0 0x40000>,
+-			<0 0xfeb90000 0 0x1c>;
+-		reg-names = "du", "lvds.0";
++		reg = <0 0xfeb00000 0 0x70000>,
++			<0 0xfeb90000 0 0x1c>,
++			<0 0xfeb94000 0 0x1c>;
++		reg-names = "du", "lvds.0", "lvds.1";
+ 		interrupts = <0 256 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 268 IRQ_TYPE_LEVEL_HIGH>;
++				<0 268 IRQ_TYPE_LEVEL_HIGH>,
++				<0 269 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7742_CLK_DU0>,
+ 			<&mstp7_clks R8A7742_CLK_DU1>,
+-			<&mstp7_clks R8A7742_CLK_LVDS0>;
+-		clock-names = "du.0", "du.1", "lvds.0";
++			<&mstp7_clks R8A7742_CLK_LVDS0>,
++			<&mstp7_clks R8A7742_CLK_LVDS1>;
++		clock-names = "du.0", "du.1", "lvds.0", "lvds.1";
+ 		status = "disabled";
+ 
+ 		vsps = <&vspd0 &vspd1>;
+@@ -833,6 +836,12 @@
+ 				du_out_lvds0: endpoint {
+ 				};
+ 			};
++
++			port@1 {
++				reg = <1>;
++				du_out_lvds1: endpoint {
++				};
++			};
+ 		};
+ 	};
+ 
+-- 
+2.7.4
+

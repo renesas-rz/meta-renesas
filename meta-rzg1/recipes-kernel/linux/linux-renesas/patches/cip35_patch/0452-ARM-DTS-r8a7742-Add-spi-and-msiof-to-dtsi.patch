@@ -1,0 +1,103 @@
+From cb2be1dc27a95a7332289c9857d5f7ab2179d11a Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 13:35:37 +0700
+Subject: [PATCH 452/628] ARM: DTS: r8a7742: Add spi and msiof to dtsi
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 71 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 71 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 8462433..df3aa41 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -26,6 +26,11 @@
+ 		i2c1 = &i2c1;
+ 		i2c2 = &i2c2;
+ 		i2c3 = &i2c3;
++		spi0 = &qspi;
++		spi1 = &msiof0;
++		spi2 = &msiof1;
++		spi3 = &msiof2;
++		spi4 = &msiof3;
+ 	};
+ 
+ 	cpus {
+@@ -1124,4 +1129,70 @@
+ 		clocks = <&mstp9_clks R8A7742_CLK_I2C3>;
+ 		status = "disabled";
+ 	};
++
++	qspi: spi@e6b10000 {
++		compatible = "renesas,qspi-r8a7742", "renesas,qspi";
++		reg = <0 0xe6b10000 0 0x2c>;
++		interrupts = <0 184 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7742_CLK_QSPI_MOD>;
++		num-cs = <1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		dmas = <&dmac0 0x17>, <&dmac0 0x18>;
++		dma-names = "tx", "rx";
++		status = "disabled";
++	};
++
++	msiof0: spi@e6e20000 {
++		compatible = "renesas,msiof-r8a7742";
++		reg = <0 0xe6e20000 0 0x0064>;
++		interrupts = <0 156 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp0_clks R8A7742_CLK_MSIOF0>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		dmas = <&dmac0 0x51>, <&dmac0 0x52>;
++		dma-names = "tx", "rx";
++		status = "disabled";
++	};
++
++	msiof1: spi@e6e10000 {
++		compatible = "renesas,msiof-r8a7742";
++		reg = <0 0xe6e10000 0 0x0064>;
++		interrupts = <0 157 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_MSIOF1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		dmas = <&dmac0 0x55>, <&dmac0 0x56>;
++		dma-names = "tx", "rx";
++		status = "disabled";
++	};
++
++	msiof2: spi@e6e00000 {
++		compatible = "renesas,msiof-r8a7742";
++		reg = <0 0xe6e00000 0 0x0064>;
++		interrupts = <0 158 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_MSIOF2>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		dmas = <&dmac0 0x41>, <&dmac0 0x42>;
++		dma-names = "tx", "rx";
++		status = "disabled";
++	};
++
++	msiof3: spi@e6c90000 {
++		compatible = "renesas,msiof-r8a7742";
++		reg = <0 0xe6c90000 0 0x0064>;
++		interrupts = <0 159 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_MSIOF3>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		dmas = <&dmac0 0x45>, <&dmac0 0x46>;
++		dma-names = "tx", "rx";
++		status = "disabled";
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

@@ -1,0 +1,66 @@
+From c86b4079633a73df2193b176f040d5a1e952b587 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 10:37:00 +0700
+Subject: [PATCH 389/628] ARM: DTS: r8a7744: add description for VIN
+
+Define the generic R8A7744 parts of the VIN[0-2] device nodes. Add aliases for
+the VIN[0-2] device nodes.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 4843be3..fa5972e 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -34,6 +34,9 @@
+ 		spi1 = &msiof0;
+ 		spi2 = &msiof1;
+ 		spi3 = &msiof2;
++		vin0 = &vin0;
++		vin1 = &vin1;
++		vin2 = &vin2;
+ 	};
+ 
+ 	cpus {
+@@ -888,6 +891,33 @@
+ 		renesas,#ch = <0>;
+ 	};
+ 
++	vin0: video@e6ef0000 {
++		compatible = "renesas,vin-r8a7744";
++		reg = <0 0xe6ef0000 0 0x1000>;
++		interrupts = <0 188 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7744_CLK_VIN0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	vin1: video@e6ef1000 {
++		compatible = "renesas,vin-r8a7744";
++		reg = <0 0xe6ef1000 0 0x1000>;
++		interrupts = <0 189 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7744_CLK_VIN1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	vin2: video@e6ef2000 {
++		compatible = "renesas,vin-r8a7744";
++		reg = <0 0xe6ef2000 0 0x1000>;
++		interrupts = <0 190 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7744_CLK_VIN2>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
+ 	tddmac@0xfea00000 {
+ 		compatible = "renesas,vspm-tddmac","renesas,vspm";
+ 		reg = <0 0xfea00000 0 0x200>;
+-- 
+2.7.4
+

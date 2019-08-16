@@ -1,0 +1,36 @@
+From 0b506e4e2f55c880dd7c0cd765b98997eeb7ab3f Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 15:58:26 +0700
+Subject: [PATCH 330/628] ARM: DTS: r8a7744: Add device node for QSPI
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index e9bc01e..efbf5dd 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -969,4 +969,16 @@
+ 		reg = <0 0xe6180000 0 0x0200>;
+ 		#power-domain-cells = <1>;
+ 	};
++
++	qspi: spi@e6b10000 {
++		compatible = "renesas,qspi-r8a7744", "renesas,qspi";
++		reg = <0 0xe6b10000 0 0x2c>;
++		interrupts = <0 184 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_QSPI_MOD>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		num-cs = <1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
+ };
+-- 
+2.7.4
+

@@ -1,0 +1,31 @@
+From 781ef5e1f2e4eb526672859f4c7446dd8d318c84 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 08:19:55 +0700
+Subject: [PATCH 373/628] ARM: DTS: r8a7744: add reg-names for sound
+
+Rensas R-Car sound driver supports reg-names.
+Let's use it.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 174aeeb..0112759 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1588,6 +1588,8 @@
+ 			<0 0xec5a0000 0 0x100>,  /* ADG */
+ 			<0 0xec540000 0 0x1000>, /* SSIU */
+ 			<0 0xec541000 0 0x280>;  /* SSI */
++		reg-names = "scu", "adg", "ssiu", "ssi";
++
+ 		clocks = <&mstp10_clks R8A7744_CLK_SSI_ALL>,
+ 			 <&mstp10_clks R8A7744_CLK_SSI9>, <&mstp10_clks R8A7744_CLK_SSI8>,
+ 			 <&mstp10_clks R8A7744_CLK_SSI7>, <&mstp10_clks R8A7744_CLK_SSI6>,
+-- 
+2.7.4
+

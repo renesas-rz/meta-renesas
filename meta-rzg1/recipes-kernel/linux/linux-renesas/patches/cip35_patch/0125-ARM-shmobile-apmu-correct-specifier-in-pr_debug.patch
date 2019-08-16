@@ -1,0 +1,28 @@
+From d84514d561bc8e0855c47febc0941b8702e9b47c Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Wed, 23 May 2018 16:58:58 +0700
+Subject: [PATCH 125/628] ARM: shmobile: apmu: correct specifier in pr_debug
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/mach-shmobile/platsmp-apmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/platsmp-apmu.c b/arch/arm/mach-shmobile/platsmp-apmu.c
+index 4153d5a..9b0e1ed 100644
+--- a/arch/arm/mach-shmobile/platsmp-apmu.c
++++ b/arch/arm/mach-shmobile/platsmp-apmu.c
+@@ -93,7 +93,7 @@ static void apmu_init_cpu(struct resource *res, int cpu, int bit)
+ 	apmu_cpus[cpu].iomem = ioremap_nocache(res->start, resource_size(res));
+ 	apmu_cpus[cpu].bit = bit;
+ 
+-	pr_debug("apmu ioremap %d %d %pr\n", cpu, bit, res);
++	pr_debug("apmu ioremap %d %d %pr %p\n", cpu, bit, res, apmu_cpus[cpu].iomem);
+ 
+ 	/* Setup for debug mode */
+ 	x = readl(apmu_cpus[cpu].iomem + DBGRCR_OFFS);
+-- 
+2.7.4
+

@@ -1,0 +1,41 @@
+From 4374c0dfdd0573ac35ff62bd6fb79f9b3bc8864b Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Fri, 16 Mar 2018 15:40:08 +0700
+Subject: [PATCH 508/628] ARM: DTS: iwg21m: add power-supply support fan
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 23db2f7..f91fe6d 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -96,6 +96,14 @@
+ 		regulator-always-on;
+ 	};
+ 
++	vcc_fan: regulator@6 {
++		compatible = "regulator-fixed";
++		regulator-name = "fan vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
+ 	reg_3p3v: 3p3v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "3P3V";
+@@ -160,6 +168,7 @@
+ 		pwms = <&tpu 1 5000000 GPIO_ACTIVE_HIGH>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
++		power-supply = <&vcc_fan>;
+ 		pinctrl-0 = <&fan_pins>;
+ 		pinctrl-names = "default";
+ 	};
+-- 
+2.7.4
+

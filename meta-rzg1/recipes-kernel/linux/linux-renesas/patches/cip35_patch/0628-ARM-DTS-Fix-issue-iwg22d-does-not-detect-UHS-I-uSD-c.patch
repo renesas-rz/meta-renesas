@@ -1,0 +1,65 @@
+From 5fdfe29c0c805fe73541f3ff86e749779bdb1998 Mon Sep 17 00:00:00 2001
+From: Tam Nhat <tamnn1@fsoft.com.vn>
+Date: Sat, 1 Jun 2019 14:21:55 +0700
+Subject: [PATCH 628/628] ARM: DTS: Fix issue iwg22d does not detect UHS-I uSD
+ cards correctly
+
+The issue involves with CD pin of SDHI interface. This pin can not
+switch voltage between 3.3V and 1.8V when doing remove/insert.
+
+This commit is to remove "cd-gpio" property in sdhi0 node and then add
+"sdhi_cd" in pfc node of iwg22d device tree.
+
+Signed-off-by: Tam Nhat <tamnn1@fsoft.com.vn>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 4a8d689..b564c0b 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -252,11 +252,17 @@
+ 	};
+ 
+ 	sdhi0_pins: sd0 {
+-		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl", "sdhi0_cd";
+ 		renesas,function = "sdhi0";
+ 		power-source = <3300>;
+ 	};
+ 
++	sdhi0_pins_uhs: sd0_uhs {
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl", "sdhi0_cd";
++		renesas,function = "sdhi0";
++		power-source = <1800>;
++	};
++
+ 	sound_pins: sound {
+ 		renesas,groups = "ssi34_ctrl", "ssi3_data", "ssi4_data";
+ 		renesas,function = "ssi";
+@@ -330,11 +336,11 @@
+ 
+ &sdhi0 {
+ 	pinctrl-0 = <&sdhi0_pins>;
+-	pinctrl-names = "default";
++	pinctrl-1 = <&sdhi0_pins_uhs>;
++	pinctrl-names = "default", "uhs";
+ 
+ 	vmmc-supply = <&reg_3p3v>;
+ 	vqmmc-supply = <&vccq_sdhi0>;
+-	cd-gpios = <&gpio6 6 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
+ };
+ 
+@@ -435,4 +441,4 @@
+ 
+ &tmu3 {
+ 	status = "okay";
+-};
+\ No newline at end of file
++};
+-- 
+2.7.4
+

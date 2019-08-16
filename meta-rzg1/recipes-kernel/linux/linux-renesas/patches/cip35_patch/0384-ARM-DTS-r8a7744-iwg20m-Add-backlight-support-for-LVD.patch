@@ -1,0 +1,36 @@
+From bfabba5d7f437d49b850b87e71091537dbe4f802 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 10:16:52 +0700
+Subject: [PATCH 384/628] ARM: DTS: r8a7744-iwg20m: Add backlight support for
+ LVDS panel on r8a7744
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 8cf9ec1..b10724a 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -109,6 +109,15 @@
+ 		};
+ 	};
+ 
++	backlight: backlight {
++		compatible = "pwm-backlight";
++		pwms = <&pwm3 0 5000000>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		power-supply = <&vcc_lvds>;
++		enable-gpios = <&gpio5 14 0>;
++	};
++
+ 	panel_edt: panel@0 {
+ 		compatible = "edt,etm0700g0dh6", "simple-panel";
+ 		power-supply = <&vcc_lvds>;
+-- 
+2.7.4
+

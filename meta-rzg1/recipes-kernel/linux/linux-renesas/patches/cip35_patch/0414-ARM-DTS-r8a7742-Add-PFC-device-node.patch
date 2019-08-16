@@ -1,0 +1,30 @@
+From 33c80a7329b9a8f56766a1b0e46488c33537ff2d Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Tue, 13 Mar 2018 18:07:35 +0700
+Subject: [PATCH 414/628] ARM: DTS: r8a7742: Add PFC device node
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index ed08e82..0c921ff 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -131,6 +131,11 @@
+ 		power-domains = <&cpg_clocks>;
+ 	};
+ 
++	pfc: pfc@e6060000 {
++		compatible = "renesas,pfc-r8a7742";
++		reg = <0 0xe6060000 0 0x250>;
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+-- 
+2.7.4
+

@@ -1,0 +1,35 @@
+From c69c8a203ad7110597f3f3677164a382c578fb91 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 09:04:11 +0700
+Subject: [PATCH 374/628] ARM: DTS: r8a7744: enable Audio DMAC peri peri via
+ sound driver
+
+Audio DMAC peri peri is supported by sound driver.
+This patch enable it.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 0112759..1d9aeb1 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1587,8 +1587,9 @@
+ 		reg =	<0 0xec500000 0 0x1000>, /* SCU */
+ 			<0 0xec5a0000 0 0x100>,  /* ADG */
+ 			<0 0xec540000 0 0x1000>, /* SSIU */
+-			<0 0xec541000 0 0x280>;  /* SSI */
+-		reg-names = "scu", "adg", "ssiu", "ssi";
++			<0 0xec541000 0 0x280>,  /* SSI */
++			<0 0xec740000 0 0x200>;  /* Audio DMAC peri peri*/
++		reg-names = "scu", "adg", "ssiu", "ssi", "audmapp";
+ 
+ 		clocks = <&mstp10_clks R8A7744_CLK_SSI_ALL>,
+ 			 <&mstp10_clks R8A7744_CLK_SSI9>, <&mstp10_clks R8A7744_CLK_SSI8>,
+-- 
+2.7.4
+

@@ -1,0 +1,28 @@
+From f94b34905617db51f332e6f1e81275e400105b9e Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Thu, 29 Mar 2018 11:26:55 +0700
+Subject: [PATCH 405/628] Wrong mistake: Replace comma with a semicolon in line
+ 196 into vsp1_pipeline_stopped() function.
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/media/platform/vsp1/vsp1_pipe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/vsp1/vsp1_pipe.c b/drivers/media/platform/vsp1/vsp1_pipe.c
+index b06fd5f..2e7732f 100644
+--- a/drivers/media/platform/vsp1/vsp1_pipe.c
++++ b/drivers/media/platform/vsp1/vsp1_pipe.c
+@@ -193,7 +193,7 @@ bool vsp1_pipeline_stopped(struct vsp1_pipeline *pipe)
+ 	bool stopped;
+ 
+ 	spin_lock_irqsave(&pipe->irqlock, flags);
+-	stopped = pipe->state == VSP1_PIPELINE_STOPPED,
++	stopped = pipe->state == VSP1_PIPELINE_STOPPED;
+ 	spin_unlock_irqrestore(&pipe->irqlock, flags);
+ 
+ 	return stopped;
+-- 
+2.7.4
+

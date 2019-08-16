@@ -1,0 +1,146 @@
+From 43489659a7b889700150971464dfa754f5398d70 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 16:11:45 +0700
+Subject: [PATCH 333/628] ARM: DTS: r8a7744: add support for i2c
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 114 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 114 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index efbf5dd..0a52461 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -20,6 +20,18 @@
+ 	#address-cells = <2>;
+ 	#size-cells = <2>;
+ 
++	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c4;
++		i2c5 = &i2c5;
++		i2c6 = &i2c6;
++		i2c7 = &i2c7;
++		i2c8 = &i2c8;
++	};
++
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -234,6 +246,108 @@
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
++	/* The memory map in the User's Manual maps the cores to bus numbers */
++	i2c0: i2c@e6508000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7744";
++		reg = <0 0xe6508000 0 0x40>;
++		interrupts = <0 287 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_I2C0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c1: i2c@e6518000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7744";
++		reg = <0 0xe6518000 0 0x40>;
++		interrupts = <0 288 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_I2C1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c2: i2c@e6530000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7744";
++		reg = <0 0xe6530000 0 0x40>;
++		interrupts = <0 286 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_I2C2>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c3: i2c@e6540000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7744";
++		reg = <0 0xe6540000 0 0x40>;
++		interrupts = <0 290 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_I2C3>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c4: i2c@e6520000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7744";
++		reg = <0 0xe6520000 0 0x40>;
++		interrupts = <0 19 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_I2C4>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c5: i2c@e6528000 {
++		/* doesn't need pinmux */
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7744";
++		reg = <0 0xe6528000 0 0x40>;
++		interrupts = <0 20 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_I2C5>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c6: i2c@e60b0000 {
++		/* doesn't need pinmux */
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,iic-r8a7744", "renesas,rmobile-iic";
++		reg = <0 0xe60b0000 0 0x425>;
++		interrupts = <0 173 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7744_CLK_IICDVFS>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c7: i2c@e6500000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,iic-r8a7744", "renesas,rmobile-iic";
++		reg = <0 0xe6500000 0 0x425>;
++		interrupts = <0 174 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7744_CLK_IIC0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	i2c8: i2c@e6510000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,iic-r8a7744", "renesas,rmobile-iic";
++		reg = <0 0xe6510000 0 0x425>;
++		interrupts = <0 175 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp3_clks R8A7744_CLK_IIC1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
+ 	pfc: pfc@e6060000 {
+ 		compatible = "renesas,pfc-r8a7744";
+ 		reg = <0 0xe6060000 0 0x250>;
+-- 
+2.7.4
+

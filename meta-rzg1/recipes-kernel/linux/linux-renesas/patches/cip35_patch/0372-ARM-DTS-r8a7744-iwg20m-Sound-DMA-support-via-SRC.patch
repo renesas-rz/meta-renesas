@@ -1,0 +1,44 @@
+From 23e161f40a832c9f402492b8f1f9c460e6121296 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 20:11:56 +0700
+Subject: [PATCH 372/628] ARM: DTS: r8a7744-iwg20m: Sound DMA support via SRC
+
+DMA transfer to/from SRC
+
+     DMA      DMApp
+[MEM] -> [SRC] -> [SSIU] -> [SSI]
+
+     DMA      DMApp
+[MEM] <- [SRC] <- [SSIU] <- [SSI]
+
+Current sound driver is supporting
+SSI/SRC random connection.
+So, this patch is tring
+SSI0 -> SRC0
+SSI1 <- SRC1
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 6c27b9e..6581d82 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -369,8 +369,8 @@
+ 
+ 	rcar_sound,dai {
+ 		dai0 {
+-			playback = <&ssi1>;
+-			capture = <&ssi0>;
++			playback = <&ssi1 &src1>;
++			capture = <&ssi0 &src0>;
+ 		};
+ 	};
+ };
+-- 
+2.7.4
+

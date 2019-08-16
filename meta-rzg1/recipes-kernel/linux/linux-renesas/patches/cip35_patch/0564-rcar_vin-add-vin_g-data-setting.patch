@@ -1,0 +1,66 @@
+From d74dd008e269d4088d001e8c9cf30c4a926c3472 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Tue, 22 May 2018 10:53:44 +0700
+Subject: [PATCH 564/628] rcar_vin: add vin_g data setting
+
+When working in YCbCr 8bit mode, there's an option to set input
+video signal group corresonding with specific VIN module.
+For exmample in this case, board iWave RZ/G1H select VIN_G 8bit
+as data input.
+About register value, please refer VnDMR2 in SoC HW manual.
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts         | 1 +
+ drivers/media/platform/soc_camera/rcar_vin.c | 8 ++++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 55ea27a..b2bebf8 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -753,6 +753,7 @@
+ 		vin2ep: endpoint {
+ 			remote-endpoint = <&ov7725_2>;
+ 			bus-width = <8>;
++			ycbcr_8b_g_enable;
+ 		};
+ 	};
+ };
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 3d2a153..8f1daf9 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -133,6 +133,7 @@
+ #define VNDMR2_HPS		(1 << 29)
+ #define VNDMR2_FTEV		(1 << 17)
+ #define VNDMR2_VLV(n)		((n & 0xf) << 12)
++#define VNDMR2_YDS		(1 << 22)
+ 
+ #define VIN_MAX_WIDTH		2048
+ #define VIN_MAX_HEIGHT		2048
+@@ -1302,6 +1303,9 @@ static int rcar_vin_set_bus_param(struct soc_camera_device *icd)
+ 		val |= VNDMR2_VPS;
+ 	if (!(common_flags & V4L2_MBUS_HSYNC_ACTIVE_LOW))
+ 		val |= VNDMR2_HPS;
++	if (priv->pdata_flags & VNDMR2_YDS)
++		val |= VNDMR2_YDS;
++
+ 	iowrite32(val, priv->base + VNDMR2_REG);
+ 	/*fixme: hardcode
+ 	(val == 0x60021000) ? iowrite32(0x21000, priv->base + VNDMR2_REG) : iowrite32(val, priv->base + VNDMR2_REG);*/
+@@ -2336,6 +2340,10 @@ static int rcar_vin_probe(struct platform_device *pdev)
+ 				pdata_flags |= RCAR_VIN_VSYNC_ACTIVE_LOW;
+ 		}
+ 
++		/* YCrbr 8bit input pin selection flag: VIN_B or VIN_G */
++		if (of_find_property(np, "ycbcr_8b_g_enable", NULL))
++			pdata_flags |= VNDMR2_YDS;
++
+ 		of_node_put(np);
+ 
+ 		dev_dbg(&pdev->dev, "pdata_flags = %08x\n", pdata_flags);
+-- 
+2.7.4
+

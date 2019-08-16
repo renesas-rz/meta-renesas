@@ -1,0 +1,45 @@
+From 099d3c6280a91a906fb7b5b0a61d212bdc897f39 Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Wed, 14 Mar 2018 12:54:46 +0700
+Subject: [PATCH 500/628] ARM: DTS: r8a7742: Add device node support CAN
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 7db8b8b..aefc93e 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -887,6 +887,26 @@
+ 		};
+ 	};
+ 
++	can0: can@e6e80000 {
++		compatible = "renesas,can-r8a7742";
++		reg = <0 0xe6e80000 0 0x1000>;
++		interrupts = <0 186 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7742_CLK_RCAN0>;
++		clock-names = "clkp1";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
++	can1: can@e6e88000 {
++		compatible = "renesas,can-r8a7742";
++		reg = <0 0xe6e88000 0 0x1000>;
++		interrupts = <0 187 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7742_CLK_RCAN1>;
++		clock-names = "clkp1";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
+ 	sysc: system-controller@e6180000 {
+ 		compatible = "renesas,r8a7742-sysc";
+ 		reg = <0 0xe6180000 0 0x0200>;
+-- 
+2.7.4
+

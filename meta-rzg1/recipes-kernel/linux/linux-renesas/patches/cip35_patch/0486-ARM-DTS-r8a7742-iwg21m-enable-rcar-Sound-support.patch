@@ -1,0 +1,139 @@
+From a06e02f5027e7937635c4285ec9828bb48960ad5 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Mon, 9 Apr 2018 11:11:02 +0700
+Subject: [PATCH 486/628] ARM: DTS: r8a7742-iwg21m: enable rcar Sound support
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 89 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 88 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 03fbc70..e92783c 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -46,6 +46,38 @@
+ 		#size-cells = <1>;
+ 	};
+ 
++	reg_0p0v: 0p0v {
++		compatible = "regulator-fixed";
++		regulator-name = "0P0V";
++		regulator-min-microvolt = <0000000>;
++		regulator-max-microvolt = <0000000>;
++		regulator-always-on;
++	};
++
++	reg_2p5v: 2p5v {
++		compatible = "regulator-fixed";
++		regulator-name = "2P5V";
++		regulator-min-microvolt = <2500000>;
++		regulator-max-microvolt = <2500000>;
++		regulator-always-on;
++	};
++
++	reg_3p3v: 3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "3P3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	x9_clk: x9-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <26000000>;
++		clock-output-names = "audio_clock";
++	};
++
+ 	vcc_lvds: regulator@4 {
+ 		compatible = "regulator-fixed";
+ 
+@@ -130,6 +162,27 @@
+ 		pinctrl-0 = <&backlight_pins>;
+ 		pinctrl-names = "default";
+ 	};
++
++	sound {
++		compatible = "simple-audio-card";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,bitclock-master = <&sndcodec>;
++		simple-audio-card,frame-master = <&sndcodec>;
++		simple-audio-card,routing =
++					"MIC_IN", "Mic Jack",
++					"Mic Jack", "Mic Bias",
++					"Headphone Jack", "HP_OUT";
++
++		sndcpu: simple-audio-card,cpu {
++			sound-dai = <&rcar_sound>;
++		};
++
++		sndcodec: simple-audio-card,codec {
++			sound-dai = <&codec>;
++			clocks = <&x9_clk>;
++			system-clock-frequency = <26000000>;
++		};
++	};
+ };
+ 
+ &extal_clk {
+@@ -231,6 +284,11 @@
+ 		renesas,groups = "msiof0_clk", "msiof0_tx", "msiof0_rx";
+ 		renesas,function = "msiof0";
+ 	};
++
++	sound_pins: sound {
++		renesas,groups = "ssi34_ctrl", "ssi3_data", "ssi4_data";
++		renesas,function = "ssi";
++	};
+ };
+ 
+ &scif0 {
+@@ -327,7 +385,15 @@
+ 	clock-frequency = <400000>;
+ 	pinctrl-0 = <&i2c2_pins>;
+ 	pinctrl-names = "default";
+-
++	codec: sgtl5000@a {
++		#sound-dai-cells = <0>;
++		compatible = "fsl,sgtl5000";
++		reg = <0x0a>;
++		VDDA-supply = <&reg_2p5v>;
++		VDDIO-supply = <&reg_3p3v>;
++		VDDD-supply = <&reg_0p0v>;
++		clocks = <&x9_clk 1>;
++	};
+ };
+ 
+ &i2c3 {
+@@ -439,3 +505,24 @@
+ 
+ &pciec {
+ };
++
++&rcar_sound {
++	pinctrl-0 = <&sound_pins>;
++	pinctrl-names = "default";
++
++	/* Single DAI */
++	#sound-dai-cells = <0>;
++
++	status = "okay";
++
++	rcar_sound,dai {
++		dai0 {
++			playback = <&ssi4>;
++			capture = <&ssi3>;
++		};
++	};
++};
++
++&ssi4 {
++	shared-pin;
++};
+-- 
+2.7.4
+

@@ -1,0 +1,27 @@
+From b9fd05ce8beb9215c9112b795824dcdbde1823a8 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Fri, 12 Oct 2018 16:24:17 +0700
+Subject: [PATCH 619/628] ARM: DTS: r8a7744-iwg20m: change AVB alias similar to
+ r8a7743-iwg20m
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 40911402..f4db104 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -22,7 +22,7 @@
+ 		serial2 = &scif4;
+ 		serial3 = &scifb1;
+ 		serial4 = &hscif1;
+-		eth	= &avb;
++		ethernet0 = &avb;
+ 		xhci	= &xhci;
+ 	};
+ 	memory@40000000 {
+-- 
+2.7.4
+

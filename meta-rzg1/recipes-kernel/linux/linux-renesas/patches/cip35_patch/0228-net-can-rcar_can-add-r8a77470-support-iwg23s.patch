@@ -1,0 +1,28 @@
+From 3eaaa47a2d3d5541eb81e522ee434c9cbe6fa6e3 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 17:05:22 +0700
+Subject: [PATCH 228/628] net: can: rcar_can: add r8a77470 support iwg23s
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/net/can/rcar_can.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/can/rcar_can.c b/drivers/net/can/rcar_can.c
+index 2aebc47..e1df25f 100644
+--- a/drivers/net/can/rcar_can.c
++++ b/drivers/net/can/rcar_can.c
+@@ -908,6 +908,7 @@ static const struct of_device_id rcar_can_of_table[] __maybe_unused = {
+ 	{ .compatible = "renesas,can-r8a7790" },
+ 	{ .compatible = "renesas,can-r8a7791" },
+ 	{ .compatible = "renesas,can-r8a7745" },
++	{ .compatible = "renesas,can-r8a77470" },
+ 	{ .compatible = "renesas,rcar-gen1-can" },
+ 	{ .compatible = "renesas,rcar-gen2-can" },
+ 	{ }
+-- 
+2.7.4
+

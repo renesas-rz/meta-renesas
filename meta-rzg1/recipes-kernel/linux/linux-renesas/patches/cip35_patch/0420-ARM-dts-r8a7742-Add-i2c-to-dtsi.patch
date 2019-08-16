@@ -1,0 +1,79 @@
+From 128a87098355cb5f2a90e3a41f5bdc215649725b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 11:45:26 +0700
+Subject: [PATCH 420/628] ARM: dts: r8a7742: Add i2c to dtsi
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 47 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index bbf0463..f9b3d2c 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -21,6 +21,13 @@
+ 	#address-cells = <2>;
+ 	#size-cells = <2>;
+ 
++	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++	};
++
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+@@ -632,4 +639,44 @@
+ 				"src4", "src3", "src2", "src1", "src0";
+ 		};
+ 	};
++
++	i2c0: i2c@e6508000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7742";
++		reg = <0 0xe6508000 0 0x40>;
++		interrupts = <0 287 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7742_CLK_I2C0>;
++		status = "disabled";
++	};
++
++	i2c1: i2c@e6518000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7742";
++		reg = <0 0xe6518000 0 0x40>;
++		interrupts = <0 288 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7742_CLK_I2C1>;
++		status = "disabled";
++	};
++
++	i2c2: i2c@e6530000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7742";
++		reg = <0 0xe6530000 0 0x40>;
++		interrupts = <0 286 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7742_CLK_I2C2>;
++		status = "disabled";
++	};
++
++	i2c3: i2c@e6540000 {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		compatible = "renesas,i2c-r8a7742";
++		reg = <0 0xe6540000 0 0x40>;
++		interrupts = <0 290 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp9_clks R8A7742_CLK_I2C3>;
++		status = "disabled";
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

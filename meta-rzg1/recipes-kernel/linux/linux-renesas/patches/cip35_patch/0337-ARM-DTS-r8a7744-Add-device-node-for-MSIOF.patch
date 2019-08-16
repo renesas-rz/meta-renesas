@@ -1,0 +1,67 @@
+From 4da0945d3f0f1899d9accb5a5372b7cb9d07d8e7 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 16:31:43 +0700
+Subject: [PATCH 337/628] ARM: DTS: r8a7744: Add device node for MSIOF
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 0a52461..dccab57 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -30,6 +30,9 @@
+ 		i2c6 = &i2c6;
+ 		i2c7 = &i2c7;
+ 		i2c8 = &i2c8;
++		spi1 = &msiof0;
++		spi2 = &msiof1;
++		spi3 = &msiof2;
+ 	};
+ 
+ 	cpus {
+@@ -1095,4 +1098,37 @@
+ 		#size-cells = <0>;
+ 		status = "disabled";
+ 	};
++
++	msiof0: spi@e6e20000 {
++		compatible = "renesas,msiof-r8a7744";
++		reg = <0 0xe6e20000 0 0x0064>;
++		interrupts = <0 156 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp0_clks R8A7744_CLK_MSIOF0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++	msiof1: spi@e6e10000 {
++		compatible = "renesas,msiof-r8a7744";
++		reg = <0 0xe6e10000 0 0x0064>;
++		interrupts = <0 157 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7744_CLK_MSIOF1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
++	msiof2: spi@e6e00000 {
++		compatible = "renesas,msiof-r8a7744";
++		reg = <0 0xe6e00000 0 0x0064>;
++		interrupts = <0 158 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7744_CLK_MSIOF2>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
+ };
+-- 
+2.7.4
+

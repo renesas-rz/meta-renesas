@@ -1,0 +1,31 @@
+From b7c8657bcebfa48d99f3705461787eedf55e93ad Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 11:17:01 +0700
+Subject: [PATCH 468/628] ARM: DTS: r8a7742: add description of usb channel 2
+ to usb phy
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 9f61f76..1fd6c25 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -627,6 +627,11 @@
+ 			reg = <1>;
+ 			#phy-cells = <1>;
+ 		};
++
++		usb2: usb-channel@2 {
++			reg = <2>;
++			#phy-cells = <1>;
++		};
+ 	};
+ 
+ 	pci1: pci@ee0b0000 {
+-- 
+2.7.4
+

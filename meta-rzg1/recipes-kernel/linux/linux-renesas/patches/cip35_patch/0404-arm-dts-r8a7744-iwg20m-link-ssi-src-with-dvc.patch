@@ -1,0 +1,30 @@
+From 65add73017ba4145c2bd86e8fb6b9c29345bd9eb Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Wed, 11 Apr 2018 10:32:49 +0700
+Subject: [PATCH 404/628] arm:dts:r8a7744-iwg20m: link ssi, src with dvc
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 859b787..f331564 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -550,8 +550,8 @@
+ 
+ 	rcar_sound,dai {
+ 		dai0 {
+-			playback = <&ssi1 &src1>;
+-			capture = <&ssi0 &src0>;
++			playback = <&ssi1 &src1 &dvc1>;
++			capture = <&ssi0 &src0 &dvc0>;
+ 		};
+ 	};
+ };
+-- 
+2.7.4
+

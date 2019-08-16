@@ -1,0 +1,141 @@
+From acc18996b4772a02ed68c9f6ebf4e19a86cdbb1d Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 23 Apr 2018 15:09:38 +0700
+Subject: [PATCH 529/628] ARM: dts: r8a7742: add and link ov7725 with vin
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 81 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 80 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 6ceb620..cdcc8fe 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -235,6 +235,12 @@
+ };
+ 
+ &pfc {
++
++	pinctrl-0 = <&vin3_pins>;
++	pinctrl-1 = <&vin0_pins>;
++	pinctrl-2 = <&vin1_pins>;
++	pinctrl-3 = <&vin2_pins>;
++
+ 	scif0_pins: serial0 {
+ 		renesas,groups = "scif0_data";
+ 		renesas,function = "scif0";
+@@ -356,6 +362,27 @@
+ 		renesas,groups = "can1_data_b";
+ 		renesas,function = "can1";
+ 	};
++
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data8", "vin0_clk";
++		renesas,function = "vin0";
++	};
++
++	vin1_pins: vin1 {
++		renesas,groups = "vin1_data8", "vin1_clk";
++		renesas,function = "vin1";
++	};
++
++	vin2_pins: vin2 {
++		renesas,groups = "vin2_data8", "vin2_clk";
++		renesas,function = "vin2";
++	};
++
++	vin3_pins: vin3 {
++		renesas,groups = "vin3_data8", "vin3_clk";
++		renesas,function = "vin3";
++	};
++
+ };
+ 
+ &scif0 {
+@@ -451,14 +478,40 @@
+ 		compatible = "bq32000";
+ 		reg = <0x68>;
+ 	};
++
++	ov7725@0 {
++		compatible = "ovti,ov772x";
++		reg = <0x21>;
++		remote = <&vin0>;
++
++		port {
++			ov7725_0: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin0ep>;
++			};
++		};
++	};
+ };
+ 
+ &i2c1 {
+ 	pinctrl-0 = <&i2c1_pins>;
+ 	pinctrl-names = "default";
+ 
+-	status = "disabled";
++	status = "okay";
+ 	clock-frequency = <400000>;
++
++	ov7725@1 {
++		compatible = "ovti,ov772x";
++		reg = <0x21>;
++		remote = <&vin1>;
++
++		port {
++			ov7725_1: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin1ep>;
++			};
++		};
++	};
+ };
+ 
+ &i2c2	{
+@@ -490,6 +543,19 @@
+ 		compatible = "cil,ch7036";
+ 		reg = <0x76>;
+ 	};
++
++	ov7725@2 {
++		compatible = "ovti,ov772x";
++		reg = <0x21>;
++		remote = <&vin2>;
++
++		port {
++			ov7725_2: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin2ep>;
++			};
++		};
++	};
+ };
+ 
+ &i2c3 {
+@@ -497,6 +563,19 @@
+ 	pinctrl-names = "default";
+ 	status = "okay";
+ 	clock-frequency = <400000>;
++
++	ov7725@3 {
++		compatible = "ovti,ov772x";
++		reg = <0x21>;
++		remote = <&vin3>;
++
++		port {
++			ov7725_3: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin3ep>;
++			};
++		};
++	};
+ };
+ 
+ &tpu {
+-- 
+2.7.4
+

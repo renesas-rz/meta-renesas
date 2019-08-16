@@ -1,0 +1,63 @@
+From 202755fa00ca180aef8a82651105ada115ca047d Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 10:00:16 +0700
+Subject: [PATCH 382/628] ARM: DTS: r8a7744-iwg20m: Add LCD panel support for
+ r8a7744
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 2f98bbf..3340bdc 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -76,6 +76,15 @@
+ 				  1800000 0>;
+ 	};
+ 
++	vcc_lvds: regulator@4 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "panel vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
+ 	x3_clk: x3-clock {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+@@ -100,6 +109,26 @@
+ 		};
+ 	};
+ 
++	panel_edt: panel@0 {
++		compatible = "edt,etm0700g0dh6", "simple-panel";
++		power-supply = <&vcc_lvds>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <0>;
++				panel_input: endpoint {
++					reg = <0>;
++					remote-endpoint = <&du_out_lvds0>;
++				};
++			};
++		};
++	};
++
+ 	sound {
+ 		compatible = "simple-audio-card";
+ 
+-- 
+2.7.4
+

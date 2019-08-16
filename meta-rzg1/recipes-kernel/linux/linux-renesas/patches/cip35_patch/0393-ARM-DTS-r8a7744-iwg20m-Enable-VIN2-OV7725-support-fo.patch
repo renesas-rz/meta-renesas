@@ -1,0 +1,93 @@
+From b8f69b77d1392b94831a661106f83fa95381d010 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 16:09:45 +0700
+Subject: [PATCH 393/628] ARM: DTS: r8a7744-iwg20m: Enable VIN2/OV7725 support
+ for r8a7744
+
+Define the RZG1N iwg20m board dependent part of the VIN2 device node. Add the device
+node for Devices OV7725  video decoder to  I2C5 bus. Add the necessary
+subnodes to interconnect VIN2 and OV7725 devices.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 41 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index f290593..968a4ca 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -258,6 +258,11 @@
+ 		renesas,function = "vin0";
+ 	};
+ 
++	vin2_pins: vin2 {
++		renesas,groups = "vin2_data8", "vin2_clk";
++		renesas,function = "vin2";
++	};
++
+ 	pwm3_pins: pwm3 {
+ 		renesas,groups = "pwm3";
+ 		renesas,function = "pwm3";
+@@ -474,6 +479,19 @@
+ 			};
+ 		};
+ 	};
++
++	ov7725@21 {
++		compatible = "ovti,ov772x";
++		reg = <0x21>;
++		remote = <&vin2>;
++
++		port {
++			ov7725: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin2ep>;
++			};
++		};
++	};
+ };
+ 
+ &du {
+@@ -529,6 +547,13 @@
+ 		output-high;
+ 		line-name = "lcd-power-eb-gpio";
+ 	};
++
++	cam-power{
++		gpio-hog;
++		gpios = <3 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "cam-power";
++	};
+ };
+ 
+ &gpio0 {
+@@ -562,4 +587,20 @@
+ 			bus-width = <8>;
+ 		};
+ 	};
++};
++
++&vin2 {
++	status = "okay";
++	pinctrl-0 = <&vin2_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin2ep: endpoint {
++			remote-endpoint = <&ov7725>;
++			bus-width = <8>;
++		};
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

@@ -1,0 +1,28 @@
+From e3098b49659b0f61034b0e32f12d139435c890f9 Mon Sep 17 00:00:00 2001
+From: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Date: Sat, 10 Mar 2018 14:05:57 +0700
+Subject: [PATCH 459/628] ARM: DTS: r8a7742: fix error when build yocto failed
+ beacaus lack of ";" in dts
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 22904d0..aa2c30b 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -235,7 +235,7 @@
+ 	msiof0_pins: spi1 {
+ 		renesas,groups = "msiof0_clk", "msiof0_tx", "msiof0_rx";
+ 		renesas,function = "msiof0";
+-	}
++	};
+ };
+ 
+ &scif0 {
+-- 
+2.7.4
+

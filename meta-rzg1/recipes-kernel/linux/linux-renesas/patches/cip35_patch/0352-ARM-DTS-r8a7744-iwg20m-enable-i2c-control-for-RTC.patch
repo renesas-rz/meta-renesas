@@ -1,0 +1,30 @@
+From 35f85e04af58404641b50e7cff441cc31250dd8e Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 18:07:41 +0700
+Subject: [PATCH 352/628] ARM: DTS: r8a7744-iwg20m: enable i2c control for RTC
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index d583063..53ed9c8 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -277,6 +277,11 @@
+ 	status = "okay";
+ 	clock-frequency = <400000>;
+ 
++	rtc@68 {
++		compatible = "bq32000";
++		reg = <0x68>;
++	};
++
+ };
+ 
+ &i2c5 {
+-- 
+2.7.4
+

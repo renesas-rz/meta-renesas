@@ -1,0 +1,33 @@
+From b5b13b82d27e50c6ad3e6812cfa7aefa7e7fb7d5 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 14:03:34 +0700
+Subject: [PATCH 553/628] ARM: DTS: iwg20m: enable cmt0 and cmt1 for r8a7744
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index ca5ad52..ce88cbd4 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -678,4 +678,12 @@
+ 
+ &tmu3 {
+ 	status = "okay";
++};
++
++&cmt0 {
++	status = "okay";
++};
++
++&cmt1 {
++	status = "okay";
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

@@ -1,0 +1,61 @@
+From 881bca29c8c80dd7992f7262dd96d95e238c4666 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Fri, 25 Jan 2019 14:55:53 +0700
+Subject: [PATCH 627/628] ARM: dts: r8a7745: revert vspdu to keep changes of
+ community
+
+	- Revert vsp@fe928000 and vsp@fe930000 nodes.
+	- Change compatible property to use vspm driver of Renesas
+
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index f834d37..e63d96f 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -1426,20 +1426,31 @@
+ 			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 		};
+ 
+-		vspm@fe928000 {
+-			compatible = "renesas,vspm-vsps", "renesas-vspm";
+-			reg = <0 0xfe928000 0 0x7404>;
++		vsp@fe928000 {
++			compatible = "renesas,vspm-vsps";
++			reg = <0 0xfe928000 0 0x8000>;
+ 			interrupts = <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_VSP1_SY>;
+-			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
++			power-domains = <&cpg_clocks>;
++
++			renesas,has-lut;
++			renesas,has-sru;
++			renesas,#rpf = <5>;
++			renesas,#uds = <1>;
++			renesas,#wpf = <4>;
+ 		};
+ 
+-		vspm@fe930000 {
+-			compatible = "renesas,vspm-vspd0", "renesas-vspm";
+-			reg = <0 0xfe930000 0 0x7404>;
++		vsp@fe930000 {
++			compatible = "renesas,vspm-vspd0";
++			reg = <0 0xfe930000 0 0x8000>;
+ 			interrupts = <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_VSP1DU0>;
+-			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
++			power-domains = <&cpg_clocks>;
++			renesas,has-lif;
++			renesas,has-lut;
++			renesas,#rpf = <4>;
++			renesas,#uds = <1>;
++			renesas,#wpf = <1>;
+ 		};
+ 
+ 		vspdu0: vspdu0@fe930000 {
+-- 
+2.7.4
+

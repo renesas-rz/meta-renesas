@@ -1,0 +1,29 @@
+From 889ad190b8e557a3623d7502527c8518feac091c Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 13:45:34 +0700
+Subject: [PATCH 550/628] ARM: DTS: iwg20m: enable tmu for r8a7744
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 169963e..ea55396 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -666,4 +666,8 @@
+ 			bus-width = <8>;
+ 		};
+ 	};
++};
++
++&tmu1 {
++	status = "okay";
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

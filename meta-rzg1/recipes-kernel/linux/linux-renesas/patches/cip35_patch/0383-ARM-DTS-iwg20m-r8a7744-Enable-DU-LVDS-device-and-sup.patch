@@ -1,0 +1,47 @@
+From 47c0d08f5d589b403b110d3c8b09447a89b683d1 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 10:15:12 +0700
+Subject: [PATCH 383/628] ARM: DTS: iwg20m r8a7744: Enable DU LVDS device and
+ supply LVDS power in DT
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 3340bdc..8cf9ec1 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -459,6 +459,11 @@
+ 				remote-endpoint = <&adv7511_in>;
+ 			};
+ 		};
++		port@1 {
++			endpoint {
++				remote-endpoint = <&panel_input>;
++			};
++		};
+ 	};
+ };
+ 
+@@ -482,6 +487,14 @@
+ 	shared-pin;
+ };
+ 
++&gpio7 {
++	lcd-power-eb-gpio{
++		gpio-hog;
++		gpios = <25 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "lcd-power-eb-gpio";
++	};
++};
+ 
+ &pwm3 {
+ 	pinctrl-0 = <&pwm3_pins>;
+-- 
+2.7.4
+

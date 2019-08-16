@@ -1,0 +1,57 @@
+From c019a9421086b1ec5ec893937cb534796d2c31a7 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Fri, 15 Jun 2018 09:07:10 +0700
+Subject: [PATCH 574/628] ARM: DTS: r8a7743: Fix issue SDHI pin function
+ control failed
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 2 +-
+ arch/arm/boot/dts/r8a7743-iwg20m.dtsi   | 4 ++--
+ arch/arm/boot/dts/r8a7743.dtsi          | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 56d313e..424a3c2 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -263,7 +263,7 @@
+ 
+ 	sdhi1_pins: sd1 {
+ 		renesas,groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
+-		function = "sdhi1";
++		renesas,function = "sdhi1";
+ 		power-source = <3300>;
+ 	};
+ 
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+index 1d3e950..fd8b17f 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+@@ -54,8 +54,8 @@
+ 	};
+ 
+ 	sdhi0_pins: sd0 {
+-		groups = "sdhi0_data4", "sdhi0_ctrl";
+-		function = "sdhi0";
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
+ 		power-source = <3300>;
+ 	};
+ };
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index c810d25..3a726db 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -1431,7 +1431,7 @@
+ 					R8A7743_CLK_USBDMAC1
+ 				>;
+ 				clock-output-names =
+-					"tpu0", "sdhi3", "sdhi2", "sdhi0",
++					"tpu0", "sdhi1", "sdhi2", "sdhi0",
+ 					"mmcif0", "i2c7", "pciec", "i2c8",
+ 					"ssusb", "cmt1", "usbdmac0",
+ 					"usbdmac1";
+-- 
+2.7.4
+

@@ -1,0 +1,29 @@
+From 6a2ebee76bc3ca81be5aaaa89dbf4351c9a03778 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Mon, 1 Oct 2018 15:56:23 +0700
+Subject: [PATCH 614/628] ARM: DTS: iwg21m: change to use vin1_clk_b
+
+correct pin setting for vin1 clock, iwg21m use vin1_clk_b
+the previous setting made conflict with avb
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 9d4e977..e000b0f 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -394,7 +394,7 @@
+ 	};
+ 
+ 	vin1_pins: vin1 {
+-		renesas,groups = "vin1_data8", "vin1_clk";
++		renesas,groups = "vin1_data8", "vin1_clk_b";
+ 		renesas,function = "vin1";
+ 	};
+ 
+-- 
+2.7.4
+

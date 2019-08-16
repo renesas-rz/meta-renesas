@@ -1,0 +1,29 @@
+From a9ac793a78387c57bdb55e33f7888e879578220e Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 11:20:28 +0700
+Subject: [PATCH 471/628] ARM: DTS: iwg21m: enable USB2.0 xhci support
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 0a5fa0c..30bf42e 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -258,6 +258,10 @@
+ 	status = "okay";
+ };
+ 
++&xhci {
++	status = "okay";
++};
++
+ &scifa2 {
+ 	pinctrl-0 = <&scifa2_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

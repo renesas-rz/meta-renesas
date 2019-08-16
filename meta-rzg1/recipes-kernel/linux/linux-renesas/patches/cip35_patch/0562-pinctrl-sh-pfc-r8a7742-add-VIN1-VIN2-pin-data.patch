@@ -1,0 +1,75 @@
+From 0031c7351c84334962cab2763c7cbf01c3cf3f47 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Wed, 2 May 2018 17:28:21 +0700
+Subject: [PATCH 562/628] pinctrl: sh-pfc: r8a7742: add VIN1, VIN2 pin data
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7742.c | 34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7742.c b/drivers/pinctrl/sh-pfc/pfc-r8a7742.c
+index 1edd77d..36b62133 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7742.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7742.c
+@@ -3465,6 +3465,21 @@ static const unsigned int vin1_data18_mux[] = {
+ 	VI1_R4_MARK, VI1_R5_MARK,
+ 	VI1_R6_MARK, VI1_R7_MARK,
+ };
++
++static const unsigned int vin1_data8_pins[] = {
++	RCAR_GP_PIN(3, 0), RCAR_GP_PIN(3, 1),
++	RCAR_GP_PIN(3, 2), RCAR_GP_PIN(3, 3),
++	RCAR_GP_PIN(3, 4), RCAR_GP_PIN(3, 5),
++	RCAR_GP_PIN(3, 6), RCAR_GP_PIN(3, 7),
++};
++
++static const unsigned int vin1_data8_mux[] = {
++	VI1_DATA0_VI1_B0_B_MARK, VI1_DATA1_VI1_B1_B_MARK,
++	VI1_DATA2_VI1_B2_B_MARK, VI1_DATA3_VI1_B3_B_MARK,
++	VI1_DATA4_VI1_B4_B_MARK, VI1_DATA5_VI1_B5_B_MARK,
++	VI1_DATA6_VI1_B6_B_MARK, VI1_DATA7_VI1_B7_B_MARK,
++};
++
+ static const unsigned int vin1_sync_pins[] = {
+ 	RCAR_GP_PIN(1, 24), /* HSYNC */
+ 	RCAR_GP_PIN(1, 25), /* VSYNC */
+@@ -3486,10 +3501,10 @@ static const unsigned int vin1_clkenb_mux[] = {
+ 	VI1_CLKENB_MARK,
+ };
+ static const unsigned int vin1_clk_pins[] = {
+-	RCAR_GP_PIN(2, 9),
++	RCAR_GP_PIN(3, 15),
+ };
+ static const unsigned int vin1_clk_mux[] = {
+-	VI1_CLK_MARK,
++	VI1_CLK_B_MARK,
+ };
+ /* - VIN2 ----------------------------------------------------------------- */
+ static const union vin_data vin2_data_pins = {
+@@ -3558,6 +3573,21 @@ static const unsigned int vin2_data18_mux[] = {
+ 	VI2_R4_MARK, VI2_R5_MARK,
+ 	VI2_R6_MARK, VI2_R7_MARK,
+ };
++
++static const unsigned int vin2_data8_pins[] = {
++	RCAR_GP_PIN(0, 27), RCAR_GP_PIN(0, 28),
++	RCAR_GP_PIN(0, 29), RCAR_GP_PIN(1, 10),
++	RCAR_GP_PIN(1, 4), RCAR_GP_PIN(1, 5),
++	RCAR_GP_PIN(1, 6), RCAR_GP_PIN(1, 7),
++};
++
++static const unsigned int vin2_data8_mux[] = {
++	VI2_G0_MARK, VI2_G1_MARK,
++	VI2_G2_MARK, VI2_G3_MARK,
++	VI2_G4_MARK, VI2_G5_MARK,
++	VI2_G6_MARK, VI2_G7_MARK,
++};
++
+ static const unsigned int vin2_sync_pins[] = {
+ 	RCAR_GP_PIN(1, 16), /* HSYNC */
+ 	RCAR_GP_PIN(1, 21), /* VSYNC */
+-- 
+2.7.4
+

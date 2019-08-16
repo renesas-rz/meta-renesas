@@ -1,0 +1,39 @@
+From de74644d5631cee8738d66cd0cbb358ab1731829 Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 10:30:44 +0700
+Subject: [PATCH 462/628] ARM: DTS: iwg21m: connect USB2.0 channel 1 to PCI
+ bridge
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 9836b55..6bc7d67 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -631,6 +631,19 @@
+ 		interrupt-map = <0x0000 0 0 1 &gic 0 112 IRQ_TYPE_LEVEL_HIGH
+ 				 0x0800 0 0 1 &gic 0 112 IRQ_TYPE_LEVEL_HIGH
+ 				 0x1000 0 0 2 &gic 0 112 IRQ_TYPE_LEVEL_HIGH>;
++		usb@0,1 {
++			reg = <0x800 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb1 0>;
++			phy-names = "usb";
++		};
++
++		usb@0,2 {
++			reg = <0x1000 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb1 0>;
++			phy-names = "usb";
++		};
+ 	};
+ 
+ 	clocks {
+-- 
+2.7.4
+

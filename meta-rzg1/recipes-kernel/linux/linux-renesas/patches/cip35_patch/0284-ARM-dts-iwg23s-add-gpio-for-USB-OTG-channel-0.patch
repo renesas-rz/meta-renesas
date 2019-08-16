@@ -1,0 +1,30 @@
+From 041a4a28339fb3fc16e3fe493c56f56ce1915213 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 13:38:36 +0700
+Subject: [PATCH 284/628] ARM: dts: iwg23s: add gpio for USB OTG channel 0
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 65a5ff2..cf6e425 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -275,6 +275,9 @@
+ 
+ &usbphy0 {
+ 	status = "okay";
++	renesas,id-gpio = <&gpio0 1 GPIO_ACTIVE_LOW>;
++	renesas,vbus-pwr-gpio = <&gpio0 0 GPIO_ACTIVE_LOW>;
++	renesas,wakeup;
+ };
+ 
+ &usbphy1 {
+-- 
+2.7.4
+

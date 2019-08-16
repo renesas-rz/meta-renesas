@@ -1,0 +1,86 @@
+From 72a78dde4e1a07fc8872028f363f95231569efb2 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 20:13:23 +0700
+Subject: [PATCH 430/628] ARM: DTS: iwg21m: enable TPU
+
+on iwg21m, TPU is used for buzzer, fan, LCD backlight
+this commit enable all of them
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 46 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 4dca58b..7e01c76 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -38,6 +38,33 @@
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 	};
++
++	buzzer {
++		compatible = "pwm-backlight";
++		pwms = <&tpu 0 5000000 GPIO_ACTIVE_HIGH>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		pinctrl-0 = <&buzzer_pins>;
++		pinctrl-names = "default";
++	};
++
++	fan {
++		compatible = "pwm-backlight";
++		pwms = <&tpu 1 5000000 GPIO_ACTIVE_HIGH>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		pinctrl-0 = <&fan_pins>;
++		pinctrl-names = "default";
++	};
++
++	backlight {
++		compatible = "pwm-backlight";
++		pwms = <&tpu 2 5000000 GPIO_ACTIVE_HIGH>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		pinctrl-0 = <&backlight_pins>;
++		pinctrl-names = "default";
++	};
+ };
+ 
+ &extal_clk {
+@@ -74,6 +101,21 @@
+ 		renesas,groups = "i2c3";
+ 		renesas,function = "i2c3";
+ 	};
++
++	buzzer_pins: buzzer {
++		renesas,groups = "tpu0_to0";
++		renesas,function = "tpu0";
++	};
++
++	fan_pins: fan {
++		renesas,groups = "tpu0_to1";
++		renesas,function = "tpu0";
++	};
++
++	backlight_pins: backlight {
++		renesas,groups = "tpu0_to2";
++		renesas,function = "tpu0";
++	};
+ };
+ 
+ &scifa2 {
+@@ -135,3 +177,7 @@
+ 	status = "okay";
+ 	clock-frequency = <400000>;
+ };
++
++&tpu {
++	status = "okay";
++};
+-- 
+2.7.4
+

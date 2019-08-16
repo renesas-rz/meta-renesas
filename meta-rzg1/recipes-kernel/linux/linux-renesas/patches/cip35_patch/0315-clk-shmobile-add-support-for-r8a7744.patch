@@ -1,0 +1,27 @@
+From f45a27e136c6f34d0d058a5b09fd65c3776934ac Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNv25@fsoft.com.vn>
+Date: Wed, 11 Apr 2018 23:26:40 +0700
+Subject: [PATCH 315/628] clk: shmobile: add support for r8a7744
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/clk/shmobile/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/shmobile/Makefile b/drivers/clk/shmobile/Makefile
+index 2412eb9..6badac5 100644
+--- a/drivers/clk/shmobile/Makefile
++++ b/drivers/clk/shmobile/Makefile
+@@ -3,6 +3,7 @@ obj-$(CONFIG_ARCH_R7S72100)		+= clk-rz.o
+ obj-$(CONFIG_ARCH_R8A73A4)		+= clk-r8a73a4.o
+ obj-$(CONFIG_ARCH_R8A7740)		+= clk-r8a7740.o
+ obj-$(CONFIG_ARCH_R8A7743)		+= clk-rcar-gen2.o
++obj-$(CONFIG_ARCH_R8A7744)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7745)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A77470)		+= clk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7778)		+= clk-r8a7778.o
+-- 
+2.7.4
+

@@ -1,0 +1,26 @@
+From 8e97ffdb7b7c9f9e8d1af2c24d541ccaa3de4f66 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Thu, 14 Dec 2017 15:48:33 +0700
+Subject: [PATCH 116/628] net-ethernet-ravb-add-support-r8a7743-SoC
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 240f6da..bb49b1f 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1687,6 +1687,7 @@ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,etheravb-rcar-gen2", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7795", .data = (void *)RCAR_GEN3 },
+ 	{ .compatible = "renesas,etheravb-rcar-gen3", .data = (void *)RCAR_GEN3 },
++	{ .compatible = "renesas,etheravb-r8a7743", .data = (void *)RCAR_GEN2 },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, ravb_match_table);
+-- 
+2.7.4
+

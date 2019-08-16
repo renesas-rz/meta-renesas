@@ -1,0 +1,81 @@
+From 3e9ed62390e8176627c7fa624d518ec717b9c911 Mon Sep 17 00:00:00 2001
+From: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Date: Mon, 19 Feb 2018 08:44:50 +0700
+Subject: [PATCH 422/628] ARM: dts: Add i2c to dts
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 52 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index b84e1e3..23cd7c4 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -54,6 +54,26 @@
+ 		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
+ 		renesas,function = "avb";
+ 	};
++
++	i2c0_pins: i2c0 {
++		renesas,groups = "i2c0";
++		renesas,function = "i2c0";
++	};
++
++	i2c1_pins: i2c1 {
++		renesas,groups = "i2c1_c";
++		renesas,function = "i2c1";
++	};
++
++	i2c2_pins: i2c2 {
++		renesas,groups = "i2c2_b";
++		renesas,function = "i2c2";
++	};
++
++	i2c3_pins: i2c3 {
++		renesas,groups = "i2c3";
++		renesas,function = "i2c3";
++	};
+ };
+ 
+ &scifa2 {
+@@ -75,3 +95,35 @@
+ 		micrel,led-mode = <1>;
+ 	};
+ };
++
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++};
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++};
++
++&i2c2	{
++	status = "okay";
++	clock-frequency = <400000>;
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++
++};
++
++&i2c3 {
++	pinctrl-0 = <&i2c3_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++	clock-frequency = <400000>;
++};
+-- 
+2.7.4
+

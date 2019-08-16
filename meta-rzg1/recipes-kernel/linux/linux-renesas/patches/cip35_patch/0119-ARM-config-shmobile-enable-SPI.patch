@@ -1,0 +1,33 @@
+From 3e06734982e253fa777a78c8b40a90f0ad88bc2b Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 29 May 2017 19:06:50 +0700
+Subject: [PATCH 119/628] ARM: config: shmobile: enable SPI
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/configs/shmobile_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index dc5134d..de545c4 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -116,9 +116,12 @@ CONFIG_I2C_RIIC=y
+ CONFIG_I2C_SH_MOBILE=y
+ CONFIG_I2C_RCAR=y
+ CONFIG_SPI=y
++CONFIG_SPI_MASTER=y
++CONFIG_SPI_BITBANG=y
+ CONFIG_SPI_RSPI=y
+ CONFIG_SPI_SH_MSIOF=y
+ CONFIG_SPI_SH_HSPI=y
++CONFIG_SPI_SPIDEV=y
+ CONFIG_GPIO_EM=y
+ CONFIG_GPIO_RCAR=y
+ CONFIG_GPIO_PCF857X=y
+-- 
+2.7.4
+

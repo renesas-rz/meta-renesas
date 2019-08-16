@@ -1,0 +1,29 @@
+From 4ed62583b857141de271dc5591039e81f93926a0 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 14 Mar 2018 17:04:47 +0700
+Subject: [PATCH 424/628] ARM: DTS: iwg21m: enable wdt0
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 23cd7c4..df7b555 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -96,6 +96,10 @@
+ 	};
+ };
+ 
++&wdt0{
++	status = "okay";
++};
++
+ &i2c0 {
+ 	pinctrl-0 = <&i2c0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

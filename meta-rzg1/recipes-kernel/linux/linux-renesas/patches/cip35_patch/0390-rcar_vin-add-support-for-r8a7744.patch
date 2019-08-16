@@ -1,0 +1,30 @@
+From 2806907ed97d8fdd2457241881fa481349badf48 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 12:57:03 +0700
+Subject: [PATCH 390/628] rcar_vin: add support for r8a7744
+
+Add support for devicetree probe for the rcar-vin driver.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/media/platform/soc_camera/rcar_vin.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index d5ddca2..3e65178 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -2275,6 +2275,7 @@ static struct soc_camera_host_ops rcar_vin_host_ops = {
+ #ifdef CONFIG_OF
+ static const struct of_device_id rcar_vin_of_table[] = {
+ 	{ .compatible = "renesas,vin-r8a7794", .data = (void *)RCAR_GEN2 },
++	{ .compatible = "renesas,vin-r8a7744", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7745", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7793", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7791", .data = (void *)RCAR_GEN2 },
+-- 
+2.7.4
+

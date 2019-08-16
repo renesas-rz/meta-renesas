@@ -1,0 +1,33 @@
+From 61af345155e766a40f90bf5a120b4276338b0c7d Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Thu, 12 Apr 2018 10:21:21 +0700
+Subject: [PATCH 502/628] ARM: DTS: r8a7742: Add description for thermal sensor
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index aefc93e..7c13651 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -218,6 +218,14 @@
+ 		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 	};
+ 
++	thermal@e61f0000 {
++		compatible = "renesas,thermal-r8a7742", "renesas,rcar-thermal";
++		reg = <0 0xe61f0000 0 0x14>, <0 0xe61f0100 0 0x38>;
++		interrupts = <0 69 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp5_clks R8A7742_CLK_THERMAL>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++	};
++
+ 	timer {
+ 		compatible = "arm,armv7-timer";
+ 		interrupts = <1 13 (GIC_CPU_MASK_SIMPLE(4) |
+-- 
+2.7.4
+

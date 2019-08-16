@@ -1,0 +1,53 @@
+From 67c9e3eae50c88eadc83c4ee463586837c3463a6 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 7 Nov 2018 18:34:58 +0700
+Subject: [PATCH 178/628] ARM: dts: iwg22m: Add SPI support
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22m.dtsi | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+index 68e9e2a..190137a 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
++++ b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+@@ -110,6 +110,12 @@
+ 		function = "qspi";
+ 	};
+ 
++	msiof2_pins: spi3 {
++		renesas,groups = "msiof2_clk", "msiof2_tx", "msiof2_rx",
++				"msiof2_ss2", "msiof2_sync";
++		renesas,function = "msiof2";
++	};
++
+ 	sdhi1_pins: sd1 {
+ 		groups = "sdhi1_data4", "sdhi1_ctrl";
+ 		function = "sdhi1";
+@@ -122,6 +128,19 @@
+ 	};
+ };
+ 
++&msiof2 {
++	pinctrl-0 = <&msiof2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	spidev@0 {
++		compatible = "renesas,spidev-r8a7745";
++		reg = <0>;
++		spi-max-frequency = <1000000>;
++	};
++};
++
+ &mmcif0 {
+ 	pinctrl-0 = <&mmcif0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

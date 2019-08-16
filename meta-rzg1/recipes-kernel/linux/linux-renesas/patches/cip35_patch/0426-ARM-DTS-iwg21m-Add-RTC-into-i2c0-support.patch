@@ -1,0 +1,36 @@
+From 1bf8e432ad4699ef70d20bffc797056cf949da9c Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 14 Mar 2018 17:27:14 +0700
+Subject: [PATCH 426/628] ARM: DTS: iwg21m: Add RTC into i2c0 support
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+RZ/G1H supports external RTC Controller “BQ32002” On-SOM for Real time
+clock support. In power off condition, this device will take power from
+VCC_RTC and continues to keep the current time
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index df7b555..4dca58b 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -107,6 +107,10 @@
+ 	status = "okay";
+ 	clock-frequency = <400000>;
+ 
++	rtc@68 {
++		compatible = "bq32000";
++		reg = <0x68>;
++	};
+ };
+ 
+ &i2c1 {
+-- 
+2.7.4
+

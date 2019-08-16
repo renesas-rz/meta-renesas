@@ -1,0 +1,34 @@
+From 26d5df54f27cdf856bc38f89662f06aa393a89b6 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Fri, 26 Jul 2019 15:07:44 +0700
+Subject: [PATCH 561/628] ARM: DTS: iwg23s: enable cmt0 and cmt1
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 9a88e5b..57b37ed9 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -442,6 +442,14 @@
+ 	status = "okay";
+ };
+ 
++&cmt0 {
++	status = "okay";
++};
++
++&cmt1 {
++	status = "okay";
++};
++
+ &du {
+ 	pinctrl-0 = <&du0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

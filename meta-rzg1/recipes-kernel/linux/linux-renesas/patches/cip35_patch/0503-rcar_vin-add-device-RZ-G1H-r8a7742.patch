@@ -1,0 +1,28 @@
+From 658c4aa7295b27ac7ccf9d8187240b487ce3466d Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 13:52:16 +0700
+Subject: [PATCH 503/628] rcar_vin: add device RZ/G1H(r8a7742)
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: LiNTC <lintc@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/media/platform/soc_camera/rcar_vin.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index 3e65178..3d2a153 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -2279,6 +2279,7 @@ static const struct of_device_id rcar_vin_of_table[] = {
+ 	{ .compatible = "renesas,vin-r8a7745", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7793", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7791", .data = (void *)RCAR_GEN2 },
++	{ .compatible = "renesas,vin-r8a7742", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7790", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,vin-r8a7779", .data = (void *)RCAR_H1 },
+ 	{ .compatible = "renesas,vin-r8a7778", .data = (void *)RCAR_M1 },
+-- 
+2.7.4
+

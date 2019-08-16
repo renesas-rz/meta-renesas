@@ -1,0 +1,27 @@
+From 184157bf84341edce74b50455c01220cefc950b5 Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 11:26:00 +0700
+Subject: [PATCH 472/628] ARM: DTS: r8a7742: add power-domains to support
+ USB3.0 xhci
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index e90968b..c91a0444 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -641,6 +641,7 @@
+ 		clocks = <&mstp3_clks R8A7742_CLK_SSUSB>;
+ 		phys = <&usb2 1>;
+ 		phy-names = "usb";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+-- 
+2.7.4
+

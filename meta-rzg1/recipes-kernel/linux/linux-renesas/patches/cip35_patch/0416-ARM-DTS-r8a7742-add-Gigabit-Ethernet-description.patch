@@ -1,0 +1,37 @@
+From 1c3924a8afbe6bb3d305c81d26953c61b39e35fa Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Wed, 14 Mar 2018 13:46:20 +0700
+Subject: [PATCH 416/628] ARM: DTS: r8a7742: add Gigabit Ethernet description
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index f47a705..bbf0463 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -145,6 +145,18 @@
+ 		status = "disabled";
+ 	};
+ 
++	avb: ethernet@e6800000 {
++		compatible = "renesas,etheravb-r8a7742";
++		reg = <0 0xe6800000 0 0x7bf>;
++		interrupts = <0 163 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp8_clks R8A7742_CLK_ETHERAVB>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		phy-mode = "gmii";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+-- 
+2.7.4
+

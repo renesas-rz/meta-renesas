@@ -1,0 +1,113 @@
+From 435369ce47b5bcd2ee7be0ad76b64c81332c543e Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Wed, 14 Nov 2018 16:23:28 +0700
+Subject: [PATCH 576/628] ARM: DTS: pfc: fix support Renesas-specific
+ properties
+
+Support both the old Renesas-specific properties and the new standard
+properties. Mixing old and new properties isn't allowed, neither
+inside a subnode nor across subnodes.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi  | 20 ++++++++++----------
+ arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi |  8 ++++----
+ arch/arm/boot/dts/r8a7743-iwg20m.dtsi    |  4 ++--
+ 3 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 424a3c2..ee6d725 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -247,8 +247,8 @@
+ 	};
+ 
+ 	i2c2_pins: i2c2 {
+-		renesas,groups = "i2c2";
+-		renesas,function = "i2c2";
++		groups = "i2c2";
++		function = "i2c2";
+ 	};
+ 
+ 	scif0_pins: scif0 {
+@@ -262,8 +262,8 @@
+ 	};
+ 
+ 	sdhi1_pins: sd1 {
+-		renesas,groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
+-		renesas,function = "sdhi1";
++		groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
++		function = "sdhi1";
+ 		power-source = <3300>;
+ 	};
+ 
+@@ -273,8 +273,8 @@
+ 	};
+ 
+ 	sdhi1_pins_uhs: sd2_uhs {
+-		renesas,groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
+-		renesas,function = "sdhi1";
++		groups = "sdhi1_data4", "sdhi1_ctrl", "sdhi1_cd";
++		function = "sdhi1";
+ 		power-source = <1800>;
+ 	};
+ 
+@@ -289,13 +289,13 @@
+ 	};
+ 
+ 	scif4_pins: serial2 {
+-		renesas,groups = "scif4_data_c";
+-		renesas,function = "scif4";
++		groups = "scif4_data_c";
++		function = "scif4";
+ 	};
+ 
+ 	pwm3_pins: pwm3 {
+-		renesas,groups = "pwm3";
+-		renesas,function = "pwm3";
++		groups = "pwm3";
++		function = "pwm3";
+ 	};
+ 
+ 	du_pins: du {
+diff --git a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+index f1fff19..e459e22 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+@@ -164,13 +164,13 @@
+ 	};
+ 
+ 	vin0_pins: vin0 {
+-		renesas,groups = "vin0_data8", "vin0_clk";
+-		renesas,function = "vin0";
++		groups = "vin0_data8", "vin0_clk";
++		function = "vin0";
+ 	};
+ 
+ 	vin2_pins: vin2 {
+-		renesas,groups = "vin2_data8", "vin2_clk";
+-		renesas,function = "vin2";
++		groups = "vin2_data8", "vin2_clk";
++		function = "vin2";
+ 	};
+ };
+ 
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+index fd8b17f..1d3e950 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+@@ -54,8 +54,8 @@
+ 	};
+ 
+ 	sdhi0_pins: sd0 {
+-		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
+-		renesas,function = "sdhi0";
++		groups = "sdhi0_data4", "sdhi0_ctrl";
++		function = "sdhi0";
+ 		power-source = <3300>;
+ 	};
+ };
+-- 
+2.7.4
+

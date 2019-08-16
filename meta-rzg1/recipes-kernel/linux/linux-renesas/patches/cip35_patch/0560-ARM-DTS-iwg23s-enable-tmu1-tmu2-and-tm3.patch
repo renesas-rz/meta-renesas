@@ -1,0 +1,38 @@
+From 3b7d4c5e68ef20d8f364eca44d1e125a054000ed Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Wed, 24 Jul 2019 09:56:44 +0700
+Subject: [PATCH 560/628] ARM: DTS: iwg23s: enable tmu1, tmu2 and tm3
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 2609ecc..9a88e5b 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -430,6 +430,18 @@
+ 	};
+ };
+ 
++&tmu1 {
++	status = "okay";
++};
++
++&tmu2 {
++	status = "okay";
++};
++
++&tmu3 {
++	status = "okay";
++};
++
+ &du {
+ 	pinctrl-0 = <&du0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

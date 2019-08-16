@@ -1,0 +1,27 @@
+From 25d4601e272568fe6504a5ac5b9d10e6b080c0c1 Mon Sep 17 00:00:00 2001
+From: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Date: Tue, 31 Oct 2017 22:05:33 +0700
+Subject: [PATCH 180/628] spi: spidev: add compatible for r8a7745
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/spi/spidev.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
+index d0e7dfc..2aceb13 100644
+--- a/drivers/spi/spidev.c
++++ b/drivers/spi/spidev.c
+@@ -695,6 +695,7 @@ static struct class *spidev_class;
+ static const struct of_device_id spidev_dt_ids[] = {
+ 	{ .compatible = "rohm,dh2228fv" },
+ 	{ .compatible = "lineartechnology,ltc2488" },
++	{ .compatible = "renesas,spidev-r8a7745" },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
+-- 
+2.7.4
+

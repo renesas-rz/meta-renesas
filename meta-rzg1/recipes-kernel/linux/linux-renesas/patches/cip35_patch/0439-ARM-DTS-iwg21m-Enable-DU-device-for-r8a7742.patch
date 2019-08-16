@@ -1,0 +1,55 @@
+From 992b134d9649099fe7d6d7d1c25fb4d81a6b8316 Mon Sep 17 00:00:00 2001
+From: hungdong <hung.dong.xd@rvc.renesas.com>
+Date: Wed, 21 Mar 2018 14:50:57 +0700
+Subject: [PATCH 439/628] ARM: DTS: iwg21m: Enable DU device for r8a7742
+
+Specify the DU output topology, enable the DU device
+and configure the related pins.
+
+Signed-off-by: hungdong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 7e01c76..a210261 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -116,6 +116,11 @@
+ 		renesas,groups = "tpu0_to2";
+ 		renesas,function = "tpu0";
+ 	};
++
++	du_pins: du {
++		renesas,groups = "du_rgb666", "du_sync_1", "du_clk_out_0";
++		renesas,function = "du";
++	};
+ };
+ 
+ &scifa2 {
+@@ -181,3 +186,21 @@
+ &tpu {
+ 	status = "okay";
+ };
++
++&du {
++	pinctrl-0 = <&du_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	clocks = <&mstp7_clks R8A7742_CLK_DU0>,
++		<&mstp7_clks R8A7742_CLK_DU1>,
++		<&mstp7_clks R8A7742_CLK_LVDS0>;
++	clock-names = "du.0", "du.1", "lvds.0";
++
++	ports {
++		port@0 {
++			 endpoint {
++			};
++		};
++	};
++};
+-- 
+2.7.4
+

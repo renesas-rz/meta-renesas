@@ -1,0 +1,30 @@
+From 3e94b1654b488a4979e4fa3551410b56d23c1203 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 14:06:34 +0700
+Subject: [PATCH 537/628] usb: renesas_usbhs: add support for r8a7742
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/usb/renesas_usbhs/common.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/usb/renesas_usbhs/common.c b/drivers/usb/renesas_usbhs/common.c
+index 7d0759a..ca895de 100644
+--- a/drivers/usb/renesas_usbhs/common.c
++++ b/drivers/usb/renesas_usbhs/common.c
+@@ -473,6 +473,10 @@ static const struct of_device_id usbhs_of_match[] = {
+ 		.data = (void *)USBHS_TYPE_RCAR_GEN2,
+ 	},
+ 	{
++		.compatible = "renesas,usbhs-r8a7742",
++		.data = (void *)USBHS_TYPE_RCAR_GEN2,
++	},
++	{
+ 		.compatible = "renesas,usbhs-r8a7744",
+ 		.data = (void *)USBHS_TYPE_RCAR_GEN2,
+ 	},
+-- 
+2.7.4
+

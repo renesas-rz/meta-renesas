@@ -1,0 +1,41 @@
+From fc035a7b23eb65921eed48a963ecff1f4c259256 Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 10:33:09 +0700
+Subject: [PATCH 464/628] ARM: DTS: r8a7742: add description for USB PHY, usb
+ channel 1
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 6bc7d67..6822d23 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -613,6 +613,21 @@
+ 		};
+ 	};
+ 
++	usbphy: usb-phy@e6590100 {
++		compatible = "renesas,usb-phy-r8a7742";
++		reg = <0 0xe6590100 0 0x100>;
++		clocks = <&mstp7_clks R8A7742_CLK_HSUSB>;
++		clock-names = "usbhs";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++
++		usb1: usb-channel@1 {
++			reg = <1>;
++			#phy-cells = <1>;
++		};
++	};
++
+ 	pci1: pci@ee0b0000 {
+ 		compatible = "renesas,pci-r8a7742";
+ 		device_type = "pci";
+-- 
+2.7.4
+

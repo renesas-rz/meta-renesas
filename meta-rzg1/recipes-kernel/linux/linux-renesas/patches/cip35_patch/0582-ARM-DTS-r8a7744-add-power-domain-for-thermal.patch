@@ -1,0 +1,29 @@
+From 6916be78a0d707be3123fb95e0d03c4baa3d2fde Mon Sep 17 00:00:00 2001
+From: huytran <huy.tran.xd@rvc.renesas.com>
+Date: Tue, 12 Jun 2018 17:16:39 +0700
+Subject: [PATCH 582/628] ARM: DTS: r8a7744: add power-domain for thermal
+
+Due to missing power-domain. Thermal cannot work properly.
+So this patch add power-domain to make thermal works properly.
+
+Signed-off-by: khatran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: huytran <huy.tran.xd@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 38e9048..11eef0c 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -209,6 +209,7 @@
+ 		reg = <0 0xe61f0000 0 0x14>, <0 0xe61f0100 0 0x38>;
+ 		interrupts = <0 69 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_THERMAL>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	timer {
+-- 
+2.7.4
+

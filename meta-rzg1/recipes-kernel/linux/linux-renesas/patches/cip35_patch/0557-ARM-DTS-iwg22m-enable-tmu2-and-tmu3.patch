@@ -1,0 +1,42 @@
+From 3d5f8caf22a729f683b6b75762b49585d4eb4590 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 8 Nov 2018 09:26:59 +0700
+Subject: [PATCH 557/628] ARM: DTS: iwg22m: enable tmu2 and tmu3
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 8470e03..08d030b 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -377,6 +377,8 @@
+ 	can0-trx-en-gpio{
+ 		gpio-hog;
+ 		gpios = <2 GPIO_ACTIVE_HIGH>;
++
++
+ 		output-low;
+ 		line-name = "can0-trx-en-gpio";
+ 	};
+@@ -384,4 +386,12 @@
+ 
+ &tmu1 {
+ 	status = "okay";
++};
++
++&tmu2 {
++	status = "okay";
++};
++
++&tmu3 {
++	status = "okay";
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

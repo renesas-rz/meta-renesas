@@ -1,0 +1,63 @@
+From a3af3fe3803a9f6fc48f3b61d731561cd50fe815 Mon Sep 17 00:00:00 2001
+From: huytran <huy.tran.xd@rvc.renesas.com>
+Date: Tue, 12 Jun 2018 17:23:47 +0700
+Subject: [PATCH 575/628] ARM: DTS: iwg20m: change backlight device to tpu
+ Because backlight use pwm3 so when running testing for PWM we get fail
+ result. change backlight device to tpu to seperate device to make backligth
+ and pwm work together
+
+Signed-off-by: huytran <huy.tran.xd@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index e508e1b..2da8b90 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -113,11 +113,13 @@
+ 
+ 	backlight: backlight {
+ 		compatible = "pwm-backlight";
+-		pwms = <&pwm3 0 5000000>;
++		pwms = <&tpu 3 5000000  GPIO_ACTIVE_HIGH>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
+ 		power-supply = <&vcc_lvds>;
+ 		enable-gpios = <&gpio5 14 0>;
++		pinctrl-0 = <&backlight_pins>;
++		pinctrl-names = "default";
+ 	};
+ 
+ 	panel_edt: panel@0 {
+@@ -287,6 +289,11 @@
+ 		renesas,groups = "pwm3";
+ 		renesas,function = "pwm3";
+ 	};
++
++	backlight_pins: backlight {
++		renesas,groups = "tpu_to3";
++		renesas,function = "tpu";
++	};
+ };
+ 
+ &scif0 {
+@@ -628,12 +635,12 @@
+ };
+ 
+ &pwm3 {
+-	pinctrl-0 = <&pwm3_pins>;
+-	pinctrl-names = "default";
+-
+ 	status = "okay";
+ };
+ 
++&tpu {
++	status = "okay";
++};
+ 
+ &vin0 {
+ 	status = "okay";
+-- 
+2.7.4
+

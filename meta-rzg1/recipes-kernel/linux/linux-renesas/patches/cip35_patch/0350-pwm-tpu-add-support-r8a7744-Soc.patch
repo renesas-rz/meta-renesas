@@ -1,0 +1,28 @@
+From 013166a2bbaddcb62efe94b2667cff77e2a786bc Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 11:30:32 +0700
+Subject: [PATCH 350/628] pwm: tpu: add support r8a7744 Soc
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/pwm/pwm-renesas-tpu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pwm/pwm-renesas-tpu.c b/drivers/pwm/pwm-renesas-tpu.c
+index 62ed435..a2953a8 100644
+--- a/drivers/pwm/pwm-renesas-tpu.c
++++ b/drivers/pwm/pwm-renesas-tpu.c
+@@ -456,6 +456,7 @@ static const struct of_device_id tpu_of_table[] = {
+ 	{ .compatible = "renesas,tpu-r8a7740", },
+ 	{ .compatible = "renesas,tpu-r8a7790", },
+ 	{ .compatible = "renesas,tpu-r8a7745", },
++	{ .compatible = "renesas,tpu-r8a7744", },
+ 	{ .compatible = "renesas,tpu-sh7372", },
+ 	{ .compatible = "renesas,tpu", },
+ 	{ },
+-- 
+2.7.4
+

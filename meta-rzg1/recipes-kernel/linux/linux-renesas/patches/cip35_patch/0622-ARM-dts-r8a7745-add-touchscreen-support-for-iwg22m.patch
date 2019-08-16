@@ -1,0 +1,67 @@
+From 4a786db5730f70d56f97688cc7df2d358e5dfb7f Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 13 Nov 2018 14:03:34 +0700
+Subject: [PATCH 622/628] ARM: dts: r8a7745: add touchscreen support for iwg22m
+
+add touchscreen support for iwg22m
+
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 41 +++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 0c7bddb..4a8d689 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -133,6 +133,47 @@
+ 		VDDIO-supply = <&reg_3p3v>;
+ 	};
+ 
++	/* STMPE811 touch screen controller */
++	stmpe811@44 {
++		compatible = "st,stmpe811";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		reg = <0x44>;
++		interrupt-parent = <&irqc>;
++		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
++		pinctrl-0 = <&stmp_pins>;
++		pinctrl-names = "default";
++		id = <0>;
++		blocks = <0x5>;
++		irq-trigger = <0x1>;
++
++		stmpe_touchscreen {
++			compatible = "st,stmpe-ts";
++				reg = <0>;
++				/* 3.25 MHz ADC clock speed */
++				st,adc-freq = <3>;
++				/* 8 sample average control */
++				st,ave-ctrl = <2>;
++				/* 7 length fractional part in z */
++				st,fraction-z = <7>;
++				/*
++				* 50 mA typical 80 mA max touchscreen drivers
++				* current limit value
++				*/
++				st,i-drive = <0>;
++				/* 12-bit ADC */
++				st,mod-12b = <1>;
++				/* internal ADC reference */
++				st,ref-sel = <0>;
++				/* ADC converstion time: 80 clocks */
++				st,sample-time = <4>;
++				/* 1 ms panel driver settling time */
++				st,settling = <3>;
++				/* 5 ms touch detect interrupt delay */
++				st,touch-det-delay = <4>;
++		};
++	};
++
+ 	ov7725@21 {
+ 		compatible = "ov772x";
+ 		reg = <0x21>;
+-- 
+2.7.4
+

@@ -1,0 +1,52 @@
+From 66d5398afe79b3e93015de3906be258f8d854d14 Mon Sep 17 00:00:00 2001
+From: Tri Luong <tri.luong.te@rvc.renesas.com>
+Date: Sun, 5 Aug 2018 06:15:33 +0700
+Subject: [PATCH 601/628] pfc-r8a7744: Add missing DVC_MUTE pin function.
+
+Signed-off-by: Tri Luong <tri.luong.te@rvc.renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7744.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+index e1a3547..42ac63d 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+@@ -242,7 +242,7 @@ enum {
+ 
+ 	/* IPSR6 */
+ 	FN_AUDIO_CLKB, FN_MSIOF1_SCK_B,
+-	FN_SCIF_CLK,
++	FN_SCIF_CLK, FN_DVC_MUTE,
+ 	FN_AUDIO_CLKC, FN_SCIFB0_SCK_C, FN_MSIOF1_SYNC_B, FN_RX2,
+ 	FN_SCIFA2_RXD,
+ 	FN_AUDIO_CLKOUT, FN_MSIOF1_SS1_B, FN_TX2, FN_SCIFA2_TXD,
+@@ -599,7 +599,7 @@ enum {
+ 	SSI_SDATA9_MARK, RX3_D_MARK, CAN0_RX_D_MARK,
+ 
+ 	/* IPSR6 */
+-	AUDIO_CLKB_MARK, MSIOF1_SCK_B_MARK, SCIF_CLK_MARK,
++	AUDIO_CLKB_MARK, MSIOF1_SCK_B_MARK, SCIF_CLK_MARK, DVC_MUTE_MARK,
+ 	AUDIO_CLKC_MARK, SCIFB0_SCK_C_MARK, MSIOF1_SYNC_B_MARK, RX2_MARK,
+ 	SCIFA2_RXD_MARK,
+ 	AUDIO_CLKOUT_MARK, MSIOF1_SS1_B_MARK, TX2_MARK, SCIFA2_TXD_MARK,
+@@ -1071,6 +1071,7 @@ static const u16 pinmux_data[] = {
+ 	PINMUX_IPSR_MSEL(IP6_2_0, AUDIO_CLKB, SEL_ADG_0),
+ 	PINMUX_IPSR_MSEL(IP6_2_0, MSIOF1_SCK_B, SEL_SOF1_1),
+ 	PINMUX_IPSR_MSEL(IP6_2_0, SCIF_CLK, SEL_SCIF_0),
++	PINMUX_IPSR_DATA(IP6_2_0, DVC_MUTE),
+ 	PINMUX_IPSR_DATA(IP6_5_3, AUDIO_CLKC),
+ 	PINMUX_IPSR_MSEL(IP6_5_3, SCIFB0_SCK_C, SEL_SCIFB_2),
+ 	PINMUX_IPSR_MSEL(IP6_5_3, MSIOF1_SYNC_B, SEL_SOF1_1),
+@@ -5646,7 +5647,7 @@ static const struct pinmux_cfg_reg pinmux_config_regs[] = {
+ 		0, 0,
+ 		/* IP6_2_0 [3] */
+ 		FN_AUDIO_CLKB, 0, FN_MSIOF1_SCK_B,
+-		FN_SCIF_CLK, 0, 0,
++		FN_SCIF_CLK, FN_DVC_MUTE, 0,
+ 		0, 0, }
+ 	},
+ 	{ PINMUX_CFG_REG_VAR("IPSR7", 0xE606003C, 32,
+-- 
+2.7.4
+

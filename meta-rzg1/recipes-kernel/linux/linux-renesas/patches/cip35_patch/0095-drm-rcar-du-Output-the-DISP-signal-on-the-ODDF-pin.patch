@@ -1,0 +1,66 @@
+From e89a46b3f6f0d0f6cacf67a9e2de40904f3cbd69 Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Mon, 7 Sep 2015 18:09:55 +0300
+Subject: [PATCH 095/628] drm: rcar-du: Output the DISP signal on the ODDF pin
+
+The ODDF signal, output by default on the ODDF pin, isn't used on any
+board supported in the kernel. As the Gen3 Salvator-X board uses the
+ODDF pin as a DISP signal, hardcode that configuration in the driver.
+
+Use of the ODDF signal will be implemented later through proper DT-based
+configuration of the DU pins.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_group.c | 12 ++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_regs.h  |  2 +-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.c b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+index 0e2b46d..144d1e0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+@@ -44,6 +44,16 @@ void rcar_du_group_write(struct rcar_du_group *rgrp, u32 reg, u32 data)
+ 	rcar_du_write(rgrp->dev, rgrp->mmio_offset + reg, data);
+ }
+ 
++static void rcar_du_group_setup_pins(struct rcar_du_group *rgrp)
++{
++	u32 defr6 = DEFR6_CODE | DEFR6_ODPM12_DISP;
++
++	if (rgrp->num_crtcs > 1)
++		defr6 |= DEFR6_ODPM22_DISP;
++
++	rcar_du_group_write(rgrp, DEFR6, defr6);
++}
++
+ static void rcar_du_group_setup_defr8(struct rcar_du_group *rgrp)
+ {
+ 	u32 defr8 = DEFR8_CODE | DEFR8_DEFE8;
+@@ -71,6 +81,8 @@ static void rcar_du_group_setup(struct rcar_du_group *rgrp)
+ 	rcar_du_group_write(rgrp, DEFR4, DEFR4_CODE);
+ 	rcar_du_group_write(rgrp, DEFR5, DEFR5_CODE | DEFR5_DEFE5);
+ 
++	rcar_du_group_setup_pins(rgrp);
++
+ 	if (rcar_du_has(rgrp->dev, RCAR_DU_FEATURE_EXT_CTRL_REGS)) {
+ 		rcar_du_group_setup_defr8(rgrp);
+ 
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_regs.h b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+index 95add71..2ccb1a2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_regs.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_regs.h
+@@ -187,7 +187,7 @@
+ 
+ #define DEFR6			0x000e8
+ #define DEFR6_CODE		(0x7778 << 16)
+-#define DEFR6_ODPM22_D2SMR	(0 << 10)
++#define DEFR6_ODPM22_DSMR	(0 << 10)
+ #define DEFR6_ODPM22_DISP	(2 << 10)
+ #define DEFR6_ODPM22_CDE	(3 << 10)
+ #define DEFR6_ODPM22_MASK	(3 << 10)
+-- 
+2.7.4
+

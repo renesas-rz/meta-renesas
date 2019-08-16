@@ -1,0 +1,62 @@
+From a5e458873cf42a359b4e4edfc145afce7bd2ed4c Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 18:39:46 +0700
+Subject: [PATCH 359/628] ARM: DTS: r8a7744: link PCI USB devices to USB PHY
+
+Describe the PCI USB devices that are behind the PCI bridges, adding necessary
+links to the USB PHY device.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 4355efe..22ac1d5 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1358,6 +1358,19 @@
+ 				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+ 				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
+ 
++		usb@0,1 {
++			reg = <0x800 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb0 0>;
++			phy-names = "usb";
++		};
++
++		usb@0,2 {
++			reg = <0x1000 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb0 0>;
++			phy-names = "usb";
++		};
+ 	};
+ 
+ 	pci1: pci@ee0d0000 {
+@@ -1380,6 +1393,19 @@
+ 				 0x0800 0 0 1 &gic 0 113 IRQ_TYPE_LEVEL_HIGH
+ 				 0x1000 0 0 2 &gic 0 113 IRQ_TYPE_LEVEL_HIGH>;
+ 
++		usb@0,1 {
++			reg = <0x800 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb2 0>;
++			phy-names = "usb";
++		};
++
++		usb@0,2 {
++			reg = <0x1000 0 0 0 0>;
++			device_type = "pci";
++			phys = <&usb2 0>;
++			phy-names = "usb";
++		};
+ 	};
+ 
+ 	ipmmu_sy0: mmu@e6280000 {
+-- 
+2.7.4
+

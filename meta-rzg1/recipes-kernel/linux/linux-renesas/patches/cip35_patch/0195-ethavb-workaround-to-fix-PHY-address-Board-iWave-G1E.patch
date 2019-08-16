@@ -1,0 +1,39 @@
+From 7f04bae18151f875b5c45ffdd17331e0efcda334 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Wed, 15 Nov 2017 18:05:51 +0700
+Subject: [PATCH 195/628] ethavb:workaround to fix PHY address Board iWave G1E
+ 's PHY address is changed of 1 or 3. This workaround is using loop to check
+ the PHY address
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/of/of_mdio.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/of/of_mdio.c b/drivers/of/of_mdio.c
+index a87a868..75a6020 100644
+--- a/drivers/of/of_mdio.c
++++ b/drivers/of/of_mdio.c
+@@ -54,8 +54,15 @@ static int of_mdiobus_register_phy(struct mii_bus *mdio, struct device_node *chi
+ 
+ 	if (!is_c45 && !of_get_phy_id(child, &phy_id))
+ 		phy = phy_device_create(mdio, addr, phy_id, 0, NULL);
+-	else
+-		phy = get_phy_device(mdio, addr, is_c45);
++	else {
++		for (addr = 1; addr < PHY_MAX_ADDR ; addr++) {
++			phy = get_phy_device(mdio, addr, is_c45);
++			if (!phy || IS_ERR(phy))
++				continue;
++			else
++				break;
++		}
++	}
+ 	if (!phy || IS_ERR(phy))
+ 		return 1;
+ 
+-- 
+2.7.4
+

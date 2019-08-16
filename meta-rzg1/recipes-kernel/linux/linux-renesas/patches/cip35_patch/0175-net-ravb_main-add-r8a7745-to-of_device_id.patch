@@ -1,0 +1,27 @@
+From 1f21465b7972b3cb5887f55c6dafbfef1cc02099 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Sun, 24 Dec 2017 04:35:49 +0700
+Subject: [PATCH 175/628] net: ravb_main: add r8a7745 to of_device_id
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index bb49b1f..18227c0 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1688,6 +1688,7 @@ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,etheravb-r8a7795", .data = (void *)RCAR_GEN3 },
+ 	{ .compatible = "renesas,etheravb-rcar-gen3", .data = (void *)RCAR_GEN3 },
+ 	{ .compatible = "renesas,etheravb-r8a7743", .data = (void *)RCAR_GEN2 },
++	{ .compatible = "renesas,etheravb-r8a7745", .data = (void *)RCAR_GEN2 },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, ravb_match_table);
+-- 
+2.7.4
+

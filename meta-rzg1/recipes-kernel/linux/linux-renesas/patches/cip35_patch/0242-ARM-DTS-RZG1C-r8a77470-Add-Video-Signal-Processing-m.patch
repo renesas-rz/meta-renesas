@@ -1,0 +1,45 @@
+From cd435796c7a05ff0cdc1f43320a4bb878a6851a6 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 11:22:15 +0700
+Subject: [PATCH 242/628] ARM: DTS: RZG1C r8a77470: Add Video Signal Processing
+ module (vspm module) node to device tree
+
+This patch support Renesas vspm kernel module probe.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index ec47b62..0754320 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -568,6 +568,22 @@
+ 			renesas,#ch = <0>;
+ 		};
+ 
++		vspm@fe928000 {
++			compatible = "renesas,vspm-vsps", "renesas-vspm";
++			reg = <0 0xfe928000 0 0x7404>;
++			interrupts = <0 267 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A77470_CLK_VSP1_SY>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		};
++
++		vspm@fe930000 {
++			compatible = "renesas,vspm-vspd0", "renesas-vspm";
++			reg = <0 0xfe930000 0 0x7404>;
++			interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A77470_CLK_VSP1DU0>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		};
++
+ 		fdp0: fdpm@fe940000 {
+ 			compatible = "renesas,fdp1";
+ 			reg = <0 0xfe940000 0 0x2400>;
+-- 
+2.7.4
+

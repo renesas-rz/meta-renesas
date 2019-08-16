@@ -1,0 +1,59 @@
+From d98c46502f7394306d711acb0c24907bf9e49e5f Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 14:14:49 +0700
+Subject: [PATCH 497/628] ARM: DTS: iwg21m: add Ethernet MAC and PHY device
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 9e86fff1..f290337 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -27,6 +27,7 @@
+ 		serial4 = &scifb2;
+ 		serial5 = &hscif0;
+ 		eth = &avb;
++		eth1 = &ether;
+ 		pciec   = &pciec;
+ 		pcie_clk = &pcie_bus_clk;
+ 	};
+@@ -220,6 +221,11 @@
+ 		renesas,function = "hscif0";
+ 	};
+ 
++	ether_pins: ether {
++		renesas,groups = "eth_mdio", "eth_rmii";
++		renesas,function = "eth";
++	};
++
+ 	avb_pins: avb {
+ 		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
+ 		renesas,function = "avb";
+@@ -341,6 +347,20 @@
+ 	status = "okay";
+ };
+ 
++&ether {
++	pinctrl-0 = <&ether_pins>;
++	pinctrl-names = "default";
++
++	phy-handle = <&phy1>;
++	renesas,ether-link-active-low;
++	status = "okay";
++
++	phy1: ethernet-phy@1 {
++		reg = <1>;
++		micrel,led-mode = <1>;
++	};
++};
++
+ &avb {
+ 	pinctrl-0 = <&avb_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

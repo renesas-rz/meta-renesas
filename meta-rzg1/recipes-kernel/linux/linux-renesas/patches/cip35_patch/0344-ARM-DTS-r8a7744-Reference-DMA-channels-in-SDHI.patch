@@ -1,0 +1,56 @@
+From ed832b49d5f2dc5718a9c684f721dd6d5363cad8 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 17:29:06 +0700
+Subject: [PATCH 344/628] ARM: DTS: r8a7744: Reference DMA channels in SDHI
+
+Add references to the transmit and receive DMA channels SDHI and MMC.
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index d2ac7c24..c582f60 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -425,6 +425,8 @@
+ 		reg = <0 0xee200000 0 0x80>;
+ 		interrupts = <0 169 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_MMCIF0>;
++		dmas = <&dmac0 0xd1>, <&dmac0 0xd2>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		reg-io-width = <4>;
+ 		status = "disabled";
+@@ -436,6 +438,8 @@
+ 		reg = <0 0xee100000 0 0x328>;
+ 		interrupts = <0 165 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_SDHI0>;
++		dmas = <&dmac1 0xcd>, <&dmac1 0xce>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -445,6 +449,8 @@
+ 		reg = <0 0xee140000 0 0x100>;
+ 		interrupts = <0 167 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_SDHI1>;
++		dmas = <&dmac1 0xc1>, <&dmac1 0xc2>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -454,6 +460,8 @@
+ 		reg = <0 0xee160000 0 0x100>;
+ 		interrupts = <0 168 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_SDHI2>;
++		dmas = <&dmac1 0xd3>, <&dmac1 0xd4>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+-- 
+2.7.4
+

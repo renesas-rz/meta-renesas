@@ -1,0 +1,28 @@
+From df8147b748c372c54b8f706ab3683ffb89728c7b Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 16:01:34 +0700
+Subject: [PATCH 163/628] pwm: pwm-renesas-tpu: add r8a7745 support iwg22m
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/pwm/pwm-renesas-tpu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pwm/pwm-renesas-tpu.c b/drivers/pwm/pwm-renesas-tpu.c
+index 075c1a76..62ed435 100644
+--- a/drivers/pwm/pwm-renesas-tpu.c
++++ b/drivers/pwm/pwm-renesas-tpu.c
+@@ -455,6 +455,7 @@ static const struct of_device_id tpu_of_table[] = {
+ 	{ .compatible = "renesas,tpu-r8a73a4", },
+ 	{ .compatible = "renesas,tpu-r8a7740", },
+ 	{ .compatible = "renesas,tpu-r8a7790", },
++	{ .compatible = "renesas,tpu-r8a7745", },
+ 	{ .compatible = "renesas,tpu-sh7372", },
+ 	{ .compatible = "renesas,tpu", },
+ 	{ },
+-- 
+2.7.4
+

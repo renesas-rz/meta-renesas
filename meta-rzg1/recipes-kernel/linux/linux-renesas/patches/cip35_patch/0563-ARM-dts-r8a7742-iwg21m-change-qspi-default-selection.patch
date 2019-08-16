@@ -1,0 +1,50 @@
+From 3ee7d40eca34058bac737e8acce80843f6984a53 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Thu, 3 May 2018 12:03:52 +0700
+Subject: [PATCH 563/628] ARM: dts: r8a7742-iwg21m: change qspi default
+ selection
+
+There're a workaround in u-boot to control the selection of qspi and vin2
+through GPIO0_18. And when working, VIN2 should be selected as default after
+kernel finish  booting. These changes in devide tree to configure VIN2 as
+default.
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 1a4b899..55ea27a 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -647,7 +647,7 @@
+ 	pinctrl-0 = <&qspi_pins>;
+ 	pinctrl-names = "default";
+ 
+-	status = "okay"; /* multiplexed with VI2 */
++	status = "disabled"; /* multiplexed with VI2 */
+ 
+ 	flash: flash@0 {
+ 		#address-cells = <1>;
+@@ -682,16 +682,6 @@
+ 	};
+ };
+ 
+-/*If “GP0_18” pin is set to low, then QSPI is selected. If “GP0_18” pin is set to high, then VIN2 is selected.*/
+-&gpio0 {
+-	enable-qspi{
+-		gpio-hog;
+-		gpios = <18 GPIO_ACTIVE_HIGH>;
+-		output-low;
+-		line-name = "enable-qspi";
+-	};
+-};
+-
+ &pcie_bus_clk {
+ };
+ 
+-- 
+2.7.4
+

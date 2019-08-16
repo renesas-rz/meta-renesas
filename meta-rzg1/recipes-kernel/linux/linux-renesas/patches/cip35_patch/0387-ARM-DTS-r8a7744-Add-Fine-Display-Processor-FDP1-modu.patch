@@ -1,0 +1,45 @@
+From f3548410897bec1aa4c583a36a310d36c4d704bb Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 10:27:54 +0700
+Subject: [PATCH 387/628] ARM: DTS: r8a7744: Add Fine Display Processor (FDP1
+ module) node to device tree
+
+This patch support Renesas FDP1 kernel module probe.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index b45514e..b00b38e 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -912,6 +912,22 @@
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
++	fdp0: fdpm@fe940000 {
++		compatible = "renesas,fdp1";
++		reg = <0 0xfe940000 0 0x2400>;
++		interrupts = <0 262 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7744_CLK_FDP1_0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++	};
++
++	fdp1: fdpm@fe944000 {
++		compatible = "renesas,fdp1";
++		reg = <0 0xfe944000 0 0x2400>;
++		interrupts = <0 263 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7744_CLK_FDP1_1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
++	};
++
+ 	du: display@feb00000 {
+ 		compatible = "renesas,du-r8a7744";
+ 		reg = <0 0xfeb00000 0 0x40000>,
+-- 
+2.7.4
+

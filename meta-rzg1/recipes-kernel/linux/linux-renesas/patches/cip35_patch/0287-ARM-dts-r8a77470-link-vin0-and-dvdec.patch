@@ -1,0 +1,73 @@
+From e7c67eff81afbf8b0594d55e45f2ca78259bcb54 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 13:50:56 +0700
+Subject: [PATCH 287/628] ARM: dts: r8a77470: link vin0 and dvdec
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 32 +++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index cf6e425..54e2f03 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -201,6 +201,11 @@
+ 		renesas,function = "du0";
+ 	};
+ 
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data8", "vin0_sync", "vin0_clkenb", "vin0_clk";
++		renesas,function = "vin0";
++	};
++
+ 	pwm0_pins: pwm0 {
+ 		renesas,groups = "pwm0_c";
+ 		renesas,function = "pwm0";
+@@ -341,6 +346,18 @@
+ 			};
+ 		};
+ 	};
++
++	rcar_dvdec@0 {
++		compatible = "rcar-dvdec";
++		reg = <0x49>;
++		clocks = <&mstp8_clks R8A77470_CLK_DVD>;
++
++		port {
++			dvdec: endpoint {
++				remote-endpoint = <&vin0ep>;
++			};
++		};
++	};
+ };
+ 
+ &pwm0 {
+@@ -394,6 +411,21 @@
+ 	};
+ };
+ 
++&vin0 {
++	status = "okay";
++	pinctrl-0 = <&vin0_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin0ep: endpoint {
++			remote-endpoint = <&dvdec>;
++		};
++	};
++};
++
+ &du {
+ 	pinctrl-0 = <&du0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

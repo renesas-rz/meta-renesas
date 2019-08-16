@@ -1,0 +1,57 @@
+From f4d4e198801a73b80f2bb85247e019c8d0afd298 Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 17 Nov 2017 18:29:25 +0700
+Subject: [PATCH 186/628] phy: phy-rcar-gen2.c: check compatible SoC for
+ UGCTRL2 setting
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/phy/phy-rcar-gen2.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/phy/phy-rcar-gen2.c b/drivers/phy/phy-rcar-gen2.c
+index 5d5f842..3d449cb 100644
+--- a/drivers/phy/phy-rcar-gen2.c
++++ b/drivers/phy/phy-rcar-gen2.c
+@@ -297,8 +297,12 @@ static void gpio_id_work(struct work_struct *work)
+ 
+ 	id = !!gpio_get_value(channel->gpio_id);
+ 	/* Switch the PHY over */
+-	if (!id)
+-		rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_USB30);
++	if (!id) {
++		if (of_machine_is_compatible("renesas,r8a7745"))
++			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_PCI);
++		else if (of_machine_is_compatible("renesas,r8a7743"))
++			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_USB30);
++	}
+ 
+ 	/* If VBUS is powered and we are not the initial Host, turn off VBUS */
+ 	if (gpio_is_valid(channel->gpio_vbus_pwr))
+@@ -318,10 +322,17 @@ static void gpio_vbus_work(struct work_struct *work)
+ 	if (gpio_is_valid(channel->gpio_vbus_pwr))
+ 		gpio_request_one(channel->gpio_vbus_pwr, GPIOF_DIR_OUT, NULL);
+ 	/* Switch the PHY over */
+-	if (id)
+-		rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_HS_USB | USBHS_UGCTRL2_USB2SEL_USB30);
+-	else
+-		rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_USB30);
++	if (id) {
++		if (of_machine_is_compatible("renesas,r8a7745"))
++			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_HS_USB | USBHS_UGCTRL2_USB2SEL_PCI);
++		else if (of_machine_is_compatible("renesas,r8a7743"))
++			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_HS_USB | USBHS_UGCTRL2_USB2SEL_USB30);
++	} else {
++		if (of_machine_is_compatible("renesas,r8a7745"))
++			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_PCI);
++		else if (of_machine_is_compatible("renesas,r8a7743"))
++			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_USB30);
++	}
+ 
+ 	if (!channel->otg->gadget)
+ 		return;
+-- 
+2.7.4
+

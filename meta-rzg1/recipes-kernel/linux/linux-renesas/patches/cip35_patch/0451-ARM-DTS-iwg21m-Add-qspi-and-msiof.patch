@@ -1,0 +1,88 @@
+From db6b36ec4cfa0d742eaec07700883fc3d3c4ba34 Mon Sep 17 00:00:00 2001
+From: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Date: Sat, 10 Mar 2018 01:27:17 +0700
+Subject: [PATCH 451/628] ARM: DTS: iwg21m: Add qspi and msiof
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 59 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 4557d87..5318acc 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -224,6 +224,16 @@
+ 		renesas,groups = "sdhi2_data4", "sdhi2_ctrl";
+ 		renesas,function = "sdhi2";
+ 	};
++
++	qspi_pins: spi0 {
++		renesas,groups = "qspi_ctrl", "qspi_data2";
++		renesas,function = "qspi";
++	};
++
++	msiof0_pins: spi1 {
++		renesas,groups = "msiof0_clk", "msiof0_tx", "msiof0_rx";
++		renesas,function = "msiof0";
++	}
+ };
+ 
+ &scif0 {
+@@ -372,3 +382,52 @@
+ 	led-gpios = <&gpio5 22 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
+ };
++
++&qspi {
++	pinctrl-0 = <&qspi_pins>;
++	pinctrl-names = "default";
++
++	status = "okay"; /* multiplexed with VI2 */
++
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "sst,sst25vf016b";
++		reg = <0>;
++		spi-max-frequency = <30000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		m25p,fast-read;
++		spi-cpol;
++		spi-cpha;
++	};
++};
++
++&msiof0 {
++	pinctrl-0 = <&msiof0_pins>;
++	pinctrl-names = "default";
++	cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
++
++	status = "okay";
++
++	flash1: flash1@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "sst,sst25vf016b";
++		reg = <0>;
++		spi-max-frequency = <10000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		m25p,fast-read;
++	};
++};
++
++/*If “GP0_18” pin is set to low, then QSPI is selected. If “GP0_18” pin is set to high, then VIN2 is selected.*/
++&gpio0 {
++	enable-qspi{
++		gpio-hog;
++		gpios = <18 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "enable-qspi";
++	};
++};
+-- 
+2.7.4
+

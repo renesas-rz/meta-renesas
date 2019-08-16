@@ -1,0 +1,28 @@
+From 6c68b173a900a4eb22b15f5fce8f5ec8347a4cf2 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Tue, 10 Apr 2018 10:07:07 +0700
+Subject: [PATCH 299/628] spi: rspi: fix compile warning
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/spi/spi-rspi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-rspi.c b/drivers/spi/spi-rspi.c
+index 90b5e1c..2c145b9 100644
+--- a/drivers/spi/spi-rspi.c
++++ b/drivers/spi/spi-rspi.c
+@@ -188,7 +188,7 @@
+ #define SPBFCR_RXTRG_8B		0x04	/*   8 bytes (24 bytes available) */
+ #define SPBFCR_RXTRG_32B	0x07	/*   32 bytes (0 byte avaliable) */
+ 
+-#define SPI_BUFFER_SIZE		32u	/* transmit and receive buffer size *
++#define SPI_BUFFER_SIZE		32u	/* transmit and receive buffer size */
+ /* QSPI on R-Car Gen2 */
+ #define SPBFCR_TXTRG_1B		0x00	/* 31 bytes (1 byte available) */
+ #define SPBFCR_TXTRG_32B	0x30	/* 0 byte (32 bytes available) */
+-- 
+2.7.4
+

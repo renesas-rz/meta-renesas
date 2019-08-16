@@ -1,0 +1,47 @@
+From 2f502292be843941387ee34eb33ea193cb111e41 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 13:23:10 +0700
+Subject: [PATCH 280/628] ARM: dts: r8a77470: enable USB2.0
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index e9c8a17..65a5ff2 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -273,6 +273,26 @@
+ 	status = "okay";
+ };
+ 
++&usbphy0 {
++	status = "okay";
++};
++
++&usbphy1 {
++	status = "okay";
++};
++
++&hsusb {
++	status = "okay";
++};
++
++&ohci_1 {
++	status = "okay";
++};
++
++&ehci_1 {
++	status = "okay";
++};
++
+ &can0 {
+ 	pinctrl-0 = <&can0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

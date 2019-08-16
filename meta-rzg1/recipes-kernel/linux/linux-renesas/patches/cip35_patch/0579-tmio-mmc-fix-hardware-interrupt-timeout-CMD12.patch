@@ -1,0 +1,45 @@
+From 6b182ecbf91283353e0fce00dc8732327273aff8 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Mon, 14 May 2018 12:56:23 +0700
+Subject: [PATCH 579/628] tmio: mmc: fix hardware interrupt timeout (CMD12)
+
+Below issue occured with eMMC on iwg23s:
+"sh_mobile_sdhi ee300000.mmc: timeout waiting for hardware interrupt (CMD12)"
+
+This issue involve power management of mmc device.
+Before setting clock for mmc, should resume callback for the device by
+adding function pm_runtime_get_sync.
+
+After stopping clock for mmc, should request idle for the device by
+adding function pm_runtime_put.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+---
+ drivers/mmc/host/tmio_mmc_pio.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index e7723a7..111cfd3 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -1214,14 +1214,17 @@ static void tmio_mmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
+ 	case MMC_POWER_OFF:
+ 		tmio_mmc_power_off(host);
+ 		tmio_mmc_clk_stop(host);
++		pm_runtime_put(dev);
+ 		break;
+ 	case MMC_POWER_UP:
++		pm_runtime_get_sync(dev);
+ 		tmio_mmc_set_clock(host, ios->clock);
+ 		tmio_mmc_power_on(host, ios->vdd);
+ 		tmio_mmc_clk_start(host);
+ 		tmio_mmc_set_bus_width(host, ios->bus_width);
+ 		break;
+ 	case MMC_POWER_ON:
++		pm_runtime_get_sync(dev);
+ 		tmio_mmc_set_clock(host, ios->clock);
+ 		tmio_mmc_clk_start(host);
+ 		tmio_mmc_set_bus_width(host, ios->bus_width);
+-- 
+2.7.4
+

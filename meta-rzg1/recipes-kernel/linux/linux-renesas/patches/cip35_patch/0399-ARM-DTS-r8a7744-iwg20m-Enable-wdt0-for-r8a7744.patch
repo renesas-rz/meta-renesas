@@ -1,0 +1,29 @@
+From cc27e47f4091152e1693c8e221cd367f25dcb9a2 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Thu, 25 Jan 2018 11:14:47 +0700
+Subject: [PATCH 399/628] ARM: DTS: r8a7744-iwg20m: Enable wdt0 for r8a7744
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index a94ce2b..16bd164 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -605,6 +605,10 @@
+ 	};
+ };
+ 
++&wdt0{
++	status = "okay";
++};
++
+ &pwm3 {
+ 	pinctrl-0 = <&pwm3_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

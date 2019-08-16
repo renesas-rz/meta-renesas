@@ -1,0 +1,84 @@
+From 824827facacc1a3f64bca25759cdb31974bc3723 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Thu, 16 Aug 2018 11:43:55 +0700
+Subject: [PATCH 611/628] ARM: shmobile: Add resource reset for booting
+ secondary CPU
+
+Enable the reset requests by CA7/CA15 debug resource
+control register before secondary CPU boot.
+
+Refer to commit 7910fe7dc22e ("ARM: shmobile: r8a7790:....") from
+git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git
+
+Signed-off-by: Kazumi Harada <kazumi.harada.rh@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/mach-shmobile/smp-r8a7743.c | 12 ++++++++++++
+ arch/arm/mach-shmobile/smp-r8a7744.c | 12 ++++++++++++
+ 2 files changed, 24 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/smp-r8a7743.c b/arch/arm/mach-shmobile/smp-r8a7743.c
+index 3cf4452..d2a4f6e 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7743.c
++++ b/arch/arm/mach-shmobile/smp-r8a7743.c
+@@ -25,6 +25,9 @@
+ #include "r8a7743.h"
+ #include "rcar-gen2.h"
+ 
++#define APMU		0xe6151000
++#define CA15DBGRCR	0x1180
++
+ static struct rcar_apmu_config r8a7743_apmu_config[] = {
+ 	{
+ 		.iomem = DEFINE_RES_MEM(0xe6152000, 0x188),
+@@ -39,6 +42,15 @@ static void __init r8a7743_smp_prepare_cpus(unsigned int max_cpus)
+ 				       r8a7743_apmu_config,
+ 				       ARRAY_SIZE(r8a7743_apmu_config));
+ 
++	/* setup for debug mode */
++	{
++		void __iomem *p = ioremap_nocache(APMU, 0x2000);
++		u32 val = readl_relaxed(p + CA15DBGRCR);
++
++		writel_relaxed((val | 0x01f80000), p + CA15DBGRCR);
++		iounmap(p);
++	}
++
+ 	rcar_gen2_pm_init();
+ }
+ 
+diff --git a/arch/arm/mach-shmobile/smp-r8a7744.c b/arch/arm/mach-shmobile/smp-r8a7744.c
+index 5d38cb8..fe3d421 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7744.c
++++ b/arch/arm/mach-shmobile/smp-r8a7744.c
+@@ -25,6 +25,9 @@
+ #include "r8a7744.h"
+ #include "rcar-gen2.h"
+ 
++#define APMU		0xe6151000
++#define CA15DBGRCR	0x1180
++
+ static struct rcar_apmu_config r8a7744_apmu_config[] = {
+ 	{
+ 		.iomem = DEFINE_RES_MEM(0xe6152000, 0x188),
+@@ -39,6 +42,15 @@ static void __init r8a7744_smp_prepare_cpus(unsigned int max_cpus)
+ 				       r8a7744_apmu_config,
+ 				       ARRAY_SIZE(r8a7744_apmu_config));
+ 
++	/* setup for debug mode */
++	{
++		void __iomem *p = ioremap_nocache(APMU, 0x2000);
++		u32 val = readl_relaxed(p + CA15DBGRCR);
++
++		writel_relaxed((val | 0x01f80000), p + CA15DBGRCR);
++		iounmap(p);
++	}
++
+ 	rcar_gen2_pm_init();
+ }
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,35 @@
+From da7c7d73c8d2b85e8fb496b62e6cbfbefe406bd9 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 7 Nov 2018 18:38:05 +0700
+Subject: [PATCH 181/628] ARM: DTS: iwg22m: enable usb otg
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index b936d0d..acc9442 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -315,6 +315,14 @@
+ 
+ &usbphy {
+ 	status = "okay";
++	renesas,id-gpio = <&gpio4 6 GPIO_ACTIVE_LOW>;
++	renesas,vbus-gpio = <&gpio5 25 GPIO_ACTIVE_LOW>;
++	renesas,vbus-pwr-gpio = <&gpio5 24 GPIO_ACTIVE_LOW>;
++	renesas,wakeup;
++};
++
++&pci0 {
++	status = "okay";
+ };
+ 
+ &tpu {
+-- 
+2.7.4
+

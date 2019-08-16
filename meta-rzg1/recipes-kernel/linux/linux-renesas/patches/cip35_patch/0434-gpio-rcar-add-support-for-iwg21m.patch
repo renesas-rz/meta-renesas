@@ -1,0 +1,28 @@
+From 9e48018afe45019f8c9628bbbb16ecf218623685 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Mon, 21 May 2018 17:00:38 +0700
+Subject: [PATCH 434/628] gpio-rcar: add support for iwg21m
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/gpio/gpio-rcar.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index 144bbc5..4a90007 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -389,6 +389,9 @@ static const struct of_device_id gpio_rcar_of_table[] = {
+ 		.compatible = "renesas,gpio-r8a7791",
+ 		.data = &gpio_rcar_info_gen2,
+ 	}, {
++		.compatible = "renesas,gpio-r8a7742",
++		.data = &gpio_rcar_info_gen2,
++	}, {
+ 		.compatible = "renesas,gpio-r8a7744",
+ 		.data = &gpio_rcar_info_gen2,
+ 	}, {
+-- 
+2.7.4
+

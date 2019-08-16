@@ -1,0 +1,113 @@
+From 344d47daeb81645fa24b11b4252141a33fc96133 Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Fri, 9 Mar 2018 04:39:18 +0700
+Subject: [PATCH 447/628] ARM: DTS: r8a7742: Add device node support Serial
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 81 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 81 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index ea698f9..3558350 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -353,6 +353,24 @@
+ 		status = "disabled";
+ 	};
+ 
++	scifa0: serial@e6c40000 {
++		compatible = "renesas,scifa-r8a7742", "renesas,scifa";
++		reg = <0 0xe6c40000 0 64>;
++		interrupts = <0 144 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_SCIFA0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifa1: serial@e6c50000 {
++		compatible = "renesas,scifa-r8a7742", "renesas,scifa";
++		reg = <0 0xe6c50000 0 64>;
++		interrupts = <0 145 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_SCIFA1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
+ 	scifa2: serial@e6c60000 {
+ 		compatible = "renesas,scifa-r8a7742", "renesas,scifa";
+ 		reg = <0 0xe6c60000 0 64>;
+@@ -362,6 +380,69 @@
+ 		status = "disabled";
+ 	};
+ 
++	scifb0: serial@e6c20000 {
++		compatible = "renesas,scifb-r8a7742", "renesas,scifb";
++		reg = <0 0xe6c20000 0 64>;
++		interrupts = <0 148 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_SCIFB0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifb1: serial@e6c30000 {
++		compatible = "renesas,scifb-r8a7742", "renesas,scifb";
++		reg = <0 0xe6c30000 0 64>;
++		interrupts = <0 149 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_SCIFB1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scifb2: serial@e6ce0000 {
++		compatible = "renesas,scifb-r8a7742", "renesas,scifb";
++		reg = <0 0xe6ce0000 0 64>;
++		interrupts = <0 150 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp2_clks R8A7742_CLK_SCIFB2>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif0: serial@e6e60000 {
++		compatible = "renesas,scif-r8a7742", "renesas,scif";
++		reg = <0 0xe6e60000 0 64>;
++		interrupts = <0 152 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7742_CLK_SCIF0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	scif1: serial@e6e68000 {
++		compatible = "renesas,scif-r8a7742", "renesas,scif";
++		reg = <0 0xe6e68000 0 64>;
++		interrupts = <0 153 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7742_CLK_SCIF1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	hscif0: serial@e62c0000 {
++		compatible = "renesas,hscif-r8a7742", "renesas,hscif";
++		reg = <0 0xe62c0000 0 96>;
++		interrupts = <0 154 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7742_CLK_HSCIF0>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
++	hscif1: serial@e62c8000 {
++		compatible = "renesas,hscif-r8a7742", "renesas,hscif";
++		reg = <0 0xe62c8000 0 96>;
++		interrupts = <0 155 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7742_CLK_HSCIF1>;
++		clock-names = "sci_ick";
++		status = "disabled";
++	};
++
+ 	avb: ethernet@e6800000 {
+ 		compatible = "renesas,etheravb-r8a7742";
+ 		reg = <0 0xe6800000 0 0x7bf>;
+-- 
+2.7.4
+

@@ -1,0 +1,113 @@
+From 99a81df235dfae9610dde979ffc6fac95aff6a5c Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Fri, 9 Mar 2018 04:43:15 +0700
+Subject: [PATCH 450/628] ARM: DTS: iwg21m: enable Serial module
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 62 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 35ea0e3..4557d87 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -20,7 +20,12 @@
+ 	compatible = "iw,iwg21m", "renesas,r8a7742";
+ 
+ 	aliases {
++		serial0 = &scif0;
++		serial1 = &scif1;
+ 		serial2 = &scifa2;
++		serial3 = &scifb1;
++		serial4 = &scifb2;
++		serial5 = &hscif0;
+ 		eth = &avb;
+ 	};
+ 
+@@ -130,11 +135,36 @@
+ };
+ 
+ &pfc {
++	scif0_pins: serial0 {
++		renesas,groups = "scif0_data";
++		renesas,function = "scif0";
++	};
++
++	scif1_pins: serial1 {
++		renesas,groups = "scif1_data";
++		renesas,function = "scif1";
++	};
++
+ 	scifa2_pins: serial2 {
+ 		renesas,groups = "scifa2_data_c";
+ 		renesas,function = "scifa2";
+ 	};
+ 
++	scifb1_pins: serial3 {
++		renesas,groups = "scifb1_data";
++		renesas,function = "scifb1";
++	};
++
++	scifb2_pins: serial4 {
++		renesas,groups = "scifb2_data", "scifb2_ctrl";
++		renesas,function = "scifb2";
++	};
++
++	hscif0_pins: serial5 {
++		renesas,groups = "hscif0_data", "hscif0_ctrl";
++		renesas,function = "hscif0";
++	};
++
+ 	avb_pins: avb {
+ 		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
+ 		renesas,function = "avb";
+@@ -196,12 +226,44 @@
+ 	};
+ };
+ 
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &scifa2 {
+ 	pinctrl-0 = <&scifa2_pins>;
+ 	pinctrl-names = "default";
+ 	status = "okay";
+ };
+ 
++&scifb1 {
++	pinctrl-0 = <&scifb1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scifb2 {
++	pinctrl-0 = <&scifb2_pins>;
++	pinctrl-names = "default";
++	ctsrts;
++	status = "okay";
++};
++
++&hscif0 {
++	pinctrl-0 = <&hscif0_pins>;
++	pinctrl-names = "default";
++	ctsrts;
++	status = "okay";
++};
++
+ &avb {
+ 	pinctrl-0 = <&avb_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

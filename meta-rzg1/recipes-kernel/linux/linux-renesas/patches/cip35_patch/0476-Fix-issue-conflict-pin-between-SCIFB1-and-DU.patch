@@ -1,0 +1,46 @@
+From 3dad08da976de23d5a3887c0eaf39b320456dc75 Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Fri, 9 Mar 2018 09:06:53 +0700
+Subject: [PATCH 476/628] Fix issue: conflict pin between SCIFB1 and DU
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 30bf42e..03fbc70 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -207,11 +207,6 @@
+ 		renesas,function = "tpu0";
+ 	};
+ 
+-	du_pins: du {
+-		renesas,groups = "du_rgb666", "du_sync_1", "du_clk_out_0";
+-		renesas,function = "du";
+-	};
+-
+ 	mmc1_4_pins: mmc1_4 {
+ 		renesas,groups = "mmc1_data4", "mmc1_ctrl";
+ 		renesas,function = "mmc1";
+@@ -347,15 +342,8 @@
+ };
+ 
+ &du {
+-	pinctrl-0 = <&du_pins>;
+-	pinctrl-names = "default";
+ 	status = "okay";
+ 
+-	clocks = <&mstp7_clks R8A7742_CLK_DU0>,
+-		<&mstp7_clks R8A7742_CLK_DU1>,
+-		<&mstp7_clks R8A7742_CLK_LVDS0>;
+-	clock-names = "du.0", "du.1", "lvds.0";
+-
+ 	ports {
+ 		port@0 {
+ 			 endpoint {
+-- 
+2.7.4
+

@@ -1,0 +1,141 @@
+From 29cb387aa4af5c76abf885842a4cb19be85b5b9d Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 15:41:21 +0700
+Subject: [PATCH 319/628] ARM: DTS: r8a7744-iwg20m: Enable MMC and SDHI
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 95 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 95 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index e167995..033dfb7 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -11,6 +11,7 @@
+ 
+ /dts-v1/;
+ #include "r8a7744.dtsi"
++#include <dt-bindings/gpio/gpio.h>
+ 
+ / {
+ 	model = "iwg20m";
+@@ -26,6 +27,54 @@
+ 		device_type = "memory";
+ 		reg = <0 0x40000000 0 0x40000000>;
+ 	};
++
++	reg_0p0v: 0p0v {
++		compatible = "regulator-fixed";
++		regulator-name = "0P0V";
++		regulator-min-microvolt = <0000000>;
++		regulator-max-microvolt = <0000000>;
++		regulator-always-on;
++	};
++
++	reg_2p5v: 2p5v {
++		compatible = "regulator-fixed";
++		regulator-name = "2P5V";
++		regulator-min-microvolt = <2500000>;
++		regulator-max-microvolt = <2500000>;
++		regulator-always-on;
++	};
++
++	reg_3p3v: 3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "3P3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		regulator-boot-on;
++	};
++
++	vcc_sdhi1: reg_vcc_sdhi1 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI1 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpio = <&gpio1 16 GPIO_ACTIVE_LOW>;
++	};
++
++	vccq_sdhi1: reg_vccq_sdhi1 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI1 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio2 30 GPIO_ACTIVE_LOW>;
++		gpios-states = <1>;
++		states = <3300000 1
++				  1800000 0>;
++	};
+ };
+ 
+ &extal_clk {
+@@ -57,6 +106,21 @@
+ 		renesas,groups = "hscif1_data_c", "hscif1_ctrl_c";
+ 		renesas,function = "hscif1";
+ 	};
++
++	mmcif0_pins: mmc {
++		renesas,groups = "mmc_data8_b", "mmc_ctrl";
++		renesas,function = "mmc";
++	};
++
++	sdhi0_pins: sd0 {
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
++	};
++
++	sdhi1_pins: sd2 {
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,function = "sdhi1";
++	};
+ };
+ 
+ &scif0 {
+@@ -94,4 +158,35 @@
+ 	ctsrts;
+ 
+ 	status = "okay";
++};
++
++&mmcif0 {
++	pinctrl-0 = <&mmcif0_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&reg_3p3v>;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
++
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&reg_3p3v>;
++	cd-gpios = <&gpio7 11 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi1>;
++	vqmmc-supply = <&vccq_sdhi1>;
++	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
++	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
++	status = "okay";
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

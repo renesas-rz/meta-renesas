@@ -1,0 +1,91 @@
+From 0dc8888c8cacf96d7aea34fa6fb3b6d07eb2729a Mon Sep 17 00:00:00 2001
+From: TraHT <traht@fsoft.com.vn>
+Date: Mon, 7 Jan 2019 13:37:47 +0700
+Subject: [PATCH 610/628] ARM: DTS: r8a7745: add power-domains support pwm
+
+Signed-off-by: Tung Vo <tung.vo.eb@renesas.com>
+
+Signed-off-by: TraHT <traht@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 4464fb9..7a11c60 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -217,7 +217,7 @@
+ 			compatible = "renesas,tpu-r8a7745", "renesas,tpu";
+ 			reg = <0 0xe60f0000 0 0x148>;
+ 			clocks = <&mstp3_clks R8A7745_CLK_TPU0>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <3>;
+ 			status = "disabled";
+ 		};
+@@ -885,7 +885,7 @@
+ 			compatible = "renesas,pwm-r8a7745", "renesas,pwm-rcar";
+ 			reg = <0 0xe6e30000 0 0x8>;
+ 			clocks = <&mstp5_clks R8A7745_CLK_PWM>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <2>;
+ 			status = "disabled";
+ 		};
+@@ -894,7 +894,7 @@
+ 			compatible = "renesas,pwm-r8a7745", "renesas,pwm-rcar";
+ 			reg = <0 0xe6e31000 0 0x8>;
+ 			clocks = <&mstp5_clks R8A7745_CLK_PWM>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <2>;
+ 			status = "disabled";
+ 		};
+@@ -903,7 +903,7 @@
+ 			compatible = "renesas,pwm-r8a7745", "renesas,pwm-rcar";
+ 			reg = <0 0xe6e32000 0 0x8>;
+ 			clocks = <&mstp5_clks R8A7745_CLK_PWM>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <2>;
+ 			status = "disabled";
+ 		};
+@@ -912,7 +912,7 @@
+ 			compatible = "renesas,pwm-r8a7745", "renesas,pwm-rcar";
+ 			reg = <0 0xe6e33000 0 0x8>;
+ 			clocks = <&mstp5_clks R8A7745_CLK_PWM>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <2>;
+ 			status = "disabled";
+ 		};
+@@ -921,7 +921,7 @@
+ 			compatible = "renesas,pwm-r8a7745", "renesas,pwm-rcar";
+ 			reg = <0 0xe6e34000 0 0x8>;
+ 			clocks = <&mstp5_clks R8A7745_CLK_PWM>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <2>;
+ 			status = "disabled";
+ 		};
+@@ -930,7 +930,7 @@
+ 			compatible = "renesas,pwm-r8a7745", "renesas,pwm-rcar";
+ 			reg = <0 0xe6e35000 0 0x8>;
+ 			clocks = <&mstp5_clks R8A7745_CLK_PWM>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <2>;
+ 			status = "disabled";
+ 		};
+@@ -939,7 +939,7 @@
+ 			compatible = "renesas,pwm-r8a7745", "renesas,pwm-rcar";
+ 			reg = <0 0xe6e36000 0 0x8>;
+ 			clocks = <&mstp5_clks R8A7745_CLK_PWM>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			#pwm-cells = <2>;
+ 			status = "disabled";
+ 		};
+-- 
+2.7.4
+

@@ -1,0 +1,60 @@
+From c6e6f3f539294bf9281bf8a31c80b37040c0bb46 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 11:36:57 +0700
+Subject: [PATCH 265/628] ARM: dts: iwg23s: Add SPI support
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 8494fcf..b2049d5 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -185,6 +185,11 @@
+ 		renesas,function = "i2c4";
+ 	};
+ 
++	qspi0_pins: spi0 {
++		renesas,groups = "qspi0_ctrl", "qspi0_data2";
++		renesas,function = "qspi0";
++	};
++
+ 	du0_pins: du0 {
+ 		renesas,groups = "du0_rgb888", "du0_clk0_out", "du0_sync",
+ 						"du0_cde", "du0_disp";
+@@ -295,6 +300,27 @@
+ 	};
+ };
+ 
++&qspi0 {
++	pinctrl-0 = <&qspi0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "sst,sst25vf016b";
++		reg = <0>;
++		spi-max-frequency = <50000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		m25p,fast-read;
++		spi-cpol;
++		spi-cpha;
++
++	};
++};
++
+ &du {
+ 	pinctrl-0 = <&du0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

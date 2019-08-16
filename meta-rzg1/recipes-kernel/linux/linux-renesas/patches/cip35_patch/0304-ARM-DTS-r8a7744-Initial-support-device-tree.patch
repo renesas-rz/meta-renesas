@@ -1,0 +1,250 @@
+From 8450eb8832a3d18e3ecb75cc62037035bdd67309 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Tue, 13 Aug 2019 15:39:37 +0700
+Subject: [PATCH 304/628] ARM: DTS: r8a7744: Initial support device tree
+
+Add initial support for the r8a7744 SoC including:
+- Single Cortex-A15 CPU Core
+- GIC
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi         | 59 ++++++++++++++++++++++++++++++++++
+ arch/arm/mach-shmobile/Kconfig         |  5 +++
+ arch/arm/mach-shmobile/Makefile        |  2 ++
+ arch/arm/mach-shmobile/r8a7744.h       |  6 ++++
+ arch/arm/mach-shmobile/setup-r8a7744.c | 38 ++++++++++++++++++++++
+ arch/arm/mach-shmobile/smp-r8a7744.c   | 53 ++++++++++++++++++++++++++++++
+ 6 files changed, 163 insertions(+)
+ create mode 100644 arch/arm/boot/dts/r8a7744.dtsi
+ create mode 100644 arch/arm/mach-shmobile/r8a7744.h
+ create mode 100644 arch/arm/mach-shmobile/setup-r8a7744.c
+ create mode 100644 arch/arm/mach-shmobile/smp-r8a7744.c
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+new file mode 100644
+index 0000000..6de325f
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -0,0 +1,59 @@
++/*
++ * Device Tree Source for the r8a7744 SoC
++ *
++ * Copyright (C) 2013-2015 Renesas Electronics Corporation
++ * Copyright (C) 2013-2014 Renesas Solutions Corp.
++ *
++ * This file is licensed under the terms of the GNU General Public License
++ * version 2.  This program is licensed "as is" without any warranty of any
++ * kind, whether express or implied.
++ */
++
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++
++/ {
++	compatible = "renesas,r8a7744";
++	interrupt-parent = <&gic>;
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	cpus {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		cpu0: cpu@0 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a15";
++			reg = <0>;
++			clock-frequency = <1500000000>;
++			voltage-tolerance = <1>; /* 1% */
++			clock-latency = <300000>; /* 300 us */
++
++			/* kHz - uV - OPPs unknown yet */
++			operating-points = <1500000 1000000>,
++					   <1312500 1000000>,
++					   <1125000 1000000>,
++					   < 937500 1000000>,
++					   < 750000 1000000>,
++					   < 375000 1000000>;
++		};
++		cpu1: cpu@1 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a15";
++			reg = <1>;
++			clock-frequency = <1500000000>;
++		};
++	};
++	gic: interrupt-controller@f1001000 {
++		compatible = "arm,gic-400";
++		#interrupt-cells = <3>;
++		#address-cells = <0>;
++		interrupt-controller;
++		reg = <0 0xf1001000 0 0x1000>,
++		      <0 0xf1002000 0 0x1000>,
++		      <0 0xf1004000 0 0x2000>,
++		      <0 0xf1006000 0 0x2000>;
++		interrupts = <1 9 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
++	};
++};
+diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
+index a9abe7e..6854b1c 100644
+--- a/arch/arm/mach-shmobile/Kconfig
++++ b/arch/arm/mach-shmobile/Kconfig
+@@ -97,6 +97,11 @@ config ARCH_R8A7791
+ 	select ARCH_RCAR_GEN2
+ 	select I2C
+ 
++config ARCH_R8A7744
++	bool "RZ/G1N (R8A77440)"
++	select ARCH_RCAR_GEN2
++	select I2C
++
+ config ARCH_R8A7793
+ 	bool "R-Car M2-N (R8A7793)"
+ 	select ARCH_RCAR_GEN2
+diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
+index 02824b7..49710bf 100644
+--- a/arch/arm/mach-shmobile/Makefile
++++ b/arch/arm/mach-shmobile/Makefile
+@@ -14,6 +14,7 @@ obj-$(CONFIG_ARCH_R8A7779)	+= setup-r8a7779.o pm-r8a7779.o
+ obj-$(CONFIG_ARCH_R8A7790)	+= setup-r8a7790.o
+ obj-$(CONFIG_ARCH_R8A7791)	+= setup-r8a7791.o
+ obj-$(CONFIG_ARCH_R8A7745)      += setup-r8a7745.o sgx-r8a7745-quirk.o
++obj-$(CONFIG_ARCH_R8A7744)	+= setup-r8a7744.o
+ obj-$(CONFIG_ARCH_EMEV2)	+= setup-emev2.o
+ obj-$(CONFIG_ARCH_R7S72100)	+= setup-r7s72100.o
+ 
+@@ -34,6 +35,7 @@ smp-$(CONFIG_ARCH_SH73A0)	+= smp-sh73a0.o headsmp-scu.o platsmp-scu.o
+ smp-$(CONFIG_ARCH_R8A7779)	+= smp-r8a7779.o headsmp-scu.o platsmp-scu.o
+ smp-$(CONFIG_ARCH_R8A7790)	+= smp-r8a7790.o
+ smp-$(CONFIG_ARCH_R8A7791)	+= smp-r8a7791.o
++smp-$(CONFIG_ARCH_R8A7744)	+= smp-r8a7744.o
+ smp-$(CONFIG_ARCH_EMEV2)	+= smp-emev2.o headsmp-scu.o platsmp-scu.o
+ 
+ # PM objects
+diff --git a/arch/arm/mach-shmobile/r8a7744.h b/arch/arm/mach-shmobile/r8a7744.h
+new file mode 100644
+index 0000000..adef144b
+--- /dev/null
++++ b/arch/arm/mach-shmobile/r8a7744.h
+@@ -0,0 +1,6 @@
++#ifndef __ASM_R8A7744_H__
++#define __ASM_R8A7744_H__
++
++extern struct smp_operations r8a7744_smp_ops;
++
++#endif /* __ASM_R8A7744_H__ */
+\ No newline at end of file
+diff --git a/arch/arm/mach-shmobile/setup-r8a7744.c b/arch/arm/mach-shmobile/setup-r8a7744.c
+new file mode 100644
+index 0000000..b092372
+--- /dev/null
++++ b/arch/arm/mach-shmobile/setup-r8a7744.c
+@@ -0,0 +1,38 @@
++/*
++ * r8a7744 processor support
++ *
++ * Copyright (C) 2013  Renesas Electronics Corporation
++ * Copyright (C) 2013  Renesas Solutions Corp.
++ * Copyright (C) 2013  Magnus Damm
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/init.h>
++
++#include <asm/mach/arch.h>
++
++#include "common.h"
++#include "r8a7744.h"
++#include "rcar-gen2.h"
++
++static const char *const r8a7744_boards_compat_dt[] __initconst = {
++	"renesas,r8a7744",
++	NULL,
++};
++
++DT_MACHINE_START(R8A7744_DT, "Generic R8A7744 (Flattened Device Tree)")
++	.smp		= smp_ops(r8a7744_smp_ops),
++	.init_early	= shmobile_init_delay,
++	.init_time	= rcar_gen2_timer_init,
++	.init_late	= shmobile_init_late,
++	.reserve	= rcar_gen2_reserve,
++	.dt_compat	= r8a7744_boards_compat_dt,
++MACHINE_END
+\ No newline at end of file
+diff --git a/arch/arm/mach-shmobile/smp-r8a7744.c b/arch/arm/mach-shmobile/smp-r8a7744.c
+new file mode 100644
+index 0000000..5d38cb8
+--- /dev/null
++++ b/arch/arm/mach-shmobile/smp-r8a7744.c
+@@ -0,0 +1,53 @@
++/*
++ * SMP support for r8a7744
++ *
++ * Copyright (C) 2013 Renesas Solutions Corp.
++ * Copyright (C) 2013 Magnus Damm
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/smp.h>
++#include <linux/io.h>
++
++#include <asm/smp_plat.h>
++
++#include "common.h"
++#include "platsmp-apmu.h"
++#include "r8a7744.h"
++#include "rcar-gen2.h"
++
++static struct rcar_apmu_config r8a7744_apmu_config[] = {
++	{
++		.iomem = DEFINE_RES_MEM(0xe6152000, 0x188),
++		.cpus = { 0, 1 },
++	}
++};
++
++static void __init r8a7744_smp_prepare_cpus(unsigned int max_cpus)
++{
++	/* let APMU code install data related to shmobile_boot_vector */
++	shmobile_smp_apmu_prepare_cpus(max_cpus,
++				       r8a7744_apmu_config,
++				       ARRAY_SIZE(r8a7744_apmu_config));
++
++	rcar_gen2_pm_init();
++}
++
++struct smp_operations r8a7744_smp_ops __initdata = {
++	.smp_prepare_cpus	= r8a7744_smp_prepare_cpus,
++	.smp_boot_secondary	= shmobile_smp_apmu_boot_secondary,
++#ifdef CONFIG_HOTPLUG_CPU
++	.cpu_can_disable	= shmobile_smp_cpu_can_disable,
++	.cpu_die		= shmobile_smp_apmu_cpu_die,
++	.cpu_kill		= shmobile_smp_apmu_cpu_kill,
++#endif
++};
+\ No newline at end of file
+-- 
+2.7.4
+

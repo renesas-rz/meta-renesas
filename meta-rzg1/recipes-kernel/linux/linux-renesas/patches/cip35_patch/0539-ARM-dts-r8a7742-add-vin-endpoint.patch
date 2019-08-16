@@ -1,0 +1,89 @@
+From f7ba04069bf1656a73a565ade47e3931f6b77993 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 23 Apr 2018 16:14:51 +0700
+Subject: [PATCH 539/628] ARM: dts: r8a7742: add vin endpoint
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 64 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 64 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 0b65944..8c71190 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -719,6 +719,70 @@
+ 	shared-pin;
+ };
+ 
++&vin0 {
++	status = "okay";
++	pinctrl-0 = <&vin0_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin0ep: endpoint {
++			remote-endpoint = <&ov7725_0 >;
++			bus-width = <8>;
++		};
++	};
++};
++
++&vin1 {
++	status = "okay";
++	pinctrl-0 = <&vin1_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin1ep: endpoint {
++			remote-endpoint = <&ov7725_1>;
++			bus-width = <8>;
++		};
++	};
++};
++
++&vin2 {
++	status = "okay";
++	pinctrl-0 = <&vin2_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin2ep: endpoint {
++			remote-endpoint = <&ov7725_2>;
++			bus-width = <8>;
++		};
++	};
++};
++
++&vin3 {
++	status = "okay";
++	pinctrl-0 = <&vin3_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin3ep: endpoint {
++			remote-endpoint = <&ov7725_3>;
++			bus-width = <8>;
++		};
++	};
++};
++
+ &can0 {
+ 	pinctrl-0 = <&can0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

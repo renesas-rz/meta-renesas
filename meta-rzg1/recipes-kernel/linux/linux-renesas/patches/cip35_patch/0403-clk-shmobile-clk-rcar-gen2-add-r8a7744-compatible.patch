@@ -1,0 +1,31 @@
+From 1f0ab7748ca6f4278020d8c52a68233eaa5ee523 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNv25@fsoft.com.vn>
+Date: Thu, 12 Apr 2018 00:44:36 +0700
+Subject: [PATCH 403/628] clk: shmobile: clk-rcar-gen2: add r8a7744 compatible
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/clk/shmobile/clk-rcar-gen2.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 6f06399..3b2db3f 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -358,6 +358,11 @@ static const struct of_device_id cpg_of_match[] = {
+ 	},
+ 
+ 	{
++		.compatible = "renesas,r8a7744-cpg-clocks",
++		.data = &var_pll0_ratio,
++	},
++
++	{
+ 		.compatible = "renesas,r8a7792-cpg-clocks",
+ 		.data = &fix_pll0_ratio,
+ 	},
+-- 
+2.7.4
+

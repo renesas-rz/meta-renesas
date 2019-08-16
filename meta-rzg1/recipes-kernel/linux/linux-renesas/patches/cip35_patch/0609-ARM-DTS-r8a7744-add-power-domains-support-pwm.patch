@@ -1,0 +1,81 @@
+From 17b8656985833207549b6aba732c1fc021c2ccab Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@renesas.com>
+Date: Tue, 7 Aug 2018 05:54:35 +0700
+Subject: [PATCH 609/628] ARM: DTS: r8a7744: add power-domains support pwm
+
+Signed-off-by: Tung Vo <tung.vo.eb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 11eef0c..dba6ca8 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -1633,6 +1633,7 @@
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e30000 0 0x8>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_PWM>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <2>;
+ 	};
+@@ -1641,6 +1642,7 @@
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e31000 0 0x8>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_PWM>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <2>;
+ 	};
+@@ -1649,6 +1651,7 @@
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e32000 0 0x8>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_PWM>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <2>;
+ 	};
+@@ -1657,6 +1660,7 @@
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e33000 0 0x8>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_PWM>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <2>;
+ 	};
+@@ -1665,6 +1669,7 @@
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e34000 0 0x8>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_PWM>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <2>;
+ 	};
+@@ -1673,6 +1678,7 @@
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e35000 0 0x8>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_PWM>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <2>;
+ 	};
+@@ -1681,6 +1687,7 @@
+ 		compatible = "renesas,pwm-rcar";
+ 		reg = <0 0xe6e36000 0 0x8>;
+ 		clocks = <&mstp5_clks R8A7744_CLK_PWM>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <2>;
+ 	};
+@@ -1690,6 +1697,7 @@
+ 		reg = <0 0xe60f0000 0 0x40>;
+ 		interrupts = <0 135 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_TPU0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 		#pwm-cells = <3>;
+ 	};
+-- 
+2.7.4
+

@@ -1,0 +1,58 @@
+From dadf519550d05a3da298f53f64933af8a63829c1 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 14:13:49 +0700
+Subject: [PATCH 546/628] ARM: DTS: r8a7743: add description for tmu2 and tmu3
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: LiNTC <lintc@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index 343104b..c810d25 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -266,6 +266,37 @@
+ 			status = "disabled";
+ 		};
+ 
++		tmu2: timer@fff70000 {
++			compatible = "renesas,tmu-r8a7743", "renesas,tmu";
++			reg = <0 0xfff70000 0 0x30>;
++			interrupts = <0 303 IRQ_TYPE_LEVEL_HIGH>,
++				<0 304 IRQ_TYPE_LEVEL_HIGH>,
++				<0 305 IRQ_TYPE_LEVEL_HIGH>,
++				<0 306 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_TMU2>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7743_PD_ALWAYS_ON>;
++
++			#renesas,channels = <3>;
++
++			status = "disabled";
++		};
++
++		tmu3: timer@fff80000 {
++			compatible = "renesas,tmu-r8a7743", "renesas,tmu";
++			reg = <0 0xfff80000 0 0x30>;
++			interrupts = <0 131 IRQ_TYPE_LEVEL_HIGH>,
++				<0 132 IRQ_TYPE_LEVEL_HIGH>,
++				<0 133 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_TMU3>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7743_PD_ALWAYS_ON>;
++
++			#renesas,channels = <3>;
++
++			status = "disabled";
++		};
++
+ 		irqc: interrupt-controller@e61c0000 {
+ 			compatible = "renesas,irqc-r8a7743", "renesas,irqc";
+ 			#interrupt-cells = <2>;
+-- 
+2.7.4
+

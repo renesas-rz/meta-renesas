@@ -1,0 +1,157 @@
+From c6232d46555c0ae76e6954a8ce305569d832bb8f Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Fri, 19 Jul 2019 16:13:19 +0700
+Subject: [PATCH 215/628] ARM: dts: Add MMC and SDHI devices for iwg23s DTS
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 79 +++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/r8a77470.dtsi           |  3 +-
+ 2 files changed, 81 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 2bfa66f..768a1eb 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -7,6 +7,7 @@
+ 
+ /dts-v1/;
+ #include "r8a77470.dtsi"
++#include <dt-bindings/gpio/gpio.h>
+ / {
+ 	model = "iWave iW-RainboW-G23S single board computer based on RZ/G1C";
+ 	compatible = "iwave,g23s", "renesas,r8a77470";
+@@ -31,6 +32,11 @@
+ 		reg = <0 0x40000000 0 0x20000000>;
+ 	};
+ 
++	lbsc {
++		#address-cells = <1>;
++		#size-cells = <1>;
++	};
++
+ 	reg_1p0v: 1p0v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "1P0V";
+@@ -39,6 +45,47 @@
+ 		regulator-boot-on;
+ 		regulator-always-on;
+ 	};
++
++	vcc_sdhi2: regulator@2 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI2 Vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++
++		enable-active-high;
++	};
++
++	vccq_sdhi2: regulator@3 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI2 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		gpios = <&gpio2 24 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			1800000 0>;
++	};
++
++	fixedregulator3v3: fixedregulator@0 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++		enable-active-high;
++	};
++
++	fixedregulator1v8: fixedregulator@1 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
+ };
+ 
+ &cpu0 {
+@@ -101,6 +148,16 @@
+ 		renesas,groups = "hscif2_data", "hscif2_clk", "hscif2_ctrl";
+ 		renesas,function = "hscif2";
+ 	};
++
++	sdhi2_pins: sd1 {
++		renesas,groups = "sdhi2_data4", "sdhi2_ctrl", "sdhi2_cd";
++		renesas,function = "sdhi2";
++	};
++
++	mmc_pins: mmc {
++		renesas,groups = "mmc_data8", "mmc_ctrl";
++		renesas,function = "mmc";
++	};
+ };
+ 
+ &scif1 {
+@@ -135,6 +192,28 @@
+ 	status = "okay";
+ };
+ 
++&sdhi2 {
++	pinctrl-0 = <&sdhi2_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&vcc_sdhi2>;
++	vqmmc-supply = <&vccq_sdhi2>;
++	bus-width = <4>;
++	cd-gpios = <&gpio4 20 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&mmc {
++	pinctrl-0 = <&mmc_pins>;
++	pinctrl-names = "default";
++
++	vmmc-supply = <&fixedregulator3v3>;
++	vqmmc-supply = <&fixedregulator3v3>;
++	cap-mmc-highspeed;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
+ &hscif2 {
+ 	pinctrl-0 = <&hscif2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 190d5bc..0c2fc2b 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -454,6 +454,7 @@
+ 			reg = <0 0xee160000 0 0x200>;
+ 			interrupts = <0 167 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp3_clks R8A77470_CLK_SDHI2>;
++			renesas,clk-rate = <78000000>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -463,7 +464,7 @@
+ 			interrupts = <0 166 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp3_clks R8A77470_CLK_SDHI1>;
+ 			reg-io-width = <4>;
+-			max-frequency = <97500000>;
++			renesas,clk-rate = <97500000>;
+ 			status = "disabled";
+ 		};
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,46 @@
+From e4c43a46c38efab23ae4455bad03f2018ecd2953 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 17:42:52 +0700
+Subject: [PATCH 346/628] ARM: DTS: r8a7744: add DMA nodes for i2c
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 4c9d5ff..feb9839 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -388,6 +388,8 @@
+ 		reg = <0 0xe60b0000 0 0x425>;
+ 		interrupts = <0 173 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp9_clks R8A7744_CLK_IICDVFS>;
++		dmas = <&dmac0 0x77>, <&dmac0 0x78>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -399,6 +401,8 @@
+ 		reg = <0 0xe6500000 0 0x425>;
+ 		interrupts = <0 174 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_IIC0>;
++		dmas = <&dmac0 0x61>, <&dmac0 0x62>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+@@ -410,6 +414,8 @@
+ 		reg = <0 0xe6510000 0 0x425>;
+ 		interrupts = <0 175 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_IIC1>;
++		dmas = <&dmac0 0x65>, <&dmac0 0x66>;
++		dma-names = "tx", "rx";
+ 		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+-- 
+2.7.4
+

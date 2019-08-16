@@ -1,0 +1,35 @@
+From e6253eef76553a3e94284182dc54b8bffe44e497 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 14 Mar 2018 17:03:59 +0700
+Subject: [PATCH 423/628] ARM: DTS: r8a7742: add description for wdt0
+
+This patch add a device node to dtsi to describe for watchdog timer
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index f9b3d2c..bea216a 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -164,6 +164,14 @@
+ 		status = "disabled";
+ 	};
+ 
++	wdt0: watchdog@e6020000 {
++		compatible = "renesas,r8a7742-wdt", "renesas,rcar-gen2-wdt";
++		reg = <0 0xe6020000 0 0x0c>;
++		clocks = <&mstp4_clks R8A7742_CLK_RWDT>;
++		timeout-sec = <60>;
++		status = "disabled";
++	};
++
+ 	clocks {
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+-- 
+2.7.4
+

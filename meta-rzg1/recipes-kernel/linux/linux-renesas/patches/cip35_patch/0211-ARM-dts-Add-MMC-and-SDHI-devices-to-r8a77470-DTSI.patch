@@ -1,0 +1,60 @@
+From fbb1fc36e22d692679f0c06f94a4253771121cb2 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Wed, 17 Jul 2019 18:02:08 +0700
+Subject: [PATCH 211/628] ARM: dts: Add MMC and SDHI devices to r8a77470 DTSI
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index ca884be..190d5bc 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -433,6 +433,40 @@
+ 			status = "disabled";
+ 		};
+ 
++		sdhi0: sd@ee100000 {
++			compatible = "renesas,sdhi-r8a77470";
++			reg = <0 0xee100000 0 0x200>;
++			interrupts = <0 165 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A77470_CLK_SDHI0>;
++			status = "disabled";
++		};
++
++		sdhi1: sd@ee300000 {
++			compatible = "renesas,sdhi-r8a77470";
++			reg = <0 0xee300000 0 0x2000>;
++			interrupts = <0 166 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A77470_CLK_SDHI1>;
++			status = "disabled";
++		};
++
++		sdhi2: sd@ee160000 {
++			compatible = "renesas,sdhi-r8a77470";
++			reg = <0 0xee160000 0 0x200>;
++			interrupts = <0 167 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A77470_CLK_SDHI2>;
++			status = "disabled";
++		};
++
++		mmc: mmc@ee300000 {
++			compatible = "renesas,sdhi-r8a77470";
++			reg = <0 0xee300000 0 0x2000>;
++			interrupts = <0 166 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp3_clks R8A77470_CLK_SDHI1>;
++			reg-io-width = <4>;
++			max-frequency = <97500000>;
++			status = "disabled";
++		};
++
+ 		gic: interrupt-controller@f1001000 {
+ 			compatible = "arm,gic-400";
+ 			#interrupt-cells = <3>;
+-- 
+2.7.4
+

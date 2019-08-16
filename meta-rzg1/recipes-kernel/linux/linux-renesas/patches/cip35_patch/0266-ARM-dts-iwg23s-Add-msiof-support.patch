@@ -1,0 +1,51 @@
+From bb97920648f1f01b72fb02109f715eef22a6b5e8 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 11:40:18 +0700
+Subject: [PATCH 266/628] ARM: dts: iwg23s: Add msiof support
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index b2049d5..7d93fa1 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -190,6 +190,11 @@
+ 		renesas,function = "qspi0";
+ 	};
+ 
++	msiof2_pins: spi4 {
++		renesas,groups = "msiof2_clk_a", "msiof2_sync_a", "msiof2_ss1_a", "msiof2_rx_a", "msiof2_tx_a";
++		renesas,function = "msiof2";
++	};
++
+ 	du0_pins: du0 {
+ 		renesas,groups = "du0_rgb888", "du0_clk0_out", "du0_sync",
+ 						"du0_cde", "du0_disp";
+@@ -321,6 +326,18 @@
+ 	};
+ };
+ 
++&msiof2 {
++	pinctrl-0 = <&msiof2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	spidev@0 {
++		compatible = "renesas,spidev-r8a77470";
++		reg = <0>;
++		spi-max-frequency = <1000000>;
++	};
++};
++
+ &du {
+ 	pinctrl-0 = <&du0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

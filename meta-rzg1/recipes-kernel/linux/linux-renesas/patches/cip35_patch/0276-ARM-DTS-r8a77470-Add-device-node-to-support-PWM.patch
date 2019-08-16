@@ -1,0 +1,53 @@
+From fd2dcc312ad0799f4b888ef63f9f1a3839e9e7d2 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 12:16:28 +0700
+Subject: [PATCH 276/628] ARM: DTS: r8a77470: Add device node to support PWM
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 3e37b63..bc1fa73 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -767,6 +767,33 @@
+ 			power-domains = <&cpg_clocks>;
+ 		};
+ 
++		pwm0: pwm@e6e30000 {
++			compatible = "renesas,pwm-r8a77470";
++			reg = <0 0xe6e30000 0 0x8>;
++			#pwm-cells = <2>;
++			clocks = <&mstp5_clks R8A77470_CLK_PWM>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++			status = "disabled";
++		};
++
++		pwm2: pwm@e6e32000 {
++			compatible = "renesas,pwm-r8a77470";
++			reg = <0 0xe6e32000 0 0x8>;
++			#pwm-cells = <2>;
++			clocks = <&mstp5_clks R8A77470_CLK_PWM>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++			status = "disabled";
++		};
++
++		pwm6: pwm@e6e36000 {
++			compatible = "renesas,pwm-r8a77470";
++			reg = <0 0xe6e36000 0 0x8>;
++			#pwm-cells = <2>;
++			clocks = <&mstp5_clks R8A77470_CLK_PWM>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++			status = "disabled";
++		};
++
+ 		clocks {
+ 			#address-cells = <2>;
+ 			#size-cells = <2>;
+-- 
+2.7.4
+

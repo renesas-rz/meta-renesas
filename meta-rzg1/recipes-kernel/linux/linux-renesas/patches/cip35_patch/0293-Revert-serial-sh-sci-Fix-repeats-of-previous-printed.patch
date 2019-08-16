@@ -1,0 +1,98 @@
+From a0da215ecb92ea0fee891d307e69c3f4905fb37d Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Tue, 5 Jun 2018 09:43:44 +0700
+Subject: [PATCH 293/628] Revert "serial: sh-sci: Fix repeats of previous
+ printed messages in rebooting"
+
+This reverts commit <19fb7a990d46b2595c5c968740e85f3fd0f3666f>.
+
+Revert this commit due to in CIP version, struct sci_port does not have element "sg_tx"
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+---
+ drivers/tty/serial/sh-sci.c | 21 ++++-----------------
+ drivers/tty/serial/sh-sci.h |  5 -----
+ 2 files changed, 4 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 9521a9c..c07f31c 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -116,7 +116,6 @@ struct sci_port {
+ 	struct work_struct		work_tx;
+ 	struct timer_list		rx_timer;
+ 	unsigned int			rx_timeout;
+-	int                             circ_flush_flag;
+ #endif
+ 
+ 	bool autorts;
+@@ -1041,11 +1040,10 @@ static void sci_dma_tx_complete(void *arg)
+ 
+ 	spin_lock_irqsave(&port->lock, flags);
+ 
+-	if (s->circ_flush_flag == SCI_CIRC_FLSH_OFF) {
+-		xmit->tail += sg_dma_len(&s->sg_tx);
+-		mit->tail &= UART_XMIT_SIZE - 1;
+-		port->icount.tx += sg_dma_len(&s->sg_tx);
+-	}
++	xmit->tail += s->tx_dma_len;
++	xmit->tail &= UART_XMIT_SIZE - 1;
++
++	port->icount.tx += s->tx_dma_len;
+ 
+ 	if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
+ 		uart_write_wakeup(port);
+@@ -1246,7 +1244,6 @@ static void work_fn_tx(struct work_struct *work)
+ 	 * consistent xmit buffer state.
+ 	 */
+ 	spin_lock_irq(&port->lock);
+-	s->circ_flush_flag = SCI_CIRC_FLSH_OFF;
+ 	buf = s->tx_dma_addr + (xmit->tail & (UART_XMIT_SIZE - 1));
+ 	s->tx_dma_len = min_t(unsigned int,
+ 		CIRC_CNT(xmit->head, xmit->tail, UART_XMIT_SIZE),
+@@ -2090,15 +2087,6 @@ static void sci_baud_calc_hscif(unsigned int bps, unsigned long freq,
+ 	}
+ }
+ 
+-static void sci_flush_buffer(struct uart_port *port)
+-{
+-#ifdef CONFIG_SERIAL_SH_SCI_DMA
+-	struct sci_port *s = to_sci_port(port);
+-
+-	s->circ_flush_flag = SCI_CIRC_FLSH_ON;
+-#endif
+-}
+-
+ static void sci_reset(struct uart_port *port)
+ {
+ 	const struct plat_sci_reg *reg;
+@@ -2396,7 +2384,6 @@ static struct uart_ops sci_uart_ops = {
+ 	.break_ctl	= sci_break_ctl,
+ 	.startup	= sci_startup,
+ 	.shutdown	= sci_shutdown,
+-	.flush_buffer	= sci_flush_buffer,
+ 	.set_termios	= sci_set_termios,
+ 	.pm		= sci_pm,
+ 	.type		= sci_type,
+diff --git a/drivers/tty/serial/sh-sci.h b/drivers/tty/serial/sh-sci.h
+index 7fd6436..f070a44 100644
+--- a/drivers/tty/serial/sh-sci.h
++++ b/drivers/tty/serial/sh-sci.h
+@@ -6,11 +6,6 @@
+ #define SCI_MAJOR		204
+ #define SCI_MINOR_START		8
+ 
+-#ifdef CONFIG_SERIAL_SH_SCI_DMA
+-#define SCI_CIRC_FLSH_OFF      0
+-#define SCI_CIRC_FLSH_ON       1
+-#endif
+-
+ /*
+  * SCI register subset common for all port types.
+  * Not all registers will exist on all parts.
+-- 
+2.7.4
+

@@ -1,0 +1,50 @@
+From eac4e7fbfbb6c84c9b4dffeef36e29333009c711 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Thu, 10 May 2018 18:37:37 +0700
+Subject: [PATCH 570/628] ARM: DTS: r8a7742: remove cpu enable method as apmu
+
+There was issue to parse phandle of A7-cpus from device tree.
+That made the A7-CPUs can not boot up.
+Remove APMU enable-method in device tree and use APMU configuration in
+smp-r8a7742.c can fix the issue.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index bd4b097..5dbb50e 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -41,7 +41,6 @@
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
+-		enable-method = "renesas,apmu";
+ 
+ 		cpu0: cpu@0 {
+ 			device_type = "cpu";
+@@ -119,18 +118,6 @@
+ 		};
+ 	};
+ 
+-	apmu@e6151000 {
+-		compatible = "renesas,r8a7742-apmu", "renesas,apmu";
+-		reg = <0 0xe6151000 0 0x188>;
+-		cpus = <&cpu4 &cpu5 &cpu6 &cpu7>;
+-	};
+-
+-	apmu@e6152000 {
+-		compatible = "renesas,r8a7742-apmu", "renesas,apmu";
+-		reg = <0 0xe6152000 0 0x188>;
+-		cpus = <&cpu0 &cpu1 &cpu2 &cpu3>;
+-	};
+-
+ 	gic: interrupt-controller@f1001000 {
+ 		compatible = "arm,gic-400";
+ 		#interrupt-cells = <3>;
+-- 
+2.7.4
+

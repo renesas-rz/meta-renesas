@@ -1,0 +1,35 @@
+From a959658620fc70df74816fae7867ed4258e02dc5 Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 6 Apr 2018 10:39:29 +0700
+Subject: [PATCH 467/628] ARM: DTS: r8a7742: add power-domains to support
+ USB2.0
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 6822d23..9f61f76 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -620,6 +620,7 @@
+ 		clock-names = "usbhs";
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 
+ 		usb1: usb-channel@1 {
+@@ -635,6 +636,7 @@
+ 		reg = <0 0xee0b0000 0 0xc00>,
+ 		      <0 0xee0a0000 0 0x1100>;
+ 		interrupts = <0 112 IRQ_TYPE_LEVEL_HIGH>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 
+ 		bus-range = <1 1>;
+-- 
+2.7.4
+

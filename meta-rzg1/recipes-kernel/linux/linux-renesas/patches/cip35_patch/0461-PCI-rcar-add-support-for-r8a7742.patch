@@ -1,0 +1,27 @@
+From 7f47af0b92c729a17d3cb1d16575e436fc6e83e4 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 13:35:56 +0700
+Subject: [PATCH 461/628] PCI: rcar: add support for r8a7742
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ drivers/pci/host/pci-rcar-gen2.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index d587d0d..93c93af 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -362,6 +362,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ static struct of_device_id rcar_pci_of_match[] = {
+ 	{ .compatible = "renesas,pci-r8a7790", },
+ 	{ .compatible = "renesas,pci-r8a7791", },
++	{ .compatible = "renesas,pci-r8a7742", },
+ 	{ .compatible = "renesas,pci-r8a7794", },
+ 	{ .compatible = "renesas,pci-r8a7745", },
+ 	{ .compatible = "renesas,pci-r8a7744", },
+-- 
+2.7.4
+

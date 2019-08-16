@@ -1,0 +1,37 @@
+From 7c880158dfce46b4af80a06d8c1e2d0eeeef74f1 Mon Sep 17 00:00:00 2001
+From: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Date: Sat, 10 Mar 2018 04:49:35 +0700
+Subject: [PATCH 456/628] ARM: DTS: r8a7742: add pcie to dts
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 5318acc..22904d0 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -27,6 +27,8 @@
+ 		serial4 = &scifb2;
+ 		serial5 = &hscif0;
+ 		eth = &avb;
++		pciec   = &pciec;
++		pcie_clk = &pcie_bus_clk;
+ 	};
+ 
+ 	memory@40000000 {
+@@ -431,3 +433,9 @@
+ 		line-name = "enable-qspi";
+ 	};
+ };
++
++&pcie_bus_clk {
++};
++
++&pciec {
++};
+-- 
+2.7.4
+

@@ -1,0 +1,72 @@
+From 97e65da215ffabc39cc8de37a6885c9782bc8591 Mon Sep 17 00:00:00 2001
+From: khatran <kha.tran.px@rvc.renesas.com>
+Date: Mon, 23 Apr 2018 16:37:57 +0700
+Subject: [PATCH 542/628] ARM: DTS: r8a7742: add description for tmu1, tmu2 and
+ tmu3
+
+Signed-off-by: khatran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 46 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 7abd3ec..bd4b097 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -435,6 +435,52 @@
+ 		status = "disabled";
+ 	};
+ 
++	tmu1: timer@fff60000 {
++		compatible = "renesas,tmu-r8a7742", "renesas,tmu";
++		reg = <0 0xfff60000 0 0x30>;
++		interrupts = <0 128 IRQ_TYPE_LEVEL_HIGH>,
++				<0 129 IRQ_TYPE_LEVEL_HIGH>,
++				<0 130 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_TMU1>;
++		clock-names = "fck";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++
++		#renesas,channels = <3>;
++
++		status = "disabled";
++	};
++
++	tmu2: timer@fff70000 {
++		compatible = "renesas,tmu-r8a7742", "renesas,tmu";
++		reg = <0 0xfff70000 0 0x30>;
++		interrupts = <0 303 IRQ_TYPE_LEVEL_HIGH>,
++				<0 304 IRQ_TYPE_LEVEL_HIGH>,
++				<0 305 IRQ_TYPE_LEVEL_HIGH>,
++				<0 306 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_TMU2>;
++		clock-names = "fck";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++
++		#renesas,channels = <3>;
++
++		status = "disabled";
++	};
++
++	tmu3: timer@fff80000 {
++		compatible = "renesas,tmu-r8a7742", "renesas,tmu";
++		reg = <0 0xfff80000 0 0x30>;
++		interrupts = <0 131 IRQ_TYPE_LEVEL_HIGH>,
++				<0 132 IRQ_TYPE_LEVEL_HIGH>,
++				<0 133 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_TMU3>;
++		clock-names = "fck";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++
++		#renesas,channels = <3>;
++
++		status = "disabled";
++	};
++
+ 	pfc: pfc@e6060000 {
+ 		compatible = "renesas,pfc-r8a7742";
+ 		reg = <0 0xe6060000 0 0x250>;
+-- 
+2.7.4
+

@@ -1,0 +1,29 @@
+From 2bd0d8a86eba0c2d64c1d02e4d9b941859358c6c Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 8 Nov 2018 09:28:47 +0700
+Subject: [PATCH 558/628] ARM: DTS: iwg22m: enable cmt1
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22m.dtsi | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+index a89e784..3d850f0 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
++++ b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+@@ -95,6 +95,9 @@
+ 	status = "okay";
+ };
+ 
++&cmt1 {
++	status = "okay";
++};
+ &extal_clk {
+ 	clock-frequency = <20000000>;
+ };
+-- 
+2.7.4
+

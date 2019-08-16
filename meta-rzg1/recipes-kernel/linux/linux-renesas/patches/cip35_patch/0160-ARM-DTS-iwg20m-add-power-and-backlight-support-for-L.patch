@@ -1,0 +1,52 @@
+From 185915c25d885164ba666ab97db18dce03a7d41f Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 15:06:23 +0700
+Subject: [PATCH 160/628] ARM: DTS: iwg20m: add power and backlight support for
+ LCD panel
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 99d1f29..4f1e99c 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -131,6 +131,15 @@
+ 			};
+ 		};
+ 	};
++
++	backlight: backlight {
++		compatible = "pwm-backlight";
++		pwms = <&pwm3 0 5000000>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		power-supply = <&vcc_lvds>;
++		enable-gpios = <&gpio5 14 0>;
++	};
+ };
+ 
+ &avb {
+@@ -348,3 +357,12 @@
+ 		};
+ 	};
+ };
++
++&gpio7 {
++	lcd-power-eb-gpio{
++		gpio-hog;
++		gpios = <25 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "lcd-power-eb-gpio";
++	};
++};
+-- 
+2.7.4
+

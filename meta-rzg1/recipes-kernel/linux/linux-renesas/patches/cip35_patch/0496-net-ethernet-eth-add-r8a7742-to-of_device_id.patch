@@ -1,0 +1,34 @@
+From 61a15f9b5985d2ecf5c8f178604830d9278599d3 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Mon, 21 May 2018 17:36:05 +0700
+Subject: [PATCH 496/628] net: ethernet: eth: add r8a7742 to of_device_id
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/net/ethernet/renesas/sh_eth.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index c03e0b8..0199e1d 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -3068,6 +3068,7 @@ static const struct of_device_id sh_eth_match_table[] = {
+ 	{ .compatible = "renesas,ether-r8a7779", .data = &r8a777x_data },
+ 	{ .compatible = "renesas,ether-r8a7790", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r8a7791", .data = &r8a779x_data },
++	{ .compatible = "renesas,ether-r8a7742", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r8a7793", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r8a7794", .data = &r8a779x_data },
+ 	{ .compatible = "renesas,ether-r7s72100", .data = &r7s72100_data },
+@@ -3342,6 +3343,7 @@ static struct platform_device_id sh_eth_id_table[] = {
+ 	{ "r8a777x-ether", (kernel_ulong_t)&r8a777x_data },
+ 	{ "r8a7790-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7791-ether", (kernel_ulong_t)&r8a779x_data },
++	{ "r8a7742-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7743-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7744-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7793-ether", (kernel_ulong_t)&r8a779x_data },
+-- 
+2.7.4
+

@@ -1,0 +1,94 @@
+From 75e004db3f0e0d756e029fafc170c21c058d8408 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 16:05:43 +0700
+Subject: [PATCH 391/628] ARM: DTS: r8a7744-iwg20m: Enable VIN0/TVP5150 support
+ for r8a7744
+
+Define the RZG1N iwg20m board dependent part of the VIN0 device node. Add the device
+node for Analog  Devices TVP5150  video decoder to  I2C5 bus. Add the necessary
+subnodes to interconnect VIN0 and TVP5150 devices.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 44 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 88b2fbd..f290593 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -253,6 +253,11 @@
+ 		renesas,function = "ssi";
+ 	};
+ 
++	vin0_pins: vin0 {
++		renesas,groups = "vin0_data8", "vin0_clk";
++		renesas,function = "vin0";
++	};
++
+ 	pwm3_pins: pwm3 {
+ 		renesas,groups = "pwm3";
+ 		renesas,function = "pwm3";
+@@ -456,6 +461,19 @@
+ 			};
+ 		};
+ 	};
++
++	composite-in@5d {
++		compatible = "ti,tvp5150";
++		reg = <0x5d>;
++		remote = <&vin0>;
++
++		port {
++			tvp5150: endpoint {
++				bus-width = <8>;
++				remote-endpoint = <&vin0ep>;
++			};
++		};
++	};
+ };
+ 
+ &du {
+@@ -513,9 +531,35 @@
+ 	};
+ };
+ 
++&gpio0 {
++	tvp-power{
++		gpio-hog;
++		gpios = <22 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "tvp-power";
++	};
++};
++
+ &pwm3 {
+ 	pinctrl-0 = <&pwm3_pins>;
+ 	pinctrl-names = "default";
+ 
+ 	status = "okay";
++};
++
++
++&vin0 {
++	status = "okay";
++	pinctrl-0 = <&vin0_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin0ep: endpoint {
++			remote-endpoint = <&tvp5150>;
++			bus-width = <8>;
++		};
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

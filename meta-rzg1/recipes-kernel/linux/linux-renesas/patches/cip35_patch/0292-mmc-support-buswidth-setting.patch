@@ -1,0 +1,151 @@
+From bb1a2f37186d38b53ae1e462f083ef93c5fc853c Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Tue, 10 Apr 2018 09:52:25 +0700
+Subject: [PATCH 292/628] mmc: support buswidth setting
+
+Signed-off-by: Anh Tran <anh.tran.jc@renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/mmc/host/tmio_mmc.h     | 14 +++++++++
+ drivers/mmc/host/tmio_mmc_pio.c | 67 +++++++++++++++++++++++++++++++++--------
+ include/linux/mfd/tmio.h        |  2 ++
+ 3 files changed, 71 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/mmc/host/tmio_mmc.h b/drivers/mmc/host/tmio_mmc.h
+index 4a597f5a..0f439a4 100644
+--- a/drivers/mmc/host/tmio_mmc.h
++++ b/drivers/mmc/host/tmio_mmc.h
+@@ -42,6 +42,12 @@
+ struct tmio_mmc_data;
+ struct tmio_mmc_host;
+ 
++enum tmio_mmc_power {
++	TMIO_MMC_OFF_STOP,	/* card power off, controller stopped */
++	TMIO_MMC_ON_STOP,	/* card power on, controller stopped */
++	TMIO_MMC_ON_RUN,	/* card power on, controller running */
++};
++
+ struct tmio_mmc_dma {
+ 	enum dma_slave_buswidth dma_buswidth;
+ 	bool (*filter)(struct dma_chan *chan, void *arg);
+@@ -55,6 +61,8 @@ struct tmio_mmc_host {
+ 	struct mmc_data         *data;
+ 	struct mmc_host         *mmc;
+ 
++	enum tmio_mmc_power	power;
++
+ 	/* Callbacks for clock / power control */
+ 	void (*set_pwr)(struct platform_device *host, int state);
+ 	void (*set_clk_div)(struct platform_device *host, int state);
+@@ -93,6 +101,12 @@ struct tmio_mmc_host {
+ 	struct mutex		ios_lock;	/* protect set_ios() context */
+ 	bool			native_hotplug;
+ 	bool			sdio_irq_enabled;
++	bool			resuming;
++	bool			done_tuning;
++	struct completion	completion;
++
++	spinlock_t			trans_lock;
++	unsigned int		trans_state;
+ 
+ 	int (*write16_hook)(struct tmio_mmc_host *host, int addr);
+ 	int (*clk_enable)(struct platform_device *pdev, unsigned int *f);
+diff --git a/drivers/mmc/host/tmio_mmc_pio.c b/drivers/mmc/host/tmio_mmc_pio.c
+index 3c7c3a1..e3ed257 100644
+--- a/drivers/mmc/host/tmio_mmc_pio.c
++++ b/drivers/mmc/host/tmio_mmc_pio.c
+@@ -948,22 +948,65 @@ static void tmio_mmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
+ 
+ 	spin_unlock_irqrestore(&host->lock, flags);
+ 
+-	switch (ios->power_mode) {
+-	case MMC_POWER_OFF:
+-		tmio_mmc_power_off(host);
+-		tmio_mmc_clk_stop(host);
+-		break;
+-	case MMC_POWER_UP:
++	/*
++	 * host->power toggles between false and true in both cases - either
++	 * or not the controller can be runtime-suspended during inactivity.
++	 * But if the controller has to be kept on, the runtime-pm usage_count
++	 * is kept positive, so no suspending actually takes place.
++	 */
++	if (ios->power_mode == MMC_POWER_ON && ios->clock) {
++		if (host->power != TMIO_MMC_ON_RUN) {
++			tmio_mmc_clk_update(mmc);
++			pm_runtime_get_sync(dev);
++			if (host->resuming) {
++				tmio_mmc_reset(host);
++				host->resuming = false;
++			}
++		}
++		if (host->power == TMIO_MMC_OFF_STOP)
++			tmio_mmc_reset(host);
+ 		tmio_mmc_set_clock(host, ios->clock);
+-		tmio_mmc_power_on(host, ios->vdd);
++		if (host->power == TMIO_MMC_OFF_STOP)
++			/* power up SD card and the bus */
++			tmio_mmc_power_on(host, ios->vdd);
++		host->power = TMIO_MMC_ON_RUN;
++		/* start bus clock */
+ 		tmio_mmc_clk_start(host);
+-		tmio_mmc_set_bus_width(host, ios->bus_width);
++	} else if (ios->power_mode != MMC_POWER_UP) {
++		struct tmio_mmc_data *pdata = host->pdata;
++		unsigned int old_power = host->power;
++
++		if (old_power != TMIO_MMC_OFF_STOP) {
++			if (ios->power_mode == MMC_POWER_OFF) {
++				tmio_mmc_power_off(host);
++				host->power = TMIO_MMC_OFF_STOP;
++			} else {
++				host->power = TMIO_MMC_ON_STOP;
++			}
++		}
++
++		if (old_power == TMIO_MMC_ON_RUN) {
++			tmio_mmc_clk_stop(host);
++			pm_runtime_put(dev);
++			if (pdata->clk_disable)
++				pdata->clk_disable(host->pdev);
++		}
++	}
++
++	if (host->power != TMIO_MMC_OFF_STOP &&
++	    host->power != TMIO_MMC_ON_STOP) {
++		switch (ios->bus_width) {
++		case MMC_BUS_WIDTH_1:
++			sd_ctrl_write16(host, CTL_SD_MEM_CARD_OPT, 0x80e0);
+ 		break;
+-	case MMC_POWER_ON:
+-		tmio_mmc_set_clock(host, ios->clock);
+-		tmio_mmc_clk_start(host);
+-		tmio_mmc_set_bus_width(host, ios->bus_width);
++		case MMC_BUS_WIDTH_4:
++			sd_ctrl_write16(host, CTL_SD_MEM_CARD_OPT, 0x00e0);
+ 		break;
++		case MMC_BUS_WIDTH_8:
++			sd_ctrl_write16(host, CTL_SD_MEM_CARD_OPT, 0x20e0);
++		break;
++
++		}
+ 	}
+ 
+ 	/* Let things settle. delay taken from winCE driver */
+diff --git a/include/linux/mfd/tmio.h b/include/linux/mfd/tmio.h
+index 24b86d5..a1077cb 100644
+--- a/include/linux/mfd/tmio.h
++++ b/include/linux/mfd/tmio.h
+@@ -123,6 +123,8 @@ struct tmio_mmc_data {
+ 	dma_addr_t			dma_rx_offset;
+ 	void (*set_pwr)(struct platform_device *host, int state);
+ 	void (*set_clk_div)(struct platform_device *host, int state);
++	int (*clk_enable)(struct platform_device *pdev, unsigned int *f);
++	void (*clk_disable)(struct platform_device *pdev);
+ };
+ 
+ /*
+-- 
+2.7.4
+

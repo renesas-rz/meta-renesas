@@ -1,0 +1,26 @@
+From 821f03c3d404533312361ed200a1f78dd83811a7 Mon Sep 17 00:00:00 2001
+From: Tri Luong <tri.luong.te@rvc.renesas.com>
+Date: Sun, 5 Aug 2018 07:26:19 +0700
+Subject: [PATCH 602/628] pfc-r8a7744: Fix wrong definition in scifb2_groups.
+
+Signed-off-by: Tri Luong <tri.luong.te@rvc.renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7744.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+index 42ac63d..7ea1d44 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7744.c
+@@ -4921,7 +4921,7 @@ static const char * const scifb2_groups[] = {
+ 	"scifb2_data_b",
+ 	"scifb2_clk_b",
+ 	"scifb2_ctrl_b",
+-	"scifb0_data_c",
++	"scifb2_data_c",
+ 	"scifb2_clk_c",
+ 	"scifb2_data_d",
+ };
+-- 
+2.7.4
+

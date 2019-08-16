@@ -1,0 +1,37 @@
+From 6b839630dbae83ec4b077160fc63f698fb0600bf Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 20 Apr 2018 08:50:03 +0700
+Subject: [PATCH 532/628] ARM: DTS: r8a7742: add description for hsusb
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index d02c4b7..6b5fccb 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -907,6 +907,18 @@
+ 		};
+ 	};
+ 
++	hsusb: usb@e6590000 {
++		compatible = "renesas,usbhs-r8a7742";
++		reg = <0 0xe6590000 0 0x100>;
++		interrupts = <0 107 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp7_clks R8A7742_CLK_HSUSB>;
++		renesas,buswait = <4>;
++		phys = <&usb0 1>;
++		phy-names = "usb";
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++		status = "disabled";
++	};
++
+ 	xhci: xhci@ee000000 {
+ 		compatible = "renesas,xhci-r8a7742";
+ 		reg = <0 0xee000000 0 0xc00>;
+-- 
+2.7.4
+

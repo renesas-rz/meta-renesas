@@ -1,0 +1,58 @@
+From 7185ce41d19094826736a9d35775f5e6a302c9cf Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 15:16:25 +0700
+Subject: [PATCH 324/628] ARM: dts: r8a7744: Add SYSC PM Domains
+
+Add a device node for the System Controller.
+Hook up the Cortex-A15 CPU cores to their respective PM Domains.
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 2b8f904..4598ca1 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -12,6 +12,7 @@
+ #include <dt-bindings/clock/r8a7744-clock.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+ #include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/power/r8a7744-sysc.h>
+ 
+ / {
+ 	compatible = "renesas,r8a7744";
+@@ -29,7 +30,9 @@
+ 			reg = <0>;
+ 			clock-frequency = <1500000000>;
+ 			voltage-tolerance = <1>; /* 1% */
++			clocks = <&cpg_clocks R8A7744_CLK_Z>;
+ 			clock-latency = <300000>; /* 300 us */
++			power-domains = <&sysc R8A7744_PD_CA15_CPU0>;
+ 
+ 			/* kHz - uV - OPPs unknown yet */
+ 			operating-points = <1500000 1000000>,
+@@ -44,6 +47,7 @@
+ 			compatible = "arm,cortex-a15";
+ 			reg = <1>;
+ 			clock-frequency = <1500000000>;
++			power-domains = <&sysc R8A7744_PD_CA15_CPU1>;
+ 		};
+ 	};
+ 	gic: interrupt-controller@f1001000 {
+@@ -902,4 +906,10 @@
+ 			clock-output-names = "scifa3", "scifa4", "scifa5";
+ 		};
+ 	};
++
++	sysc: system-controller@e6180000 {
++		compatible = "renesas,r8a7744-sysc";
++		reg = <0 0xe6180000 0 0x0200>;
++		#power-domain-cells = <1>;
++	};
+ };
+-- 
+2.7.4
+

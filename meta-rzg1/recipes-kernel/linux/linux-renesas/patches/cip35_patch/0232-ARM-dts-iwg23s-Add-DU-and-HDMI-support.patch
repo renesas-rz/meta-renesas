@@ -1,0 +1,110 @@
+From 4978890524155a35af66bdd66734e1682b0ee032 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Tue, 23 Jul 2019 10:49:30 +0700
+Subject: [PATCH 232/628] ARM: dts: iwg23s: Add DU and HDMI support
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 70 +++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index d0e2313..161892f 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -86,6 +86,17 @@
+ 		regulator-boot-on;
+ 		regulator-always-on;
+ 	};
++
++	hdmi-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_con: endpoint {
++				remote-endpoint = <&sii9022_out>;
++			};
++		};
++	};
+ };
+ 
+ &cpu0 {
+@@ -168,6 +179,17 @@
+ 		renesas,groups = "can0_data_a";
+ 		renesas,function = "can0";
+ 	};
++
++	i2c4_pins: i2c4 {
++		renesas,groups = "i2c4_e";
++		renesas,function = "i2c4";
++	};
++
++	du0_pins: du0 {
++		renesas,groups = "du0_rgb888", "du0_clk0_out", "du0_sync",
++						"du0_cde", "du0_disp";
++		renesas,function = "du0";
++	};
+ };
+ 
+ &scif1 {
+@@ -237,4 +259,52 @@
+ 	pinctrl-names = "default";
+ 	ctsrts;
+ 	status = "okay";
++};
++
++&i2c4 {
++	pinctrl-0 = <&i2c4_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <100000>;
++	status = "okay";
++
++	hdmi@39 {
++		compatible = "sil,sii9022";
++		reg = <0x39>;
++		interrupt-parent = <&gpio2>;
++		interrupts = <29 IRQ_TYPE_LEVEL_LOW>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				sii9022_in: endpoint {
++					remote-endpoint = <&du_out_rgb0>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				sii9022_out: endpoint {
++					remote-endpoint = <&hdmi_con>;
++				};
++			};
++		};
++	};
++};
++
++&du {
++	pinctrl-0 = <&du0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	clocks = <&mstp7_clks R8A77470_CLK_DU0>;
++	clock-names = "du.0";
++
++	port@0 {
++		endpoint {
++			remote-endpoint = <&sii9022_in>;
++		};
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

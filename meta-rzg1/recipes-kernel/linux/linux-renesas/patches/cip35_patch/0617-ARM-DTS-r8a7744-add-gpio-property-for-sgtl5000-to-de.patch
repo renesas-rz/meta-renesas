@@ -1,0 +1,30 @@
+From 5382a3982b441b2f1182f3aa3e2b140b15894f68 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Thu, 4 Oct 2018 16:58:51 +0700
+Subject: [PATCH 617/628] ARM: DTS: r8a7744: add gpio property for sgtl5000 to
+ detect sound jack
+
+Add hp-det-gpios to detect headphone jack plugging state.
+Add mic-det-gpios to detect mic jack plugging state.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 2da8b90..40911402 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -452,6 +452,8 @@
+ 		VDDA-supply = <&reg_2p5v>;
+ 		VDDIO-supply = <&reg_3p3v>;
+ 		VDDD-supply = <&reg_0p0v>;
++		hp-det-gpios = <&gpio2 19 GPIO_ACTIVE_LOW>;
++		mic-det-gpios = <&gpio2 21 GPIO_ACTIVE_LOW>;
+ 		clocks = <&x9_clk 1>;
+ 	};
+ 
+-- 
+2.7.4
+

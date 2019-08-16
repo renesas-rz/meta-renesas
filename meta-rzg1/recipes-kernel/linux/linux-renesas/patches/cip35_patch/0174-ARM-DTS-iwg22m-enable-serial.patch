@@ -1,0 +1,71 @@
+From cb42a67b01ad2271794d868129bca32654c15d69 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Fri, 9 Nov 2018 10:57:15 +0700
+Subject: [PATCH 174/628] ARM: DTS: iwg22m: enable serial
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 76debf9..77b0115 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -39,8 +39,11 @@
+ 	compatible = "iwave,g22d", "iwave,g22m", "renesas,r8a7745";
+ 
+ 	aliases {
++		serial1 = &scif2;
++		serial2 = &scif3;
+ 		serial3 = &scif4;
+ 		serial5 = &hscif1;
++		serial5 = &hscif1;
+ 		ethernet0 = &avb;
+ 	};
+ 
+@@ -99,6 +102,21 @@
+ 	status = "okay";
+ };
+ 
++&scif2 {
++	pinctrl-0 = <&scif2_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif3 {
++	pinctrl-0 = <&scif3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++
+ &i2c5 {
+ 	pinctrl-0 = <&i2c5_pins>;
+ 	pinctrl-names = "default";
+@@ -141,6 +159,16 @@
+ 		function = "hscif1";
+ 	};
+ 
++	scif2_pins: serial1 {
++		renesas,groups = "scif2_data";
++		renesas,function = "scif2";
++	};
++
++	scif3_pins: serial2 {
++		renesas,groups = "scif3_data";
++		renesas,function = "scif3";
++	};
++
+ 	i2c5_pins: i2c5 {
+ 		groups = "i2c5_b";
+ 		function = "i2c5";
+-- 
+2.7.4
+

@@ -1,0 +1,41 @@
+From 266941a80aba75c06aa6ea6cc2c92ba88503cd7d Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Fri, 16 Mar 2018 15:38:01 +0700
+Subject: [PATCH 507/628] ARM: DTS: iwg21m: add power-supply support buzzer
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index d5b1488..23db2f7 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -88,6 +88,14 @@
+ 		regulator-always-on;
+ 	};
+ 
++	vcc_buzzer: regulator@5 {
++		compatible = "regulator-fixed";
++		regulator-name = "buzzer vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
+ 	reg_3p3v: 3p3v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "3P3V";
+@@ -142,6 +150,7 @@
+ 		pwms = <&tpu 0 5000000 GPIO_ACTIVE_HIGH>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
++		power-supply = <&vcc_buzzer>;
+ 		pinctrl-0 = <&buzzer_pins>;
+ 		pinctrl-names = "default";
+ 	};
+-- 
+2.7.4
+

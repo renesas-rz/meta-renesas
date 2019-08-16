@@ -1,0 +1,27 @@
+From 4160a8267f7f84011b47e0c1238a46334ed2e649 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 14:06:08 +0700
+Subject: [PATCH 578/628] Fix commit "add DT smp sopport"
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/mach-shmobile/platsmp-apmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/platsmp-apmu.c b/arch/arm/mach-shmobile/platsmp-apmu.c
+index c7855b5..0b42f7f 100644
+--- a/arch/arm/mach-shmobile/platsmp-apmu.c
++++ b/arch/arm/mach-shmobile/platsmp-apmu.c
+@@ -215,7 +215,7 @@ void __init shmobile_smp_apmu_prepare_cpus(unsigned int max_cpus,
+ int shmobile_smp_apmu_boot_secondary(unsigned int cpu, struct task_struct *idle)
+ {
+ 	/* For this particular CPU register boot vector */
+-	shmobile_smp_hook(cpu, virt_to_phys(shmobile_boot_apmu), 0);
++	shmobile_smp_hook(cpu, virt_to_phys(shmobile_invalidate_start), 0);
+ 
+ 	return apmu_wrap(cpu, apmu_power_on);
+ }
+-- 
+2.7.4
+

@@ -1,0 +1,52 @@
+From bc2501b6e09d4a5f0a4a987f0ab0c27a492890a1 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 13:56:50 +0700
+Subject: [PATCH 296/628] ARM: DTS: r8a77470: add description for wdt0
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ Documentation/devicetree/bindings/watchdog/renesas-wdt.txt | 7 +++++++
+ arch/arm/boot/dts/r8a77470.dtsi                            | 8 ++++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/watchdog/renesas-wdt.txt b/Documentation/devicetree/bindings/watchdog/renesas-wdt.txt
+index 25b108e..3465841 100644
+--- a/Documentation/devicetree/bindings/watchdog/renesas-wdt.txt
++++ b/Documentation/devicetree/bindings/watchdog/renesas-wdt.txt
+@@ -31,3 +31,10 @@ Examples:
+ 		power-domains = <&cpg_clocks>;
+ 		timeout-sec = <60>;
+ 	};
++
++	wdt0: watchdog@e6020000 {
++		compatible = "renesas,r8a77470-wdt", "renesas,rcar-gen2-wdt";
++		reg = <0 0xe6020000 0 0x0c>;
++		clocks = <&mstp4_clks R8A77470_CLK_RWDT>;
++		timeout-sec = <60>;
++	};
+\ No newline at end of file
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index d94ee67..1e9ec2f 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -86,6 +86,14 @@
+ 		#size-cells = <2>;
+ 		ranges;
+ 
++		wdt0: watchdog@e6020000 {
++			compatible = "renesas,r8a77470-wdt", "renesas,rcar-gen2-wdt";
++			reg = <0 0xe6020000 0 0x0c>;
++			clocks = <&mstp4_clks R8A77470_CLK_RWDT>;
++			timeout-sec = <60>;
++			status = "disabled";
++		};
++
+ 		sysc: system-controller@e6180000 {
+ 			compatible = "renesas,r8a77470-sysc";
+ 			reg = <0 0xe6180000 0 0x0200>;
+-- 
+2.7.4
+

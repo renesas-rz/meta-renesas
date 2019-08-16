@@ -1,0 +1,33 @@
+From 5d855673b94593f7e26a51e7097cb8a4b76fc565 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 23 Apr 2018 15:10:49 +0700
+Subject: [PATCH 530/628] ARM: dts: r8a7742: change EthAVB status to disabled
+
+This is of iWave u-boot workaround.
+In u-boot, when SW0 is ON, VIN0 is selected but EthAVB status(in dtb) is not
+changed. But when SW0 is OFF, AVB is selected and EthAVB status is changed to
+"okay". So we must keep EthAVB to default status "disabled".
+(VIN0 and EthAVB is muxed)
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index cdcc8fe..dffae04 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -455,7 +455,7 @@
+ 
+ 	phy-handle = <&phy0>;
+ 	renesas,no-ether-link;
+-	status = "okay";
++	status = "disabled";
+ 
+ 	phy0: ethernet-phy@0 {
+ 		reg = <3>;
+-- 
+2.7.4
+

@@ -1,0 +1,29 @@
+From e01c448ee108602cca9f406e817a437cf94a54aa Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 8 Nov 2018 09:24:20 +0700
+Subject: [PATCH 555/628] ARM: DTS: iwg22m: enable tmu
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index acc9442..8470e03 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -380,4 +380,8 @@
+ 		output-low;
+ 		line-name = "can0-trx-en-gpio";
+ 	};
++};
++
++&tmu1 {
++	status = "okay";
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

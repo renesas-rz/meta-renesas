@@ -1,0 +1,37 @@
+From cc3d17171a58ac0ca84223beeb0dcfae8261610d Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Tue, 10 Apr 2018 09:56:40 +0700
+Subject: [PATCH 294/628] Revert "serial: sh-sci: Fix hang-up in rebooting with
+ DMA transfer enabled"
+
+This reverts commit af170e500639 ("serial: sh-sci: Fix hang-up in
+rebooting with DMA transfer enabled")
+
+Function sg_dma_len(sg) calls struct pointer sg but it does not exist.
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/tty/serial/sh-sci.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index c07f31c..fda4c0c 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -1250,11 +1250,6 @@ static void work_fn_tx(struct work_struct *work)
+ 		CIRC_CNT_TO_END(xmit->head, xmit->tail, UART_XMIT_SIZE));
+ 	spin_unlock_irq(&port->lock);
+ 
+-	if (sg_dma_len(sg) == 0) {
+-		s->cookie_tx = -EINVAL;
+-		return;
+-	}
+-
+ 	desc = dmaengine_prep_slave_single(chan, buf, s->tx_dma_len,
+ 					   DMA_MEM_TO_DEV,
+ 					   DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
+-- 
+2.7.4
+

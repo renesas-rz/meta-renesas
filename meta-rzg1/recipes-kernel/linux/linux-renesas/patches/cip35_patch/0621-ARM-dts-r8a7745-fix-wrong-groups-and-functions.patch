@@ -1,0 +1,141 @@
+From 180bd5237cd554cb10f89591b676c05795a918c0 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 13 Nov 2018 13:58:54 +0700
+Subject: [PATCH 621/628] ARM: dts: r8a7745: fix wrong groups and functions
+
+fix wrong groups and functions of iwg22m dts
+
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 36 ++++++++++++++---------------
+ arch/arm/boot/dts/r8a7745-iwg22m.dtsi       | 16 ++++++-------
+ 2 files changed, 26 insertions(+), 26 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 08d030b..0c7bddb 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -150,13 +150,13 @@
+ 
+ &pfc {
+ 	can0_pins: can0 {
+-		groups = "can0_data";
+-		function = "can0";
++		renesas,groups = "can0_data";
++		renesas,function = "can0";
+ 	};
+ 
+ 	hscif1_pins: hscif1 {
+-		groups = "hscif1_data", "hscif1_ctrl";
+-		function = "hscif1";
++		renesas,groups = "hscif1_data", "hscif1_ctrl";
++		renesas,function = "hscif1";
+ 	};
+ 
+ 	scif2_pins: serial1 {
+@@ -170,8 +170,8 @@
+ 	};
+ 
+ 	i2c5_pins: i2c5 {
+-		groups = "i2c5_b";
+-		function = "i2c5";
++		renesas,groups = "i2c5_b";
++		renesas,function = "i2c5";
+ 	};
+ 
+ 	stmp_pins: stmpe811 {
+@@ -196,13 +196,13 @@
+ 	};
+ 
+ 	scif4_pins: scif4 {
+-		groups = "scif4_data_b";
+-		function = "scif4";
++		renesas,groups = "scif4_data_b";
++		renesas,function = "scif4";
+ 	};
+ 
+ 	avb_pins: avb {
+-		groups = "avb_mdio", "avb_gmii";
+-		function = "avb";
++		renesas,groups = "avb_mdio", "avb_gmii";
++		renesas,function = "avb";
+ 	};
+ 
+ 	phy0_pins: phy0 {
+@@ -211,24 +211,24 @@
+ 	};
+ 
+ 	sdhi0_pins: sd0 {
+-		groups = "sdhi0_data4", "sdhi0_ctrl";
+-		function = "sdhi0";
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
+ 		power-source = <3300>;
+ 	};
+ 
+ 	sound_pins: sound {
+-		groups = "ssi34_ctrl", "ssi3_data", "ssi4_data";
+-		function = "ssi";
++		renesas,groups = "ssi34_ctrl", "ssi3_data", "ssi4_data";
++		renesas,function = "ssi";
+ 	};
+ 
+ 	usb0_pins: usb0 {
+-		groups = "usb0";
+-		function = "usb0";
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
+ 	};
+ 
+ 	usb1_pins: usb1 {
+-		groups = "usb1";
+-		function = "usb1";
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
+ 	};
+ 
+ 	pwm1_pins: pwm1 {
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+index 3d850f0..963f1eb 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
++++ b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+@@ -104,13 +104,13 @@
+ 
+ &pfc {
+ 	mmcif0_pins: mmc {
+-		groups = "mmc_data8", "mmc_ctrl";
+-		function = "mmc";
++		renesas,groups = "mmc_data8", "mmc_ctrl";
++		renesas,function = "mmc";
+ 	};
+ 
+ 	qspi_pins: qspi {
+-		groups = "qspi_ctrl", "qspi_data2";
+-		function = "qspi";
++		renesas,groups = "qspi_ctrl", "qspi_data2";
++		renesas,function = "qspi";
+ 	};
+ 
+ 	msiof2_pins: spi3 {
+@@ -120,14 +120,14 @@
+ 	};
+ 
+ 	sdhi1_pins: sd1 {
+-		groups = "sdhi1_data4", "sdhi1_ctrl";
+-		function = "sdhi1";
++		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
++		renesas,function = "sdhi1";
+ 		power-source = <3300>;
+ 	};
+ 
+ 	i2c3_pins: i2c3 {
+-		groups = "i2c3_b";
+-		function = "i2c3";
++		renesas,groups = "i2c3_b";
++		renesas,function = "i2c3";
+ 	};
+ };
+ 
+-- 
+2.7.4
+

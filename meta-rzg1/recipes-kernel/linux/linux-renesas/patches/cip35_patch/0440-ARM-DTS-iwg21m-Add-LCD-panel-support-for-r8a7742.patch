@@ -1,0 +1,54 @@
+From e82c874669088eaec3d81fc2a3c9b8532cde5f41 Mon Sep 17 00:00:00 2001
+From: hungdong <hung.dong.xd@rvc.renesas.com>
+Date: Wed, 21 Mar 2018 14:57:31 +0700
+Subject: [PATCH 440/628] ARM: DTS: iwg21m: Add LCD panel support for r8a7742
+
+Signed-off-by: hungdong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index a210261..d3fa859 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -39,6 +39,35 @@
+ 		#size-cells = <1>;
+ 	};
+ 
++	vcc_lvds: regulator@4 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "panel vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
++	panel_edt: panel@0 {
++		compatible = "edt,etm0700g0dh6", "simple-panel";
++		power-supply = <&vcc_lvds>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <0>;
++				panel_input: endpoint {
++					reg = <0>;
++					remote-endpoint = <&du_out_lvds0>;
++				};
++			};
++		};
++	};
++
+ 	buzzer {
+ 		compatible = "pwm-backlight";
+ 		pwms = <&tpu 0 5000000 GPIO_ACTIVE_HIGH>;
+-- 
+2.7.4
+

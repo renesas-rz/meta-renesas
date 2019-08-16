@@ -1,0 +1,43 @@
+From 660017daa65269604cdd1211ed5357175d189b0a Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 13:41:33 +0700
+Subject: [PATCH 286/628] ARM: dts: r8a77470: add vin0 description
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index e40ba78..d94ee67 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -26,6 +26,7 @@
+ 		spi2 = &msiof0;
+ 		spi3 = &msiof1;
+ 		spi4 = &msiof2;
++		vin0 = &vin0;
+ 	};
+ 
+ 	cpus {
+@@ -769,6 +770,15 @@
+ 			};
+ 		};
+ 
++		vin0: video@e6ef0000 {
++			compatible = "renesas,vin-r8a77470";
++			reg = <0 0xe6ef0000 0 0x1000>;
++			interrupts = <0 188 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp8_clks R8A77470_CLK_VIN0>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++			status = "disabled";
++		};
++
+ 		/* The memory map in the User's Manual maps the cores to bus numbers */
+ 		i2c0: i2c@e6508000 {
+ 			#address-cells = <1>;
+-- 
+2.7.4
+

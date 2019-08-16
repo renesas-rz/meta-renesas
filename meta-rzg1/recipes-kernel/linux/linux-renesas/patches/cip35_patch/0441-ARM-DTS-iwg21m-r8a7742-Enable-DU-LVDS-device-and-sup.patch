@@ -1,0 +1,37 @@
+From b39a56f176734563f7548a5ea231afc97f36127a Mon Sep 17 00:00:00 2001
+From: hungdong <hung.dong.xd@rvc.renesas.com>
+Date: Wed, 21 Mar 2018 15:00:33 +0700
+Subject: [PATCH 441/628] ARM: DTS: iwg21m r8a7742: Enable DU LVDS device and
+ supply LVDS power in DT
+
+Signed-off-by: hungdong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index d3fa859..2ffdd58 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -229,7 +229,17 @@
+ 	ports {
+ 		port@0 {
+ 			 endpoint {
++				remote-endpoint = <&panel_input>;
+ 			};
+ 		};
+ 	};
+ };
++
++&gpio5 {
++	lcd-power-eb-gpio{
++		gpio-hog;
++		gpios = <28 GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "lcd-power-eb-gpio";
++	};
++};
+-- 
+2.7.4
+

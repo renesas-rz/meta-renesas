@@ -1,0 +1,31 @@
+From 6641f1c891048aea43a3ee4d7986e05f04feafa1 Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 20 Apr 2018 08:39:18 +0700
+Subject: [PATCH 531/628] ARM: DTS: r8a7742: add description for USB PHY usb
+ channel 0
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 7f0fc17..d02c4b7 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -891,6 +891,11 @@
+ 		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 
++		usb0: usb-channel@0 {
++			reg = <0>;
++			#phy-cells = <1>;
++		};
++
+ 		usb1: usb-channel@1 {
+ 			reg = <1>;
+ 			#phy-cells = <1>;
+-- 
+2.7.4
+

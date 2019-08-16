@@ -1,0 +1,63 @@
+From dbf70ea76d5cc7102831543744d979a2cff92bfd Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 15:11:14 +0700
+Subject: [PATCH 577/628] ARM: DTS: r8a7743: remove pin-ctrl pwm3 and add
+ option for backlight for tpu
+
+During changing mode for backlight from pwm3 to tpu.
+Testcase of PWM for backlight has some conflict so don't run this test.
+Now it's available and found that tpu need request pin-ctrl same as pwm3.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index ee6d725..f02ffc7 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -139,11 +139,13 @@
+ 
+ 	backlight: backlight {
+ 		compatible = "pwm-backlight";
+-		pwms = <&pwm3 3 5000000>;
++		pwms = <&tpu 3 5000000 GPIO_ACTIVE_HIGH>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
+ 		power-supply = <&vcc_lvds>;
+ 		enable-gpios = <&gpio5 14 0>;
++		pinctrl-0 = <&backlight_pins>;
++		pinctrl-names = "default";
+ 	};
+ };
+ 
+@@ -293,6 +295,11 @@
+ 		function = "scif4";
+ 	};
+ 
++	backlight_pins: backlight {
++		groups = "tpu_to3";
++		function = "tpu";
++	};
++
+ 	pwm3_pins: pwm3 {
+ 		groups = "pwm3";
+ 		function = "pwm3";
+@@ -365,9 +372,10 @@
+ };
+ 
+ &pwm3 {
+-	pinctrl-0 = <&pwm3_pins>;
+-	pinctrl-names = "default";
++	status = "okay";
++};
+ 
++&tpu {
+ 	status = "okay";
+ };
+ 
+-- 
+2.7.4
+

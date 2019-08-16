@@ -1,0 +1,44 @@
+From f22d55369930bab239eaa33473f199c9472dcc49 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Tue, 10 Apr 2018 10:42:55 +0700
+Subject: [PATCH 493/628] ARM: DTS: RZG1H r8a7742: Add Video Signal Processing
+ module (vspm module) node to device tree
+
+This patch support Renesas vspm kernel module probe.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index b8773b1..5add837 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -743,6 +743,22 @@
+ 		renesas,#ch = <0>;
+ 	};
+ 
++	vspm@fe920000 {
++		compatible = "renesas,vspm-vspr", "renesas-vspm";
++		reg = <0 0xfe920000 0 0x8000>;
++		interrupts = <0 266 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_VSP1_S>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++	};
++
++	vspm@fe928000 {
++		compatible = "renesas,vspm-vsps", "renesas-vspm";
++		reg = <0 0xfe928000 0 0x7404>;
++		interrupts = <0 267 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&mstp1_clks R8A7742_CLK_VSP1_S>;
++		power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++	};
++
+ 	vspd0: vspd0@fe930000 {
+ 		compatible = "renesas,vsp2";
+ 		reg = <0 0xfe930000 0 0x7404>;
+-- 
+2.7.4
+

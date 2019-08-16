@@ -1,0 +1,287 @@
+From eb1f38e0ee2d028ac24244501262b09b658b9798 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 15:23:23 +0700
+Subject: [PATCH 325/628] ARM: dts: r8a7744: Use SYSC always-on PM Domain
+
+Hook up all devices that are part of the CPG/MSTP Clock Domain to the
+SYSC always-on PM Domain, for a more consistent device-power-area
+description in DT.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 4598ca1..8603718 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -72,6 +72,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	gpio1: gpio@e6051000 {
+@@ -84,6 +85,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	gpio2: gpio@e6052000 {
+@@ -96,6 +98,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO2>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	gpio3: gpio@e6053000 {
+@@ -108,6 +111,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO3>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	gpio4: gpio@e6054000 {
+@@ -120,6 +124,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO4>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	gpio5: gpio@e6055000 {
+@@ -132,6 +137,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO5>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	gpio6: gpio@e6055400 {
+@@ -144,6 +150,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO6>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	gpio7: gpio@e6055800 {
+@@ -156,6 +163,7 @@
+ 		#interrupt-cells = <2>;
+ 		interrupt-controller;
+ 		clocks = <&mstp9_clks R8A7744_CLK_GPIO7>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	thermal@e61f0000 {
+@@ -180,6 +188,7 @@
+ 		<0 143 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp1_clks R8A7744_CLK_CMT0>;
+ 		clock-names = "fck";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 
+ 		renesas,channels-mask = <0x60>;
+ 
+@@ -199,6 +208,7 @@
+ 		<0 127 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_CMT1>;
+ 		clock-names = "fck";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 
+ 		renesas,channels-mask = <0xff>;
+ 
+@@ -221,6 +231,7 @@
+ 			     <0 16 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <0 17 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp4_clks R8A7744_CLK_IRQC>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 	};
+ 
+ 	pfc: pfc@e6060000 {
+@@ -234,6 +245,7 @@
+ 		reg = <0 0xee200000 0 0x80>;
+ 		interrupts = <0 169 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_MMCIF0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		reg-io-width = <4>;
+ 		status = "disabled";
+ 		max-frequency = <97500000>;
+@@ -244,6 +256,7 @@
+ 		reg = <0 0xee100000 0 0x328>;
+ 		interrupts = <0 165 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_SDHI0>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -252,6 +265,7 @@
+ 		reg = <0 0xee140000 0 0x100>;
+ 		interrupts = <0 167 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_SDHI1>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -260,6 +274,7 @@
+ 		reg = <0 0xee160000 0 0x100>;
+ 		interrupts = <0 168 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp3_clks R8A7744_CLK_SDHI2>;
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -269,6 +284,7 @@
+ 		interrupts = <0 144 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp2_clks R8A7744_CLK_SCIFA0>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -278,6 +294,7 @@
+ 		interrupts = <0 145 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp2_clks R8A7744_CLK_SCIFA1>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -287,6 +304,7 @@
+ 		interrupts = <0 151 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp2_clks R8A7744_CLK_SCIFA2>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -296,6 +314,7 @@
+ 		interrupts = <0 29 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp11_clks R8A7744_CLK_SCIFA3>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -305,6 +324,7 @@
+ 		interrupts = <0 30 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp11_clks R8A7744_CLK_SCIFA4>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -314,6 +334,7 @@
+ 		interrupts = <0 31 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp11_clks R8A7744_CLK_SCIFA5>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -323,6 +344,7 @@
+ 		interrupts = <0 148 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp2_clks R8A7744_CLK_SCIFB0>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -332,6 +354,7 @@
+ 		interrupts = <0 149 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp2_clks R8A7744_CLK_SCIFB1>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -341,6 +364,7 @@
+ 		interrupts = <0 150 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp2_clks R8A7744_CLK_SCIFB2>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -350,6 +374,7 @@
+ 		interrupts = <0 152 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_SCIF0>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -359,6 +384,7 @@
+ 		interrupts = <0 153 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_SCIF1>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -368,6 +394,7 @@
+ 		interrupts = <0 22 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_SCIF2>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -377,6 +404,7 @@
+ 		interrupts = <0 23 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_SCIF3>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -386,6 +414,7 @@
+ 		interrupts = <0 24 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_SCIF4>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -395,6 +424,7 @@
+ 		interrupts = <0 25 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_SCIF5>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -404,6 +434,7 @@
+ 		interrupts = <0 154 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_HSCIF0>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -413,6 +444,7 @@
+ 		interrupts = <0 155 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_HSCIF1>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -422,6 +454,7 @@
+ 		interrupts = <0 21 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&mstp7_clks R8A7744_CLK_HSCIF2>;
+ 		clock-names = "sci_ick";
++		power-domains = <&sysc R8A7744_PD_ALWAYS_ON>;
+ 		status = "disabled";
+ 	};
+ 
+-- 
+2.7.4
+

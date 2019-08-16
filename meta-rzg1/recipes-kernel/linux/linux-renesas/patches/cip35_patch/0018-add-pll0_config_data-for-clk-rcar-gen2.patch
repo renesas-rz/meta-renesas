@@ -1,0 +1,42 @@
+From 8bc935ceb8792f329a4783a79587db77f4399309 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 26 Sep 2018 10:47:28 +0700
+Subject: [PATCH 018/628] add pll0_config_data for clk-rcar-gen2
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/clk/shmobile/clk-rcar-gen2.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 3f7d331..e16ad7f 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -325,6 +325,22 @@ static const struct clk_div_table cpg_sd01_div_table[] = {
+  * Initialization
+  */
+ 
++struct pll0_config_data{
++	bool is_devider_fixed;
++	unsigned int mult_ratio_table[4];
++};
++
++static struct pll0_config_data fix_pll0_ratio = {
++	.is_devider_fixed = true,
++	.mult_ratio_table = {
++		200, 150, 230, 200
++	} /* See tables 7.5b and 7.5c */
++};
++
++static struct pll0_config_data var_pll0_ratio = {
++	.is_devider_fixed = false
++};
++
+ static u32 cpg_mode __initdata;
+ 
+ static const char * const pll0_mult_match[] = {
+-- 
+2.7.4
+

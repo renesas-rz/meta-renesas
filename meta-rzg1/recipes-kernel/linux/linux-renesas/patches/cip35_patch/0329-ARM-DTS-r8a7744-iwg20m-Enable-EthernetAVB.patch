@@ -1,0 +1,51 @@
+From 471853e28c1142eb0a5de19e4f7ad258ba8df6ba Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 15:46:29 +0700
+Subject: [PATCH 329/628] ARM: DTS: r8a7744-iwg20m: Enable EthernetAVB
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7744-iwg20m.dts | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744-iwg20m.dts b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+index 033dfb7..3bc44bb 100644
+--- a/arch/arm/boot/dts/r8a7744-iwg20m.dts
++++ b/arch/arm/boot/dts/r8a7744-iwg20m.dts
+@@ -121,6 +121,11 @@
+ 		renesas,groups = "sdhi1_data4", "sdhi1_ctrl";
+ 		renesas,function = "sdhi1";
+ 	};
++
++	avb_pins: avb {
++		renesas,groups = "avb_mdio", "avb_gmii", "avb_phy_int";
++		renesas,function = "avb";
++	};
+ };
+ 
+ &scif0 {
+@@ -189,4 +194,18 @@
+ 	cd-gpios = <&gpio6 14 GPIO_ACTIVE_LOW>;
+ 	wp-gpios = <&gpio6 15 GPIO_ACTIVE_HIGH>;
+ 	status = "okay";
++};
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++
++	phy-handle = <&phy0>;
++	renesas,no-ether-link;
++	status = "okay";
++
++	phy0: ethernet-phy@0 {
++		reg = <3>;
++		micrel,led-mode = <1>;
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

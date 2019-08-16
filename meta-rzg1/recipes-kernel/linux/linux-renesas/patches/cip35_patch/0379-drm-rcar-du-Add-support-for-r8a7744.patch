@@ -1,0 +1,62 @@
+From df1154c0137a8206a1ad02b3125833ddf5337794 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Mon, 22 Oct 2018 15:28:44 +0700
+Subject: [PATCH 379/628] drm: rcar-du: Add support for r8a7744
+
+Implement support for r8a7744 bindings in the rcar-du DRM
+driver.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index b8d0c37..eec16be 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -221,6 +221,28 @@ static const struct rcar_du_device_info rcar_du_r8a77470_info = {
+ 	.num_lvds = 0,
+ };
+ 
++static const struct rcar_du_device_info rcar_du_r8a7744_info = {
++	.gen = 2,
++	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
++		  | RCAR_DU_FEATURE_EXT_CTRL_REGS
++		  | RCAR_DU_FEATURE_VSP1_SOURCE,
++	.num_crtcs = 2,
++	.vspd_crtcs = BIT(0) | BIT(1),
++	.routes = {
++		[RCAR_DU_OUTPUT_DPAD0] = {
++			.possible_crtcs = BIT(1) | BIT(0),
++			.encoder_type = DRM_MODE_ENCODER_NONE,
++			.port = 0,
++		},
++		[RCAR_DU_OUTPUT_LVDS0] = {
++			.possible_crtcs = BIT(0),
++			.encoder_type = DRM_MODE_ENCODER_LVDS,
++			.port = 1,
++		},
++	},
++	.num_lvds = 1,
++};
++
+ static const struct of_device_id rcar_du_of_table[] = {
+ 	{ .compatible = "renesas,du-r8a7743", .data = &rzg1_du_r8a7743_info },
+ 	{ .compatible = "renesas,du-r8a7779", .data = &rcar_du_r8a7779_info },
+@@ -230,6 +252,7 @@ static const struct of_device_id rcar_du_of_table[] = {
+ 	{ .compatible = "renesas,du-r8a7794", .data = &rcar_du_r8a7794_info },
+ 	{ .compatible = "renesas,du-r8a7745", .data = &rcar_du_r8a7745_info },
+ 	{ .compatible = "renesas,du-r8a77470", .data = &rcar_du_r8a77470_info },
++	{ .compatible = "renesas,du-r8a7744", .data = &rcar_du_r8a7744_info },
+ 	{ }
+ };
+ 
+-- 
+2.7.4
+
