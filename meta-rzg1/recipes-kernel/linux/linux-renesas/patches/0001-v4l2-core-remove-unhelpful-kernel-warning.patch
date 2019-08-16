@@ -1,22 +1,23 @@
-From 862c55c4403d1e38aa33d1baded2afc31b70226a Mon Sep 17 00:00:00 2001
-From: "Thao M. Hoang" <thaohm2@fsoft.com.vn>
-Date: Thu, 14 Jun 2018 13:15:46 +0700
-Subject: v4l2-core: remove unhelpful kernel warning
+From 26223948fbce5972e161f6f8d97a53b0a8312428 Mon Sep 17 00:00:00 2001
+From: Duy Nguyen <duynt26@fsoft.com.vn>
+Date: Fri, 2 Aug 2019 08:56:31 +0700
+Subject: [PATCH] v4l2-core: remove unhelpful kernel warning
 
 This warning might have been helpful in mainline or at early stage of
 3.14 kernel lifetime, but now it gets scooped into feedback reports
 and litters them.
 
 Signed-off-by: Thao M. Hoang <thaohm2@fsoft.com.vn>
+Signed-off-by: Duy Nguyen <duynt26@fsoft.com.vn>
 ---
- drivers/media/v4l2-core/videobuf2-v4l2.c | 23 -----------------------
- 1 file changed, 23 deletions(-)
+ drivers/media/v4l2-core/videobuf2-v4l2.c | 22 ----------------------
+ 1 file changed, 22 deletions(-)
 
 diff --git a/drivers/media/v4l2-core/videobuf2-v4l2.c b/drivers/media/v4l2-core/videobuf2-v4l2.c
-index 6c441be..b6c802b 100644
+index 412a6a7..b44d0e7 100644
 --- a/drivers/media/v4l2-core/videobuf2-v4l2.c
 +++ b/drivers/media/v4l2-core/videobuf2-v4l2.c
-@@ -133,23 +133,6 @@ static int __set_timestamp(struct vb2_buffer *vb, const void *pb)
+@@ -133,22 +133,6 @@ static int __set_timestamp(struct vb2_buffer *vb, const void *pb)
  	return 0;
  };
  
@@ -28,7 +29,6 @@ index 6c441be..b6c802b 100644
 -		return;
 -
 -	check_once = true;
--	WARN_ON(1);
 -
 -	pr_warn("use of bytesused == 0 is deprecated and will be removed in the future,\n");
 -	if (vb->vb2_queue->allow_zero_bytesused)
@@ -40,7 +40,7 @@ index 6c441be..b6c802b 100644
  static int vb2_queue_or_prepare_buf(struct vb2_queue *q, struct v4l2_buffer *b,
  				    const char *opname)
  {
-@@ -357,9 +340,6 @@ static int __fill_vb2_buffer(struct vb2_buffer *vb,
+@@ -356,9 +340,6 @@ static int __fill_vb2_buffer(struct vb2_buffer *vb,
  				struct vb2_plane *pdst = &planes[plane];
  				struct v4l2_plane *psrc = &b->m.planes[plane];
  
@@ -50,7 +50,7 @@ index 6c441be..b6c802b 100644
  				if (vb->vb2_queue->allow_zero_bytesused)
  					pdst->bytesused = psrc->bytesused;
  				else
-@@ -394,9 +374,6 @@ static int __fill_vb2_buffer(struct vb2_buffer *vb,
+@@ -393,9 +374,6 @@ static int __fill_vb2_buffer(struct vb2_buffer *vb,
  		}
  
  		if (V4L2_TYPE_IS_OUTPUT(b->type)) {
