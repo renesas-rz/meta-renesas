@@ -11,10 +11,10 @@ DEPENDS_append = " util-linux-native openssl-native"
 KERNEL_URL = " \
 	git://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git"
 BRANCH = "linux-4.4.y-cip-rt"
-SRCREV = "b51a171ad762ba4a78b0ed0c7ec83fb9f6fb135f"
+SRCREV = "0b75882ea6fde15a0217792ce7c20992a57ec129"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
-LINUX_VERSION ?= "4.4.176-cip31-rt"
+LINUX_VERSION ?= "4.4.185-cip35-rt"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
