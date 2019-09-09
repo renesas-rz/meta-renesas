@@ -3,6 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI_append = " \
     file://enlarge-max-file-path-size.patch \
     file://0002-workaround-to-reduce-the-maximum-latency-for-pkill_thread.patch \
+    file://0003-prio-preempt-set-affinity-the-CPUs-core-for-each.patch \
 "
 
 SRC_URI_append_iwg22m += " \
