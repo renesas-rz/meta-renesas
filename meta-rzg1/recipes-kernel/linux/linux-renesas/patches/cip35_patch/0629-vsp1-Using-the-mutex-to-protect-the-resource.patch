@@ -1,0 +1,43 @@
+From f975584397c0e54c6520256eb270ce0aa604c9b0 Mon Sep 17 00:00:00 2001
+From: Danh Duong <danhdc1@fsoft.com.vn>
+Date: Wed, 31 Jul 2019 15:30:19 +0700
+Subject: [PATCH] vsp1: Using the mutex() to protect the resource
+
+When restarting the weston service, the pipline of vsp1 driver is
+sometimes broken because access to the vsp1 device gets timed out (race
+condition). That leads to Weston crash.
+
+This patch adds a mutex() to protect vsp1 device against race condition.
+
+Signed-off-by: Danh Duong <danhdc1@fsoft.com.vn>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/media/platform/vsp1/vsp1_drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/media/platform/vsp1/vsp1_drv.c b/drivers/media/platform/vsp1/vsp1_drv.c
+index ea37c78e..cb6798b 100644
+--- a/drivers/media/platform/vsp1/vsp1_drv.c
++++ b/drivers/media/platform/vsp1/vsp1_drv.c
+@@ -419,6 +419,7 @@ int vsp1_reset_wpf(struct vsp1_device *vsp1, unsigned int index)
+ 	if (!(status & VI6_STATUS_SYS_ACT(index)))
+ 		return 0;
+ 
++	mutex_lock(&vsp1->lock);
+ 	vsp1_write(vsp1, VI6_SRESET, VI6_SRESET_SRTS(index));
+ 	for (timeout = 10; timeout > 0; --timeout) {
+ 		status = vsp1_read(vsp1, VI6_STATUS);
+@@ -430,8 +431,10 @@ int vsp1_reset_wpf(struct vsp1_device *vsp1, unsigned int index)
+ 
+ 	if (!timeout) {
+ 		dev_err(vsp1->dev, "failed to reset wpf.%u\n", index);
++		mutex_unlock(&vsp1->lock);
+ 		return -ETIMEDOUT;
+ 	}
++	mutex_unlock(&vsp1->lock);
+ 
+ 	return 0;
+ }
+-- 
+2.7.4
+

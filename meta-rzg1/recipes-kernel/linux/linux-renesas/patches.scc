@@ -626,3 +626,4 @@ patch patches/cip35_patch/0625-ARM-DTS-r8a7744-enable-watchdog-wdt0.patch
 patch patches/cip35_patch/0626-watchdog-renesas-wdt-fix-wrong-name-of-rcar-gen3-wdt.patch
 patch patches/cip35_patch/0627-ARM-dts-r8a7745-revert-vspdu-to-keep-changes-of-comm.patch
 patch patches/cip35_patch/0628-ARM-DTS-Fix-issue-iwg22d-does-not-detect-UHS-I-uSD-c.patch
+patch patches/cip35_patch/0629-vsp1-Using-the-mutex-to-protect-the-resource.patch
