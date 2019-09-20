@@ -628,3 +628,4 @@ patch patches/cip35rt_patch/0627-ARM-dts-r8a7745-revert-vspdu-to-keep-changes-of
 patch patches/cip35rt_patch/0628-ARM-DTS-Fix-issue-iwg22d-does-not-detect-UHS-I-uSD-c.patch
 patch patches/cip35rt_patch/0629-gpio-rcar-Prevent-to-force-the-interrupt-handler-as.patch
 patch patches/cip35rt_patch/0630-v4l-vsp1-Change-VSP1-LIF-linebuffer-FIFO.patch
+patch patches/cip35rt_patch/0631-vsp1-Using-the-mutex-to-protect-the-resource.patch
