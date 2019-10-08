@@ -5,7 +5,7 @@
 
 PR = "r1"
 
-inherit debian-package
+inherit debian-package siteinfo
 PV = "1.0.1t"
 SRCREV = "cbff4ab26540579d65eaf9a52b9d26657ce4189c"
 
