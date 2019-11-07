@@ -1,0 +1,28 @@
+From af5f721fc8447ea431af61b1c25e3593f8e12a90 Mon Sep 17 00:00:00 2001
+From: Duy Nguyen <duynt26@fsoft.com.vn>
+Date: Wed, 23 Oct 2019 08:57:15 +0700
+Subject: [PATCH] ARM: DTS: iwg23s: add i2c3 to dts
+
+Signed-off-by: Duy Nguyen <duynt26@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 6b12fd5..2f0c4f2 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -153,8 +153,8 @@
+ 	};
+ 
+ 	i2c3_pins: i2c3 {
+-		groups = "i2c3_c";
+-		function = "i2c3";
++		renesas,groups = "i2c3_c";
++		renesas,function = "i2c3";
+ 	};
+ 
+ 	qspi0_pins: qspi0 {
+-- 
+2.7.4
+
