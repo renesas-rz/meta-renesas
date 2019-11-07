@@ -38,6 +38,7 @@ SRC_URI += " \
     file://0005-waylandsink-Don-t-wait-for-the-wl_surface_frame-call.patch \
     file://0009-waylandsink-Support-Wayland-KMS-to-improve-performan.patch \
     file://0010-Revert-waylandsink-Change-the-size-of-area_surface-s.patch \
+    file://0011-waylandsink-Fix-memory-leak-error-in-DU-because-un-c.patch \
 "
 
 RDEPENDS_gstreamer1.0-plugins-bad_append = " libwayland-egl gles-user-module "
