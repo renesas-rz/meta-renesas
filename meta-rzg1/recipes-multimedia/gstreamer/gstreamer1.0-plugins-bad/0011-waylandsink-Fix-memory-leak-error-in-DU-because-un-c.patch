@@ -1,0 +1,37 @@
+From d81d6cbbaf4e7e26bfe8be38a4f846907322f0f4 Mon Sep 17 00:00:00 2001
+From: Tam Nhat <tamnn1@fsoft.com.vn>
+Date: Mon, 4 Nov 2019 10:04:41 +0700
+Subject: [PATCH] waylandsink: Fix memory leak error in DU because un-closed fd
+
+The fd provided by drmPrimeHandleToFD() must be closed after use.
+If not, it will hold refcount of corresponding CMA object, and
+cause memory leak in DU driver.
+
+Signed-off-by: Tam Nhat <tamnn1@fsoft.com.vn>
+---
+ ext/wayland/waylandkmspool.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ext/wayland/waylandkmspool.c b/ext/wayland/waylandkmspool.c
+index 9239591..c16e1b8 100644
+--- a/ext/wayland/waylandkmspool.c
++++ b/ext/wayland/waylandkmspool.c
+@@ -88,7 +88,7 @@ gst_wl_kms_meta_free (GstWlKmsMeta * meta, GstBuffer * buffer)
+     }
+     g_ptr_array_unref (meta->kms_bo_array);
+   }
+-
++  close(meta->display->drm_fd);
+   g_object_unref (meta->display);
+ }
+
+@@ -317,6 +317,7 @@ gst_wayland_buffer_pool_create_mp_buffer (GstWaylandBufferPool * wpool,
+       gst_buffer_append_memory (buffer,
+           gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data[i],
+               maxsize, 0, size, NULL, NULL));
++      close(dmabuf[i]);
+     }
+   }
+
+--
+2.7.4
