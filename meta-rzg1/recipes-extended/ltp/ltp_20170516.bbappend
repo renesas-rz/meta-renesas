@@ -8,8 +8,10 @@ SRC_URI_append = " \
 
 SRC_URI_append_iwg22m += " \
     file://0001-Reconfig-LOOPS_MULTIPLIER-to-fix-issue-periodic_cpu_load.patch \
+    file://0004-async_handler-increase-pass-criterial-and-apply-warn.patch \
 "
 
 SRC_URI_append_iwg23s += " \
     file://0001-Reconfig-LOOPS_MULTIPLIER-to-fix-issue-periodic_cpu_load.patch \
+    file://0004-async_handler-increase-pass-criterial-and-apply-warn.patch \
 "
