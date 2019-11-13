@@ -1,7 +1,8 @@
 require recipes-graphics/images/core-image-weston.bb
 include core-image-weston.inc
+include core-image-weston-sdk.inc
 
-inherit populate_sdk_qt5_base
+inherit ${QT5_BASE_INHERIT}
 
 DESCRIPTION = " \
     Image with weston support that includes everything within \
