@@ -1,0 +1,29 @@
+From 4e68e528e482ff8b2f79455892622f5e6e971e89 Mon Sep 17 00:00:00 2001
+From: Viet Nguyen <vietn@fsoft.com.vn>
+Date: Thu, 24 May 2018 02:33:37 +0700
+Subject: [PATCH 187/628] ARM: DTS: iwg20m: correct pwm channel for backlight
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index fc6428f..d5b4e91 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -139,7 +139,7 @@
+ 
+ 	backlight: backlight {
+ 		compatible = "pwm-backlight";
+-		pwms = <&pwm3 0 5000000>;
++		pwms = <&pwm3 3 5000000>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
+ 		power-supply = <&vcc_lvds>;
+-- 
+2.7.4
+

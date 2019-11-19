@@ -1,0 +1,75 @@
+From da16c31b6df3fcf2bbc3ad78b34d98bcdc3cf1bb Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 13 Nov 2018 13:51:58 +0700
+Subject: [PATCH 171/628] ARM: DTS: iwg22m: enable vin1 and ov7725 camera
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 35 +++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 28177e9..cf3c248 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -114,6 +114,20 @@
+ 		VDDA-supply = <&reg_3p3v>;
+ 		VDDIO-supply = <&reg_3p3v>;
+ 	};
++
++	ov7725@21 {
++		compatible = "ov772x";
++		reg = <0x21>;
++		remote = <&vin1>;
++
++		port {
++			ov7725: endpoint {
++				bus-width = <8>;
++				pclk-sample = <1>;
++				remote-endpoint = <&vin1ep>;
++			};
++		};
++	};
+ };
+ 
+ &pfc {
+@@ -148,6 +162,11 @@
+ 		renesas,function = "du0";
+ 	};
+ 
++	vin1_pins: vin1 {
++		renesas,groups = "vin1_data8", "vin1_sync", "vin1_clk";
++		renesas,function = "vin1";
++	};
++
+ 	scif4_pins: scif4 {
+ 		groups = "scif4_data_b";
+ 		function = "scif4";
+@@ -295,4 +314,20 @@
+ 			};
+ 		};
+ 	};
++};
++
++&vin1 {
++	status = "okay";
++	pinctrl-0 = <&vin1_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin1ep: endpoint {
++			remote-endpoint = <&ov7725>;
++			bus-width = <8>;
++		};
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

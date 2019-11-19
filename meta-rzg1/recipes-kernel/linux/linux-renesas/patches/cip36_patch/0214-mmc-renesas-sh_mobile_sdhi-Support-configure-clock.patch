@@ -1,0 +1,53 @@
+From ace2528aab8c3677d442237d66593b674054cd51 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 14:29:14 +0700
+Subject: [PATCH 214/628] mmc: renesas: sh_mobile_sdhi: Support configure clock
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/mmc/host/sh_mobile_sdhi.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index feefaef..913cc28 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -205,11 +205,13 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 	struct sh_mobile_sdhi *priv;
+ 	struct tmio_mmc_data *mmc_data;
+ 	struct tmio_mmc_data *mmd = pdev->dev.platform_data;
++	const struct device_node *np = pdev->dev.of_node;
+ 	struct tmio_mmc_host *host;
+ 	struct resource *res;
+ 	int irq, ret, i = 0;
+ 	bool multiplexed_isr = true;
+ 	struct tmio_mmc_dma *dma_priv;
++	int clk_rate = 0;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (!res)
+@@ -231,6 +233,18 @@ static int sh_mobile_sdhi_probe(struct platform_device *pdev)
+ 		goto eprobe;
+ 	}
+ 
++	if (np && !of_property_read_u32(np, "renesas,clk-rate", &clk_rate)) {
++			if (clk_rate) {
++					clk_prepare_enable(priv->clk);
++					ret = clk_set_rate(priv->clk, clk_rate);
++					if (ret < 0)
++							dev_err(&pdev->dev,
++									"cannot set clock rate: %d\n", ret);
++
++					clk_disable_unprepare(priv->clk);
++			}
++	}
++
+ 	host = tmio_mmc_host_alloc(pdev);
+ 	if (!host) {
+ 		ret = -ENOMEM;
+-- 
+2.7.4
+

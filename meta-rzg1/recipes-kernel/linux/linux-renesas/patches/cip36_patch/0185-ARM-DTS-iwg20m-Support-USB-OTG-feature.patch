@@ -1,0 +1,46 @@
+From 2d465c751ba9f1c05062129ce62ee19d264b0adf Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 16:24:49 +0700
+Subject: [PATCH 185/628] ARM: DTS: iwg20m: Support USB OTG feature
+
+Both USB Host (pci0) and Function (USBHS) drivers are enabled.
+The USB PHY driver determines which IP block should be connected
+based on vbus and id signals read via gpios.
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index bdb4514..fc6428f 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -223,6 +223,10 @@
+ 	pinctrl-names = "default";
+ };
+ 
++&hsusb {
++	status = "okay";
++};
++
+ &pcie_bus_clk {
+ 	clock-frequency = <100000000>;
+ };
+@@ -348,6 +352,10 @@
+ 
+ &usbphy {
+ 	status = "okay";
++	renesas,id-gpio = <&gpio1 11 GPIO_ACTIVE_LOW>;
++	renesas,vbus-gpio = <&gpio7 24 GPIO_ACTIVE_LOW>;
++	renesas,vbus-pwr-gpio = <&gpio7 23 GPIO_ACTIVE_LOW>;
++	renesas,wakeup;
+ };
+ 
+ &pwm3 {
+-- 
+2.7.4
+

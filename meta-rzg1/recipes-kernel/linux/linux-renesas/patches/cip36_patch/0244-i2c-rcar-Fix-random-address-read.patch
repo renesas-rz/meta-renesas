@@ -1,0 +1,51 @@
+From 69ff34603f8220898105cb9c20d30a04fcb2982a Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNv25@fsoft.com.vn>
+Date: Mon, 9 Apr 2018 22:52:16 +0700
+Subject: [PATCH 244/628] i2c: rcar: Fix random address read
+
+    commit <1bc7473ea07a01a90281ab0d8b7f529d3a8a726c>
+    from git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git
+
+    In spite of not having transmission data, the next transmission will
+    be started if status is cleared. It means clearing a MDE bit.
+    The rcar_i2c_write(priv, ICMSR, 0) is moved for this reason.
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/i2c/busses/i2c-rcar.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 245725a..064b87f 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -448,6 +448,7 @@ static irqreturn_t rcar_i2c_irq(int irq, void *ptr)
+ 		/* HW automatically sends STOP after received NACK */
+ 		rcar_i2c_write(priv, ICMIER, RCAR_IRQ_STOP);
+ 		rcar_i2c_flags_set(priv, ID_NACK);
++		rcar_i2c_write(priv, ICMSR, 0);
+ 		goto out;
+ 	}
+ 
+@@ -455,6 +456,7 @@ static irqreturn_t rcar_i2c_irq(int irq, void *ptr)
+ 	if (msr & MST) {
+ 		priv->msgs_left--; /* The last message also made it */
+ 		rcar_i2c_flags_set(priv, ID_DONE);
++		rcar_i2c_write(priv, ICMSR, 0);
+ 		goto out;
+ 	}
+ 
+@@ -466,7 +468,6 @@ static irqreturn_t rcar_i2c_irq(int irq, void *ptr)
+ out:
+ 	if (rcar_i2c_flags_has(priv, ID_DONE)) {
+ 		rcar_i2c_write(priv, ICMIER, 0);
+-		rcar_i2c_write(priv, ICMSR, 0);
+ 		wake_up(&priv->wait);
+ 	}
+ 
+-- 
+2.7.4
+

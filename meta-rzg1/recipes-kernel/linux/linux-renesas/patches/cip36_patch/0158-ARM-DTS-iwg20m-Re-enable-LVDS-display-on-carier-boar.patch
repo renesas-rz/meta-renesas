@@ -1,0 +1,117 @@
+From c19f5d4ddd2cdd0debc3d4fd3cf9a36626e1b708 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 14:56:39 +0700
+Subject: [PATCH 158/628] ARM: DTS: iwg20m: Re-enable LVDS display on carier
+ board dtsi
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi  | 54 ++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi |  5 ---
+ 2 files changed, 54 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 35d07d5..b7b91c2 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -44,6 +44,21 @@
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	vcc_lvds: regulator@4 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "panel vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
++	x3_clk: x3-clock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <148500000>;
++	};
++
+ 	audio_clock: audio_clock {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+@@ -96,6 +111,26 @@
+ 		states = <3300000 1
+ 			  1800000 0>;
+ 	};
++
++	panel_hannstar: panel@0 {
++		compatible = "hannstar,hsd070pww1", "simple-panel";
++		power-supply = <&vcc_lvds>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				#address-cells = <1>;
++				#size-cells = <0>;
++				reg = <0>;
++				panel_input: endpoint {
++					reg = <0>;
++					remote-endpoint = <&du_out_lvds0>;
++				};
++			};
++		};
++	};
+ };
+ 
+ &avb {
+@@ -230,6 +265,11 @@
+ 		renesas,groups = "pwm3";
+ 		renesas,function = "pwm3";
+ 	};
++
++	du_pins: du {
++		groups = "du_rgb888", "du_sync", "du_oddf", "du_clk_out_0";
++		function = "du";
++	};
+ };
+ 
+ &rcar_sound {
+@@ -294,3 +334,17 @@
+ 
+ 	status = "okay";
+ };
++
++&du {
++	pinctrl-0 = <&du_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	ports {
++		port@1 {
++			endpoint {
++				remote-endpoint = <&panel_input>;
++			};
++		};
++	};
++};
+diff --git a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+index b5b9efd..f1fff19 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+@@ -153,11 +153,6 @@
+ 		function = "can1";
+ 	};
+ 
+-	du_pins: du {
+-		groups = "du_rgb888", "du_sync", "du_oddf", "du_clk_out_0";
+-		function = "du";
+-	};
+-
+ 	hscif1_pins: hscif1 {
+ 		groups = "hscif1_data_c", "hscif1_ctrl_c";
+ 		function = "hscif1";
+-- 
+2.7.4
+

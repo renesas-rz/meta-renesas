@@ -1,0 +1,40 @@
+From b3e53b98dfeae3f4390b26dc655c3e1f013230f3 Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 10:15:56 +0700
+Subject: [PATCH 239/628] ARM: DTS: RZG1C r8a77470: Add PowerVR (SGX module)
+ node to device tree
+
+This patch support Renesas SGX kernel module probe.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index a5c5c97..8750982 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -86,6 +86,17 @@
+ 			#power-domain-cells = <1>;
+ 		};
+ 
++		sgx@fd800000 {
++			compatible = "renesas,sgx";
++			reg = <0 0xfd800000 0 0x10000>;
++			interrupts = <0 119 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "irq_sgx";
++			clocks = <&mstp1_clks R8A77470_CLK_3DG>,
++				<&mstp8_clks R8A77470_CLK_IPMMU_SGX>;
++			clock-names = "sgx_clk", "ipmmu_clk";
++			power-domains = <&sysc R8A77470_PD_SGX>;
++		};
++
+ 		gpio0: gpio@e6050000 {
+ 			compatible = "renesas,gpio-r8a77470",
+ 				     "renesas,rcar-gen2-gpio";
+-- 
+2.7.4
+

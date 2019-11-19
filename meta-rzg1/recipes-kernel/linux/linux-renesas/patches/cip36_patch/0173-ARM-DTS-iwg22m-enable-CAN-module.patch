@@ -1,0 +1,54 @@
+From d0daad38837f107fcde47115e3e1cb40f905174b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 7 Nov 2018 18:15:50 +0700
+Subject: [PATCH 173/628] ARM: DTS: iwg22m: enable CAN module
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts | 9 +++++++++
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts         | 9 +++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts
+index 654d28b..c9b0f29 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts
+@@ -154,3 +154,12 @@
+ 
+ 	status = "okay";
+ };
++
++&gpio4 {
++	can1-trx-en-gpio{
++		gpio-hog;
++		gpios = <10 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can1-trx-en-gpio";
++	};
++};
+\ No newline at end of file
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index cf3c248..76debf9 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -330,4 +330,13 @@
+ 			bus-width = <8>;
+ 		};
+ 	};
++};
++
++&gpio4 {
++	can0-trx-en-gpio{
++		gpio-hog;
++		gpios = <2 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can0-trx-en-gpio";
++	};
+ };
+\ No newline at end of file
+-- 
+2.7.4
+

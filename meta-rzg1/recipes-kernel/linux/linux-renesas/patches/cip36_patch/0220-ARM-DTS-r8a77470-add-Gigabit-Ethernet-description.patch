@@ -1,0 +1,33 @@
+From 85cb063ef703682a600542cacf1ea7560fc1ca62 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Mon, 22 Jul 2019 14:16:11 +0700
+Subject: [PATCH 220/628] ARM: DTS: r8a77470: add Gigabit Ethernet description
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index e8f786b..4835da1 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -321,10 +321,11 @@
+ 		avb: ethernet@e6800000 {
+ 			compatible = "renesas,etheravb-r8a77470",
+ 				     "renesas,etheravb-rcar-gen2";
+-			reg = <0 0xe6800000 0 0x800>, <0 0xee0e8000 0 0x4000>;
++			reg = <0 0xe6800000 0 0x7bf>;
+ 			interrupts = <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp8_clks R8A77470_CLK_ETHERAVB>;
+-			power-domains = <&cpg_clocks>;
++			phy-mode = "gmii";
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			status = "disabled";
+-- 
+2.7.4
+

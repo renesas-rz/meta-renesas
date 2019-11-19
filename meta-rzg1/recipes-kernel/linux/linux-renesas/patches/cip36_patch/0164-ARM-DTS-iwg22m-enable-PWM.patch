@@ -1,0 +1,39 @@
+From f207773beb5698146c1347e0bf7cbb86f2de4da0 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 7 Nov 2018 17:37:48 +0700
+Subject: [PATCH 164/628] ARM: DTS: iwg22m: enable PWM
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 94e9088..f03b670 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -162,6 +162,18 @@
+ 		groups = "usb1";
+ 		function = "usb1";
+ 	};
++
++	pwm1_pins: pwm1 {
++		renesas,groups = "pwm1_c";
++		renesas,function = "pwm1";
++	};
++};
++
++&pwm1 {
++	pinctrl-0 = <&pwm1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
+ };
+ 
+ &rcar_sound {
+-- 
+2.7.4
+

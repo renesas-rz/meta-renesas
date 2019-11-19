@@ -1,0 +1,35 @@
+From 3074a39bb8cc2a09f4c74f6125d49bfbe7c40b08 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Fri, 29 Dec 2017 21:50:52 +0700
+Subject: [PATCH 236/628] mmc: shmobile: Support SDHI version for 0xCC10,
+ 0xCD10
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/mmc/host/sh_mobile_sdhi.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/mmc/host/sh_mobile_sdhi.c b/drivers/mmc/host/sh_mobile_sdhi.c
+index 913cc28..5663bee 100644
+--- a/drivers/mmc/host/sh_mobile_sdhi.c
++++ b/drivers/mmc/host/sh_mobile_sdhi.c
+@@ -106,6 +106,15 @@ static void sh_mobile_sdhi_sdbuf_width(struct tmio_mmc_host *host, int width)
+ 	case 0xCB0D:
+ 		val = (width == 32) ? 0x0000 : 0x0001;
+ 		break;
++	case 0xCC10:
++	case 0xCD10:
++		if (width == 64)
++			val = 0x0000;
++		else if (width == 32)
++			val = 0x0101;
++		else    /* width = 16 */
++			val = 0x0001;
++		break;
+ 	default:
+ 		/* nothing to do */
+ 		return;
+-- 
+2.7.4
+

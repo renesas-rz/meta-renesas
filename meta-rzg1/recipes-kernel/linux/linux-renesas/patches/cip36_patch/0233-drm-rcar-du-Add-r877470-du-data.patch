@@ -1,0 +1,54 @@
+From d67083c9b690b9d34c598ec952e4e188678114f3 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 14 Nov 2018 16:16:09 +0700
+Subject: [PATCH 233/628] drm: rcar-du: Add r877470 du data
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index 967d31c..21b48c7 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -201,6 +201,24 @@ static const struct rcar_du_device_info rcar_du_r8a7745_info = {
+ 		.num_lvds = 0,
+ };
+ 
++static const struct rcar_du_device_info rcar_du_r8a77470_info = {
++	.gen = 2,
++	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
++				| RCAR_DU_FEATURE_EXT_CTRL_REGS,
++	.num_crtcs = 1,
++	.routes = {
++		/* R8A7745 has two RGB outputs and one (currently unsupported)
++		 * TCON output.
++		 */
++		[RCAR_DU_OUTPUT_DPAD0] = {
++			.possible_crtcs = BIT(0),
++			.encoder_type = DRM_MODE_ENCODER_NONE,
++			.port = 0,
++		},
++	},
++	.num_lvds = 0,
++};
++
+ static const struct of_device_id rcar_du_of_table[] = {
+ 	{ .compatible = "renesas,du-r8a7743", .data = &rzg1_du_r8a7743_info },
+ 	{ .compatible = "renesas,du-r8a7779", .data = &rcar_du_r8a7779_info },
+@@ -209,6 +227,7 @@ static const struct of_device_id rcar_du_of_table[] = {
+ 	{ .compatible = "renesas,du-r8a7793", .data = &rcar_du_r8a7791_info },
+ 	{ .compatible = "renesas,du-r8a7794", .data = &rcar_du_r8a7794_info },
+ 	{ .compatible = "renesas,du-r8a7745", .data = &rcar_du_r8a7745_info },
++	{ .compatible = "renesas,du-r8a77470", .data = &rcar_du_r8a77470_info },
+ 	{ }
+ };
+ 
+-- 
+2.7.4
+

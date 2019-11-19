@@ -1,0 +1,25 @@
+From 2debbc728908ffb962fb13cfd631745bc8023223 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 17:35:36 +0700
+Subject: [PATCH 150/628] configs: shmobile: enable ov772x driver
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/configs/shmobile_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 6c6677d..1a9ddd4 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -270,3 +270,4 @@ CONFIG_EXTRA_FIRMWARE_DIR="firmware"
+ CONFIG_MEDIA_USB_SUPPORT=y
+ CONFIG_USB_VIDEO_CLASS=y
+ CONFIG_VIDEO_V4L2=y
++SOC_CAMERA_OV772X=y
+-- 
+2.7.4
+

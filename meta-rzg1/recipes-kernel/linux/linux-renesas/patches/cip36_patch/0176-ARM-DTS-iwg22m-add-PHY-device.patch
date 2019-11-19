@@ -1,0 +1,32 @@
+From 2271e0175e2e4f7d63e9a8f57b35084db860eb71 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 7 Nov 2018 18:27:06 +0700
+Subject: [PATCH 176/628] ARM: DTS: iwg22m: add PHY device
+
+Signed-off-by: NhanNguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 77b0115..b936d0d 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -205,6 +205,11 @@
+ 		function = "avb";
+ 	};
+ 
++	phy0_pins: phy0 {
++		renesas,groups = "intc_irq8";
++		renesas,function = "intc";
++	};
++
+ 	sdhi0_pins: sd0 {
+ 		groups = "sdhi0_data4", "sdhi0_ctrl";
+ 		function = "sdhi0";
+-- 
+2.7.4
+

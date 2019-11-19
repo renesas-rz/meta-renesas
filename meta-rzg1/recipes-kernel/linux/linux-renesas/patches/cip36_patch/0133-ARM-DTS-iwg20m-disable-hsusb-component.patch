@@ -1,0 +1,37 @@
+From 02538e2af1a5e7a5d04a7ec21a7a7e0e96c0cafc Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Wed, 23 May 2018 17:53:17 +0700
+Subject: [PATCH 133/628] ARM: DTS: iwg20m: disable hsusb component
+
+as description in HW manual, usb only can work for one mode HS/FS/LS
+disable hsusb to remove confliction
+
+Signed-off-by: Loc Pham <loc.pham.xh@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index fcb61ed..4ccdd68 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -129,12 +129,6 @@
+ 	};
+ };
+ 
+-&hsusb {
+-	status = "okay";
+-	pinctrl-0 = <&usb0_pins>;
+-	pinctrl-names = "default";
+-};
+-
+ &i2c2 {
+ 	pinctrl-0 = <&i2c2_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

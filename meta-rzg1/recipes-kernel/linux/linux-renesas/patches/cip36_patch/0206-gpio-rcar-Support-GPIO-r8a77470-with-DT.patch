@@ -1,0 +1,30 @@
+From f3551f655181f46a9a73eca8a798f64b3a1afb64 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Fri, 19 Jul 2019 15:47:47 +0700
+Subject: [PATCH 206/628] gpio: rcar: Support GPIO r8a77470 with DT
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ drivers/gpio/gpio-rcar.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index 921c8d1..cfec3d3 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -398,6 +398,9 @@ static const struct of_device_id gpio_rcar_of_table[] = {
+ 		.compatible = "renesas,gpio-r8a7745",
+ 		.data = &gpio_rcar_info_gen2,
+ 	}, {
++		.compatible = "renesas,gpio-r8a77470",
++		.data = &gpio_rcar_info_gen2,
++	}, {
+ 		.compatible = "renesas,gpio-r8a7795",
+ 		/* Gen3 GPIO is identical to Gen2. */
+ 		.data = &gpio_rcar_info_gen2,
+-- 
+2.7.4
+

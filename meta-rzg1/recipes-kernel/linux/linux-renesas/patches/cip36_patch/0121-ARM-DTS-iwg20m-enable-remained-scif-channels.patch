@@ -1,0 +1,60 @@
+From b9f2604d24aa0d0080a9b88f20b17299b31afc54 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Wed, 20 Jun 2018 17:37:56 +0700
+Subject: [PATCH 121/628] ARM: DTS: iwg20m: enable remained scif channels
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index a181dab..eb8bb33 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -35,6 +35,7 @@
+ 	aliases {
+ 		serial0 = &scif0;
+ 		serial3 = &scifb1;
++		serial2 = &scif4;
+ 		ethernet0 = &avb;
+ 	};
+ 
+@@ -214,6 +215,11 @@
+ 		groups = "usb1";
+ 		function = "usb1";
+ 	};
++
++	scif4_pins: serial2 {
++		renesas,groups = "scif4_data_c";
++		renesas,function = "scif4";
++	};
+ };
+ 
+ &rcar_sound {
+@@ -247,6 +253,12 @@
+ 	status = "okay";
+ };
+ 
++&scif4 {
++	pinctrl-0 = <&scif4_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &sdhi1 {
+ 	pinctrl-0 = <&sdhi1_pins>;
+ 	pinctrl-names = "default";
+@@ -268,4 +280,4 @@
+ 
+ &xhci {
+ 	status = "okay";
+-};
+\ No newline at end of file
++};
+-- 
+2.7.4
+

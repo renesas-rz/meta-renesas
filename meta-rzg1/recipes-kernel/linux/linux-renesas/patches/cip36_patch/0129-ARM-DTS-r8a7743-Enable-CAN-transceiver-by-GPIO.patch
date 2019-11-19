@@ -1,0 +1,54 @@
+From d095c9fd1dca31dd7b942cdaf9f3dd1b8e1b3a24 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 10:12:49 +0700
+Subject: [PATCH 129/628] ARM: DTS: r8a7743: Enable CAN transceiver by GPIO
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi  | 9 +++++++++
+ arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi | 9 +++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index eb8bb33..2db9bbf 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -120,6 +120,15 @@
+ 	status = "okay";
+ };
+ 
++&gpio2 {
++	can0-trx-en-gpio{
++		gpio-hog;
++		gpios = <3 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can0-trx-en-gpio";
++	};
++};
++
+ &hsusb {
+ 	status = "okay";
+ 	pinctrl-0 = <&usb0_pins>;
+diff --git a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+index 639b940..3959877 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+@@ -74,6 +74,15 @@
+ 	status = "okay";
+ };
+ 
++&gpio0 {
++	can1-trx-en-gpio{
++		gpio-hog;
++		gpios = <4 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can1-trx-en-gpio";
++	};
++};
++
+ &du {
+ 	pinctrl-0 = <&du_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+
