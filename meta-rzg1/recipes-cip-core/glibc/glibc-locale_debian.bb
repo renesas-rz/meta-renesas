@@ -28,7 +28,7 @@ do_package[depends] += "${BINUTILSDEP}"
 
 # default to disabled 
 ENABLE_BINARY_LOCALE_GENERATION ?= "0"
-ENABLE_BINARY_LOCALE_GENERATION_pn-nativesdk-glibc-locale = "0"
+ENABLE_BINARY_LOCALE_GENERATION_pn-nativesdk-glibc-locale = "1"
 
 #enable locale generation on these arches
 # BINARY_LOCALE_ARCHES is a space separated list of regular expressions
@@ -36,6 +36,7 @@ BINARY_LOCALE_ARCHES ?= "arm.* aarch64 i[3-6]86 x86_64 powerpc mips mips64"
 
 # set "1" to use cross-localedef for locale generation
 # set "0" for qemu emulation of native localedef for locale generation
+# Note: don't set to "1" since cross-localedef is not supported in cip-corE
 LOCALE_GENERATION_WITH_CROSS-LOCALEDEF = "0"
 
 PROVIDES = "virtual/libc-locale"
@@ -139,3 +140,16 @@ FILES_${PN}-dbg += "${libdir}/gconv/.debug"
 # since they redepends on glibc-binary-localedata-* but not depend.
 # These warning messages are harmless, suppress them here.
 do_package_qa[noexec] = "1"
+
+
+# In libc-package.bbclass, localedef file is installed to $treedir/$base_bindir
+# but later it is called from $treedir/bin/localedef.
+# This mistake causes error in nativesdk-glibc-locale package when
+# LOCALE_GENERATION_WITH_CROSS-LOCALEDEF=0
+# (no error in glibc-locale, or when LOCALE_GENERATION_WITH_CROSS-LOCALEDEF=1)
+do_prep_locale_tree_append () {
+	if [ ! -f ${treedir}/bin/localedef ];then
+		[ -d ${treedir}/bin/ ] || mkdir ${treedir}/bin/
+		ln -s ${treedir}/${base_bindir}/localedef ${treedir}/bin/
+	fi
+}
