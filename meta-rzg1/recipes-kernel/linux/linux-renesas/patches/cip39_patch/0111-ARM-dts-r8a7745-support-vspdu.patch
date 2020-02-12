@@ -1,0 +1,86 @@
+From b92d776fd8418ee342103eb529a878f26481b50b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Fri, 2 Nov 2018 21:56:16 +0700
+Subject: [PATCH 111/628] ARM: dts: r8a7745: support vspdu
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 40 +++++++++++++++++++---------------------
+ 1 file changed, 19 insertions(+), 21 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index b194d06..32ce631 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -1350,40 +1350,36 @@
+ 			status = "disabled";
+ 		};
+ 
+-		dmac2d: dma-controller@fea00000 {
+-			compatible = "renesas,2ddmac-r8a7745";
++		vspm@fea00000 {
++			compatible = "renesas,vspm-tddmac","renesas-vspm";
+ 			reg = <0 0xfea00000 0 0x0200>;
+ 			interrupts = <0 285 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_2DDMAC>;
+ 			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 		};
+ 
+-		vsp@fe928000 {
+-			compatible = "renesas,vsp1";
+-			reg = <0 0xfe928000 0 0x8000>;
++		vspm@fe928000 {
++			compatible = "renesas,vspm-vsps", "renesas-vspm";
++			reg = <0 0xfe928000 0 0x7404>;
+ 			interrupts = <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_VSP1_SY>;
+-			power-domains = <&cpg_clocks>;
+-
+-			renesas,has-lut;
+-			renesas,has-sru;
+-			renesas,#rpf = <5>;
+-			renesas,#uds = <1>;
+-			renesas,#wpf = <4>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 		};
+ 
+-		vsp@fe930000 {
+-			compatible = "renesas,vsp1";
+-			reg = <0 0xfe930000 0 0x8000>;
++		vspm@fe930000 {
++			compatible = "renesas,vspm-vspd0", "renesas-vspm";
++			reg = <0 0xfe930000 0 0x7404>;
+ 			interrupts = <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_VSP1DU0>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
++		};
+ 
+-			renesas,has-lif;
+-			renesas,has-lut;
+-			renesas,#rpf = <4>;
+-			renesas,#uds = <1>;
+-			renesas,#wpf = <1>;
++		vspdu0: vspdu0@fe930000 {
++			compatible = "renesas,vsp2";
++			reg = <0 0xfe930000 0 0x7404>;
++			interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7745_CLK_VSP1DU0>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		fdp0: fdpm@fe940000 {
+@@ -1405,6 +1401,8 @@
+ 			clock-names = "du.0", "du.1";
+ 			status = "disabled";
+ 
++			vsps = <&vspdu0>;
++
+ 			ports {
+ 				#address-cells = <1>;
+ 				#size-cells = <0>;
+-- 
+2.7.4
+

@@ -1,0 +1,45 @@
+From 163efd3adf7055fc2fbdf72c5e0bf879e354ec0f Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 11:02:39 +0700
+Subject: [PATCH 137/628] ARM: DTS: iwg20m: enable PWM module
+
+Signed-off-by: Nam Nguyen <nam.nguyen.xb@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 4be87b0..2d7bdc5 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -227,6 +227,11 @@
+ 		renesas,groups = "scif4_data_c";
+ 		renesas,function = "scif4";
+ 	};
++
++	pwm3_pins: pwm3 {
++		renesas,groups = "pwm3";
++		renesas,function = "pwm3";
++	};
+ };
+ 
+ &rcar_sound {
+@@ -284,3 +289,10 @@
+ &usbphy {
+ 	status = "okay";
+ };
++
++&pwm3 {
++	pinctrl-0 = <&pwm3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
+-- 
+2.7.4
+

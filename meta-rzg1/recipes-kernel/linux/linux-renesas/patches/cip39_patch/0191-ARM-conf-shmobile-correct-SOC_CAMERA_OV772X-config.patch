@@ -1,0 +1,26 @@
+From b15b3b107416d103349bcb0297bb8198b447093d Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 18:09:40 +0700
+Subject: [PATCH 191/628] ARM: conf: shmobile: correct SOC_CAMERA_OV772X config
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/configs/shmobile_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 1a9ddd4..5dc06df 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -270,4 +270,4 @@ CONFIG_EXTRA_FIRMWARE_DIR="firmware"
+ CONFIG_MEDIA_USB_SUPPORT=y
+ CONFIG_USB_VIDEO_CLASS=y
+ CONFIG_VIDEO_V4L2=y
+-SOC_CAMERA_OV772X=y
++CONFIG_SOC_CAMERA_OV772X=y
+-- 
+2.7.4
+

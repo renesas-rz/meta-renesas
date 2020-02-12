@@ -1,0 +1,79 @@
+From 780cbde7e54985abb7cb03bcc67b88c2ab6d150d Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 13:10:16 +0700
+Subject: [PATCH 022/628] Revert "gpio: rcar: Fine-grained Runtime PM support"
+
+This reverts commit 65194cb174b8 ("gpio: rcar: Fine-grained Runtime PM support")
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/gpio/gpio-rcar.c | 20 ++++----------------
+ 1 file changed, 4 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/gpio/gpio-rcar.c b/drivers/gpio/gpio-rcar.c
+index 9d4e1e4..921c8d1 100644
+--- a/drivers/gpio/gpio-rcar.c
++++ b/drivers/gpio/gpio-rcar.c
+@@ -293,32 +293,17 @@ static void gpio_rcar_config_general_input_output_mode(struct gpio_chip *chip,
+ 
+ static int gpio_rcar_request(struct gpio_chip *chip, unsigned offset)
+ {
+-	struct gpio_rcar_priv *p = gpio_to_priv(chip);
+-	int error;
+-
+-	error = pm_runtime_get_sync(&p->pdev->dev);
+-	if (error < 0)
+-		return error;
+-
+-	error = pinctrl_request_gpio(chip->base + offset);
+-	if (error)
+-		pm_runtime_put(&p->pdev->dev);
+-
+-	return error;
++	return pinctrl_request_gpio(chip->base + offset);
+ }
+ 
+ static void gpio_rcar_free(struct gpio_chip *chip, unsigned offset)
+ {
+-	struct gpio_rcar_priv *p = gpio_to_priv(chip);
+-
+ 	pinctrl_free_gpio(chip->base + offset);
+ 
+ 	/* Set the GPIO as an input to ensure that the next GPIO request won't
+ 	 * drive the GPIO pin as an output.
+ 	 */
+ 	gpio_rcar_config_general_input_output_mode(chip, offset, false);
+-
+-	pm_runtime_put(&p->pdev->dev);
+ }
+ 
+ static int gpio_rcar_direction_input(struct gpio_chip *chip, unsigned offset)
+@@ -501,6 +486,7 @@ static int gpio_rcar_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	pm_runtime_enable(dev);
++	pm_runtime_get_sync(dev);
+ 
+ 	io = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+@@ -587,6 +573,7 @@ static int gpio_rcar_probe(struct platform_device *pdev)
+ err1:
+ 	gpiochip_remove(gpio_chip);
+ err0:
++	pm_runtime_put(dev);
+ 	pm_runtime_disable(dev);
+ 	return ret;
+ }
+@@ -597,6 +584,7 @@ static int gpio_rcar_remove(struct platform_device *pdev)
+ 
+ 	gpiochip_remove(&p->gpio_chip);
+ 
++	pm_runtime_put(&pdev->dev);
+ 	pm_runtime_disable(&pdev->dev);
+ 	return 0;
+ }
+-- 
+2.7.4
+

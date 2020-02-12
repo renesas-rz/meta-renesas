@@ -1,0 +1,77 @@
+From fba17f9d20da11e24654f94304e99399a8112211 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 10:38:23 +0700
+Subject: [PATCH 131/628] ARM: DTS: r8a7743: add description for wdt0
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7743-iwg20m.dtsi |  5 -----
+ arch/arm/boot/dts/r8a7743.dtsi        | 18 ++++++++----------
+ 2 files changed, 8 insertions(+), 15 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+index d364685..1d3e950 100644
+--- a/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
++++ b/arch/arm/boot/dts/r8a7743-iwg20m.dtsi
+@@ -91,11 +91,6 @@
+ 	};
+ };
+ 
+-&rwdt {
+-	timeout-sec = <60>;
+-	status = "okay";
+-};
+-
+ &sdhi0 {
+ 	pinctrl-0 = <&sdhi0_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index 2fa5438..a80fac1c 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -116,15 +116,6 @@
+ 			reg = <0 0xe6160000 0 0x100>;
+ 		};
+ 
+-		rwdt: watchdog@e6020000 {
+-			compatible = "renesas,r8a7743-wdt",
+-				     "renesas,rcar-gen2-wdt";
+-			reg = <0 0xe6020000 0 0x0c>;
+-			clocks = <&mstp4_clks R8A7743_CLK_RWDT>;
+-			power-domains = <&cpg_clocks>;
+-			status = "disabled";
+-		};
+-
+ 		gic: interrupt-controller@f1001000 {
+ 			compatible = "arm,gic-400";
+ 			#interrupt-cells = <3>;
+@@ -141,6 +132,13 @@
+ 			power-domains = <&cpg_clocks>;
+ 		};
+ 
++		wdt0: watchdog@e6020000 {
++			compatible = "renesas,r8a7743-wdt", "renesas,rcar-gen2-wdt";
++			reg = <0 0xe6020000 0 0x0c>;
++			clocks = <&mstp4_clks R8A7743_CLK_RWDT>;
++			timeout-sec = <60>;
++		};
++
+ 		gpio0: gpio@e6050000 {
+ 			compatible = "renesas,gpio-r8a7743",
+ 				     "renesas,rcar-gen2-gpio";
+@@ -1400,7 +1398,7 @@
+ 					R8A7743_CLK_RWDT R8A7743_CLK_IRQC
+ 					R8A7743_CLK_INTC_SYS
+ 				>;
+-				clock-output-names = "rwdt", "irqc", "intc-sys";
++				clock-output-names = "wdt0", "irqc", "intc-sys";
+ 			};
+ 			mstp5_clks: mstp5_clks@e6150144 {
+ 				compatible = "renesas,r8a7743-mstp-clocks",
+-- 
+2.7.4
+

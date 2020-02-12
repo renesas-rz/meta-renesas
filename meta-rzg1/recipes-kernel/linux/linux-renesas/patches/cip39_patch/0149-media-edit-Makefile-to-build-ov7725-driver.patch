@@ -1,0 +1,28 @@
+From 7fa0c2eef41a992c597b8a4931f40909b9766d66 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@renesas.com>
+Date: Mon, 21 Aug 2017 19:56:50 +0700
+Subject: [PATCH 149/628] media: edit Makefile to build ov7725 driver
+
+Signed-off-by: nhannguyen <nhan.nguyen.yb@renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/media/i2c/soc_camera/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/soc_camera/Makefile b/drivers/media/i2c/soc_camera/Makefile
+index d0421fe..58e4eea 100644
+--- a/drivers/media/i2c/soc_camera/Makefile
++++ b/drivers/media/i2c/soc_camera/Makefile
+@@ -7,7 +7,7 @@ obj-$(CONFIG_SOC_CAMERA_MT9V022)	+= mt9v022.o
+ obj-$(CONFIG_SOC_CAMERA_OV2640)		+= ov2640.o
+ obj-$(CONFIG_SOC_CAMERA_OV5642)		+= ov5642.o
+ obj-$(CONFIG_SOC_CAMERA_OV6650)		+= ov6650.o
+-obj-$(CONFIG_SOC_CAMERA_OV772X)		+= ov772x.o
++obj-$(CONFIG_SOC_CAMERA_OV772X)		+= ov7725.o
+ obj-$(CONFIG_SOC_CAMERA_OV9640)		+= ov9640.o
+ obj-$(CONFIG_SOC_CAMERA_OV9740)		+= ov9740.o
+ obj-$(CONFIG_SOC_CAMERA_RJ54N1)		+= rj54n1cb0c.o
+-- 
+2.7.4
+

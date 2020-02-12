@@ -1,0 +1,56 @@
+From dab561a3716a3b1d060025443a608deb7ad000a2 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Thu, 18 Jul 2019 12:17:23 +0700
+Subject: [PATCH 208/628] ARM: dts: r8a77470: Add serial ports to the device
+ tree
+
+Add all serial ports marked as disabled.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index d039a65..ca884be 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -406,6 +406,33 @@
+ 			status = "disabled";
+ 		};
+ 
++		hscif0: serial@e62c0000 {
++			compatible = "renesas,hscif-r8a77470", "renesas,hscif";
++			reg = <0 0xe62c0000 0 96>;
++			interrupts = <0 154 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A77470_CLK_HSCIF0>;
++			clock-names = "sci_ick";
++			status = "disabled";
++		};
++
++		hscif1: serial@e62c8000 {
++			compatible = "renesas,hscif-r8a77470", "renesas,hscif";
++			reg = <0 0xe62c8000 0 96>;
++			interrupts = <0 155 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A77470_CLK_HSCIF1>;
++			clock-names = "sci_ick";
++			status = "disabled";
++		};
++
++		hscif2: serial@e62d0000 {
++			compatible = "renesas,hscif-r8a77470", "renesas,hscif";
++			reg = <0 0xe62d0000 0 96>;
++			interrupts = <0 21 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp7_clks R8A77470_CLK_HSCIF2>;
++			clock-names = "sci_ick";
++			status = "disabled";
++		};
++
+ 		gic: interrupt-controller@f1001000 {
+ 			compatible = "arm,gic-400";
+ 			#interrupt-cells = <3>;
+-- 
+2.7.4
+

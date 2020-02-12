@@ -1,0 +1,31 @@
+From c4b5b36ff7f064f8abaa34f3cc0258ca42ae239b Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Wed, 17 Jul 2019 11:14:24 +0700
+Subject: [PATCH 204/628] ARM: dts: r8a77470 PFC device tree node
+
+Modify DT node for the r8a77470 PFC device.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 26f32f2..8a58ec1 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -156,7 +156,8 @@
+ 
+ 		pfc: pin-controller@e6060000 {
+ 			compatible = "renesas,pfc-r8a77470";
+-			reg = <0 0xe6060000 0 0x118>;
++			reg = <0 0xe6060000 0 0x250>;
++			#gpio-range-cells = <3>;
+ 		};
+ 
+ 		apmu@e6151000 {
+-- 
+2.7.4
+

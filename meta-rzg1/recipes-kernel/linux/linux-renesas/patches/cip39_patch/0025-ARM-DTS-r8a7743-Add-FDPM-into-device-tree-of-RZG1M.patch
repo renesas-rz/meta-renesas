@@ -1,0 +1,43 @@
+From fb676302cddd203b6f8d5fe3e9c90a79b31fd68e Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 13:38:24 +0700
+Subject: [PATCH 025/628] ARM: DTS: r8a7743: Add FDPM into device tree of RZG1M
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index a12b9f1..2a75817 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -1640,6 +1640,22 @@
+ 			status = "disabled";
+ 		};
+ 
++		fdp0: fdpm@fe940000 {
++			compatible = "renesas,fdp1";
++			reg = <0 0xfe940000 0 0x2400>;
++			interrupts = <0 262 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_FDP1_0>;
++			power-domains = <&cpg_clocks>;
++		};
++
++		fdp1: fdpm@fe944000 {
++			compatible = "renesas,fdp1";
++			reg = <0 0xfe944000 0 0x2400>;
++			interrupts = <0 263 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_FDP1_1>;
++			power-domains = <&cpg_clocks>;
++		};
++
+ 		du: display@feb00000 {
+ 			compatible = "renesas,du-r8a7743";
+ 			reg = <0 0xfeb00000 0 0x40000>,
+-- 
+2.7.4
+

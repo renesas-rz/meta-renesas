@@ -1,0 +1,54 @@
+From d6ce9565883058f050244d67c4bce0719d172c64 Mon Sep 17 00:00:00 2001
+From: Danh Duong <danhdc1@fsoft.com.vn>
+Date: Fri, 2 Nov 2018 18:30:15 +0700
+Subject: [PATCH 019/628] Add-for-clk-driver-RZG-support
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7745.dtsi       |  1 +
+ drivers/clk/shmobile/clk-rcar-gen2.c | 15 +++++++++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 54b556b..8e4c1bf 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -74,6 +74,7 @@
+ 			reg = <0>;
+ 			clock-frequency = <1000000000>;
+ 			clocks = <&z2_clk>;
++			operating-points = <1000000 1000000>;
+ 			next-level-cache = <&L2_CA7>;
+ 		};
+ 
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index e16ad7f..b0a371f 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -341,6 +341,21 @@ static struct pll0_config_data var_pll0_ratio = {
+ 	.is_devider_fixed = false
+ };
+ 
++static const struct of_device_id cpg_of_match[] = {
++
++	{
++		.compatible = "renesas,r8a7743-cpg-clocks",
++		.data = &var_pll0_ratio,
++	},
++
++
++	{
++		.compatible = "renesas,r8a7745-cpg-clocks",
++		.data = &fix_pll0_ratio,
++	},
++	{}
++};
++
+ static u32 cpg_mode __initdata;
+ 
+ static const char * const pll0_mult_match[] = {
+-- 
+2.7.4
+

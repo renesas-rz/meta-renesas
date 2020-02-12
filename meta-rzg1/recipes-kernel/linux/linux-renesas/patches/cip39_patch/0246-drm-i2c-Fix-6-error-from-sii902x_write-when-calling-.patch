@@ -1,0 +1,28 @@
+From 8db361956af375df89e58d1c9064e98167b1be51 Mon Sep 17 00:00:00 2001
+From: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Date: Wed, 10 Jan 2018 16:49:59 +0700
+Subject: [PATCH 246/628] drm: i2c: Fix -6 error from sii902x_write when
+ calling sii902x_get_modes
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/gpu/drm/i2c/sii902x.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/i2c/sii902x.c b/drivers/gpu/drm/i2c/sii902x.c
+index 96e8305..86f6a73 100644
+--- a/drivers/gpu/drm/i2c/sii902x.c
++++ b/drivers/gpu/drm/i2c/sii902x.c
+@@ -117,6 +117,8 @@ static int sii902x_get_modes(struct drm_encoder *encoder,
+ 		kfree(edid);
+ 	}
+ 
++	sii902x_read(client, 0x1A);
++
+ 	cnt = 100;
+ 	do {
+ 		cnt--;
+-- 
+2.7.4
+

@@ -1,0 +1,48 @@
+From 1b935b49cccfa6522f86bb3f6d3692c6e9969f2d Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 10:35:49 +0700
+Subject: [PATCH 134/628] ARM: DTS: iwg20m: disable USB3.0
+
+xhci is driver for for USB3.0
+we detected an issue when using xhci: can not transfer large data
+it stop transfering large data after a period with below message:
+
+xhci-hcd ee000000.usb: xHCI host not responding to stop endpoint command.
+xhci-hcd ee000000.usb: Assuming host is dying, halting host.
+xhci-hcd ee000000.usb: HC died; cleaning up
+usb 3-1: USB disconnect, device number 2
+usb 4-1: USB disconnect, device number 2
+sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x01 driverbyte=0x00
+sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x2a 2a 00 00 00 09 a1 00 00 f0 00
+blk_update_request: I/O error, dev sda, sector 2465
+FAT-fs (sda1): FAT read failed (blocknr 2)
+sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x01 driverbyte=0x00
+sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x2a 2a 00 00 00 0a 91 00 00 f0 00
+blk_update_request: I/O error, dev sda, sector 2705
+FAT-fs (sda1): FAT read failed (blocknr 1)
+mv: write error: Input/output error
+
+Signed-off-by: Loc Pham <loc.pham.xh@rvc.renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 4ccdd68..4be87b0 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -284,7 +284,3 @@
+ &usbphy {
+ 	status = "okay";
+ };
+-
+-&xhci {
+-	status = "okay";
+-};
+-- 
+2.7.4
+

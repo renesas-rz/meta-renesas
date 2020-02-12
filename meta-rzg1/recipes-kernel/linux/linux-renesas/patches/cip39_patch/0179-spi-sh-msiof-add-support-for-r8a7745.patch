@@ -1,0 +1,27 @@
+From d96cebfb9d6013e35b1c7753f721c86eb8e53129 Mon Sep 17 00:00:00 2001
+From: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Date: Thu, 21 Sep 2017 11:16:13 +0700
+Subject: [PATCH 179/628] spi:sh-msiof:add support for r8a7745
+
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/spi/spi-sh-msiof.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index a2a3804..d26e303 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -1276,6 +1276,7 @@ static int sh_msiof_spi_remove(struct platform_device *pdev)
+ static const struct platform_device_id spi_driver_ids[] = {
+ 	{ "spi_sh_msiof",	(kernel_ulong_t)&sh_data },
+ 	{ "spi_r8a7743_msiof",  (kernel_ulong_t)&r8a779x_data },
++	{ "spi_r8a7745_msiof",  (kernel_ulong_t)&r8a779x_data },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(platform, spi_driver_ids);
+-- 
+2.7.4
+

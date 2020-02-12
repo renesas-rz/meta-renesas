@@ -1,0 +1,48 @@
+From d0612f441cfe6fbc61aa8743e19a7abbc74abb5b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 14:51:42 +0700
+Subject: [PATCH 245/628] i2c: rcar: Add subsys_initcall for early timing
+ startup
+
+commit <edd07e6d78396415b5447a935d285cf2e990e111>
+from git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git
+
+Since I2C driver should be handled before all other drivers,
+subsys_initcall() is implemented in this driver.
+
+Signed-off-by: Ryo Kataoka <ryo.kataoka.wt@renesas.com>
+Signed-off-by: khanhluu <khanh.luu.xw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNv25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ drivers/i2c/busses/i2c-rcar.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-rcar.c b/drivers/i2c/busses/i2c-rcar.c
+index 064b87f..36c605a 100644
+--- a/drivers/i2c/busses/i2c-rcar.c
++++ b/drivers/i2c/busses/i2c-rcar.c
+@@ -693,7 +693,18 @@ static struct platform_driver rcar_i2c_driver = {
+ 	.remove		= rcar_i2c_remove,
+ };
+ 
+-module_platform_driver(rcar_i2c_driver);
++static int __init rcar_i2c_adap_init(void)
++{
++	return platform_driver_register(&rcar_i2c_driver);
++}
++
++static void __exit rcar_i2c_adap_exit(void)
++{
++	platform_driver_unregister(&rcar_i2c_driver);
++}
++
++subsys_initcall(rcar_i2c_adap_init);
++module_exit(rcar_i2c_adap_exit);
+ 
+ MODULE_LICENSE("GPL v2");
+ MODULE_DESCRIPTION("Renesas R-Car I2C bus driver");
+-- 
+2.7.4
+

@@ -1,0 +1,34 @@
+From c816864d4d401c6470340d00f323bf6a33df9d8e Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 17:33:37 +0700
+Subject: [PATCH 146/628] ARM: configs: shmobile: parse kernel config from
+ yocto-recipes
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/configs/shmobile_defconfig | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 01012a6..6c6677d 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -261,3 +261,12 @@ CONFIG_PWM_RCAR=y
+ CONFIG_SND_SOC_SGTL5000=y
+ CONFIG_RENESAS_WDT=y
+ CONFIG_VIDEO_TVP5150=y
++CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_XHCI_PCI=y
++CONFIG_USB_XHCI_PLATFORM=y
++CONFIG_USB_XHCI_RCAR=y
++CONFIG_EXTRA_FIRMWARE="r8a779x_usb3_v1.dlmem"
++CONFIG_EXTRA_FIRMWARE_DIR="firmware"
++CONFIG_MEDIA_USB_SUPPORT=y
++CONFIG_USB_VIDEO_CLASS=y
++CONFIG_VIDEO_V4L2=y
+-- 
+2.7.4
+

@@ -1,0 +1,36 @@
+From 4da03f393466576c1008e5b4869a0aabf5bf8c68 Mon Sep 17 00:00:00 2001
+From: Viet Nguyen <vietn@fsoft.com.vn>
+Date: Thu, 24 May 2018 02:20:59 +0700
+Subject: [PATCH 182/628] ARM: DTS: iwg20m: add aliases for SATA version board
+ bug detected in SATA version board, reported by REL.
+
+discussion in redmine https://socrm.dgn.renesas.com/issues/134769
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 0918c4e..bdb4514 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -37,6 +37,11 @@
+ 		serial3 = &scifb1;
+ 		serial2 = &scif4;
+ 		ethernet0 = &avb;
++		sata0	= &sata0;
++		sata1	= &sata1;
++		xhci	= &xhci;
++		pciec	= &pciec;
++		pcie_clk = &pcie_bus_clk;
+ 	};
+ 
+ 	chosen {
+-- 
+2.7.4
+

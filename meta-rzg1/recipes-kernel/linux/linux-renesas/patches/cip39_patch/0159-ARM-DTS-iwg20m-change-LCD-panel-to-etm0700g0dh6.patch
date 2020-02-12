@@ -1,0 +1,33 @@
+From 310cb0d0dbce0e995f9ecf87df32d190b457077b Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 15:02:01 +0700
+Subject: [PATCH 159/628] ARM: DTS: iwg20m: change LCD panel to etm0700g0dh6
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index b7b91c2..99d1f29 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -112,8 +112,8 @@
+ 			  1800000 0>;
+ 	};
+ 
+-	panel_hannstar: panel@0 {
+-		compatible = "hannstar,hsd070pww1", "simple-panel";
++	panel_edt: panel@0 {
++		compatible = "edt,etm0700g0dh6", "simple-panel";
+ 		power-supply = <&vcc_lvds>;
+ 
+ 		ports {
+-- 
+2.7.4
+

@@ -1,0 +1,61 @@
+From 4ccf18ad1708004d547329045bfe369fe02ee177 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Tue, 25 Sep 2018 16:38:20 +0700
+Subject: [PATCH 122/628] ARM: configs: shmobile: add serveral configs specific
+ for iwg20m board
+
+there are serveral kernel configs added in yocto recipes for iwg20m board
+this commit parsed the kernel config in yocto recipes and add here for iwg20m
+board usage only. Please be noticed that these configs may be not suitable for
+some of Renesas boards which also use shmobile_defconfig
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/configs/shmobile_defconfig | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 02e9e4d..46151f8 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -229,3 +229,34 @@ CONFIG_JFFS2_FS_DEBUG=0
+ CONFIG_JFFS2_FS_WRITEBUFFER=y
+ CONFIG_JFFS2_ZLIB=y
+ CONFIG_JFFS2_RTIME=y
++CONFIG_EXT3_FS=y
++CONFIG_EXT4_FS=y
++CONFIG_EXT4_USE_FOR_EXT2=y
++CONFIG_USB_STORAGE=y
++CONFIG_HID_MULTITOUCH=y
++CONFIG_INPUT_TOUCHSCREEN=y
++CONFIG_DRM_PANEL_SIMPLE=y
++CONFIG_DEBUG_FS=y
++CONFIG_ARM_ATAG_DTB_COMPAT=y
++CONFIG_ARM_ATAG_DTB_COMPAT_CMDLINE_FROM_BOOTLOADER=y
++CONFIG_CMDLINE_FROM_BOOTLOADER=y
++CONFIG_VGA_ARB=n
++CONFIG_FB_SH_MOBILE_HDMI=y
++CONFIG_FRAMEBUFFER_CONSOLE=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_VIDEO_RENESAS_VSP1=y
++CONFIG_PREEMPT=y
++CONFIG_ARM_LPAE=y
++CONFIG_RTC_DRV_DA9063=y
++CONFIG_GPIO_SYSFS=y
++CONFIG_SH_SCI_DMA=y
++CONFIG_DRM_RCAR_VSP=y
++CONFIG_CPU_BPREDICT_DISABLE=n
++CONFIG_CMA=y
++CONFIG_DMA_CMA=y
++CONFIG_CMA_SIZE_MBYTES=128
++CONFIG_USB_U_ETHER=n
++CONFIG_USB_ETH=m
++CONFIG_RTC_DRV_BQ32K=y
+-- 
+2.7.4
+

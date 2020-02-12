@@ -1,0 +1,41 @@
+From acbf386f33b81d7901d1cb2d6e1e83abfb096f12 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Tue, 28 Nov 2017 14:50:43 +0700
+Subject: [PATCH 193/628] usb: host: ohci-hcd : workaround to fix warning when
+ soft-reboot
+
+check status of interrupt and command status register before disabling
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/usb/host/ohci-hcd.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/usb/host/ohci-hcd.c b/drivers/usb/host/ohci-hcd.c
+index 602c6e4..2d9b10fb 100644
+--- a/drivers/usb/host/ohci-hcd.c
++++ b/drivers/usb/host/ohci-hcd.c
+@@ -421,11 +421,15 @@ ohci_shutdown (struct usb_hcd *hcd)
+ 	struct ohci_hcd *ohci;
+ 
+ 	ohci = hcd_to_ohci (hcd);
+-	ohci_writel(ohci, (u32) ~0, &ohci->regs->intrdisable);
++	if (!ohci_readl(ohci, &ohci->regs->intrdisable)) {
++		ohci_writel(ohci, (u32) ~0, &ohci->regs->intrdisable);
++	}
+ 
+ 	/* Software reset, after which the controller goes into SUSPEND */
+-	ohci_writel(ohci, OHCI_HCR, &ohci->regs->cmdstatus);
+-	ohci_readl(ohci, &ohci->regs->cmdstatus);	/* flush the writes */
++	if (ohci_readl(ohci, &ohci->regs->cmdstatus)) {
++		ohci_writel(ohci, OHCI_HCR, &ohci->regs->cmdstatus);
++		ohci_readl(ohci, &ohci->regs->cmdstatus);	/* flush the writes */
++	}
+ 	udelay(10);
+ 
+ 	ohci_writel(ohci, ohci->fminterval, &ohci->regs->fminterval);
+-- 
+2.7.4
+

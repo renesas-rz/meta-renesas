@@ -1,0 +1,30 @@
+From e7da6791dd5a42c8f0a5cc2eb4b1dd67b4fa71c7 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 27 Sep 2018 14:40:01 +0700
+Subject: [PATCH 216/628] ARM: shmobile: Enable ramdisk boot support
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+---
+ arch/arm/configs/shmobile_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index 5dc06df..b6b691e 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -229,6 +229,9 @@ CONFIG_JFFS2_FS_DEBUG=0
+ CONFIG_JFFS2_FS_WRITEBUFFER=y
+ CONFIG_JFFS2_ZLIB=y
+ CONFIG_JFFS2_RTIME=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_COUNT=1
++CONFIG_BLK_DEV_RAM_SIZE=102400
+ CONFIG_EXT3_FS=y
+ CONFIG_EXT4_FS=y
+ CONFIG_EXT4_USE_FOR_EXT2=y
+-- 
+2.7.4
+

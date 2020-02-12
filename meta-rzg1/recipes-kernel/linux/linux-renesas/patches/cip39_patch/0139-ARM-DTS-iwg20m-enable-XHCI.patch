@@ -1,0 +1,44 @@
+From 4178f9d37b4628b38dcd7916158d1532ce1cfc57 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Fri, 22 Jun 2018 11:09:57 +0700
+Subject: [PATCH 139/628] ARM: DTS: iwg20m: enable XHCI
+
+XHCI is enable for suporting USB3.0
+in RZG1 hardware manual, USB3.0 use one USB2.0 PHY, thereforce, USB1 need to be
+disabled in order to enable USB3.0
+
+Signed-off-by: Loc Pham <loc.pham.xh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Viet Nguyen <vietn@fsoft.com.vn>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 2d7bdc5..35d07d5 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -156,15 +156,13 @@
+ 	status = "okay";
+ };
+ 
+-&pci0 {
++&xhci {
+ 	status = "okay";
+-	pinctrl-0 = <&usb0_pins>;
+-	pinctrl-names = "default";
+ };
+ 
+-&pci1 {
++&pci0 {
+ 	status = "okay";
+-	pinctrl-0 = <&usb1_pins>;
++	pinctrl-0 = <&usb0_pins>;
+ 	pinctrl-names = "default";
+ };
+ 
+-- 
+2.7.4
+

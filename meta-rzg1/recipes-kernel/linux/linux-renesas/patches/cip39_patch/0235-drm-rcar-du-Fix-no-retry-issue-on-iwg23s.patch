@@ -1,0 +1,37 @@
+From 75a0a951c29ba54ad5eeb67bb594fd51e8404612 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Mon, 9 Apr 2018 18:29:43 +0700
+Subject: [PATCH 235/628] drm: rcar-du: Fix no-retry issue on iwg23s
+
+Issue caused by workaround in commit 587eb8d94ef5 ("rcar-du: Work
+around to enable iwg20m LCD display")
+- The mentioned commit prevents DU from re-initializing HDMI encoder on
+  iwg23s board
+- This new commit limits the workaround to work on iwg20m and iwg22m boards
+  only
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_encoder.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+index 8408359..a4ef2be 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_encoder.c
+@@ -206,7 +206,9 @@ done:
+ 		devm_kfree(rcdu->dev, renc);
+ 	}
+ 
+-	if (ret == -EPROBE_DEFER)
++	if (ret == -EPROBE_DEFER &&
++			(of_machine_is_compatible("iw,iwg20m") ||
++			of_machine_is_compatible("iw,iwg22m")))
+ 		/* Return -EPROBE_DEFER will make kernel trying to initialize
+ 		 * current output again. But in certain case it causes looping
+ 		 * and kernel cannot init another output. Disable temporarily */
+-- 
+2.7.4
+
