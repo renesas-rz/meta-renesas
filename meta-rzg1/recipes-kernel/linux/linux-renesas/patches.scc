@@ -634,3 +634,4 @@ patch patches/cip39rt_patch/0633-v4l-vsp1-Always-setup-the-display-list.patch
 patch patches/cip39rt_patch/0634-v4l-vsp1-Simplify-frame-end-processing.patch
 patch patches/cip39rt_patch/0635-v4l-vsp1-Split-display-list-manager-from-display-lis.patch
 patch patches/cip39rt_patch/0636-v4l-vsp1-Store-the-display-list-manager-in-the-WPF.patch
+patch patches/cip39rt_patch/0637-serial-sh-sci-fix-issue-of-handling-parity-error-in-.patch
