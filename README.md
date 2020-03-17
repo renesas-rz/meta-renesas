@@ -46,8 +46,7 @@ This layer depends on:
 
 * meta-rust
   * URI: https://github.com/webdino/meta-rust.git
-  * branch: jethro-14.0.1_rust_1.24.1
-  * revision: a047b443c2bdac19bf2c2b067c9737e4f151cc9f
+  * revision: 4110f1d92af4dbcb73ed5ad6f18b25bd097451ae
 
 ## Build Instructions
 
