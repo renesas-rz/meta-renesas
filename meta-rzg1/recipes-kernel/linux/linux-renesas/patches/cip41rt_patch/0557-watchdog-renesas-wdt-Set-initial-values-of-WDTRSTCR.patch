@@ -1,0 +1,75 @@
+From 958162d2f849eb24709aa9e8e89e3e34389dcffb Mon Sep 17 00:00:00 2001
+From: Duy Bao Dang <duy.dang.yb@renesas.com>
+Date: Mon, 25 May 2020 15:07:17 +0700
+Subject: [PATCH] watchdog: renesas-wdt: Set initial values of WDTRSTCR, CA7BAR
+ and CA15BAR
+
+Set initial values of Watchdog Timer Reset Control and Cortex A7/A15
+Boot Address registers to enable Watchdog reboot by default.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+Signed-off-by: Duy Bao Dang <duy.dang.yb@renesas.com>
+---
+ drivers/watchdog/renesas_wdt.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/drivers/watchdog/renesas_wdt.c b/drivers/watchdog/renesas_wdt.c
+index fdc1e30..d6c3577 100644
+--- a/drivers/watchdog/renesas_wdt.c
++++ b/drivers/watchdog/renesas_wdt.c
+@@ -204,6 +204,10 @@ static int rwdt_probe(struct platform_device *pdev)
+ 	unsigned long clks_per_sec;
+ 	int ret, i;
+ 
++	void __iomem *wdtrstcr;
++	void __iomem *ca15bar;
++	void __iomem *ca7bar;
++
+ 	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
+@@ -275,6 +279,20 @@ static int rwdt_probe(struct platform_device *pdev)
+ 		if (ret)
+ 			dev_err(&pdev->dev,
+ 				"Failed to register restart handler (err = %d)\n", ret);
++
++		wdtrstcr = ioremap_nocache(WDTRSTCR, 4);
++		ca15bar  = ioremap_nocache(CA15BAR, 4);
++
++		BUG_ON(!ca15bar);
++		BUG_ON(!wdtrstcr);
++		// /* Enabling RWDT Reset request */
++		iowrite32(0xA55A0002, wdtrstcr);
++		/* setting ROM Address as SYS Boot Address */
++		iowrite32(0x00000002, ca15bar);
++		iowrite32(0x00000012, ca15bar);
++		iounmap(wdtrstcr);
++		iounmap(ca15bar);
++
+ 	}
+ 
+ 	/*
+@@ -290,6 +308,20 @@ static int rwdt_probe(struct platform_device *pdev)
+ 		if (ret)
+ 			dev_err(&pdev->dev,
+ 				"Failed to register restart handler (err = %d)\n", ret);
++
++		wdtrstcr = ioremap_nocache(WDTRSTCR, 4);
++		ca7bar  = ioremap_nocache(CA7BAR, 4);
++
++		BUG_ON(!ca7bar);
++		BUG_ON(!wdtrstcr);
++		// /* Enabling RWDT Reset request */
++		iowrite32(0xA55A0002, wdtrstcr);
++		/* setting ROM Address as SYS Boot Address */
++		iowrite32(0x00000002, ca7bar);
++		iowrite32(0x00000012, ca7bar);
++		iounmap(wdtrstcr);
++		iounmap(ca7bar);
++
+ 	}
+ 
+ 	return 0;
+-- 
+1.9.1
+

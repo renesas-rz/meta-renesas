@@ -1,0 +1,48 @@
+From 5e2c6ea835ade4031a6ff410a93390b9257bc0a1 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Thu, 18 Jul 2019 15:19:21 +0700
+Subject: [PATCH 209/559] ARM: dts: r8a77470: Add CPU Voltage parameters into
+ cpu0 node for r8a77470
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index b9bd9f1..fdec72e 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -32,6 +32,15 @@
+ 		reg = <0 0x40000000 0 0x20000000>;
+ 	};
+ 
++	reg_1p0v: 1p0v {
++		compatible = "regulator-fixed";
++		regulator-name = "1P0V";
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
+ 	reg_1p8v: reg-1p8v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "fixed-1.8V";
+@@ -64,6 +73,10 @@
+ 	};
+ };
+ 
++&cpu0 {
++	cpu0-supply = <&reg_1p0v>;
++};
++
+ &avb {
+ 	pinctrl-0 = <&avb_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

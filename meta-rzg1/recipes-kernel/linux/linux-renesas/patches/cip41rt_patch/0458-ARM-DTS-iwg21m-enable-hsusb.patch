@@ -1,0 +1,29 @@
+From 95486c2e964f2fc15986880d37083dc0ac0606c9 Mon Sep 17 00:00:00 2001
+From: Tin Le <tin.le.wh@rvc.renesas.com>
+Date: Fri, 20 Apr 2018 10:20:09 +0700
+Subject: [PATCH 458/559] ARM: DTS: iwg21m: enable hsusb
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index 9cfed63..cc55642 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -408,6 +408,10 @@
+ 	renesas,wakeup;
+ };
+ 
++&hsusb {
++	status = "okay";
++};
++
+ &xhci {
+ 	status = "okay";
+ };
+-- 
+2.7.4
+

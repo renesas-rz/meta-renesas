@@ -1,0 +1,70 @@
+From 3b74bc81130dc2760cd2e3c0f0b63d2c784a8114 Mon Sep 17 00:00:00 2001
+From: TamPT8 <tampt8@fsoft.com.vn>
+Date: Tue, 17 Dec 2019 08:41:56 +0700
+Subject: [PATCH 461/559] phy: phy-rcar-gen2: add support for r8a7742 usb otg
+
+Signed-off-by: Tin Le <tin.le.wh@rvc.renesas.com>
+Signed-off-by: LiNTC <lintc@fsoft.com.vn>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: TamPT8 <tampt8@fsoft.com.vn>
+---
+ drivers/phy/phy-rcar-gen2.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/phy/phy-rcar-gen2.c b/drivers/phy/phy-rcar-gen2.c
+index c923608..c996473 100644
+--- a/drivers/phy/phy-rcar-gen2.c
++++ b/drivers/phy/phy-rcar-gen2.c
+@@ -398,7 +398,8 @@ static void gpio_id_work(struct work_struct *work)
+ 	if (!id) {
+ 		if (of_machine_is_compatible("renesas,r8a7745"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_PCI);
+-		else if (of_machine_is_compatible("renesas,r8a7743") ||
++		else if (of_machine_is_compatible("renesas,r8a7742") ||
++			of_machine_is_compatible("renesas,r8a7743") ||
+ 			of_machine_is_compatible("renesas,r8a7744"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_USB30);
+ 		else if (of_machine_is_compatible("renesas,r8a77470"))
+@@ -406,7 +407,8 @@ static void gpio_id_work(struct work_struct *work)
+ 	} else {
+ 		if (of_machine_is_compatible("renesas,r8a7745"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_HS_USB | USBHS_UGCTRL2_USB2SEL_PCI);
+-		else if (of_machine_is_compatible("renesas,r8a7743") ||
++		else if (of_machine_is_compatible("renesas,r8a7742") ||
++			of_machine_is_compatible("renesas,r8a7743") ||
+ 			of_machine_is_compatible("renesas,r8a7744"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_HS_USB | USBHS_UGCTRL2_USB2SEL_USB30);
+ 		else if (of_machine_is_compatible("renesas,r8a77470"))
+@@ -438,7 +440,8 @@ static void gpio_vbus_work(struct work_struct *work)
+ 	if (id) {
+ 		if (of_machine_is_compatible("renesas,r8a7745"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_HS_USB | USBHS_UGCTRL2_USB2SEL_PCI);
+-		else if (of_machine_is_compatible("renesas,r8a7743") ||
++		else if (of_machine_is_compatible("renesas,r8a7742") ||
++			of_machine_is_compatible("renesas,r8a7743") ||
+ 			of_machine_is_compatible("renesas,r8a7744"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_HS_USB | USBHS_UGCTRL2_USB2SEL_USB30);
+ 		else if (of_machine_is_compatible("renesas,r8a77470"))
+@@ -446,7 +449,8 @@ static void gpio_vbus_work(struct work_struct *work)
+ 	} else {
+ 		if (of_machine_is_compatible("renesas,r8a7745"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_PCI);
+-		else if (of_machine_is_compatible("renesas,r8a7743") ||
++		else if (of_machine_is_compatible("renesas,r8a7742") ||
++			of_machine_is_compatible("renesas,r8a7743") ||
+ 			of_machine_is_compatible("renesas,r8a7744"))
+ 			rcar_gen2_phy_switch(channel, USBHS_UGCTRL2_USB0SEL_PCI | USBHS_UGCTRL2_USB2SEL_USB30);
+ 		else if (of_machine_is_compatible("renesas,r8a77470"))
+@@ -559,7 +563,8 @@ static int rcar_gen2_usb_set_peripheral(struct usb_otg *otg,
+ 		otg->gadget = gadget;
+ 
+ 	/* initialize connection state */
+-		if (of_machine_is_compatible("renesas,r8a7743")
++		if (of_machine_is_compatible("renesas,r8a7742")
++			|| of_machine_is_compatible("renesas,r8a7743")
+ 			|| of_machine_is_compatible("renesas,r8a7744")
+ 			|| of_machine_is_compatible("renesas,r8a7745")) {
+ 			gpio_vbus_irq(channel->irq_vbus, channel);
+-- 
+2.7.4
+

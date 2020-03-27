@@ -1,0 +1,28 @@
+From d89552d4cd983976e572653c5e7d80502f6e6a0b Mon Sep 17 00:00:00 2001
+From: Tung Vo <tung.vo.eb@rvc.renesas.com>
+Date: Tue, 15 May 2018 02:21:43 +0700
+Subject: [PATCH 502/559] ARM: DTS: iwg21m: modify VBUS and enable PWEN pin
+ support USB OTG
+
+Signed-off-by: Tung Vo <tung.vo.eb@rvc.renesas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21m.dts | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21m.dts b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+index bb66802..5403854 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21m.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21m.dts
+@@ -433,7 +433,8 @@
+ &usbphy {
+ 	status = "okay";
+ 	renesas,id-gpio = <&gpio5 20 GPIO_ACTIVE_LOW>;
+-	renesas,vbus-gpio = <&gpio5 18 GPIO_ACTIVE_LOW>;
++	renesas,vbus-gpio = <&gpio5 19 GPIO_ACTIVE_LOW>;
++	renesas,vbus-pwr-gpio = <&gpio5 18 GPIO_ACTIVE_LOW>;
+ 	renesas,wakeup;
+ };
+ 
+-- 
+2.7.4
+

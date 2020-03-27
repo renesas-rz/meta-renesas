@@ -1,0 +1,29 @@
+From b29e4434b1f59c3f269721351adb23876f5152e1 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 25 Jun 2018 14:28:43 +0700
+Subject: [PATCH 493/559] ARM: DTS: Fix issue lvds screen cannot display
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index 247b5df..a080005 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -247,8 +247,8 @@
+ 	};
+ 
+ 	i2c2_pins: i2c2 {
+-		groups = "i2c2";
+-		function = "i2c2";
++		renesas,groups = "i2c2";
++		renesas,function = "i2c2";
+ 	};
+ 
+ 	scif0_pins: scif0 {
+-- 
+2.7.4
+

@@ -1,0 +1,36 @@
+From 8924fddf7c682126c0b4031aaddfa0aabb6d5860 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Thu, 2 Jan 2020 11:42:37 +0700
+Subject: [PATCH 541/559] sh-pfc: usb0_pins, usb1_pins: switch to using renesas
+ manufacturer name
+
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 23b1960..9061743 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -174,13 +174,13 @@
+ 	};
+ 
+ 	usb0_pins: usb0 {
+-		groups = "usb0";
+-		function = "usb0";
++		renesas,groups = "usb0";
++		renesas,function = "usb0";
+ 	};
+ 
+ 	usb1_pins: usb1 {
+-		groups = "usb1";
+-		function = "usb1";
++		renesas,groups = "usb1";
++		renesas,function = "usb1";
+ 	};
+ 
+ 	scif1_pins: serial1 {
+-- 
+2.7.4
+

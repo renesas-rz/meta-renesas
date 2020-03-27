@@ -1,0 +1,39 @@
+From 362f97643ca2077d72cd1ecea328ccc0ac4d29cf Mon Sep 17 00:00:00 2001
+From: "Pham Thanh Tam [FGA.AIS]" <tampt8@fsoft.com.vn>
+Date: Tue, 23 Jul 2019 08:29:33 +0700
+Subject: [PATCH 222/559] ARM: DTS: r8a77470: Add DMAC devices to DT
+
+Instantiate the two system DMA controllers in the r8a77470 device tree.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 24b830c..6785aeb 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -445,7 +445,7 @@
+ 					  "ch12", "ch13", "ch14";
+ 			clocks = <&mstp2_clks R8A77470_CLK_SYS_DMAC0>;
+ 			clock-names = "fck";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			#dma-cells = <1>;
+ 			dma-channels = <15>;
+ 		};
+@@ -477,7 +477,7 @@
+ 					  "ch12", "ch13", "ch14";
+ 			clocks = <&mstp2_clks R8A77470_CLK_SYS_DMAC1>;
+ 			clock-names = "fck";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			#dma-cells = <1>;
+ 			dma-channels = <15>;
+ 		};
+-- 
+2.7.4
+

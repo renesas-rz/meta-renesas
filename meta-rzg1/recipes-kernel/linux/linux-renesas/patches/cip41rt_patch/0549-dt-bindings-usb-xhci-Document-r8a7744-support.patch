@@ -1,0 +1,38 @@
+From 1ab6cb92fc39c2eb26a0d99a791642e2764f1bfd Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das@bp.renesas.com>
+Date: Fri, 24 Jan 2020 09:08:18 +0000
+Subject: [PATCH 549/559] dt-bindings: usb-xhci: Document r8a7744 support
+
+commit 2cfe8f864d0e2504dc2f68f0b04668d877f7c7b4 upstream.
+
+Document r8a7744 xhci support. The driver will use the fallback
+compatible string "renesas,rcar-gen2-xhci", therefore no driver
+change is needed.
+
+Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+Reviewed-by: Chris Paterson <Chris.Paterson2@renesas.com>
+Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ Documentation/devicetree/bindings/usb/usb-xhci.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/usb/usb-xhci.txt b/Documentation/devicetree/bindings/usb/usb-xhci.txt
+index fce0320..bf5192b 100644
+--- a/Documentation/devicetree/bindings/usb/usb-xhci.txt
++++ b/Documentation/devicetree/bindings/usb/usb-xhci.txt
+@@ -3,7 +3,8 @@ USB xHCI controllers
+ Required properties:
+   - compatible: should be one of "generic-xhci",
+     "marvell,armada-375-xhci", "marvell,armada-380-xhci",
+-    "renesas,xhci-r8a7790", "renesas,xhci-r8a7791", "renesas,xhci-r8a7743"
++    "renesas,xhci-r8a7790", "renesas,xhci-r8a7791", "renesas,xhci-r8a7743",
++    "renesas,xhci-r8a7744"
+     (deprecated: "xhci-platform").
+   - reg: should contain address and length of the standard XHCI
+     register set for the device.
+-- 
+2.7.4
+

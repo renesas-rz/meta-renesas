@@ -1,0 +1,50 @@
+From 0baf89aa988527b0c9768ce87802f598ffbd2b41 Mon Sep 17 00:00:00 2001
+From: Tam Nhat <tamnn1@fsoft.com.vn>
+Date: Sat, 1 Jun 2019 14:21:55 +0700
+Subject: [PATCH 536/559] ARM: DTS: iwg22d: Enable UHS-I mode for SDHI0
+
+This patch adds UHS pin state with power-source 1.8V to enable UHS-I
+mode.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 4a8d689..c620637 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -257,6 +257,12 @@
+ 		power-source = <3300>;
+ 	};
+ 
++	sdhi0_pins_uhs: sd0_uhs {
++		renesas,groups = "sdhi0_data4", "sdhi0_ctrl";
++		renesas,function = "sdhi0";
++		power-source = <1800>;
++	};
++
+ 	sound_pins: sound {
+ 		renesas,groups = "ssi34_ctrl", "ssi3_data", "ssi4_data";
+ 		renesas,function = "ssi";
+@@ -330,7 +336,8 @@
+ 
+ &sdhi0 {
+ 	pinctrl-0 = <&sdhi0_pins>;
+-	pinctrl-names = "default";
++	pinctrl-1 = <&sdhi0_pins_uhs>;
++	pinctrl-names = "default", "state_uhs";
+ 
+ 	vmmc-supply = <&reg_3p3v>;
+ 	vqmmc-supply = <&vccq_sdhi0>;
+@@ -435,4 +442,4 @@
+ 
+ &tmu3 {
+ 	status = "okay";
+-};
+\ No newline at end of file
++};
+-- 
+2.7.4
+

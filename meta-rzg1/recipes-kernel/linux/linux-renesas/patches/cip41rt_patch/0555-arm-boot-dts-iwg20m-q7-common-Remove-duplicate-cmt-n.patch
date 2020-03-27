@@ -1,0 +1,32 @@
+From 2b2942dde0c1ca28bcb915c0a02863fafa39a26c Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Thu, 23 Apr 2020 11:34:24 +0700
+Subject: [PATCH 555/559] arm: boot: dts: iwg20m-q7-common: Remove duplicate
+ cmt node
+
+This patch remove diplicate node cmt0 of
+iwg20m-q7-common.dtsi.
+
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index ed24e1e..a4fc9d3 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -171,10 +171,6 @@
+ 	status = "okay";
+ };
+ 
+-&cmt0 {
+-	status = "okay";
+-};
+-
+ &gpio2 {
+ 	can0-trx-en-gpio{
+ 		gpio-hog;
+-- 
+2.7.4
+
