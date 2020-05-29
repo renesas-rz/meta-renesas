@@ -1,0 +1,78 @@
+From cf8e9d01ee9dbd168465aee6c91752f22bbede75 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das@bp.renesas.com>
+Date: Fri, 24 Jan 2020 09:08:15 +0000
+Subject: [PATCH 306/557] ARM: dts: r8a7744: Add MSIOF[012] support
+
+commit 491e70588805a8895bff6ac5a626c8bb481fea1c upstream.
+
+Add the DT nodes needed by MSIOF[012] interfaces to the SoC dtsi.
+
+Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+(changed clocks and power-domains properties, removed resets property)
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 45 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 804f4f6a..87c43fb 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -892,6 +892,51 @@
+ 			status = "disabled";
+ 		};
+ 
++		msiof0: spi@e6e20000 {
++			compatible = "renesas,msiof-r8a7744",
++				     "renesas,rcar-gen2-msiof";
++			reg = <0 0xe6e20000 0 0x0064>;
++			interrupts = <GIC_SPI 156 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp0_clks R8A7744_CLK_MSIOF0>;
++			dmas = <&dmac0 0x51>, <&dmac0 0x52>,
++			       <&dmac1 0x51>, <&dmac1 0x52>;
++			dma-names = "tx", "rx", "tx", "rx";
++			power-domains = <&cpg_clocks>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		msiof1: spi@e6e10000 {
++			compatible = "renesas,msiof-r8a7744",
++				     "renesas,rcar-gen2-msiof";
++			reg = <0 0xe6e10000 0 0x0064>;
++			interrupts = <GIC_SPI 157 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp2_clks R8A7744_CLK_MSIOF1>;
++			dmas = <&dmac0 0x55>, <&dmac0 0x56>,
++			       <&dmac1 0x55>, <&dmac1 0x56>;
++			dma-names = "tx", "rx", "tx", "rx";
++			power-domains = <&cpg_clocks>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		msiof2: spi@e6e00000 {
++			compatible = "renesas,msiof-r8a7744",
++				     "renesas,rcar-gen2-msiof";
++			reg = <0 0xe6e00000 0 0x0064>;
++			interrupts = <GIC_SPI 158 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp2_clks R8A7744_CLK_MSIOF2>;
++			dmas = <&dmac0 0x41>, <&dmac0 0x42>,
++			       <&dmac1 0x41>, <&dmac1 0x42>;
++			dma-names = "tx", "rx", "tx", "rx";
++			power-domains = <&cpg_clocks>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		can0: can@e6e80000 {
+ 			compatible = "renesas,can-r8a7744",
+ 				     "renesas,rcar-gen2-can";
+-- 
+2.7.4
+

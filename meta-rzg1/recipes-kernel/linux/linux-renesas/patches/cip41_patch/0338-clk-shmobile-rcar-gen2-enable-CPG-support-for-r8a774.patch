@@ -1,0 +1,33 @@
+From 069ba41c8f63d6f8f24a7302378b88a82bb4194d Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Thu, 18 Oct 2018 11:19:53 +0700
+Subject: [PATCH 338/557] clk: shmobile: rcar-gen2: enable CPG support for
+ r8a7742
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ drivers/clk/shmobile/clk-rcar-gen2.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/clk/shmobile/clk-rcar-gen2.c b/drivers/clk/shmobile/clk-rcar-gen2.c
+index 5cb6a26..c2aea3a 100644
+--- a/drivers/clk/shmobile/clk-rcar-gen2.c
++++ b/drivers/clk/shmobile/clk-rcar-gen2.c
+@@ -344,6 +344,11 @@ static struct pll0_config_data var_pll0_ratio = {
+ static const struct of_device_id cpg_of_match[] = {
+ 
+ 	{
++		.compatible = "renesas,r8a7742-cpg-clocks",
++		.data = &var_pll0_ratio,
++	},
++
++	{
+ 		.compatible = "renesas,r8a7743-cpg-clocks",
+ 		.data = &var_pll0_ratio,
+ 	},
+-- 
+2.7.4
+

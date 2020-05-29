@@ -1,0 +1,251 @@
+From e14fb7590a7516d27555615a59dd4ffca143ba0a Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Wed, 14 Aug 2019 15:20:45 +0700
+Subject: [PATCH 216/557] ARM: dts: r8a77470: Add SYSC PM Domains
+
+Add a device node for the System Controller.
+
+Hook up the Cortex-A7 CPU cores to their respective PM Domains.
+
+Hook up all devices that are part of the CPG/MSTP Clock Domain to the
+SYSC always-on PM Domain, for a more consistent device-power-area
+description in DT.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 48 +++++++++++++++++++++++++----------------
+ 1 file changed, 30 insertions(+), 18 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 9d8eb2c..75c0dd6 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -8,6 +8,7 @@
+ #include <dt-bindings/interrupt-controller/irq.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+ #include <dt-bindings/clock/r8a77470-clock.h>
++#include <dt-bindings/power/r8a77470-sysc.h>
+ 
+ / {
+ 	compatible = "renesas,r8a77470";
+@@ -33,6 +34,7 @@
+ 			reg = <0>;
+ 			clock-frequency = <1000000000>;
+ 			clocks = <&z2_clk>;
++			power-domains = <&sysc R8A77470_PD_CA7_CPU0>;
+ 			next-level-cache = <&L2_CA7>;
+ 		};
+ 
+@@ -42,6 +44,7 @@
+ 			reg = <1>;
+ 			clock-frequency = <1000000000>;
+ 			clocks = <&z2_clk>;
++			power-domains = <&sysc R8A77470_PD_CA7_CPU1>;
+ 			next-level-cache = <&L2_CA7>;
+ 		};
+ 
+@@ -77,6 +80,12 @@
+ 		#size-cells = <2>;
+ 		ranges;
+ 
++		sysc: system-controller@e6180000 {
++			compatible = "renesas,r8a77470-sysc";
++			reg = <0 0xe6180000 0 0x0200>;
++			#power-domain-cells = <1>;
++		};
++
+ 		rwdt: watchdog@e6020000 {
+ 			compatible = "renesas,r8a77470-wdt",
+ 				     "renesas,rcar-gen2-wdt";
+@@ -97,7 +106,7 @@
+ 			#interrupt-cells = <2>;
+ 			interrupt-controller;
+ 			clocks = <&mstp9_clks R8A77470_CLK_GPIO0>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		gpio1: gpio@e6051000 {
+@@ -111,7 +120,7 @@
+ 			#interrupt-cells = <2>;
+ 			interrupt-controller;
+ 			clocks = <&mstp9_clks R8A77470_CLK_GPIO1>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		gpio2: gpio@e6052000 {
+@@ -125,7 +134,7 @@
+ 			#interrupt-cells = <2>;
+ 			interrupt-controller;
+ 			clocks = <&mstp9_clks R8A77470_CLK_GPIO2>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		gpio3: gpio@e6053000 {
+@@ -140,7 +149,7 @@
+ 			#interrupt-cells = <2>;
+ 			interrupt-controller;
+ 			clocks = <&mstp9_clks R8A77470_CLK_GPIO3>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		gpio4: gpio@e6054000 {
+@@ -154,7 +163,7 @@
+ 			#interrupt-cells = <2>;
+ 			interrupt-controller;
+ 			clocks = <&mstp9_clks R8A77470_CLK_GPIO4>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		gpio5: gpio@e6055000 {
+@@ -168,7 +177,7 @@
+ 			#interrupt-cells = <2>;
+ 			interrupt-controller;
+ 			clocks = <&mstp9_clks R8A77470_CLK_GPIO5>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		pfc: pin-controller@e6060000 {
+@@ -204,7 +213,7 @@
+ 				     <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp4_clks R8A77470_CLK_IRQC>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		icram0:	sram@e63a0000 {
+@@ -525,7 +534,7 @@
+ 			dmas = <&dmac0 0x29>, <&dmac0 0x2a>,
+ 			       <&dmac1 0x29>, <&dmac1 0x2a>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -539,7 +548,7 @@
+ 			dmas = <&dmac0 0x2d>, <&dmac0 0x2e>,
+ 			       <&dmac1 0x2d>, <&dmac1 0x2e>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -553,7 +562,7 @@
+ 			dmas = <&dmac0 0x2b>, <&dmac0 0x2c>,
+ 			       <&dmac1 0x2b>, <&dmac1 0x2c>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -567,7 +576,7 @@
+ 			dmas = <&dmac0 0x2f>, <&dmac0 0x30>,
+ 			       <&dmac1 0x2f>, <&dmac1 0x30>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -581,7 +590,7 @@
+ 			dmas = <&dmac0 0xfb>, <&dmac0 0xfc>,
+ 			       <&dmac1 0xfb>, <&dmac1 0xfc>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -596,7 +605,7 @@
+ 			dmas = <&dmac0 0xfd>, <&dmac0 0xfe>,
+ 			       <&dmac1 0xfd>, <&dmac1 0xfe>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -676,7 +685,7 @@
+ 			       <&dmac1 0xcd>, <&dmac1 0xce>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+ 			max-frequency = <156000000>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -686,7 +695,7 @@
+ 			interrupts = <GIC_SPI 166 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp3_clks R8A77470_CLK_SDHI1>;
+ 			max-frequency = <156000000>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -700,7 +709,7 @@
+ 			       <&dmac1 0xd3>, <&dmac1 0xd4>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+ 			max-frequency = <78000000>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -710,6 +719,7 @@
+ 			interrupts = <0 154 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp7_clks R8A77470_CLK_HSCIF0>;
+ 			clock-names = "sci_ick";
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -719,6 +729,7 @@
+ 			interrupts = <0 155 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp7_clks R8A77470_CLK_HSCIF1>;
+ 			clock-names = "sci_ick";
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -728,6 +739,7 @@
+ 			interrupts = <0 21 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp7_clks R8A77470_CLK_HSCIF2>;
+ 			clock-names = "sci_ick";
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -752,7 +764,7 @@
+ 				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A77470_CLK_CMT0>;
+ 			clock-names = "fck";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 
+ 			renesas,channels-mask = <0x60>;
+ 
+@@ -773,7 +785,7 @@
+ 				     <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp3_clks R8A77470_CLK_CMT1>;
+ 			clock-names = "fck";
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 
+ 			renesas,channels-mask = <0xff>;
+ 
+-- 
+2.7.4
+

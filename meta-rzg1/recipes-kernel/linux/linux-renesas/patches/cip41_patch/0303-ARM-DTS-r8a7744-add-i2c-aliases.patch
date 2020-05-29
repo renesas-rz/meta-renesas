@@ -1,0 +1,39 @@
+From 02cab3d10e65d5ff2d9f6d8ededa34ca449efdf1 Mon Sep 17 00:00:00 2001
+From: Kha Tran <kha.tran.px@rvc.renesas.com>
+Date: Wed, 24 Jan 2018 16:11:45 +0700
+Subject: [PATCH 303/557] ARM: DTS: r8a7744: add i2c aliases
+
+Signed-off-by: Kha Tran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 7531c1d..804f4f6a 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -15,6 +15,18 @@
+ 	#address-cells = <2>;
+ 	#size-cells = <2>;
+ 
++	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c4;
++		i2c5 = &i2c5;
++		i2c6 = &iic0;
++		i2c7 = &iic1;
++		i2c8 = &iic3;
++	};
++
+ 	/*
+ 	 * The external audio clocks are configured as 0 Hz fixed frequency
+ 	 * clocks by default.
+-- 
+2.7.4
+

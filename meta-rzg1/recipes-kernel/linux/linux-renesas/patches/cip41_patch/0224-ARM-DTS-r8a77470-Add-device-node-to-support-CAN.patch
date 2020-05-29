@@ -1,0 +1,37 @@
+From eb5819e9490f4ce6850a05e10d9fa0ee21016869 Mon Sep 17 00:00:00 2001
+From: ChinhPC <chinhpc@fsoft.com.vn>
+Date: Tue, 8 Oct 2019 10:19:31 +0700
+Subject: [PATCH 224/557] ARM: DTS: r8a77470: Add device node to support CAN
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renesas.com>
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Pham Thanh Tam [FGA.AIS] <tampt8@fsoft.com.vn>
+Signed-off-by: ChinhPC <chinhpc@fsoft.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index ede1056..35f0e46 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -239,6 +239,16 @@
+ 			reg = <0 0xe6300000 0 0x20000>;
+ 		};
+ 
++		can0: can@e6e80000 {
++			compatible = "renesas,can-r8a77470";
++			reg = <0 0xe6e80000 0 0x1000>;
++			interrupts = <0 186 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp9_clks R8A77470_CLK_CAN0>;
++			clock-names = "clkp1";
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++			status = "disabled";
++		};
++
+ 		i2c0: i2c@e6508000 {
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-- 
+2.7.4
+
