@@ -62,10 +62,8 @@ Clone above dependencies to the same place as this layer and checkout each revis
 
 Download "RZ/G Multimedia Package" (proprietary graphics and multimedia drivers) from the following links:
 
-* America: https://mp.renesas.com/en-us/rzg/marketplace/linux_package/index.html
-* Europe : https://mp.renesas.com/en-eu/rzg/marketplace/linux_package/index.html
-* Asia : https://mp.renesas.com/en-sg/rzg/marketplace/linux_package/index.html
-* Japan : https://mp.renesas.com/ja-jp/rzg/marketplace/linux_package/index.html
+* English: https://www.renesas.com/us/en/products/rzg-linux-platform/rzg-marcketplace/verified-linux-package/rzg-mlp-eva.html
+* Japanese: https://www.renesas.com/jp/ja/products/rzg-linux-platform/rzg-marcketplace/verified-linux-package/rzg-mlp-eva.html
 
 After downloading the proprietary package, please put the files on $WORK/proprietary then run copy scripts as below:
 
@@ -121,10 +119,8 @@ Images to be generated:
 
 For more details, please refer to the "RZ/G Yocto Recipe Start-Up Guide" here:
 
-* America: https://mp.renesas.com/en-us/rzg/marketplace/document/index.html
-* Europe : https://mp.renesas.com/en-eu/rzg/marketplace/document/index.html
-* Asia : https://mp.renesas.com/en-sg/rzg/marketplace/document/index.html
-* Japan : https://mp.renesas.com/ja-jp/rzg/marketplace/document/index.html
+* English: https://www.renesas.com/us/en/products/rzg-linux-platform/rzg-marcketplace/document.html
+* Japanese: https://www.renesas.com/jp/ja/products/rzg-linux-platform/rzg-marcketplace/document.html
 
 ## Build Instructions for SDK
 
