@@ -1,0 +1,30 @@
+From 1632772d5772ab89f3211e0f9201e663117ea5e8 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Fri, 8 Nov 2019 13:19:46 +0700
+Subject: [PATCH] util: perlpath: require find.pl in current directory instead
+ libdir
+
+Compiler may not use the current directory to require find.pl and it
+will fail. So we make it static.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ util/perlpath.pl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/util/perlpath.pl b/util/perlpath.pl
+index a1f236b..d9741ba 100755
+--- a/util/perlpath.pl
++++ b/util/perlpath.pl
+@@ -4,7 +4,7 @@
+ # line in all scripts that rely on perl.
+ #
+
+-require "find.pl";
++require "./find.pl";
+
+ $#ARGV == 0 || print STDERR "usage: perlpath newpath  (eg /usr/bin)\n";
+ &find(".");
+--
+2.17.1
+
