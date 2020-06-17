@@ -53,6 +53,7 @@ SRC_URI += " \
 	file://0001-Fix-error-undefined-reference-to-libgcc_s_resume.patch \
 	file://0023-Define-DUMMY_LOCALE_T-if-not-defined.patch \
 	file://0001-Gracefully-handle-incompatible-locale-data.patch \
+	file://0001-sysdeps-Fix-value-of-__O_TMPFILE-flag.patch \
 "
 
 NATIVESDKFIXES ?= ""
