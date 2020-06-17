@@ -52,6 +52,7 @@ SRC_URI += " \
 	file://correct-valencia-locale-supported_debian.patch \
 	file://0001-Fix-error-undefined-reference-to-libgcc_s_resume.patch \
 	file://0023-Define-DUMMY_LOCALE_T-if-not-defined.patch \
+	file://0001-Gracefully-handle-incompatible-locale-data.patch \
 "
 
 NATIVESDKFIXES ?= ""
