@@ -1,0 +1,37 @@
+From 2e48f86392fc6931aa6f4c9ef74dea5472515f41 Mon Sep 17 00:00:00 2001
+From: Your Name <you@example.com>
+Date: Tue, 12 Nov 2019 09:40:34 +0700
+Subject: [PATCH] Gracefully handle incompatible locale data
+
+* locale/loadlocale.c (_nl_intern_locale_data): Change assertion
+on CNT to a conditional jump to 'puntdata'.
+
+Backport from newer version:
++ Commit ID: 0062ace2292effc4135c15ea99b1931fea5e0203
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ locale/loadlocale.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/locale/loadlocale.c b/locale/loadlocale.c
+index f926036..bc305d3 100644
+--- a/locale/loadlocale.c
++++ b/locale/loadlocale.c
+@@ -121,9 +121,10 @@ _nl_intern_locale_data (int category, const void *data, size_t datasize)
+       switch (category)
+ 	{
+ #define CATTEST(cat) \
+-	case LC_##cat:							      \
+-	  assert (cnt < (sizeof (_nl_value_type_LC_##cat)		      \
+-			 / sizeof (_nl_value_type_LC_##cat[0])));	      \
++	case LC_##cat:						\
++	  if (cnt >= (sizeof (_nl_value_type_LC_##cat)		\
++		      / sizeof (_nl_value_type_LC_##cat[0])))	\
++	    goto puntdata;					\
+ 	  break
+ 	  CATTEST (NUMERIC);
+ 	  CATTEST (TIME);
+--
+2.17.1
+
