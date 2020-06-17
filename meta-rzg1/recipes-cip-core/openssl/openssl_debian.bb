@@ -24,6 +24,10 @@ file://oe-ldflags.patch \
 file://find.pl \
 "
 
+SRC_URI_append = "\
+file://0002-util-perlpath-require-find.pl-in-current-directory-i.patch \
+"
+
 # "${S}/Configure" is written by perl script
 DEPENDS = "hostperl-runtime-native"
 
@@ -91,6 +95,7 @@ do_configure () {
 		;;
 	esac
 	target="$os-${HOST_ARCH}"
+	libdir="${libdir} /home/rvc/"
 	case $target in
 	linux-arm)
 		target=linux-armv4
