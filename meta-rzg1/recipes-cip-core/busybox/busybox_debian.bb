@@ -8,7 +8,7 @@ PR = "r0"
 inherit debian-package
 PV = "1.22.0"
 include busybox.inc
-SRCREV = "8feca13beb2589cc5463b934c97d5d03b149de05"
+SRCREV = "30edbff51c82483dbeab86c11562d451ead8d9c9"
 
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=de10de48642ab74318e893a61105afbb"
