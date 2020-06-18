@@ -1,0 +1,28 @@
+From 548f9efbdbe7300373d34acb8ae8e0d83e364a7e Mon Sep 17 00:00:00 2001
+From: Duy Dang <duy.dang.yb@renesas.com>
+Date: Wed, 17 Jun 2020 14:39:53 +0700
+Subject: [PATCH] "Look for python3 when building python bindings"
+
+This patch uses Python3 instead of Python2 for python bidings.
+
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 86bc4c7..d5e43cf 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -320,7 +320,7 @@ AC_ARG_ENABLE([python-agent],
+ )
+ AM_CONDITIONAL([BUILD_PYTHON_AGENT], [test "x$python_agent" = "xyes"])
+ if test "x$python_agent" = "xyes"; then
+-	AM_PATH_PYTHON([2.7])
++	AM_PATH_PYTHON([3.5])
+ fi
+
+ # sdt.h integration
+--
+2.7.4
+
