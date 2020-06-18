@@ -27,7 +27,7 @@ PACKAGECONFIG[kmod] = "--enable-kmod, --disable-kmod, kmod"
 PACKAGECONFIG_remove_libc-musl = "lttng-ust"
 
 SRC_URI = "git://git.lttng.org/lttng-tools.git;branch=stable-2.7 \
-           file://Revert-Build-look-for-python-3.0-when-building-pytho.patch \
+           file://0002-Build-look-for-python-3.5-when-building-python-bindi.patch \
            file://runtest-2.4.0.patch \
            file://0001-lttng-tools-filter-random-filename-of-tests-output.patch \
            file://run-ptest"
