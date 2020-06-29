@@ -41,9 +41,9 @@ IMAGE_INSTALL_append = " \
   e2fsprogs \
   i2c-tools \
   memtester \
-  python-subprocess \
-  python-datetime \
-  python-json \
+  python3-subprocess \
+  python3-datetime \
+  python3-json \
   ethtool \
   mtd-utils \
   mtd-utils-ubifs \
