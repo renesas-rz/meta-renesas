@@ -1,0 +1,42 @@
+From 5766af7b7593380082cb1531aeeb8b66bec35eee Mon Sep 17 00:00:00 2001
+From: Son Lam <son.lam.ym@renesas.com>
+Date: Sat, 13 Jun 2020 22:30:10 +0700
+Subject: [PATCH] xserver-xorg : fix error implicit declaration of function
+ 'major'
+
+This commit fixes error implicit declaration of function 'major'
+for xserver-xorg when updating glibc to version 2.28
+
+Signed-off-by: Son Lam <son.lam.ym@renesas.com>
+---
+ hw/xfree86/common/xf86Xinput.c         | 1 +
+ hw/xfree86/os-support/linux/lnx_init.c | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/hw/xfree86/common/xf86Xinput.c b/hw/xfree86/common/xf86Xinput.c
+index 39de498..f563709 100644
+--- a/hw/xfree86/common/xf86Xinput.c
++++ b/hw/xfree86/common/xf86Xinput.c
+@@ -82,6 +82,7 @@
+ #include <stdarg.h>
+ #include <stdint.h>             /* for int64_t */
+ #include <sys/types.h>
++#include <sys/sysmacros.h>
+ #include <sys/stat.h>
+ #include <unistd.h>
+ #ifdef HAVE_SYS_MKDEV_H
+diff --git a/hw/xfree86/os-support/linux/lnx_init.c b/hw/xfree86/os-support/linux/lnx_init.c
+index dbf497c..6257d0c 100644
+--- a/hw/xfree86/os-support/linux/lnx_init.c
++++ b/hw/xfree86/os-support/linux/lnx_init.c
+@@ -37,6 +37,7 @@
+ #include "xf86Priv.h"
+ #include "xf86_OSlib.h"
+ 
++#include <sys/sysmacros.h>
+ #include <sys/stat.h>
+ 
+ #ifndef K_OFF
+-- 
+2.7.4
+
