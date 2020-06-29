@@ -63,7 +63,6 @@ IMAGE_INSTALL_append = " \
   kernel-module-ohci-pci \
   ohci-init \
   rt-tests \
-  ltp \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
