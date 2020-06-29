@@ -60,7 +60,6 @@ IMAGE_INSTALL_append = " \
   can-utils \
   audio-init \
   rt-tests \
-  ltp \
   pulseaudio-init \
   kernel-module-ohci-hcd \
   kernel-module-ohci-pci \
