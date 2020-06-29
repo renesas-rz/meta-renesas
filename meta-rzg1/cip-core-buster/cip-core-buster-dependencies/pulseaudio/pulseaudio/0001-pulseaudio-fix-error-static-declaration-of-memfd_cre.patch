@@ -1,0 +1,36 @@
+From e3026cf1de08c16c2447ee46ac6e1a30985f0273 Mon Sep 17 00:00:00 2001
+From: Son Lam <son.lam.ym@renesas.com>
+Date: Sat, 13 Jun 2020 21:30:45 +0700
+Subject: [PATCH] pulseaudio: fix error static declaration of 'memfd_create'
+ follows non-static declaration
+
+Updating glibc to version 2.28 causes error of syscall.
+This commit fixes error static declaration of 'memfd_create'
+follows non-static declaration by updating syscall name.
+
+Signed-off-by: Son Lam <son.lam.ym@renesas.com>
+---
+ src/pulsecore/memfd-wrappers.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/pulsecore/memfd-wrappers.h b/src/pulsecore/memfd-wrappers.h
+index c7aadfd..31a9864 100644
+--- a/src/pulsecore/memfd-wrappers.h
++++ b/src/pulsecore/memfd-wrappers.h
+@@ -34,10 +34,12 @@
+  * a whole conflicts with the original glibc header <fnctl.h>.
+  */
+ 
+-static inline int memfd_create(const char *name, unsigned int flags) {
++static inline int missing_memfd_create(const char *name, unsigned int flags) {
+     return syscall(SYS_memfd_create, name, flags);
+ }
+ 
++#  define memfd_create missing_memfd_create
++
+ /* memfd_create(2) flags */
+ 
+ #ifndef MFD_CLOEXEC
+-- 
+2.7.4
+

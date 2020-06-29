@@ -1,0 +1,115 @@
+From 846945740754a09b6f0560efc312b848883e7060 Mon Sep 17 00:00:00 2001
+From: Son Lam <son.lam.ym@renesas.com>
+Date: Sat, 13 Jun 2020 22:26:21 +0700
+Subject: [PATCH] weston: fix error undefined reference to `major'
+
+This commit fixed error undefined reference to `major'
+for weston when updating glibc to 2.28
+
+Signed-off-by: Son Lam <son.lam.ym@renesas.com>
+---
+ configure.ac                       | 1 +
+ libweston/launcher-direct.c        | 8 ++++++++
+ libweston/launcher-logind.c        | 8 ++++++++
+ libweston/launcher-weston-launch.c | 7 +++++++
+ libweston/weston-launch.c          | 9 +++++++++
+ 5 files changed, 33 insertions(+)
+
+diff --git a/configure.ac b/configure.ac
+index 75f391e..cfda80e 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -34,6 +34,7 @@ AC_CONFIG_MACRO_DIR([m4])
+ 
+ AC_USE_SYSTEM_EXTENSIONS
+ AC_SYS_LARGEFILE
++AC_HEADER_MAJOR
+ 
+ AM_INIT_AUTOMAKE([1.11 parallel-tests foreign no-dist-gzip dist-xz color-tests subdir-objects])
+ 
+diff --git a/libweston/launcher-direct.c b/libweston/launcher-direct.c
+index 4fc1c3c..e343a27 100644
+--- a/libweston/launcher-direct.c
++++ b/libweston/launcher-direct.c
+@@ -46,6 +46,14 @@
+ #define KDSKBMUTE	0x4B51
+ #endif
+ 
++/* major()/minor() */
++#ifdef MAJOR_IN_MKDEV
++#    include <sys/mkdev.h>
++#endif
++#ifdef MAJOR_IN_SYSMACROS
++#    include <sys/sysmacros.h>
++#endif
++
+ #ifdef HAVE_LIBDRM
+ 
+ #include <xf86drm.h>
+diff --git a/libweston/launcher-logind.c b/libweston/launcher-logind.c
+index 8b984a6..53be6d6 100644
+--- a/libweston/launcher-logind.c
++++ b/libweston/launcher-logind.c
+@@ -44,6 +44,14 @@
+ 
+ #define DRM_MAJOR 226
+ 
++/* major()/minor() */
++#ifdef MAJOR_IN_MKDEV
++#    include <sys/mkdev.h>
++#endif
++#ifdef MAJOR_IN_SYSMACROS
++#    include <sys/sysmacros.h>
++#endif
++
+ struct launcher_logind {
+ 	struct weston_launcher base;
+ 	struct weston_compositor *compositor;
+diff --git a/libweston/launcher-weston-launch.c b/libweston/launcher-weston-launch.c
+index 072d626..db82c0d 100644
+--- a/libweston/launcher-weston-launch.c
++++ b/libweston/launcher-weston-launch.c
+@@ -74,6 +74,13 @@ drmSetMaster(int drm_fd)
+ 
+ #endif
+ 
++/* major()/minor() */
++#ifdef MAJOR_IN_MKDEV
++#    include <sys/mkdev.h>
++#endif
++#ifdef MAJOR_IN_SYSMACROS
++#    include <sys/sysmacros.h>
++#endif
+ 
+ union cmsg_data { unsigned char b[4]; int fd; };
+ 
+diff --git a/libweston/weston-launch.c b/libweston/weston-launch.c
+index 07e7469..17d313a 100644
+--- a/libweston/weston-launch.c
++++ b/libweston/weston-launch.c
+@@ -36,6 +36,7 @@
+ #include <getopt.h>
+ 
+ #include <sys/types.h>
++#include <sys/sysmacros.h>
+ #include <sys/ioctl.h>
+ #include <sys/stat.h>
+ #include <sys/wait.h>
+@@ -94,6 +95,14 @@ drmSetMaster(int drm_fd)
+ 
+ #endif
+ 
++/* major()/minor() */
++#ifdef MAJOR_IN_MKDEV
++#    include <sys/mkdev.h>
++#endif
++#ifdef MAJOR_IN_SYSMACROS
++#    include <sys/sysmacros.h>
++#endif
++
+ struct weston_launch {
+ #ifdef HAVE_PAM
+ 	struct pam_conv pc;
+-- 
+2.7.4
+
