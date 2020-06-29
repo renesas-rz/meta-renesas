@@ -1,0 +1,26 @@
+From 67e8ffb567dbabaf2757ec2d3f2d7832823873d8 Mon Sep 17 00:00:00 2001
+From: Son Lam <son.lam.ym@renesas.com>
+Date: Sat, 13 Jun 2020 18:23:43 +0700
+Subject: [PATCH] systemd: meson.build: pass -D_GNU_SOURCE when checking for
+ functions
+
+Signed-off-by: Son Lam <son.lam.ym@renesas.com>
+---
+ meson.build | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/meson.build b/meson.build
+index 20b27c8..4dc2f8d 100644
+--- a/meson.build
++++ b/meson.build
+@@ -433,6 +433,7 @@ foreach ident : [
+ ]
+ 
+         have = cc.has_function(ident[0], prefix : ident[1])
++	have = cc.has_function(ident[0], args : '-D_GNU_SOURCE', prefix : ident[1])
+         conf.set10('HAVE_DECL_' + ident[0].to_upper(), have)
+ endforeach
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,15 @@
+--- a/doc/specs/Makefile.am
++++ b/doc/specs/Makefile.am
+@@ -12,9 +12,9 @@ draft-morgan-pam-current.txt: padout dra
+ AM_YFLAGS = -d
+ 
+ CC = @CC_FOR_BUILD@
+-AM_CPPFLAGS = @BUILD_CPPFLAGS@
+-AM_CFLAGS = @BUILD_CFLAGS@
+-AM_LDFLAGS = @BUILD_LDFLAGS@
++CPPFLAGS = @BUILD_CPPFLAGS@
++CFLAGS = @BUILD_CFLAGS@
++LDFLAGS = @BUILD_LDFLAGS@
+ 
+ BUILT_SOURCES = parse_y.h
+ 
