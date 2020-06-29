@@ -1,0 +1,29 @@
+From 20f7f0a9a9f97ebebfd3377104b7eaed61410a47 Mon Sep 17 00:00:00 2001
+From: Son Lam <son.lam.ym@renesas.com>
+Date: Fri, 31 Jan 2020 02:54:41 +0700
+Subject: [PATCH] glob: fix error undefined reference to __alloca
+
+This commit fix error undefined reference to __alloca
+causes make fails to build
+
+Signed-off-by: Son Lam <son.lam.ym@renesas.com>
+---
+ glob/glob.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/glob/glob.c b/glob/glob.c
+index f3911bc..8adbde3 100644
+--- a/glob/glob.c
++++ b/glob/glob.c
+@@ -208,7 +208,7 @@ my_realloc (p, n)
+ #endif /* __GNU_LIBRARY__ || __DJGPP__ */
+ 
+ 
+-#if !defined __alloca && !defined __GNU_LIBRARY__
++#if !defined __alloca && defined __GNU_LIBRARY__
+ 
+ # ifdef	__GNUC__
+ #  undef alloca
+-- 
+1.9.1
+
