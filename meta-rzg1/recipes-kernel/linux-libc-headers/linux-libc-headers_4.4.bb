@@ -3,7 +3,7 @@ require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 KERNEL_URL = " \
 	git://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git"
 BRANCH = "linux-4.4.y-cip-rt"
-SRCREV = "924af895a0339f5f46e2c632c14eacd6492469b6"
+SRCREV = "8a7ba6d321a6d03c4267c8598ff00d2a646ba386"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
 SRC_URI_append = " \
