@@ -1,26 +1,23 @@
-From e875d057469d436216e9d5dc659495feca22db71 Mon Sep 17 00:00:00 2001
+From bd9142d611d9aeb1fc7bc2c14981a026330bb78a Mon Sep 17 00:00:00 2001
 From: hienhuynh <hien.huynh.px@rvc.renenas.com>
 Date: Fri, 17 Aug 2018 08:59:13 +0700
 Subject: [PATCH] rt: add kernel module backfire for rt-tests
 
 Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
 ---
- drivers/soc/renesas/Makefile   |   3 +-
+ drivers/soc/renesas/Makefile   |   1 +
  drivers/soc/renesas/backfire.c | 148 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 150 insertions(+), 1 deletion(-)
+ 2 files changed, 149 insertions(+)
  create mode 100644 drivers/soc/renesas/backfire.c
 
 diff --git a/drivers/soc/renesas/Makefile b/drivers/soc/renesas/Makefile
-index 577ee6e..5fc9eba 100644
+index 048c2ca..76a2811 100644
 --- a/drivers/soc/renesas/Makefile
 +++ b/drivers/soc/renesas/Makefile
-@@ -2,4 +2,5 @@ obj-$(CONFIG_ARCH_R8A7742)	+= rcar-sysc.o r8a7742-sysc.o
- obj-$(CONFIG_ARCH_R8A7743)	+= rcar-sysc.o r8a7743-sysc.o
- obj-$(CONFIG_ARCH_R8A7744)      += rcar-sysc.o r8a7744-sysc.o
+@@ -4,3 +4,4 @@ obj-$(CONFIG_ARCH_R8A7743)	+= rcar-sysc.o r8a7743-sysc.o
+ obj-$(CONFIG_ARCH_R8A7744)	+= rcar-sysc.o r8a7744-sysc.o
  obj-$(CONFIG_ARCH_R8A7745)	+= rcar-sysc.o r8a7745-sysc.o
--obj-$(CONFIG_ARCH_R8A77470)      += rcar-sysc.o r8a77470-sysc.o
-\ No newline at end of file
-+obj-$(CONFIG_ARCH_R8A77470)      += rcar-sysc.o r8a77470-sysc.o
+ obj-$(CONFIG_ARCH_R8A77470)	+= rcar-sysc.o r8a77470-sysc.o
 +obj-m				:= backfire.o
 diff --git a/drivers/soc/renesas/backfire.c b/drivers/soc/renesas/backfire.c
 new file mode 100644
