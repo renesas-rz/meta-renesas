@@ -18,6 +18,9 @@ RDEPENDS_${PN} += "${DEP}"
 RDEPENDS_${PN}-plugins += "${DEP}"
 RDEPENDS_${PN}-examples += "${DEP}"
 
+# qtbase does not support openssl 1.1 until version 5.10
+PACKAGECONFIG_remove = "openssl"
+
 # add necessary packages
 PACKAGECONFIG_append = " sql-sqlite sql-sqlite2 openssl icu accessibility examples alsa"
 
