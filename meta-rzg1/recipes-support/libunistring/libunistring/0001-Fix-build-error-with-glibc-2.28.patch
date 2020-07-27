@@ -1,0 +1,26 @@
+From cacf33161512e833441f321ddbd3a80ff08a76cd Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Sat, 18 Jul 2020 18:08:29 +0700
+Subject: [PATCH] Fix build error with glibc 2.28
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ lib/fseterr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/fseterr.c b/lib/fseterr.c
+index e6d690c..dff668d 100644
+--- a/lib/fseterr.c
++++ b/lib/fseterr.c
+@@ -38,7 +38,7 @@ fseterr (FILE *fp)
+   /* Most systems provide FILE as a struct and the necessary bitmask in
+      <stdio.h>, because they need it for implementing getc() and putc() as
+      fast macros.  */
+-#if defined _IO_ftrylockfile || __GNU_LIBRARY__ == 1 /* GNU libc, BeOS, Haiku, Linux libc5 */
++#if defined _IO_EOF_SEEN || __GNU_LIBRARY__ == 1 /* GNU libc, BeOS, Haiku, Linux libc5 */
+   fp->_flags |= _IO_ERR_SEEN;
+ #elif defined __sferror || defined __DragonFly__ || defined __ANDROID__
+   /* FreeBSD, NetBSD, OpenBSD, DragonFly, Mac OS X, Cygwin, Android */
+-- 
+1.9.1
+

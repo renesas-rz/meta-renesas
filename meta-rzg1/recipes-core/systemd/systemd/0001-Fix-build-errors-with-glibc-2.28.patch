@@ -1,0 +1,44 @@
+From 964a4710775a8a9ee642d1faad953a68461e33fe Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Sat, 18 Jul 2020 15:05:54 +0700
+Subject: [PATCH] Fix build errors with glibc 2.28
+
+When build with glibc 2.28, get some errors as below:
+    src/basic/missing_syscall.h:236:19: error: static declaration of 'renameat2' follows non-static declaration
+    src/basic/missing_syscall.h:68:19: error: static declaration of 'memfd_create' follows non-static declaration
+    src/basic/fileio.c:1398:14: error: implicit declaration of function 'memfd_create'; did you mean 'timer_create'? [-Werror=implicit-function-declaration]
+These errors happen because systemd did not detect 'renameat2' and 'memfd_create'
+in glibc correctly.
+
+Add more header files to allow systemd detect correctly these functions.
+And also allow implict-function-declaration to avoid the 3rd error.
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ configure.ac | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 3674190..d9a5305 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -163,7 +163,6 @@ CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+         -Wfloat-equal \
+         -Wsuggest-attribute=noreturn \
+         -Werror=missing-prototypes \
+-        -Werror=implicit-function-declaration \
+         -Werror=missing-declarations \
+         -Werror=return-type \
+         -Werror=incompatible-pointer-types \
+@@ -346,6 +345,8 @@ AC_CHECK_DECLS([
+ #include <string.h>
+ #include <stdlib.h>
+ #include <linux/loop.h>
++#include <stdio.h>
++#include <sys/mman.h>
+ ]])
+ 
+ AC_CHECK_DECLS([getrandom],
+-- 
+1.9.1
+

@@ -24,6 +24,10 @@ SRC_URI_append = "\
 SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-at-GPU-mode.patch \
                           file://0001-v4l2-renderer-add-more-formats-for-gl-fallback.patch \
 "
+
+#Fix build break with glibc 2.28
+SRC_URI += "${@'file://Fix-build-error-major-minor.patch' if 'Buster' in '${MACHINE_FEATURES}' else ' '}"
+
 INSANE_SKIP_${PN} += "dev-so"
 INSANE_SKIP_${PN} += "installed-vs-shipped"
 TARGET_CC_ARCH += "${LDFLAGS}"
