@@ -4,3 +4,6 @@
 
 PV = "git${SRCPV}"
 SRCREV = "0c623fab420102c54fa533da3b8ca774290d6d13"
+
+# Not support openssl 1.1 yet
+PACKAGECONFIG_remove = "openssl"
