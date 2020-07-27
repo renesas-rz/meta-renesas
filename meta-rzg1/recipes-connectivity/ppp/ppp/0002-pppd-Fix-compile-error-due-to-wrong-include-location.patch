@@ -1,0 +1,48 @@
+From f40245e47333834ea22f3188ec7ea514993da0e4 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Mon, 20 Jul 2020 13:31:28 +0700
+Subject: [PATCH] pppd: Fix compile error due to wrong include location
+
+ppp Makefile has some wrong include dir that ignore SYSROOT option.
+This causes error in cross-compiling:
+
+aarch64-poky-linux-gcc  ... -I/usr/include/openssl  ...   -c -o multilink.o multilink.c
+cc1: warning: include location "/usr/include/openssl" is unsafe for cross-compilation [-Wpoison-system-directories]
+In file included from pppcrypt.h:41:0,
+                 from chap_ms.c:94:
+/usr/include/openssl/des.h:91:9: error: unknown type name 'DES_LONG'
+         DES_LONG deslong[2];
+
+Fix these wrong include dir by adding '=' before include dir
+make will replace '=' with $SYSROOT
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ pppd/Makefile.linux | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pppd/Makefile.linux b/pppd/Makefile.linux
+index f3e009f..b02158e 100644
+--- a/pppd/Makefile.linux
++++ b/pppd/Makefile.linux
+@@ -99,7 +99,7 @@ endif
+ 
+ # EAP SRP-SHA1
+ ifdef USE_SRP
+-CFLAGS	+= -DUSE_SRP -DOPENSSL -I/usr/local/ssl/include
++CFLAGS	+= -DUSE_SRP -DOPENSSL -I =/usr/local/ssl/include
+ LIBS	+= -lsrp -L/usr/local/ssl/lib -lcrypto
+ TARGETS	+= srp-entry
+ EXTRAINSTALL = $(INSTALL) -c -m 555 srp-entry $(BINDIR)/srp-entry
+@@ -132,7 +132,7 @@ endif
+ 
+ ifdef NEEDDES
+ ifndef USE_CRYPT
+-CFLAGS   += -I/usr/include/openssl
++CFLAGS   += -I =/usr/include/openssl
+ LIBS     += -lcrypto
+ else
+ CFLAGS   += -DUSE_CRYPT=1
+-- 
+1.9.1
+
