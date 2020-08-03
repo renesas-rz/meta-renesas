@@ -1,0 +1,47 @@
+From a1a483700a77e6a80c01533dc7094797999d7998 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Fri, 31 Jul 2020 17:49:33 +0700
+Subject: [PATCH] Workaround for build error with glibc 2.28
+
+When build with glibc 2.28, there is an error as below:
+| In file included from /data1/hungdanhtran/G2_4.19/1.0.5/g2e/tmp/work/aarch64-poky-linux/strace/4.18-r0/recipe-sysroot/usr/include/sys/stat.h:446:0,
+|                  from ../../strace-4.18/tests/xstatx.c:68,
+|                  from ../../strace-4.18/tests/statx.c:64:
+| /data1/hungdanhtran/G2_4.19/1.0.5/g2e/tmp/work/aarch64-poky-linux/strace/4.18-r0/recipe-sysroot/usr/include/bits/statx.h:25:8: error: redefinition of 'struct statx_timestamp'
+|  struct statx_timestamp
+|         ^~~~~~~~~~~~~~~
+| In file included from ../../strace-4.18/tests/statx.c:33:0:
+| /data1/hungdanhtran/G2_4.19/1.0.5/g2e/tmp/work/aarch64-poky-linux/strace/4.18-r0/recipe-sysroot/usr/include/linux/stat.h:56:8: note: originally defined here
+|  struct statx_timestamp {
+|         ^~~~~~~~~~~~~~~
+| In file included from /data1/hungdanhtran/G2_4.19/1.0.5/g2e/tmp/work/aarch64-poky-linux/strace/4.18-r0/recipe-sysroot/usr/include/sys/stat.h:446:0,
+|                  from ../../strace-4.18/tests/xstatx.c:68,
+|                  from ../../strace-4.18/tests/statx.c:64:
+| /data1/hungdanhtran/G2_4.19/1.0.5/g2e/tmp/work/aarch64-poky-linux/strace/4.18-r0/recipe-sysroot/usr/include/bits/statx.h:36:8: error: redefinition of 'struct statx'
+|  struct statx
+|         ^~~~~
+| In file included from ../../strace-4.18/tests/statx.c:33:0:
+| /data1/hungdanhtran/G2_4.19/1.0.5/g2e/tmp/work/aarch64-poky-linux/strace/4.18-r0/recipe-sysroot/usr/include/linux/stat.h:99:8: note: originally defined here
+|  struct statx {
+|         ^~~~~
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ tests/statx.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/tests/statx.c b/tests/statx.c
+index 816b7eb..fd90aa0 100644
+--- a/tests/statx.c
++++ b/tests/statx.c
+@@ -30,7 +30,6 @@
+ 
+ #ifdef __NR_statx
+ 
+-# include <linux/stat.h>
+ # include "xlat.h"
+ # include "xlat/statx_masks.h"
+ # include "xlat/statx_attrs.h"
+-- 
+1.9.1
+
