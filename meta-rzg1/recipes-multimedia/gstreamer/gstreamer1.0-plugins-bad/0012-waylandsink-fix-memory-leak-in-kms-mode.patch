@@ -1,0 +1,238 @@
+From e48f3344e2a69f54af5ccbabe84908e5ba0bfeae Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Fri, 7 Feb 2020 11:20:58 +0700
+Subject: [PATCH] waylandsink: fix memory leak in kms mode
+
+The buffers in kmspool are not freed due to trouble in refcount.
+Due to update of Linux kernel, a bug in drmPrimeHandleToFD was fixed and
+now this functions always increases refcount of coresponding CMA object.
+In user side, the returned fd must be closed after use to counter this
+refcount-increasing.
+It is done in this patch.
+
+Besides, also fix an harmless warning message due to misisng init function
+"GStreamer-CRITICAL **: Registering meta implementation 'GstWlKmsMeta' without init function"
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ ext/wayland/gstwaylandsink.c | 13 ++++++--
+ ext/wayland/waylandkmspool.c | 75 +++++++++++++++++++++++++++-----------------
+ ext/wayland/waylandkmspool.h |  1 -
+ ext/wayland/wldisplay.c      |  3 ++
+ 4 files changed, 61 insertions(+), 31 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 621cc39..99147d0 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -225,6 +225,7 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+   sink->position_y = -1;
+   sink->scale = 0;
+   sink->fullscreen = FALSE;
++  sink->display = NULL;
+ }
+ 
+ 
+@@ -694,8 +695,15 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+ 
+   gst_query_parse_allocation (query, &caps, &need_pool);
+ 
+-  if (need_pool)
+-    pool = gst_wayland_create_pool (sink, caps);
++  if (need_pool) {
++    if (!sink->pool)
++      /* Only create new pool if sink->pool is not available yet,
++       * otherwise just use current pool */
++      pool = gst_wayland_create_pool (sink, caps);
++
++    pool = sink->pool;
++    gst_object_ref (pool);
++  }
+ 
+   if (pool) {
+     gst_query_add_allocation_pool (query, pool, sink->video_info.size, 2, 0);
+@@ -710,6 +718,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+      */
+     gst_query_add_allocation_param (query, gst_allocator_find (NULL), NULL);
+ 
++    gst_structure_free (config);
+     g_object_unref (pool);
+   }
+ 
+diff --git a/ext/wayland/waylandkmspool.c b/ext/wayland/waylandkmspool.c
+index c16e1b8..999ee82 100644
+--- a/ext/wayland/waylandkmspool.c
++++ b/ext/wayland/waylandkmspool.c
+@@ -47,6 +47,13 @@ GST_DEBUG_CATEGORY_EXTERN (gstwayland_debug);
+ #define GST_WAYLAND_BUFFER_POOL_NUM  3
+ 
+ /* wl metadata */
++
++static void gst_wl_kms_meta_init (GstWlKmsMeta* meta, gpointer params,
++    GstBuffer * buf)
++{
++  meta->kms_bo_array = NULL;
++}
++
+ GType
+ gst_wl_kms_meta_api_get_type (void)
+ {
+@@ -64,32 +71,10 @@ gst_wl_kms_meta_api_get_type (void)
+ static void
+ gst_wl_kms_meta_free (GstWlKmsMeta * meta, GstBuffer * buffer)
+ {
+-  GstMemory *mem;
+-  gboolean is_dmabuf;
+-  guint n_mem;
+-  struct kms_bo *kms_bo;
+-  guint i;
+-
+   if (meta->kms_bo_array) {
+-    n_mem = gst_buffer_n_memory (buffer);
+-    for (i = 0; i < n_mem; i++) {
+-      mem = gst_buffer_get_memory (buffer, i);
+-
+-      kms_bo = (struct kms_bo *) g_ptr_array_index (meta->kms_bo_array, i);
+-
+-      is_dmabuf = gst_is_dmabuf_memory (mem);
+-      if (!is_dmabuf)
+-        kms_bo_unmap (kms_bo);
+-      else
+-        close (gst_dmabuf_memory_get_fd (mem));
+-      kms_bo_destroy (&kms_bo);
+-
+-      gst_memory_unref (mem);
+-    }
+     g_ptr_array_unref (meta->kms_bo_array);
++    meta->kms_bo_array = NULL;
+   }
+-  close(meta->display->drm_fd);
+-  g_object_unref (meta->display);
+ }
+ 
+ const GstMetaInfo *
+@@ -100,7 +85,7 @@ gst_wl_kms_meta_get_info (void)
+   if (g_once_init_enter (&wl_meta_info)) {
+     const GstMetaInfo *meta =
+         gst_meta_register (GST_WL_KMS_META_API_TYPE, "GstWlKmsMeta",
+-        sizeof (GstWlKmsMeta), (GstMetaInitFunction) NULL,
++        sizeof (GstWlKmsMeta), (GstMetaInitFunction) gst_wl_kms_meta_init,
+         (GstMetaFreeFunction) gst_wl_kms_meta_free,
+         (GstMetaTransformFunction) NULL);
+     g_once_init_leave (&wl_meta_info, meta);
+@@ -117,6 +102,8 @@ static GstFlowReturn gst_wayland_kms_buffer_pool_alloc (GstBufferPool * pool,
+     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
+ static gboolean gst_wayland_kms_buffer_pool_set_config (GstBufferPool * pool,
+     GstStructure * config);
++static void gst_wayland_kms_buffer_pool_free (GstBufferPool * pool,
++    GstBuffer * buffer);
+ 
+ #define gst_wayland_kms_buffer_pool_parent_class parent_class
+ G_DEFINE_TYPE (GstWaylandKmsBufferPool, gst_wayland_kms_buffer_pool,
+@@ -133,6 +120,7 @@ gst_wayland_kms_buffer_pool_class_init (GstWaylandKmsBufferPoolClass * klass)
+   gstbufferpool_class->stop = gst_wayland_kms_buffer_pool_stop;
+   gstbufferpool_class->start = gst_wayland_kms_buffer_pool_start;
+   gstbufferpool_class->alloc_buffer = gst_wayland_kms_buffer_pool_alloc;
++  gstbufferpool_class->free_buffer = gst_wayland_kms_buffer_pool_free;
+   gstbufferpool_class->set_config = gst_wayland_kms_buffer_pool_set_config;
+ }
+ 
+@@ -317,7 +305,6 @@ gst_wayland_buffer_pool_create_mp_buffer (GstWaylandBufferPool * wpool,
+       gst_buffer_append_memory (buffer,
+           gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data[i],
+               maxsize, 0, size, NULL, NULL));
+-      close(dmabuf[i]);
+     }
+   }
+ 
+@@ -354,7 +341,6 @@ gst_wayland_buffer_pool_create_buffer_from_dmabuf (GstWaylandBufferPool * wpool,
+   wmeta = gst_buffer_get_wl_kms_meta (buffer);
+ 
+   wmeta->kms_bo_array = NULL;
+-  wmeta->display = g_object_ref (wpool->display);
+ 
+   /* To avoid deattaching meta data when a buffer returns to the buffer pool */
+   GST_META_FLAG_SET (wmeta, GST_META_FLAG_POOLED);
+@@ -441,6 +427,10 @@ gst_wayland_kms_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+     return GST_FLOW_ERROR;
+   }
+ 
++  for (i = 0; i < n_planes; i++) {
++    /* fd got from drmPrimeHandleToFD must be closed */
++    close (dmabuf_fd[i]);
++  }
+ 
+   meta = gst_buffer_get_wl_kms_meta (*buffer);
+ 
+@@ -452,11 +442,40 @@ gst_wayland_kms_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+       " (%d x %d), format %s", GST_VIDEO_INFO_SIZE (&self->info), width, height,
+       gst_wl_kms_format_to_string (format));
+ 
+-  meta->display = g_object_ref (self->display);
+-
+   return GST_FLOW_OK;
+ }
+ 
++static void gst_wayland_kms_buffer_pool_free (GstBufferPool * pool,
++    GstBuffer * buffer)
++{
++  GstWlKmsMeta * meta;
++  guint n_mem, i;
++  struct kms_bo * kms_bo;
++  gboolean is_dmabuf;
++  GstMemory *mem;
++
++  meta = gst_buffer_get_wl_kms_meta (buffer);
++
++  if (meta->kms_bo_array) {
++    n_mem = gst_buffer_n_memory (buffer);
++    for (i = 0; i < n_mem; i++) {
++
++      kms_bo = (struct kms_bo *) g_ptr_array_index (meta->kms_bo_array, i);
++      mem = gst_buffer_peek_memory (buffer, 0);
++      is_dmabuf = gst_is_dmabuf_memory (mem);
++
++      if (kms_bo) {
++        if (!is_dmabuf)
++          kms_bo_unmap (kms_bo);
++        else
++          close (gst_dmabuf_memory_get_fd(mem));
++
++        kms_bo_destroy (&kms_bo);
++      }
++    }
++  }
++}
++
+ #if 0
+ GstBufferPool *
+ gst_wayland_buffer_pool_new (GstWlDisplay * display)
+diff --git a/ext/wayland/waylandkmspool.h b/ext/wayland/waylandkmspool.h
+index cdcf725..9fbd04f 100644
+--- a/ext/wayland/waylandkmspool.h
++++ b/ext/wayland/waylandkmspool.h
+@@ -59,7 +59,6 @@ struct _GstWlKmsMeta
+ {
+   GstMeta meta;
+   GPtrArray *kms_bo_array;
+-  GstWlDisplay *display;
+ };
+ 
+ /* buffer pool */
+diff --git a/ext/wayland/wldisplay.c b/ext/wayland/wldisplay.c
+index 76a494b..6e0d3b8 100644
+--- a/ext/wayland/wldisplay.c
++++ b/ext/wayland/wldisplay.c
+@@ -118,6 +118,9 @@ gst_wl_display_finalize (GObject * gobject)
+     wl_display_disconnect (self->display);
+   }
+ 
++  if (self->drm_fd > -1)
++    close (self->drm_fd);
++
+   G_OBJECT_CLASS (gst_wl_display_parent_class)->finalize (gobject);
+ }
+ 
+-- 
+1.9.1
+
