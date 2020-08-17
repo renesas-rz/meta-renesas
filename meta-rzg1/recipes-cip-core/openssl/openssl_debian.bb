@@ -201,7 +201,7 @@ do_install_append_class-native() {
 }
 
 
-PACKAGES =+ "libssl"
+PACKAGES =+ "libssl ${PN}-bin"
 
 FILES_${PN} += "${libdir}/ssl"
 FILES_${PN}-dbg += "${libdir}/openssl-1.0.0/engines/.debug"
@@ -210,8 +210,10 @@ ${libdir}/libssl.so.* \
 ${libdir}/libcrypto.so.* \
 ${libdir}/openssl-1.0.0/engines/*.so \
 "
+FILES_${PN}-bin += "${bindir}/"
 
 RDEPENDS_${PN} += "perl"
+RDEPENDS_${PN}-bin += "perl"
 INSANE_SKIP_${PN} += "file-rdeps"
 
 BBCLASSEXTEND = "native nativesdk"
