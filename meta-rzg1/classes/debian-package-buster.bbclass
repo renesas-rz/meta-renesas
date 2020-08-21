@@ -5,6 +5,8 @@
 # debian-source.bbclass will generate DEBIAN_SRC_URI information
 # in recipes-debian/sources/<source name>.inc
 
+BB_HASHBASE_WHITELIST += "DEBIAN_UNPACK_DIR"
+
 DEBIAN_SRC_URI ?= ""
 SRC_URI = "${DEBIAN_SRC_URI}"
 
