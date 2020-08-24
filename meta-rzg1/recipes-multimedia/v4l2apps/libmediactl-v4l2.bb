@@ -11,6 +11,7 @@ inherit autotools pkgconfig
 SRCREV = "998aaa0fa4a594bfc8d98ce0f5971ffc083be231"
 SRC_URI = " \
     git://github.com/renesas-devel/libmediactl-v4l2.git;protocol=git;branch=RCAR-GEN2/1.0.0 \
+    file://0001-libmediactl-v4l2-Fix-undefined-symbols-when-building.patch \
 "
 
 S = "${WORKDIR}/git"
