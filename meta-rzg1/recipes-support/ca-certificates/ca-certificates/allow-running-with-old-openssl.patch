@@ -1,0 +1,32 @@
+From 6d6753dcbaf6b8a59caf939ec207457d037d80eb Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Mon, 17 Aug 2020 00:12:57 +0700
+Subject: [PATCH] Allow running with old openssl
+
+This change modifies update-ca-certificates script to use with openssl version
+older than 1.1.1, which does not support "openssl rehash" command.
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ sbin/update-ca-certificates | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sbin/update-ca-certificates b/sbin/update-ca-certificates
+index ca1f0e8..dd27d53 100755
+--- a/sbin/update-ca-certificates
++++ b/sbin/update-ca-certificates
+@@ -218,9 +218,9 @@ then
+   done
+   if [ "$verbose" = 0 ]
+   then
+-    openssl rehash . > /dev/null
++    c_rehash . > /dev/null
+   else
+-    openssl rehash -v .
++    c_rehash -v .
+   fi
+ fi
+ 
+-- 
+1.9.1
+
