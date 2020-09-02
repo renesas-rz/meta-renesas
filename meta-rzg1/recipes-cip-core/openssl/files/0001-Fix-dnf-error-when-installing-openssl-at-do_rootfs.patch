@@ -1,0 +1,36 @@
+From 33cbdb0e8188f19f88c925fb9a591c2138cdccbe Mon Sep 17 00:00:00 2001
+From: Loc Pham <loc.pham.xh@renesas.com>
+Date: Tue, 16 Apr 2019 18:21:45 +0700
+Subject: [PATCH] Fix dnf error when installing openssl at do_rootfs
+
+This patch fixes the below error:
+  ERROR: core-image-weston-1.0-r0 do_rootfs: Could not invoke dnf. Command
+  ...
+  Error:
+    Problem 1: conflicting requests
+      - nothing provides <xxx>/build/tmp/hosttools/perl needed by openssl-1.0.1t-r1.aarch64
+    Problem 2: package ca-certificates-20170717-r0.noarch requires openssl, but none of the providers can be installed
+      - conflicting requests
+      - nothing provides <xxx>/build/tmp/hosttools/perl needed by openssl-1.0.1t-r1.aarch64
+
+Signed-off-by: Loc Pham <loc.pham.xh@renesas.com>
+---
+ Configure | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/Configure b/Configure
+index 93c4cc1..0928a78 100755
+--- a/Configure
++++ b/Configure
+@@ -1954,8 +1954,6 @@ EOF
+ 	(system $make_command.$make_targets) == 0 or exit $?
+ 		if $make_targets ne "";
+ 	if ( $perl =~ m@^/@) {
+-	    &dofile("tools/c_rehash",$perl,'^#!/', '#!%s','^my \$dir;$', 'my $dir = "' . $openssldir . '";', '^my \$prefix;$', 'my $prefix = "' . $prefix . '";');
+-	    &dofile("apps/CA.pl",$perl,'^#!/', '#!%s');
+ 	} else {
+ 	    # No path for Perl known ...
+ 	    &dofile("tools/c_rehash",'/usr/local/bin/perl','^#!/', '#!%s','^my \$dir;$', 'my $dir = "' . $openssldir . '";',  '^my \$prefix;$', 'my $prefix = "' . $prefix . '";');
+-- 
+1.9.1
+
