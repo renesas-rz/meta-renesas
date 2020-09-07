@@ -274,7 +274,7 @@ EOF
        cat ${SYSROOT_DESTDIR}${bindir}/nativeperl
 }
 
-DEBIAN_UNPACK_DIR = "${WORKDIR}/${PN}-${PV}"
+DEBIAN_UNPACK_DIR = "${WORKDIR}/perl-${PV}"
 do_cp_af_unpack() {
 	cd ${WORKDIR}
 	cp -r debian ${DEBIAN_UNPACK_DIR}
