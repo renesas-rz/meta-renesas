@@ -1,6 +1,6 @@
 require gzip.inc
 
-inherit debian-package
+inherit debian-package autotools
 
 LICENSE = "GPLv3+"
 LIC_FILES_CHKSUM = " \
@@ -44,3 +44,5 @@ do_cp_af_unpack() {
 	cp -r debian ${DEBIAN_UNPACK_DIR}
 }
 addtask do_cp_af_unpack after do_unpack before do_debian_verify_version
+
+export CONFIG_SHELL="/bin/sh"
