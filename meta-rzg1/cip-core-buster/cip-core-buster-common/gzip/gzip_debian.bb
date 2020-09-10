@@ -36,3 +36,11 @@ do_install_ptest() {
 	    -e 's:${BASE_WORKDIR}/${MULTIMACH_TARGET_SYS}::g' \
 	    ${B}/tests/Makefile > ${D}${PTEST_PATH}/src/tests/Makefile
 }
+
+DEBIAN_UNPACK_DIR = "${WORKDIR}/gzip-${PV}"
+
+do_cp_af_unpack() {
+	cd ${WORKDIR}
+	cp -r debian ${DEBIAN_UNPACK_DIR}
+}
+addtask do_cp_af_unpack after do_unpack before do_debian_verify_version
