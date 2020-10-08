@@ -1,0 +1,31 @@
+From bb8250ad14f030a4dd5dc34c7331d7701a8fac74 Mon Sep 17 00:00:00 2001
+From: quynhnguyen <quynhnguyen.xb@renesas.com>
+Date: Thu, 27 Feb 2020 13:26:34 +0700
+Subject: [PATCH] sysdeps: Fix value of __O_TMPFILE flag
+
+This patch fix value of O_TMPFILE for architectures with
+non-default O_DIRECTORY.
+Reference link:
+https://sourceware.org/git/?p=glibc.git;a=commit;h=59b61c82fe18e612058302e4c726385c4eb301d8
+
+Signed-off-by: quynhnguyen <quynhnguyen.xb@renesas.com>
+---
+ sysdeps/unix/sysv/linux/bits/fcntl-linux.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h
+index 499bfff..7d1007c 100644
+--- a/sysdeps/unix/sysv/linux/bits/fcntl-linux.h
++++ b/sysdeps/unix/sysv/linux/bits/fcntl-linux.h
+@@ -97,7 +97,7 @@
+ # define __O_DSYNC	 010000
+ #endif
+ #ifndef __O_TMPFILE
+-# define __O_TMPFILE   020200000
++# define __O_TMPFILE   (020000000 | __O_DIRECTORY)
+ #endif
+ 
+ #ifndef F_GETLK
+-- 
+2.7.4
+
