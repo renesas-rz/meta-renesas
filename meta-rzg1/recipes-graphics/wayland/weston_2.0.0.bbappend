@@ -26,7 +26,7 @@ SRC_URI_append_iwg23s = " file://0001-libweston-fix-issue-can-t-display-to-LCD-a
 "
 
 #Fix build break with glibc 2.28
-SRC_URI += "${@'file://Fix-build-error-major-minor.patch' if 'Buster' in '${MACHINE_FEATURES}' else ' '}"
+SRC_URI += "${@'file://Fix-build-error-major-minor.patch' if 'Buster' in '${CIP_MODE}' else ' '}"
 
 INSANE_SKIP_${PN} += "dev-so"
 INSANE_SKIP_${PN} += "installed-vs-shipped"

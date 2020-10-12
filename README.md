@@ -142,26 +142,18 @@ Run the installer to install SDK to the default directory _'/opt/poky/x.x'_
 * CIP Core: choose the version of CIP Core to build with. CIP Core are software packages that are maintained for long term by CIP community.
   * Buster-limited: use limited packages from CIP Core Buster
   ```
-  MACHINE_FEATURES_append = " Buster-limited"
+  CIP_MODE = "Buster-limited"
   ```
   * Buster-full: use as many packages from CIP Core Buster as possible. Note that currently GPLv3 must be allowed for building Buster-full.
+  CIP_MODE = "Buster-full"
   ```
   * **Jessie (default)**: not use CIP Core Buster, use limited packages from CIP Core Jessie instead
   ```
-  #MACHINE_FEATURES_append = " Buster-limited"
+  CIP_MODE = "Jessie"
   ```
   * None CIP Core: not use CIP Core at all, use all default version from Yocto 2.4 Rocko
   ```
-  #MACHINE_FEATURES_append = " Buster-limited"
-  #BINUVERSION = "${@'2.31.1' if 'Buster' in '${MACHINE_FEATURES}' else '2.25'}"
-  #PREFERRED_VERSION_nativesdk-binutils = "${BINUVERSION}"
-  #GLIBCVERSION = "${@'2.28' if 'Buster' in '${MACHINE_FEATURES}' else '2.19'}"
-  #PREFERRED_VERSION_nativesdk-glibc-locale = "${GLIBCVERSION}"
-  #BBMASK .= "|glibc-mtrace"
-  #RDEPENDS_${PN}_remove_pn-packagegroup-core-tools-debug = "libc-mtrace"
-  #DEPENDS_remove_pn-openssh = "openssl10"
-  #DEPENDS_append_pn-openssh = " openssl"
-  BBMASK .= "|openssl_debian"
+  CIP_MODE = "none"
   ```
 Below table show the version of recipes that change due to above setting.  
 Note that this table only show packages that change version, others are not shown.  
