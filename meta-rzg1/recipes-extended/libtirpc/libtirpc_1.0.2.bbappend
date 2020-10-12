@@ -1,1 +1,1 @@
-BBCLASSEXTEND = "${@'native nativesdk' if 'Buster' in '${MACHINE_FEATURES}' else ''}"
+BBCLASSEXTEND = "${@'native nativesdk' if 'Buster' in '${CIP_MODE}' else ''}"
