@@ -15,6 +15,11 @@ EXTRA_OECONF[vardepsexclude] = "TUNE_PKGARCH"
 
 LDGOLD_sdkmingw32 = ""
 
+SRC_URI += " \
+     file://reverse_aarch64-libpath.diff.patch \
+     file://reverse_129_multiarch_libpath.patch \
+"
+
 do_install () {
 	autotools_do_install
 
