@@ -10,10 +10,10 @@ DEPENDS_append = " util-linux-native openssl-native"
 KERNEL_URL=" \
 	git://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git"
 BRANCH = "linux-4.4.y-cip"
-SRCREV = "f77b9619332744040a0320ddd3f5e507d6f4cb53"
+SRCREV = "c9f71781108017f6e3fc8d3326cf24bb234b5399"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
-LINUX_VERSION ?= "4.4.222-cip45"
+LINUX_VERSION ?= "4.4.235-cip49"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
@@ -22,7 +22,7 @@ S = "${WORKDIR}/git"
 SRC_URI_append = " \
 	file://defconfig \
 	file://common.cfg \
-	file://patches/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \ 
+	file://patches/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
 	file://patches/0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
 	file://patches.scc \
 "
