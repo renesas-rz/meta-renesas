@@ -273,3 +273,11 @@ EOF
        chmod 0755 ${SYSROOT_DESTDIR}${bindir}/nativeperl
        cat ${SYSROOT_DESTDIR}${bindir}/nativeperl
 }
+
+DEBIAN_UNPACK_DIR = "${WORKDIR}/${PN}-${PV}"
+do_cp_af_unpack() {
+	cd ${WORKDIR}
+	cp -r debian ${DEBIAN_UNPACK_DIR}
+}
+addtask do_cp_af_unpack after do_unpack before do_debian_verify_version
+
