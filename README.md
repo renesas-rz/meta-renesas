@@ -144,10 +144,10 @@ Run the installer to install SDK to the default directory _'/opt/poky/x.x'_
   ```
   CIP_MODE = "Buster-limited"
   ```
-  * Buster-full: use as many packages from CIP Core Buster as possible. Note that currently GPLv3 must be allowed for building Buster-full.
+  * Buster-full (default): use as many packages from CIP Core Buster as possible. Note that currently GPLv3 must be allowed for building Buster-full.
   CIP_MODE = "Buster-full"
   ```
-  * **Jessie (default)**: not use CIP Core Buster, use limited packages from CIP Core Jessie instead
+  * Jessie: not use CIP Core Buster, use limited packages from CIP Core Jessie instead
   ```
   CIP_MODE = "Jessie"
   ```
