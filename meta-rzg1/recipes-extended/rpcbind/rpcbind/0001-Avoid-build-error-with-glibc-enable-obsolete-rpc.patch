@@ -1,0 +1,37 @@
+From ce4e7c18b42d336b1406e67ab153512816f06855 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Fri, 2 Oct 2020 11:32:00 +0700
+Subject: [PATCH] Avoid build error with glibc --enable-obsolete-rpc
+
+When build glibc 2.28 with --enable-obsolete-rpc, some rpc headers are available.
+Thus HAVE_RPCSVC_MOUNT_H will be enabled.
+However the rpc headers in glibc 2.28 does not compatible with this version of
+rpcbind and cause below build error
+
+| ../rpcbind-0.2.4/src/security.c:29:10: fatal error: rpcsvc/yp.h: No such file or directory
+|  #include <rpcsvc/yp.h>
+|           ^~~~~~~~~~~~~
+| compilation terminated.
+|
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ src/security.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/security.c b/src/security.c
+index c54ce26..54c95fc 100644
+--- a/src/security.c
++++ b/src/security.c
+@@ -22,7 +22,7 @@
+ /*
+  * XXX for special case checks in check_callit.
+  */
+-#ifdef HAVE_RPCSVC_MOUNT_H
++#if 0
+ #include <rpcsvc/mount.h>
+ #include <rpcsvc/rquota.h>
+ #include <rpcsvc/nfs_prot.h>
+-- 
+2.17.1
+
