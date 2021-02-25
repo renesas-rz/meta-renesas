@@ -1,5 +1,5 @@
-require glibc_${PV}.bb
-require glibc-initial.inc
+require glibc_debian.bb
+require recipes-core/glibc/glibc-initial.inc
 
 # main glibc recipes muck with TARGET_CPPFLAGS to point into
 # final target sysroot but we
@@ -7,3 +7,5 @@ require glibc-initial.inc
 # so reset it here
 
 TARGET_CPPFLAGS = ""
+
+PV = "2.28"
