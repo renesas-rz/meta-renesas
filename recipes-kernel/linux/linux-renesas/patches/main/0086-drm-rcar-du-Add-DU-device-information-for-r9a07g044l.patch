@@ -1,0 +1,100 @@
+From e8d5ce3e71cd7eec8608daf8f1b0dd64e53a8f57 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 1 Mar 2021 11:32:37 +0700
+Subject: [PATCH 086/135] drm: rcar-du: Add DU device information for
+ r9a07g044l
+
+This commit adds DU device information for r9a07g044l SoC.
+In r9a07g044l, DU device has 1 channel and supports 2 outputs RGB
+and MIPI DSI. We add DSI output definition because DSI device is newly
+supported.
+Also add a feature to distinguish RZ/G2L family from others.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.h |  1 +
+ drivers/gpu/drm/rcar-du/rcar_du_drv.c  | 20 ++++++++++++++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_drv.h  |  3 +++
+ 3 files changed, 24 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+index 6baa4c0..9366da0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.h
+@@ -93,6 +93,7 @@ enum rcar_du_output {
+ 	RCAR_DU_OUTPUT_LVDS1,
+ 	RCAR_DU_OUTPUT_HDMI0,
+ 	RCAR_DU_OUTPUT_HDMI1,
++	RCAR_DU_OUTPUT_MIPI_DSI0,
+ 	RCAR_DU_OUTPUT_TCON,
+ 	RCAR_DU_OUTPUT_MAX,
+ };
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.c b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+index d881a27..c450efc 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.c
+@@ -164,6 +164,25 @@ static const struct rcar_du_device_info rcar_du_r8a774c0_info = {
+ 	.lvds_clk_mask =  BIT(1) | BIT(0),
+ };
+ 
++static const struct rcar_du_device_info rcar_du_r9a04g077l_info = {
++	.gen = 3,
++	.features = RCAR_DU_FEATURE_CRTC_IRQ_CLOCK
++		  | RCAR_DU_FEATURE_RZG2L
++		  | RCAR_DU_FEATURE_VSP1_SOURCE,
++	.channels_mask = BIT(0),
++	.routes = {
++		[RCAR_DU_OUTPUT_DPAD0] = {
++			.possible_crtcs = BIT(0),
++			.port = 0,
++		},
++		[RCAR_DU_OUTPUT_MIPI_DSI0] = {
++			.possible_crtcs = BIT(0),
++			.port = 1,
++		},
++	},
++	.num_mipi_dsi = 1,
++};
++
+ static const struct rcar_du_device_info rcar_du_r8a7779_info = {
+ 	.gen = 1,
+ 	.features = RCAR_DU_FEATURE_INTERLACED
+@@ -396,6 +415,7 @@ static const struct of_device_id rcar_du_of_table[] = {
+ 	{ .compatible = "renesas,du-r8a774a1", .data = &rcar_du_r8a774a1_info },
+ 	{ .compatible = "renesas,du-r8a774b1", .data = &rcar_du_r8a774b1_info },
+ 	{ .compatible = "renesas,du-r8a774c0", .data = &rcar_du_r8a774c0_info },
++	{ .compatible = "renesas,du-r9a04g077l", .data = &rcar_du_r9a04g077l_info },
+ 	{ .compatible = "renesas,du-r8a7779", .data = &rcar_du_r8a7779_info },
+ 	{ .compatible = "renesas,du-r8a7790", .data = &rcar_du_r8a7790_info },
+ 	{ .compatible = "renesas,du-r8a7791", .data = &rcar_du_r8a7791_info },
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_drv.h b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+index f16cd26..ded60a8 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_drv.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_drv.h
+@@ -31,6 +31,7 @@ struct rcar_du_encoder;
+ #define RCAR_DU_FEATURE_VSP1_SOURCE	BIT(1)	/* Has inputs from VSP1 */
+ #define RCAR_DU_FEATURE_INTERLACED	BIT(2)	/* HW supports interlaced */
+ #define RCAR_DU_FEATURE_TVM_SYNC	BIT(3)	/* Has TV switch/sync modes */
++#define RCAR_DU_FEATURE_RZG2L		BIT(4)	/* Use RZ/G2L registers */
+ 
+ #define RCAR_DU_QUIRK_ALIGN_128B	BIT(0)	/* Align pitches to 128 bytes */
+ 
+@@ -56,6 +57,7 @@ struct rcar_du_output_routing {
+  * @channels_mask: bit mask of available DU channels
+  * @routes: array of CRTC to output routes, indexed by output (RCAR_DU_OUTPUT_*)
+  * @num_lvds: number of internal LVDS encoders
++ * @num_mipi_dsi: number of internal MIPI DSI encoders
+  * @dpll_mask: bit mask of DU channels equipped with a DPLL
+  * @lvds_clk_mask: bitmask of channels that can use the LVDS clock as dot clock
+  */
+@@ -66,6 +68,7 @@ struct rcar_du_device_info {
+ 	unsigned int channels_mask;
+ 	struct rcar_du_output_routing routes[RCAR_DU_OUTPUT_MAX];
+ 	unsigned int num_lvds;
++	unsigned int num_mipi_dsi;
+ 	unsigned int dpll_mask;
+ 	unsigned int lvds_clk_mask;
+ };
+-- 
+2.7.4
+

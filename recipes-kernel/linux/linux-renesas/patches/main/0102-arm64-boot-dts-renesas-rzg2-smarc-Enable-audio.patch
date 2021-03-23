@@ -1,0 +1,125 @@
+From ba96f70c40c7beb8f59ea5bb535f57036a43e9af Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Mon, 1 Mar 2021 15:17:44 +0700
+Subject: [PATCH 102/135] arm64: boot: dts: renesas: rzg2-smarc: Enable audio
+
+Enable audio via SSIF-0 along with Wolfson WM8978 audio codec on
+I2C bus.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 63 +++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 48ee45a..e6f0267 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -22,6 +22,12 @@
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	audio_mclock: audio_mclock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <11289600>;
++	};
++
+ 	reg_1p8v: regulator0 {
+ 		compatible = "regulator-fixed";
+ 
+@@ -42,6 +48,21 @@
+ 		regulator-always-on;
+ 	};
+ 
++	snd_rzg2l: sound {
++		compatible = "simple-audio-card";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,bitclock-master = <&cpu_dai>;
++		simple-audio-card,frame-master = <&cpu_dai>;
++
++		cpu_dai: simple-audio-card,cpu {
++			sound-dai = <&ssi0>;
++		};
++
++		codec_dai: simple-audio-card,codec {
++			sound-dai = <&wm8978>;
++		};
++	};
++
+ 	vccq_sdhi1: regulator-vccq-sdhi1 {
+ 		compatible = "regulator-gpio";
+ 
+@@ -117,6 +138,11 @@
+ 		line-name = "eth1_irq_pin";
+ 	};
+ 
++	i2c3_pins: i2c3 {
++		groups = "i2c3_b";
++		function = "i2c3";
++	};
++
+ 	scif0_pins: scif0 {
+ 		groups = "scif0_data";
+ 		function = "scif0";
+@@ -179,6 +205,16 @@
+ 		line-name = "sd1_pwr_en";
+ 	};
+ 
++	sound_clk_pins: sound_clk {
++		pins = "AUDIO_CLK1", "AUDIO_CLK2";
++		input-enable;
++	};
++
++	ssi0_pins: ssi0 {
++		groups = "ssi0_ctrl_d", "ssi0_data_d";
++		function = "ssi0";
++	};
++
+ 	can0_stb {
+ 		gpio-hog;
+ 		gpios = <RZG2L_GPIO(42, 2) GPIO_ACTIVE_LOW>;
+@@ -234,6 +270,26 @@
+ 	};
+ };
+ 
++&audio_clk1{
++	clock-frequency = <11289600>;
++};
++
++&i2c3 {
++	pinctrl-0 = <&i2c3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++	wm8978: codec@1a {
++		compatible = "wlf,wm8978";
++		#sound-dai-cells = <0>;
++		reg = <0x1a>;
++		clocks = <&audio_mclock>;
++		clock-names = "mclk";
++	};
++};
++
+ &scif0 {
+ 	pinctrl-0 = <&scif0_pins>;
+ 	pinctrl-names = "default";
+@@ -335,6 +391,13 @@
+ 	/delete-node/ qspi@20000000;
+ };
+ 
++&ssi0 {
++	pinctrl-0 = <&ssi0_pins &sound_clk_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
+ &spibsc {
+ 	status = "okay";
+ 
+-- 
+2.7.4
+

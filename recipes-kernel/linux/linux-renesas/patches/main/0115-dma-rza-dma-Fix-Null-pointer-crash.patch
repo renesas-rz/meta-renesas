@@ -1,0 +1,61 @@
+From 222c7241169be1df18df7f203771787feabfc602 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 11 Feb 2021 11:30:02 +0000
+Subject: [PATCH 115/135] dma: rza-dma: Fix Null pointer crash
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+---
+ drivers/dma/rza-dma.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/dma/rza-dma.c b/drivers/dma/rza-dma.c
+index 21fd219d..3670b41 100644
+--- a/drivers/dma/rza-dma.c
++++ b/drivers/dma/rza-dma.c
+@@ -621,7 +621,7 @@ static void rzadma_tasklet(unsigned long data)
+ {
+ 	struct dmac_channel *channel = (void *)data;
+ 	struct rzadma_engine *rzadma = channel->rzadma;
+-	struct dmac_desc *desc;
++	struct dmac_desc *desc = NULL;
+ 	unsigned long flags;
+ 
+ 	dev_dbg(rzadma->dev, "%s called\n", __func__);
+@@ -634,6 +634,9 @@ static void rzadma_tasklet(unsigned long data)
+ 		goto out;
+ 	}
+ 
++	if (list_empty(&channel->ld_active))
++		goto out;
++
+ 	desc = list_first_entry(&channel->ld_active, struct dmac_desc, node);
+ 
+ #ifndef THREADED_CALLBACK
+@@ -642,13 +645,7 @@ static void rzadma_tasklet(unsigned long data)
+ #endif
+ 
+ 	dma_cookie_complete(&desc->desc);
+-
+-
+-	if (list_empty(&channel->ld_active)) {
+-		goto out;
+-	} else {
+-		list_move_tail(channel->ld_active.next, &channel->ld_free);
+-	}
++	list_move_tail(channel->ld_active.next, &channel->ld_free);
+ 
+ 	if (!list_empty(&channel->ld_queue)) {
+ 		desc = list_first_entry(&channel->ld_queue, struct dmac_desc,
+@@ -663,7 +660,8 @@ static void rzadma_tasklet(unsigned long data)
+ out:
+ 	spin_unlock_irqrestore(&channel->lock, flags);
+ #ifdef THREADED_CALLBACK
+-	dmaengine_desc_get_callback_invoke(&desc->desc, NULL);
++	if (desc)
++		dmaengine_desc_get_callback_invoke(&desc->desc, NULL);
+ #endif
+ }
+ 
+-- 
+2.7.4
+

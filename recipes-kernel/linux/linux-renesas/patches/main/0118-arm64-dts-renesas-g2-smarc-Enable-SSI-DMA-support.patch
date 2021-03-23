@@ -1,0 +1,57 @@
+From 07a9879dff99d84720599b0401fb8665fe4d31cb Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Tue, 9 Mar 2021 10:41:14 +0700
+Subject: [PATCH 118/135] arm64: dts: renesas: g2-smarc: Enable SSI DMA support
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 3a1d075..6d365bb 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -409,10 +409,39 @@
+ 	/delete-node/ qspi@20000000;
+ };
+ 
++/* Assign IDs to DMA channels (actual number is not important) */
++#define RZADMA_SSI0_TX	1
++#define RZADMA_SSI0_RX	2
++
++/* DMA Configuration */
++&dma0  {
++	/* Assign Slave IDs */
++	slave_id = <RZADMA_SSI0_TX
++		    RZADMA_SSI0_RX>;
++	/* Address of data source/destination */
++	addr = <0x10049C18	/* SSIFTDR_0 */
++		0x10049C1C	/* SSIFRDR_0 */
++		>;
++	/* Channel Configuration Register (CHCFG) for slave device */
++	/* .reqd .loen .hien .lvl .am .sds .dds .tm */
++	chcfg = <0x1 0x0 0x1 0x0 0x2 0x1 0x1 0x0	/* SSI ch0 TX (req sig=SSIFTDR_0) */
++		 0x0 0x0 0x1 0x0 0x2 0x1 0x1 0x0	/* SSI ch0 RX (req sig=SSIFRDR_0) */
++		 >;
++	/* DMARS for slave device */
++	/* .rid .mid */
++	dmars = <0x1 0x95	/* SSI ch0 TX */
++		 0x2 0x95	/* SSI ch0 RX */
++		 >;
++};
++
+ &ssi0 {
+ 	pinctrl-0 = <&ssi0_pins &sound_clk_pins>;
+ 	pinctrl-names = "default";
+ 
++	dmas = <&dma0 RZADMA_SSI0_TX>,
++	       <&dma0 RZADMA_SSI0_RX>;
++	dma-names = "tx", "rx";
++
+ 	status = "okay";
+ };
+ 
+-- 
+2.7.4
+

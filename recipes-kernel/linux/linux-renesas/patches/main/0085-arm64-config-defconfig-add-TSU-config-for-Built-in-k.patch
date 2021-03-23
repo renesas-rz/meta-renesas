@@ -1,0 +1,25 @@
+From 50c66cdd5496693aaba0909f6359fe378b012544 Mon Sep 17 00:00:00 2001
+From: Tien Le <tien.le.xw@renesas.com>
+Date: Mon, 1 Mar 2021 17:53:50 +0700
+Subject: [PATCH 085/135] arm64: config: defconfig: add TSU config for Built-in
+ kernel modules
+
+this patch add TSU config for Built-in kernel modules.
+
+Signed-off-by: Tien Le <tien.le.xw@renesas.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 60accf0..9ca6ccb 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -741,3 +741,4 @@ CONFIG_CRYPTO_AES_ARM64_BS=m
+ CONFIG_RESET_CONTROLLER=y
+ CONFIG_I2C_RIIC=y
+ CONFIG_RZA_DMA=y
++CONFIG_RZG2L_THERMAL=y
+-- 
+2.7.4
+

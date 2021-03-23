@@ -1,0 +1,37 @@
+From 9201fedb2a29309a480630843f7e4d8d0ca7b261 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Tue, 26 Jan 2021 19:34:23 +0700
+Subject: [PATCH 033/135] dt-bindings: i2c: riic: Update document.
+
+This patch add compatible string for I2C driver.
+It also add generic compatible string.
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ Documentation/devicetree/bindings/i2c/i2c-riic.txt | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/i2c/i2c-riic.txt b/Documentation/devicetree/bindings/i2c/i2c-riic.txt
+index 0bcc471..1cffe6e 100644
+--- a/Documentation/devicetree/bindings/i2c/i2c-riic.txt
++++ b/Documentation/devicetree/bindings/i2c/i2c-riic.txt
+@@ -1,7 +1,15 @@
+ Device tree configuration for Renesas RIIC driver
+ 
+ Required properties:
+-- compatible      : "renesas,riic-<soctype>". "renesas,riic-rz" as fallback
++- compatible      :
++	"renesas,riic-r9a07g044l" if the device is a part of a R9A07G044L SoC.
++	"renesas,riic-r7s72100" if the device is a part of a R7S72100 SoC.
++	"renesas,riic-rz" for a generic RZ/A1, RZ/A2 or RZ/G2L compatible device.
++
++	When compatible with the generic version, nodes must list the
++	SoC-specific version corresponding to the platform first followed
++	by the generic version.
++
+ - reg             : address start and address range size of device
+ - interrupts      : 8 interrupts (TEI, RI, TI, SPI, STI, NAKI, ALI, TMOI)
+ - clock-frequency : frequency of bus clock in Hz
+-- 
+2.7.4
+

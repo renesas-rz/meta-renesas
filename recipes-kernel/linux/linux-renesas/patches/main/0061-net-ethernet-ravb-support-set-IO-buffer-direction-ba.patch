@@ -1,0 +1,87 @@
+From f55300d8d93284bb3aaf967380de101aeafd3528 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Thu, 4 Mar 2021 15:26:12 +0700
+Subject: [PATCH 061/135] net: ethernet: ravb: support set IO buffer direction
+ based on phy mode
+
+This commit supports set IO buffer direction based on phy mode for
+RZ/G2L SoC.
+It uses an api which is supported from pinctrl and parse necessary
+setting from devicetree.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 43 ++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 99e8b64..64b8cc1 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -34,6 +34,10 @@
+ 
+ #include "ravb.h"
+ 
++#if defined(CONFIG_ARCH_ESPADA)
++#include "../../../pinctrl/sh-pfc/pinctrl-rzg2l.h"
++#endif
++
+ #define RAVB_DEF_MSG_ENABLE \
+ 		(NETIF_MSG_LINK	  | \
+ 		 NETIF_MSG_TIMER  | \
+@@ -2473,6 +2477,39 @@ static void ravb_set_delay_mode(struct net_device *ndev)
+ 	ravb_modify(ndev, APSR, APSR_DM, set);
+ }
+ 
++#if defined(CONFIG_ARCH_ESPADA)
++static int ravb_mode_set_io_buffer(struct device_node *np,
++				   phy_interface_t interface)
++{
++	struct property *prop;
++	const char *propname = "eth-pin-mode-switch";
++
++	prop = of_find_property(np, propname, NULL);
++	if (prop) {
++		struct of_phandle_args args;
++		struct platform_device *pdev_cpg;
++		int ret;
++
++		ret = of_parse_phandle_with_fixed_args(np, propname, 1, 0,
++							 &args);
++		if (ret)
++			return -EINVAL;
++
++		pdev_cpg = of_find_device_by_node(args.np);
++		if (!pdev_cpg)
++			return -ENODEV;
++
++		ret = rzg2l_pinctrl_eth_mode_set(&pdev_cpg->dev,
++						 interface,
++						 args.args[0]);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++#endif
++
+ static int ravb_probe(struct platform_device *pdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -2538,6 +2575,12 @@ static int ravb_probe(struct platform_device *pdev)
+ 
+ 	priv->phy_interface = of_get_phy_mode(np);
+ 
++#if defined(CONFIG_ARCH_ESPADA)
++	error = ravb_mode_set_io_buffer(np, priv->phy_interface);
++	if (error)
++		goto out_release;
++#endif
++
+ 	priv->no_avb_link = of_property_read_bool(np, "renesas,no-ether-link");
+ 	priv->avb_link_active_low =
+ 		of_property_read_bool(np, "renesas,ether-link-active-low");
+-- 
+2.7.4
+

@@ -1,0 +1,292 @@
+From 47749fa282c451bde9283a464829f9290c0a03d3 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 22 Mar 2021 13:22:06 +0700
+Subject: [PATCH 127/135] arm64: dts: renesas: rzg2-smarc: add condition to
+ support display parallel
+
+In G2L SMARC platform, parallel display pins are multiplexed with
+CAN module. Also LCDC can only output 1 interface MIPI DSI or parallel.
+Therefore add macros to enable and disable CAN, LCDC with below
+relationship:
+- If support CAN, disable parallel display then use MIPI DSI instead
+and vice versa.
+- If LCDC support HDMI output then disable support panel output and
+vice versa.
+Note: Panel output support will be added soon.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 138 ++++++++++++++++++++++++++++
+ 1 file changed, 138 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 4133a95..05644b2 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -23,11 +23,67 @@
+  *	aplay -D hw:1,0 xxx.wav
+  */
+ 
++/* Enable/Disable CAN support (must choose 1) */
++#define CAN_SUPPORT		1
++//#define CAN_SUPPORT		0
++
++/* With above CAN selection, we will get all below results */
++#if (CAN_SUPPORT)
++/* Parallel display is disabled due to pins conflict with CAN.
++ * Therefore, we must set 0 to Parallel display macros like below.
++ */
++#define DISP_PARALLEL_HDMI	0
++#define DISP_PARALLEL_PANEL	0
++
++/* Besides that, LCDC can only output 1 video interface (Parallel or MIPI DSI).
++ * Because parallel display is disabled as above, we enable MIPI DSI as below.
++ * Please choose one of two interfaces (HDMI or panel) based on your board
++ * by setting 1 in value.
++ * Currently we support HDMI as default output.
++ */
++#define DISP_DSI_HDMI		1
++#define DISP_DSI_PANEL		0
++#else
++/* Parallel display is supported as default if not support CAN.
++ * Please choose one of two interfaces (HDMI or panel) based on your board
++ * by setting 1 in value.
++ * Currently we support HDMI as default output.
++ */
++#define DISP_PARALLEL_HDMI	1
++#define DISP_PARALLEL_PANEL	0
++
++/* MIPI DSI is disabled when Parallel display support.
++ * Must disabled by setting 0 as below macros.
++ */
++#define DISP_DSI_HDMI		0
++#define DISP_DSI_PANEL		0
++#endif
++
++/* Below macros are created to check which video interface is supporting
++ * and notify error if:
++ * - Support both Parallel display and MIPI DSI at the same time.
++ * - Support CAN and Parallel display at the same time.
++ */
++#define DISP_PARALLEL		(DISP_PARALLEL_HDMI | DISP_PARALLEL_PANEL)
++#define DISP_DSI		(DISP_DSI_HDMI | DISP_DSI_PANEL)
++#define DISP_HDMI		(DISP_PARALLEL_HDMI | DISP_DSI_HDMI)
++#define DISP_PANEL		(DISP_PARALLEL_PANEL | DISP_DSI_PANEL)
++
++#if (CAN_SUPPORT & DISP_PARALLEL)
++#error "RZ/G2L can not enable CAN and Parallel display simultaneously"
++#endif
++
++#if ((DISP_PARALLEL & DISP_DSI) || (DISP_HDMI & DISP_PANEL))
++#error "RZ/G2L can only display 1 output interface"
++#endif
++
+ / {
+ 	aliases {
+ 		serial0 = &scif0;
++#if (CAN_SUPPORT)
+ 		can0 = &can;
+ 		can1 = &can;
++#endif
+ 		ethernet0 = &eth0;
+ 		ethernet1 = &eth1;
+ 	};
+@@ -92,10 +148,12 @@
+ 		};
+ 	};
+ 
++#if (DISP_DSI_HDMI)
+ 	sound_card {
+ 		compatible = "audio-graph-card";
+ 		dais = <&ssi1>;
+ 	};
++#endif
+ 
+ 	vccq_sdhi1: regulator-vccq-sdhi1 {
+ 		compatible = "regulator-gpio";
+@@ -141,16 +199,23 @@
+ 		default-brightness-level = <6>;
+ 	};
+ 
++#if (DISP_HDMI)
+ 	hdmi-out {
+ 		compatible = "hdmi-connector";
+ 		type = "d";
+ 
+ 		port {
+ 			hdmi_con_out: endpoint {
++#if (DISP_DSI_HDMI)
+ 				remote-endpoint = <&adv7535_out>;
++#endif
++#if (DISP_PARALLEL_HDMI)
++				remote-endpoint = <&adv7513_out>;
++#endif
+ 			};
+ 		};
+ 	};
++#endif
+ };
+ 
+ &xinclk {
+@@ -249,11 +314,14 @@
+ 		function = "ssi0";
+ 	};
+ 
++#if (DISP_DSI_HDMI)
+ 	ssi1_pins: ssi1 {
+ 		groups = "ssi1_ctrl_d", "ssi1_data_d";
+ 		function = "ssi1";
+ 	};
++#endif
+ 
++#if (CAN_SUPPORT)
+ 	can0_stb {
+ 		gpio-hog;
+ 		gpios = <RZG2L_GPIO(42, 2) GPIO_ACTIVE_LOW>;
+@@ -277,6 +345,7 @@
+ 		groups = "can1_data_a";
+ 		function = "can1";
+ 	};
++#endif
+ 
+ 	ether0_pins: eth0 {
+ 		groups = "eth0_link", "eth0_mdio", "eth0_mii";
+@@ -317,6 +386,13 @@
+ 		groups = "usb1_d";
+ 		function = "usb1";
+ 	};
++
++#if (DISP_PARALLEL)
++	du_pins: du {
++		groups = "disp_bgr888", "disp_sync", "disp_de", "disp_clk";
++		function = "disp";
++	};
++#endif
+ };
+ 
+ &audio_clk1{
+@@ -373,6 +449,7 @@
+ 	status = "okay";
+ };
+ 
++#if (CAN_SUPPORT)
+ &can {
+ 	pinctrl-0 = <&can0_pins &can1_pins>;
+ 	pinctrl-names = "default";
+@@ -386,6 +463,7 @@
+ 		status = "okay";
+ 	};
+ };
++#endif
+ 
+ &eth0 {
+ 	pinctrl-0 = <&ether0_pins>;
+@@ -486,6 +564,7 @@
+ 	status = "okay";
+ };
+ 
++#if (DISP_DSI_HDMI)
+ &ssi1 {
+ 	pinctrl-0 = <&ssi1_pins>;
+ 	pinctrl-names = "default";
+@@ -503,6 +582,7 @@
+ 		};
+ 	};
+ };
++#endif
+ 
+ &spibsc {
+ 	status = "okay";
+@@ -579,6 +659,7 @@
+ 
+ 	status = "okay";
+ 
++#if (DISP_DSI_HDMI)
+ 	adv7535: hdmi@3d {
+ 		compatible = "adi,adv7535";
+ 		reg = <0x3d>;
+@@ -619,24 +700,81 @@
+ 			};
+ 		};
+ 	};
++#endif
++
++#if (DISP_PARALLEL_HDMI)
++	adv7513: adv7513@39 {
++		compatible = "adi,adv7513";
++		reg = <0x39>;
++
++		adi,input-depth = <8>;
++		adi,input-colorspace = "rgb";
++		adi,input-clock = "1x";
++
++		avdd-supply = <&reg_1p8v>;
++		dvdd-supply = <&reg_1p8v>;
++		pvdd-supply = <&reg_1p8v>;
++		dvdd-3v-supply = <&reg_3p3v>;
++		bgvdd-supply = <&reg_1p8v>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++
++				adv7513_in: endpoint {
++					remote-endpoint = <&du_out_rgb>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++
++				adv7513_out: endpoint {
++					remote-endpoint = <&hdmi_con_out>;
++				};
++			};
++		};
++	};
++#endif
+ };
+ 
+ &du {
++#if (DISP_PARALLEL)
++	pinctrl-0 = <&du_pins>;
++	pinctrl-names = "default";
++#endif
+ 	status = "okay";
++
++	ports {
++		port@0 {
++			du_out_rgb: endpoint {
++#if (DISP_PARALLEL_HDMI)
++				remote-endpoint = <&adv7513_in>;
++#endif
++			};
++		};
++	};
+ };
+ 
++#if (DISP_DSI)
+ &dsi0 {
+ 	status = "okay";
+ 
+ 	ports {
+ 		port@1 {
+ 			dsi0_out: endpoint {
++#if (DISP_DSI_HDMI)
+ 				remote-endpoint = <&adv7535_in>;
+ 				data-lanes = <1 2 3 4>;
++#endif
+ 			};
+ 		};
+ 	};
+ };
++#endif
+ 
+ &ehci0 {
+ 	dr_mode = "otg";
+-- 
+2.7.4
+

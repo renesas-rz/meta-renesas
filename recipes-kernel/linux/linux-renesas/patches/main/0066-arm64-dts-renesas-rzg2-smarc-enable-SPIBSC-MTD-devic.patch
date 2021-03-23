@@ -1,0 +1,107 @@
+From bedc47b528982648ebe01ce1533b49c5e55f07b5 Mon Sep 17 00:00:00 2001
+From: thekinhnguyen <the.nguyen.vx@renesas.com>
+Date: Fri, 26 Feb 2021 17:34:11 +0700
+Subject: [PATCH 066/135] arm64: dts: renesas: rzg2-smarc: enable SPIBSC MTD
+ device
+
+Adds SPI Multi IO (SPIBSC) device nodes for r9a07g044l SoC.
+
+Signed-off-by: thekinhnguyen <the.nguyen.vx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 76 +++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 87d83e1..8599424 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -55,6 +55,28 @@
+ 		states = <3300000 0
+ 			  1800000 1>;
+ 	};
++
++/* Read Only File system in QSPI Example */
++/* File System in XIP QSPI */
++/* Remember, we'll be in QSPI XIP mode at this point */
++/* Requires CONFIG_MTD_ROM=y */
++	qspi@20000000 {
++		compatible = "mtd-rom";
++		//probe-type = "map_rom";
++		probe-type = "direct-mapped";   // XIP from QSPI
++		reg = <0 0x20000000 0 0x4000000>;   /* 64 MB*/
++		bank-width = <4>;
++		device-width = <1>;
++		
++		#address-cells = <1>;
++		#size-cells = <1>;
++		
++		partition@800000 {
++			label ="rootfs_xipcramfs";
++			reg = <0x0800000 0x1000000>; /* 16MB @ 0x20800000 */
++			read-only;
++		};
++	};
+ };
+ 
+ &xinclk {
+@@ -268,3 +290,57 @@
+ 		txd3-skew-psec = <0>;
+ 	};
+ };
++
++/* Delete our XIP QSPI partitions from the top of this file. You would not have these for non-XIP systems */
++/ {
++	/delete-node/ qspi@20000000;
++};
++
++&spibsc {
++	status = "okay";
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <30000000>;
++
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++
++		/* SPI Mode 3 */
++		spi-cpol;
++		spi-cpha;
++		m25p,fast-read;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <2>;
++			#size-cells = <2>;
++
++			partition@0000000 {
++				label = "u-boot";
++				reg = <0 0x00000000 0 0x80000>;
++				read-only;
++			};
++			partition@80000 {
++				label = "env";
++				reg = <0 0x00080000 0 0x40000>;
++				read-only;
++			};
++			partition@C0000 {
++				label = "dtb";
++				reg = <0 0x000C0000 0 0x40000>;
++				read-only;
++			};
++			partition@800000 {
++				label = "rootfs";
++				/* 16MB @ 8MB offset in SPI Flash */
++				reg = <0 0x00800000 0 0x01000000>;
++			};
++			partition@2000000 {
++				label = "test-area";
++				reg = <0 0x02000000 0 0x00100000>;
++			};
++		};
++	};
++};
+-- 
+2.7.4
+

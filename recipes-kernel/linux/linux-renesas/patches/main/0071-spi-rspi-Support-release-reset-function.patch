@@ -1,0 +1,49 @@
+From 3e2592cdb431c00afcb315ea9eeda8f0574bac8a Mon Sep 17 00:00:00 2001
+From: thekinhnguyen <the.nguyen.vx@renesas.com>
+Date: Tue, 2 Feb 2021 14:55:30 +0700
+Subject: [PATCH 071/135] spi: rspi: Support release reset function.
+
+In RZ/G2L platform, the default state of RSPI is reset.
+
+Signed-off-by: thekinhnguyen <the.nguyen.vx@renesas.com>
+---
+ drivers/spi/spi-rspi.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/spi/spi-rspi.c b/drivers/spi/spi-rspi.c
+index 02c9d10..ca05de5 100644
+--- a/drivers/spi/spi-rspi.c
++++ b/drivers/spi/spi-rspi.c
+@@ -32,6 +32,7 @@
+ #include <linux/sh_dma.h>
+ #include <linux/spi/spi.h>
+ #include <linux/spi/rspi.h>
++#include <linux/reset.h>
+ 
+ #define RSPI_SPCR		0x00	/* Control Register */
+ #define RSPI_SSLP		0x01	/* Slave Select Polarity Register */
+@@ -199,6 +200,7 @@ struct rspi_data {
+ 
+ 	unsigned dma_callbacked:1;
+ 	unsigned byte_access:1;
++	struct reset_control *rstc;
+ };
+ 
+ static void rspi_write8(const struct rspi_data *rspi, u8 data, u16 offset)
+@@ -1266,6 +1268,13 @@ static int rspi_probe(struct platform_device *pdev)
+ 		goto error1;
+ 	}
+ 
++	rspi->rstc = devm_reset_control_get(&pdev->dev, NULL);
++
++	if (IS_ERR(rspi->rstc))
++		dev_warn(&pdev->dev, "failed to get cpg reset\n");
++	else
++		reset_control_deassert(rspi->rstc);
++
+ 	rspi->clk = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(rspi->clk)) {
+ 		dev_err(&pdev->dev, "cannot get clock\n");
+-- 
+2.7.4
+

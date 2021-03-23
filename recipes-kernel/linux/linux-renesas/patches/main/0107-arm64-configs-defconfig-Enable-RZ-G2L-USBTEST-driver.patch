@@ -1,0 +1,25 @@
+From 50fc63cc58c91694dfe01edfba8860cbb8b853ea Mon Sep 17 00:00:00 2001
+From: hoahuynh <hoa.huynh.ud@renesas.com>
+Date: Fri, 26 Feb 2021 14:42:50 +0700
+Subject: [PATCH 107/135] arm64: configs: defconfig: Enable RZ/G2L USBTEST
+ driver
+
+Add config to enable usbtest driver.
+
+Signed-off-by: hoahuynh <hoa.huynh.ud@renesas.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 2726182..c2b3044 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1,3 +1,4 @@
++CONFIG_PHY_RZG2L_USBTEST=y
+ CONFIG_SYSVIPC=y
+ CONFIG_POSIX_MQUEUE=y
+ CONFIG_AUDIT=y
+-- 
+2.7.4
+

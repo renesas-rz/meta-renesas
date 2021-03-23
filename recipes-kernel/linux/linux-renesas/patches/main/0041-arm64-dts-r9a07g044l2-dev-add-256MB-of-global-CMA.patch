@@ -1,0 +1,38 @@
+From 4c7fb082b98f3b67d3094a3e9ef98939e6a7db82 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Fri, 29 Jan 2021 16:15:47 +0700
+Subject: [PATCH 041/135] arm64: dts: r9a07g044l2-dev: add 256MB of global CMA
+
+Add 256MB CMA for device drivers need dma allocate
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts b/arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts
+index 1dd5c27..a9d3b38 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts
+@@ -18,5 +18,18 @@
+ 		/* first 126MB is reserved for secure area. */
+ 		reg = <0x0 0x47E00000 0x0 0xF8200000>;
+ 	};
++
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		reserved: linux,cma@58000000 {
++			compatible = "shared-dma-pool";
++			linux,cma-default;
++			reusable;
++			reg = <0x0 0x58000000 0x0 0x10000000>;
++		};
++	};
+ };
+ 
+-- 
+2.7.4
+

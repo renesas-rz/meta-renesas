@@ -1,0 +1,44 @@
+From 0f9e104383af762d545d0b4e74c5a3444f595270 Mon Sep 17 00:00:00 2001
+From: Long Luu <long.luu.ur@renesas.com>
+Date: Thu, 14 Jan 2021 18:27:33 +0700
+Subject: [PATCH 072/135] Documentation: gpt: rzg2l: add a new gpt document for
+ RZ/G2L SoC
+
+Add device tree bindings documentation for Renesas RZ/G2L gpt.
+
+Signed-off-by: Long Luu <long.luu.ur@renesas.com>
+---
+ .../devicetree/bindings/pwm/renesas,gpt-rg2l.txt    | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pwm/renesas,gpt-rg2l.txt
+
+diff --git a/Documentation/devicetree/bindings/pwm/renesas,gpt-rg2l.txt b/Documentation/devicetree/bindings/pwm/renesas,gpt-rg2l.txt
+new file mode 100644
+index 0000000..5378c53
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pwm/renesas,gpt-rg2l.txt
+@@ -0,0 +1,21 @@
++* Renesas GPT Timer Controller
++
++Required Properties:
++- compatible: should be "renesas,pwm-rcar" and one of the following.
++ - "renesas,gpt-r9a07g044l": for RZ/G2L
++- reg: base address and length of the registers block for the PWM.
++- #pwm-cells: should be 2. See pwm.txt in this directory for a description of
++  the cells format.
++- clocks: clock phandle and specifier pair.
++- pinctrl-0: phandle, referring to a default pin configuration node.
++- pinctrl-names: Set to "default".
++
++Example: R9A07G044L (RZ/G2L) GPT(PWM) Timer node
++
++                gpt0: gpt@10048000 {
++                        compatible = "renesas,gpt-r9a07g044l";
++                        reg = <0 0x10048000 0 0xa4>;
++                        #pwm-cells = <2>;
++                        clocks = <&cpg CPG_MOD R9A07G044L_CLK_GPT>;
++                        status = "disabled";
++                };
+-- 
+2.7.4
+

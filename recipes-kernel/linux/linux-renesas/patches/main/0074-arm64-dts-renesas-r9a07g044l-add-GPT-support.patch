@@ -1,0 +1,52 @@
+From 6a39df283b86d0d473e55b8ae2e1ac5df7aaa673 Mon Sep 17 00:00:00 2001
+From: Long Luu <long.luu.ur@renesas.com>
+Date: Tue, 2 Mar 2021 18:27:49 +0700
+Subject: [PATCH 074/135] arm64: dts: renesas: r9a07g044l: add GPT support
+
+This commit adds GPT node support for R9A07G044L SoC.
+
+Signed-off-by: Long Luu <long.luu.ur@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 1d7969b..000fe34 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -375,6 +375,32 @@
+ 			num-cs = <1>;
+ 			status = "disabled";
+ 		};
++
++		gpt3: gpt@10048300 {
++			compatible = "renesas,gpt-r9a07g044l";
++			reg = <0 0x10048300 0 0xa4>;
++			#pwm-cells = <2>;
++			interrupts = <GIC_SPI 257 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 258 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 259 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 260 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 261 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 262 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 263 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 264 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 265 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 266 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 267 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 268 IRQ_TYPE_EDGE_RISING>,
++				<GIC_SPI 269 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "gtcia", "gtcib", "gtcic", "gtcid",
++				"gtcie", "gtcif", "gtciada", "gtciadb",
++				"gtciv", "gtciu", "gtcih", "gtcil",
++				"gtdei";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_GPT>;
++			resets =  <&cpg R9A07G044L_CLK_GPT>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	timer {
+-- 
+2.7.4
+

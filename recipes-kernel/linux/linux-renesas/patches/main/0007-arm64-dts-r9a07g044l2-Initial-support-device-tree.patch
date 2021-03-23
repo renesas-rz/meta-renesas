@@ -1,0 +1,69 @@
+From 28cbbcbf01fcfb7f054be92099860ba21c2e5c6a Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Mon, 8 Mar 2021 14:10:07 +0700
+Subject: [PATCH 007/135] arm64: dts: r9a07g044l2: Initial support  device tree
+
+Add Initial device tree support for RZ/G2L dual A55 SoC
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l2.dtsi | 47 ++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r9a07g044l2.dtsi
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l2.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l2.dtsi
+new file mode 100644
+index 0000000..4f28bb7
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l2.dtsi
+@@ -0,0 +1,47 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Device Tree Source for the RZ/G2L Dual A55 (R9A07G044L2) SoC
++ *
++ * Copyright (C) 2020 Renesas Electronics Corp.
++ */
++
++#include "r9a07g044l.dtsi"
++
++/ {
++	compatible = "renesas,r9a07g044l2";
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	cpus {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		a55_0: cpu@0 {
++			compatible = "arm,cortex-a55";
++			reg = <0x0000>;
++			device_type = "cpu";
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++		};
++
++		a55_1: cpu@1 {
++			compatible = "arm,cortex-a55";
++			reg = <0x0100>;
++			device_type = "cpu";
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++		};
++
++		L3_CA55: cache-controller-0 {
++			compatible = "cache";
++			cache-unified;
++			cache-level = <3>;
++		};
++	};
++
++	psci {
++		compatible = "arm,psci-1.0", "arm,psci-0.2";
++		method = "smc";
++	};
++};
++
+-- 
+2.7.4
+

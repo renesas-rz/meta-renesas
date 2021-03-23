@@ -1,0 +1,31 @@
+From a75f50750f97e4cddcdec5183c1b3e8515a990d0 Mon Sep 17 00:00:00 2001
+From: Ky Nguyen <ky.nguyen.uj@renesas.com>
+Date: Thu, 3 Dec 2020 11:52:48 +0700
+Subject: [PATCH 020/135] drivers: serial: sh-sci: Support for SCIF on
+ r9a07g044l
+
+Adds compatible string to RZ/G2L
+
+Signed-off-by: Ky Nguyen <ky.nguyen.uj@renesas.com>
+---
+ drivers/tty/serial/sh-sci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 8dd1c2e..d89e701 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -3186,6 +3186,10 @@ static const struct of_device_id of_sci_match[] = {
+ 		.compatible = "renesas,scif-r7s9210",
+ 		.data = SCI_OF_DATA(PORT_SCIF, SCIx_RZ_SCIFA_REGTYPE),
+ 	},
++	{
++		.compatible = "renesas,scif-r9a07g044l",
++		.data = SCI_OF_DATA(PORT_SCIF, SCIx_RZ_SCIFA_REGTYPE),
++	},
+ 	/* Family-specific types */
+ 	{
+ 		.compatible = "renesas,rcar-gen1-scif",
+-- 
+2.7.4
+

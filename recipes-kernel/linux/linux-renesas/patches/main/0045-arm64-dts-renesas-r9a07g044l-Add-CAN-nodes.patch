@@ -1,0 +1,55 @@
+From 17ed3142b4e9e6226314542b7d53a4198fac3b4f Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Tue, 2 Feb 2021 17:53:25 +0700
+Subject: [PATCH 045/135] arm64: dts: renesas: r9a07g044l: Add CAN nodes.
+
+This patch add CAN nodes for RZ/G2L (R9A07G044L) SoC.
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 112f54c..d2c7523 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -251,6 +251,35 @@
+ 			dma-channels = <16>;
+ 			#dma-cells = <1>;
+ 		};
++
++		can: can@10050000 {
++			compatible = "renesas,rcar-gen3-canfd",
++					"renesas,r9a07g044l-canfd";
++			reg = <0 0x10050000 0 0x6000>;
++			interrupts =    <GIC_SPI 426 IRQ_TYPE_LEVEL_HIGH>,
++					<GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>,
++					<GIC_SPI 428 IRQ_TYPE_LEVEL_HIGH>,
++					<GIC_SPI 423 IRQ_TYPE_LEVEL_HIGH>,
++					<GIC_SPI 429 IRQ_TYPE_LEVEL_HIGH>,
++					<GIC_SPI 424 IRQ_TYPE_LEVEL_HIGH>,
++					<GIC_SPI 425 IRQ_TYPE_LEVEL_HIGH>,
++					<GIC_SPI 427 IRQ_TYPE_LEVEL_HIGH>;
++
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_CANFD>,
++				 <&cpg CPG_CORE R9A07G044L_CLK_P0>;
++			clock-names = "fck","canfd";
++			resets = <&cpg R9A07G044L_CLK_CANFD>;
++			power-dmains = <&cpg>;
++			status = "disabled";
++			channel0 {
++				renesas,channel = <0>;
++				status = "disabled";
++			};
++			channel1 {
++				renesas,channel = <1>;
++				status = "disabled";
++			};
++		};
+ 	};
+ 
+ 	timer {
+-- 
+2.7.4
+

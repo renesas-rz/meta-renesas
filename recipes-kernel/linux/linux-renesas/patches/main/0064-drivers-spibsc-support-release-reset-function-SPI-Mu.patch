@@ -1,0 +1,51 @@
+From 1c70a72b742db47aaf55af702e9000cba98ef504 Mon Sep 17 00:00:00 2001
+From: thekinhnguyen <the.nguyen.vx@renesas.com>
+Date: Fri, 26 Feb 2021 17:24:58 +0700
+Subject: [PATCH 064/135] drivers: spibsc: support release reset function SPI
+ Multi driver
+
+In RZ/G2L platform, the default state of SPIBSC is reset.
+This patch will release reset state by set direct to CPG register.
+
+Signed-off-by: thekinhnguyen <the.nguyen.vx@renesas.com>
+---
+ drivers/spi/spi-spibsc-rzg2l.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/spi/spi-spibsc-rzg2l.c b/drivers/spi/spi-spibsc-rzg2l.c
+index b4959a3..c9feefa 100644
+--- a/drivers/spi/spi-spibsc-rzg2l.c
++++ b/drivers/spi/spi-spibsc-rzg2l.c
+@@ -13,6 +13,7 @@
+ #include <linux/io.h>
+ #include <linux/delay.h>
+ #include <linux/spi/spi.h>
++#include <linux/reset.h>
+ 
+ /* SPIBSC registers */
+ #define	CMNCR	0x00
+@@ -130,6 +131,7 @@ struct spibsc_priv {
+ 	int last_xfer;
+ 	int tx_only;
+ 	u32 flags;
++	struct reset_control *rstc;
+ };
+ 
+ static void spibsc_write(struct spibsc_priv *sbsc, int reg, u32 val)
+@@ -504,6 +506,13 @@ static int spibsc_probe(struct platform_device *pdev)
+ 	sbsc->master	= master;
+ 	sbsc->dev	= &pdev->dev;
+ 
++	sbsc->rstc = devm_reset_control_get(&pdev->dev, NULL);
++
++	if (IS_ERR(sbsc->rstc))
++		dev_warn(&pdev->dev, "failed to get cpg reset\n");
++	else
++		reset_control_deassert(sbsc->rstc);
++
+ 	sbsc->clk = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(sbsc->clk)) {
+ 		dev_err(&pdev->dev, "cannot get clock\n");
+-- 
+2.7.4
+

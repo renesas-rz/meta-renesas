@@ -1,0 +1,131 @@
+From 8524f12fdad3c9298c03409aeb90b73b8062ecdb Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Fri, 11 Dec 2020 09:10:25 +0700
+Subject: [PATCH 014/135] Documentation: pinctrl: rzg2l: add a new pinctrl
+ document for RZ/G2L SoC
+
+Add device tree bindings documentation for Renesas RZ/G2L gpio and pin
+controller.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../bindings/pinctrl/renesas,rzg2l-pinctrl.txt     | 107 +++++++++++++++++++++
+ 1 file changed, 107 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.txt
+
+diff --git a/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.txt b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.txt
+new file mode 100644
+index 0000000..69af06c
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pinctrl/renesas,rzg2l-pinctrl.txt
+@@ -0,0 +1,107 @@
++Renesas RZ/G2L combined Pin and GPIO controller
++
++The Renesas SoCs of the RZ/G2L family feature a combined Pin and GPIO controller,
++named "P" in the hardware reference manual.
++Pin multiplexing and GPIO configuration is performed on a per-pin basis
++writing configuration values to per-port register sets.
++Each "port" features up to 8 pins, each of them configurable for GPIO
++function (port mode) or in alternate function mode.
++Up to 4 different alternate function modes exist for each single pin.
++
++Pin controller node
++-------------------
++
++Required properties:
++  - compatible: should be:
++    - "renesas,r9a07g044l-pinctrl": for R9A07G044L SoC.
++
++  - reg
++    address base and length of the memory area where the pin controller
++    hardware is mapped to.
++
++Example:
++Pin controller node for R9A07G044L SoC.
++
++pinctrl: pin-controller@11030000 {
++	compatible = "renesas,r9a07g044l-pinctrl";
++
++	reg = <0 0x11030000 0 0x10000>;
++};
++
++The PFC node also acts as a container for pin configuration nodes. Please refer
++to pinctrl-bindings.txt in this directory for the definition of the term "pin
++configuration node" and for the common pinctrl bindings used by client devices.
++
++Each pin configuration node represents a desired configuration for a pin, a
++pin group, or a list of pins or pin groups. The configuration can include the
++function to select on those pin(s) and pin configuration parameters (such as
++pull-up and pull-down).
++
++Pin configuration nodes contain pin configuration properties, either directly
++or grouped in child subnodes. Both pin muxing and configuration parameters can
++be grouped in that way and referenced as a single pin configuration node by
++client devices.
++
++A configuration node or subnode must reference at least one pin (through the
++pins or pin groups properties) and contain at least a function or one
++configuration parameter. When the function is present only pin groups can be
++used to reference pins.
++
++All pin configuration nodes and subnodes names are ignored. All of those nodes
++are parsed through phandles and processed purely based on their content.
++
++Pin Configuration Node Properties:
++
++- pins : An array of strings, each string containing the name of a pin.
++- groups : An array of strings, each string containing the name of a pin
++  group.
++
++- function: A string containing the name of the function to mux to the pin
++  group(s) specified by the groups property.
++
++  Valid values for pin, group and function names can be found in the group and
++  function arrays of the PFC data file corresponding to the SoC
++  (drivers/pinctrl/rzg2l/pinctrl-*.c)
++
++The pin configuration parameters use the generic pinconf bindings defined in
++pinctrl-bindings.txt in this directory. The supported parameters are
++bias-disable, bias-pull-up, bias-pull-down, drive-strength, slew-rate, input-enable.
++
++  Example: pin control maps for the SCIF2 devices
++	&pinctrl {
++		scif2_pins: scif2 {
++			groups = "scif2_data_a", "scifa2_ctrl_a";
++			function = "scif2";
++		};
++	};
++
++- GPIO controller:
++In RZ/G2L, the PFC node is also a GPIO controller node.
++
++Required properties:
++- gpio-controller
++  empty property as defined by the GPIO bindings documentation.
++- #gpio-cells
++  number of cells required to identify and configure a GPIO.
++  Shall be 2. The first cell is the GPIO number and the second
++  cell specifies GPIO flags, as defined in <dt-bindings/gpio/gpio.h>.
++  Only the GPIO_ACTIVE_HIGH and GPIO_ACTIVE_LOW flags are supported.
++- gpio-ranges
++  Describes a GPIO controller specifying its specific pin base, the pin
++  base in the global pin numbering space, and the number of controlled
++  pins, as defined by the GPIO bindings documentation. Refer to
++  Documentation/devicetree/bindings/gpio/gpio.txt file for a more detailed
++  description.
++
++The syntax of the gpio specifier used by client nodes should be the following
++with values derived from the SoC user manual.
++  <[phandle of the gpio controller node]
++   [pin number within the gpio controller]
++   [flags]>
++
++  Example: A GPIO LED node that references a GPIO
++	#include <dt-bindings/gpio/gpio.h>
++	led1 {
++		compatible = "gpio-leds";
++		gpios = <&pinctrl 10 GPIO_ACTIVE_LOW>;
++	};
+-- 
+2.7.4
+

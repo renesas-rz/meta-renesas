@@ -1,0 +1,84 @@
+From 19f0dc7f206e11c1df354483b5e06fc67b08e912 Mon Sep 17 00:00:00 2001
+From: thekinhnguyen <the.nguyen.vx@renesas.com>
+Date: Mon, 1 Mar 2021 13:46:10 +0700
+Subject: [PATCH 067/135] arm64: dts: renesas: r9a07g044l: Add RSPI nodes
+
+Add RSPI nodes for RZ/G2L (R9A07G044L) SoC.
+
+Signed-off-by: thekinhnguyen <the.nguyen.vx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 51 +++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 3753f3a..1d7969b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -18,6 +18,9 @@
+ 		i2c1 = &i2c1;
+ 		i2c2 = &i2c2;
+ 		i2c3 = &i2c3;
++		spi0 = &rspi0;
++		spi1 = &rspi1;
++		spi2 = &rspi2;
+ 	};
+ 
+ 	xinclk: xinclk {
+@@ -324,6 +327,54 @@
+ 			#size-cells = <0>;
+ 			status = "disabled";
+ 		};
++
++		rspi0: spi@1004ac00 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,rspi-r9a07g044l", "renesas,rspi-rz";
++			reg = <0 0x1004ac00 0 0x24>;
++			interrupts = <GIC_SPI 415 IRQ_TYPE_LEVEL_HIGH>,
++			             <GIC_SPI 413 IRQ_TYPE_LEVEL_HIGH>,
++			             <GIC_SPI 414 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "error", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_RSPI0>;
++			resets = <&cpg R9A07G044L_CLK_RSPI0>;
++			power-domains = <&cpg>;
++			num-cs = <1>;
++			status = "disabled";
++		};
++
++		rspi1: spi@1004b000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,rspi-r9a07g044l", "renesas,rspi-rz";
++			reg = <0 0x1004b000 0 0x24>;
++			interrupts = <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++			             <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++			             <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "error", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_RSPI1>;
++			resets = <&cpg R9A07G044L_CLK_RSPI1>;
++			power-domains = <&cpg>;
++			num-cs = <1>;
++			status = "disabled";
++		};
++
++		rspi2: spi@1004b400 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,rspi-r9a07g044l", "renesas,rspi-rz";
++			reg = <0 0x1004b400 0 0x24>;
++			interrupts = <GIC_SPI 421 IRQ_TYPE_LEVEL_HIGH>,
++			             <GIC_SPI 419 IRQ_TYPE_LEVEL_HIGH>,
++			             <GIC_SPI 420 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "error", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_RSPI2>;
++			resets = <&cpg R9A07G044L_CLK_RSPI2>;
++			power-domains = <&cpg>;
++			num-cs = <1>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	timer {
+-- 
+2.7.4
+

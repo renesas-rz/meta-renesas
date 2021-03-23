@@ -1,0 +1,80 @@
+From e3e4f30aaa15b7dbc0b5cc5f7a46f516c96a59a1 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Wed, 2 Dec 2020 11:14:19 +0700
+Subject: [PATCH 008/135] arm64: dts: renesas: rzg2-smarc/r9a07g044l2-dev: Add
+ Initial support
+
+Add rzg2-smarc.dtsi : used as common dtsi for RZ/G2L Evaluation boards
+Add r9a07g044l2-dev: initial support RZ/G2L Dual A55 Evaluation board:
+- memory
+- External input clock
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/Makefile            |  1 +
+ arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts | 22 ++++++++++++++++++++++
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi     | 11 +++++++++++
+ 3 files changed, 34 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts
+ create mode 100644 arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index d22ede9..5a842a3 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -6,6 +6,7 @@ dtb-$(CONFIG_ARCH_R8A774B1) += r8a774b1-hihope-rzg2n.dtb
+ dtb-$(CONFIG_ARCH_R8A774B1) += r8a774b1-hihope-rzg2n-ex.dtb
+ dtb-$(CONFIG_ARCH_R8A774C0) += r8a774c0-cat874.dtb r8a774c0-ek874.dtb \
+ 			       r8a774c0-ek874-idk-2121wr.dtb
++dtb-$(CONFIG_ARCH_R9A07G044L2) += r9a07g044l2-dev.dtb
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-h3ulcb-kf.dtb
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-xs.dtb
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts b/arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts
+new file mode 100644
+index 0000000..1dd5c27
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l2-dev.dts
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Device Tree Source for the RZG2L Dual A55 Evaluation board
++ *
++ * Copyright (C) 2021 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r9a07g044l2.dtsi"
++#include "rzg2-smarc.dtsi"
++
++/ {
++	model = "Evaluation board based on r9a07g044l2";
++	compatible = "renesas,r9a07g044l2-dev", "renesas,r9a07g044l2";
++
++	memory@47E00000 {
++		device_type = "memory";
++		/* first 126MB is reserved for secure area. */
++		reg = <0x0 0x47E00000 0x0 0xF8200000>;
++	};
++};
++
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+new file mode 100644
+index 0000000..07cee80
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -0,0 +1,11 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Device Tree Source for the RZG2 SMARC main board common parts
++ *
++ * Copyright (C) 2020 Renesas Electronics Corp.
++ */
++
++&xinclk {
++	clock-frequency = <24000000>;
++};
++
+-- 
+2.7.4
+

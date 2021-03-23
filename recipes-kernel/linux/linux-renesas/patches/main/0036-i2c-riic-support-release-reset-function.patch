@@ -1,0 +1,50 @@
+From 6b976962c8c483a7a2919a57353083f79059e09c Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Tue, 26 Jan 2021 14:07:07 +0700
+Subject: [PATCH 036/135] i2c: riic: support release reset function.
+
+In RZ/G2L platform, the default state of I2C is reset.
+The function reset_control_deassert() to release reset state for I2C driver.
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/i2c/busses/i2c-riic.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/i2c/busses/i2c-riic.c b/drivers/i2c/busses/i2c-riic.c
+index e6f351c..9eb3ed1 100644
+--- a/drivers/i2c/busses/i2c-riic.c
++++ b/drivers/i2c/busses/i2c-riic.c
+@@ -43,6 +43,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/reset.h>
+ 
+ #define RIIC_ICCR1	0x00
+ #define RIIC_ICCR2	0x04
+@@ -95,6 +96,7 @@ struct riic_dev {
+ 	struct completion msg_done;
+ 	struct i2c_adapter adapter;
+ 	struct clk *clk;
++	struct reset_control *rstc;
+ };
+ 
+ struct riic_irq_desc {
+@@ -415,6 +417,13 @@ static int riic_i2c_probe(struct platform_device *pdev)
+ 		return PTR_ERR(riic->clk);
+ 	}
+ 
++	riic->rstc = devm_reset_control_get(&pdev->dev, NULL);
++
++	if (IS_ERR(riic->rstc))
++		dev_warn(&pdev->dev, "failed to get cpg reset\n");
++	else
++		reset_control_deassert(riic->rstc);
++
+ 	for (i = 0; i < ARRAY_SIZE(riic_irqs); i++) {
+ 		res = platform_get_resource(pdev, IORESOURCE_IRQ, riic_irqs[i].res_num);
+ 		if (!res)
+-- 
+2.7.4
+

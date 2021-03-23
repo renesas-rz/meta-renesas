@@ -1,0 +1,181 @@
+From 73378c54dbe53494c1585e8db4a82d07012a3d5a Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 12 Feb 2021 13:22:55 +0000
+Subject: [PATCH 054/135] net: ethernet: renesas: ravb_main: Port ESPADA
+ {get/set}_settings
+
+* Port ESPADA {get/set}_settings
+* Drop dead code
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 121 ++++++++++++++-----------------
+ 1 file changed, 54 insertions(+), 67 deletions(-)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 4f1cd60..99e8b64 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -85,48 +85,6 @@ static void ravb_set_duplex(struct net_device *ndev)
+ 	ravb_write(ndev, ecmr, ECMR);
+ }
+ 
+-#ifdef DUMP_REGS
+-static void __dump_regs(struct net_device *ndev)
+-{
+-	netdev_warn(ndev, "CSR0: 0x%08x\n", ravb_read(ndev, 0x800));
+-	netdev_warn(ndev, "CSR: 0x%08x\n", ravb_read(ndev, 0xc));
+-	netdev_warn(ndev, "CXR35: 0x%08x\n", ravb_read(ndev, 0x540));
+-	netdev_warn(ndev, "CXR31: 0x%08x\n", ravb_read(ndev, 0x530));
+-	netdev_warn(ndev, "CXR2C: 0x%08x\n", ravb_read(ndev, 0x52c));
+-	netdev_warn(ndev, "CXR2A: 0x%08x\n", ravb_read(ndev, 0x508));
+-	netdev_warn(ndev, "CXR71: 0x%08x\n", ravb_read(ndev, 0x554));
+-	netdev_warn(ndev, "CXR24: 0x%08x\n", ravb_read(ndev, 0x5c0));
+-	netdev_warn(ndev, "CXR25: 0x%08x\n", ravb_read(ndev, 0x5c8));
+-	netdev_warn(ndev, "CXR21: 0x%08x\n", ravb_read(ndev, 0x510));
+-	netdev_warn(ndev, "CXR22: 0x%08x\n", ravb_read(ndev, 0x518));
+-	netdev_warn(ndev, "CXRD2: 0x%08x\n", ravb_read(ndev, 0x5b0));
+-	netdev_warn(ndev, "CXR2G: 0x%08x\n", ravb_read(ndev, 0x5bc));
+-
+-	netdev_warn(ndev, "TGC: 0x%08x\n", ravb_read(ndev, 0x300));
+-	netdev_warn(ndev, "TIC: 0x%08x\n", ravb_read(ndev, 0x378));
+-	netdev_warn(ndev, "TIE: 0x%08x\n", ravb_read(ndev, 0x478));
+-	netdev_warn(ndev, "TIS: 0x%08x\n", ravb_read(ndev, 0x37C));
+-	netdev_warn(ndev, "TID: 0x%08x\n", ravb_read(ndev, 0x47C));
+-
+-	netdev_warn(ndev, "RIC0: 0x%08x\n", ravb_read(ndev, RIC0));
+-	netdev_warn(ndev, "RIE0: 0x%08x\n", ravb_read(ndev, RIE0));
+-
+-	netdev_warn(ndev, "DBAT: 0x%08x\n", ravb_read(ndev, 0x04));
+-	netdev_warn(ndev, "RCR: 0x%08x\n", ravb_read(ndev, 0x090));
+-	netdev_warn(ndev, "RTC: 0x%08x\n", ravb_read(ndev, 0x0b4));
+-	netdev_warn(ndev, "CIE: 0x%08x\n", ravb_read(ndev, 0x384));
+-	netdev_warn(ndev, "DIE: 0x%08x\n", ravb_read(ndev, 0x450));
+-	netdev_warn(ndev, "EIE: 0x%08x\n", ravb_read(ndev, 0x458));
+-	netdev_warn(ndev, "RIE0: 0x%08x\n", ravb_read(ndev, 0x460));
+-	netdev_warn(ndev, "RIE1: 0x%08x\n", ravb_read(ndev, 0x468));
+-	netdev_warn(ndev, "RIE2: 0x%08x\n", ravb_read(ndev, 0x470));
+-	netdev_warn(ndev, "RIE3: 0x%08x\n", ravb_read(ndev, 0x488));
+-	netdev_warn(ndev, "CCC: 0x%08x\n", ravb_read(ndev, 0x0));
+-	netdev_warn(ndev, "CXR20: 0x%08x\n", ravb_read(ndev, 0x500));
+-	netdev_warn(ndev, "TCCR: 0x%08x\n", ravb_read(ndev, 0x304));
+-}
+-#endif
+-
+ static void ravb_set_rate(struct net_device *ndev)
+ {
+ 	struct ravb_private *priv = netdev_priv(ndev);
+@@ -1352,9 +1310,6 @@ static int ravb_phy_init(struct net_device *ndev)
+ 	struct ravb_private *priv = netdev_priv(ndev);
+ 	struct phy_device *phydev;
+ 	struct device_node *pn;
+-#if 0
+-	u32 val;
+-#endif
+ 
+ 	priv->link = 0;
+ 	priv->speed = 0;
+@@ -1394,25 +1349,6 @@ static int ravb_phy_init(struct net_device *ndev)
+ 
+ 	priv->phydev = phydev;
+ 
+-#if 0
+-	/* near end loopback test */
+-	phy_write_mmd(priv->phydev, 0x28, 0x15, 0xEEEE);
+-	phy_write_mmd(priv->phydev, 0x28, 0x16, 0xEEEE);
+-	phy_write_mmd(priv->phydev, 0x28, 0x18, 0xEEEE);
+-	phy_write_mmd(priv->phydev, 0x28, 0x1b, 0xEEEE2);
+-	val = phy_read_mmd(priv->phydev, 0, 0);
+-	val |= BIT(14);
+-	val |= BIT(8);
+-	val |= BIT(6);
+-	val &= ~BIT(13);
+-	val &= ~BIT(12);
+-	phy_write_mmd(priv->phydev, 0, 0, val);
+-	val = phy_read_mmd(priv->phydev, 0, 9);
+-	val |= BIT(12);
+-	val &= ~BIT(11);
+-	phy_write_mmd(priv->phydev, 0, 9, val);
+-#endif
+-
+ 	phy_attached_info(phydev);
+ 
+ #if defined(CONFIG_ARCH_ESPADA)
+@@ -1765,10 +1701,64 @@ static int ravb_nway_reset(struct net_device *ndev)
+ 
+ 	return error;
+ }
++
++static int ravb_get_settings(struct net_device *ndev, struct ethtool_cmd *ecmd)
++{
++	struct ravb_private *priv = netdev_priv(ndev);
++	int error = -ENODEV;
++	unsigned long flags;
++
++	if (priv->phydev) {
++		spin_lock_irqsave(&priv->lock, flags);
++		error = phy_ethtool_gset(priv->phydev, ecmd);
++		spin_unlock_irqrestore(&priv->lock, flags);
++	}
++
++	return error;
++}
++
++static int ravb_set_settings(struct net_device *ndev, struct ethtool_cmd *ecmd)
++{
++	struct ravb_private *priv = netdev_priv(ndev);
++	unsigned long flags;
++	int error;
++
++	if (!priv->phydev)
++		return -ENODEV;
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	/* Disable TX and RX */
++	ravb_rcv_snd_disable(ndev);
++
++	error = phy_ethtool_sset(priv->phydev, ecmd);
++	if (error)
++		goto error_exit;
++
++	if (ecmd->duplex == DUPLEX_FULL)
++		priv->duplex = 1;
++	else
++		priv->duplex = 0;
++
++	ravb_set_duplex(ndev);
++
++error_exit:
++	mdelay(1);
++
++	/* Enable TX and RX */
++	ravb_rcv_snd_enable(ndev);
++
++	mmiowb();
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	return error;
++}
+ #endif
+ 
+ static const struct ethtool_ops ravb_ethtool_ops = {
+ #if defined(CONFIG_ARCH_ESPADA)
++	.get_settings		= ravb_get_settings,
++	.set_settings		= ravb_set_settings,
+ 	.nway_reset		= ravb_nway_reset,
+ #else
+ 	.nway_reset		= phy_ethtool_nway_reset,
+@@ -2033,9 +2023,6 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	desc--;
+ 	desc->die_dt = DT_FSTART;
+ 
+-#ifdef DUMP_REGS
+-	__dump_regs(ndev);
+-#endif
+ 	ravb_write(ndev, ravb_read(ndev, TCCR) | (TCCR_TSRQ0 << q), TCCR);
+ 
+ 	priv->cur_tx[q] += NUM_TX_DESC;
+-- 
+2.7.4
+

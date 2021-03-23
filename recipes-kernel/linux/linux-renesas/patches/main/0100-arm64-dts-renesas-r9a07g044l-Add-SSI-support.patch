@@ -1,0 +1,117 @@
+From d87ae1bb955c7804b6bac346af0532e911de55f8 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Sat, 23 Jan 2021 17:41:50 +0000
+Subject: [PATCH 100/135] arm64: dts: renesas: r9a07g044l: Add SSI support
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 85 +++++++++++++++++++++++++++++
+ 1 file changed, 85 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 0586015..69100de 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -23,6 +23,23 @@
+ 		spi2 = &rspi2;
+ 	};
+ 
++	/*
++	 * The external audio clocks are configured as 0 Hz fixed frequency
++	 * clocks by default.
++	 * Boards that provide audio clocks should override them.
++	 */
++	audio_clk1: audio_clk1 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <0>;
++	};
++
++	audio_clk2: audio_clk2 {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <0>;
++	};
++
+ 	xinclk: xinclk {
+ 		compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+@@ -500,6 +517,74 @@
+ 				};
+ 			};
+ 		};
++
++		ssi0: ssi@10049c00 {
++			#sound-dai-cells = <0>;
++			compatible = "renesas,rzg2l-ssi";
++			reg = <0 0x10049c00 0 0x00000028>;
++			interrupts = <GIC_SPI 326 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 327 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 328 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SSI0> ,
++				 <&audio_clk1>,
++				 <&audio_clk2>;
++			clock-names = "ssi", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G044L_CLK_SSI0>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ssi1: ssi@1004A000 {
++			#sound-dai-cells = <0>;
++			compatible = "renesas,rzg2l-ssi";
++			reg = <0 0x1004A000 0 0x00000028>;
++			interrupts = <GIC_SPI 330 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 331 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 332 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SSI1>,
++				 <&audio_clk1>,
++				 <&audio_clk2>;
++			clock-names = "ssi", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G044L_CLK_SSI1>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ssi2: ssi@1004A400 {
++			#sound-dai-cells = <0>;
++			compatible = "renesas,rzg2l-ssi";
++			reg = <0 0x1004A400 0 0x00000028>;
++			interrupts = <GIC_SPI 334 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 335 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 336 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SSI2>,
++				 <&audio_clk1>,
++				 <&audio_clk2>;
++			clock-names = "ssi", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G044L_CLK_SSI2>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ssi3: ssi@1004A800 {
++			#sound-dai-cells = <0>;
++			compatible = "renesas,rzg2l-ssi";
++			reg = <0 0x1004A800 0 0x00000028>;
++			interrupts = <GIC_SPI 338 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 339 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 340 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SSI3>,
++				 <&audio_clk1>,
++				 <&audio_clk2>;
++			clock-names = "ssi", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G044L_CLK_SSI3>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	thermal-zones {
+-- 
+2.7.4
+

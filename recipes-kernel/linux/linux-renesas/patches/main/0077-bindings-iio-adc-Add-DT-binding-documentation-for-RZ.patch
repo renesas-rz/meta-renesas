@@ -1,0 +1,44 @@
+From 1f3ea8c879174172baed23d71e2791d5ba439827 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 18 Feb 2021 18:46:13 +0000
+Subject: [PATCH 077/135] bindings: iio: adc: Add DT binding documentation for
+ RZ/G2L ADC
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+---
+ .../devicetree/bindings/iio/adc/rzg2l-adc.txt      | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/iio/adc/rzg2l-adc.txt
+
+diff --git a/Documentation/devicetree/bindings/iio/adc/rzg2l-adc.txt b/Documentation/devicetree/bindings/iio/adc/rzg2l-adc.txt
+new file mode 100644
+index 0000000..d62a3bd
+--- /dev/null
++++ b/Documentation/devicetree/bindings/iio/adc/rzg2l-adc.txt
+@@ -0,0 +1,23 @@
++Renesas RZ/G2L A/D Converter bindings
++
++Required properties:
++- compatible: should be "renesas,adc-r9a07g044l"
++
++- reg: physical base address of the controller and length of memory mapped
++       region.
++- interrupts: The interrupt number to the cpu. The interrupt specifier format
++              depends on the interrupt controller.
++- clocks: Must contain an entry for each entry in clock-names.
++- #io-channel-cells: Should be 1, see ../iio-bindings.txt
++- resets: Must contain an entry for each entry in reset-names if need support
++	  this option. See ../reset/reset.txt for details.
++
++Example:
++	adc: adc@10059000 {
++		compatible = "renesas,adc-r9a07g044l";
++		reg = <0 0x10059000 0 0x400>;
++		interrupts = <GIC_SPI 347  IRQ_TYPE_EDGE_RISING>;
++		clocks = <&cpg CPG_MOD R9A07G044L_CLK_ADC>;
++		resets = <&cpg R9A07G044L_CLK_ADC>;
++		power-domains = <&cpg>;
++	};
+-- 
+2.7.4
+

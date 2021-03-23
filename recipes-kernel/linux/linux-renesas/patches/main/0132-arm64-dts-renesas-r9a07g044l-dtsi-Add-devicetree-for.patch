@@ -1,0 +1,43 @@
+From c8f1cd66f09b0f9364a3393ba4488548ace72e48 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Fri, 12 Mar 2021 17:30:39 +0700
+Subject: [PATCH 132/135] arm64: dts: renesas: r9a07g044l: dtsi: Add devicetree
+ for MTU3
+
+Add device node for MTU3
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index a1598ab..5d24e08 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -86,6 +86,22 @@
+ 				(GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
+ 		};
+ 
++		mtu3: timer@10001200 {
++			compatible = "renesas,rzg2l-mtu3";
++			reg = <0 0x10001200 0 0x400>;
++			interrupts =
++				<GIC_SPI 170 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 174 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "tgi0a" , "tci0v" , "tgi1a" , "tgi2a";
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_MTU>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G044L_CLK_MTU>;
++			status = "disabled";
++		};
++
+ 		scif0: serial@1004b800 {
+ 			compatible = "renesas,scif-r9a07g044l";
+ 			reg = <0 0x1004b800 0 0x400>;
+-- 
+2.7.4
+

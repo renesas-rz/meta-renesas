@@ -1,0 +1,27 @@
+From fa33e6c1c0171b14276deec77f9990cee35c749f Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 4 Mar 2021 13:17:41 +0000
+Subject: [PATCH 119/135] sound: audio-graph-card: Fix audio graph
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+---
+ sound/soc/generic/audio-graph-card.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/generic/audio-graph-card.c b/sound/soc/generic/audio-graph-card.c
+index 2094d2c..7e333f0 100644
+--- a/sound/soc/generic/audio-graph-card.c
++++ b/sound/soc/generic/audio-graph-card.c
+@@ -163,7 +163,8 @@ static int asoc_graph_card_dai_link_of(struct device_node *cpu_port,
+ 	struct graph_dai_props *dai_props = graph_priv_to_props(priv, idx);
+ 	struct asoc_simple_dai *cpu_dai = &dai_props->cpu_dai;
+ 	struct asoc_simple_dai *codec_dai = &dai_props->codec_dai;
+-	struct device_node *cpu_ep    = of_get_next_child(cpu_port, NULL);
++	struct device_node *cpuport = of_get_next_child(cpu_port, NULL);
++	struct device_node *cpu_ep = of_graph_get_next_endpoint(cpuport,0);
+ 	struct device_node *codec_ep = of_graph_get_remote_endpoint(cpu_ep);
+ 	struct device_node *rcpu_ep = of_graph_get_remote_endpoint(codec_ep);
+ 	int ret;
+-- 
+2.7.4
+

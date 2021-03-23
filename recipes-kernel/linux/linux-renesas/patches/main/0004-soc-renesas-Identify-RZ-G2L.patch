@@ -1,0 +1,88 @@
+From 514dc84c88cb55594d0a3a5253a4b1d95df068fa Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Tue, 17 Nov 2020 11:55:43 +0700
+Subject: [PATCH 004/135] soc: renesas: Identify RZ/G2L
+
+Add support for identifying Renesas RZ/G2L (r9a07g044lx) SoC.
+Note that:
+- RZ/G2L use 28 bits for product identification instead of 8
+bits as other Renesas SoCs. So, type of "id" is changed from u8 to u32
+- currently product revision checking is not supported for G2L.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ drivers/soc/renesas/renesas-soc.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/soc/renesas/renesas-soc.c b/drivers/soc/renesas/renesas-soc.c
+index 1a40c1e..7d932f8 100644
+--- a/drivers/soc/renesas/renesas-soc.c
++++ b/drivers/soc/renesas/renesas-soc.c
+@@ -60,6 +60,11 @@ static const struct renesas_family fam_rzg2 __initconst __maybe_unused = {
+ 	.reg	= 0xfff00044,		/* PRR (Product Register) */
+ };
+ 
++static const struct renesas_family fam_rzg2l __initconst __maybe_unused = {
++	.name   = "RZ/G2L",
++	.reg    = 0x11020a04,		/* DEVID (Device ID Register) */
++};
++
+ static const struct renesas_family fam_shmobile __initconst __maybe_unused = {
+ 	.name	= "SH-Mobile",
+ 	.reg	= 0xe600101c,		/* CCCR (Common Chip Code Register) */
+@@ -68,7 +73,7 @@ static const struct renesas_family fam_shmobile __initconst __maybe_unused = {
+ 
+ struct renesas_soc {
+ 	const struct renesas_family *family;
+-	u8 id;
++	u32 id;
+ };
+ 
+ static const struct renesas_soc soc_rz_a1h __initconst __maybe_unused = {
+@@ -125,6 +130,11 @@ static const struct renesas_soc soc_rz_g2e __initconst __maybe_unused = {
+ 	.id	= 0x57,
+ };
+ 
++static const struct renesas_soc soc_rz_g2l __initconst __maybe_unused = {
++	.family = &fam_rzg2l,
++	.id     = 0x841c447,
++};
++
+ static const struct renesas_soc soc_rcar_m1a __initconst __maybe_unused = {
+ 	.family	= &fam_rcar_gen1,
+ };
+@@ -234,6 +244,9 @@ static const struct of_device_id renesas_socs[] __initconst = {
+ #ifdef CONFIG_ARCH_R8A774C0
+ 	{ .compatible = "renesas,r8a774c0",	.data = &soc_rz_g2e },
+ #endif
++#ifdef CONFIG_ARCH_R9A07G044L2
++	{ .compatible = "renesas,r9a07g044l2",     .data = &soc_rz_g2l },
++#endif
+ #ifdef CONFIG_ARCH_R8A7778
+ 	{ .compatible = "renesas,r8a7778",	.data = &soc_rcar_m1a },
+ #endif
+@@ -317,7 +330,9 @@ static int __init renesas_soc_init(void)
+ 		/* R-Car M3-W ES1.3 incorrectly identifies as ES2.1 */
+ 		if ((product & 0x7fff) == 0x5211)
+ 			product ^= 0x12;
+-		if (soc->id && ((product >> 8) & 0xff) != soc->id) {
++		/*RZ/G2L use 28 bits for product identification*/
++		if (soc->id && ((product >> 8) & 0xff) != soc->id &&
++				(product & 0xfffffff) != soc->id) {
+ 			pr_warn("SoC mismatch (product = 0x%x)\n", product);
+ 			return -ENODEV;
+ 		}
+@@ -339,6 +354,10 @@ static int __init renesas_soc_init(void)
+ 						   ((product >> 4) & 0x0f) + 1,
+ 						   product & 0xf);
+ 
++	/*FIXME: current RZG2L family do not support product revision*/
++	if (strcmp(soc_dev_attr->family, fam_rzg2l.name))
++		soc_dev_attr->revision = 0;
++
+ 	pr_info("Detected Renesas %s %s %s\n", soc_dev_attr->family,
+ 		soc_dev_attr->soc_id, soc_dev_attr->revision ?: "");
+ 
+-- 
+2.7.4
+

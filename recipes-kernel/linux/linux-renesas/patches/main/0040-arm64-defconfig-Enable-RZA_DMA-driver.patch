@@ -1,0 +1,24 @@
+From 4dddb684948f06e0dfdcfc7beea61993290070f5 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Fri, 29 Jan 2021 16:10:50 +0700
+Subject: [PATCH 040/135] arm64: defconfig: Enable RZA_DMA driver
+
+enable RZA_DMA as default
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 44660c0..49e688c 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -735,3 +735,4 @@ CONFIG_CRYPTO_CHACHA20_NEON=m
+ CONFIG_CRYPTO_AES_ARM64_BS=m
+ CONFIG_RESET_CONTROLLER=y
+ CONFIG_I2C_RIIC=y
++CONFIG_RZA_DMA=y
+-- 
+2.7.4
+

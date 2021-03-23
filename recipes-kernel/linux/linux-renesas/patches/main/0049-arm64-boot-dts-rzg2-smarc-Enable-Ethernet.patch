@@ -1,0 +1,99 @@
+From 780761459f0887f993a97b30ab19e5de7644df0d Mon Sep 17 00:00:00 2001
+From: Khoi Nguyen <khoi.nguyen.aj@renesas.com>
+Date: Tue, 2 Feb 2021 18:19:21 +0700
+Subject: [PATCH 049/135] arm64: boot: dts: rzg2-smarc: Enable Ethernet
+
+This patch enables Ethernet to use on G2L-SMARC board.
+atm we are using generic phy driver for Micrel phy, so manually
+configure the irq line as inout.
+
+Signed-off-by: Khoi Nguyen <khoi.nguyen.aj@renesas.com>
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 52 +++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 2913e4d..7f298a9 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -13,6 +13,8 @@
+ 		serial0 = &scif0;
+ 		can0 = &can;
+ 		can1 = &can;
++		ethernet0 = &eth0;
++		ethernet1 = &eth1;
+ 	};
+ 
+ 	chosen {
+@@ -60,6 +62,20 @@
+ };
+ 
+ &pinctrl {
++	eth0_irq_pin {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(1, 0) GPIO_ACTIVE_HIGH>;
++		input;
++		line-name = "eth0_irq_pin";
++	};
++
++	eth0_irq_pin {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(1, 1) GPIO_ACTIVE_HIGH>;
++		input;
++		line-name = "eth1_irq_pin";
++	};
++
+ 	scif0_pins: scif0 {
+ 		groups = "scif0_data";
+ 		function = "scif0";
+@@ -145,6 +161,16 @@
+ 		groups = "can1_data_a";
+ 		function = "can1";
+ 	};
++
++	ether0_pins: eth0 {
++		groups = "eth0_link", "eth0_mdio", "eth0_mii";
++		function = "eth0";
++	};
++	
++	ether1_pins: eth1 {
++		groups = "eth1_link", "eth1_mdio", "eth1_mii";
++		function = "eth1";
++	};
+ };
+ 
+ &scif0 {
+@@ -194,3 +220,29 @@
+ 		status = "okay";
+ 	};
+ };
++
++&eth0 {
++        pinctrl-0 = <&ether0_pins>;
++        pinctrl-names = "default";
++        phy-handle = <&phy0>;
++        phy-mode = "rgmii";
++        status = "okay";
++
++        phy0: ethernet-phy@7 {
++                rxc-skew-ps = <1500>;
++                reg = <7>;
++        };
++};
++
++&eth1 {
++	pinctrl-0 = <&ether1_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy1>;
++	phy-mode = "rgmii";
++	status = "okay";
++	
++	phy1: ethernet-phy@7 {
++		rxc-skew-ps = <1500>;
++		reg = <7>;
++	};
++};
+-- 
+2.7.4
+

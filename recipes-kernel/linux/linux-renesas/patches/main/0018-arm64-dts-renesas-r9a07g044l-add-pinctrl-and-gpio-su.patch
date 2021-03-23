@@ -1,0 +1,37 @@
+From a79c27513657e551e04c633d686c570a5f065403 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 14 Dec 2020 08:04:34 +0700
+Subject: [PATCH 018/135] arm64: dts: renesas: r9a07g044l: add pinctrl and gpio
+ support
+
+This commit adds pin controller adn gpio node support for R9A07G044L
+SoC.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index d0a09f0..6643a2e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -37,6 +37,15 @@
+ 			#power-domain-cells = <0>;
+ 		};
+ 
++		pinctrl: pin-controller@11030000 {
++			compatible = "renesas,r9a07g044l-pinctrl";
++			reg = <0 0x11030000 0 0x10000>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pinctrl 0 0 392>;
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_GPIO>;
++		};
++
+ 		gic: interrupt-controller@11900000 {
+ 			compatible = "arm,gic-v3";
+ 			#interrupt-cells = <3>;
+-- 
+2.7.4
+

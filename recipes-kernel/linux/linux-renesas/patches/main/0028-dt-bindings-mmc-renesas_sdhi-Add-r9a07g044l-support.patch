@@ -1,0 +1,28 @@
+From 42620aafb5afd17a042a0157f11d5e484ff170cc Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Wed, 20 Jan 2021 16:14:04 +0700
+Subject: [PATCH 028/135] dt-bindings: mmc: renesas_sdhi: Add r9a07g044l
+ support
+
+Document RZ/G2L (r9a07g044l) SoC bindings.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ Documentation/devicetree/bindings/mmc/tmio_mmc.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/mmc/tmio_mmc.txt b/Documentation/devicetree/bindings/mmc/tmio_mmc.txt
+index d50c6cb..b5d5b29 100644
+--- a/Documentation/devicetree/bindings/mmc/tmio_mmc.txt
++++ b/Documentation/devicetree/bindings/mmc/tmio_mmc.txt
+@@ -20,6 +20,7 @@ Required properties:
+ 		"renesas,sdhi-r8a774a1" - SDHI IP on R8A774A1 SoC
+ 		"renesas,sdhi-r8a774b1" - SDHI IP on R8A774B1 SoC
+ 		"renesas,sdhi-r8a774c0" - SDHI IP on R8A774C0 SoC
++		"renesas,sdhi-r9a07g044l" - SDHI IP on R9A07G044L SoC
+ 		"renesas,sdhi-r8a77470" - SDHI IP on R8A77470 SoC
+ 		"renesas,sdhi-mmc-r8a77470" - SDHI/MMC IP on R8A77470 SoC
+ 		"renesas,sdhi-r8a7778" - SDHI IP on R8A7778 SoC
+-- 
+2.7.4
+

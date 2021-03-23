@@ -1,0 +1,109 @@
+From 0b8e4f80f0d8b87fcb19b24feba9916ba562b2e0 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Thu, 4 Mar 2021 14:37:52 +0700
+Subject: [PATCH 060/135] pinctrl: pinctrl-rzg2l: add a api to switch eth
+ mii/rgmii mode
+
+This commit adds a api to swith eth mii/rgmii mode which is supported
+by GPIO to control direction of IO buffer.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pinctrl-rzg2l.c | 43 ++++++++++++++++++++++++++++++++++
+ drivers/pinctrl/sh-pfc/pinctrl-rzg2l.h |  7 ++++++
+ 2 files changed, 50 insertions(+)
+
+diff --git a/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.c b/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.c
+index 554a9a0..f01c4f5 100644
+--- a/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.c
+@@ -482,6 +482,49 @@ static int rzg2l_pinctrl_pinconf_group_get(struct pinctrl_dev *pctldev,
+ 	return 0;
+ };
+ 
++/* -----------------------------------------------------------------------------
++ * Switch between MII / RGMII of ETH
++ * Ethernet driver API
++ */
++
++int rzg2l_pinctrl_eth_mode_set(struct device *dev,
++			       phy_interface_t interface,
++			       unsigned int eth_channel)
++{
++	struct rzg2l_pinctrl *pctrl = dev_get_drvdata(dev);
++	u32 reg32;
++	unsigned long flags;
++
++	if (eth_channel < 2)
++		reg32 = readl(pctrl->base + ETH_MODE_CTRL) & ~BIT(eth_channel);
++	else
++		return -EINVAL;
++
++	switch (interface) {
++	case PHY_INTERFACE_MODE_MII: {
++		spin_lock_irqsave(&pctrl->lock, flags);
++		writel(reg32 | ETH_MII_CH(eth_channel),
++						pctrl->base + ETH_MODE_CTRL);
++		spin_unlock_irqrestore(&pctrl->lock, flags);
++		break;
++	}
++	case PHY_INTERFACE_MODE_RGMII:
++	case PHY_INTERFACE_MODE_RGMII_ID:
++	case PHY_INTERFACE_MODE_RGMII_RXID:
++	case PHY_INTERFACE_MODE_RGMII_TXID: {
++		spin_lock_irqsave(&pctrl->lock, flags);
++		writel(reg32 | ETH_RGMII_CH(eth_channel),
++						pctrl->base + ETH_MODE_CTRL);
++		spin_unlock_irqrestore(&pctrl->lock, flags);
++		break;
++	}
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++};
++
+ static const struct pinctrl_ops rzg2l_pinctrl_pctlops = {
+ 	.get_groups_count = pinctrl_generic_get_group_count,
+ 	.get_group_name = pinctrl_generic_get_group_name,
+diff --git a/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.h b/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.h
+index ed4c467..c9744730 100644
+--- a/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.h
++++ b/drivers/pinctrl/sh-pfc/pinctrl-rzg2l.h
+@@ -18,6 +18,7 @@
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+ #include <linux/clk.h>
++#include <linux/phy.h>
+ 
+ #include "../core.h"
+ #include "../pinconf.h"
+@@ -38,6 +39,7 @@
+ #define SD_CH(n) (0x3000 + (n) * 4)	/* SD IO Voltage Control Register */
+ #define QSPI	(0x3008)		/* QSPI IO Voltage Control Register */
+ #define ETH_CH(n) (0x300C + (n) * 4)	/* Ether Voltage Control Register */
++#define ETH_MODE_CTRL	0x3018	/* Ether MII/RGMII Mode Control Register */
+ 
+ #define PWPR_B0WI		BIT(7)	/* Bit Write Disable */
+ #define PWPR_PFCWE		BIT(6)	/* PFC Register Write Enable */
+@@ -46,6 +48,8 @@
+ #define ETH_PVDD_2500		BIT(1)	/* Ether I/O voltage 2.5V */
+ #define ETH_PVDD_1800		BIT(0)	/* Ether I/O voltage 1.8V */
+ #define ETH_PVDD_3300		0	/* Ether I/O voltage 3.3V */
++#define ETH_MII_CH(x)		(1 << (x)) /* Ether channel x MII mode */
++#define ETH_RGMII_CH(x)		(0 << (x)) /* Ether channel x RGMII mode */
+ 
+ #define PM_INPUT		0x1	/* Input Mode */
+ #define PM_OUTPUT		0x2	/* Output Mode (disable Input) */
+@@ -173,4 +177,7 @@ struct rzg2l_pinctrl {
+ 
+ extern const struct rzg2l_pin_soc r9a07g044l_pinctrl_data;
+ 
++int rzg2l_pinctrl_eth_mode_set(struct device *dev,
++			       phy_interface_t interface,
++			       unsigned int eth_channel);
+ #endif
+-- 
+2.7.4
+

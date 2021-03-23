@@ -1,0 +1,62 @@
+From a36d5db09df226192f3dfb245e556b5eb962b074 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Tue, 19 Jan 2021 18:32:18 +0700
+Subject: [PATCH 027/135] tty: sh-sci: fix issue can not set correct baudrate
+ on rz scifa
+
+RZ/SCIFA support extended mode, current driver does not support that
+mode. However, It may be configured in earlier loaders.
+
+This commit add extended mode register and clear it as default for sure.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ drivers/tty/serial/sh-sci.c | 5 +++++
+ drivers/tty/serial/sh-sci.h | 1 +
+ 2 files changed, 6 insertions(+)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 3bd30c3..869ef14 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -311,6 +311,7 @@ static const struct sci_port_params sci_port_params[SCIx_NR_REGTYPES] = {
+ 			[SCFDR]		= { 0x0E, 16 },
+ 			[SCSPTR]	= { 0x10, 16 },
+ 			[SCLSR]		= { 0x12, 16 },
++			[SCSEMR]	= { 0x14, 8 },
+ 		},
+ 		.fifosize = 16,
+ 		.overrun_reg = SCLSR,
+@@ -2534,6 +2535,8 @@ static void sci_set_termios(struct uart_port *port, struct ktermios *termios,
+ 			case 27: smr_val |= SCSMR_SRC_27; break;
+ 			}
+ 		smr_val |= cks;
++		/*we not support extended mode yet, make sure it is cleared*/
++		serial_port_out(port, SCSEMR, 0);
+ 		serial_port_out(port, SCSCR, scr_val | s->hscif_tot);
+ 		serial_port_out(port, SCSMR, smr_val);
+ 		serial_port_out(port, SCBRR, brr);
+@@ -2568,6 +2571,8 @@ static void sci_set_termios(struct uart_port *port, struct ktermios *termios,
+ 		scr_val = s->cfg->scscr & (SCSCR_CKE1 | SCSCR_CKE0);
+ 		smr_val |= serial_port_in(port, SCSMR) &
+ 			   (SCSMR_CKEDG | SCSMR_SRC_MASK | SCSMR_CKS);
++		/*we not support extended mode yet, make sure it is cleared*/
++		serial_port_out(port, SCSEMR, 0);
+ 		serial_port_out(port, SCSCR, scr_val | s->hscif_tot);
+ 		serial_port_out(port, SCSMR, smr_val);
+ 	}
+diff --git a/drivers/tty/serial/sh-sci.h b/drivers/tty/serial/sh-sci.h
+index 0b9e804..15c8ad3 100644
+--- a/drivers/tty/serial/sh-sci.h
++++ b/drivers/tty/serial/sh-sci.h
+@@ -32,6 +32,7 @@ enum {
+ 	SCCKS,				/* BRG Clock Select Register */
+ 	HSRTRGR,			/* Rx FIFO Data Count Trigger Register */
+ 	HSTTRGR,			/* Tx FIFO Data Count Trigger Register */
++	SCSEMR,				/* Serial extended mode register */
+ 
+ 	SCIx_NR_REGS,
+ };
+-- 
+2.7.4
+

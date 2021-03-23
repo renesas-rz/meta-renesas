@@ -1,0 +1,27 @@
+From 303012af21475375fc858491cc0d24d6e6eeab6c Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Tue, 9 Mar 2021 10:44:23 +0700
+Subject: [PATCH 117/135] arm64: dts: renesas: r9a07g044l: Add clocks and
+ resets for dma0
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 4678b79..60b0b98 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -291,6 +291,8 @@
+ 				"error";
+ 			dma-channels = <16>;
+ 			#dma-cells = <1>;
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_DMAC>;
++			resets = <&cpg R9A07G044L_CLK_DMAC>;
+ 		};
+ 
+ 		can: can@10050000 {
+-- 
+2.7.4
+

@@ -1,0 +1,42 @@
+From 3e249c72f214f0d1e5d45500899231d1e8a0ace1 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Wed, 10 Mar 2021 21:25:35 +0700
+Subject: [PATCH 081/135] arm64: dts: renesas: rzg2-smarc: Add ADC setting
+
+Add ADC setting for RZ/G2L Board.
+Disable it as default since it use same pin with CAN0
+
+Signed-off-by: Tien Le <tien.le.xw@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 0e77efc..eaeaab1 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -212,6 +212,10 @@
+ 		function = "gpt3";
+ 	};
+ 
++	adc_pins: adc {
++		groups = "adc_d";
++		function = "adc";
++	};
+ };
+ 
+ &scif0 {
+@@ -376,3 +380,10 @@
+ 	//conflict pin with SD1 WP, disable as default
+ 	//status = "okay";
+ };
++
++&adc {
++	pinctrl-0 = <&adc_pins>;
++	pinctrl-names = "default";
++	//conflict pin with CAN0 pin, disable as default
++	//status = "okay";
++};
+-- 
+2.7.4
+

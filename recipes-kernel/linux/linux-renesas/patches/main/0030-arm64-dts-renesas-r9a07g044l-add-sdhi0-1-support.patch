@@ -1,0 +1,50 @@
+From c1e6639398ba90e3bb55b9ba0e43c91573fdce0b Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Tue, 9 Mar 2021 11:41:38 +0700
+Subject: [PATCH 030/135] arm64: dts: renesas: r9a07g044l: add sdhi0/1 support
+
+This commits adds sdhi0/1 node support for r9a07g044l SoCs.
+
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 980d6ae..81c9948 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -109,6 +109,30 @@
+ 			power-domains = <&cpg>;
+ 			status = "disable";
+ 		};
++
++		sdhi0: sd@11c00000 {
++			compatible = "renesas,sdhi-r9a07g044l",
++				     "renesas,rcar-gen3-sdhi";
++			reg = <0 0x11c00000 0 0x10000>;
++			interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SDHI0>;
++			resets = <&cpg R9A07G044L_CLK_SDHI0>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		sdhi1: sd@11c10000 {
++			compatible = "renesas,sdhi-r9a07g044l",
++				     "renesas,rcar-gen3-sdhi";
++			reg = <0x0 0x11c10000 0 0x10000>;
++			interrupts = <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SDHI1>;
++			resets = <&cpg R9A07G044L_CLK_SDHI1>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	timer {
+-- 
+2.7.4
+

@@ -1,0 +1,30 @@
+From 3e878aa5d02e7aae9f476fd5567209f6e1b261a0 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Tue, 17 Nov 2020 11:10:25 +0700
+Subject: [PATCH 002/135] dt-bindings: arm: renesas: Document RZ/G2L Dual A55
+ Evaluation Board
+
+Add dt-bindings documentation for Renesas RZ/G2L dual A55 cores
+SMARC v2.1 Evaluation Board.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ Documentation/devicetree/bindings/arm/shmobile.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/arm/shmobile.txt b/Documentation/devicetree/bindings/arm/shmobile.txt
+index 39bd3b2..5b95b2c 100644
+--- a/Documentation/devicetree/bindings/arm/shmobile.txt
++++ b/Documentation/devicetree/bindings/arm/shmobile.txt
+@@ -95,6 +95,8 @@ Boards:
+     compatible = "renesas,h3ulcb", "renesas,r8a7795"
+   - Henninger
+     compatible = "renesas,henninger", "renesas,r8a7791"
++  - G2L2SMARC (RZ/G2L dual A55 SMARC v2.1 Evaluation Board)
++    compatible = "renesas,r9a07g044l2-dev", "renesas,r9a07g044l2"
+   - HopeRun expansion board for HiHope RZ/G2 platforms
+     compatible = "hoperun,hihope-rzg2m", "renesas,r8a774a1",
+                  "hoperun,hihope-rzg2n", "renesas,r8a774b1",
+-- 
+2.7.4
+

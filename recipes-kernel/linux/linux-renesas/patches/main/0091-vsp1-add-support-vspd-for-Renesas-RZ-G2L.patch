@@ -1,0 +1,155 @@
+From 1c5b607eb772c8626bd63c564f04d96f6500c659 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 1 Mar 2021 13:38:22 +0700
+Subject: [PATCH 091/135] vsp1: add support vspd for Renesas RZ/G2L
+
+This commit add support vspd driver for RZ/G2L with:
+- Release reset state before accessing VSP registers
+because initial state of this module is reset in RZ/G2L.
+- Add new model for RZ/G2L and hard set version because there is no
+VI6_IP_VERSION register in RZ/G2L.
+- Set LIF buffer Attribute for Renesas RZ/G2L.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ drivers/media/platform/vsp1/vsp1.h      |  2 ++
+ drivers/media/platform/vsp1/vsp1_drv.c  | 31 ++++++++++++++++++++++++++++++-
+ drivers/media/platform/vsp1/vsp1_lif.c  | 23 ++++++++++++++++++-----
+ drivers/media/platform/vsp1/vsp1_regs.h |  1 +
+ 4 files changed, 51 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/platform/vsp1/vsp1.h b/drivers/media/platform/vsp1/vsp1.h
+index 56c6212..b41ec73 100644
+--- a/drivers/media/platform/vsp1/vsp1.h
++++ b/drivers/media/platform/vsp1/vsp1.h
+@@ -103,6 +103,8 @@ struct vsp1_device {
+ 	struct media_entity_operations media_ops;
+ 
+ 	struct vsp1_drm *drm;
++
++	struct reset_control *rstc;
+ };
+ 
+ int vsp1_device_get(struct vsp1_device *vsp1);
+diff --git a/drivers/media/platform/vsp1/vsp1_drv.c b/drivers/media/platform/vsp1/vsp1_drv.c
+index 8c9d9d6..a4cdffc2 100644
+--- a/drivers/media/platform/vsp1/vsp1_drv.c
++++ b/drivers/media/platform/vsp1/vsp1_drv.c
+@@ -17,6 +17,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/videodev2.h>
++#include <linux/reset.h>
++#include <linux/sys_soc.h>
+ 
+ #include <media/rcar-fcp.h>
+ #include <media/v4l2-subdev.h>
+@@ -780,9 +782,22 @@ static const struct vsp1_device_info vsp1_device_infos[] = {
+ 		.uif_count = 2,
+ 		.wpf_count = 2,
+ 		.num_bru_inputs = 5,
++	}, {
++		.version = VI6_IP_VERSION_MODEL_VSPD_RZG2L,
++		.model = "VSP2-D",
++		.gen = 3,
++		.features = VSP1_HAS_BRS | VSP1_HAS_WPF_VFLIP | VSP1_HAS_EXT_DL,
++		.lif_count = 1,
++		.rpf_count = 2,
++		.wpf_count = 1,
+ 	},
+ };
+ 
++static const struct soc_device_attribute rzg2l_match[] = {
++	{ .family = "RZ/G2L" },
++	{ /* sentinel*/ }
++};
++
+ static int vsp1_probe(struct platform_device *pdev)
+ {
+ 	struct vsp1_device *vsp1;
+@@ -842,6 +857,16 @@ static int vsp1_probe(struct platform_device *pdev)
+ 		vsp1->bus_master = vsp1->dev;
+ 	}
+ 
++	if (soc_device_match(rzg2l_match)) {
++		vsp1->rstc = devm_reset_control_get(&pdev->dev, NULL);
++		if (IS_ERR(vsp1->rstc)) {
++			dev_err(&pdev->dev, "failed to get cpg reset\n");
++			return PTR_ERR(vsp1->rstc);
++		}
++
++		reset_control_deassert(vsp1->rstc);
++	}
++
+ 	/* Configure device parameters based on the version register. */
+ 	pm_runtime_enable(&pdev->dev);
+ 
+@@ -849,7 +874,11 @@ static int vsp1_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		goto done;
+ 
+-	vsp1->version = vsp1_read(vsp1, VI6_IP_VERSION);
++	if (soc_device_match(rzg2l_match))
++		vsp1->version = VI6_IP_VERSION_MODEL_VSPD_RZG2L;
++	else
++		vsp1->version = vsp1_read(vsp1, VI6_IP_VERSION);
++
+ 	pm_runtime_put_sync(&pdev->dev);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(vsp1_device_infos); ++i) {
+diff --git a/drivers/media/platform/vsp1/vsp1_lif.c b/drivers/media/platform/vsp1/vsp1_lif.c
+index 0cb6324..523a1b1 100644
+--- a/drivers/media/platform/vsp1/vsp1_lif.c
++++ b/drivers/media/platform/vsp1/vsp1_lif.c
+@@ -88,9 +88,20 @@ static void lif_configure_stream(struct vsp1_entity *entity,
+ {
+ 	const struct v4l2_mbus_framefmt *format;
+ 	struct vsp1_lif *lif = to_lif(&entity->subdev);
+-	unsigned int hbth = 1300;
+-	unsigned int obth = 400;
+-	unsigned int lbth = 200;
++	unsigned int hbth;
++	unsigned int obth;
++	unsigned int lbth;
++
++	if ((entity->vsp1->version & VI6_IP_VERSION_MODEL_MASK) ==
++	     VI6_IP_VERSION_MODEL_VSPD_RZG2L) {
++		hbth = 0;
++		obth = 1500;
++		lbth = 0;
++	} else {
++		hbth = 1300;
++		obth = 400;
++		lbth = 200;
++	}
+ 
+ 	format = vsp1_entity_get_pad_format(&lif->entity, lif->entity.config,
+ 					    LIF_PAD_SOURCE);
+@@ -112,8 +123,10 @@ static void lif_configure_stream(struct vsp1_entity *entity,
+ 	 * may appear on the output). The value required by the manual is not
+ 	 * explained but is likely a buffer size or threshold.
+ 	 */
+-	if ((entity->vsp1->version & VI6_IP_VERSION_MASK) ==
+-	    (VI6_IP_VERSION_MODEL_VSPD_V3 | VI6_IP_VERSION_SOC_V3M))
++	if (((entity->vsp1->version & VI6_IP_VERSION_MASK) ==
++	    (VI6_IP_VERSION_MODEL_VSPD_V3 | VI6_IP_VERSION_SOC_V3M)) ||
++	    ((entity->vsp1->version & VI6_IP_VERSION_MASK) ==
++	     VI6_IP_VERSION_MODEL_VSPD_RZG2L))
+ 		vsp1_lif_write(lif, dlb, VI6_LIF_LBA,
+ 			       VI6_LIF_LBA_LBA0 |
+ 			       (1536 << VI6_LIF_LBA_LBA1_SHIFT));
+diff --git a/drivers/media/platform/vsp1/vsp1_regs.h b/drivers/media/platform/vsp1/vsp1_regs.h
+index f6e4157..bb87dd3 100644
+--- a/drivers/media/platform/vsp1/vsp1_regs.h
++++ b/drivers/media/platform/vsp1/vsp1_regs.h
+@@ -766,6 +766,7 @@
+ #define VI6_IP_VERSION_MODEL_VSPD_V3	(0x18 << 8)
+ #define VI6_IP_VERSION_MODEL_VSPDL_GEN3	(0x19 << 8)
+ #define VI6_IP_VERSION_MODEL_VSPBS_GEN3	(0x1a << 8)
++#define VI6_IP_VERSION_MODEL_VSPD_RZG2L	(0x1b << 8)
+ #define VI6_IP_VERSION_SOC_MASK		(0xff << 0)
+ #define VI6_IP_VERSION_SOC_H2		(0x01 << 0)
+ #define VI6_IP_VERSION_SOC_V2H		(0x01 << 0)
+-- 
+2.7.4
+

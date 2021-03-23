@@ -1,0 +1,78 @@
+From fd1c239e0ba9491cd76f1122c454a335219353bb Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Tue, 9 Mar 2021 10:56:12 +0700
+Subject: [PATCH 021/135] arm64: dts: r9a07g044l: Add device nodes for
+ SCIF0/1/2
+
+Add support SCIF0/1/2 for RZ/G2L
+
+Signed-off-by: LongLuu <long.luu.ur@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 51 +++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 6643a2e..980d6ae 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -58,6 +58,57 @@
+ 			interrupts = <GIC_PPI 9
+ 				(GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
+ 		};
++
++		scif0: serial@1004b800 {
++			compatible = "renesas,scif-r9a07g044l";
++			reg = <0 0x1004b800 0 0x400>;
++			interrupts =
++				<GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 383 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 381 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 384 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 384 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SCIF0>;
++			clock-names = "fck";
++			resets = <&cpg R9A07G044L_CLK_SCIF0>;
++			power-domains = <&cpg>;
++			status = "disable";
++		};
++
++		scif1: serial@1004bc00 {
++			compatible = "renesas,scif-r9a07g044l";
++			reg = <0 0x1004bc00 0 0x400>;
++			interrupts =
++				<GIC_SPI 385 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 387 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 388 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 386 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 389 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 389 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SCIF1>;
++			clock-names = "fck";
++			resets = <&cpg R9A07G044L_CLK_SCIF1>;
++			power-domains = <&cpg>;
++			status = "disable";
++		};
++
++		scif2: serial@1004c000 {
++			compatible = "renesas,scif-r9a07g044l";
++			reg = <0 0x1004c000 0 0x400>;
++			interrupts =
++				<GIC_SPI 390 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 392 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 393 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 391 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 394 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 394 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G044L_CLK_SCIF2>;
++			clock-names = "fck";
++			resets = <&cpg R9A07G044L_CLK_SCIF2>;
++			power-domains = <&cpg>;
++			status = "disable";
++		};
+ 	};
+ 
+ 	timer {
+-- 
+2.7.4
+

@@ -1,0 +1,78 @@
+From 3857cbf2fdcb4afdee3dfb546607fb91edd19f9b Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Wed, 10 Mar 2021 18:30:14 +0700
+Subject: [PATCH 059/135] arm64: dts: renesas: rzg2-smarc: correct skew
+ settings for Ethernet
+
+This patch correct the skew settings for Ethernet on RZ/G2L boards
+
+Signed-off-by: Khoi Nguyen <khoi.nguyen.aj@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 44 +++++++++++++++++++++--------
+ 1 file changed, 33 insertions(+), 11 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 7f298a9..87d83e1 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -222,16 +222,27 @@
+ };
+ 
+ &eth0 {
+-        pinctrl-0 = <&ether0_pins>;
+-        pinctrl-names = "default";
+-        phy-handle = <&phy0>;
+-        phy-mode = "rgmii";
+-        status = "okay";
+-
+-        phy0: ethernet-phy@7 {
+-                rxc-skew-ps = <1500>;
+-                reg = <7>;
+-        };
++	pinctrl-0 = <&ether0_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy0>;
++	phy-mode = "rgmii";
++	status = "okay";
++
++	phy0: ethernet-phy@7 {
++		reg = <7>;
++		rxc-skew-psec = <2400>;
++		txc-skew-psec = <2400>;
++		rxdv-skew-psec = <0>;
++		txdv-skew-psec = <0>;
++		rxd0-skew-psec = <0>;
++		rxd1-skew-psec = <0>;
++		rxd2-skew-psec = <0>;
++		rxd3-skew-psec = <0>;
++		txd0-skew-psec = <0>;
++		txd1-skew-psec = <0>;
++		txd2-skew-psec = <0>;
++		txd3-skew-psec = <0>;
++	};
+ };
+ 
+ &eth1 {
+@@ -242,7 +253,18 @@
+ 	status = "okay";
+ 	
+ 	phy1: ethernet-phy@7 {
+-		rxc-skew-ps = <1500>;
+ 		reg = <7>;
++		rxc-skew-psec = <2400>;
++		txc-skew-psec = <2400>;
++		rxdv-skew-psec = <0>;
++		txdv-skew-psec = <0>;
++		rxd0-skew-psec = <0>;
++		rxd1-skew-psec = <0>;
++		rxd2-skew-psec = <0>;
++		rxd3-skew-psec = <0>;
++		txd0-skew-psec = <0>;
++		txd1-skew-psec = <0>;
++		txd2-skew-psec = <0>;
++		txd3-skew-psec = <0>;
+ 	};
+ };
+-- 
+2.7.4
+

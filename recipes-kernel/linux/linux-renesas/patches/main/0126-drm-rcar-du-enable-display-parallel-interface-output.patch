@@ -1,0 +1,43 @@
+From 36d1d5372212bd756cf6eaf1ac261584f8196613 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Wed, 17 Mar 2021 13:18:44 +0700
+Subject: [PATCH 126/135] drm: rcar-du: enable display parallel interface
+ output for RZ/G2L
+
+RZ/G2L can support MIPI DSI and Display parallel interface output.
+Therefore, this commit is created to enable display parallel interface
+output for RZ/G2L.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_group.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_group.c b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+index 3909818..fd99ca0 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_group.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_group.c
+@@ -216,9 +216,17 @@ static void __rcar_du_group_start_stop(struct rcar_du_group *rgrp, bool start)
+ {
+ 	struct rcar_du_crtc *rcrtc = &rgrp->dev->crtcs[rgrp->index * 2];
+ 
+-	if (rcar_du_has(rgrp->dev, RCAR_DU_FEATURE_RZG2L))
+-		rcar_du_write(rgrp->dev, DU_MCR0, start ? DU_MCR0_DI_EN : 0);
+-	else
++	if (rcar_du_has(rgrp->dev, RCAR_DU_FEATURE_RZG2L)) {
++		struct rcar_du_crtc_state *rstate =
++					to_rcar_crtc_state(rcrtc->crtc.state);
++
++		if (rstate->outputs == BIT(RCAR_DU_OUTPUT_MIPI_DSI0))
++			rcar_du_write(rgrp->dev, DU_MCR0, start ?
++					DU_MCR0_DI_EN : 0);
++		else if (rstate->outputs == BIT(RCAR_DU_OUTPUT_DPAD0))
++			rcar_du_write(rgrp->dev, DU_MCR0, start ?
++					(DU_MCR0_DI_EN | DU_MCR0_DPI_OE) : 0);
++	} else
+ 		rcar_du_crtc_dsysr_clr_set(rcrtc, DSYSR_DRES | DSYSR_DEN,
+ 					   start ? DSYSR_DEN : DSYSR_DRES);
+ }
+-- 
+2.7.4
+

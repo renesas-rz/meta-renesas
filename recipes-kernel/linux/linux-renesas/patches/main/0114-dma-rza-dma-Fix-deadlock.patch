@@ -1,0 +1,55 @@
+From 74927b46494ce128cddb7de81cd9a71e08a7ff6b Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Thu, 11 Feb 2021 11:25:06 +0000
+Subject: [PATCH 114/135] dma: rza-dma: Fix deadlock
+
+Deadlock scenario
+
+rzadma_issue_pending --> acquiring lock and then calls
+rzadma_xfer_desc.
+
+rzadma_xfer_desc--> acquiring same lock.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+---
+ drivers/dma/rza-dma.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/dma/rza-dma.c b/drivers/dma/rza-dma.c
+index a6722ae..21fd219d 100644
+--- a/drivers/dma/rza-dma.c
++++ b/drivers/dma/rza-dma.c
+@@ -518,10 +518,10 @@ static void prepare_descs_for_slave_sg(struct dmac_desc *d)
+ 	const struct rza_dma_slave_config *slave = channel->slave;
+ 	struct scatterlist *sg, *sgl = d->sg;
+ 	unsigned int i, sg_len = d->sgcount;
+-	unsigned long flags;
++	//unsigned long flags;
+ 	u32 chcfg;
+ 	u32 dmars;
+-	
++
+ 	dev_dbg(rzadma->dev, "%s called\n", __func__);
+ 
+ 	chcfg = channel->slave->chcfg.v | (CHCFG_SEL(channel->nr) | CHCFG_DEM | CHCFG_DMS);
+@@ -534,7 +534,7 @@ static void prepare_descs_for_slave_sg(struct dmac_desc *d)
+ 	channel->chcfg = chcfg;			/* save */
+ 	channel->per_address = slave->addr;	/* slave device address */
+ 
+-	spin_lock_irqsave(&channel->lock, flags);
++	//spin_lock_irqsave(&channel->lock, flags);
+ 
+ 	/* Prepare descriptors */
+ 	lmdesc = channel->lmdesc.tail;
+@@ -577,7 +577,7 @@ static void prepare_descs_for_slave_sg(struct dmac_desc *d)
+ 
+ 	channel->chctrl = CHCTRL_SETEN;		/* always */
+ 
+-	spin_unlock_irqrestore(&channel->lock, flags);
++	//spin_unlock_irqrestore(&channel->lock, flags);
+ 
+ }
+ 
+-- 
+2.7.4
+

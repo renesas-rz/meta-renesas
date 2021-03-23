@@ -1,0 +1,37 @@
+From e0b8f9110a6a38159a86827b4e391a8870a391a0 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Mon, 14 Dec 2020 07:48:28 +0700
+Subject: [PATCH 017/135] dt-bindings: pinctrl-rzg2l: add Renesas RZ/G2L
+ pinctrl header
+
+Add dt-bindings for Renesas RZ/G2L pin controller and gpio header file.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ include/dt-bindings/pinctrl/pinctrl-rzg2l.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+ create mode 100644 include/dt-bindings/pinctrl/pinctrl-rzg2l.h
+
+diff --git a/include/dt-bindings/pinctrl/pinctrl-rzg2l.h b/include/dt-bindings/pinctrl/pinctrl-rzg2l.h
+new file mode 100644
+index 0000000..21bf23a
+--- /dev/null
++++ b/include/dt-bindings/pinctrl/pinctrl-rzg2l.h
+@@ -0,0 +1,14 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Defines macros and constants for Renesas RZ/G2L pin controller
++ * GPIO function
++ */
++
++#ifndef __DT_BINDINGS_PINCTRL_RZG2L_H
++#define __DT_BINDINGS_PINCTRL_RZG2L_H
++
++#define RZG2L_PINS_PER_PORT	8
++
++#define RZG2L_GPIO(port, pos)	((port) * RZG2L_PINS_PER_PORT + (pos))
++
++#endif /* __DT_BINDINGS_PINCTRL_RZG2L_H */
+-- 
+2.7.4
+

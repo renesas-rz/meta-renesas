@@ -1,0 +1,1245 @@
+From afb6dc001d63acf9ba5999170a5ac213c8dd850e Mon Sep 17 00:00:00 2001
+From: Khoi Nguyen <khoi.nguyen.aj@renesas.com>
+Date: Thu, 28 Jan 2021 10:34:21 +0700
+Subject: [PATCH 050/135] net: ethernet: renesas: ravb_main: Modify driver
+ source for G2L
+
+This patch modifies Ethernet source code to match the
+ setting on G2L SMARC board.
+
+Signed-off-by: Khoi Nguyen <khoi.nguyen.aj@renesas.com>
+---
+ arch/arm64/configs/defconfig             |   1 +
+ drivers/net/ethernet/renesas/Kconfig     |  10 +-
+ drivers/net/ethernet/renesas/ravb.h      | 345 ++++++++++++++++++++++++++-
+ drivers/net/ethernet/renesas/ravb_main.c | 390 ++++++++++++++++++++++++++++++-
+ 4 files changed, 737 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index e2494a6..a5390d1 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -54,6 +54,7 @@ CONFIG_ARCH_R8A774A1=y
+ CONFIG_ARCH_R8A774B1=y
+ CONFIG_ARCH_R8A774C0=y
+ CONFIG_ARCH_R9A07G044L2=y
++CONFIG_ARCH_ESPADA=y
+ CONFIG_ARCH_R8A7795=y
+ CONFIG_ARCH_R8A7796=y
+ CONFIG_ARCH_R8A77965=y
+diff --git a/drivers/net/ethernet/renesas/Kconfig b/drivers/net/ethernet/renesas/Kconfig
+index bb0ebdf..ed4afb0 100644
+--- a/drivers/net/ethernet/renesas/Kconfig
++++ b/drivers/net/ethernet/renesas/Kconfig
+@@ -29,9 +29,17 @@ config SH_ETH
+ 		- SH7619, SH7710, SH7712, SH7724, SH7734, SH7763, SH7757,
+ 		  R8A7740, R8A774x, R8A777x and R8A779x.
+ 
++config ARCH_ESPADA
++	tristate "Renesas Ethernet support for G2L SMARC"
++	---help---
++		Renesas GbEthernet device driver.
++
++		This driver only supports the following SoCs:
++			- R9A07G004L.
++
+ config RAVB
+ 	tristate "Renesas Ethernet AVB support"
+-	depends on ARCH_RENESAS || COMPILE_TEST
++	depends on ARCH_RENESAS || ARCH_ESPADA || COMPILE_TEST
+ 	select CRC32
+ 	select MII
+ 	select MDIO_BITBANG
+diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
+index ac9195a..e1f6afd 100644
+--- a/drivers/net/ethernet/renesas/ravb.h
++++ b/drivers/net/ethernet/renesas/ravb.h
+@@ -19,6 +19,7 @@
+ #include <linux/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/ptp_clock_kernel.h>
++#include <linux/reset.h>
+ 
+ #define BE_TX_RING_SIZE	64	/* TX ring size for Best Effort */
+ #define BE_RX_RING_SIZE	1024	/* RX ring size for Best Effort */
+@@ -81,6 +82,9 @@ enum ravb_reg {
+ 	RQC3	= 0x00A0,
+ 	RQC4	= 0x00A4,
+ 	RPC	= 0x00B0,
++#ifdef CONFIG_ARCH_ESPADA
++	RTC	= 0x00B4,
++#endif /* CONFIG_ARCH_ESPADA */
+ 	UFCW	= 0x00BC,
+ 	UFCS	= 0x00C0,
+ 	UFCV0	= 0x00C4,
+@@ -155,6 +159,9 @@ enum ravb_reg {
+ 	TIC	= 0x0378,
+ 	TIS	= 0x037C,
+ 	ISS	= 0x0380,
++#ifdef CONFIG_ARCH_ESPADA
++	RIC3	= 0x0388,
++#endif /* CONFIG_ARCH_ESPADA */
+ 	CIE	= 0x0384,	/* R-Car Gen3 only */
+ 	GCCR	= 0x0390,
+ 	GMTT	= 0x0394,
+@@ -187,6 +194,10 @@ enum ravb_reg {
+ 	PIR	= 0x0520,
+ 	PSR	= 0x0528,
+ 	PIPR	= 0x052c,
++#ifdef CONFIG_ARCH_ESPADA
++	CXR31	= 0x0530,
++	CXR35	= 0x0540,
++#endif /* CONFIG_ARCH_ESPADA */
+ 	MPR	= 0x0558,
+ 	PFTCR	= 0x055c,
+ 	PFRCR	= 0x0560,
+@@ -204,6 +215,64 @@ enum ravb_reg {
+ 	CERCR	= 0x0768,	/* Undocumented? */
+ 	CEECR	= 0x0770,	/* Undocumented? */
+ 	MAFCR	= 0x0778,
++#ifdef CONFIG_ARCH_ESPADA
++	MDIOSTS = 0x0780,
++	MDIOCMD = 0x0784,
++	MDIOADR = 0x0788,
++	MDIODAT = 0x078C,
++	MDIOMOD = 0x0790,
++	LPTXMOD1 = 0x07B0,
++	LPTXMOD2 = 0x07B4,
++	LPTXGTH1 = 0x07C0,
++	LPTXGTH2 = 0x07C4,
++	LPTXGTH3 = 0x07C8,
++	LPTXGTH4 = 0x07CC,
++	LPTXMTH1 = 0x07D0,
++	LPTXMTH2 = 0x07D4,
++	LPTXMTH3 = 0x07D8,
++	LPTXMTH4 = 0x07DC,
++	CSR0     = 0x0800,
++	CSR1     = 0x0804,
++	CSR2     = 0x0808,
++	CSR3     = 0x080C,
++	CSR4     = 0x0810,
++	CSR20    = 0x0820,
++	CSR30    = 0x0824,
++	CSR31    = 0x0828,
++	CSR32    = 0x082C,
++	CSFR00   = 0x0840,
++	CSFR01   = 0x0844,
++	CSFR02_0 = 0x0848,
++	CSFR03_U = 0x0858,
++	CSFR03_L = 0x085C,
++	CSFR04   = 0x0860,
++	CSFR10_0 = 0x0870,
++	CSFR10   = 0x0880,
++	CSFR11_0 = 0x0884,
++	CSFR11   = 0x0894,
++	CSFR12_0 = 0x0898,
++	CSFR12   = 0x08C8,
++	CSFR13_U = 0x08CC,
++	CSFR13_L = 0x08D0,
++	CSFR14_U = 0x08D4,
++	CSFR14_L = 0x08D8,
++	CSFR15_U_0 = 0x08DC,
++	CSFR15_L_0 = 0x08E0,
++	CSFR15   = 0x097C,
++	CSFR16_0 = 0x0980,
++	CSFR16_1 = 0x0984,
++	CSFR16_2 = 0x0988,
++	CSFR16   = 0x098C,
++	CSFR20   = 0x09A0,
++	CSFR21   = 0x09A4,
++	CSFR30   = 0x09B0,
++	CSFR31   = 0x09B4,
++	CSFR40   = 0x09C0,
++	CSFR41   = 0x09C4,
++	CSFR42_U = 0x09C8,
++	CSFR42_L = 0x09CC,
++	CSFR43_i = 0x09D0,
++#endif /* CONFIG_ARCH_ESPADA */
+ };
+ 
+ 
+@@ -216,6 +285,9 @@ enum CCC_BIT {
+ 	CCC_OPC_OPERATION = 0x00000002,
+ 	CCC_GAC		= 0x00000080,
+ 	CCC_DTSR	= 0x00000100,
++#ifdef CONFIG_ARCH_ESPADA
++	CCC_RDFD	= 0x00000200,
++#endif	/* CONFIG_ARCH_ESPADA */
+ 	CCC_CSEL	= 0x00030000,
+ 	CCC_CSEL_HPB	= 0x00010000,
+ 	CCC_CSEL_ETH_TX	= 0x00020000,
+@@ -224,6 +296,13 @@ enum CCC_BIT {
+ 	CCC_LBME	= 0x01000000,
+ };
+ 
++#ifdef CONFIG_ARCH_ESPADA
++enum DLR_BIT {
++	DLR_LBA0	= 0x00000001,
++	DLR_LBA4	= 0x00000010,
++};
++#endif	/* CONFIG_ARCH_ESPADA */
++
+ /* CSR */
+ enum CSR_BIT {
+ 	CSR_OPS		= 0x0000000F,
+@@ -232,6 +311,9 @@ enum CSR_BIT {
+ 	CSR_OPS_OPERATION = 0x00000004,
+ 	CSR_OPS_STANDBY	= 0x00000008,	/* Undocumented? */
+ 	CSR_DTS		= 0x00000100,
++#ifdef CONFIG_ARCH_ESPADA
++	CSR_RDFDM	= 0x00000200,
++#endif	/* CONFIG_ARCH_ESPADA */
+ 	CSR_TPO0	= 0x00010000,
+ 	CSR_TPO1	= 0x00020000,
+ 	CSR_TPO2	= 0x00040000,
+@@ -348,8 +430,13 @@ enum TCCR_BIT {
+ 	TCCR_TSRQ1	= 0x00000002,
+ 	TCCR_TSRQ2	= 0x00000004,
+ 	TCCR_TSRQ3	= 0x00000008,
++#ifdef CONFIG_ARCH_ESPADA
++	TCCR_TFEN	= 0x00010000,
++	TCCR_TFR	= 0x00020000,
++#else	/* CONFIG_ARCH_ESPADA */
+ 	TCCR_TFEN	= 0x00000100,
+ 	TCCR_TFR	= 0x00000200,
++#endif	/* CONFIG_ARCH_ESPADA */
+ };
+ 
+ /* TSR */
+@@ -382,6 +469,9 @@ enum DIC_BIT {
+ 	DIC_DPE13	= 0x00002000,
+ 	DIC_DPE14	= 0x00004000,
+ 	DIC_DPE15	= 0x00008000,
++#ifdef CONFIG_ARCH_ESPADA
++	DIC_ALL		= 0x00000FFE,
++#endif	/* CONFIG_ARCH_ESPADA */
+ };
+ 
+ /* DIS */
+@@ -404,6 +494,15 @@ enum DIS_BIT {
+ };
+ 
+ /* EIC */
++#ifdef CONFIG_ARCH_ESPADA
++enum EIC_BIT {
++	EIC_MREE	= 0x00000001,
++	EIC_MTEE	= 0x00000002,
++	EIC_QEE		= 0x00000004,
++	EIC_MFFE	= 0x00000200,
++	EIC_MFFE2	= 0x00000400,
++};
++#else	/* CONFIG_ARCH_ESPADA */
+ enum EIC_BIT {
+ 	EIC_MREE	= 0x00000001,
+ 	EIC_MTEE	= 0x00000002,
+@@ -415,6 +514,7 @@ enum EIC_BIT {
+ 	EIC_CULE1	= 0x00000080,
+ 	EIC_TFFE	= 0x00000100,
+ };
++#endif
+ 
+ /* EIS */
+ enum EIS_BIT {
+@@ -509,6 +609,13 @@ enum RIC2_BIT {
+ 	RIC2_RFFE	= 0x80000000,
+ };
+ 
++#ifdef CONFIG_ARCH_ESPADA
++/* RIC3 */
++enum RIC3_BIT {
++	RIC3_RDPE	= 0x00000001,
++};
++#endif
++
+ /* RIS2 */
+ enum RIS2_BIT {
+ 	RIS2_QFF0	= 0x00000001,
+@@ -535,18 +642,38 @@ enum RIS2_BIT {
+ 
+ /* TIC */
+ enum TIC_BIT {
++#ifdef CONFIG_ARCH_ESPADA
++	TIC_FTE		= 0x00000001,
++	TIC_MFUE	= 0x00000400,
++	TIC_MFWE	= 0x00000800,
++	TIC_MFUE2	= 0x00001000,
++	TIC_MFWE2	= 0x00002000,
++	TIC_RCSRE	= 0x00004000,
++	TIC_TDPE	= 0x00010000,
++#else	/* CONFIG_ARCH_ESPADA */
+ 	TIC_FTE0	= 0x00000001,	/* Undocumented? */
+ 	TIC_FTE1	= 0x00000002,	/* Undocumented? */
+ 	TIC_TFUE	= 0x00000100,
+ 	TIC_TFWE	= 0x00000200,
++#endif
+ };
+ 
+ /* TIS */
+ enum TIS_BIT {
++#ifdef CONFIG_ARCH_ESPADA
++	TIS_FTF		= 0x00000001,
++	TIS_TFUF	= 0x00000400,
++	TIS_MFWF	= 0x00000800,
++	TIS_TFUF2	= 0x00001000,
++	TIS_MFWF2	= 0x00002000,
++	TIS_RCSRF	= 0x00004000,
++	TIS_TDPF	= 0x00010000,
++#else	/* CONFIG_ARCH_ESPADA */
+ 	TIS_FTF0	= 0x00000001,	/* Undocumented? */
+ 	TIS_FTF1	= 0x00000002,	/* Undocumented? */
+ 	TIS_TFUF	= 0x00000100,
+ 	TIS_TFWF	= 0x00000200,
++#endif
+ 	TIS_RESERVED	= (GENMASK(31, 20) | GENMASK(15, 12) | GENMASK(7, 4))
+ };
+ 
+@@ -577,6 +704,12 @@ enum ISS_BIT {
+ 	ISS_DPS15	= 0x80000000,
+ };
+ 
++#ifdef CONFIG_ARCH_ESPADA
++enum CIE_BIT {
++	CIE_CRIE	= 0x00000001,
++	CIE_CTIE	= 0x00000100,
++};
++#else	/* CONFIG_ARCH_ESPADA */
+ /* CIE (R-Car Gen3 only) */
+ enum CIE_BIT {
+ 	CIE_CRIE	= 0x00000001,
+@@ -586,6 +719,7 @@ enum CIE_BIT {
+ 	CIE_RFWL	= 0x00040000,
+ 	CIE_RFFL	= 0x00080000,
+ };
++#endif
+ 
+ /* GCCR */
+ enum GCCR_BIT {
+@@ -810,16 +944,29 @@ enum TID_BIT {
+ enum ECMR_BIT {
+ 	ECMR_PRM	= 0x00000001,
+ 	ECMR_DM		= 0x00000002,
++#ifdef CONFIG_ARCH_ESPADA
++	CXR20_LPM	= 0x00000010,
++#endif /* CONFIG_ARCH_ESPADA */
+ 	ECMR_TE		= 0x00000020,
+ 	ECMR_RE		= 0x00000040,
+ 	ECMR_MPDE	= 0x00000200,
++#ifdef CONFIG_ARCH_ESPADA
++	CXR20_CER	= 0x00001000,
++#endif /* CONFIG_ARCH_ESPADA */
+ 	ECMR_TXF	= 0x00010000,	/* Undocumented? */
+ 	ECMR_RXF	= 0x00020000,
+ 	ECMR_PFR	= 0x00040000,
+ 	ECMR_ZPF	= 0x00080000,	/* Undocumented? */
+ 	ECMR_RZPF	= 0x00100000,
+ 	ECMR_DPAD	= 0x00200000,
++#ifdef CONFIG_ARCH_ESPADA
++	CXR20_CXSER	= 0x00400000,
++#endif /* CONFIG_ARCH_ESPADA */
+ 	ECMR_RCSC	= 0x00800000,
++#ifdef CONFIG_ARCH_ESPADA
++	CXR20_TCPT	= 0x01000000,
++	CXR20_RCPT	= 0x02000000,
++#endif /* CONFIG_ARCH_ESPADA */
+ 	ECMR_TRCCM	= 0x04000000,
+ };
+ 
+@@ -829,6 +976,9 @@ enum ECSR_BIT {
+ 	ECSR_MPD	= 0x00000002,
+ 	ECSR_LCHNG	= 0x00000004,
+ 	ECSR_PHYI	= 0x00000008,
++#ifdef CONFIG_ARCH_ESPADA
++	ECSR_RFRI	= 0x00000010,
++#endif /* CONFIG_ARCH_ESPADA */
+ };
+ 
+ /* ECSIPR */
+@@ -836,6 +986,10 @@ enum ECSIPR_BIT {
+ 	ECSIPR_ICDIP	= 0x00000001,
+ 	ECSIPR_MPDIP	= 0x00000002,
+ 	ECSIPR_LCHNGIP	= 0x00000004,	/* Undocumented? */
++#ifdef CONFIG_ARCH_ESPADA
++	ECSIPR_PHYIM	= 0x00000008,
++	ECSIPR_PFRIM	= 0x00000010,
++#endif /* CONFIG_ARCH_ESPADA */
+ };
+ 
+ /* PIR */
+@@ -863,9 +1017,16 @@ enum MPR_BIT {
+ 
+ /* GECMR */
+ enum GECMR_BIT {
++#ifdef CONFIG_ARCH_ESPADA
++	GECMR_SPEED	= 0x00000030,
++	GECMR_SPEED_10	= 0x00000000,
++	GECMR_SPEED_100	= 0x00000010,
++	GECMR_SPEED_1000 = 0x00000020,
++#else
+ 	GECMR_SPEED	= 0x00000001,
+ 	GECMR_SPEED_100	= 0x00000000,
+ 	GECMR_SPEED_1000 = 0x00000001,
++#endif
+ };
+ 
+ /* The Ethernet AVB descriptor definitions. */
+@@ -955,6 +1116,75 @@ enum RAVB_QUEUE {
+ 	RAVB_NC,	/* Network Control Queue */
+ };
+ 
++#ifdef CONFIG_ARCH_ESPADA
++enum CXR31_BIT {
++	CXR31_SEL_LINK0		= 0x00000001,
++	CXR31_SEL_LINK1		= 0x00000008,
++};
++enum CXR35_BIT {
++	CXR35_SEL_MODIN		= 0x00000100,
++};
++
++enum CSR0_BIT {
++	CSR0_CCM		= 0x00000001,
++	CSR0_TPE		= 0x00000010,
++	CSR0_RPE		= 0x00000020,
++	CSR0_TBP		= 0x00000100,
++	CSR0_RBP		= 0x00000200,
++	CSR0_FIFOCAP	= 0x00003000,
++};
++
++enum CSR1_BIT {
++	CSR1_TIP4		= 0x00000001,
++	CSR1_TTCP4		= 0x00000010,
++	CSR1_TUDP4		= 0x00000020,
++	CSR1_TICMP4		= 0x00000040,
++	CSR1_TTCP6		= 0x00100000,
++	CSR1_TUDP6		= 0x00200000,
++	CSR1_TICMP6		= 0x00400000,
++	CSR1_THOP		= 0x01000000,
++	CSR1_TROUT		= 0x02000000,
++	CSR1_TAHD		= 0x04000000,
++	CSR1_TDHD		= 0x08000000,
++	CSR1_ALL		= 0x0F700071,
++};
++
++enum CSR2_BIT {
++	CSR2_RIP4		= 0x00000001,
++	CSR2_RTCP4		= 0x00000010,
++	CSR2_RUDP4		= 0x00000020,
++	CSR2_RICMP4		= 0x00000040,
++	CSR2_RTCP6		= 0x00100000,
++	CSR2_RUDP6		= 0x00200000,
++	CSR2_RICMP6		= 0x00400000,
++	CSR2_RHOP		= 0x01000000,
++	CSR2_RROUT		= 0x02000000,
++	CSR2_RAHD		= 0x04000000,
++	CSR2_RDHD		= 0x08000000,
++	CSR2_ALL		= 0x0F700071,
++};
++
++enum LPTXMOD2_BIT {
++	LPTXMOD2_STP_TXC_LPI	= 0x00000001,
++	LPTXMOD2_MAC_TLPI_TYPE	= 0x00000010,
++};
++
++enum CSFR20_BIT {
++	CSFR20_TRA_MAC  = 0x10000000,
++	CSFR20_ALL	= 0x101FFFFF,
++};
++
++enum CSFR40_BIT {
++	CSFR40_ARP_NS   = 0x00000001,
++	CSFR40_ALL	= 0x00000007,
++};
++
++enum CSFR00_BIT {
++	CSFR00_SBY_MOD	= 0x00000002,
++};
++
++#endif
++
+ #define DBAT_ENTRY_NUM	22
+ #define RX_QUEUE_OFFSET	4
+ #define NUM_RX_QUEUE	2
+@@ -990,7 +1220,101 @@ struct ravb_ptp {
+ enum ravb_chip_id {
+ 	RCAR_GEN2,
+ 	RCAR_GEN3,
+-};
++	ESPADA,
++};
++
++#ifdef CONFIG_ARCH_ESPADA
++
++struct ravb_reg_dmac_backup {
++	u32 CCC_B;
++	u32 DBAT_B;
++	u32 RCR_B;
++	u32 RTC_B;
++	u32 TGC_B;
++	u32 EIC_B;
++	u32 RIC0_B;
++	u32 RIC1_B;
++	u32 RIC2_B;
++	u32 TIC_B;
++	u32 CIE_B;
++	u32 RIC3_B;
++	u32 DIC_B;
++};
++
++struct ravb_reg_emac_backup {
++	u32 CXR20_B;
++	u32 CXR2A_B;
++	u32 CXR22_B;
++	u32 CXR2C_B;
++	u32 CXR35_B;
++	u32 CXR2D_B;
++	u32 CXR24_B;
++	u32 CXR25_B;
++	u32 CXR31_B;
++	u32 CXR72_B;
++	u32 LPTXGTH1_B;
++	u32 LPTXMTH1_B;
++	u32 LPTXMOD2_B;
++};
++
++struct ravb_reg_toe_backup {
++	u32 CSR0_B;
++	u32 CSR1_B;
++	u32 CSR2_B;
++	u32 CSR3_B;
++	u32 CSR4_B;
++	u32 CSR20_B;
++	u32 CSR30_B;
++	u32 CSR31_B;
++	u32 CSR32_B;
++	u32 CSFR01_B;
++	u32 CSFR02_i_B[4];
++	u32 CSFR03_U_B;
++	u32 CSFR03_L_B;
++	u32 CSFR04_B;
++	u32 CSFR10_i_B[4];
++	u32 CSFR10_B;
++	u32 CSFR11_i_B[4];
++	u32 CSFR11_B;
++	u32 CSFR12_i_B[12];
++	u32 CSFR12_B;
++	u32 CSFR13_U_B;
++	u32 CSFR13_L_B;
++	u32 CSFR14_U_B;
++	u32 CSFR14_L_B;
++	u32 CSFR15_U_i_B[20];
++	u32 CSFR15_L_i_B[20];
++	u32 CSFR15_B;
++	u32 CSFR16_0_B;
++	u32 CSFR16_1_B;
++	u32 CSFR16_2_B;
++	u32 CSFR16_B;
++	u32 CSFR21_B;
++	u32 CSFR30_B;
++	u32 CSFR31_B;
++	u32 CSFR40_B;
++	u32 CSFR41_B;
++	u32 CSFR00_B;
++};
++
++struct ravb_backup {
++	struct ravb_reg_dmac_backup dmac;
++	struct ravb_reg_emac_backup emac;
++	struct ravb_reg_toe_backup toe;
++	/* SendData 1500 byte + SendTimming 4 byte + SendSize 4byte */
++	unsigned char periodical_trandata[1508];
++};
++
++#define LPTXGTH1_RESOLUTION 32
++#define LPTXMTH1_RESOLUTION 320
++#define RAVB_NS2MS 1000
++#define RAVB_RCV_DESCRIPTOR_DATA_SIZE 4080
++#define RAVB_RCV_BUFF_MAX 8192
++#define RAVB_MDIO_STAT1_CLKSTOP_EN 0x40
++#define RAVB_NOT_SUSPEND 0
++#define RAVB_SUSPEND 1
++#define RAVB_SET_SUSPEND_ROLLBACK 0x80000000
++#endif	/* CONFIG_ARCH_ESPADA */
+ 
+ struct ravb_private {
+ 	struct net_device *ndev;
+@@ -1005,7 +1329,11 @@ struct ravb_private {
+ 	struct ravb_desc *desc_bat;
+ 	dma_addr_t rx_desc_dma[NUM_RX_QUEUE];
+ 	dma_addr_t tx_desc_dma[NUM_TX_QUEUE];
++#ifdef CONFIG_ARCH_ESPADA
++	struct ravb_rx_desc *rx_ring[NUM_RX_QUEUE];
++#else  /* CONFIG_ARCH_ESPADA */
+ 	struct ravb_ex_rx_desc *rx_ring[NUM_RX_QUEUE];
++#endif
+ 	struct ravb_tx_desc *tx_ring[NUM_TX_QUEUE];
+ 	void *tx_align[NUM_TX_QUEUE];
+ 	struct sk_buff **rx_skb[NUM_RX_QUEUE];
+@@ -1032,6 +1360,7 @@ struct ravb_private {
+ 	phy_interface_t phy_interface;
+ 	int msg_enable;
+ 	int speed;
++	int duplex;
+ 	int emac_irq;
+ 	enum ravb_chip_id chip_id;
+ 	int rx_irqs[NUM_RX_QUEUE];
+@@ -1041,6 +1370,20 @@ struct ravb_private {
+ 	unsigned avb_link_active_low:1;
+ 	unsigned wol_enabled:1;
+ 	int num_tx_desc;	/* TX descriptors per packet */
++
++#ifdef CONFIG_ARCH_ESPADA
++	void __iomem *gbe_addr;
++	int eee_enabled;
++	int eee_active;
++	int tx_lpi_timer;
++	int tx_lpi_enabled;
++	int wol_ecspir;
++	struct ravb_backup backup_data;
++	struct sk_buff *rxtop_skb;
++	int do_suspend;
++#endif /* CONFIG_ARCH_ESPADA */
++
++	struct reset_control *rstc;
+ };
+ 
+ static inline u32 ravb_read(struct net_device *ndev, enum ravb_reg reg)
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 161f7ee..1174429 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -82,11 +82,28 @@ static int ravb_config(struct net_device *ndev)
+ 	return error;
+ }
+ 
++static void ravb_set_duplex(struct net_device *ndev)
++{
++	struct ravb_private *priv = netdev_priv(ndev);
++	u32 ecmr = ravb_read(ndev, ECMR);
++
++	if (priv->duplex)	/* Full */
++		ecmr |=  ECMR_DM;
++	else			/* Half */
++		ecmr &= ~ECMR_DM;
++	ravb_write(ndev, ecmr, ECMR);
++}
++
+ static void ravb_set_rate(struct net_device *ndev)
+ {
+ 	struct ravb_private *priv = netdev_priv(ndev);
+ 
+ 	switch (priv->speed) {
++#if defined(CONFIG_ARCH_ESPADA)
++	case 10:		/* 10BASE */
++		ravb_write(ndev, GECMR_SPEED_10, GECMR);
++		break;
++#endif /* CONFIG_ARCH_ESPADA */
+ 	case 100:		/* 100BASE */
+ 		ravb_write(ndev, GECMR_SPEED_100, GECMR);
+ 		break;
+@@ -224,17 +241,30 @@ static void ravb_ring_free(struct net_device *ndev, int q)
+ 
+ 	if (priv->rx_ring[q]) {
+ 		for (i = 0; i < priv->num_rx_ring[q]; i++) {
++#ifndef CONFIG_ARCH_ESPADA
+ 			struct ravb_ex_rx_desc *desc = &priv->rx_ring[q][i];
++#else
++			struct ravb_rx_desc *desc = &priv->rx_ring[q][i];
++#endif
+ 
+ 			if (!dma_mapping_error(ndev->dev.parent,
+ 					       le32_to_cpu(desc->dptr)))
+ 				dma_unmap_single(ndev->dev.parent,
+ 						 le32_to_cpu(desc->dptr),
++#ifdef CONFIG_ARCH_ESPADA
++						 RAVB_RCV_BUFF_MAX,
++#else
+ 						 priv->rx_buf_sz,
++#endif
+ 						 DMA_FROM_DEVICE);
+ 		}
++#ifdef CONFIG_ARCH_ESPADA
++		ring_size = sizeof(struct ravb_rx_desc) *
++			    (priv->num_rx_ring[q] + 1);
++#else  /* CONFIG_ARCH_ESPADA */
+ 		ring_size = sizeof(struct ravb_ex_rx_desc) *
+ 			    (priv->num_rx_ring[q] + 1);
++#endif
+ 		dma_free_coherent(ndev->dev.parent, ring_size, priv->rx_ring[q],
+ 				  priv->rx_desc_dma[q]);
+ 		priv->rx_ring[q] = NULL;
+@@ -274,7 +304,11 @@ static void ravb_ring_format(struct net_device *ndev, int q)
+ {
+ 	struct ravb_private *priv = netdev_priv(ndev);
+ 	int num_tx_desc = priv->num_tx_desc;
++#ifdef CONFIG_ARCH_ESPADA
++	struct ravb_rx_desc *rx_desc;
++#else  /* CONFIG_ARCH_ESPADA */
+ 	struct ravb_ex_rx_desc *rx_desc;
++#endif
+ 	struct ravb_tx_desc *tx_desc;
+ 	struct ravb_desc *desc;
+ 	int rx_ring_size = sizeof(*rx_desc) * priv->num_rx_ring[q];
+@@ -293,10 +327,18 @@ static void ravb_ring_format(struct net_device *ndev, int q)
+ 	for (i = 0; i < priv->num_rx_ring[q]; i++) {
+ 		/* RX descriptor */
+ 		rx_desc = &priv->rx_ring[q][i];
++#ifdef CONFIG_ARCH_ESPADA
++		rx_desc->ds_cc = cpu_to_le16(RAVB_RCV_DESCRIPTOR_DATA_SIZE);
++		dma_addr = dma_map_single(ndev->dev.parent,
++					  priv->rx_skb[q][i]->data,
++					  ALIGN(RAVB_RCV_BUFF_MAX, 16),
++					  DMA_FROM_DEVICE);
++#else  /* CONFIG_ARCH_ESPADA */
+ 		rx_desc->ds_cc = cpu_to_le16(priv->rx_buf_sz);
+ 		dma_addr = dma_map_single(ndev->dev.parent, priv->rx_skb[q][i]->data,
+ 					  priv->rx_buf_sz,
+ 					  DMA_FROM_DEVICE);
++#endif
+ 		/* We just set the data size to 0 for a failed mapping which
+ 		 * should prevent DMA from happening...
+ 		 */
+@@ -399,13 +441,27 @@ static int ravb_ring_init(struct net_device *ndev, int q)
+ /* E-MAC init function */
+ static void ravb_emac_init(struct net_device *ndev)
+ {
++	struct ravb_private *priv = netdev_priv(ndev);
++	u32 ecmr;
++
+ 	/* Receive frame limit set register */
+ 	ravb_write(ndev, ndev->mtu + ETH_HLEN + VLAN_HLEN + ETH_FCS_LEN, RFLR);
+ 
++	ecmr =  ravb_read(ndev, ECMR);
++	ecmr &= ECMR_DM;
++
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* EMAC Mode: PAUSE prohibition; Duplex; RX Checksum; TX; RX */
+ 	ravb_write(ndev, ECMR_ZPF | ECMR_DM |
+ 		   (ndev->features & NETIF_F_RXCSUM ? ECMR_RCSC : 0) |
+ 		   ECMR_TE | ECMR_RE, ECMR);
++#else	
++	ecmr |=  ECMR_ZPF | (priv->duplex ? ECMR_DM : 0) |
++	                ECMR_TE | ECMR_RE | CXR20_RCPT |
++	                ECMR_TXF | ECMR_RXF | ECMR_PRM;
++	
++	ravb_write(ndev, ecmr, ECMR);
++#endif
+ 
+ 	ravb_set_rate(ndev);
+ 
+@@ -416,17 +472,39 @@ static void ravb_emac_init(struct net_device *ndev)
+ 	ravb_write(ndev,
+ 		   (ndev->dev_addr[4] << 8)  | (ndev->dev_addr[5]), MALR);
+ 
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* E-MAC status register clear */
+ 	ravb_write(ndev, ECSR_ICD | ECSR_MPD, ECSR);
+ 
+ 	/* E-MAC interrupt enable register */
+ 	ravb_write(ndev, ECSIPR_ICDIP | ECSIPR_MPDIP | ECSIPR_LCHNGIP, ECSIPR);
++#else
++	/* E-MAC status register clear */
++	ravb_write(ndev, ECSR_ICD | ECSR_MPD | ECSR_LCHNG |
++	                                 ECSR_RFRI, ECSR);
++	ravb_write(ndev, CSR0_TPE | CSR0_RPE, CSR0);
++
++	/* E-MAC interrupt enable register */
++	ravb_write(ndev, ECSIPR_ICDIP, ECSIPR);
++	
++	ravb_write(ndev, ravb_read(ndev, CXR31)
++	                 & ~CXR31_SEL_LINK1, CXR31);
++	if (priv->phy_interface == PHY_INTERFACE_MODE_RGMII_ID) {
++	        ravb_write(ndev, ravb_read(ndev, CXR31)
++	                 | CXR31_SEL_LINK0, CXR31);
++	} else {
++	        ravb_write(ndev, ravb_read(ndev, CXR31)
++	                 & ~CXR31_SEL_LINK0, CXR31);
++	}
++#endif
+ }
+ 
+ /* Device init function for Ethernet AVB */
+ static int ravb_dmac_init(struct net_device *ndev)
+ {
++#ifndef CONFIG_ARCH_ESPADA
+ 	struct ravb_private *priv = netdev_priv(ndev);
++#endif
+ 	int error;
+ 
+ 	/* Set CONFIG mode */
+@@ -453,6 +531,7 @@ static int ravb_dmac_init(struct net_device *ndev)
+ 	ravb_modify(ndev, CCC, CCC_BOC, CCC_BOC);
+ #endif
+ 
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* Set AVB RX */
+ 	ravb_write(ndev,
+ 		   RCR_EFFS | RCR_ENCF | RCR_ETS0 | RCR_ESF | 0x18000000, RCR);
+@@ -478,6 +557,31 @@ static int ravb_dmac_init(struct net_device *ndev)
+ 	ravb_write(ndev, RIC2_QFE0 | RIC2_QFE1 | RIC2_RFFE, RIC2);
+ 	/* Frame transmitted, timestamp FIFO updated */
+ 	ravb_write(ndev, TIC_FTE0 | TIC_FTE1 | TIC_TFUE, TIC);
++#else
++	/* Set AVB RX */
++	ravb_write(ndev, 0x60000000, RCR);
++
++	/* Set Max Frame Length (RTC) */
++	ravb_write(ndev, 0x7ffc0000 | RAVB_RCV_BUFF_MAX, RTC);
++
++	/* Set FIFO size */
++	ravb_write(ndev, 0x00222200, TGC);
++
++	ravb_write(ndev, 0, TCCR);
++
++	/* Interrupt enable: */
++	/* Frame receive */
++	ravb_write(ndev, RIC0_FRE0, RIC0);
++
++	ravb_write(ndev, 0x0, RIC1);
++
++	/* Receive FIFO full error, descriptor empty */
++	ravb_write(ndev, RIC2_QFE0 | RIC2_RFFE, RIC2);
++
++	ravb_write(ndev, 0x0, RIC3);
++
++	ravb_write(ndev, TIC_FTE, TIC);
++#endif
+ 
+ 	/* Setting the control will start the AVB-DMAC process. */
+ 	ravb_modify(ndev, CCC, CCC_OPC, CCC_OPC_OPERATION);
+@@ -523,6 +627,171 @@ static void ravb_get_tx_tstamp(struct net_device *ndev)
+ 	}
+ }
+ 
++#ifdef CONFIG_ARCH_ESPADA
++static void ravb_rx_csum(struct net_device *ndev, struct sk_buff *skb)
++{
++	u8 *hw_csum;
++
++	/* The hardware checksum is 2 bytes appended to packet data */
++	if (unlikely(skb->len < 2))
++		return;
++
++	hw_csum = skb_tail_pointer(skb) - 2;
++
++	if (*hw_csum == 0)
++		skb->ip_summed = CHECKSUM_UNNECESSARY;
++	else
++		skb->ip_summed = CHECKSUM_NONE;
++}
++
++/* Packet receive function for Ethernet AVB */
++static bool ravb_rx(struct net_device *ndev, int *quota, int q)
++{
++	struct ravb_private *priv = netdev_priv(ndev);
++	int entry = priv->cur_rx[q] % priv->num_rx_ring[q];
++	int boguscnt = (priv->dirty_rx[q] + priv->num_rx_ring[q]) -
++			priv->cur_rx[q];
++	struct net_device_stats *stats = &priv->stats[q];
++	struct ravb_rx_desc *desc;
++	struct sk_buff *skb;
++	dma_addr_t dma_addr;
++	u8  desc_status;
++	u8  die_dt;
++	u16 pkt_len;
++	int limit;
++
++	boguscnt = min(boguscnt, *quota);
++	limit = boguscnt;
++	desc = &priv->rx_ring[q][entry];
++	while (desc->die_dt != DT_FEMPTY) {
++		/* Descriptor type must be checked before all other reads */
++		dma_rmb();
++		desc_status = desc->msc;
++		pkt_len = le16_to_cpu(desc->ds_cc) & RX_DS;
++
++		if (--boguscnt < 0)
++			break;
++
++		/* We use 0-byte descriptors to mark the DMA mapping errors */
++		if (!pkt_len)
++			continue;
++
++		if (desc_status & MSC_MC)
++			stats->multicast++;
++
++		if (desc_status & (MSC_CRC | MSC_RFE | MSC_RTSF | MSC_RTLF |
++				   MSC_CEEF)) {
++			stats->rx_errors++;
++			if (desc_status & MSC_CRC)
++				stats->rx_crc_errors++;
++			if (desc_status & MSC_RFE)
++				stats->rx_frame_errors++;
++			if (desc_status & (MSC_RTLF | MSC_RTSF))
++				stats->rx_length_errors++;
++			if (desc_status & MSC_CEEF)
++				stats->rx_missed_errors++;
++		} else {
++			die_dt = desc->die_dt & 0xF0;
++			if (die_dt == DT_FSINGLE) {
++				skb = priv->rx_skb[q][entry];
++				priv->rx_skb[q][entry] = NULL;
++				dma_unmap_single(ndev->dev.parent,
++					le32_to_cpu(desc->dptr),
++					ALIGN(RAVB_RCV_BUFF_MAX, 16),
++					DMA_FROM_DEVICE);
++
++				skb_put(skb, pkt_len);
++				skb->protocol = eth_type_trans(skb, ndev);
++				if (ndev->features & NETIF_F_RXCSUM)
++					ravb_rx_csum(ndev, skb);
++				napi_gro_receive(&priv->napi[q], skb);
++				stats->rx_packets++;
++				stats->rx_bytes += pkt_len;
++			} else if (die_dt == DT_FSTART) {
++				priv->rxtop_skb = priv->rx_skb[q][entry];
++				priv->rx_skb[q][entry] = NULL;
++				dma_unmap_single(ndev->dev.parent,
++					le32_to_cpu(desc->dptr),
++					ALIGN(RAVB_RCV_BUFF_MAX, 16),
++					DMA_FROM_DEVICE);
++
++				skb_put(priv->rxtop_skb, pkt_len);
++			} else if (die_dt == DT_FMID) {
++				skb = priv->rx_skb[q][entry];
++				priv->rx_skb[q][entry] = NULL;
++				dma_unmap_single(ndev->dev.parent,
++					le32_to_cpu(desc->dptr),
++					ALIGN(RAVB_RCV_BUFF_MAX, 16),
++					DMA_FROM_DEVICE);
++				skb_copy_to_linear_data_offset(priv->rxtop_skb,
++					priv->rxtop_skb->len,
++					skb->data,
++					pkt_len);
++				skb_put(priv->rxtop_skb, pkt_len);
++				dev_kfree_skb(skb);
++			} else if (die_dt == DT_FEND) {
++				skb = priv->rx_skb[q][entry];
++				priv->rx_skb[q][entry] = NULL;
++				dma_unmap_single(ndev->dev.parent,
++					le32_to_cpu(desc->dptr),
++					ALIGN(RAVB_RCV_BUFF_MAX, 16),
++					DMA_FROM_DEVICE);
++				skb_copy_to_linear_data_offset(priv->rxtop_skb,
++					priv->rxtop_skb->len,
++					skb->data,
++					pkt_len);
++				skb_put(priv->rxtop_skb, pkt_len);
++				dev_kfree_skb(skb);
++				priv->rxtop_skb->protocol
++					= eth_type_trans(priv->rxtop_skb, ndev);
++				if (ndev->features & NETIF_F_RXCSUM)
++					ravb_rx_csum(ndev, skb);
++				napi_gro_receive(&priv->napi[q],
++						  priv->rxtop_skb);
++				stats->rx_packets++;
++				stats->rx_bytes += priv->rxtop_skb->len;
++				priv->rx_skb[q][entry] = NULL;
++			}
++		}
++		entry = (++priv->cur_rx[q]) % priv->num_rx_ring[q];
++		desc = &priv->rx_ring[q][entry];
++	}
++
++	/* Refill the RX ring buffers. */
++	for (; priv->cur_rx[q] - priv->dirty_rx[q] > 0; priv->dirty_rx[q]++) {
++		entry = priv->dirty_rx[q] % priv->num_rx_ring[q];
++		desc = &priv->rx_ring[q][entry];
++		/* The size of the buffer should be on 16-byte boundary. */
++		desc->ds_cc = cpu_to_le16(RAVB_RCV_DESCRIPTOR_DATA_SIZE);
++		if (!priv->rx_skb[q][entry]) {
++			skb = netdev_alloc_skb(ndev,
++				RAVB_RCV_BUFF_MAX + RAVB_ALIGN - 1);
++			if (!skb)
++				break;	/* Better luck next round. */
++			ravb_set_buffer_align(skb);
++			dma_addr = dma_map_single(ndev->dev.parent,
++						skb->data,
++						le16_to_cpu(RAVB_RCV_BUFF_MAX),
++						DMA_FROM_DEVICE);
++			skb_checksum_none_assert(skb);
++			/* We just set the data size to 0 for a failed mapping
++			 * which should prevent DMA  from happening...
++			 */
++			if (dma_mapping_error(ndev->dev.parent, dma_addr))
++				desc->ds_cc = cpu_to_le16(0);
++			desc->dptr = cpu_to_le32(dma_addr);
++			priv->rx_skb[q][entry] = skb;
++		}
++		/* Descriptor type must be set after all the above writes */
++		dma_wmb();
++		desc->die_dt = DT_FEMPTY;
++	}
++
++	*quota -= limit - (++boguscnt);
++
++	return boguscnt <= 0;
++}
++#else
+ static void ravb_rx_csum(struct sk_buff *skb)
+ {
+ 	u8 *hw_csum;
+@@ -653,6 +922,7 @@ static bool ravb_rx(struct net_device *ndev, int *quota, int q)
+ 
+ 	return boguscnt <= 0;
+ }
++#endif
+ 
+ static void ravb_rcv_snd_disable(struct net_device *ndev)
+ {
+@@ -924,9 +1194,15 @@ static int ravb_poll(struct napi_struct *napi, int budget)
+ 	int q = napi - priv->napi;
+ 	int mask = BIT(q);
+ 	int quota = budget;
+-	u32 ris0, tis;
++#ifndef CONFIG_ARCH_ESPADA
++	u32 ris0;
++#endif
++	u32 tis;
++	int entry;
++	struct ravb_rx_desc *desc;
+ 
+ 	for (;;) {
++#ifndef CONFIG_ARCH_ESPADA
+ 		tis = ravb_read(ndev, TIS);
+ 		ris0 = ravb_read(ndev, RIS0);
+ 		if (!((ris0 & mask) || (tis & mask)))
+@@ -949,6 +1225,30 @@ static int ravb_poll(struct napi_struct *napi, int budget)
+ 			mmiowb();
+ 			spin_unlock_irqrestore(&priv->lock, flags);
+ 		}
++#else
++		tis = ravb_read(ndev, TIS);
++		entry = priv->cur_rx[q] % priv->num_rx_ring[q];
++		desc = &priv->rx_ring[q][entry];
++		ravb_write(ndev, ~mask, RIS0);
++		if (!((tis & mask) || (desc->die_dt != DT_FEMPTY)))
++			break;
++
++		/* Processing RX Descriptor Ring */
++		if (desc->die_dt != DT_FEMPTY) {
++			if (ravb_rx(ndev, &quota, q))
++				goto out;
++		}
++		/* Processing TX Descriptor Ring */
++		if (tis & mask) {
++			spin_lock_irqsave(&priv->lock, flags);
++			/* Clear TX interrupt */
++			ravb_write(ndev, ~mask, TIS);
++			ravb_tx_free(ndev, q, true);
++			netif_wake_subqueue(ndev, q);
++			mmiowb();
++			spin_unlock_irqrestore(&priv->lock, flags);
++		}
++#endif
+ 	}
+ 
+ 	napi_complete(napi);
+@@ -986,6 +1286,7 @@ static void ravb_adjust_link(struct net_device *ndev)
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* Disable TX and RX right over here, if E-MAC change is ignored */
+ 	if (priv->no_avb_link)
+ 		ravb_rcv_snd_disable(ndev);
+@@ -1010,7 +1311,36 @@ static void ravb_adjust_link(struct net_device *ndev)
+ 	/* Enable TX and RX right over here, if E-MAC change is ignored */
+ 	if (priv->no_avb_link && phydev->link)
+ 		ravb_rcv_snd_enable(ndev);
++#else
++	if (phydev->link) {
++		if (phydev->duplex != priv->duplex) {
++			new_state = true;
++			priv->duplex = phydev->duplex;
++			ravb_set_duplex(ndev);
++		}
+ 
++		if (phydev->speed != priv->speed) {
++			new_state = true;
++			priv->speed = phydev->speed;
++			ravb_set_rate(ndev);
++		}
++		if (!priv->link) {
++			ravb_write(ndev, ravb_read(ndev, ECMR) & ~ECMR_TXF,
++				   ECMR);
++			new_state = true;
++			priv->link = phydev->link;
++			if (priv->no_avb_link)
++				ravb_rcv_snd_enable(ndev);
++		}
++	} else if (priv->link) {
++		new_state = true;
++		priv->link = 0;
++		priv->speed = 0;
++		priv->duplex = -1;
++		if (priv->no_avb_link)
++			ravb_rcv_snd_disable(ndev);
++	}
++#endif
+ 	mmiowb();
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+@@ -1070,8 +1400,17 @@ static int ravb_phy_init(struct net_device *ndev)
+ 		netdev_info(ndev, "limited PHY to 100Mbit/s\n");
+ 	}
+ 
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* 10BASE is not supported */
+ 	phydev->supported &= ~PHY_10BT_FEATURES;
++#endif
++
++#ifdef CONFIG_ARCH_ESPADA
++	if (priv->phy_interface == PHY_INTERFACE_MODE_RGMII_ID) {
++		ravb_write(ndev, ravb_read(ndev, CXR35)
++			 | CXR35_SEL_MODIN, CXR35);
++	}
++#endif  /* CONFIG_ARCH_ESPADA */
+ 
+ 	phy_attached_info(phydev);
+ 
+@@ -1356,7 +1695,7 @@ static int ravb_open(struct net_device *ndev)
+ 	napi_enable(&priv->napi[RAVB_BE]);
+ 	napi_enable(&priv->napi[RAVB_NC]);
+ 
+-	if (priv->chip_id == RCAR_GEN2) {
++	if (priv->chip_id == RCAR_GEN2 || priv->chip_id == ESPADA) {
+ 		error = request_irq(ndev->irq, ravb_interrupt, IRQF_SHARED,
+ 				    ndev->name, ndev);
+ 		if (error) {
+@@ -1396,9 +1735,11 @@ static int ravb_open(struct net_device *ndev)
+ 		goto out_free_irq_nc_tx;
+ 	ravb_emac_init(ndev);
+ 
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* Initialise PTP Clock driver */
+ 	if (priv->chip_id == RCAR_GEN2)
+ 		ravb_ptp_init(ndev, priv->pdev);
++#endif
+ 
+ 	netif_tx_start_all_queues(ndev);
+ 
+@@ -1410,23 +1751,44 @@ static int ravb_open(struct net_device *ndev)
+ 	return 0;
+ 
+ out_ptp_stop:
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* Stop PTP Clock driver */
+ 	if (priv->chip_id == RCAR_GEN2)
+ 		ravb_ptp_stop(ndev);
++#else
++#endif
+ out_free_irq_nc_tx:
++#ifndef CONFIG_ARCH_ESPADA
+ 	if (priv->chip_id == RCAR_GEN2)
+ 		goto out_free_irq;
+ 	free_irq(priv->tx_irqs[RAVB_NC], ndev);
++#else
++#endif
+ out_free_irq_nc_rx:
++#ifndef CONFIG_ARCH_ESPADA
+ 	free_irq(priv->rx_irqs[RAVB_NC], ndev);
++#else
++#endif
+ out_free_irq_be_tx:
++#ifndef CONFIG_ARCH_ESPADA
+ 	free_irq(priv->tx_irqs[RAVB_BE], ndev);
++#else
++#endif
+ out_free_irq_be_rx:
++#ifndef CONFIG_ARCH_ESPADA
+ 	free_irq(priv->rx_irqs[RAVB_BE], ndev);
++#else
++#endif
+ out_free_irq_emac:
++#ifndef CONFIG_ARCH_ESPADA
+ 	free_irq(priv->emac_irq, ndev);
++#else
++#endif
+ out_free_irq:
++#ifndef CONFIG_ARCH_ESPADA
+ 	free_irq(ndev->irq, ndev);
++#else
++#endif
+ out_napi_off:
+ 	napi_disable(&priv->napi[RAVB_NC]);
+ 	napi_disable(&priv->napi[RAVB_BE]);
+@@ -1946,6 +2308,7 @@ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,etheravb-rcar-gen2", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7795", .data = (void *)RCAR_GEN3 },
+ 	{ .compatible = "renesas,etheravb-rcar-gen3", .data = (void *)RCAR_GEN3 },
++	{ .compatible = "renesas,etheravb-r9a07g044l", .data = (void *)ESPADA },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, ravb_match_table);
+@@ -1983,9 +2346,11 @@ static void ravb_set_config_mode(struct net_device *ndev)
+ 		ravb_modify(ndev, CCC, CCC_OPC, CCC_OPC_CONFIG);
+ 		/* Set CSEL value */
+ 		ravb_modify(ndev, CCC, CCC_CSEL, CCC_CSEL_HPB);
+-	} else {
++	} else if (priv->chip_id == RCAR_GEN3) {
+ 		ravb_modify(ndev, CCC, CCC_OPC, CCC_OPC_CONFIG |
+ 			    CCC_GAC | CCC_CSEL_HPB);
++	} else {
++		ravb_modify(ndev, CCC, CCC_OPC, CCC_OPC_CONFIG);
+ 	}
+ }
+ 
+@@ -2046,10 +2411,7 @@ static int ravb_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	ndev->features = NETIF_F_RXCSUM;
+-	ndev->hw_features = NETIF_F_RXCSUM;
+-
+-	pm_runtime_enable(&pdev->dev);
+-	pm_runtime_get_sync(&pdev->dev);
++	ndev->hw_features |= (NETIF_F_HW_CSUM | NETIF_F_RXCSUM);
+ 
+ 	/* The Ether-specific entries in the device structure. */
+ 	ndev->base_addr = res->start;
+@@ -2123,6 +2485,16 @@ static int ravb_probe(struct platform_device *pdev)
+ 		goto out_release;
+ 	}
+ 
++	priv->rstc = devm_reset_control_get(&pdev->dev, NULL);
++	if (IS_ERR(priv->rstc)) {
++		dev_err(&pdev->dev, "failed to get cpg reset\n");
++		return PTR_ERR(priv->rstc);
++	}
++	reset_control_deassert(priv->rstc);
++
++	pm_runtime_enable(&pdev->dev);
++	pm_runtime_get_sync(&pdev->dev);
++
+ 	ndev->max_mtu = 2048 - (ETH_HLEN + VLAN_HLEN + ETH_FCS_LEN);
+ 	ndev->min_mtu = ETH_MIN_MTU;
+ 
+@@ -2136,6 +2508,7 @@ static int ravb_probe(struct platform_device *pdev)
+ 	/* Set AVB config mode */
+ 	ravb_set_config_mode(ndev);
+ 
++#ifndef CONFIG_ARCH_ESPADA
+ 	/* Set GTI value */
+ 	error = ravb_set_gti(ndev);
+ 	if (error)
+@@ -2146,6 +2519,7 @@ static int ravb_probe(struct platform_device *pdev)
+ 
+ 	if (priv->chip_id != RCAR_GEN2)
+ 		ravb_set_delay_mode(ndev);
++#endif
+ 
+ 	/* Allocate descriptor base address table */
+ 	priv->desc_bat_size = sizeof(struct ravb_desc) * DBAT_ENTRY_NUM;
+@@ -2165,9 +2539,11 @@ static int ravb_probe(struct platform_device *pdev)
+ 	/* Initialise HW timestamp list */
+ 	INIT_LIST_HEAD(&priv->ts_skb_list);
+ 
++#ifdef CONFIG_ARCH_ESPADA
+ 	/* Initialise PTP Clock driver */
+ 	if (chip_id != RCAR_GEN2)
+ 		ravb_ptp_init(ndev, pdev);
++#endif
+ 
+ 	/* Debug message level */
+ 	priv->msg_enable = RAVB_DEF_MSG_ENABLE;
+-- 
+2.7.4
+

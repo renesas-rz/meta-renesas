@@ -1,0 +1,270 @@
+From 3c4cdcb86d3a2c14a4d02846b41b00358f4ec5e6 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 1 Mar 2021 13:59:22 +0700
+Subject: [PATCH 093/135] drm: rcar-du:
+ Provisional-correction-for-multiple-resolution-support
+
+Add tables for hard set PLL5 to support Display and MIPI DSI for
+Renesas RZ/G2L. PLL5_1 is used to generate vclk and pllclk.
+Also these settings are based on number of lanes setting in AD7535.
+If video dot clock is greater than 800MHz, 4 lanes will support and
+3 lanes support with remained frequency.
+
+Currently, it can support some below resolution:
+- 640x480@60
+- 720x480@60
+- 800x600@60
+- 1024x768@60
+- 1280x720@60
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 225 +++++++++++++++++++++++++++++++++
+ 1 file changed, 225 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 78ddbca..da4147b 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -213,6 +213,193 @@ static const struct soc_device_attribute rcar_du_r8a7795_es1[] = {
+ 	{ /* sentinel */ }
+ };
+ 
++struct cpg_param {
++	u32	frequency;
++	u32	pl5_refdiv;
++	u32	pl5_intin;
++	u32	pl5_fracin;
++	u32	pl5_postdiv1;
++	u32	pl5_postdiv2;
++	u32	pl5_scc_en;
++	u32	pl5_downspread;
++	u32	pl5_divval;
++	u32	pl5_spread;
++	u32	dsi_div_a;
++	u32	dsi_div_b;
++};
++
++#define	TABLE_MAX	11
++#define reg_write(x, a)	iowrite32(a, x)
++#define CPG_LPCLK_DIV	0
++
++struct cpg_param resolution_param[TABLE_MAX] = {
++	{
++		/* VGA 25.175MHz	*/
++		/* frequency		*/	25175,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	16,
++		/* pl5_fracin		*/	13141593,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* VGA 25.200MHz	*/
++		/* frequency		*/	25200,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	16,
++		/* pl5_fracin		*/	13421773,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* 480p 27.000MHz	*/
++		/* frequency		*/	27000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	18,
++		/* pl5_fracin		*/	0,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* 480p 27.027MHz	*/
++		/* frequency		*/	27027,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	18,
++		/* pl5_fracin		*/	301990,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* WVGA 29.605MHz	*/
++		/* frequency		*/	29605,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	19,
++		/* pl5_fracin		*/	12359216,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* SVGA 40.00MHz	*/
++		/* frequency		*/	40000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	43,
++		/* pl5_fracin		*/	11184810,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* XGA	65.00MHz	*/
++		/* frequency		*/	65000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	43,
++		/* pl5_fracin		*/	5592405,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* 720p 74.176MHz	*/
++		/* frequency		*/	74176,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	49,
++		/* pl5_fracin		*/	7560932,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* 720p 74.25MHz	*/
++		/* frequency		*/	74250,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	49,
++		/* pl5_fracin		*/	8388608,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	3,	// 1/4
++	},
++	{
++		/* SXGA 108MHz		*/
++		/* frequency		*/	108000,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	54,
++		/* pl5_fracin		*/	0,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++	{
++		/* 1080p 148.5MHz	*/
++		/* frequency		*/	148500,
++		/* pl5_refdiv		*/	1,
++		/* pl5_intin		*/	74,
++		/* pl5_fracin		*/	4194304,
++		/* pl5_postdiv1		*/	1,
++		/* pl5_postdiv2		*/	1,
++		/* pl5_scc_en		*/	1,
++		/* pl5_downspread	*/	1,
++		/* pl5_divval		*/	6,
++		/* pl5_spread		*/	5,
++		/* dsi_div_a		*/	2,	// 1/4
++		/* dsi_div_b		*/	2,	// 1/3
++	},
++};
++
+ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ {
+ 	const struct drm_display_mode *mode = &rcrtc->crtc.state->adjusted_mode;
+@@ -223,6 +410,44 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 
+ 	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_RZG2L)) {
+ 		u32 ditr0, ditr1, ditr2, ditr3, ditr4, ditr5, pbcr0;
++		void __iomem *cpg_base = ioremap_nocache(0x11010000, 0x1000);
++		u32 i, index, prevIndex = 0;
++
++		for (i = 0; i < TABLE_MAX; i++)
++		{
++			if (resolution_param[i].frequency == mode->clock)
++			{
++				index = i;
++				break;
++			}
++			if (resolution_param[i].frequency > mode->clock)
++			{
++				if ((resolution_param[i].frequency - mode->clock) > (mode->clock - resolution_param[prevIndex].frequency))
++				{
++					index = prevIndex;
++				}
++				else
++				{
++					index = i;
++				}
++				break;
++			}
++			prevIndex = i;
++		}
++
++		if (i == TABLE_MAX)
++		{
++			index = TABLE_MAX - 1;
++		}
++
++		reg_write(cpg_base + 0x0204, 0x10000000 | (CPG_LPCLK_DIV<<12)); //CPG_PL2_DDIV: DIV_DSI_LPCLK
++		reg_write(cpg_base + 0x0420, 0x01010000 | (resolution_param[index].dsi_div_a<<0) | (resolution_param[index].dsi_div_b << 8)); //CPG_PL5_SDIV: DIV_DSI_A, DIV_DSI_B
++		reg_write(cpg_base + 0x0144, 0x01110000 | (resolution_param[index].pl5_postdiv1<<0) | (resolution_param[index].pl5_postdiv2<<4) | (resolution_param[index].pl5_refdiv<<8)); //CPG_PLL5_CLK1: POSTDIV1, POSTDIV2, REFDIV
++		reg_write(cpg_base + 0x014C, (resolution_param[index].pl5_divval<<0) | (resolution_param[index].pl5_fracin<<8)); //CPG_PLL5_CLK3: DIVVAL=6, FRACIN
++		reg_write(cpg_base + 0x0150, 0x000000ff | (resolution_param[index].pl5_intin<<16)); //CPG_PLL5_CLK4: INTIN
++		reg_write(cpg_base + 0x0154, (resolution_param[index].pl5_spread<<0)); //CPG_PLL5_CLK5: SPREAD
++		reg_write(cpg_base + 0x0140, 0x00150001 | (resolution_param[index].pl5_scc_en<<2) | (resolution_param[index].pl5_downspread<<4)); //CPG_PLL5_STBY: RESETB=1, SSC_EN, DOWNSPREAD
++		iounmap(cpg_base);
+ 
+ 		ditr0 = (DU_DITR0_DEMD_HIGH
+ 		| ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DU_DITR0_VSPOL : 0)
+-- 
+2.7.4
+

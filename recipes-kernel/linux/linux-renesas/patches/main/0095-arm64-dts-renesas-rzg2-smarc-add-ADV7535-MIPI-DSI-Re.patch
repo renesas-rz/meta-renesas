@@ -1,0 +1,112 @@
+From 5e1534f981b44f78f000d5c07927f3254fbc95af Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Wed, 10 Mar 2021 21:46:34 +0700
+Subject: [PATCH 095/135] arm64: dts: renesas: rzg2-smarc: add ADV7535 MIPI DSI
+ Receiver
+
+This commit add support ADV7535 MIPI DSI Receiver which is
+controlled by I2C channel 1. Also enable DU and MIPI DSI nodes.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 73 +++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index eaeaab1..48ee45a 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -85,6 +85,17 @@
+ 		brightness-levels = <0 2 8 16 32 64 128 255>;
+ 		default-brightness-level = <6>;
+ 	};
++
++	hdmi-out {
++		compatible = "hdmi-connector";
++		type = "d";
++
++		port {
++			hdmi_con_out: endpoint {
++				remote-endpoint = <&adv7535_out>;
++			};
++		};
++	};
+ };
+ 
+ &xinclk {
+@@ -216,6 +227,11 @@
+ 		groups = "adc_d";
+ 		function = "adc";
+ 	};
++
++	i2c1_pins: i2c1 {
++		pins = "RIIC1_SDA", "RIIC1_SCL";
++		input-enable;
++	};
+ };
+ 
+ &scif0 {
+@@ -387,3 +403,60 @@
+ 	//conflict pin with CAN0 pin, disable as default
+ 	//status = "okay";
+ };
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	adv7535: hdmi@3d {
++		compatible = "adi,adv7535";
++		reg = <0x3d>;
++
++		avdd-supply = <&reg_1p8v>;
++		dvdd-supply = <&reg_1p8v>;
++		pvdd-supply = <&reg_1p8v>;
++		a2vdd-supply = <&reg_1p8v>;
++		v3p3-supply = <&reg_3p3v>;
++		v1p2-supply = <&reg_1p8v>;
++
++		adi,dsi-lanes = <4>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7535_in: endpoint@0 {
++					remote-endpoint = <&dsi0_out>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				adv7535_out: endpoint@1 {
++					remote-endpoint = <&hdmi_con_out>;
++				};
++			};
++		};
++	};
++};
++
++&du {
++	status = "okay";
++};
++
++&dsi0 {
++	status = "okay";
++
++	ports {
++		port@1 {
++			dsi0_out: endpoint {
++				remote-endpoint = <&adv7535_in>;
++				data-lanes = <1 2 3 4>;
++			};
++		};
++	};
++};
+-- 
+2.7.4
+

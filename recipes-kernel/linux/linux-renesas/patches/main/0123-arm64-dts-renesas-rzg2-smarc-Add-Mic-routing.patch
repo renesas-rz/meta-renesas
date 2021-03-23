@@ -1,0 +1,33 @@
+From 33654e5f984d6db440c4924721806b878509f4ac Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Wed, 17 Mar 2021 15:13:23 +0700
+Subject: [PATCH 123/135] arm64: dts: renesas: rzg2-smarc: Add Mic routing
+
+This patch adds audio routing for Mic with Bias to reduce noise
+when doing audio capture.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index c391fa4..f85588a 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -62,6 +62,12 @@
+ 		simple-audio-card,bitclock-master = <&cpu_dai>;
+ 		simple-audio-card,frame-master = <&cpu_dai>;
+ 
++		simple-audio-card,widgets = "Microphone", "Microphone Jack";
++		simple-audio-card,routing =
++			    "L2", "Mic Bias",
++			    "R2", "Mic Bias",
++			    "Mic Bias", "Microphone Jack";
++
+ 		cpu_dai: simple-audio-card,cpu {
+ 			sound-dai = <&ssi0>;
+ 		};
+-- 
+2.7.4
+

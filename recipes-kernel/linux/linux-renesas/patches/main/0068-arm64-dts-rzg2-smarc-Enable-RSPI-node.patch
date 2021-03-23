@@ -1,0 +1,41 @@
+From 0b62453037893c1157198dd6581f872eb57e2ee0 Mon Sep 17 00:00:00 2001
+From: thekinhnguyen <the.nguyen.vx@renesas.com>
+Date: Mon, 1 Mar 2021 13:50:41 +0700
+Subject: [PATCH 068/135] arm64: dts: rzg2-smarc: Enable RSPI node.
+
+This patch enable channel rspi1.
+
+Signed-off-by: thekinhnguyen <the.nguyen.vx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 8599424..ed0e554 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -193,6 +193,11 @@
+ 		groups = "eth1_link", "eth1_mdio", "eth1_mii";
+ 		function = "eth1";
+ 	};
++
++	spi1_pins: rspi1 {
++		groups = "rspi1_clk_b", "rspi1_data_b", "rspi1_ssl_b";
++		function = "rspi1";
++	};
+ };
+ 
+ &scif0 {
+@@ -344,3 +349,9 @@
+ 		};
+ 	};
+ };
++
++&rspi1 {
++	pinctrl-0 = <&spi1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
+-- 
+2.7.4
+
