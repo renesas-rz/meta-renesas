@@ -1,0 +1,39 @@
+From 7926deca965ee1a80037ec8fe1b62bdaddfb967c Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Sun, 14 Mar 2021 17:03:00 +0700
+Subject: [PATCH 3/3] arm64: dts: renesas: rzg2-smarc: Enable Watchdog in
+ devicetree.
+
+This patch enable both 3 channels wdt0, wdt1 and wdt2 of watchdog timer.
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+index 7d6bbbf..791a133 100644
+--- a/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg2-smarc.dtsi
+@@ -868,3 +868,18 @@
+ 
+ 	status = "okay";
+ };
++
++&wdt0 {
++	status = "okay";
++	timeout-sec = <60>;
++};
++
++&wdt1 {
++	status = "okay";
++	timeout-sec = <60>;
++};
++
++&wdt2 {
++	status = "okay";
++	timeout-sec = <60>;
++};
+-- 
+2.7.4
+

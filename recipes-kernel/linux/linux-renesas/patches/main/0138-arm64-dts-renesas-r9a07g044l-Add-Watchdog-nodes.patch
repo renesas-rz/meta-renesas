@@ -1,0 +1,59 @@
+From 577b13675d7c06066092436520df97deac541c50 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Sun, 14 Mar 2021 17:00:44 +0700
+Subject: [PATCH 2/3] arm64: dts: renesas: r9a07g044l: Add Watchdog nodes.
+
+This patch add watchdog timer nodes for RZ/G2L (R9A07G044L) SoC.
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g044l.dtsi | 33 +++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+index 5d24e08..99e0259 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l.dtsi
+@@ -694,6 +694,39 @@
+ 			power-domains = <&cpg>;
+ 			status = "disabled";
+ 		};
++
++		wdt0: watchdog@12800800 {
++			compatible = "renesas,rzg2l-wdt";
++			reg = <0 0x12800800 0 0x60>;
++			clocks = <&xinclk>,
++				 <&cpg CPG_MOD R9A07G044L_CLK_WDT0>;
++			interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>;
++			resets = <&cpg R9A07G044L_CLK_WDT0>;
++			status = "disabled";
++		};
++
++		wdt1: watchdog@12800c00 {
++			compatible = "renesas,rzg2l-wdt";
++			reg = <0 0x12800C00 0 0x60>;
++			clocks = <&xinclk>,
++				 <&cpg CPG_MOD R9A07G044L_CLK_WDT1>;
++			interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
++			resets = <&cpg R9A07G044L_CLK_WDT1>;
++			status = "disabled";
++		};
++
++		wdt2: watchdog@12800400 {
++			compatible = "renesas,rzg2l-wdt";
++			reg = <0 0x12800400 0 0x60>;
++			clocks = <&xinclk>,
++				 <&cpg CPG_MOD R9A07G044L_CLK_WDT2>;
++			interrupts = <GIC_SPI 53 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>;
++			resets = <&cpg R9A07G044L_CLK_WDT2>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	thermal-zones {
+-- 
+2.7.4
+

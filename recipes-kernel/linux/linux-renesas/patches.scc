@@ -134,3 +134,7 @@ patch patches/main/0133-arm64-dts-renesas-rzg2-smarc-Enable-MTU3-nodes.patch
 patch patches/main/0134-clk-renesas-rzg2l-cpg-set-PLL-clock-as-fixed-factor-.patch
 patch patches/main/0135-arm64-dts-rzg2-smarc-Add-option-build-for-CAN-ADC-GP.patch
 patch patches/main/0136-i2c-riic-use-core-to-detect-no-zero-length-quirk.patch
+patch patches/main/0137-watchdog-add-new-rzg2l-wdt-driver-support-for-RZ-G2L.patch
+patch patches/main/0138-arm64-dts-renesas-r9a07g044l-Add-Watchdog-nodes.patch
+patch patches/main/0139-arm64-dts-renesas-rzg2-smarc-Enable-Watchdog-in-devi.patch
+
