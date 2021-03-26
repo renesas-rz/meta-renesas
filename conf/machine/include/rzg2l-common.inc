@@ -19,7 +19,7 @@ KERNEL_DEVICETREE = " \
 "
 
 # Configuration for ARM Trusted Firmware
-#EXTRA_IMAGEDEPENDS += " arm-trusted-firmware"
+EXTRA_IMAGEDEPENDS += " trusted-firmware-a"
 
 # u-boot
 PREFERRED_VERSION_u-boot = "v2020.10%"
