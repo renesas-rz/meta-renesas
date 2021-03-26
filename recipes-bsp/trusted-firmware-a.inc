@@ -8,21 +8,19 @@ DEPENDS = "bootparameter-native u-boot fiptool-native"
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(rzg2l-smarc|smarc-rzg2l|rzg2l-eval)"
+COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev)"
 
 PLATFORM_smarc-rzg2l = "rzg2l"
 EXTRA_FLAGS_smarc-rzg2l = "BOARD_TYPE=BOARD_RZG2L_EVA"
 FLASH_ADDRESS_BL2_BP_smarc-rzg2l = "00000"
 FLASH_ADDRESS_FIP_smarc-rzg2l = "1D200"
 
-PLATFORM_rzg2l-eval = "rzg2l"
-EXTRA_FLAGS_rzg2l-eval = "BOARD_TYPE=BOARD_RZG2L_15MMSQ"
-FLASH_ADDRESS_BL2_BP_rzg2l-eval = "00000"
-FLASH_ADDRESS_FIP_rzg2l-eval = "1D200"
+PLATFORM_rzg2l-dev = "rzg2l"
+EXTRA_FLAGS_rzg2l-dev = "BOARD_TYPE=BOARD_RZG2L_15MMSQ"
+FLASH_ADDRESS_BL2_BP_rzg2l-dev = "00000"
+FLASH_ADDRESS_FIP_rzg2l-dev = "1D200"
 
 PLATFORM = "rzg2l"
-
-SRC_URI = "file://rzg2l_tf-a_flash-bin_template.ttl"
 
 # Requires CROSS_COMPILE set by hand as there is no configure script
 export CROSS_COMPILE="${TARGET_PREFIX}"
@@ -51,18 +49,8 @@ do_compile () {
 	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
 	objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip.bin fip.srec
 
-	# Update flashing macro
-	cp ${WORKDIR}/rzg2l_tf-a_flash-bin_template.ttl ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl
-
 	PROGRAM_SIZE_BL2_BP=$(printf "%x" `wc -c < bl2_bp.bin`)
 	PROGRAM_SIZE_FIP=$(printf "%x" `wc -c < fip.bin`)
-
-	sed -i "s|PROGRAM_SIZE_BL2_BP|${PROGRAM_SIZE_BL2_BP}|g" ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl
-	sed -i "s|PROGRAM_SIZE_FIP|${PROGRAM_SIZE_FIP}|g" ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl
-	sed -i "s|FLASH_ADDRESS_BL2_BP|${FLASH_ADDRESS_BL2_BP}|g" ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl
-	sed -i "s|FLASH_ADDRESS_FIP|${FLASH_ADDRESS_FIP}|g" ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl
-	sed -i "s|FILENAME_BL2_BP|bl2_bp-${MACHINE}.bin|g" ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl
-	sed -i "s|FILENAME_FIP|fip-${MACHINE}.bin|g" ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl
 }
 
 do_deploy () {
@@ -80,9 +68,6 @@ do_deploy () {
 	install -m 0644 ${S}/bl2_bp.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}.srec
 	install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
 	install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/fip-${MACHINE}.srec
-
-	# Copy flashing macro
-	install -m 0644 ${WORKDIR}/rzg2l_tf-a_flash-bin.ttl ${DEPLOYDIR}/rzg2l_tf-a_flash-bin-${MACHINE}.ttl
 }
 
 addtask deploy before do_build after do_compile
