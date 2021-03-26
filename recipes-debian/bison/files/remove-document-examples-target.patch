@@ -1,0 +1,47 @@
+diff --git a/Makefile.am b/Makefile.am
+index 339a3c6..da52847 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -54,9 +54,7 @@ noinst_LIBRARIES =
+
+ include build-aux/local.mk
+ include data/local.mk
+-include doc/local.mk
+ include etc/local.mk
+-include examples/local.mk
+ include lib/local.mk
+ include src/local.mk
+ include tests/local.mk
+diff --git a/Makefile.in b/Makefile.in
+index f8535d2..3064825 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -5187,15 +5187,6 @@ html-local: doc/Doxyfile
+ # configure, because the former is way faster than the latter.
+ doc/Doxyfile: $(top_srcdir)/doc/Doxyfile.in
+ 	$(AM_V_GEN) $(edit) $(top_srcdir)/doc/Doxyfile.in >doc/Doxyfile
+-examples/extracted.stamp: $(doc) doc/version.texi $(extexi)
+-	$(AM_V_GEN)rm -f $@ $@.tmp
+-	$(AM_V_at)$(MKDIR_P) examples
+-	$(AM_V_at)touch $@.tmp
+-	$(AM_V_at)$(extract) $(extracted)
+-	$(AM_V_at)mv $@.tmp $@
+-
+-$(extracted): examples/extracted.stamp
+-	touch $@
+ 
+ # Suppress the #lines from the examples when rolling the tarball, so
+ # that regular users have readable examples even before installing
+diff --git a/tests/local.mk b/tests/local.mk
+index 394a92e..9ad26f1 100644
+--- a/tests/local.mk
++++ b/tests/local.mk
+@@ -18,7 +18,7 @@
+ EXTRA_DIST += $(TESTSUITE_AT) %D%/testsuite %D%/testsuite.h
+ 
+ DISTCLEANFILES       += %D%/atconfig $(check_SCRIPTS)
+-MAINTAINERCLEANFILES += $(TESTSUITE)
++MAINTAINERCLEANFILES = $(TESTSUITE)
+ 
+ ## ------------ ##
+ ## package.m4.  ##
