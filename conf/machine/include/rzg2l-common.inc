@@ -16,6 +16,7 @@ SERIAL_CONSOLES = "115200;ttySC0"
 # Device tree: support multiple dtb files for all variant RZ/G2L
 KERNEL_DEVICETREE = " \
    renesas/r9a07g044l2-dev.dtb \
+   renesas/r9a07g044l2-smarc.dtb \
 "
 
 # Configuration for ARM Trusted Firmware
