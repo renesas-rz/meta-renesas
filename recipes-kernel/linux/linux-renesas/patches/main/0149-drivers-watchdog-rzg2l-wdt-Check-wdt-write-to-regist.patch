@@ -1,0 +1,62 @@
+From 1e5a5ed100b1c7c67b4f1b12d22ba87f3e770d84 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 26 Mar 2021 16:33:55 +0700
+Subject: [PATCH 149/151] drivers: watchdog: rzg2l-wdt: Check wdt write to
+ register.
+
+This patch add support check whether the writing to wdt register completed.
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/watchdog/rzg2l-wdt.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/watchdog/rzg2l-wdt.c b/drivers/watchdog/rzg2l-wdt.c
+index 7e6b4eb..f906fd3 100644
+--- a/drivers/watchdog/rzg2l-wdt.c
++++ b/drivers/watchdog/rzg2l-wdt.c
+@@ -50,23 +50,32 @@ struct rzg2l_wdt_priv {
+ 	struct reset_control *rstc;
+ };
+ 
+-static void rzg2l_wdt_write(struct rzg2l_wdt_priv *priv, u32 val,
++static void rzg2l_wdt_wait_delay(struct rzg2l_wdt_priv *priv)
++{
++	u32 delay;
++
++	/* delay timer when change the setting register */
++	delay =  F2CYCLE_NSEC(priv->xinclk)*6 + F2CYCLE_NSEC(priv->clk_rate)*9;
++	ndelay(delay);
++}
++
++static int rzg2l_wdt_write(struct rzg2l_wdt_priv *priv, u32 val,
+ 				unsigned int reg)
+ {
++	int i;
++
+ 	if (reg == WDTSET)
+ 		val &= 0xFFF00000;
+ 
+ 	writel_relaxed(val, priv->base + reg);
+-}
+-
+-static void rzg2l_wdt_wait_delay(struct rzg2l_wdt_priv *priv)
+-{
+-	u32 delay;
+ 
+-	/* delay timer when change the setting register */
+-	delay =  F2CYCLE_NSEC(priv->xinclk)*6 + F2CYCLE_NSEC(priv->clk_rate)*9;
++	for (i = 0; i < 1000; i++) {
++		if (readl_relaxed(priv->base + reg) == val)
++			return 0;
++		rzg2l_wdt_wait_delay(priv);
++	}
+ 
+-	ndelay(delay);
++	return -ETIMEDOUT;
+ }
+ 
+ static int rzg2l_wdt_init_timeout(struct watchdog_device *wdev)
+-- 
+2.7.4
+

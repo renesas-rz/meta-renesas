@@ -1,0 +1,677 @@
+From 0e99f73bd5c26a97b20cb3e1b4292b87a9bed259 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Wed, 24 Mar 2021 10:37:32 +0700
+Subject: [PATCH 140/151] arm64: dts: renesas: Initial support for
+ r9a07g044l2-smarc board
+
+initial support for RZG2L Evaluation Board Kit (Dual Cortex-A55)
+(Discrete Power System Ver.)
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/Makefile              |   2 +-
+ arch/arm64/boot/dts/renesas/r9a07g044l2-smarc.dts | 639 ++++++++++++++++++++++
+ 2 files changed, 640 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/boot/dts/renesas/r9a07g044l2-smarc.dts
+
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index 5a842a3..1bd5a91 100644
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -6,7 +6,7 @@ dtb-$(CONFIG_ARCH_R8A774B1) += r8a774b1-hihope-rzg2n.dtb
+ dtb-$(CONFIG_ARCH_R8A774B1) += r8a774b1-hihope-rzg2n-ex.dtb
+ dtb-$(CONFIG_ARCH_R8A774C0) += r8a774c0-cat874.dtb r8a774c0-ek874.dtb \
+ 			       r8a774c0-ek874-idk-2121wr.dtb
+-dtb-$(CONFIG_ARCH_R9A07G044L2) += r9a07g044l2-dev.dtb
++dtb-$(CONFIG_ARCH_R9A07G044L2) += r9a07g044l2-dev.dtb r9a07g044l2-smarc.dtb
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-x.dtb r8a7795-h3ulcb.dtb
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-h3ulcb-kf.dtb
+ dtb-$(CONFIG_ARCH_R8A7795) += r8a7795-salvator-xs.dtb
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g044l2-smarc.dts b/arch/arm64/boot/dts/renesas/r9a07g044l2-smarc.dts
+new file mode 100644
+index 0000000..15dfd0a
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r9a07g044l2-smarc.dts
+@@ -0,0 +1,639 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Device Tree Source for the RZG2L Evaluation Board Kit
++ * (Discrete Power System Ver.) (Dual Cortex-A55)
++ *
++ * Copyright (C) 2021 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include <dt-bindings/pinctrl/pinctrl-rzg2l.h>
++#include <dt-bindings/gpio/gpio.h>
++
++#include "r9a07g044l2.dtsi"
++
++/*
++ * SSI-WM8978
++ *
++ * This command is required when Playback/Capture
++ *
++ *	amixer cset name='Left Input Mixer L2 Switch' on
++ *	amixer cset name='Right Input Mixer R2 Switch' on
++ *	amixer cset name='Headphone Playback Volume' 100
++ *	amixer cset name='Input PGA Volume' 100
++ *	amixer cset name='L2/R2 Boost Volume' 100
++ *
++ * ADV7535 Audio playback
++ *	aplay -D hw:1,0 xxx.wav
++ */
++
++/ {
++	model = "RZG2L Evaluation Board Kit (Discrete Power System Ver.) (Dual Cortex-A55)";
++	compatible = "renesas,r9a07g044l2-smarc", "renesas,r9a07g044l2";
++
++	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c3 = &i2c3;
++		serial0 = &scif0;
++		ethernet0 = &eth0;
++		ethernet1 = &eth1;
++	};
++
++	chosen {
++		bootargs = "ignore_loglevel";
++		stdout-path = "serial0:115200n8";
++	};
++
++	hdmi-out {
++		compatible = "hdmi-connector";
++		type = "d";
++
++		port {
++			hdmi_con_out: endpoint {
++				remote-endpoint = <&adv7535_out>;
++			};
++		};
++	};
++
++	memory@48000000 {
++		device_type = "memory";
++		/* first 126MB is reserved for secure area. */
++		reg = <0x0 0x47E00000 0x0 0x78200000>;
++	};
++
++	audio_mclock: audio_mclock {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <11289600>;
++	};
++
++	reg_1p8v: regulator0 {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: regulator1 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		reserved: linux,cma@58000000 {
++			compatible = "shared-dma-pool";
++			linux,cma-default;
++			reusable;
++			reg = <0x0 0x58000000 0x0 0x10000000>;
++		};
++	};
++
++	vbus0_usb2: regulator-vbus0-usb2 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "USB20_VBUS0";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++	};
++
++	snd_rzg2l: sound {
++		compatible = "simple-audio-card";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,bitclock-master = <&cpu_dai>;
++		simple-audio-card,frame-master = <&cpu_dai>;
++
++		cpu_dai: simple-audio-card,cpu {
++			sound-dai = <&ssi0>;
++		};
++
++		codec_dai: simple-audio-card,codec {
++			sound-dai = <&wm8978>;
++		};
++	};
++
++	sound_card {
++		compatible = "audio-graph-card";
++		dais = <&ssi1>;
++	};
++
++	vccq_sdhi0: regulator-vccq-sdhi0 {
++		compatible = "regulator-fixed";
++
++		regulator-name = "SDHI0 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		states = <3300000 1 1800000 0>;
++		regulator-boot-on;
++		gpios = <&pinctrl RZG2L_GPIO(39, 0) GPIO_ACTIVE_HIGH>;
++		regulator-always-on;
++	};
++
++	vccq_sdhi1: regulator-vccq-sdhi1 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI1 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&pinctrl RZG2L_GPIO(39, 1) GPIO_ACTIVE_HIGH>;
++
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++};
++
++&audio_clk1{
++	clock-frequency = <11289600>;
++};
++
++&adc {
++	pinctrl-0 = <&adc_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&can {
++	pinctrl-0 = <&canfd0_pins &canfd1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	channel0 {
++		status = "okay";
++	};
++
++	channel1 {
++		status = "okay";
++	};
++};
++
++&dsi0 {
++	status = "okay";
++
++	ports {
++		port@1 {
++			dsi0_out: endpoint {
++				remote-endpoint = <&adv7535_in>;
++				data-lanes = <1 2 3 4>;
++			};
++		};
++	};
++};
++
++&du {
++	status = "okay";
++};
++
++&ehci0 {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&eth0 {
++	pinctrl-0 = <&eth0_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy0>;
++	phy-mode = "rgmii";
++	status = "okay";
++
++	phy0: ethernet-phy@7 {
++		reg = <7>;
++	};
++};
++
++&eth1 {
++	pinctrl-0 = <&eth1_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy1>;
++	phy-mode = "rgmii";
++	status = "okay";
++
++	phy1: ethernet-phy@7 {
++		reg = <7>;
++	};
++};
++
++&hsusb {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&i2c0 {
++	pinctrl-0 = <&i2c0_pins>;
++	pinctrl-names = "default";
++
++	clock-frequency = <100000>;
++	status = "okay";
++};
++
++&i2c1 {
++	pinctrl-0 = <&i2c1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	adv7535: hdmi@3d {
++		compatible = "adi,adv7535";
++		reg = <0x3d>;
++
++		avdd-supply = <&reg_1p8v>;
++		dvdd-supply = <&reg_1p8v>;
++		pvdd-supply = <&reg_1p8v>;
++		a2vdd-supply = <&reg_1p8v>;
++		v3p3-supply = <&reg_3p3v>;
++		v1p2-supply = <&reg_1p8v>;
++
++		adi,dsi-lanes = <4>;
++		#sound-dai-cells = <0>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				adv7535_in: endpoint@0 {
++					remote-endpoint = <&dsi0_out>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				adv7535_out: endpoint@1 {
++					remote-endpoint = <&hdmi_con_out>;
++				};
++			};
++
++			port@2 {
++				reg = <2>;
++				codec_endpoint: endpoint {
++					remote-endpoint = <&i2s2_cpu_endpoint>;
++				};
++			};
++		};
++	};
++};
++
++&i2c3 {
++	pinctrl-0 = <&i2c3_pins>;
++	pinctrl-names = "default";
++
++	clock-frequency = <400000>;
++	status = "okay";
++
++	wm8978: codec@1a {
++		compatible = "wlf,wm8978";
++		#sound-dai-cells = <0>;
++		reg = <0x1a>;
++		clocks = <&audio_mclock>;
++		clock-names = "mclk";
++	};
++};
++
++&ohci0 {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++&pinctrl {
++	pinctrl-0 = <&sound_clk_pins>;
++	pinctrl-names = "default";
++
++	adc_pins: adc {
++		groups = "adc_c";
++		function = "adc";
++	};
++
++	canfd0_en {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(42, 2) GPIO_ACTIVE_LOW>;
++		output-high;
++		line-name = "canfd0_en";
++	};
++
++	canfd1_en {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(42, 3) GPIO_ACTIVE_LOW>;
++		output-high;
++		line-name = "canfd1_en";
++	};
++
++	canfd0_pins: canfd0 {
++		groups = "can0_data_a";
++		function = "can0";
++	};
++
++	canfd1_pins: canfd1 {
++		groups = "can1_data_a";
++		function = "can1";
++	};
++
++	eth0_pins: eth0 {
++		groups = "eth0_link", "eth0_mdio", "eth0_mii";
++		function = "eth0";
++	};
++
++	eth1_pins: eth1 {
++		groups = "eth1_link", "eth1_mdio", "eth1_mii";
++		function = "eth1";
++	};
++
++	i2c0_pins: i2c0 {
++		pins = "RIIC0_SDA", "RIIC0_SCL";
++		input-enable;
++	};
++
++	i2c1_pins: i2c1 {
++		pins = "RIIC1_SDA", "RIIC1_SCL";
++		input-enable;
++	};
++
++	i2c3_pins: i2c3 {
++		groups = "i2c3_b";
++		function = "i2c3";
++	};
++
++	scif0_pins: scif0 {
++		groups = "scif0_data";
++		function = "scif0";
++	};
++
++	sd0_pwr_en {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(4, 1) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "sd0_pwr_en";
++	};
++
++	sd1_pwr_en {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(39, 2) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "sd1_pwr_en";
++	};
++
++	sdhi0_emmc_pins: sd0emmc {
++		sd0_emmc_data {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3",
++			       "SD0_DATA4", "SD0_DATA5", "SD0_DATA6", "SD0_DATA7";
++			power-source  = <1800>;
++		};
++
++		sd0_emmc_ctrl {
++			pins = "SD0_CLK", "SD0_CMD", "SD0_RST_N";
++			power-source  = <1800>;
++		};
++	};
++
++	sdhi0_pins: sd0 {
++		sd0_data {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3";
++			power-source  = <3300>;
++		};
++
++		sd0_ctrl {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source  = <3300>;
++		};
++
++		sd0_mux {
++			groups = "sdhi0_cd_b";
++			function = "sdhi0";
++		};
++	};
++
++	sdhi0_pins_uhs: sd0_uhs {
++		sd1_data_uhs {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3";
++			power-source  = <1800>;
++		};
++
++		sd0_ctrl_uhs {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source  = <1800>;
++		};
++
++		sd0_mux_uhs {
++			groups = "sdhi0_cd_b";
++			function = "sdhi0";
++		};
++	};
++
++	sdhi1_pins: sd1 {
++		sd1_data {
++			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
++			power-source  = <3300>;
++		};
++
++		sd1_ctrl {
++			pins = "SD1_CLK", "SD1_CMD";
++			power-source  = <3300>;
++		};
++
++		sd1_mux {
++			groups = "sdhi1_cd_b", "sdhi1_wp_b";
++			function = "sdhi1";
++		};
++	};
++
++	sdhi1_pins_uhs: sd1_uhs {
++		sd1_data_uhs {
++			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
++			power-source  = <1800>;
++		};
++
++		sd1_ctrl_uhs {
++			pins = "SD1_CLK", "SD1_CMD";
++			power-source  = <1800>;
++		};
++
++		sd1_mux_uhs {
++			groups = "sdhi1_cd_b", "sdhi1_wp_b";
++			function = "sdhi1";
++		};
++	};
++
++	sound_clk_pins: sound_clk {
++		pins = "AUDIO_CLK1";
++		input-enable;
++	};
++
++	ssi0_pins: ssi0 {
++		groups = "ssi0_ctrl_d", "ssi0_data_d";
++		function = "ssi0";
++	};
++
++	ssi1_pins: ssi1 {
++		groups = "ssi1_ctrl_d", "ssi1_data_d";
++		function = "ssi1";
++	};
++
++	/* USB Channel 0 */
++	usb0_pins: usb0 {
++		groups = "usb0_a";
++		function = "usb0";
++	};
++
++	/* USB Channel 1 */
++	usb1_pins: usb1 {
++		groups = "usb1_d";
++		function = "usb1";
++	};
++};
++
++&scif0 {
++	pinctrl-0 = <&scif0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++/*
++ * SW1[2] should be at position 1/HIGH to enable uSD card CN3
++ * un-comment the below node and comment out eMMC node.
++ */
++/*
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins>;
++	pinctrl-1 = <&sdhi0_pins_uhs>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&vccq_sdhi0>;
++
++	bus-width = <4>;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	status = "disabled";
++};
++*/
++
++/* SW1[2] should be at position 2/OFF to enable 64Gb eMMC */
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_emmc_pins>;
++	pinctrl-1 = <&sdhi0_emmc_pins>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&reg_1p8v>;
++	bus-width = <8>;
++	mmc-hs200-1_8v;
++	non-removable;
++	fixed-emmc-driver-type = <1>;
++	status = "okay";
++};
++
++&sdhi1 {
++	pinctrl-0 = <&sdhi1_pins>;
++	pinctrl-1 = <&sdhi1_pins_uhs>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&vccq_sdhi1>;
++
++	bus-width = <4>;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	status = "okay";
++};
++
++/* Assign IDs to DMA channels (actual number is not important) */
++#define RZADMA_SSI0_TX	1
++#define RZADMA_SSI0_RX	2
++#define RZADMA_SSI1_TX	3
++#define RZADMA_SSI1_RX	4
++
++/* DMA Configuration */
++&dma0  {
++	/* Assign Slave IDs */
++	slave_id = <RZADMA_SSI0_TX
++		    RZADMA_SSI0_RX
++		    RZADMA_SSI1_TX
++		    RZADMA_SSI1_RX>;
++	/* Address of data source/destination */
++	addr = <0x10049C18	/* SSIFTDR_0 */
++		0x10049C1C	/* SSIFRDR_0 */
++		0x1004A018	/* SSIFTDR_1 */
++		0x1004A01C	/* SSIFRDR_1 */
++		>;
++	/* Channel Configuration Register (CHCFG) for slave device */
++	/* .reqd .loen .hien .lvl .am .sds .dds .tm */
++	chcfg = <0x1 0x0 0x1 0x0 0x2 0x1 0x1 0x0	/* SSI ch0 TX (req sig=SSIFTDR_0) */
++		 0x0 0x0 0x1 0x0 0x2 0x1 0x1 0x0	/* SSI ch0 RX (req sig=SSIFRDR_0) */
++		 0x1 0x0 0x1 0x0 0x2 0x1 0x1 0x0	/* SSI ch1 TX (req sig=SSIFTDR_0) */
++		 0x0 0x0 0x1 0x0 0x2 0x1 0x1 0x0	/* SSI ch1 RX (req sig=SSIFRDR_0) */
++		 >;
++	/* DMARS for slave device */
++	/* .rid .mid */
++	dmars = <0x1 0x95	/* SSI ch0 TX */
++		 0x2 0x95	/* SSI ch0 RX */
++		 0x1 0x96	/* SSI ch1 TX */
++		 0x2 0x96	/* SSI ch1 RX */
++		 >;
++};
++
++&ssi0 {
++	pinctrl-0 = <&ssi0_pins>;
++	pinctrl-names = "default";
++
++	dmas = <&dma0 RZADMA_SSI0_TX>,
++	       <&dma0 RZADMA_SSI0_RX>;
++	dma-names = "tx", "rx";
++	status = "okay";
++};
++
++&ssi1 {
++	pinctrl-0 = <&ssi1_pins>;
++	pinctrl-names = "default";
++
++	dmas = <&dma0 RZADMA_SSI1_TX>,
++	       <&dma0 RZADMA_SSI1_RX>;
++	dma-names = "tx", "rx";
++	status = "okay";
++	ports {
++		i2s2_port0: port@0 {
++			i2s2_cpu_endpoint: endpoint {
++				remote-endpoint = <&codec_endpoint>;
++				dai-format = "i2s";
++			};
++		};
++	};
++};
++
++&usb2_phy0 {
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++
++	vbus-supply = <&vbus0_usb2>;
++	status = "okay";
++};
++
++&usb2_phy1 {
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&xinclk {
++	clock-frequency = <24000000>;
++};
+-- 
+2.7.4
+

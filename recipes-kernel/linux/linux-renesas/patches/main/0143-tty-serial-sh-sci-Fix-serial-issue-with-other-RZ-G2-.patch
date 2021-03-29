@@ -1,0 +1,87 @@
+From 84e675b11af273acd39f7ee7c58fa8b825fc2ae0 Mon Sep 17 00:00:00 2001
+From: Biju Das <biju.das.jz@bp.renesas.com>
+Date: Fri, 19 Feb 2021 15:50:36 +0000
+Subject: [PATCH 143/151] tty: serial: sh-sci: Fix serial issue with other
+ RZ/G2 SoC.
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+---
+ drivers/tty/serial/sh-sci.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 869ef14..13e4afc 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -48,6 +48,7 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/sysrq.h>
++#include <linux/sys_soc.h>
+ #include <linux/timer.h>
+ #include <linux/tty.h>
+ #include <linux/tty_flip.h>
+@@ -161,6 +162,7 @@ struct sci_port {
+ 
+ 	bool has_rtscts;
+ 	bool autorts;
++	bool is_rzg2l;
+ };
+ 
+ #define SCI_NPORTS CONFIG_SERIAL_SH_SCI_NR_UARTS
+@@ -2536,7 +2538,8 @@ static void sci_set_termios(struct uart_port *port, struct ktermios *termios,
+ 			}
+ 		smr_val |= cks;
+ 		/*we not support extended mode yet, make sure it is cleared*/
+-		serial_port_out(port, SCSEMR, 0);
++		if ((sci_getreg(port, SCSEMR)) && (sci_getreg(port, SCSEMR)->size))
++			serial_port_out(port, SCSEMR, 0);
+ 		serial_port_out(port, SCSCR, scr_val | s->hscif_tot);
+ 		serial_port_out(port, SCSMR, smr_val);
+ 		serial_port_out(port, SCBRR, brr);
+@@ -2572,7 +2575,8 @@ static void sci_set_termios(struct uart_port *port, struct ktermios *termios,
+ 		smr_val |= serial_port_in(port, SCSMR) &
+ 			   (SCSMR_CKEDG | SCSMR_SRC_MASK | SCSMR_CKS);
+ 		/*we not support extended mode yet, make sure it is cleared*/
+-		serial_port_out(port, SCSEMR, 0);
++		if (s->is_rzg2l)
++			serial_port_out(port, SCSEMR, 0);
+ 		serial_port_out(port, SCSCR, scr_val | s->hscif_tot);
+ 		serial_port_out(port, SCSMR, smr_val);
+ 	}
+@@ -3279,12 +3283,21 @@ static struct plat_sci_port *sci_parse_dt(struct platform_device *pdev,
+ 	return p;
+ }
+ 
++static const struct soc_device_attribute soc_r9a07g044l[] = {
++	{
++		.soc_id = "r9a07g044l",
++		.data = (void *)1,
++	},
++	{ /* Sentinel */ }
++};
++
+ static int sci_probe_single(struct platform_device *dev,
+ 				      unsigned int index,
+ 				      struct plat_sci_port *p,
+ 				      struct sci_port *sciport)
+ {
+ 	int ret;
++	const struct soc_device_attribute *attr;
+ 
+ 	/* Sanity check */
+ 	if (unlikely(index >= SCI_NPORTS)) {
+@@ -3332,6 +3345,10 @@ static int sci_probe_single(struct platform_device *dev,
+ 		return ret;
+ 	}
+ 
++	attr = soc_device_match(soc_r9a07g044l);
++	if (attr)
++		sciport->is_rzg2l = attr->data;
++
+ 	return 0;
+ }
+ 
+-- 
+2.7.4
+

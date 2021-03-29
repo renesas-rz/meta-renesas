@@ -1,0 +1,28 @@
+From 68e11d691de30c92e0484e34279d46fbfe95eddf Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Date: Wed, 24 Mar 2021 11:08:28 +0700
+Subject: [PATCH 144/151] arm64: configs: defconfig: increase CMA to 128MB
+
+increase defaule CMA to 128MB
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+---
+ arch/arm64/configs/defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 17fc30c..ac2ceec 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -180,7 +180,7 @@ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_DEVTMPFS=y
+ CONFIG_DEVTMPFS_MOUNT=y
+ CONFIG_DMA_CMA=y
+-CONFIG_CMA_SIZE_MBYTES=32
++CONFIG_CMA_SIZE_MBYTES=128
+ CONFIG_HISILICON_LPC=y
+ CONFIG_SIMPLE_PM_BUS=y
+ CONFIG_MTD=y
+-- 
+2.7.4
+
