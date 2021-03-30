@@ -149,3 +149,4 @@ patch patches/main/0148-arm64-dts-renesas-r9a07g044l2-smarc-Enable-SCIF2-nod.pat
 patch patches/main/0149-drivers-watchdog-rzg2l-wdt-Check-wdt-write-to-regist.patch
 patch patches/main/0150-arm64-dts-r9a07g044l2-smarc-enable-rspi.patch
 patch patches/main/0151-arm64-dts-renesas-r9a07g044l2-smarc-enable-SPIBSC-MT.patch
+patch patches/main/0152-arm64-dts-renesas-r9a07g044l2-smarc-Fix-compatible-o.patch
