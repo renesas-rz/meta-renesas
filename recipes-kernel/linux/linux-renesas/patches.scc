@@ -22,7 +22,6 @@ patch patches/main/0021-arm64-dts-r9a07g044l-Add-device-nodes-for-SCIF0-1-2.patc
 patch patches/main/0022-arm64-dts-rzg2-smarc-Enable-SCIF0-as-default-debug-p.patch
 patch patches/main/0023-arm64-config-defconfig-enable-CONFIG_RESET_CONTROLLE.patch
 patch patches/main/0024-tty-serial-sh-sci-Support-release-reset-state-for-SC.patch
-patch patches/main/0025-arm64-arch_gicv3-Workaround-GIC-access-64bit-issue.patch
 patch patches/main/0026-serial-sh-sci-Add-early-con-or-r9a70g044l.patch
 patch patches/main/0027-tty-sh-sci-fix-issue-can-not-set-correct-baudrate-on.patch
 patch patches/main/0028-dt-bindings-mmc-renesas_sdhi-Add-r9a07g044l-support.patch
