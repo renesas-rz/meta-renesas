@@ -7,5 +7,5 @@ export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
 export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
 export HOST_EXTRACFLAGS="-I${OECORE_NATIVE_SYSROOT}/usr/include/ -L${OECORE_NATIVE_SYSROOT}/usr/lib"
 
-TOOLCHAIN_TARGET_TASK += " libusb1-dev"
+TOOLCHAIN_TARGET_TASK += " libusb1-dev alsa-dev"
 
