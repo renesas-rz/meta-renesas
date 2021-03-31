@@ -4,13 +4,13 @@ require u-boot.inc
 
 DEPENDS += "bc-native dtc-native"
 
-UBOOT_URL = "git://github.com/renesas-rz/rzg_u-boot_private.git"
-BRANCH = "develop/rzg2l_init"
+UBOOT_URL = "git://github.com/renesas-rz/renesas-u-boot-cip.git"
+BRANCH = "v2020.10/rzg2l"
+SRCREV = "4121d8a2b7021079a0d7f8d691ce523f6ea981f7"
 
 # When using private git repo, you can append ";user=username:password" to SRC_URI
 # to download the remote repo.
 SRC_URI = "${UBOOT_URL};branch=${BRANCH};protocol=https"
-SRCREV = "17ccaae6ce018f93da90de18aa4c1cbe5392d135"
 PV = "v2020.10+git${SRCPV}"
 
 UBOOT_SREC_SUFFIX = "srec"
