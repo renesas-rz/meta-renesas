@@ -1,0 +1,69 @@
+From f79fff207ad845e4d347803acf7f9869fa04e588 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Mon, 10 Dec 2018 16:49:50 +0700
+Subject: [PATCH] qt5wayland: fix hardwareintegration/client/xcomposite-egl
+ compile
+
+Add upstream patch, fixes [1]:
+
+  ../../../hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp:
+In member function 'void
+QtWaylandClient::QWaylandXCompositeEGLWindow::createEglSurface()':
+  ../../../hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp:124:82:
+error: invalid conversion from 'Window {aka long unsigned int}' to
+'EGLNativeWindowType {aka void*}' [-fpermissive]
+       m_surface =
+eglCreateWindowSurface(m_glxIntegration->eglDisplay(), m_config,
+m_xWindow,0);
+                                                                                    ^~~~~~~~~
+  In file included from
+../../../hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglclientbufferintegration.h:57:0,
+                   from
+../../../hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.h:46,
+                   from
+../../../hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp:40:
+  .../host/arm-buildroot-linux-musleabihf/sysroot/usr/include/EGL/egl.h:265:31:
+note:   initializing argument 3 of 'void*
+eglCreateWindowSurface(EGLDisplay, EGLConfig, EGLNativeWindowType, const
+EGLint*)'
+ EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy,
+EGLConfig config,
+
+[1]
+http://autobuild.buildroot.net/results/9bcc76ed9e23c0d525f20b4da7f3bb5efe3083d4
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ .../client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp               | 2 +-
+ .../compositor/xcomposite-egl/xcompositeeglintegration.cpp              | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp b/src/hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp
+index 329cc76..3f54f67 100644
+--- a/src/hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp
++++ b/src/hardwareintegration/client/xcomposite-egl/qwaylandxcompositeeglwindow.cpp
+@@ -117,7 +117,7 @@ void QWaylandXCompositeEGLWindow::createEglSurface()
+     XCompositeRedirectWindow(m_glxIntegration->xDisplay(), m_xWindow, CompositeRedirectManual);
+     XMapWindow(m_glxIntegration->xDisplay(), m_xWindow);
+ 
+-    m_surface = eglCreateWindowSurface(m_glxIntegration->eglDisplay(), m_config, m_xWindow,0);
++    m_surface = eglCreateWindowSurface(m_glxIntegration->eglDisplay(), m_config, reinterpret_cast<EGLNativeWindowType>(m_xWindow), nullptr);
+     if (m_surface == EGL_NO_SURFACE) {
+         qFatal("Could not make eglsurface");
+     }
+diff --git a/src/hardwareintegration/compositor/xcomposite-egl/xcompositeeglintegration.cpp b/src/hardwareintegration/compositor/xcomposite-egl/xcompositeeglintegration.cpp
+index 86dd05f..b5b7b42 100644
+--- a/src/hardwareintegration/compositor/xcomposite-egl/xcompositeeglintegration.cpp
++++ b/src/hardwareintegration/compositor/xcomposite-egl/xcompositeeglintegration.cpp
+@@ -114,7 +114,7 @@ void XCompositeEglClientBufferIntegration::bindTextureToBuffer(struct ::wl_resou
+     attribList.append(EGL_TEXTURE_2D);
+     attribList.append(EGL_NONE);
+ 
+-    EGLSurface surface = eglCreatePixmapSurface(mEglDisplay,config,pixmap,attribList.constData());
++    EGLSurface surface = eglCreatePixmapSurface(mEglDisplay, config,reinterpret_cast<EGLNativePixmapType>(pixmap), attribList.constData());
+     if (surface == EGL_NO_SURFACE) {
+         qDebug() << "Failed to create eglsurface" << pixmap << compositorBuffer->window();
+     }
+-- 
+1.9.1
+

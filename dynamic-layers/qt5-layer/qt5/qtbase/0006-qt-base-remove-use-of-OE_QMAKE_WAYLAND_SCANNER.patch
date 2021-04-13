@@ -1,0 +1,35 @@
+From ba0803a290b54539661efe6e5397ada81b0a7c04 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 20 Aug 2020 14:34:50 +0700
+Subject: [PATCH] qt-base: remove use of OE_QMAKE_WAYLAND_SCANNER
+
+This was never defined for nativesdk, which then broke sdk which
+had nativesdk-qtwayland included. Rather than add it there, remove
+its use everywhere, since it was not adding anything meaningful to
+the build.
+
+Reference:
+https://github.com/meta-qt5/meta-qt5/commit/d27c0199dbe453b3b9af32783f6d15c022f18429#diff-f026f29b84a1d12eddfbb481e2f37762
+
+Signed-off-by: Samuli Piippo <samuli.piippo@qt.io>
+Signed-off-by: Martin Jansa <Martin.Jansa@gmail.com>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ mkspecs/linux-oe-g++/qmake.conf | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/mkspecs/linux-oe-g++/qmake.conf b/mkspecs/linux-oe-g++/qmake.conf
+index 311ba0460e0..faa6bcbbf1d 100644
+--- a/mkspecs/linux-oe-g++/qmake.conf
++++ b/mkspecs/linux-oe-g++/qmake.conf
+@@ -11,7 +11,6 @@ include(../common/linux.conf)
+ # QMAKE_<TOOL> (moc, uic, rcc) are gone, overwrite only ar and strip
+ QMAKE_AR              = $(OE_QMAKE_AR) cqs
+ QMAKE_STRIP           = $(OE_QMAKE_STRIP)
+-QMAKE_WAYLAND_SCANNER = $(OE_QMAKE_WAYLAND_SCANNER)
+ 
+ include(../common/gcc-base-unix.conf)
+ 
+-- 
+2.17.1
+

@@ -1,0 +1,15 @@
+diff --git a/src/qml/compiler/qv4isel_moth.cpp b/src/qml/compiler/qv4isel_moth.cpp
+index f87cbe3..3b1286f 100644
+--- a/src/qml/compiler/qv4isel_moth.cpp
++++ b/src/qml/compiler/qv4isel_moth.cpp
+@@ -31,6 +31,10 @@
+ **
+ ****************************************************************************/
+
++#if defined(__GNUC__)
++#pragma GCC diagnostic ignored "-Wuninitialized"
++#endif
++
+ #include "qv4isel_util_p.h"
+ #include "qv4isel_moth_p.h"
+ #include "qv4vme_moth_p.h"

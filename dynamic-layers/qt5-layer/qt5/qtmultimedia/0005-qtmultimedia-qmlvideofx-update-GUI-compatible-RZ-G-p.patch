@@ -1,0 +1,147 @@
+From 23e279c2de8c8bc60481cb5937dd6b455a9acd8e Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Tue, 10 May 2016 18:57:25 +0700
+Subject: [PATCH 5/5] qtmultimedia qmlvideofx update GUI compatible RZ/G
+ platform
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ examples/multimedia/video/qmlvideofx/main.cpp | 17 +++++++++---
+ .../qmlvideofx/qml/qmlvideofx/Button.qml      |  2 ++
+ .../video/qmlvideofx/qml/qmlvideofx/Main.qml  | 26 ++++++++++++++++---
+ 3 files changed, 37 insertions(+), 8 deletions(-)
+
+diff --git a/examples/multimedia/video/qmlvideofx/main.cpp b/examples/multimedia/video/qmlvideofx/main.cpp
+index 626139f39..6105af3da 100644
+--- a/examples/multimedia/video/qmlvideofx/main.cpp
++++ b/examples/multimedia/video/qmlvideofx/main.cpp
+@@ -34,6 +34,7 @@
+ #include <QtCore/QStandardPaths>
+ #include <QtCore/QStringList>
+ #include <QtQml/QQmlContext>
++#include <QtQml/QQmlEngine>
+ #include <QtGui/QGuiApplication>
+ #include <QtQuick/QQuickItem>
+ #include <QtQuick/QQuickView>
+@@ -72,6 +73,9 @@ int main(int argc, char *argv[])
+                 // Do nothing
+             }
+ #endif
++            else if ("--fullscreen" == arg) {
++                // Do nothing
++            }
+             else {
+                 qtTrace() << "Option" << arg << "ignored";
+             }
+@@ -89,6 +93,7 @@ int main(int argc, char *argv[])
+     QQuickItem *rootObject = viewer.rootObject();
+     rootObject->setProperty("fileName", fileName);
+     viewer.rootObject()->setProperty("volume", volume);
++    QObject::connect(viewer.engine(), SIGNAL(quit()), &app, SLOT(quit()));
+ 
+ #ifdef PERFORMANCEMONITOR_SUPPORT
+     if (performanceMonitorState.valid) {
+@@ -114,10 +119,14 @@ int main(int argc, char *argv[])
+     viewer.setTitle("qmlvideofx");
+     viewer.setFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint |
+                           Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+-    viewer.setMinimumSize(QSize(1280, 720));
+-    viewer.setResizeMode(QQuickView::SizeRootObjectToView);
+-
+-    viewer.show();
++    const QString lowerArgument = QString::fromLatin1(argv[1]).toLower();
++    if (lowerArgument == QLatin1String("--fullscreen")) {
++		viewer.showFullScreen();
++    } else {
++		viewer.setMinimumSize(QSize(1280, 720));
++		viewer.setResizeMode(QQuickView::SizeRootObjectToView);
++	    viewer.show();
++    }
+ 
+     // Delay invocation of init until the event loop has started, to work around
+     // a GL context issue on Harmattan: without this, we get the following error
+diff --git a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml
+index aa2df9869..d35a6e482 100644
+--- a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml
++++ b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Button.qml
+@@ -46,6 +46,8 @@ Rectangle {
+     property alias enabled: mouseArea.enabled
+     property bool active: true
+     property alias horizontalAlign: text.horizontalAlignment
++    property alias label: text.text;
++	property alias label_size: text.font.pixelSize;
+ 
+     signal clicked
+ 
+diff --git a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml
+index 55d0f0215..f46737040 100644
+--- a/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml
++++ b/examples/multimedia/video/qmlvideofx/qml/qmlvideofx/Main.qml
+@@ -37,6 +37,7 @@ import QtQuick.Window 2.1
+ Rectangle {
+     id: root
+     color: "black"
++    anchors.fill: parent
+     property string fileName
+     property alias volume: content.volume
+     property bool perfMonitorsLogging: false
+@@ -47,7 +48,7 @@ Rectangle {
+     property int windowWidth: Screen.desktopAvailableWidth
+     property int windowHeight: Screen.desktopAvailableHeight
+     property int scaledMargin: 2 * pixDens
+-    property int fontSize: 5 * pixDens
++    property int fontSize: 4 * pixDens
+ 
+     QtObject {
+         id: d
+@@ -91,8 +92,9 @@ Rectangle {
+                 }
+ 
+         text: "No effect"
+-        width: itemWidth * 2
++        width: itemWidth
+         height: itemHeight
++        opacity: 0.8
+         onClicked: {
+             effectName.visible = false
+             listview.visible = true
+@@ -101,6 +103,22 @@ Rectangle {
+         color: "#303030"
+     }
+ 
++    Button {
++       id: exitButton
++       anchors.right: root.right
++       anchors.margins: scaledMargin
++	   y: root.height/100 + 5
++       label: "Exit"
++       width: itemWidth/2;
++       height: itemHeight
++       opacity: 0.6
++       onClicked: {
++          Qt.quit()
++       }
++       color: "#303030"
++    }
++
++
+     Rectangle {
+         id: lvbg
+         width: itemWidth * 2
+@@ -238,10 +256,10 @@ Rectangle {
+     function init() {
+         if (Qt.platform.os === "linux" || Qt.platform.os === "windows" || Qt.platform.os === "osx" || Qt.platform.os === "unix") {
+             if (Screen.desktopAvailableWidth > 1280) {
+-                windowWidth = 1280
++		//
+             }
+             if (Screen.desktopAvailableHeight > 720) {
+-                windowHeight = 720
++                //
+             }
+         }
+ 
+-- 
+2.17.1
+

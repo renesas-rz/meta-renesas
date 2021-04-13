@@ -1,0 +1,32 @@
+From 9a433d24c9d8d98b09457ff50fee96deafe45486 Mon Sep 17 00:00:00 2001
+From: Timur Pocheptsov <timur.pocheptsov@qt.io>
+Date: Tue, 31 May 2016 14:23:31 +0200
+Subject: [PATCH] XSLTTokenizer::queueSorting - remove redundant &&
+
+Coverity CID 88517, we have expression equivalent to 'true && something()',
+something() should be enough.
+
+Task-number: QTBUG-65144
+Change-Id: Id2bfe9b798e43491e6e8147df49262c38a94f98f
+Reviewed-by: Edward Welbourne <edward.welbourne@qt.io>
+(cherry picked from commit a5ef9038f13f881796f9779c7e0ffef740bfdb58)
+Reviewed-by: Timur Pocheptsov <timur.pocheptsov@qt.io>
+---
+ src/xmlpatterns/parser/qxslttokenizer.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/xmlpatterns/parser/qxslttokenizer.cpp b/src/xmlpatterns/parser/qxslttokenizer.cpp
+index 148a004..63631bf 100644
+--- a/src/xmlpatterns/parser/qxslttokenizer.cpp
++++ b/src/xmlpatterns/parser/qxslttokenizer.cpp
+@@ -2634,7 +2634,7 @@ void XSLTTokenizer::queueSorting(const bool oneSortRequired,
+                 if(speciallyTreatWhitespace && isWhitespace())
+                     continue;
+
+-                if(QXmlStreamReader::Characters && whitespaceToSkip())
++                if (whitespaceToSkip())
+                     continue;
+
+                 /* We have an instruction which is a text node, we're done. */
+--
+1.9.1

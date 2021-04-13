@@ -1,0 +1,31 @@
+From 6087fc169c408cca302f20b944f7ebd64526fd98 Mon Sep 17 00:00:00 2001
+From: Canh Dao <canh.dao.ct@renesas.com>
+Date: Thu, 20 Aug 2020 19:30:20 +0700
+Subject: [PATCH] mkspecs: linux-oe-g++: Add check oe-device-extra.pri before
+ include it
+
+We include oe-device-extra.pri without checking the exist will cause
+error when generate configuration for compiling Qt app.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ mkspecs/linux-oe-g++/qmake.conf | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/mkspecs/linux-oe-g++/qmake.conf b/mkspecs/linux-oe-g++/qmake.conf
+index faa6bcbbf1d..f00df25e104 100644
+--- a/mkspecs/linux-oe-g++/qmake.conf
++++ b/mkspecs/linux-oe-g++/qmake.conf
+@@ -36,6 +36,8 @@ QMAKE_LINK_C_SHLIB = $(OE_QMAKE_LINK)
+ # for the SDK
+ isEmpty(QMAKE_QT_CONFIG):QMAKE_QT_CONFIG = $(OE_QMAKE_QT_CONFIG)
+ 
+-include(../oe-device-extra.pri)
++exists(../oe-device-extra.pri) {
++	include(../oe-device-extra.pri)
++}
+ 
+ load(qt_config)
+-- 
+2.17.1
+

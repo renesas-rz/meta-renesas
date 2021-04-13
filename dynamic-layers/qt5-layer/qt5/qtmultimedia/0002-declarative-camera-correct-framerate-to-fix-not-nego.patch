@@ -1,0 +1,29 @@
+From e371018fd3cf3006c489540e35bea233d5f6e5df Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Mon, 6 Aug 2018 14:56:35 +0700
+Subject: [PATCH 2/5] declarative-camera: correct framerate to fix "not
+ negotiated" issue
+
+this is a workaround to gstreamer's element can get correct caps
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ examples/multimedia/declarative-camera/declarative-camera.qml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/examples/multimedia/declarative-camera/declarative-camera.qml b/examples/multimedia/declarative-camera/declarative-camera.qml
+index 25c44e9be..9f248fe66 100644
+--- a/examples/multimedia/declarative-camera/declarative-camera.qml
++++ b/examples/multimedia/declarative-camera/declarative-camera.qml
+@@ -96,7 +96,7 @@ Rectangle {
+ 
+         videoRecorder {
+              resolution: "640x480"
+-             frameRate: 30
++             frameRate: 30000/1001
+         }
+     }
+ 
+-- 
+2.17.1
+

@@ -1,0 +1,44 @@
+From 9436e87e602703e6889122fb1ff189f9587495f2 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Fri, 7 Jun 2019 13:58:53 +0700
+Subject: [PATCH 3/4] Blacklist and skip failing tests for Boot2Qt / 64 bit arm
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Commit-ID:9c58dd15885d813aeb5d83d2869c0f3a3ee5fcfe
+Task-number: QTBUG-60263 - detected from upstream
+
+Reviewed-by: Tony Sarajärvi <tony.sarajarvi@qt.io>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ tests/auto/auto.pro                          | 5 +++++
+ tests/auto/corelib/global/qlogging/BLACKLIST | 3 +++
+ 2 files changed, 8 insertions(+)
+ create mode 100644 tests/auto/corelib/global/qlogging/BLACKLIST
+
+diff --git a/tests/auto/auto.pro b/tests/auto/auto.pro
+index f7c38e4..c58235f 100644
+--- a/tests/auto/auto.pro
++++ b/tests/auto/auto.pro
+@@ -42,3 +42,8 @@ qtHaveModule(dbus) {
+ } else {
+     SUBDIRS -= dbus
+ }
++
++# QTBUG-63915
++boot2qt: {
++    contains(QT_ARCH, arm64): SUBDIRS -= dbus
++}
+diff --git a/tests/auto/corelib/global/qlogging/BLACKLIST b/tests/auto/corelib/global/qlogging/BLACKLIST
+new file mode 100644
+index 0000000..1dcee92
+--- /dev/null
++++ b/tests/auto/corelib/global/qlogging/BLACKLIST
+@@ -0,0 +1,3 @@
++[qMessagePattern:backtrace depth,separator]
++# QTBUG-63915
++b2qt 64bit
+-- 
+2.7.4
+

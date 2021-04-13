@@ -1,0 +1,29 @@
+From 1bea879473ad3b59c5f3ef565759a41a870e6ba0 Mon Sep 17 00:00:00 2001
+From: TungDang <tung.dang.jy@rvc.renesas.com>
+Date: Wed, 28 Dec 2016 10:59:48 +0700
+Subject: [PATCH 1/5] Fix binding loop for declarative-camera
+
+qrc:///VideoCaptureControls.qml:112: Error: Cannot assign [undefined] to QString
+qrc:///CameraListButton.qml:65:5: QML CameraListPopup: Binding loop detected for property "currentValue"
+
+Signed-off-by: TungDang <tung.dang.jy@rvc.renesas.com>
+---
+ examples/multimedia/declarative-camera/CameraListButton.qml | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/examples/multimedia/declarative-camera/CameraListButton.qml b/examples/multimedia/declarative-camera/CameraListButton.qml
+index 892bb4e2a..b53b57a84 100644
+--- a/examples/multimedia/declarative-camera/CameraListButton.qml
++++ b/examples/multimedia/declarative-camera/CameraListButton.qml
+@@ -69,8 +69,6 @@ Item {
+         anchors.top: parent.top
+         visible: opacity > 0
+ 
+-        currentValue: cameraListButton.value
+-
+         onSelected: popup.toggle()
+     }
+ }
+-- 
+2.17.1
+

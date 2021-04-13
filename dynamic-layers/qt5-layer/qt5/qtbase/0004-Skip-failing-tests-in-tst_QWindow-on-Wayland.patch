@@ -1,0 +1,40 @@
+From 874b0b9e54c1c8bfd8ae7ce6e9e4a6f4710a42f8 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Fri, 7 Jun 2019 14:03:12 +0700
+Subject: [PATCH 4/4] Skip failing tests in tst_QWindow on Wayland
+
+Commid-ID: 8fc66907480d986a42ad980ee5a68e7098c5a9d2
+Task-number: QTBUG-66824 - detected from upstream
+
+Reviewed-by: Shawn Rutledge <shawn.rutledge@qt.io>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ tests/auto/gui/kernel/qwindow/tst_qwindow.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/tests/auto/gui/kernel/qwindow/tst_qwindow.cpp b/tests/auto/gui/kernel/qwindow/tst_qwindow.cpp
+index d904d48..1d92ab6 100644
+--- a/tests/auto/gui/kernel/qwindow/tst_qwindow.cpp
++++ b/tests/auto/gui/kernel/qwindow/tst_qwindow.cpp
+@@ -1102,6 +1102,9 @@ void tst_QWindow::touchCancelWithTouchToMouse()
+ 
+ void tst_QWindow::touchInterruptedByPopup()
+ {
++    if (!QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive))
++        QSKIP("Wayland: This test crashes with xdg-shell unstable v6");
++
+     InputTestWindow window;
+     window.setGeometry(QRect(m_availableTopLeft + QPoint(80, 80), m_testWindowSize));
+     window.show();
+@@ -1771,6 +1774,8 @@ void tst_QWindow::modalWindowPosition()
+ #ifndef QT_NO_CURSOR
+ void tst_QWindow::modalWindowEnterEventOnHide_QTBUG35109()
+ {
++   if (!QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive))
++        QSKIP("Wayland: QWindow::requestActivate() is not supported");
+     if (QGuiApplication::platformName() == QLatin1String("cocoa"))
+         QSKIP("This test fails on OS X on CI");
+ 
+-- 
+2.7.4
+
