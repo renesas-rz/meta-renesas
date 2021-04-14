@@ -28,3 +28,10 @@ EXTRA_IMAGEDEPENDS += " u-boot"
 
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"
+
+PREFERRED_PROVIDER_virtual/libgles1 = "mali-user-module"
+PREFERRED_PROVIDER_virtual/libgles2 = "mali-user-module"
+PREFERRED_PROVIDER_virtual/egl = "mali-user-module"
+PREFERRED_PROVIDER_virtual/libgl = ""
+PREFERRED_PROVIDER_egl = "mali-user-module"
+PREFERRED_PROVIDER_libgles2 = "mali-user-module"
