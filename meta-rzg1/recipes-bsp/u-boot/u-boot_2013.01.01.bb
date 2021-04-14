@@ -9,8 +9,8 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=1707d6db1d42237583f50183a5651ecb"
 
 PV = "v2013.01.01+git${SRCREV}"
 
-SRCREV = "dfa32a8c7f27011e16d0f7e76d4f0c55c6195916"
-SRCREV_iwg23s = "fd830e5a2305365bd0bafb581662039fc23a87b7"
+SRCREV = "fe16aa4fb779567d1b7da7c3cf22eaa9555fb483"
+SRCREV_iwg23s = "8374e64a1265a580dd628ce9fa7948d7b9c26438"
 
 SRC_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;branch=2013.01.01/rzg1-iwave;protocol=git \
 "
