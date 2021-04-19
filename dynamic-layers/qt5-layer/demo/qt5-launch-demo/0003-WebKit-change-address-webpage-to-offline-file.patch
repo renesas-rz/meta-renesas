@@ -1,0 +1,26 @@
+From 9aa29ef0d98deafe22b8feb00a6f19c6de1bc559 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Mon, 10 May 2021 15:41:11 +0700
+Subject: [PATCH] WebKit: change address webpage to offline file
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ WebKitSlideContent.qml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/WebKitSlideContent.qml b/WebKitSlideContent.qml
+index ea5a364..28c8135 100644
+--- a/WebKitSlideContent.qml
++++ b/WebKitSlideContent.qml
+@@ -37,7 +37,7 @@ Item {
+         anchors.top: browser.bottom;
+         anchors.horizontalCenter: browser.horizontalCenter
+         font.pixelSize: slide.height * 0.05;
+-        text: "http://qt.digia.com"
++        text: "/home/root/info/renesas_rzg2l_info.html"
+         onAccepted: browser.reload();
+         color: "white"
+ 
+-- 
+2.17.1
+

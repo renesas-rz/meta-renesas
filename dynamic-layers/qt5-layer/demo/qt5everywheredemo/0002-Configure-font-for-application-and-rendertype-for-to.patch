@@ -1,0 +1,64 @@
+From 385886c6d19ac4fe0b807a4324c605364cd5d534 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 6 May 2021 10:56:52 +0700
+Subject: [PATCH 2/5] Configure font for application and rendertype for
+ touchgallery
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ QtDemo/main.cpp                                              | 5 +++++
+ QtDemo/qml/QtDemo/demos/touchgallery/content/ButtonPage.qml  | 2 +-
+ .../qml/QtDemo/demos/touchgallery/content/TextInputPage.qml  | 1 +
+ 3 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/main.cpp b/main.cpp
+index e3572ea..9169901 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -1,13 +1,18 @@
+ #include <QGuiApplication>
+ #include <QQmlApplicationEngine>
+ #include <QQmlContext>
++#include <QFont>
+ 
+ int main(int argc, char *argv[])
+ {
+     QGuiApplication app(argc, argv);
++    QFont font;
+ 
+     QQmlApplicationEngine engine;
+     engine.load(QUrl(QStringLiteral("qrc:///qml/QtDemo/main.qml")));
+ 
++    font.setFamily("sans-serif");
++    app.setFont(font);
++
+     return app.exec();
+ }
+diff --git a/qml/QtDemo/demos/touchgallery/content/ButtonPage.qml b/qml/QtDemo/demos/touchgallery/content/ButtonPage.qml
+index 10e4d0d..679a093 100644
+--- a/qml/QtDemo/demos/touchgallery/content/ButtonPage.qml
++++ b/qml/QtDemo/demos/touchgallery/content/ButtonPage.qml
+@@ -108,7 +108,7 @@ Item {
+                         anchors.centerIn: parent
+                         color: "white"
+                         font.pixelSize: 23
+-                        renderType: Text.NativeRendering
++                        renderType: Text.QtRendering
+                     }
+                 }
+             }
+diff --git a/qml/QtDemo/demos/touchgallery/content/TextInputPage.qml b/qml/QtDemo/demos/touchgallery/content/TextInputPage.qml
+index 2f841ce..ee78536 100644
+--- a/qml/QtDemo/demos/touchgallery/content/TextInputPage.qml
++++ b/qml/QtDemo/demos/touchgallery/content/TextInputPage.qml
+@@ -85,6 +85,7 @@ Item {
+         TextFieldStyle {
+             textColor: "white"
+             font.pixelSize: 28
++            renderType: Text.QtRendering
+             background: Item {
+                 implicitHeight: 50
+                 implicitWidth: 300
+-- 
+2.17.1
+

@@ -1,0 +1,35 @@
+From 033ce1e329977070c6460ddfeceb58586063c61f Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 6 May 2021 13:57:01 +0700
+Subject: [PATCH] Fix missed parameter in mapToItem function of Calqlatr demo
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ QtDemo/qml/QtDemo/demos/calqlatr/Calqlatr.qml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/qml/QtDemo/demos/calqlatr/Calqlatr.qml b/qml/QtDemo/demos/calqlatr/Calqlatr.qml
+index d27a350..550557b 100644
+--- a/qml/QtDemo/demos/calqlatr/Calqlatr.qml
++++ b/qml/QtDemo/demos/calqlatr/Calqlatr.qml
+@@ -85,7 +85,7 @@ Rectangle {
+             anchors.fill: parent
+             onPositionChanged: {
+                 var reverse = startX > window.width / 2
+-                var mx = mapToItem(window, mouse.x).x
++                var mx = mapToItem(window, mouse.x, mouse.y).x
+                 var p = Math.abs((mx - startX) / (window.width - display.width))
+                 if (p < oldP)
+                     rewind = reverse ? false : true
+@@ -94,7 +94,7 @@ Rectangle {
+                 controller.progress = reverse ? 1 - p : p
+                 oldP = p
+             }
+-            onPressed: startX = mapToItem(window, mouse.x).x
++            onPressed: startX = mapToItem(window, mouse.x, mouse.y).x
+             onReleased: {
+                 if (rewind)
+                     controller.completeToBeginning()
+-- 
+2.17.1
+

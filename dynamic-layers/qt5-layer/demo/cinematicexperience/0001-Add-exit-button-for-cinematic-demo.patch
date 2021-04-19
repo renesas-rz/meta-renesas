@@ -1,0 +1,62 @@
+From d9a2ea8d56d20f8e8f12c9894c9545faa161ade1 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 4 May 2021 16:04:26 +0700
+Subject: [PATCH] Add exit button for cinematic demo
+
+When fullscreen lauching, we can not use mouse to exit the GUI, so that
+the exit button will help us terminate the application.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ content/MainView.qml | 17 +++++++++++++++++
+ main.cpp             |  2 ++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/content/MainView.qml b/content/MainView.qml
+index 3b38782..f70497c 100644
+--- a/content/MainView.qml
++++ b/content/MainView.qml
+@@ -227,4 +227,21 @@ Item {
+             visible: root.blurAmount
+         }
+     }
++
++    // Add exit button for fullscreen display
++    Image {
++        id: exit_image
++        anchors.right: parent.right
++        anchors.rightMargin: 8
++        anchors.bottom: parent.bottom
++        anchors.bottomMargin: 8
++        source: "images/exit.png"
++        opacity: 0.25
++        MouseArea {
++            anchors.fill : parent
++            onClicked: {
++                Qt.quit()
++            }
++        }
++    }
+ }
+diff --git a/main.cpp b/main.cpp
+index 81c1c85..90847b4 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -1,5 +1,6 @@
+ #include <QGuiApplication>
+ #include <QQuickView>
++#include <QtQml/QQmlEngine>
+ 
+ int main(int argc, char* argv[])
+ {
+@@ -7,6 +8,7 @@ int main(int argc, char* argv[])
+     QQuickView view;
+     view.setResizeMode(QQuickView::SizeRootObjectToView);
+     view.setSource(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + QLatin1String("/Qt5_CinematicExperience.qml")));
++    QObject::connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));
+ 
+     const QString lowerArgument = QString::fromLatin1(argv[1]).toLower();
+     if (lowerArgument == QLatin1String("--fullscreen")) {
+-- 
+2.17.1
+

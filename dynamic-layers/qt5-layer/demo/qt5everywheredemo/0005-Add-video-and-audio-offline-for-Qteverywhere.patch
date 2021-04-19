@@ -1,0 +1,118 @@
+From 29737cd6a3fba72942642a49290f370292dcce85 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 6 May 2021 13:30:12 +0700
+Subject: [PATCH] Add video and audio offline for Qteverywhere
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ QtDemo/qml.qrc                                  |  4 ++++
+ QtDemo/qml/QtDemo/demos/radio/channels.xml      |  8 ++++----
+ QtDemo/qml/QtDemo/demos/radio/radio.qml         |  2 +-
+ QtDemo/qml/QtDemo/demos/video/VideoSelector.qml |  2 +-
+ QtDemo/qml/QtDemo/demos/video/qt5_videos.xml    | 12 ++++++------
+ 5 files changed, 16 insertions(+), 12 deletions(-)
+
+diff --git a/qml.qrc b/qml.qrc
+index d14e2ce..a5c7dd8 100644
+--- a/qml.qrc
++++ b/qml.qrc
+@@ -113,6 +113,7 @@
+         <file>qml/QtDemo/demos/particledemo/particledemo.qml</file>
+         <file>qml/QtDemo/demos/particledemo/ParticleSysComponent.qml</file>
+         <file>qml/QtDemo/demos/photosurface/photosurface.qml</file>
++	<file>qml/QtDemo/demos/radio/channels.xml</file>
+         <file>qml/QtDemo/demos/radio/radio.qml</file>
+         <file>qml/QtDemo/demos/radio/VolumeButton.qml</file>
+         <file>qml/QtDemo/demos/radio/VolumePoint.qml</file>
+@@ -194,6 +195,7 @@
+         <file>qml/QtDemo/demos/video/VideoDelegate.qml</file>
+         <file>qml/QtDemo/demos/video/VideoSelector.qml</file>
+         <file>qml/QtDemo/demos/video/VolumeControl.qml</file>
++	<file>qml/QtDemo/demos/video/qt5_videos.xml</file>
+         <file>qml/QtDemo/fonts/OFL.txt</file>
+         <file>qml/QtDemo/fonts/PatrickHandSC-Regular.ttf</file>
+         <file>qml/QtDemo/images/box.png</file>
+@@ -319,6 +321,8 @@
+         <file>qml/QtDemo/demos/video/qt5_video_samuel.png</file>
+         <file>qml/QtDemo/demos/video/qt5_video_simon.png</file>
+         <file>qml/QtDemo/demos/video/qt5_video_thiago.png</file>
++	<file>qml/QtDemo/demos/video/qt5_video_hd30fps.png</file>
++	<file>qml/QtDemo/demos/video/qt5_video_fhd30fps.png</file>
+         <file>qml/QtDemo/demos/shaders/shaders/billboard.fsh</file>
+         <file>qml/QtDemo/demos/shaders/shaders/blackandwhite.fsh</file>
+         <file>qml/QtDemo/demos/shaders/shaders/emboss.fsh</file>
+diff --git a/qml/QtDemo/demos/radio/channels.xml b/qml/QtDemo/demos/radio/channels.xml
+index 0dac5c9..66772ac 100644
+--- a/qml/QtDemo/demos/radio/channels.xml
++++ b/qml/QtDemo/demos/radio/channels.xml
+@@ -1,12 +1,12 @@
+ <?xml version="1.0" encoding="utf-8"?>
+     <radio>
+         <channel>
+-            <title>BBC World Service</title>
+-            <url>http://vpr.streamguys.net/vpr24.mp3</url>
++            <title>Renesas audio mp3</title>
++            <url>file:///home/root/audios/COMMON6_MPEG2_L3_24KHZ_160_2.mp3</url>
+         </channel>
+         <channel>
+-            <title>"JPR Classics"</title>
+-            <url>http://jpr.streamguys.org:80/jpr-classics</url>
++            <title>"Renesas audio wav"</title>
++            <url>file:///home/root/audios/04_16KH_2ch_bgm_maoudamashii_healing01.wav</url>
+         </channel>
+         <channel>
+             <title>VPR Classical</title>
+diff --git a/qml/QtDemo/demos/radio/radio.qml b/qml/QtDemo/demos/radio/radio.qml
+index c51da1c..0e3619c 100644
+--- a/qml/QtDemo/demos/radio/radio.qml
++++ b/qml/QtDemo/demos/radio/radio.qml
+@@ -227,7 +227,7 @@ FocusScope {
+ 
+         XmlListModel {
+             id: stationModel
+-            source: "http://qt-project.org/uploads/videos/qt5_radio_channels.xml"
++            source: "channels.xml"
+             query: "/radio/channel"
+             XmlRole {name: "title"; query: "title/string()"}
+             XmlRole {name: "url"; query: "url/string()"}
+diff --git a/qml/QtDemo/demos/video/VideoSelector.qml b/qml/QtDemo/demos/video/VideoSelector.qml
+index 1e52ca3..64d9a38 100644
+--- a/qml/QtDemo/demos/video/VideoSelector.qml
++++ b/qml/QtDemo/demos/video/VideoSelector.qml
+@@ -62,7 +62,7 @@ Item {
+ 
+     XmlListModel {
+         id: videoModel
+-        source: "http://qt-project.org/uploads/videos/qt5_videos.xml"
++        source: "qt5_videos.xml"
+         query: "/videolist/item"
+         XmlRole  { name: "thumbnail"; query: "thumbnail/string()" }
+         XmlRole { name: "title"; query: "title/string()" }
+diff --git a/qml/QtDemo/demos/video/qt5_videos.xml b/qml/QtDemo/demos/video/qt5_videos.xml
+index 420e476..fd9a6df 100644
+--- a/qml/QtDemo/demos/video/qt5_videos.xml
++++ b/qml/QtDemo/demos/video/qt5_videos.xml
+@@ -1,14 +1,14 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <videolist>
+     <item>
+-        <title>Lars Knoll: The Making of Qt 5</title>
+-        <thumbnail>qt5_video_lars.png</thumbnail>
+-        <link>http://download.qt-project.org/learning/videos/Lars_Knoll_The_Making_of_Qt_5.mp4</link>
++        <title>Renesas video FHD</title>
++        <thumbnail>qt5_video_fhd30fps.png</thumbnail>
++        <link>file:///home/root/videos/h264-bl10-fhd-30p-5m-aac-lc-stereo-124k-48000x264.mp4</link>
+     </item>
+     <item>
+-        <title>Qt 5: Jens Bache-Wiig on Qt 5 and Qt Quick</title>
+-        <thumbnail>qt5_video_jens.png</thumbnail>
+-        <link>http://download.qt-project.org/learning/videos/Qt5_Jens_Bache-Wiig_on_Qt5_Qt_Quick.mp4</link>
++        <title>Renesas video HD</title>
++        <thumbnail>qt5_video_hd30fps.png</thumbnail>
++        <link>file:///home/root/videos/h264-hd-30.mp4</link>
+     </item>
+     <item>
+         <title>Qt 5: Simon Hausmann on Qt WebKit</title>
+-- 
+2.17.1
+

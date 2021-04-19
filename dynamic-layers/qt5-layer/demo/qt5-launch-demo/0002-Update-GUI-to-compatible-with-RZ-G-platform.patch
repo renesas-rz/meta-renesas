@@ -1,0 +1,128 @@
+From ee720f960d66ff38f89dac2db36ef009e80bfb7f Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 4 May 2021 10:27:11 +0700
+Subject: [PATCH 2/2] Update GUI to compatible with RZ/G platform
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ Button.qml                        |  4 +++-
+ CanvasSlide.qml                   |  2 +-
+ DemoMain.qml                      | 16 +++++++++++++---
+ FontSlide.qml                     |  2 +-
+ OpacityTransitionPresentation.qml |  4 ++--
+ calqlatr/Calqlatr.qml             |  4 ++--
+ 6 files changed, 22 insertions(+), 10 deletions(-)
+
+diff --git a/Button.qml b/Button.qml
+index 6d6bf6e..1c96b5e 100644
+--- a/Button.qml
++++ b/Button.qml
+@@ -59,6 +59,8 @@ Rectangle {
+ 
+     property bool pressed;
+     property alias label: textItem.text;
++    property alias label_size: textItem.font.pixelSize;
++    signal clicked()
+ 
+     Text {
+         id: textItem
+@@ -72,7 +74,7 @@ Rectangle {
+         id: mouse
+         anchors.fill: parent
+         onPressed: root.pressed = !root.pressed;
+-
++	onClicked: root.clicked();
+     }
+ 
+ }
+diff --git a/CanvasSlide.qml b/CanvasSlide.qml
+index c60a643..8766342 100644
+--- a/CanvasSlide.qml
++++ b/CanvasSlide.qml
+@@ -105,7 +105,7 @@ ctx.fill();
+ ctx.stroke();
+ 
+ ctx.fillStyle = 'aquamarine'
+-ctx.font = '20px sansserif'
++ctx.font = '20px courier'
+ ctx.fillText('HTML Canvas API!', 100, 300);
+ ctx.fillText('Imperative Drawing!', 100, 340);
+ 
+diff --git a/DemoMain.qml b/DemoMain.qml
+index 05454be..97d0079 100644
+--- a/DemoMain.qml
++++ b/DemoMain.qml
+@@ -133,7 +133,17 @@ Item {
+             color: Qt.rgba(0.0, 0.0, 0.0, 0.7);
+         }
+     }
+-
+-
+-
++    Button {
++        id: exitButton
++        anchors.right: parent.right
++        y: parent.height/100 + 5
++        opacity: 0.6
++        label: "Exit"
++        label_size: parent.height * 0.04
++        width: height * 4;
++        height: parent.height * 0.07
++        onClicked: {
++           Qt.quit()
++        }
++    }
+ }
+diff --git a/FontSlide.qml b/FontSlide.qml
+index 12106fa..d2a92aa 100644
+--- a/FontSlide.qml
++++ b/FontSlide.qml
+@@ -87,7 +87,7 @@ Native font rendering is also an option for applications that want to look nativ
+         sourceItem: textRoot
+         anchors.bottom: parent.bottom;
+         anchors.left: parent.left;
+-        smooth: false
++        smooth: true
+         transformOrigin: Item.BottomLeft;
+ 
+         visible: true
+diff --git a/OpacityTransitionPresentation.qml b/OpacityTransitionPresentation.qml
+index 1fbe17e..855dc23 100644
+--- a/OpacityTransitionPresentation.qml
++++ b/OpacityTransitionPresentation.qml
+@@ -51,8 +51,8 @@ Presentation {
+ 
+     property bool inTransition: false;
+ 
+-    property variant fromSlide;
+-    property variant toSlide;
++    property variant fromSlide : QtObject {}
++    property variant toSlide : QtObject {}
+ 
+     property int transitionTime: 500;
+ 
+diff --git a/calqlatr/Calqlatr.qml b/calqlatr/Calqlatr.qml
+index 7640fbd..d3bd70a 100644
+--- a/calqlatr/Calqlatr.qml
++++ b/calqlatr/Calqlatr.qml
+@@ -88,7 +88,7 @@ Rectangle {
+             anchors.fill: parent
+             onPositionChanged: {
+                 var reverse = startX > window.width / 2
+-                var mx = mapToItem(window, mouse.x).x
++                var mx = mapToItem(window, mouse.x, mouse.y).x
+                 var p = Math.abs((mx - startX) / (window.width - display.width))
+                 if (p < oldP)
+                     rewind = reverse ? false : true
+@@ -97,7 +97,7 @@ Rectangle {
+                 controller.progress = reverse ? 1 - p : p
+                 oldP = p
+             }
+-            onPressed: startX = mapToItem(window, mouse.x).x
++            onPressed: startX = mapToItem(window, mouse.x, mouse.y).x
+             onReleased: {
+                 if (rewind)
+                     controller.completeToBeginning()
+-- 
+2.17.1
+

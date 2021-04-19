@@ -1,0 +1,25 @@
+From 0aeb1adca0026ac73027f8d46486ad8704d7bd76 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Wed, 5 May 2021 19:00:13 +0700
+Subject: [PATCH 3/5] Force complete loading incubator if it not ready
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ QtDemo/qml/QtDemo/Slide.qml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/qml/QtDemo/Slide.qml b/qml/QtDemo/Slide.qml
+index 99ef4a9..e4a45dd 100644
+--- a/qml/QtDemo/Slide.qml
++++ b/qml/QtDemo/Slide.qml
+@@ -192,6 +192,7 @@ Item {
+                     releaseSplashScreen()
+                 }
+             }
++            incubator.forceCompletion();
+         } else {
+             print ("Object", incubator.object, "is ready immediately!");
+             slide.loaded = true
+-- 
+2.17.1
+

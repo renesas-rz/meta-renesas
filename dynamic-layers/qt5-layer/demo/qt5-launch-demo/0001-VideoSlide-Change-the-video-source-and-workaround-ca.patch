@@ -1,0 +1,69 @@
+From ae4b0fd7c3a64fda4eaf9ae318bf90e875119e14 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 27 Apr 2021 14:47:33 +0700
+Subject: [PATCH 1/2] VideoSlide: Change the video source and workaround can
+ not play video
+
+Change to renesas video.
+Also has workaround to solve sometimes issue occur "Internal data stream
+error" when start playing video
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ VideoSlide.qml | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/VideoSlide.qml b/VideoSlide.qml
+index 95479ef..62d28a8 100644
+--- a/VideoSlide.qml
++++ b/VideoSlide.qml
+@@ -54,11 +54,12 @@ Slide {
+         id: video
+ 
+         anchors.fill: parent
+-        source: "bunny.mov"
++        source: "renesas-bigideasforeveryspace.mp4"
+         autoLoad: true;
+ 
+         layer.enabled: true;
+         layer.smooth: true;
++/*
+         layer.effect: Displace {
+             displacementSource: normalMap
+             displacement: button.pressed ? 1.0 : 0.0
+@@ -66,6 +67,7 @@ Slide {
+                 NumberAnimation { duration: 1000 }
+             }
+         }
++*/
+     }
+ 
+     Rectangle {
+@@ -94,7 +96,7 @@ Slide {
+         visible: false
+     }
+ 
+-    centeredText: video.hasVideo ? "" : "'bunny.mov' is not found or cannot be played: " + video.errorString
++    centeredText: video.hasVideo ? "" : "'renesas-bigideasforeveryspace.mp4' is not found or cannot be played: " + video.errorString
+ 
+      onVisibleChanged: {
+          if (slide.visible)
+@@ -102,7 +104,7 @@ Slide {
+          else
+              video.pause();
+      }
+-
++/*
+      Button {
+          id: button
+          anchors.bottom: video.bottom
+@@ -112,5 +114,5 @@ Slide {
+          width: height * 4;
+          height: parent.height * 0.1
+      }
+-
++*/
+ }
+-- 
+2.17.1
+

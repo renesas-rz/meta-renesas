@@ -1,0 +1,98 @@
+From 54c686c69c7c4bb473de4071c45c4e19bd03e7aa Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Wed, 5 May 2021 18:54:25 +0700
+Subject: [PATCH 1/5] Run application fullscreen and add exit button
+
+This patch will let application always run in fullscreen mode.
+Also add exit button to exit the application while fullscreen.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ QtDemo/qml.qrc                        | 1 +
+ QtDemo/qml/QtDemo/HelpScreen.qml      | 8 ++++----
+ QtDemo/qml/QtDemo/NavigationPanel.qml | 8 ++++++++
+ QtDemo/qml/QtDemo/main.qml            | 1 +
+ 4 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/qml.qrc b/qml.qrc
+index aa6a0c0..d14e2ce 100644
+--- a/qml.qrc
++++ b/qml.qrc
+@@ -202,6 +202,7 @@
+         <file>qml/QtDemo/images/btn_home.png</file>
+         <file>qml/QtDemo/images/btn_next.png</file>
+         <file>qml/QtDemo/images/btn_previous.png</file>
++        <file>qml/QtDemo/images/btn_exit.png</file>
+         <file>qml/QtDemo/images/car_device.png</file>
+         <file>qml/QtDemo/images/character0.png</file>
+         <file>qml/QtDemo/images/character1.png</file>
+diff --git a/qml/QtDemo/HelpScreen.qml b/qml/QtDemo/HelpScreen.qml
+index cde7f5f..39b4861 100644
+--- a/qml/QtDemo/HelpScreen.qml
++++ b/qml/QtDemo/HelpScreen.qml
+@@ -238,14 +238,14 @@ Item {
+ 
+                     if (root.width > root.height){
+                         _x = navigationPanel.x+navigationPanel.width /2
+-                        _y = navigationPanel.y+navigationPanel.height*.33
++                        _y = navigationPanel.y+navigationPanel.height*.24
+                         pointer.x= root.width/2 -pointer.width/2 +root.width*.2
+                         pointer.y= root.height/2 -pointer.height/2
+                         highlight.x=_x
+                         highlight.y=_y
+ 
+                     }else{
+-                        _x=navigationPanel.x+navigationPanel.width*.33
++                        _x=navigationPanel.x+navigationPanel.width*.24
+                         _y=navigationPanel.y + navigationPanel.height /2
+                         pointer.x= root.width/2 -pointer.width/2
+                         pointer.y= root.height/2 -pointer.height/2 +root.height*.2
+@@ -271,14 +271,14 @@ Item {
+ 
+                     if (root.width > root.height){
+                         _x = navigationPanel.x+navigationPanel.width /2
+-                        _y = navigationPanel.y+navigationPanel.height-navigationPanel.width /2
++                        _y = navigationPanel.y+navigationPanel.height*.625
+                         pointer.x= root.width/2 -pointer.width/2 +root.width*.2
+                         pointer.y= root.height/2 -pointer.height/2
+                         highlight.x=_x
+                         highlight.y=_y
+ 
+                     }else{
+-                        _x=navigationPanel.x+navigationPanel.width-navigationPanel.height /2
++                        _x=navigationPanel.x+navigationPanel.width*.625
+                         _y=navigationPanel.y + navigationPanel.height /2
+                         pointer.x= root.width/2 -pointer.width/2
+                         pointer.y= root.height/2 -pointer.height/2 +root.height*.2
+diff --git a/qml/QtDemo/NavigationPanel.qml b/qml/QtDemo/NavigationPanel.qml
+index 0966ac3..307755f 100644
+--- a/qml/QtDemo/NavigationPanel.qml
++++ b/qml/QtDemo/NavigationPanel.qml
+@@ -89,4 +89,12 @@ Grid {
+             canvas.goBack()
+         }
+     }
++
++    Button {
++        id: exitButton
++        imageSource: "images/btn_exit.png"
++        onClicked: {
++            Qt.quit()
++        }
++    }
+ }
+diff --git a/qml/QtDemo/main.qml b/qml/QtDemo/main.qml
+index f0e32eb..b815bd4 100644
+--- a/qml/QtDemo/main.qml
++++ b/qml/QtDemo/main.qml
+@@ -45,6 +45,7 @@ import "style.js" as Style
+
+ Window {
+     visible: true
++    visibility: "FullScreen"
+
+     onWidthChanged: app.calculateScales();
+     onHeightChanged: app.calculateScales();
+-- 
+2.17.1
+
