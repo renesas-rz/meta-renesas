@@ -33,3 +33,6 @@ IMAGE_INSTALL_append = " \
     libdrm-tests \
     yavta \
 "
+
+IMAGE_FEATURES_remove = " ssh-server-dropbear"
+IMAGE_FEATURES_append = " ssh-server-openssh"
