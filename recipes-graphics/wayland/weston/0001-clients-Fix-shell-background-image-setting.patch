@@ -1,0 +1,42 @@
+From 4ad1ddaa75f6d39c9aa2ef484b13d9045c46d928 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 11 May 2021 13:35:46 +0700
+Subject: [PATCH] clients: Fix shell background image setting.
+
+If weston.ini is not setting background-image path,
+then desktop-shell sets ${DATDIR}/weston/pattern.png
+as background. However in this case  width and height
+is set to 1 during background config and is being
+scaled to avoid allocation of buffer.
+
+This behavior is not right. Along with background-image
+path, we should also check if background-color is set.
+If background color is set, then only scale 1x1 buffer.
+
+This would allow to set pattern.png as default wallpaper
+of weston correctly, if background-color is also not set
+in weston.ini file.
+
+Fixes: 3623e46dc555ea9df34ff259530af64f0d9f0645
+Signed-off-by: Tanmay Shah <tanmay@codeaurora.org>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ clients/desktop-shell.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/clients/desktop-shell.c b/clients/desktop-shell.c
+index bde5dc8..42e7a6c 100644
+--- a/clients/desktop-shell.c
++++ b/clients/desktop-shell.c
+@@ -849,7 +849,7 @@ background_configure(void *data,
+ 		return;
+ 	}
+ 
+-	if (!background->image) {
++	if (!background->image && background->color) {
+ 		widget_set_viewport_destination(background->widget, width, height);
+ 		width = 1;
+ 		height = 1;
+-- 
+2.17.1
+
