@@ -1,0 +1,89 @@
+From 9d89a4bbfded9b697b01f9bf3b55f5d3e0fe42fc Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Mon, 17 May 2021 15:45:18 +0700
+Subject: [PATCH] xdg-shell: Allow fullscreen surfaces to not cover the whole
+ screen
+
+commit
+https://github.com/wayland-project/weston/commit/f6bd2129245b6c949dfeb50c722834050876f529
+upstream.
+
+The wording of the xdg-shell protocol allows surfaces to not cover the
+whole screen when they are made fullscreen. From the description of the
+fullscreen state in xdg-shell:
+
+  The window geometry specified in the configure event is a maximum; the
+  client cannot resize beyond it. For a surface to cover the whole
+  fullscreened area, the geometry dimensions must be obeyed by the
+  client.
+
+The last sentence is the condition for fullscreen coverage, not a
+requirement.
+
+This commit updates the code to not flag size mismatches for fullscreen
+surfaces as a protocol error when the surface fits within the screen. In
+such cases, the shell is responsible for centering surfaces
+appropriately and also for obscuring other screen content as described
+in the xdg_toplevel.set_fullscreen request description (and, indeed,
+desktop-shell does all this).
+
+For reference, contrast with the corresponding, stricter wording in the
+obsolete xdg-shell-unstable-v6 protocol for the fullscreen state:
+
+  The window geometry specified in the configure event must be obeyed by
+  the client.
+
+Signed-off-by: Alexandros Frantzis <alexandros.frantzis@collabora.com>
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ libweston-desktop/xdg-shell.c | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/libweston-desktop/xdg-shell.c b/libweston-desktop/xdg-shell.c
+index d1fc2ec..4a9eb97 100644
+--- a/libweston-desktop/xdg-shell.c
++++ b/libweston-desktop/xdg-shell.c
+@@ -673,7 +673,7 @@ weston_desktop_xdg_toplevel_committed(struct weston_desktop_xdg_toplevel *toplev
+ 	struct weston_geometry geometry =
+ 		weston_desktop_surface_get_geometry(toplevel->base.desktop_surface);
+ 
+-	if ((toplevel->next.state.maximized || toplevel->next.state.fullscreen) &&
++	if (toplevel->next.state.maximized &&
+ 	    (toplevel->next.size.width != geometry.width ||
+ 	     toplevel->next.size.height != geometry.height)) {
+ 		struct weston_desktop_client *client =
+@@ -683,7 +683,29 @@ weston_desktop_xdg_toplevel_committed(struct weston_desktop_xdg_toplevel *toplev
+ 
+ 		wl_resource_post_error(client_resource,
+ 				       XDG_WM_BASE_ERROR_INVALID_SURFACE_STATE,
+-				       "xdg_surface buffer does not match the configured state");
++				       "xdg_surface buffer (%" PRIi32 " x %" PRIi32 ") "
++				       "does not match the configured maximized state (%" PRIi32 " x %" PRIi32 ")",
++				       geometry.width, geometry.height,
++				       toplevel->next.size.width,
++				       toplevel->next.size.height);
++		return;
++	}
++
++	if (toplevel->next.state.fullscreen &&
++	    (toplevel->next.size.width < geometry.width ||
++	     toplevel->next.size.height < geometry.height)) {
++		struct weston_desktop_client *client =
++			weston_desktop_surface_get_client(toplevel->base.desktop_surface);
++		struct wl_resource *client_resource =
++			weston_desktop_client_get_resource(client);
++
++		wl_resource_post_error(client_resource,
++				       XDG_WM_BASE_ERROR_INVALID_SURFACE_STATE,
++				       "xdg_surface buffer (%" PRIi32 " x %" PRIi32 ") "
++				       "is larger than the configured fullscreen state (%" PRIi32 " x %" PRIi32 ")",
++				       geometry.width, geometry.height,
++				       toplevel->next.size.width,
++				       toplevel->next.size.height);
+ 		return;
+ 	}
+ 
+-- 
+2.17.1
+
