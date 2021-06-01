@@ -13,6 +13,7 @@ LIC_FILES_CHKSUM = " \
 FILESEXTRAPATHS_append := "${THISDIR}/qtwayland:"
 SRC_URI_append  = " \
     file://0003-qt5wayland-fix-hardwareintegration-client-xcomposite.patch \
+    file://0001-qwaylandintegration-Fix-missing-freeing-for-clie.patch \
 "
 
 DEP = " freetype fontconfig"

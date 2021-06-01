@@ -1,0 +1,30 @@
+From d5f80851e2681dce733fde18fc634c53223cf5bd Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 1 Jun 2021 11:08:40 +0700
+Subject: [PATCH] qwaylandintegration: Fix missing free-ing for client buffer.
+
+Missing delete client buffer can cause wrong operation flow
+of egl-wayland communication. So that add them to remove all buffer in
+EGL side.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ src/client/qwaylandintegration.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/client/qwaylandintegration.cpp b/src/client/qwaylandintegration.cpp
+index 106e54c68..1d2afd4dd 100644
+--- a/src/client/qwaylandintegration.cpp
++++ b/src/client/qwaylandintegration.cpp
+@@ -137,6 +137,8 @@ QWaylandIntegration::QWaylandIntegration()
+ 
+ QWaylandIntegration::~QWaylandIntegration()
+ {
++    if (mClientBufferIntegration)
++	delete mClientBufferIntegration;
+ #ifndef QT_NO_DRAGANDDROP
+     delete mDrag;
+     delete mClipboard;
+-- 
+2.17.1
+
