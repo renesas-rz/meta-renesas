@@ -32,6 +32,7 @@ IMAGE_INSTALL_append = " \
     libdrm \
     libdrm-tests \
     yavta \
+    kernel-module-uvcvideo \
 "
 
 IMAGE_FEATURES_remove = " ssh-server-dropbear"
