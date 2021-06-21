@@ -1,0 +1,51 @@
+From fbbb631428e06b7aaf2dc9630dfea4c9d8cf7e05 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Fri, 18 Jun 2021 14:31:40 +0700
+Subject: [PATCH] GStreamer: fix video output stopping when the main thread is
+ blocked
+
+upstream commit f6838120ead0361463c800c25a711b799fae29ee
+
+When a new frame is ready to be rendered, our gst sink waits until the
+frame is actually processed in the GUI thread, but never more than 300
+ms. The time limit is there to avoid potential dead locks in specific
+situations. Before, if the wait would timeout, the sink would signal
+that there was an error rendering the frame, which would in turn put
+the pipeline in an error state and would stop processing any further
+frame. We now simply skip the frame if the GUI thread is blocked for
+too long and signal that everything went fine to the pipeline.
+This was already the logic in place for GStreamer 0.10 (see
+qvideosurfacegstsink.cpp).
+
+Task-number: QTBUG-60509
+Change-Id: I5173a15340c0e2065bb2fb5ca3bc045ac84ba7e1
+Reviewed-by: Christian Stromme <christian.stromme@qt.io>
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ src/gsttools/qgstvideorenderersink.cpp | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/gsttools/qgstvideorenderersink.cpp b/src/gsttools/qgstvideorenderersink.cpp
+index 31ac94e86..68c7a80d9 100644
+--- a/src/gsttools/qgstvideorenderersink.cpp
++++ b/src/gsttools/qgstvideorenderersink.cpp
+@@ -240,13 +240,11 @@ GstFlowReturn QVideoSurfaceGstDelegate::render(GstBuffer *buffer)
+     m_renderReturn = GST_FLOW_OK;
+     m_renderBuffer = buffer;
+ 
+-    GstFlowReturn flowReturn = waitForAsyncEvent(&locker, &m_renderCondition, 300)
+-                                                ? m_renderReturn
+-                                                : GST_FLOW_ERROR;
++    waitForAsyncEvent(&locker, &m_renderCondition, 300);
+ 
+     m_renderBuffer = 0;
+ 
+-    return flowReturn;
++    return m_renderReturn;
+ }
+ 
+ bool QVideoSurfaceGstDelegate::event(QEvent *event)
+-- 
+2.17.1
+

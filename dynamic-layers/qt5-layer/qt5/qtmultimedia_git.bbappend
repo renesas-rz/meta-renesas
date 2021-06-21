@@ -12,10 +12,10 @@ LIC_FILES_CHKSUM = " \
 
 SRC_URI_append = " \
 	file://0001-Fix-binding-loop-for-declarative-camera.patch \
-	file://0002-declarative-camera-correct-framerate-to-fix-not-nego.patch \
 	file://0003-qtmultimedia-replace-playbin-by-playbin3-to-play-vid.patch \
 	file://0004-qtmultimedia-qmlvideo-add-fullscreen-display-support.patch \
 	file://0005-qtmultimedia-qmlvideofx-update-GUI-compatible-RZ-G-p.patch \
+	file://0006-GStreamer-fix-video-output-stopping-when-the-main-th.patch \
 "
 
 PACKAGECONFIG_append = " gstreamer alsa"
