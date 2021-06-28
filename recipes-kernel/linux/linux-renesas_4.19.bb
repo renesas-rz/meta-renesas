@@ -6,13 +6,12 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev)"
 
 KERNEL_URL = " \
-    git://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git"
-BRANCH = "linux-4.19.y-cip"
-SRCREV = "03cdb749e6350f0403badbf7931e420ea7514f56"
+    git://github.com/renesas-rz/rz_linux-cip.git"
+BRANCH = "rzg2l-cip33"
+SRCREV = "7e878494f1c1693ec01bef0b748dbb1780814a48"
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 SRC_URI_append += "\
-	file://patches.scc \
 "
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
