@@ -43,7 +43,7 @@ do_compile () {
 	cat build/${PLATFORM}/release/bl2.bin >> bl2_bp.bin
 
 	# Create fip.bin
-	fiptool create --align 16 --soc-fw build/${PLATFORM}/release/bl31.bin --nt-fw ${DEPLOY_DIR_IMAGE}/u-boot.bin fip.bin
+	fiptool create --align 16 --soc-fw build/${PLATFORM}/release/bl31.bin --nt-fw ${WORKDIR}/recipe-sysroot/boot/u-boot.bin fip.bin
 
 	# Convert to srec
 	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
