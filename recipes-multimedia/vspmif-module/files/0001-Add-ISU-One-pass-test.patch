@@ -1,0 +1,1301 @@
+From bf2edfcb54e923d5728073755ead57164a09198f Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Tue, 13 Jul 2021 17:59:41 +0700
+Subject: [PATCH] Add-ISU-One-pass-test
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm_if-tp-user/files/vspm_if/Makefile        |  22 +-
+ vspm_if-tp-user/files/vspm_if/vspm_isu_dl.c   | 363 +++++++++++++
+ .../files/vspm_if/vspm_isu_ip_conv.c          | 506 ++++++++++++++++++
+ vspm_if-tp-user/files/vspm_if/vspm_isu_rs.c   | 360 +++++++++++++
+ 4 files changed, 1250 insertions(+), 1 deletion(-)
+ create mode 100644 vspm_if-tp-user/files/vspm_if/vspm_isu_dl.c
+ create mode 100644 vspm_if-tp-user/files/vspm_if/vspm_isu_ip_conv.c
+ create mode 100644 vspm_if-tp-user/files/vspm_if/vspm_isu_rs.c
+
+diff --git a/vspm_if-tp-user/files/vspm_if/Makefile b/vspm_if-tp-user/files/vspm_if/Makefile
+index 339658f..75c1dbe 100644
+--- a/vspm_if-tp-user/files/vspm_if/Makefile
++++ b/vspm_if-tp-user/files/vspm_if/Makefile
+@@ -23,9 +23,29 @@ all:
+ 	-lvspm -lmmngr -lpthread \
+ 	-o vspm_tp_colorkey
+ 
++	${CC} vspm_isu_rs.c \
++	-I$(INCSHARED) \
++	-L$(LIBSHARED) \
++	-lvspm -lmmngr -lpthread \
++	-o vspm_isu_rs
++
++	${CC} vspm_isu_dl.c \
++	-I$(INCSHARED) \
++	-L$(LIBSHARED) \
++	-lvspm -lmmngr -lpthread \
++	-o vspm_isu_dl
++
++	${CC} vspm_isu_ip_conv.c \
++	-I$(INCSHARED) \
++	-L$(LIBSHARED) \
++	-lvspm -lmmngr -lpthread \
++	-o vspm_isu_ip_conv
++
+ clean:
+ 	rm -f vspm_tp
+ 	rm -f fdpm_tp
+ 	rm -f vspm_tp_uds
+ 	rm -f vspm_tp_colorkey
+-
++	rm -f vspm_isu_dl
++	rm -f vspm_isu_ip_conv
++	rm -f vspm_isu_rs
+diff --git a/vspm_if-tp-user/files/vspm_if/vspm_isu_dl.c b/vspm_if-tp-user/files/vspm_if/vspm_isu_dl.c
+new file mode 100644
+index 0000000..8ab44c7
+--- /dev/null
++++ b/vspm_if-tp-user/files/vspm_if/vspm_isu_dl.c
+@@ -0,0 +1,363 @@
++/*
++ * Copyright (c) 2018 Renesas Electronics Corporation
++ * Released under the MIT license
++ * http://opensource.org/licenses/mit-license.php
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdint.h>
++#include <ctype.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <linux/fb.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <sys/time.h>
++#include <sys/types.h>
++#include <pthread.h>
++#include <errno.h>
++
++#include "vspm_public.h"
++#include "mmngr_user_public.h"
++
++#define FB_ENABLE		0	/* 0: disable output framebuffer, 1: enable */
++
++#define FATAL do { fprintf(stderr, "Error at line %ld, file %s (%ld) [%s]\n", \
++  __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
++
++#define MAP_SIZE 4096UL
++#define MAP_MASK (MAP_SIZE - 1)
++
++int src_width	= 360;
++int src_height	= 240;
++int dst_width	= 360;
++int dst_height	= 240;
++int dst_size	= 360*240*4;
++int src_size	= 360*240*4;
++
++struct vspm_tp_private_t {
++	void *in_virt;
++	unsigned int in_hard;
++	MMNGR_ID in_fd;
++
++	void *out1_virt;
++	unsigned int out1_hard;
++	MMNGR_ID out1_fd;
++
++	void *out2_virt;
++	unsigned int out2_hard;
++	MMNGR_ID out2_fd;
++
++	void *dl_virt;
++	unsigned int dl_hard;
++	MMNGR_ID dl_fd;
++
++	void *handle;
++};
++
++struct vspm_tp_cb_info_t {
++        unsigned long job_id;
++        long ercd;
++
++        pthread_mutex_t mutex;
++        pthread_cond_t cond;
++};
++
++/* callback function */
++static void cb_func(
++        unsigned long job_id, long result, void *user_data)
++{
++        struct vspm_tp_cb_info_t *cb_info =
++                (struct vspm_tp_cb_info_t *)user_data;
++
++        pthread_mutex_lock(&cb_info->mutex);
++        cb_info->job_id = job_id;
++        cb_info->ercd = result;
++        pthread_cond_signal(&cb_info->cond);
++        pthread_mutex_unlock(&cb_info->mutex);
++}
++
++/* release memory of memory manager */
++static int release_memory(struct vspm_tp_private_t *priv)
++{
++	if (priv->dl_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->dl_fd);
++	if (priv->out1_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->out1_fd);
++	if (priv->in_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->in_fd);
++	if (priv->out2_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->out2_fd);
++
++	return 0;
++}
++
++/* allocate memory from memory manager */
++static int allocate_memory(struct vspm_tp_private_t *priv)
++{
++	int ercd;
++
++	/* input buffer */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->dl_fd, src_size, &priv->dl_hard, &priv->dl_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input!! ercd=%ld\n", ercd);
++		return -1;
++	}
++
++	memset(priv->dl_virt, 0, src_size);
++	/* output buffer */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->out1_fd, dst_size, &priv->out1_hard, &priv->out1_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output!! ercd=%ld\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset(priv->out1_virt, 0, dst_size);
++
++	/* interlace frame */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->in_fd, src_size, &priv->in_hard, &priv->in_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input1!! ercd=%ld\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset((void *)priv->in_virt, 0x000000AA, src_size);
++
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->out2_fd, dst_size, &priv->out2_hard, &priv->out2_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output!! ercd=%ld\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset(priv->out2_virt, 0, dst_size);
++
++	return 0;
++}
++
++
++
++/* output framebuffer */
++static uint32_t write_reg(off_t target, unsigned long write_val)
++{
++	int fd;
++	void *map_base, *virt_addr;
++
++	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
++	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
++	if(map_base == (void *) -1) FATAL;
++	virt_addr = map_base + (target & MAP_MASK);
++	*((uint32_t *) virt_addr) = write_val;
++	if(munmap(map_base, MAP_SIZE) == -1) FATAL;
++	close(fd);
++}
++
++static uint32_t read_reg(off_t target)
++{
++	int fd;
++	void *map_base, *virt_addr;
++	uint32_t read_val;
++	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
++	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
++	if(map_base == (void *) -1) FATAL;
++	virt_addr = map_base + (target & MAP_MASK);
++	read_val = *((uint32_t *) virt_addr);
++	if(munmap(map_base, MAP_SIZE) == -1) FATAL;
++	close(fd);
++	return read_val;
++}
++
++static void output_fb(struct vspm_tp_private_t *priv)
++{
++    FILE *fp;
++    int fpmem;
++    char *file= "input.IMG";
++    fp = fopen( file, "w");
++    if( fp != NULL )
++    {
++        fwrite(priv->in_virt, 1, dst_size, fp);
++        fclose(fp);
++    }
++    file = "output1.IMG";
++    fp = fopen( file, "w");
++    fwrite(priv->out1_virt, 1, dst_size, fp);
++    fclose(fp);
++
++    file = "output2.IMG";
++    fp = fopen( file, "w");
++    fwrite(priv->out2_virt, 1, dst_size, fp);
++    fclose(fp);
++
++}
++
++/* main function */
++int main(int argc, char *argv[])
++{
++	struct vspm_tp_private_t *priv = NULL;
++	long ercd;
++	struct vspm_init_t init_par;
++	struct isu_start_t isu_par;
++	struct vspm_tp_cb_info_t *cb_info = NULL;
++	struct vspm_job_t vspm_ip;
++
++	unsigned int in_image_size=(src_width<<16)|src_height;
++	unsigned int out_image_size=(dst_width<<16)|dst_height;
++	unsigned int in_stride = src_width*4<<16;
++	unsigned int out_stride = dst_width*4<<16;
++	unsigned long job_id = 0;
++
++	/* allocate private memory */
++	priv = malloc(sizeof(struct vspm_tp_private_t));
++	if (priv == NULL) {
++		printf("Error: failed to allocate memory!!\n");
++		return -1;
++	}
++	memset(priv, 0, sizeof(struct vspm_tp_private_t));
++	unsigned int end_frame=0;
++	/* allocate memory from memory manager */
++	ercd = (long)allocate_memory(priv);
++	if (ercd != 0) {
++		goto err_exit0;
++	}
++
++	cb_info = malloc(sizeof(struct vspm_tp_cb_info_t));
++        if (cb_info == NULL) {
++                printf("Error: failed to allocate memory!!\n");
++                return -1;
++        }
++
++        /* clear memory */
++        memset(cb_info, 0, sizeof(struct vspm_tp_cb_info_t));
++        pthread_mutex_init(&cb_info->mutex, NULL);
++        pthread_cond_init(&cb_info->cond, NULL);
++
++	//DL header
++	write_reg(priv->dl_hard,4*36);
++	// input size
++	write_reg(priv->dl_hard+1*4,0x00000100);
++	write_reg(priv->dl_hard+2*4,in_image_size);
++	// image stride
++	write_reg(priv->dl_hard+3*4,0x00000104);
++	write_reg(priv->dl_hard+4*4,in_stride);
++	// input image addr
++	write_reg(priv->dl_hard+4*5,0x00000108);
++	write_reg(priv->dl_hard+4*6,0);
++	write_reg(priv->dl_hard+4*7,0x0000010C);
++	write_reg(priv->dl_hard+4*8,priv->in_hard);
++	// image format
++	write_reg(priv->dl_hard+4*9,0x00000118);
++	write_reg(priv->dl_hard+4*10,ISU_ARGB8888);
++	// scaling factor
++	write_reg(priv->dl_hard+4*11,0x00000140);
++	write_reg(priv->dl_hard+4*12,0x10000);
++	write_reg(priv->dl_hard+4*13,0x00000144);
++	write_reg(priv->dl_hard+4*14,0x10000);
++	// output size
++	write_reg(priv->dl_hard+4*15,0x00000150);
++	write_reg(priv->dl_hard+4*16,out_image_size);
++	// ouptut addr
++	write_reg(priv->dl_hard+4*17,0x00000180);
++	write_reg(priv->dl_hard+4*18,0);
++	write_reg(priv->dl_hard+4*19,0x00000184);
++	write_reg(priv->dl_hard+4*20,priv->out1_hard);
++	// output stride
++	write_reg(priv->dl_hard+4*21,0x00000190);
++	write_reg(priv->dl_hard+4*22,out_stride);
++	// output format
++	write_reg(priv->dl_hard+4*23,0x00000194);
++	write_reg(priv->dl_hard+4*24,ISU_ARGB8888);
++	// color correction
++	write_reg(priv->dl_hard+4*25,0x0000019C);
++	write_reg(priv->dl_hard+4*26,0x400); //K11
++	write_reg(priv->dl_hard+4*27,0x000001A8);
++	write_reg(priv->dl_hard+4*28,0x400); // ISU_WPF_MUL4 : K22
++	write_reg(priv->dl_hard+4*29,0x000001B0);
++	write_reg(priv->dl_hard+4*30,0x4000000); // ISU_WPF_MUL6 : K33
++	// clip
++	write_reg(priv->dl_hard+4*31,0x000001BC);
++	write_reg(priv->dl_hard+4*32,0xFF00); // layer A
++	write_reg(priv->dl_hard+4*33,0x000001C0);
++	write_reg(priv->dl_hard+4*34,0xFF00FF00); // layer B+C
++	// ISU_AXI_BLEN
++	write_reg(priv->dl_hard+4*35,0x000001F0);
++	write_reg(priv->dl_hard+4*36,0x000F000F);
++	//Footer
++	write_reg(priv->dl_hard+4*37,priv->dl_hard+160);
++	write_reg(priv->dl_hard+4*38,0);
++	write_reg(priv->dl_hard+4*39,1);
++
++	//frame 2
++	//header
++	write_reg(priv->dl_hard+160,4*2);
++	//output address
++	write_reg(priv->dl_hard+160+4*1,0x00000184);
++	write_reg(priv->dl_hard+160+4*2,priv->out2_hard);
++	//footer
++	write_reg(priv->dl_hard+160+4*3,0);
++	write_reg(priv->dl_hard+160+4*4,0);
++	write_reg(priv->dl_hard+160+4*5,2);
++
++	memset(&init_par, 0, sizeof(struct vspm_init_t));
++        init_par.use_ch = VSPM_EMPTY_CH;
++        init_par.mode = VSPM_MODE_OCCUPY;
++        init_par.type = VSPM_TYPE_ISU_AUTO;
++	ercd = vspm_init_driver(&priv->handle, &init_par);
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_init_driver() ercd=%d\n", ercd);
++		goto err_exit1;
++	}
++
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	isu_par.dl_hard_addr          = priv->dl_hard;
++
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++	ercd = vspm_entry_job(priv->handle, &job_id, 126, &vspm_ip, (void *)cb_info, cb_func);
++	if (ercd != R_VSPM_OK) {
++                printf("Error: failed to vspm_entry_job() ercd=%d\n", ercd);
++                pthread_mutex_destroy(&cb_info->mutex);
++                free(cb_info);
++                return -1;
++        }
++	/* wait callback */
++        pthread_mutex_lock(&cb_info->mutex);
++        pthread_cond_wait(&cb_info->cond, &cb_info->mutex);
++        pthread_mutex_unlock(&cb_info->mutex);
++
++        /* check callback information */
++        if (cb_info->ercd != 0) {
++                printf("Error 1: failed to incorrect callback information!!\n");
++        }
++        if (cb_info->job_id != job_id) {
++                printf("Error 2: failed to incorrect callback information!!\n");
++        }
++
++        pthread_mutex_destroy(&cb_info->mutex);
++        free(cb_info);
++
++	output_fb(priv);
++
++	/* release memory */
++	release_memory(priv);
++	free(priv);
++	printf("PASS\n");
++	return 0;
++
++err_exit2:
++	(void)vspm_quit_driver(priv->handle);
++
++err_exit1:
++	release_memory(priv);
++
++err_exit0:
++	free(priv);
++
++	printf("FAIL\n");
++	return -1;
++}
+diff --git a/vspm_if-tp-user/files/vspm_if/vspm_isu_ip_conv.c b/vspm_if-tp-user/files/vspm_if/vspm_isu_ip_conv.c
+new file mode 100644
+index 0000000..e9f3939
+--- /dev/null
++++ b/vspm_if-tp-user/files/vspm_if/vspm_isu_ip_conv.c
+@@ -0,0 +1,506 @@
++/*
++ * Copyright (c) 2018 Renesas Electronics Corporation
++ * Released under the MIT license
++ * http://opensource.org/licenses/mit-license.php
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdint.h>
++#include <ctype.h>
++#include <unistd.h>
++
++#include <fcntl.h>
++#include <linux/fb.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <sys/time.h>
++#include <sys/types.h>
++#include <pthread.h>
++#include <errno.h>
++
++#include "vspm_public.h"
++#include "mmngr_user_public.h"
++
++#define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
++  __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
++
++#define MAP_SIZE 4096UL
++#define MAP_MASK (MAP_SIZE - 1)
++
++int src_width	= 360;
++int src_height	= 240;
++int dst_width	= 360;
++int dst_height	= 240;
++int dst_size	= 360*240*4;
++int src_size	= 360*240*4;
++//int tbl_num	= 192 + 64 * 7;		/* roundup(1920/256)-1 == 7 ; max:192+64*31 */
++
++struct vspm_tp_private_t {
++	void *in_virt;
++	unsigned int in_hard;
++	MMNGR_ID in_fd;
++
++	void *out_virt;
++	unsigned int out_hard;
++	MMNGR_ID out_fd;
++
++	void *in1_virt;
++	unsigned int in1_hard;
++	MMNGR_ID in1_fd;
++	
++	void *in2_virt;
++	unsigned int in2_hard;
++	MMNGR_ID in2_fd;
++
++	void *out2_virt;
++	unsigned int out2_hard;
++	MMNGR_ID out2_fd;
++
++	void *out3_virt;
++	unsigned int out3_hard;
++	MMNGR_ID out3_fd;
++
++	void *dl_virt;
++	unsigned int dl_hard;
++	MMNGR_ID dl_fd;
++
++	void *handle;
++};
++
++struct vspm_tp_cb_info_t {
++	unsigned long job_id;
++	long ercd;
++
++	pthread_mutex_t mutex;
++	pthread_cond_t cond;
++};
++
++/* release memory of memory manager */
++static int release_memory(struct vspm_tp_private_t *priv)
++{
++	if (priv->dl_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->dl_fd);
++	if (priv->out_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->out_fd);
++	if (priv->in_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->in_fd);
++
++	return 0;
++}
++
++/* allocate memory from memory manager */
++static int allocate_memory(struct vspm_tp_private_t *priv)
++{
++	int ercd;
++
++	/* input buffer */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->in_fd, src_size, &priv->in_hard, &priv->in_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input!! ercd=%d\n", ercd);
++		return -1;
++	}
++
++	memset(priv->in_virt, 0xff, src_size);
++	/* output buffer */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->out_fd, dst_size, &priv->out_hard, &priv->out_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output!! ercd=%d\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset(priv->out_virt, 0, dst_size);
++
++	/* interlace frame */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->in1_fd, src_size/2, &priv->in1_hard, &priv->in1_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input1!! ercd=%d\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset((void *)priv->in1_virt, 0, src_size);
++
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->in2_fd, src_size/2, &priv->in2_hard, &priv->in2_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input2!! ercd=%d\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset((void *)priv->in2_virt, 0, src_size);
++
++	/* output buffer */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->out2_fd, dst_size, &priv->out2_hard, &priv->out2_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output2!! ercd=%d\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset(priv->out2_virt, 0, dst_size);
++
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->out3_fd, dst_size, &priv->out3_hard, &priv->out3_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output2!! ercd=%ld\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset(priv->out3_virt, 0, dst_size);
++
++
++	return 0;
++}
++
++/* output framebuffer */
++static void output_fb(struct vspm_tp_private_t *priv)
++{
++    FILE *fp;
++    int fpmem;
++    char *file= "interlace1.IMG";
++    fp = fopen( file, "w");
++    if( fp != NULL )
++    {
++        fwrite(priv->in1_virt, 1, dst_size/2, fp);
++        fclose(fp);
++    }
++    file = "interlace2.IMG";
++    fp = fopen( file, "w");
++    fwrite(priv->in2_virt, 1, dst_size/2, fp);
++    fclose(fp);
++
++    file = "raw_output.IMG";
++    fp = fopen( file, "w");
++    fwrite(priv->out2_virt, 1, dst_size, fp);
++    fclose(fp);
++}
++
++/* callback function */
++static void cb_func(
++	unsigned long job_id, long result, void *user_data)
++{
++	struct vspm_tp_cb_info_t *cb_info =
++		(struct vspm_tp_cb_info_t *)user_data;
++
++	pthread_mutex_lock(&cb_info->mutex);
++	cb_info->job_id = job_id;
++	cb_info->ercd = result;
++	pthread_cond_signal(&cb_info->cond);
++	pthread_mutex_unlock(&cb_info->mutex);
++}
++
++/* image test */
++int isu_image_test(struct vspm_tp_private_t *priv,struct isu_start_t isu_par)
++{
++	struct vspm_tp_cb_info_t *cb_info = NULL;
++
++	/* allocate memory */
++	cb_info = malloc(sizeof(struct vspm_tp_cb_info_t));
++	if (cb_info == NULL) {
++		printf("Error: failed to allocate memory!!\n");
++		return -1;
++	}
++
++	struct vspm_job_t vspm_ip;
++	unsigned long job_id = 1;
++	long ercd;
++
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++
++	/* entry */
++	ercd = vspm_entry_job(priv->handle, &job_id, 126, &vspm_ip, (void *)cb_info, cb_func);
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_entry_job() ercd=%ld\n", ercd);
++		pthread_mutex_destroy(&cb_info->mutex);
++		free(cb_info);
++		return -1;
++	}
++
++	/* wait callback */
++	pthread_mutex_lock(&cb_info->mutex);
++	pthread_cond_wait(&cb_info->cond, &cb_info->mutex);
++	pthread_mutex_unlock(&cb_info->mutex);
++
++	/* check callback information */
++	if (cb_info->ercd != 0) {
++		printf("Error 1: failed to incorrect callback information!!\n");
++	}
++	if (cb_info->job_id != job_id) {
++		printf("Error 2: cb_info->job_id = %i, job_id = %i !!\n",cb_info->job_id,job_id);
++	}
++
++	pthread_mutex_destroy(&cb_info->mutex);
++	free(cb_info);
++	return 0;
++}
++
++static void write_reg(off_t target, unsigned long write_val)
++{
++        int fd;
++        void *map_base, *virt_addr;
++
++        if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
++        map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
++        if(map_base == (void *) -1) FATAL;
++        virt_addr = map_base + (target & MAP_MASK);
++        *((uint32_t *) virt_addr) = write_val;
++        if(munmap(map_base, MAP_SIZE) == -1) FATAL;
++        close(fd);
++}
++
++/* main function */
++int main(int argc, char *argv[])
++{
++	struct isu_start_t isu_par;
++	struct isu_src_t src_par;
++	struct isu_alpha_unit_t alpha_par;
++	struct isu_td_unit_t td_par;
++	struct isu_dst_t dst_par;
++	struct isu_rs_t rs_par;
++	struct isu_csc_t csc_par;
++	struct vspm_tp_private_t *priv = NULL;
++	struct vspm_init_t init_par;
++	long ercd;
++	FILE *fp;
++	int fpmem;
++	char *file= "output.IMG";
++	fp = fopen( file, "w");
++
++	/* allocate private memory */
++	priv = malloc(sizeof(struct vspm_tp_private_t));
++	if (priv == NULL) {
++		printf("Error: failed to allocate memory!!\n");
++		return -1;
++	}
++	memset(priv, 0, sizeof(struct vspm_tp_private_t));
++
++	/* allocate memory from memory manager */
++	ercd = (long)allocate_memory(priv);
++	if (ercd != 0) {
++		goto err_exit0;
++	}
++
++	/* init vsp manager */
++	memset(&init_par, 0, sizeof(struct vspm_init_t));
++	init_par.use_ch = VSPM_EMPTY_CH;
++	init_par.mode = VSPM_MODE_OCCUPY;
++	init_par.type = VSPM_TYPE_ISU_AUTO;
++
++	ercd = vspm_init_driver(&priv->handle, &init_par);
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_init_driver() ercd=%ld\n", ercd);
++		goto err_exit1;
++	}
++
++//////////////////////////////////////////////////////////
++/*                generate Input interlace              */
++/////////////////////////////////////////////////////////
++	/* set alpha of source */
++	memset(&alpha_par, 0, sizeof(alpha_par));
++	alpha_par.asel		= 0;
++	alpha_par.anum0		= 0;
++	alpha_par.anum1		= 0;
++	alpha_par.anum2		= 0;
++	alpha_par.athres0	= 0;
++	alpha_par.athres1	= 0;
++	for(int i=0;i<dst_height/2;i++){
++		for(int j=0;j<dst_width;j++){
++			write_reg(priv->in1_hard+(i*dst_width+j)*4,0x0000AA00);
++			write_reg(priv->in2_hard+(i*dst_width+j)*4,0x00CCCC00);
++		}
++	}
++//////////////////////////////////////////////////////////
++/*          Generate Input interlace frame 1           */
++/////////////////////////////////////////////////////////
++	rs_par.start_x          = 0;
++        rs_par.start_y          = 0;
++        rs_par.tune_x           = 0;
++        rs_par.tune_y           = 0;
++        rs_par.crop_w           = dst_width;
++        rs_par.crop_h           = dst_height/2;
++        rs_par.pad_mode         = 0;
++        rs_par.pad_val          = 0;
++        rs_par.x_ratio          = 0x1000;
++        rs_par.y_ratio          = 0x1000;
++
++
++	memset(&src_par, 0, sizeof(src_par));
++	src_par.addr		= priv->in1_hard;
++	src_par.addr_c		= 0;
++	if ((src_width*4)%32){
++		src_par.stride = ((src_width*4)/32+1)*32;
++	}else
++	src_par.stride 		= src_width*4;
++	src_par.stride_c	= 0;
++	src_par.width		= src_width;
++	src_par.height		= src_height/2;
++	src_par.format		= ISU_ARGB8888;
++	src_par.swap		= 0;
++	src_par.td		= NULL;
++	src_par.alpha		= &alpha_par;
++	src_par.uv_conv 	= 0;
++
++	/* destination */
++	memset(&dst_par, 0, sizeof(dst_par));
++	dst_par.addr		= priv->out2_hard;
++	dst_par.addr_c		= 0;
++	if((dst_width * 8)%512){
++		dst_par.stride = ((dst_width * 8)/512+1)*512;
++	}else
++		dst_par.stride  = dst_width*8;
++	dst_par.stride_c	= 0;
++	dst_par.format		= ISU_ARGB8888;
++	dst_par.swap		= 0;
++	dst_par.csc		= NULL;
++	dst_par.alpha		= &alpha_par;
++
++	isu_par.src_par		= &src_par;
++	isu_par.dst_par		= &dst_par;
++	isu_par.rs_par		= NULL;
++        isu_par.dl_hard_addr	= 0;
++
++	ercd = (long)isu_image_test(priv, isu_par);
++	if (ercd != 0) {
++		goto err_exit2;
++	}
++
++//////////////////////////////////////////////////////////
++/*          Generate Input interlace frame 2           */
++/////////////////////////////////////////////////////////
++	src_par.addr		= priv->in2_hard;
++	src_par.addr_c		= 0;
++	if ((src_width*4)%32){
++	       src_par.stride = ((src_width*4)/32+1)*32;
++	}else
++	src_par.stride		= src_width*4;
++	src_par.stride_c	= 0;
++	src_par.width		= src_width;
++	src_par.height		= src_height/2;
++	src_par.format		= ISU_ARGB8888;
++	src_par.swap		= 0;
++	src_par.td		= NULL;
++	src_par.alpha		= &alpha_par;
++	src_par.uv_conv 	= 0;
++
++
++	/* destination */
++	if ((dst_par.stride/2)%512)
++	dst_par.addr		= priv->out2_hard + ((dst_par.stride/2)/512+1)*512;
++	else
++	dst_par.addr		= priv->out2_hard + dst_par.stride/2;
++	dst_par.addr_c		= 0;
++	if((dst_width * 8)%512){
++	       dst_par.stride = ((dst_width * 8)/512+1)*512;
++	}else
++	       dst_par.stride  = dst_width*8;
++	dst_par.stride_c	= 0;
++	dst_par.format		= ISU_ARGB8888;
++	dst_par.swap		= 0;
++	dst_par.csc		= NULL;
++	dst_par.alpha		= &alpha_par;
++
++	isu_par.src_par		= &src_par;
++	isu_par.dst_par		= &dst_par;
++        isu_par.dl_hard_addr	= 0;
++	isu_par.rs_par		= NULL;
++
++	ercd = (long)isu_image_test(priv, isu_par);
++	if (ercd != 0) {
++		goto err_exit2;
++	}
++
++	output_fb(priv);
++//////////////////////////////////////////////////////////
++/*                  Output Progressive                 */
++/////////////////////////////////////////////////////////
++	rs_par.start_x          = 0;
++        rs_par.start_y          = 0;
++        rs_par.tune_x           = 0;
++        rs_par.tune_y           = 0;
++        rs_par.crop_w           = dst_width;
++        rs_par.crop_h           = dst_height;
++        rs_par.pad_mode         = 0;
++        rs_par.pad_val          = 0;
++        rs_par.x_ratio          = 0x1000;
++        rs_par.y_ratio          = 0x1000;
++
++	/* set alpha of source */
++	alpha_par.asel		= 0;
++	alpha_par.anum0		= 0;
++	alpha_par.anum1		= 0;
++	alpha_par.anum2		= 0;
++	alpha_par.athres0	= 0;
++	alpha_par.athres1	= 0;
++
++	/* set test parttern */
++	td_par.grada_mode	= 0b11111;
++	td_par.grada_step	= 1;
++	td_par.init_val		= 0;
++
++	/* set source */
++	src_par.addr		= priv->out2_hard;
++	src_par.addr_c		= 0;
++	src_par.stride 		= dst_par.stride/2;
++	src_par.stride_c	= 0;
++	src_par.width		= src_width;
++	src_par.height		= src_height;
++	src_par.format		= ISU_ARGB8888;
++	src_par.swap		= 0;
++	src_par.td		= NULL;
++	src_par.alpha		= &alpha_par;
++	src_par.uv_conv 	= 0;
++
++	/* destination */
++	dst_par.addr		= priv->out3_hard;
++	dst_par.addr_c		= 0;
++	if((dst_width * 4)%32){
++		dst_par.stride = ((dst_width * 4)/32+1)*32;
++	}else
++		dst_par.stride  = dst_width*4;
++	dst_par.stride_c	= 0;
++	dst_par.format		= ISU_ARGB8888;
++	dst_par.swap		= 0;
++	dst_par.csc		= NULL;
++	dst_par.alpha		= &alpha_par;
++
++	/* set isu */
++	isu_par.src_par		= &src_par;
++	isu_par.dst_par		= &dst_par;
++	isu_par.rs_par		= &rs_par;
++        isu_par.dl_hard_addr	= 0;
++
++	ercd = (long)isu_image_test(priv, isu_par);
++
++    	fwrite(priv->out3_virt, 1, dst_size, fp);
++	fclose(fp);
++	ercd = vspm_quit_driver(priv->handle);
++
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_quit_driver() ercd=%ld\n", ercd);
++		goto err_exit1;
++	}
++
++	/* release memory */
++	release_memory(priv);
++	free(priv);
++	printf("PASS\n");
++	return 0;
++
++err_exit2:
++	(void)vspm_quit_driver(priv->handle);
++
++err_exit1:
++	release_memory(priv);
++
++err_exit0:
++	free(priv);
++
++	printf("FAIL\n");
++	return -1;
++}
+diff --git a/vspm_if-tp-user/files/vspm_if/vspm_isu_rs.c b/vspm_if-tp-user/files/vspm_if/vspm_isu_rs.c
+new file mode 100644
+index 0000000..ba3c869
+--- /dev/null
++++ b/vspm_if-tp-user/files/vspm_if/vspm_isu_rs.c
+@@ -0,0 +1,360 @@
++/*
++ * Copyright (c) 2018 Renesas Electronics Corporation
++ * Released under the MIT license
++ * http://opensource.org/licenses/mit-license.php
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include <unistd.h>
++#include <fcntl.h>
++#include <linux/fb.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <sys/time.h>
++#include <pthread.h>
++
++#include "vspm_public.h"
++#include "mmngr_user_public.h"
++
++#define FB_ENABLE		0	/* 0: disable output framebuffer, 1: enable */
++
++int src_width	= 720;
++int src_height	= 480;
++int dst_width	= 360;
++int dst_height	= 240;
++int dst_size	= 360*240*4;
++int src_size	= 720*480*4;
++int tbl_num	= 192 + 64 * 7;		/* roundup(1920/256)-1 == 7 ; max:192+64*31 */
++
++struct vspm_tp_private_t {
++	void *in_virt;
++	unsigned int in_hard;
++	MMNGR_ID in_fd;
++
++	void *out_virt;
++	unsigned int out_hard;
++	MMNGR_ID out_fd;
++
++	void *handle;
++};
++
++struct vspm_tp_cb_info_t {
++	unsigned long job_id;
++	long ercd;
++
++	pthread_mutex_t mutex;
++	pthread_cond_t cond;
++};
++
++/* release memory of memory manager */
++static int release_memory(struct vspm_tp_private_t *priv)
++{
++	if (priv->out_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->out_fd);
++	if (priv->in_fd != 0)
++		(void)mmngr_free_in_user_ext(priv->in_fd);
++
++	return 0;
++}
++
++/* allocate memory from memory manager */
++static int allocate_memory(struct vspm_tp_private_t *priv)
++{
++	int ercd;
++
++	/* input buffer */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->in_fd, src_size, &priv->in_hard, &priv->in_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input!! ercd=%d\n", ercd);
++		return -1;
++	}
++
++	memset(priv->in_virt, 0xff, src_size);
++	/* output buffer */
++	ercd = mmngr_alloc_in_user_ext(
++		&priv->out_fd, dst_size, &priv->out_hard, &priv->out_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output!! ercd=%d\n", ercd);
++		(void)release_memory(priv);
++		return -1;
++	}
++	memset(priv->out_virt, 0, dst_size);
++
++	return 0;
++}
++
++/* output framebuffer */
++static void output_fb(struct vspm_tp_private_t *priv)
++{
++	FILE *fp;
++	int fpmem;
++	char *file= "input.IMG";
++	fp = fopen( file, "w");
++	if( fp != NULL )
++	{
++	    fwrite(priv->in_virt, 1, src_size, fp);
++	    fclose(fp);
++	}
++	file = "output.IMG";
++	fp = fopen( file, "w");
++	fwrite(priv->out_virt, 1, dst_size, fp);
++	fclose(fp);
++}
++
++/* callback function */
++static void cb_func(
++	unsigned long job_id, long result, void *user_data)
++{
++	struct vspm_tp_cb_info_t *cb_info =
++		(struct vspm_tp_cb_info_t *)user_data;
++
++	pthread_mutex_lock(&cb_info->mutex);
++	cb_info->job_id = job_id;
++	cb_info->ercd = result;
++	pthread_cond_signal(&cb_info->cond);
++	pthread_mutex_unlock(&cb_info->mutex);
++}
++
++/* image test */
++int isu_image_test(struct vspm_tp_private_t *priv)
++{
++	struct vspm_tp_cb_info_t *cb_info = NULL;
++
++	struct vspm_job_t vspm_ip;
++	struct isu_start_t isu_par;
++	struct isu_src_t src_par;
++	struct isu_alpha_unit_t alpha_par;
++	struct isu_td_unit_t td_par;
++	struct isu_dst_t dst_par;
++	struct isu_rs_t rs_par;
++	struct isu_csc_t csc_par;
++
++	unsigned long job_id = 0;
++	long ercd;
++
++	/* allocate memory */
++	cb_info = malloc(sizeof(struct vspm_tp_cb_info_t));
++	if (cb_info == NULL) {
++		printf("Error: failed to allocate memory!!\n");
++		return -1;
++	}
++
++	/* clear memory */
++	memset(cb_info, 0, sizeof(struct vspm_tp_cb_info_t));
++	pthread_mutex_init(&cb_info->mutex, NULL);
++	pthread_cond_init(&cb_info->cond, NULL);
++
++	/* set alpha of source */
++	memset(&alpha_par, 0, sizeof(alpha_par));
++	alpha_par.asel		= 0;
++	alpha_par.anum0		= 0;
++	alpha_par.anum1		= 0;
++	alpha_par.anum2		= 0;
++	alpha_par.athres0	= 0;
++	alpha_par.athres1	= 0;
++	
++	///////// Generate Input //////////
++	/* set test parttern */
++	td_par.grada_mode	= 0b11111;
++	td_par.grada_step	= 1;
++	td_par.init_val		= 0;
++
++	/* set source */
++	memset(&src_par, 0, sizeof(src_par));
++	src_par.addr		= priv->in_hard;
++	src_par.addr_c		= 0;
++	if ((src_width*4)%32){
++		src_par.stride = ((src_width*4)/32+1)*32;
++	}else
++	src_par.stride 		= src_width*4;
++	src_par.stride_c	= 0;
++	src_par.width		= src_width;
++	src_par.height		= src_height;
++	src_par.format		= ISU_ARGB8888;
++	src_par.swap		= 0;
++	src_par.td		= &td_par;
++	src_par.alpha		= &alpha_par;
++	src_par.uv_conv 	= 0;
++
++	/* destination */
++	memset(&dst_par, 0, sizeof(dst_par));
++	dst_par.addr		= priv->in_hard;
++	dst_par.addr_c		= 0;
++	if((dst_width * 4)%32){
++		dst_par.stride = ((src_width * 4)/32+1)*32;
++	}else
++		dst_par.stride  = src_width*4;
++	dst_par.stride_c	= 0;
++	dst_par.format		= ISU_ARGB8888;
++	dst_par.swap		= 0;
++	dst_par.csc		= NULL;
++	dst_par.alpha		= &alpha_par;
++
++	/* set isu */
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	isu_par.src_par		= &src_par;
++	isu_par.dst_par		= &dst_par;
++	isu_par.rs_par		= NULL;
++	isu_par.dl_hard_addr	= 0;
++
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++	/* entry */
++	ercd = vspm_entry_job(priv->handle, &job_id, 126, &vspm_ip, (void *)cb_info, cb_func);
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_entry_job() ercd=%d\n", ercd);
++		pthread_mutex_destroy(&cb_info->mutex);
++		free(cb_info);
++		return -1;
++	}
++
++	/* wait callback */
++	pthread_mutex_lock(&cb_info->mutex);
++	pthread_cond_wait(&cb_info->cond, &cb_info->mutex);
++	pthread_mutex_unlock(&cb_info->mutex);
++
++	/* check callback information */
++	if (cb_info->ercd != 0) {
++		printf("Error 1: failed to incorrect callback information!!\n");
++	}
++	if (cb_info->job_id != job_id) {
++		printf("Error 2: failed to incorrect callback information!!\n");
++	}
++
++	//////// Resize ///////
++	/* destination */
++	memset(&dst_par, 0, sizeof(dst_par));
++	dst_par.addr		= priv->out_hard;
++	dst_par.addr_c		= 0;
++	if((dst_width * 4)%32){
++		dst_par.stride = ((dst_width * 4)/32+1)*32;
++	}else
++		dst_par.stride  = dst_width*4;
++	dst_par.stride_c	= 0;
++	dst_par.format		= ISU_ARGB8888;
++	dst_par.swap		= 0;
++	dst_par.csc		= NULL;
++	dst_par.alpha		= &alpha_par;
++
++	/* set resize parameter */
++	rs_par.start_x		= 0;
++	rs_par.start_y		= 0;
++	rs_par.tune_x		= 0;
++	rs_par.tune_y		= 0;
++	rs_par.crop_w		= dst_width;
++	rs_par.crop_h		= dst_height;
++	rs_par.pad_mode		= 0;
++	rs_par.pad_val       	= 0;
++	rs_par.x_ratio       	= 0x2000;
++	rs_par.y_ratio       	= 0x2000;
++
++	/* set isu */
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	isu_par.src_par		= &src_par;
++	isu_par.dst_par		= &dst_par;
++	isu_par.rs_par		= &rs_par;
++	isu_par.dl_hard_addr	= 0;
++
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++	/* entry */
++	ercd = vspm_entry_job(priv->handle, &job_id, 126, &vspm_ip, (void *)cb_info, cb_func);
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_entry_job() ercd=%d\n", ercd);
++		pthread_mutex_destroy(&cb_info->mutex);
++		free(cb_info);
++		return -1;
++	}
++
++	/* wait callback */
++	pthread_mutex_lock(&cb_info->mutex);
++	pthread_cond_wait(&cb_info->cond, &cb_info->mutex);
++	pthread_mutex_unlock(&cb_info->mutex);
++
++	/* check callback information */
++	if (cb_info->ercd != 0) {
++		printf("Error 1: failed to incorrect callback information!!\n");
++	}
++	if (cb_info->job_id != job_id) {
++		printf("Error 2: failed to incorrect callback information!!\n");
++	}
++
++	pthread_mutex_destroy(&cb_info->mutex);
++	free(cb_info);
++	return 0;
++}
++
++/* main function */
++int main(int argc, char *argv[])
++{
++	struct vspm_tp_private_t *priv = NULL;
++	struct vspm_init_t init_par;
++	long ercd;
++	struct timeval pre_time, now_time;
++	unsigned int time;
++
++	/* allocate private memory */
++	priv = malloc(sizeof(struct vspm_tp_private_t));
++	if (priv == NULL) {
++		printf("Error: failed to allocate memory!!\n");
++		return -1;
++	}
++	memset(priv, 0, sizeof(struct vspm_tp_private_t));
++
++	/* allocate memory from memory manager */
++	ercd = (long)allocate_memory(priv);
++	if (ercd != 0) {
++		goto err_exit0;
++	}
++
++	/* create source image */
++//	create_source_image(priv);
++
++	/* init vsp manager */
++	memset(&init_par, 0, sizeof(struct vspm_init_t));
++	init_par.use_ch = VSPM_EMPTY_CH;
++	init_par.mode = VSPM_MODE_OCCUPY;
++	init_par.type = VSPM_TYPE_ISU_AUTO;
++
++	ercd = vspm_init_driver(&priv->handle, &init_par);
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_init_driver() ercd=%d\n", ercd);
++		goto err_exit1;
++	}
++
++	/* no scale up */
++	ercd = (long)isu_image_test(priv);
++	if (ercd != 0) {
++		goto err_exit2;
++	}
++	output_fb(priv);
++	ercd = vspm_quit_driver(priv->handle);
++	if (ercd != R_VSPM_OK) {
++		printf("Error: failed to vspm_quit_driver() ercd=%d\n", ercd);
++		goto err_exit1;
++	}
++
++	/* release memory */
++	release_memory(priv);
++	free(priv);
++	printf("PASS\n");
++	return 0;
++
++err_exit2:
++	(void)vspm_quit_driver(priv->handle);
++
++err_exit1:
++	release_memory(priv);
++
++err_exit0:
++	free(priv);
++
++	printf("FAIL\n", 0);
++	return -1;
++}
+-- 
+2.17.1
+
