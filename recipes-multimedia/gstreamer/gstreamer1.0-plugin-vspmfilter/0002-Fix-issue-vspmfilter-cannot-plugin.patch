@@ -1,0 +1,41 @@
+From c1fec215e1481718469fbd3d33229010c6194ab3 Mon Sep 17 00:00:00 2001
+From: cuongdoan <cuong.doan.ra@renesas.com>
+Date: Mon, 5 Jul 2021 23:18:33 +0700
+Subject: [PATCH] Fix-issue-vspmfilter-cannot-plugin
+
+---
+ configure.ac | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index b50bf34..f28e629 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -94,7 +94,6 @@ PKG_CHECK_MODULES([GST_VIDEO],
+     [gstreamer-video-$GST_PKG_VERSION >= $GSTPB_REQ])
+ PKG_CHECK_MODULES([GST_ALLOCATORS],
+     [gstreamer-allocators-$GST_PKG_VERSION >= $GSTPB_REQ])
+-
+ dnl Check for the GStreamer plugins directory
+ AC_ARG_VAR([GST_PLUGIN_PATH], [installation path for gstreamer-vspmfilter plugin elements])
+ AC_MSG_CHECKING([for GStreamer plugins directory])
+@@ -103,6 +102,7 @@ if test -d "$GST_PLUGIN_PATH"; then
+ else
+     GST_PLUGINS_DIR="\${libdir}/gstreamer-$GST_PKG_VERSION"
+ fi
++
+ AC_MSG_RESULT([$GST_PLUGINS_DIR])
+ plugindir="$GST_PLUGINS_DIR"
+ AC_SUBST(plugindir)
+@@ -116,7 +116,7 @@ AC_SUBST(GST_ALL_LDFLAGS)
+ dnl GST_PLUGIN_LDFLAGS:
+ dnl this really should only contain flags, not libs - they get added before
+ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^([_]*gst_plugin_desc|gst_.*_get_type)\$\$' $GST_ALL_LDFLAGS"
++GST_PLUGIN_LDFLAGS="-module -avoid-version $GST_ALL_LDFLAGS"
+ AC_SUBST(GST_PLUGIN_LDFLAGS)
+ 
+ AC_CONFIG_FILES([
+-- 
+2.17.1
+

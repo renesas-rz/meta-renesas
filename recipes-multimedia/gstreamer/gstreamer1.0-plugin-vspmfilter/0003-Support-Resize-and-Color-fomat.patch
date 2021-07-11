@@ -1,0 +1,169 @@
+From 75c128f324be8023d656dd02d9d089eac080ed5d Mon Sep 17 00:00:00 2001
+From: cuongdoan <cuong.doan.ra@renesas.com>
+Date: Tue, 6 Jul 2021 09:58:23 +0700
+Subject: [PATCH] Support-Resize-and-Color-fomat
+
+---
+ gstvspmfilter.c | 89 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 49 insertions(+), 40 deletions(-)
+
+diff --git a/gstvspmfilter.c b/gstvspmfilter.c
+index c0dacc4..0ef5112 100644
+--- a/gstvspmfilter.c
++++ b/gstvspmfilter.c
+@@ -409,35 +409,30 @@ gst_vspm_filter_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+ struct extensions_t
+ {
+   GstVideoFormat gst_format;
+-  guint vsp_format;
+-  guint vsp_swap;
++  guint isu_format;
++  guint isu_swap;
+ };
+ 
+ /* Note that below swap information will be REVERSED later (in function
+  *     set_colorspace) because current system use Little Endian */
+ 
+ static const struct extensions_t exts[] = {
+-  {GST_VIDEO_FORMAT_NV12,  VSP_IN_YUV420_SEMI_NV12,  VSP_SWAP_NO},    /* NV12 format is highest priority as most modules support this */
+-  {GST_VIDEO_FORMAT_I420,  VSP_IN_YUV420_PLANAR,     VSP_SWAP_NO},    /* I420 is second priority */
+-  {GST_VIDEO_FORMAT_YUY2,  VSP_IN_YUV422_INT0_YUY2,  VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_UYVY,  ISU_YUV422_UYVY,  VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_RGBx,  ISU_RGBA8888,          VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_BGRx,  ISU_ARGB8888,          VSP_SWAP_B | VSP_SWAP_W},  /* Not supported in VSP. Use ARGB8888, and swap ARGB -> RABG -> BGRA */
+-  {GST_VIDEO_FORMAT_xRGB,  ISU_ARGB8888,          VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_xBGR,  ISU_ABGR8888,          VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_RGBA,  ISU_RGBA8888,          VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_BGRA,  ISU_ARGB8888,          VSP_SWAP_B | VSP_SWAP_W},  /* Same as BGRA */
+-  {GST_VIDEO_FORMAT_ARGB,  ISU_ARGB8888,          VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_ABGR,  ISU_ABGR8888,          VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_RGB ,  ISU_RGB888,            VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_BGR ,  ISU_BGR888,            VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_YVYU,  VSP_IN_YUV422_INT0_YVYU,  VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_Y444,  VSP_IN_YUV444_PLANAR,     VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_NV21,  VSP_IN_YUV420_SEMI_NV21,  VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_v308,  VSP_IN_YUV444_INTERLEAVED,VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_RGB16, VSP_IN_RGB565,            VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_NV16,  VSP_IN_YUV422_SEMI_NV16,  VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_NV24,  VSP_IN_YUV444_SEMI_PLANAR,VSP_SWAP_NO},
++//  {GST_VIDEO_FORMAT_ARGB1555, ISU_ARGB1555,   ISU_SWAP_NO},
++//  {GST_VIDEO_FORMAT_BGR666,   ISU_BGR666,     ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_RGB16,      ISU_RGB565,     ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_RGB,        ISU_RGB888,     ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_BGR,        ISU_BGR888,     ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_ARGB,       ISU_ARGB8888,   ISU_SWAP_B | ISU_SWAP_W},
++  {GST_VIDEO_FORMAT_RGBA,       ISU_RGBA8888,   ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_ABGR,       ISU_ABGR8888,   ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_UYVY,       ISU_YUV422_UYVY,ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_YUY2,       ISU_YUV422_YUY2,ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV16,       ISU_YUV422_NV16,ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV12,       ISU_YUV420_NV12,ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_GRAY8,      ISU_RAW8,       ISU_SWAP_NO},
++  {GST_VIDEO_FORMAT_GRAY10_LE32,ISU_RAW10,      ISU_SWAP_NO},
++//  {GST_VIDEO_FORMAT_RAW12,    ISU_RAW12,      ISU_SWAP_NO},
++
+ };
+ 
+ static gint
+@@ -448,10 +443,10 @@ set_colorspace (GstVideoFormat vid_fmt, guint * format, guint * fswap)
+ 
+   for (i = 0; i < nr_exts; i++) {
+     if (vid_fmt == exts[i].gst_format) {
+-      *format = exts[i].vsp_format;
++      *format = exts[i].isu_format;
+ 
+       /* Need to reverse swap information for Little Endian */
+-      *fswap  = (VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL) ^ exts[i].vsp_swap;
++      *fswap  = (VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL) ^ exts[i].isu_swap;
+       return 0;
+     }
+   }
+@@ -1021,9 +1016,13 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+ 
+   T_ISU_IN src_par;
+   T_ISU_ALPHA src_alpha_par;
++  T_ISU_CSC csc_par;
+   T_ISU_OUT dst_par;
+   T_ISU_RS rs_par;
+ 
++  unsigned int csc_k_matrix[3][3]={{0x0107,0x0204,0x0064},{0x3F68,0x3ED6,0x01C2},{0x01C2,0x3E87,0x3FB7}};;
++  unsigned int csc_clip[3][2]={{0x00,0x10},{0x00,0x80},{0x00,0x80}};
++  unsigned int csc_offset[3][2]={{0xEB,0x10},{0xF0,0x10},{0xF0,0x10}};
+ 
+   gint in_width, in_height;
+   gint out_width, out_height;
+@@ -1096,16 +1095,21 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     GST_ERROR("does not support number plane >= 3\n");
+     return GST_FLOW_ERROR;
+   }
+-  rs_par.start_x          = 0;
+-  rs_par.start_y          = 0;
+-  rs_par.tune_x           = 0;
+-  rs_par.tune_y           = 0;
+-  rs_par.crop_w           = out_width;
+-  rs_par.crop_h           = out_height;
+-  rs_par.pad_mode         = 0;
+-  rs_par.pad_val          = 0;
+-  rs_par.x_ratio          = 0x1000;
+-  rs_par.y_ratio          = 0x1000;
++
++  {
++    /* set resize parameter */
++    memset(&rs_par, 0, sizeof(T_ISU_RS));
++    rs_par.start_x          = 0;
++    rs_par.start_y          = 0;
++    rs_par.tune_x           = 0;
++    rs_par.tune_y           = 0;
++    rs_par.crop_w           = out_width;
++    rs_par.crop_h           = out_height;
++    rs_par.pad_mode         = 0;
++    rs_par.pad_val          = 0;
++    rs_par.x_ratio          = (unsigned short)( (in_width << 12) / out_width );
++    rs_par.y_ratio          = (unsigned short)( (in_height << 12) / out_height );
++  }
+ 
+   {
+     /* Setting input parameters */
+@@ -1115,7 +1119,6 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     src_alpha_par.anum2		= 0;    //T.B.D
+     src_alpha_par.athres0	= 0;    //T.B.D
+     src_alpha_par.athres1	= 0;    //T.B.D
+-    src_alpha_par.acsc		= 0;    //T.B.D
+ 
+     src_par.addr        = src_addr[0];
+     src_par.addr_c     = src_addr[1];
+@@ -1131,6 +1134,13 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   }
+ 
+   {
++    /* set csc for color convert */
++    csc_par.csc             = ISU_CSC_CUSTOM;
++    csc_par.clrcng          = 1;
++    memcpy(csc_par.k_matrix, csc_k_matrix, sizeof(csc_k_matrix));
++    memcpy(csc_par.offset, csc_offset, sizeof(csc_offset));
++    memcpy(csc_par.clip, csc_clip, sizeof(csc_clip));
++
+     /* Setting output parameters */
+     dst_par.addr      = dst_addr[0];
+     dst_par.addr_c    = dst_addr[1];
+@@ -1138,14 +1148,13 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     dst_par.stride_c  = out_frame->info.stride[1];
+     dst_par.format    = vsp_info->out_format;
+     dst_par.swap      = vsp_info->out_swapbit;
+-    dst_par.csc       = NULL; //T.B.D
+-    dst_par.alpha		  = &src_alpha_par;
++    dst_par.csc       = &csc_par; 
++    dst_par.alpha     = &src_alpha_par;
+   }
+   isu_par.src_par  = &src_par;
+   isu_par.dst_par   = &dst_par;
+   isu_par.rs_par = &rs_par;
+-//isu_par.rs_par = NULL;
+-//	isu_par.dl_par = NULL;
++
+   memset(&vspm_ip, 0, sizeof(VSPM_IP_PAR));
+   vspm_ip.uhType    = VSPM_TYPE_ISU_AUTO;
+   vspm_ip.unionIpParam.ptisu = &isu_par;
+-- 
+2.17.1
+
