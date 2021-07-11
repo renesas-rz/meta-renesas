@@ -1,0 +1,61 @@
+From 62303e691c346f430c1b650fb3a963199b24c087 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Mon, 12 Jul 2021 12:03:38 +0700
+Subject: [PATCH 2/2] Add option ISU_CSC_RAW
+
+	Option ISU_CSC_RAW to support color conversion RAW -> RGB and
+RAW -> YUV
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c | 27 ++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index 1ab4120..dc1df63 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -304,6 +304,18 @@ static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
+ 	/* set data swapping parameter */
+ 	wpf_info->swap = (unsigned int)(dst_par->swap);
+ 
++	for (i = 0; i < ISU_LAYER_NUM; i++) {
++		for (j = 0; j < ISU_LAYER_NUM; j++) {
++			wpf_info->k_matrix[i][j] = 0;
++		}
++	}
++	for (i = 0; i < ISU_LAYER_NUM; i++) {
++		for (j = 0; j < ISU_OFFSET_NUM; j++) {
++			wpf_info->offset[i][j] = 0;
++			wpf_info->clip[i][j] = 0xFF00;
++		}
++	}
++
+ 	/* check color space conversion parameter */
+ 	if (dst_par->csc) {
+ 		switch (dst_par->csc->csc){
+@@ -322,8 +334,19 @@ static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
+ 				}
+ 			}
+ 			break;
+-		case ISU_CSC_601:
+-		case ISU_CSC_709:
++		case ISU_CSC_RAW:
++			if((wpf_info->format>=ISU_ARGB1555)
++			&&(wpf_info->format<=ISU_ABGR8888)){
++				wpf_info->k_matrix[0][0] = 0x400;
++				wpf_info->k_matrix[1][0] = 0x400;
++				wpf_info->k_matrix[2][0] = 0x400;
++			}
++			if((wpf_info->format>=ISU_YUV422_UYVY)
++			&&(wpf_info->format<=ISU_YUV420_NV12)){
++				wpf_info->k_matrix[0][0] = 0x400;
++				wpf_info->offset[1][1] = 128;
++				wpf_info->offset[2][1] = 128;
++			}
+ 			break;
+ 		default:
+ 			return E_ISU_PARA_OUT_CSC;
+-- 
+2.17.1
+

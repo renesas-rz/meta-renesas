@@ -1,0 +1,2638 @@
+From cc791aaa6252bc3cc3f4d0ea25d5e5ae97dd7a0e Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Tue, 6 Jul 2021 16:55:10 +0700
+Subject: [PATCH] Add ISU driver
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv.c      | 490 ++++++++++++++
+ .../files/vspm/drv/isu/isu_drv_local.h        | 215 ++++++
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c  | 433 ++++++++++++
+ vspm-module/files/vspm/drv/isu/isu_drv_phy.c  | 624 ++++++++++++++++++
+ vspm-module/files/vspm/drv/isu_drv_public.h   | 100 +++
+ .../files/vspm/drv/manager/vspm_drv_isu.c     | 357 ++++++++++
+ vspm-module/files/vspm/drv/vspm_ip_ctrl.h     |  12 +-
+ vspm-module/files/vspm/include/isu_drv.h      | 232 +++++++
+ vspm-module/files/vspm/include/vspm_cmn.h     |   7 +-
+ vspm-module/files/vspm/include/vspm_public.h  |   3 +-
+ 10 files changed, 2469 insertions(+), 4 deletions(-)
+ create mode 100755 vspm-module/files/vspm/drv/isu/isu_drv.c
+ create mode 100755 vspm-module/files/vspm/drv/isu/isu_drv_local.h
+ create mode 100755 vspm-module/files/vspm/drv/isu/isu_drv_par.c
+ create mode 100755 vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+ create mode 100644 vspm-module/files/vspm/drv/isu_drv_public.h
+ create mode 100644 vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
+ create mode 100644 vspm-module/files/vspm/include/isu_drv.h
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv.c b/vspm-module/files/vspm/drv/isu/isu_drv.c
+new file mode 100755
+index 0000000..990cb6f
+--- /dev/null
++++ b/vspm-module/files/vspm/drv/isu/isu_drv.c
+@@ -0,0 +1,490 @@
++/*************************************************************************/ /*
++ * ISUM
++ *
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ *
++ * License        Dual MIT/GPLv2
++ *
++ * The contents of this file are subject to the MIT license as set out below.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * the GNU General Public License Version 2 ("GPL") in which case the provisions
++ * of GPL are applicable instead of those above.
++ *
++ * If you wish to allow use of your version of this file only under the terms of
++ * GPL, and not to allow others to use your version of this file under the terms
++ * of the MIT license, indicate your decision by deleting the provisions above
++ * and replace them with the notice and other provisions required by GPL as set
++ * out in the file called "GPL-COPYING" included in this distribution. If you do
++ * not delete the provisions above, a recipient may use your version of this
++ * file under the terms of either the MIT license or GPL.
++ *
++ * This License is also included in this distribution in the file called
++ * "MIT-COPYING".
++ *
++ * EXCEPT AS OTHERWISE STATED IN A NEGOTIATED AGREEMENT: (A) THE SOFTWARE IS
++ * PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
++ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++ * PARTICULAR PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS
++ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++ * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ *
++ * GPLv2:
++ * If you wish to use this file under the terms of GPL, following terms are
++ * effective.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */ /*************************************************************************/
++
++#include <linux/slab.h>
++
++#include "vspm_public.h"
++#include "vspm_ip_ctrl.h"
++#include "vspm_main.h"
++
++#include "isu_drv_public.h"
++#include "isu_drv_local.h"
++
++static struct isu_prv_data *g_isu_obj[ISU_IP_MAX] = {NULL};
++
++/******************************************************************************
++ * Function:		isu_lib_init
++ * Description:	Initialize ISU driver
++ * Returns:		0/E_ISU_NO_MEM
++ *	return of isu_ins_check_init_parameter()
++ ******************************************************************************/
++long isu_lib_init(struct isu_init_t *param)
++{
++	struct isu_prv_data *prv;
++
++	unsigned int i;
++
++	long ercd;
++
++	/* check initialize parameter */
++	ercd = isu_ins_check_init_parameter(param);
++	if (ercd)
++		return ercd;
++
++	for (i = 0; i < param->ip_num; i++) {
++		/* allocate memory */
++		prv = kzalloc(sizeof(struct isu_prv_data), GFP_KERNEL);
++		if (!prv)
++			goto err_exit;
++
++		/* update status */
++		prv->ch_info.status = ISU_STAT_INIT;
++
++		g_isu_obj[i] = prv;
++	}
++
++	return 0;
++
++err_exit:
++	for (i = 0; i < param->ip_num; i++) {
++		kfree(g_isu_obj[i]);
++		g_isu_obj[i] = NULL;
++	}
++
++	return E_ISU_NO_MEM;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_quit
++ * Description:	Finalize ISU driver
++ * Returns:		0
++ *	return of isu_lib_abort()
++ *	return of isu_lib_close()
++ ******************************************************************************/
++long isu_lib_quit(void)
++{
++	struct isu_prv_data **prv = &g_isu_obj[0];
++
++	long ercd;
++
++	unsigned int i;
++
++	for (i = 0; i < ISU_IP_MAX; i++) {
++		if (*prv) {
++			/* check condition */
++			if ((*prv)->ch_info.status == ISU_STAT_RUN) {
++				/* stop ISU processing */
++				ercd = isu_lib_abort((unsigned char)i);
++				if (ercd)
++					return ercd;
++			}
++
++			if ((*prv)->ch_info.status == ISU_STAT_READY) {
++				ercd = isu_lib_close((unsigned char)i);
++				if (ercd)
++					return ercd;
++			}
++
++			/* release memory */
++			kfree(*prv);
++			*prv = NULL;
++		}
++		prv++;
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_open
++ * Description:	Initialize FDP channel.
++ * Returns:		0/E_ISU_PARA_CH/E_ISU_NO_INIT/E_ISU_INVALID_STATE
++ *	return of isu_ins_get_pdata()
++ *	return of isu_ins_enable_clock()
++ *	return of isu_ins_init_reg()
++ *	return of isu_ins_reg_ih()
++ ******************************************************************************/
++long isu_lib_open(unsigned char ch, struct isu_open_t *param)
++{
++	struct isu_prv_data *prv;
++
++	long ercd;
++
++	/* check open parameter */
++	ercd = isu_ins_check_open_parameter(param);
++	if (ercd)
++		goto err_exit1;
++
++	/* check channel parameter */
++	if (ch >= ISU_IP_MAX) {
++		ercd = E_ISU_PARA_CH;
++		goto err_exit1;
++	}
++
++	if (!g_isu_obj[ch]) {
++		ercd = E_ISU_NO_INIT;
++		goto err_exit1;
++	}
++	prv = g_isu_obj[ch];
++
++	/* check status */
++	if (prv->ch_info.status != ISU_STAT_INIT){
++		ercd = E_ISU_INVALID_STATE;
++		goto err_exit1;
++	}
++
++	prv->pdev = param->pdev;
++
++	/* set open parameter */
++	ercd = isu_ins_get_isu_resource(prv);
++	if (ercd)
++		goto err_exit1;
++
++	/*dh enable clock */
++	ercd = isu_ins_enable_clock(prv);
++	if (ercd)
++		goto err_exit1;
++
++	/* initialize register */
++	ercd = isu_ins_init_reg(prv);
++	if (ercd)
++		goto err_exit2;
++
++	/* registory interrupt handler */
++	ercd = isu_ins_reg_ih(prv);
++	if (ercd)
++		goto err_exit3;
++
++	/* update status */
++	prv->ch_info.status = ISU_STAT_READY;
++
++	return 0;
++
++err_exit3:
++	(void)isu_ins_quit_reg(prv);
++
++err_exit2:
++	(void)isu_ins_disable_clock(prv);
++
++err_exit1:
++	return ercd;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_close
++ * Description:	Finalize FDP channel.
++ * Returns:		0/E_ISU_PARA_CH/E_ISU_NO_INIT/E_ISU_INVALID_STATE
++ *	return of isu_ins_unreg_ih()
++ *	return of isu_ins_quit_reg()
++ *	return of isu_ins_disable_clock()
++ ******************************************************************************/
++long isu_lib_close(unsigned char ch)
++{
++	struct isu_prv_data *prv;
++
++	long ercd;
++
++	/* check channel parameter */
++	if (ch >= ISU_IP_MAX)
++		return E_ISU_PARA_CH;
++
++	/* check condition */
++	if (!g_isu_obj[ch])
++		return E_ISU_NO_INIT;
++	prv = g_isu_obj[ch];
++
++	/* check status */
++	if (prv->ch_info.status != ISU_STAT_READY)
++		return E_ISU_INVALID_STATE;
++
++	/* unregistory interrupt handler */
++	ercd = isu_ins_unreg_ih(prv);
++	if (ercd)
++		return ercd;
++
++	/* Finalize register */
++	ercd = isu_ins_quit_reg(prv);
++	if (ercd)
++		return ercd;
++
++	/* disable clock */
++	ercd = isu_ins_disable_clock(prv);
++	if (ercd)
++		return ercd;
++
++	/* update status */
++	prv->ch_info.status = ISU_STAT_INIT;
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_start
++ * Description:	Start ISU processing
++ * Returns: 0/E_ISU_PARA_CB/E_ISU_PARA_INPAR/E_ISU_PARA_CH/E_ISU_NO_INIT/E_ISU_INVALID_STATE
++	returns isu_ins_check_start_parameter
++	returns isu_ins_set_start_parameter
++ ******************************************************************************/
++long isu_lib_start(unsigned char ch,
++			void *callback,
++			struct isu_start_t *param,
++			void *userdata)
++{
++	struct isu_prv_data *prv;
++	struct isu_ch_info *ch_info;
++
++	long ercd;
++	/* check start parameter */
++	if (!callback)
++		return E_ISU_PARA_CB;
++
++	if (!param)
++		return E_ISU_PARA_INPAR;
++
++	/* check channel parameter */
++	if (ch >= ISU_IP_MAX)
++		return E_ISU_PARA_CH;
++
++	if (!g_isu_obj[ch])
++		return E_ISU_NO_INIT;
++
++	prv = g_isu_obj[ch];
++
++	/* check write index */
++	ch_info = &prv->ch_info;
++
++	/* check status */
++	if (ch_info->status != ISU_STAT_READY)
++		return E_ISU_INVALID_STATE;
++
++	if (!prv->isu_reg)
++		return E_ISU_INVALID_STATE;
++
++	/* update status */
++	ch_info->status = ISU_STAT_RUN;
++
++	/* check start parameter */
++	ercd = isu_ins_check_start_parameter(prv, param);
++	if (ercd) {
++		/* update status */
++		ch_info->status = ISU_STAT_READY;
++
++		return ercd;
++	}
++
++	/* set start parameter */
++	ercd = isu_ins_set_start_parameter(prv);
++	if (ercd) {
++		/* update status */
++		ch_info->status = ISU_STAT_READY;
++
++		return ercd;
++	}
++
++	/* set callback information */
++	ch_info->cb_func = callback;
++	ch_info->cb_userdata = userdata;
++
++	/* start */
++	isu_ins_start_processing(prv);
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_abort
++ * Description:	Forced stop of ISU processing
++ * Returns:		0/E_ISU_PARA_CH/E_ISU_NO_INIT
++ *	return of isu_ins_stop_processing().
++ ******************************************************************************/
++long isu_lib_abort(unsigned char ch)
++{
++	struct isu_prv_data *prv;
++
++	long ercd;
++
++	/* check channel parameter */
++	if (ch >= ISU_IP_MAX)
++		return E_ISU_PARA_CH;
++
++	if (!g_isu_obj[ch])
++		return E_ISU_NO_INIT;
++
++	prv = g_isu_obj[ch];
++
++	/* check status */
++	if (prv->ch_info.status == ISU_STAT_RUN) {
++		/* stop ISU processing */
++		ercd = isu_ins_stop_processing(prv);
++		if (ercd)
++			return ercd;
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_get_status
++ * Description:	Get status of ISU processing
++ * Returns:		0/E_ISU_PARA_INPAR/E_ISU_PARA_CH/E_ISU_NO_INIT/
++ *	E_ISU_INVALID_STATE
++ ******************************************************************************/
++long isu_lib_get_status(unsigned char ch, struct isu_status_t *status)
++{
++	struct isu_prv_data *prv;
++
++	/* check parameter */
++	if (!status)
++		return E_ISU_PARA_INPAR;
++
++	/* check channel parameter */
++	if (ch >= ISU_IP_MAX)
++		return E_ISU_PARA_CH;
++
++	if (!g_isu_obj[ch])
++		return E_ISU_NO_INIT;
++	prv = g_isu_obj[ch];
++
++	/* check status */
++	if (prv->ch_info.status == ISU_STAT_INIT)
++		return E_ISU_INVALID_STATE;
++
++	/* set status */
++	status->wpf_bits = prv->rdata.usable_wpf;
++	status->rpf_bits = prv->rdata.usable_rpf;
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_suspend
++ * Description:	Suspend of ISU processing
++ * Returns:		0
++ *	return of isu_ins_unreg_ih().
++ *	return of isu_ins_quit_reg().
++ ******************************************************************************/
++long isu_lib_suspend(unsigned char ch)
++{
++	struct isu_prv_data *prv;
++
++	long ercd;
++
++	/* check channel parameter */
++	if (ch >= ISU_IP_MAX)
++		return E_ISU_PARA_CH;
++
++	prv = g_isu_obj[ch];
++
++	if (prv && prv->isu_reg) {
++		if (prv->ch_info.status == ISU_STAT_RUN) {
++			/* waiting processing finish */
++			(void)isu_ins_wait_processing(prv);
++		}
++
++		if (prv->ch_info.status == ISU_STAT_READY) {
++			/* unregistory interrupt handler */
++			ercd = isu_ins_unreg_ih(prv);
++			if (ercd)
++				return ercd;
++
++			/* finalize register */
++			ercd = isu_ins_quit_reg(prv);
++			if (ercd)
++				return ercd;
++		}
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_lib_resume
++ * Description:	Resume of ISU processing
++ * Returns:		0
++ *	return of isu_ins_init_reg().
++ *	return of isu_ins_reg_ih().
++ ******************************************************************************/
++long isu_lib_resume(unsigned char ch)
++{
++	struct isu_prv_data *prv;
++
++	long ercd;
++
++	/* check channel parameter */
++	if (ch >= ISU_IP_MAX)
++		return E_ISU_PARA_CH;
++
++	prv = g_isu_obj[ch];
++
++	if (prv && !prv->isu_reg) {
++		if (prv->ch_info.status == ISU_STAT_READY) {
++			/* reinitialize register */
++			ercd = isu_ins_init_reg(prv);
++			if (ercd)
++				return ercd;
++
++			/* reregister interrupt handler */
++			ercd = isu_ins_reg_ih(prv);
++			if (ercd) {
++				(void)isu_ins_quit_reg(prv);
++				return ercd;
++			}
++		}
++	}
++
++	return 0;
++}
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_local.h b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+new file mode 100755
+index 0000000..a5a970b
+--- /dev/null
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+@@ -0,0 +1,215 @@
++#ifndef __ISU_DRV_PHY_H__
++#define __ISU_DRV_PHY_H__
++/* define register offset */
++/* System Management Register offset address*/
++#define ISU_FM_DL_STADDH	0x0000  /* FM Descriptor List Address Registers 0 */
++#define ISU_FM_DL_STADDL	0x0004  /* FM Descriptor List Address Registers 1 */
++#define ISU_FM_FRCON		0x0008  /* FM Frame Control Registers */
++#define ISU_FM_STOP		0x000C  /* FM Module Stop Registers */
++#define ISU_FM_INT_EN		0x0010  /* FM Interrupt Enable Registers */
++#define ISU_FM_INT_STA		0x0014  /* FM Interrupt Status Registers */
++#define ISU_AXI_ERAC		0x0020  /* AXI Error Action Registers */
++#define ISU_AXI_FIFO_CAP	0x002C  /* AXI FIFO Capability Registers */
++
++/* Common Register
++Sets input/ouput, reduction ratio and color conversion coefficient
++*/
++#define ISU_RPF_SRC_SIZE	0x0100  /* RPF Source Image Size Registers */
++#define ISU_RPF_SRC_STRD	0x0104  /* RPF Source Stride Registers */
++#define ISU_RPF_SRC_ADDH_PL0	0x0108  /* RPF Source Plane0 Address Registers 0 */
++#define ISU_RPF_SRC_ADDL_PL0	0x010C  /* RPF Source Plane0 Address Registers 1 */
++#define ISU_RPF_SRC_ADDH_PL1	0x0110  /* RPF Source Plane1 Address Registers 0 */
++#define ISU_RPF_SRC_ADDL_PL1	0x0114  /* RPF Source Plane1 Address Registers 1 */
++#define ISU_RPF_FMT		0x0118  /* RPF Source Image Format Registers */
++#define ISU_RPF_UVBIN		0x011C  /* RPF Source Image UV Format Register */
++#define ISU_RPF_SRC_DSWAP	0x0120  /* RPF Source Image Data Swap Registers */
++#define ISU_RPF_ALPH_SEL	0x0124  /* RPF Source ALPHA Data Selection Registers */
++#define ISU_RPF_SRC_TD1		0x0128  /* RPF Source TEST Data Register1 */
++#define ISU_RPF_SRC_TD2		0x012C  /* RPF Source TEST Data Register2 */
++#define ISU_RS_HSCALE		0x0140  /* RS Scaling Factor Registers 0 */
++#define ISU_RS_VSCALE		0x0144  /* RS Scaling Factor Registers 1 */
++#define ISU_RS_STPOS		0x0148  /* RS Output Image Start Position Registers */
++#define ISU_RS_POS_TUNE		0x014C  /* RS Output Image Start Position Tuning Registers */
++#define ISU_RS_OS_CROP		0x0150  /* RS Output Size Crop Registers */
++#define ISU_RS_PADDMODE		0x0154  /* RS CROP Padding Mode Registers */
++#define ISU_RS_PADDVAL		0x0158  /* RS CROP Padding Value Registers */
++#define ISU_WPF_DST_ADDH_PL0	0x0180  /* WPF Destination Plane0 Address Registers 0 */
++#define ISU_WPF_DST_ADDL_PL0	0x0184  /* WPF Destination Plane0 Address Registers 1 */
++#define ISU_WPF_DST_ADDH_PL1	0x0188  /* WPF Destination Plane1 Address Registers 0 */
++#define ISU_WPF_DST_ADDL_PL1	0x018C  /* WPF Destination Plane1 Address Registers 1 */
++#define ISU_WPF_DST_STRD	0x0190  /* WPF Destination Stride Registers */
++#define ISU_WPF_FMT		0x0194  /* WPF Destination Image Format Registers */
++#define ISU_WPF_CCOL		0x0198  /* WPF Color Collection Control Registers */
++#define ISU_WPF_MUL1		0x019C  /* WPF Color Collection MUL Coefficient Registers1 */
++#define ISU_WPF_MUL2		0x01A0  /* WPF Color Collection MUL Coefficient Registers2 */
++#define ISU_WPF_MUL3		0x01A4  /* WPF Color Collection MUL Coefficient Registers3 */
++#define ISU_WPF_MUL4		0x01A8  /* WPF Color Collection MUL Coefficient Registers4 */
++#define ISU_WPF_MUL5		0x01AC  /* WPF Color Collection MUL Coefficient Registers5 */
++#define ISU_WPF_MUL6		0x01B0  /* WPF Color Collection MUL Coefficient Registers6 */
++#define ISU_WPF_OFST1		0x01B4  /* WPF Color Collection Offset Coefficient Registers1 */
++#define ISU_WPF_OFST2		0x01B8  /* WPF Color Collection Offset Coefficient Registers2 */
++#define ISU_WPF_CLP1		0x01BC  /* WPF Color Collection Clip Registers1 */
++#define ISU_WPF_CLP2		0x01C0  /* WPF Color Collection Clip Registers2 */
++#define ISU_WPF_DST_DSWAP	0x01C4  /* WPF Destination Image Data Swap Registers */
++#define ISU_WPF_ALPH_SEL1	0x01C8  /* WPF Destination ALPHA Selection Registers1 */
++#define ISU_WPF_ALPH_SEL2	0x01CC  /* WPF Destination ALPHA Selection Registers2 */
++#define ISU_WPF_ALPH_VAL	0x01D0  /* WPF Destination ALPHA Value Registers */
++#define ISU_AXI_BLEN		0x01F0  /* AXI Max Burst Length Registers */
++
++/* Controler bit */
++#define ISU_DESON		0x00010000  /* Processing method selection bit */
++#define ISU_START		0x00000001  /* Frame processing start bit */
++#define ISU_STOP		0x00000001  /* Frame processing stop bit */
++
++/* Interrupt control bits */
++#define ISU_INT_AXIRXERRE	0x10000000	/* Control of AXI bus read error interrupt */
++#define ISU_INT_AXITXERRE	0x01000000	/* Control of AXI bus write error interrupt */
++#define ISU_INT_LISTERRE	0x00010000  /* Control of "Descriptor List" format violation interrupt */
++#define ISU_INT_SRSTENDE	0x00000100  /* Control of emergency stop completion interrupt bit */
++#define ISU_INT_DESENDE		0x00000002	/* Control of descriptor footer read completion interrupt */
++#define ISU_INT_FRENDE		0x00000001  /* Control of the frame processing end */
++
++/* Interrupt bits */
++#define ISU_INT_RRESPERR	0x38000000  /* Displays the status of the AXI read response */
++#define ISU_INT_BRESPERR	0x03800000	/* Displays the status of the AXI write response */
++#define ISU_INT_LISTERR		0x00010000	/* Displays the status of "Descriptor List" format violations */
++#define ISU_INT_SRSTEND		0x00000100	/* Displays the status of the emergency stop completion */
++#define ISU_INT_DESEND		0x00000002	/* Displays the status of the descriptor footer read completion */
++#define ISU_INT_FREND		0x00000001	/* Displays the status of the frame processing end */
++
++#define ISU_RPF_TD_USE		(0x80000000)
++#define ISU_RPF_AEXT		(0x00010000)
++#define ISU_RS_PADSEL		(0x00000001)
++#define ISU_RS_NO_RESIZE	(0x00010000)
++#define ISU_RPF_UV_CONV		(0x00000001)
++#define ISU_WPF_ASEL		(0x00010000)
++#define ISU_WPF_CCOL_SEL	(0x00000002)
++#define ISU_WPF_CCOL_ASE	(0x00000001)
++
++
++/* define status read counter */
++#define ISU_STATUS_LOOP_TIME	(2)
++#define ISU_STATUS_LOOP_CNT	(500)
++
++/* define module maximum */
++#define ISU_RPF_MAX		(1)
++#define ISU_WPF_MAX		(1)
++#define ISU_IP_MAX		(ISU_RPF_MAX)
++
++/* define status */
++#define ISU_STAT_NOT_INIT	0
++#define ISU_STAT_INIT		1
++#define ISU_STAT_READY		2
++#define ISU_STAT_RUN		3
++
++/* define */
++#define ISU_FALSE		0
++#define ISU_TRUE		1
++
++/* define color space */
++#define ISU_COLOR_NO		(0)
++#define ISU_COLOR_RGB		(1)
++#define ISU_COLOR_YUV		(2)
++#define ISU_COLOR_RAW		(3)
++
++/* RPF information structure */
++struct isu_rpf_info {
++	unsigned long addr;
++	unsigned long addr_c;
++	unsigned int stride;
++	unsigned int stride_c;
++	unsigned int height;
++	unsigned int width;
++	unsigned char format;
++	unsigned int swap;	/* Data swap for input images */
++	unsigned int rpf_alpha_val;
++	unsigned int src_td1;
++	unsigned int src_td2;
++	unsigned int uv_bin;
++};
++
++/* Scaling factor information */
++struct isu_rs_info {
++	unsigned int start_x;
++	unsigned int start_y;
++	unsigned int tune_x;
++	unsigned int tune_y;
++	unsigned int crop_w;
++	unsigned int crop_h;
++	unsigned int pad_mode;
++	unsigned int pad_val;
++	unsigned int x_scale;
++	unsigned int y_scale;
++};
++
++/* WPF information structure */
++struct isu_wpf_info {
++	unsigned long addr;
++	unsigned long addr_c;
++	unsigned int stride;
++	unsigned int stride_c;
++	unsigned char format;
++	unsigned int swap;
++	unsigned int alpha_asel1;
++	unsigned int alpha_asel2;
++	unsigned int alpha_val;
++	unsigned int ccol;
++	unsigned int k_matrix[3][3];
++	unsigned int offset[3][2];
++	unsigned int clip[3][2];
++};
++
++/* channel information structure */
++struct isu_ch_info {
++	unsigned char status;
++
++	void (*cb_func)
++		(unsigned long id, long ercd, void *userdata);
++	void *cb_userdata;
++
++	struct isu_rpf_info rpf_info;;
++	struct isu_rs_info rs_info;
++	struct isu_wpf_info wpf_info;
++	unsigned long dl_info;
++};
++
++/* private data structure */
++struct isu_prv_data {
++	struct platform_device *pdev;
++	void __iomem *isu_reg;
++	struct resource *irq;
++	struct isu_res_data {
++		unsigned int usable_rpf;
++		unsigned int usable_wpf;
++		unsigned int usable_module;
++		bool burst_enable;
++	} rdata;
++
++	struct isu_ch_info ch_info;
++};
++
++/* define local functions */
++long isu_ins_check_init_parameter(struct isu_init_t *param);
++long isu_ins_check_open_parameter(struct isu_open_t *param);
++long isu_ins_check_start_parameter(
++	struct isu_prv_data *prv, struct isu_start_t *param);
++
++long isu_ins_set_start_parameter(struct isu_prv_data *prv);
++void isu_ins_start_processing(struct isu_prv_data *prv);
++long isu_ins_stop_processing(struct isu_prv_data *prv);
++long isu_ins_wait_processing(struct isu_prv_data *prv);
++
++long isu_ins_get_isu_resource(struct isu_prv_data *prv);
++
++long isu_ins_enable_clock(struct isu_prv_data *prv);
++long isu_ins_disable_clock(struct isu_prv_data *prv);
++
++long isu_ins_init_reg(struct isu_prv_data *prv);
++long isu_ins_quit_reg(struct isu_prv_data *prv);
++
++void isu_ins_cb_function(struct isu_prv_data *prv, long ercd);
++
++long isu_ins_reg_ih(struct isu_prv_data *prv);
++long isu_ins_unreg_ih(struct isu_prv_data *prv);
++
++#endif
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+new file mode 100755
+index 0000000..f9e888e
+--- /dev/null
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -0,0 +1,433 @@
++#include "vspm_public.h"
++#include "vspm_ip_ctrl.h"
++#include "vspm_main.h"
++
++#include "isu_drv_public.h"
++#include "isu_drv_local.h"
++
++/******************************************************************************
++ * Function:	isu_ins_check_init_parameter
++ * Description:	Check initialize parameter
++ * Returns:	0/E_ISU_PARA_INPAR
++ ******************************************************************************/
++long isu_ins_check_init_parameter(struct isu_init_t *param)
++{
++	/* check pointer */
++	if (!param)
++		return E_ISU_PARA_INPAR;
++
++	/* check IP number */
++	if (param->ip_num < 1 || param->ip_num > ISU_IP_MAX)
++		return E_ISU_PARA_INPAR;
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:	isu_ins_check_open_parameter
++ * Description:	Check open channel parameter
++ * Returns:	0/E_ISU_PARA_INPAR
++ ******************************************************************************/
++long isu_ins_check_open_parameter(struct isu_open_t *param)
++{
++	/* check pointer */
++	if (!param)
++		return E_ISU_PARA_INPAR;
++
++	/* check device parameter */
++	if (!param->pdev)
++		return E_ISU_PARA_INPAR;
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:	isu_ins_check_rpf_param
++ * Description:	Check source parameter of RPF.
++ * Returns:
++******************************************************************************/
++static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
++				struct isu_src_t *src_par)
++{
++	struct isu_rpf_info *rpf_info = &ch_info->rpf_info;
++	unsigned char grada_mode_tmp;
++
++	/* check pointer */
++	if (!src_par)
++		return E_ISU_PARA_NOIN;
++
++	/* check input addr 32 boundary */
++	if ((src_par->addr%32)||(src_par->addr_c%32))
++		return E_ISU_PARA_IN_ADDR;
++
++	/* check stride 32 boundary */
++	if ((src_par->stride%32)||(src_par->stride_c%32))
++		return E_ISU_PARA_IN_STRD;
++
++	/* check input format */
++	switch (src_par->format) {
++	case ISU_ARGB1555:
++	case ISU_RGB565:
++	case ISU_BGR666:
++	case ISU_RGB888:
++	case ISU_BGR888:
++	case ISU_ARGB8888:
++	case ISU_RGBA8888:
++	case ISU_ABGR8888:
++	case ISU_RAW8:
++	case ISU_RAW10:
++	case ISU_RAW12:
++	case ISU_YUV422_UYVY:
++	case ISU_YUV422_YUY2:
++		break;
++	case ISU_YUV422_NV16:
++	case ISU_YUV420_NV12:
++		if(!src_par->addr_c)
++			 return E_ISU_PARA_IN_ADDR;
++		if(!src_par->stride_c)
++			return E_ISU_PARA_IN_STRD;
++		break;
++	default:
++		return E_ISU_PARA_IN_FORMAT;
++	}
++
++	rpf_info->format = src_par->format;
++	rpf_info->addr = src_par->addr;
++	rpf_info->addr_c = src_par->addr_c;
++	rpf_info->stride = src_par->stride;
++	rpf_info->stride_c = src_par->stride_c;
++
++	/* check test date parameter */
++	if (src_par->td) {
++		rpf_info->src_td1 |= ISU_RPF_TD_USE;
++		grada_mode_tmp = (src_par->td->grada_mode) >> 1;
++		rpf_info->src_td1 |= ((unsigned int)grada_mode_tmp) << 16;
++		grada_mode_tmp = src_par->td->grada_mode & 0x01;
++		rpf_info->src_td1 |= ((unsigned int)grada_mode_tmp) << 4;
++		if (src_par->td->grada_step) {
++			rpf_info->src_td1 |= ((unsigned int)src_par->td->grada_step)&0x0000000F;
++		} else {
++			rpf_info->src_td2 |= (unsigned int)src_par->td->init_val;
++		}
++	} else {
++		rpf_info->src_td1 = 0;
++	}
++
++	/* set data swapping parameter */
++	rpf_info->swap = (unsigned int)(src_par->swap);
++
++	/* check basic area */
++	if (src_par->width < 1 || src_par->width > 2800)
++		return E_ISU_PARA_IN_WIDTH;
++	else {
++		rpf_info->width = src_par->width;
++	}
++
++	if (src_par->height < 1 || src_par->height > 2047)
++		return E_ISU_PARA_IN_HEIGHT;
++	else {
++		rpf_info->height = src_par->height;
++	}
++
++	/* check alpha selection and color converter parameter */
++	if(src_par->alpha){
++		if(src_par->alpha->asel == ISU_AEXT_COPY) {
++		/* Copy input Alpha value 1bit to all 8bit */
++		} else if (src_par->alpha->asel == ISU_AEXT_EXPAN) {
++			/* set 8bit transparent-alpha generator */
++			rpf_info->rpf_alpha_val |= ISU_RPF_AEXT;
++			rpf_info->rpf_alpha_val |= ((unsigned int)src_par->alpha->anum1) << 8;
++			rpf_info->rpf_alpha_val |= (unsigned int)src_par->alpha->anum0;
++		} else
++			return E_ISU_PARA_ALPHA_ASEL;
++	} else {
++		rpf_info->rpf_alpha_val = 0;
++	}
++	/* Check whether convert Cb/Cr/UV to offset binary */
++	rpf_info->uv_bin |= src_par->uv_conv;
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:	isu_ins_check_rs_param
++ * Description:	Check module parameter of RS.
++ * Returns:
++ ******************************************************************************/
++static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
++				struct isu_rs_t *rs_param)
++{
++	struct isu_rpf_info *rpf_info = &ch_info->rpf_info;
++	struct isu_rs_info *rs_info = &ch_info->rs_info;
++
++	if (rs_param){
++		 /* Check start position after resize */
++		if ((rs_param->start_x >= rpf_info->width)||(rs_param->start_y >= rpf_info->height))
++			return E_ISU_PARA_RS_START;
++		else {
++			rs_info->start_x = rs_param->start_x;
++			rs_info->start_y = rs_param->start_y;
++		}
++
++		/* Check tuning parameter */
++		if ((rs_param->tune_x >= ISU_TUNE_MAX)||(rs_param->tune_y >= ISU_TUNE_MAX))
++			return E_ISU_PARA_RS_TUNE;
++		else {
++			rs_info->tune_x = rs_param->tune_x;
++			rs_info->tune_y = rs_param->tune_y;
++		}
++
++		/* Check output size */
++		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 1920)||
++		(rs_param->crop_h < 1) ||(rs_param->crop_h > 1080))
++			return E_ISU_PARA_RS_CROP;
++		else {
++			rs_info->crop_w = rs_param->crop_w;
++			rs_info->crop_h = rs_param->crop_h;
++		}
++
++		/* Check pad mode */
++		switch(rs_param->pad_mode){
++		case ISU_PAD_IN:
++			break;
++		case ISU_PAD_P:
++			rs_info->pad_mode = rs_param->pad_mode;
++			rs_info->pad_val  = rs_param->pad_val;
++			break;
++		default:
++			return E_ISU_PARA_RS_PAD;
++		}
++		/* Check ratio scale */
++		if((rs_param->x_ratio & 0x0000F000)||(rs_param->y_ratio & 0x0000F000)) {
++			rs_info->x_scale = ((unsigned int)rs_param->x_ratio >> 12) << 16;
++			rs_info->x_scale |= ((unsigned int)rs_param->x_ratio);
++			rs_info->y_scale = ((unsigned int)rs_param->y_ratio >> 12) << 16;
++			rs_info->y_scale |= ((unsigned int)rs_param->y_ratio & 0x00000FFF);
++		} else
++			return E_ISU_PARA_RS_RATIO;
++	} else {
++		rs_info->start_x = 0;
++		rs_info->start_y = 0;
++		rs_info->tune_x = 0;
++		rs_info->tune_y = 0;
++		rs_info->crop_w = rpf_info->width;
++		rs_info->crop_h = rpf_info->height;
++		rs_info->x_scale |= ISU_RS_NO_RESIZE;
++		rs_info->y_scale |= ISU_RS_NO_RESIZE;
++		rs_info->pad_mode=0;
++		rs_info->pad_val=0;
++	}
++	return 0;
++}
++
++/******************************************************************************
++ * Function:isu_ins_check_connection_module_from_rpf
++ * Description: Check connection module parameter from RPF.
++ * Returns:
++ *	return of isu_ins_check_rpf_param()
++ *	return of isu_ins_check_rs_param()
++ ******************************************************************************/
++static long isu_ins_check_connection_module_from_rpf(struct isu_prv_data *prv,
++						struct isu_start_t *param)
++{
++	struct isu_ch_info *ch_info = &prv->ch_info;
++	long ercd;
++
++	/* check RPF parameter */
++	if(!(param->dl_hard_addr)){
++		ercd = isu_ins_check_rpf_param(ch_info, param->src_par);
++		if (ercd)
++			return ercd;
++
++		/* check module parameter */
++		ercd = isu_ins_check_rs_param(ch_info, param->rs_par);
++		if (ercd)
++			return ercd;
++	}
++	return 0;
++}
++
++/******************************************************************************
++ * Function:isu_ins_check_wpf_param
++ * Description: Check output parameter of WPF.
++ * Returns:
++ ******************************************************************************/
++static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
++				struct isu_dst_t *dst_par)
++{
++	struct isu_wpf_info *wpf_info = &ch_info->wpf_info;
++	unsigned char i, j;
++
++	/* check pointer */
++	if (!dst_par)
++		return E_ISU_PARA_NOOUT;
++
++	/* check format parameter */
++	if ((dst_par->addr%512)||(dst_par->addr_c%512))
++		return E_ISU_PARA_OUT_ADDR;
++
++	/* check stride 32 boundary */
++	if ((dst_par->stride%32)||(dst_par->stride_c%32))
++		return E_ISU_PARA_OUT_STRD;
++
++	/* check format parameter */
++	switch (dst_par->format) {
++	case ISU_ARGB1555:
++	case ISU_RGB565:
++	case ISU_BGR666:
++	case ISU_RGB888:
++	case ISU_BGR888:
++	case ISU_ARGB8888:
++	case ISU_RGBA8888:
++	case ISU_ABGR8888:
++	case ISU_RAW8:
++	case ISU_RAW10:
++	case ISU_RAW12:
++	case ISU_YUV422_UYVY:
++	case ISU_YUV422_YUY2:
++		break;
++	case ISU_YUV422_NV16:
++	case ISU_YUV420_NV12:
++		if(!dst_par->addr_c)
++			return E_ISU_PARA_OUT_ADDR;
++		if(!dst_par->stride_c)
++			return E_ISU_PARA_OUT_STRD;
++		break;
++	default:
++		return E_ISU_PARA_OUT_FORMAT;
++	}
++
++	wpf_info->format = dst_par->format;
++	wpf_info->addr = dst_par->addr;
++	wpf_info->addr_c   = dst_par->addr_c;
++	wpf_info->stride   = dst_par->stride;
++	wpf_info->stride_c = dst_par->stride_c;
++
++	/* set data swapping parameter */
++	wpf_info->swap = (unsigned int)(dst_par->swap);
++
++	/* check color space conversion parameter */
++	if (dst_par->csc) {
++		switch (dst_par->csc->csc){
++		case ISU_CSC_CUSTOM:
++			wpf_info->ccol |= ISU_WPF_CCOL_SEL;  // enable color conversion
++			wpf_info->ccol |= ISU_WPF_CCOL_ASE; // enable alpha color conversion
++			for (i = 0; i < ISU_LAYER_NUM; i++) {
++				for (j = 0; j < ISU_LAYER_NUM; j++) {
++					wpf_info->k_matrix[i][j] = dst_par->csc->k_matrix[i][j];
++				}
++			}
++			for (i = 0; i < ISU_LAYER_NUM; i++) {
++				for (j = 0; j < ISU_OFFSET_NUM; j++) {
++					wpf_info->offset[i][j] = dst_par->csc->offset[i][j]&0xFF;
++					wpf_info->clip[i][j] = dst_par->csc->clip[i][j]&0xFF;
++				}
++			}
++			break;
++		case ISU_CSC_601:
++		case ISU_CSC_709:
++			break;
++		default:
++			return E_ISU_PARA_OUT_CSC;
++		}
++	} else {
++		/* disable color space conversion */
++		wpf_info->ccol = 0;
++	}
++
++	/* check alpha selection and color converter parameter */
++	if ((dst_par->format == ISU_ARGB1555)||(dst_par->format == ISU_ARGB8888)){
++		if (dst_par->alpha){
++			switch (dst_par->alpha->asel){
++			case ISU_AEXT_COPY:
++				break;
++			case ISU_AEXT_COMP:
++				/* Select alpha output base on a-value and a-thres */
++				wpf_info->alpha_asel1 |= ISU_WPF_ASEL;
++				wpf_info->alpha_asel1 |= ((unsigned int)dst_par->alpha->athres0);
++				break;
++			case ISU_AEXT_CONV:
++				wpf_info->alpha_asel2 |= ISU_WPF_ASEL;
++				wpf_info->alpha_asel2 |= ((unsigned int)dst_par->alpha->athres0) << 8;
++				wpf_info->alpha_asel2 |= ((unsigned int)dst_par->alpha->athres1);
++				wpf_info->alpha_val |= ((unsigned int)dst_par->alpha->anum2) << 16;
++				wpf_info->alpha_val |= ((unsigned int)dst_par->alpha->anum1) << 8;
++				wpf_info->alpha_val |= ((unsigned int)dst_par->alpha->anum0);
++				break;
++			default:
++				return E_ISU_PARA_ALPHA_ASEL;
++			}
++		} else {
++			wpf_info->alpha_val = 0;
++			wpf_info->alpha_asel1 = 0;
++			wpf_info->alpha_asel2 = 0;
++		}
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:vsp_ins_check_dl_param
++ * Description: Check display list parameter.
++ * Returns: 0/E_ISU_PARA_DL_ADDR
++ ******************************************************************************/
++static long isu_ins_check_dl_param(struct isu_ch_info *ch_info,
++				unsigned long dl_hard_addr)
++{
++	if(dl_hard_addr%32)
++		return E_ISU_PARA_DL_ADDR;
++
++	ch_info->dl_info = dl_hard_addr;
++	return 0;
++}
++/******************************************************************************
++ * Function:isu_ins_check_output_module
++ * Description: Check destination module parameter.
++ * Returns:
++ ******************************************************************************/
++static long isu_ins_check_output_module(
++struct isu_ch_info *ch_info, struct isu_start_t *param)
++{
++	long ercd;
++	/* check WPF parameter */
++	if(!(param->dl_hard_addr)){
++		ercd = isu_ins_check_wpf_param(ch_info, param->dst_par);
++		if (ercd)
++			return ercd;
++	} else {
++		/* check DL parameter */
++		ercd = isu_ins_check_dl_param(ch_info, param->dl_hard_addr);
++		if (ercd)
++			return ercd;
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:isu_ins_check_start_parameter
++ * Description: Check vsp_start_t parameter.
++ * Returns: 0/E_VSP_PARA_USEMODULE
++ *	Return of isu_ins_check_connection_module_from_rpf()
++ *	Return of isu_ins_check_output_module()
++ *	Return of isu_ins_check_partition()
++ ******************************************************************************/
++long isu_ins_check_start_parameter(struct isu_prv_data *prv,
++				struct isu_start_t *param)
++{
++	struct isu_ch_info *ch_info = &prv->ch_info;
++	long ercd;
++
++	/* check connection module parameter (RPF->RS or WPF) */
++	ercd = isu_ins_check_connection_module_from_rpf(prv, param);
++	if (ercd)
++		return ercd;
++
++	/* check WPF module parameter */
++	ercd = isu_ins_check_output_module(ch_info, param);
++	if (ercd)
++		return ercd;
++
++	return 0;
++}
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+new file mode 100755
+index 0000000..2e45b44
+--- /dev/null
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+@@ -0,0 +1,624 @@
++#include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/slab.h>
++#include <linux/delay.h>
++#include <linux/pm_runtime.h>
++
++#include "vspm_public.h"
++#include "vspm_ip_ctrl.h"
++#include "vspm_main.h"
++#include "vspm_log.h"
++
++#include "isu_drv_public.h"
++#include "isu_drv_local.h"
++
++/******************************************************************************
++ * Function:		isu_write_reg
++ * Description:	Write to register
++ * Returns:		void
++ ******************************************************************************/
++inline void isu_write_reg(
++	unsigned int data, void __iomem *base, unsigned int offset)
++{
++	unsigned int __iomem *reg =
++		(unsigned int __iomem *)base;
++	reg += (offset >> 2);
++	iowrite32(data, reg);
++}
++
++/******************************************************************************
++ * Function:		isu_read_reg
++ * Description:	Read from register
++ * Returns:		void
++ ******************************************************************************/
++inline unsigned int isu_read_reg(void __iomem *base, unsigned int offset)
++{
++	unsigned int __iomem *reg =
++		(unsigned int __iomem *)base;
++	reg += (offset >> 2);
++	return ioread32(reg);
++}
++
++/******************************************************************************
++ * Function:		isu_ins_set_reg_for_rpf
++ * Description:	Set RPF register value.
++ * Returns:		void
++ ******************************************************************************/
++static void isu_ins_set_reg_for_rpf(struct isu_prv_data *prv,
++struct isu_ch_info *ch_info)
++{
++	struct isu_rpf_info *rpf_info = &ch_info->rpf_info;
++	unsigned int reg_temp;
++
++	/* RPF Source Image Size Registers */
++	reg_temp = (((unsigned int)rpf_info->width) << 16) & 0x0FFF0000;
++	reg_temp |= ((unsigned int)rpf_info->height & 0x00000FFF);
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RPF_SRC_SIZE);
++
++	/* RPF Source Stride Registers */
++	reg_temp = ((unsigned int)rpf_info->stride) << 16;
++	reg_temp |= (unsigned int)rpf_info->stride_c;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RPF_SRC_STRD);
++
++	/* Start address for Plane 0 */
++	reg_temp = ((rpf_info->addr) >> 32) & 0x00000003;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RPF_SRC_ADDH_PL0);
++	reg_temp = (unsigned int)rpf_info->addr;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RPF_SRC_ADDL_PL0);
++
++	/* Start address for Plane 1 */
++	reg_temp = ((rpf_info->addr_c) >> 32) & 0x00000003;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RPF_SRC_ADDH_PL1);
++	reg_temp = (unsigned int)rpf_info->addr_c;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RPF_SRC_ADDL_PL1);
++
++	/* RPF Source Image Format Registers */
++	reg_temp = ((unsigned int)rpf_info->format) & 0x0000003F;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RPF_FMT);
++
++	/* RPF Source Image UV Format Register */
++	isu_write_reg(rpf_info->uv_bin, prv->isu_reg, ISU_RPF_UVBIN);
++
++	/* RPF Source Image Data Swap Registers */
++	isu_write_reg(rpf_info->swap, prv->isu_reg, ISU_RPF_SRC_DSWAP);
++
++	/* RPF Source ALPHA Data Selection Registers */
++	if (rpf_info->format == ISU_ARGB1555)
++		isu_write_reg(rpf_info->rpf_alpha_val, prv->isu_reg, ISU_RPF_ALPH_SEL);
++
++	/* RPF Source TEST Data Register1 */
++	isu_write_reg(rpf_info->src_td1, prv->isu_reg, ISU_RPF_SRC_TD1);
++	/* RPF Source TEST Data Register2 */
++	isu_write_reg(rpf_info->src_td2, prv->isu_reg, ISU_RPF_SRC_TD2);
++}
++
++/******************************************************************************
++ * Function:		isu_ins_set_reg_for_rs
++ * Description:	Set RS register value.
++ * Returns:		void
++ ******************************************************************************/
++static void isu_ins_set_reg_for_rs(struct isu_prv_data *prv,
++	struct isu_ch_info *ch_info)
++{
++	struct isu_rs_info *rs_info = &ch_info->rs_info;
++	unsigned int reg_temp;
++
++	/* RS Scaling Factor Registers 0 */
++	isu_write_reg(rs_info->x_scale, prv->isu_reg, ISU_RS_HSCALE);
++
++	/* RS Scaling Factor Registers 1 */
++	isu_write_reg(rs_info->y_scale, prv->isu_reg, ISU_RS_VSCALE);
++
++	/* RS Output Image Start Position Registers */
++	reg_temp = (rs_info->start_x << 16);
++	reg_temp |= (rs_info->start_y);
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RS_STPOS);
++
++	/* RS Output Image Start Position Tuning Registers */
++	reg_temp = (rs_info->tune_x << 16);
++	reg_temp |= (rs_info->tune_y);
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RS_POS_TUNE);
++
++	/* RS Output Size Crop Registers */
++	reg_temp = (rs_info->crop_w << 16);
++	reg_temp |= (rs_info->crop_h);
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_RS_OS_CROP);
++
++	/* RS CROP Padding Mode Registers */
++	isu_write_reg(rs_info->pad_mode, prv->isu_reg, ISU_RS_PADDMODE);
++	isu_write_reg(rs_info->pad_val, prv->isu_reg, ISU_RS_PADDVAL);
++}
++
++/******************************************************************************
++ * Function:		isu_ins_set_reg_for_wpf
++ * Description:	Set WPF register value.
++ * Returns:		void
++ ******************************************************************************/
++static void isu_ins_set_reg_for_wpf(struct isu_prv_data *prv,
++struct isu_ch_info *ch_info)
++{
++	struct isu_wpf_info *wpf_info = &ch_info->wpf_info;
++	unsigned int reg_temp;
++	unsigned long reg_temp0;
++
++	/* WPF Destination Plane0 Address Registers 0 */
++	reg_temp0 = (((unsigned long)wpf_info->addr) >> 32) & 0x00000003;
++	reg_temp = (unsigned int)reg_temp0;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_DST_ADDH_PL0);
++	reg_temp = (unsigned int)wpf_info->addr;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_DST_ADDL_PL0);
++
++	/* WPF Destination Plane0 Address Registers 1 */
++	reg_temp0 = (((unsigned long)wpf_info->addr_c) >> 32) & 0x00000003;
++	reg_temp = (unsigned int)reg_temp0;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_DST_ADDH_PL1);
++	reg_temp = (unsigned int)wpf_info->addr_c;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_DST_ADDL_PL1);
++
++	/* WPF Destination Stride Registers */
++	reg_temp = ((unsigned int)wpf_info->stride) << 16;
++	reg_temp |= (unsigned int)wpf_info->stride_c;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_DST_STRD);
++
++	/* WPF Destination Image Format Registers */
++	reg_temp = ((unsigned int)wpf_info->format) & 0x0000003F;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_FMT);
++
++	/* WPF Color Collection Control Registers */
++	isu_write_reg(wpf_info->ccol, prv->isu_reg, ISU_WPF_CCOL);
++
++	/* WPF Color Collection MUL Coefficient Registers1 */
++	reg_temp = wpf_info->k_matrix[0][0];
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_MUL1);
++
++	/* WPF Color Collection MUL Coefficient Registers2 */
++	reg_temp = (wpf_info->k_matrix[0][2] << 16);
++	reg_temp |= (wpf_info->k_matrix[0][1]);
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_MUL2);
++
++	/* WPF Color Collection MUL Coefficient Registers3 */
++	reg_temp = wpf_info->k_matrix[1][0];
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_MUL3);
++
++	/* WPF Color Collection MUL Coefficient Registers4 */
++	reg_temp = (wpf_info->k_matrix[1][2] << 16);
++	reg_temp |= (wpf_info->k_matrix[1][1]);
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_MUL4);
++
++	/* WPF Color Collection MUL Coefficient Registers5 */
++	reg_temp = wpf_info->k_matrix[2][0];
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_MUL5);
++
++	/* WPF Color Collection MUL Coefficient Registers6 */
++	reg_temp = (wpf_info->k_matrix[2][2] << 16);
++	reg_temp |= (wpf_info->k_matrix[2][1]);
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_MUL6);
++
++	/* WPF Color Collection Offset Coefficient Registers1 */
++	reg_temp = (wpf_info->offset[0][0] << 24);
++	reg_temp |= ((wpf_info->offset[1][0] << 16));
++	reg_temp |= ((wpf_info->offset[2][0] << 8));
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_OFST1);
++
++	/* WPF Color Collection Offset Coefficient Registers2 */
++	reg_temp = (wpf_info->offset[0][1] << 24);
++	reg_temp |= ((wpf_info->offset[1][1] << 16));
++	reg_temp |= ((wpf_info->offset[2][1] << 8));
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_OFST2);
++
++	/* WPF Color Collection Clip Registers1 */
++	reg_temp = wpf_info->clip[0][CLIP_MIN_INX];
++	reg_temp |= ((wpf_info->clip[0][CLIP_MAX_INX] << 8));
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_CLP1);
++
++	/* WPF Color Collection Clip Registers2 */
++	reg_temp = (wpf_info->clip[1][CLIP_MAX_INX] << 24);
++	reg_temp |= ((wpf_info->clip[1][CLIP_MIN_INX] << 16));
++	reg_temp |= ((wpf_info->clip[2][CLIP_MAX_INX] << 8));
++	reg_temp |= ((wpf_info->clip[2][CLIP_MIN_INX]));
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_CLP2);
++
++	/* WPF Destination Image Data Swap Registers */
++	reg_temp = ((unsigned int)wpf_info->swap) & 0x00000007;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_WPF_DST_DSWAP);
++
++	/* WPF Destination ALPHA Selection Registers1 */
++	isu_write_reg(wpf_info->alpha_asel1, prv->isu_reg, ISU_WPF_ALPH_SEL1);
++	/* WPF Destination ALPHA Selection Registers2 */
++	isu_write_reg(wpf_info->alpha_asel2, prv->isu_reg, ISU_WPF_ALPH_SEL2);
++	isu_write_reg(wpf_info->alpha_val, prv->isu_reg, ISU_WPF_ALPH_VAL);
++}
++
++/******************************************************************************
++ * Function:		isu_ins_set_start_parameter
++ * Description:	Set isu_start_t parameter.
++ * Returns:		0
++ ******************************************************************************/
++long isu_ins_set_start_parameter(
++struct isu_prv_data *prv)
++{
++	struct isu_ch_info *ch_info = &prv->ch_info;
++
++	if(!(ch_info->dl_info)){
++		/* input module */
++		isu_ins_set_reg_for_rpf(prv, ch_info);
++
++		/* Scale module */
++		isu_ins_set_reg_for_rs(prv, ch_info);
++
++		/* output module */
++		isu_ins_set_reg_for_wpf(prv, ch_info);
++	} else
++		isu_write_reg(ch_info->dl_info, prv->isu_reg, ISU_FM_DL_STADDL);
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_init_isu_reg
++ * Description:	Initialize ISU hardware.
++ * Returns:		0
++ ******************************************************************************/
++static long isu_ins_init_isu_reg(struct isu_prv_data *prv)
++{
++	/* Sets the upper limit to the burst length of the AXI-Master. */
++	isu_write_reg(0x000f000f, prv->isu_reg, ISU_AXI_BLEN);
++
++	/* clear interrupt */
++	isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_init_reg
++ * Description:	Initialize hardware register.
++ * Returns:		0/E_ISU_DEF_REG
++ *	return of isu_ins_init_isu_reg()
++ ******************************************************************************/
++long isu_ins_init_reg(struct isu_prv_data *prv)
++{
++struct resource *res;
++long ercd = 0;
++
++/* get an I/O memory resource of ISU */
++	res = platform_get_resource(prv->pdev, IORESOURCE_MEM, 0);
++	if (!res) {
++		EPRINT("%s: failed to get resource of ISU!!\n", __func__);
++		return E_ISU_DEF_REG;
++	}
++
++/* remap an I/O memory of ISU */
++	prv->isu_reg = ioremap(res->start, resource_size(res));
++	if (!prv->isu_reg) {
++		EPRINT("%s: failed to ioremap of ISU!!\n", __func__);
++		return E_ISU_DEF_REG;
++	}
++
++/* initialize ISU register */
++	ercd = isu_ins_init_isu_reg(prv);
++
++	return ercd;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_quit_reg
++ * Description:	Finalize ISU hardware.
++ * Returns:		0
++ ******************************************************************************/
++long isu_ins_quit_reg(struct isu_prv_data *prv)
++{
++		/* unmap an I/O register of ISU */
++	if (prv->isu_reg) {
++		iounmap(prv->isu_reg);
++		prv->isu_reg = NULL;
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_enable_clock
++ * Description:	Enable ISU clock supply.
++ * Returns:		0/E_ISU_NO_CLK
++ ******************************************************************************/
++long isu_ins_enable_clock(struct isu_prv_data *prv)
++{
++	struct platform_device *pdev = prv->pdev;
++	struct device *dev = &pdev->dev;
++	int ercd;
++
++	/* wake up device */
++	ercd = pm_runtime_get_sync(dev);
++	if (ercd < 0) {
++		EPRINT("%s: failed to pm_runtime_get_sync!! ercd=%d\n",
++			__func__, ercd);
++		return E_ISU_NO_CLK;
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_disable_clock
++ * Description:	Disable ISU clock supply.
++ * Returns:		0
++ ******************************************************************************/
++long isu_ins_disable_clock(struct isu_prv_data *prv)
++{
++	struct platform_device *pdev = prv->pdev;
++
++	/* mark device as idle */
++	pm_runtime_put_sync(&pdev->dev);
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_get_isu_resource
++ * Description:	Get ISU resource.
++ * Returns:		0/E_ISU_PARA_INPAR
++ ******************************************************************************/
++long isu_ins_get_isu_resource(struct isu_prv_data *prv)
++{
++	struct device_node *np = prv->pdev->dev.of_node;
++	struct isu_res_data *rdata = &prv->rdata;
++
++/* read usable RPF bits */
++	of_property_read_u32(np, "renesas,#rpf", &rdata->usable_rpf);
++	if (rdata->usable_rpf >= (1 << ISU_RPF_MAX))
++		return E_ISU_PARA_INPAR;
++
++/* read usable WPF bits */
++	of_property_read_u32(np, "renesas,#wpf", &rdata->usable_wpf);
++	if (rdata->usable_wpf >= (1 << ISU_RPF_MAX))
++		return E_ISU_PARA_INPAR;
++
++	rdata->usable_module = 0;
++
++	if (of_property_read_bool(np, "renesas,has-rs"))
++		rdata->usable_module |= ISU_RS_USE;
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_start_processing
++ * Description:	Start ISU processing.
++ * Returns:		void
++ ******************************************************************************/
++void isu_ins_start_processing(struct isu_prv_data *prv)
++{
++	struct isu_ch_info *ch_info = &prv->ch_info;
++
++	if(!(ch_info->dl_info)){
++		/* enable interrupt */
++		isu_write_reg(ISU_INT_FRENDE, prv->isu_reg, ISU_FM_INT_EN);
++		/* start */
++		isu_write_reg(ISU_START, prv->isu_reg, ISU_FM_FRCON);
++	} else {
++		isu_write_reg(ISU_INT_FRENDE|ISU_INT_LISTERRE, prv->isu_reg, ISU_FM_INT_EN);
++		isu_write_reg(ISU_START|ISU_DESON, prv->isu_reg, ISU_FM_FRCON);
++	}
++
++}
++
++/******************************************************************************
++ * Function:		isu_ins_stop_processing
++ * Description:	Forced stop ISU processing.
++ * Returns:		0
++ ******************************************************************************/
++long isu_ins_stop_processing(struct isu_prv_data *prv)
++{
++	unsigned int status;
++	unsigned int loop_cnt, reg_temp= 0;
++
++	/* disable interrupt */
++	isu_write_reg(0, prv->isu_reg, ISU_FM_INT_EN);
++
++	/* clear interrupt */
++	isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
++
++	/* dummy read */
++	isu_read_reg(prv->isu_reg,ISU_FM_INT_STA);
++	isu_read_reg(prv->isu_reg,ISU_FM_INT_STA);
++
++	/* Enable Controls interrupt by the completion of emergency stop */
++	isu_write_reg(ISU_INT_SRSTENDE, prv->isu_reg, ISU_FM_INT_EN);
++
++	/* Enable emergency stop */
++	reg_temp |= ISU_STOP;
++	isu_write_reg(reg_temp, prv->isu_reg, ISU_FM_STOP);
++
++	/* init loop counter */
++	loop_cnt = ISU_STATUS_LOOP_CNT;
++
++	/* Waiting emergency stop process */
++	do {
++		/* sleep */
++		msleep(ISU_STATUS_LOOP_TIME);
++
++		/* read status register of ISU */
++		status = (isu_read_reg(prv->isu_reg,ISU_FM_INT_STA))&ISU_INT_SRSTENDE;
++	} while ((status!=ISU_INT_SRSTENDE)&&(--loop_cnt>0));
++
++	/* disable callback function */
++	prv->ch_info.cb_func = NULL;
++
++	/* callback function */
++	if (loop_cnt != 0) {
++		isu_ins_cb_function(prv, R_VSPM_CANCEL);
++		isu_ins_cb_function(prv, R_VSPM_CANCEL);
++	} else {
++		APRINT("%s: happen to timeout after reset of ISU!!\n",__func__);
++		isu_ins_cb_function(prv, R_VSPM_DRIVER_ERR);
++		isu_ins_cb_function(prv, R_VSPM_DRIVER_ERR);
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_wait_processing
++ * Description:	Waiting ISU processing.
++ * Returns:		0
++ ******************************************************************************/
++long isu_ins_wait_processing(struct isu_prv_data *prv)
++{
++	unsigned int loop_cnt = ISU_STATUS_LOOP_CNT;
++
++	do {
++		/* sleep */
++		msleep(ISU_STATUS_LOOP_TIME);
++
++		if (prv->ch_info.status != ISU_STAT_RUN)
++			break;
++	} while (--loop_cnt > 0);
++
++	if (loop_cnt == 0) {
++		APRINT("%s: happen to timeout!!\n", __func__);
++		isu_ins_cb_function(prv, R_VSPM_DRIVER_ERR);
++		isu_ins_cb_function(prv, R_VSPM_DRIVER_ERR);
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_cb_function
++ * Description:	Callback function processing.
++ * Returns:		void
++ ******************************************************************************/
++void isu_ins_cb_function(struct isu_prv_data *prv, long ercd)
++{
++	struct isu_ch_info *ch_info;
++
++	void (*cb_func)
++		(unsigned long id, long ercd, void *userdata);
++	unsigned long id;
++	void *userdata;
++
++	/* check parameter */
++	if (!prv) {
++		APRINT("%s: private data is null!!\n", __func__);
++		return;
++	}
++
++	ch_info = &prv->ch_info;
++	if (ch_info->status == ISU_STAT_RUN) {
++		/* set callback information */
++		cb_func = ch_info->cb_func;
++		id = 0;
++		userdata = ch_info->cb_userdata;
++
++		/* update status */
++		ch_info->status = ISU_STAT_READY;
++
++		/* callback function */
++		if (cb_func)
++			cb_func(id, ercd, userdata);
++	}
++}
++
++/******************************************************************************
++ * Function:		isu_ins_ih
++ * Description:	Interrupt handler.
++ * Returns:		IRQ_HANDLED
++ ******************************************************************************/
++static irqreturn_t isu_ins_ih(int irq, void *dev)
++{
++	struct isu_prv_data *prv = (struct isu_prv_data *)dev;
++	struct isu_ch_info *ch_info;
++	unsigned int status;
++
++	/* check finished channel */
++	ch_info = &prv->ch_info;
++	if (ch_info->status == ISU_STAT_RUN) {
++		/* read control register */
++		status = isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
++		if (!(ch_info->dl_info)){
++			if ((status & ISU_INT_FREND) == ISU_INT_FREND) {
++			/* clear interrupt */
++			isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
++
++			/* dummy read */
++			isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
++			isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
++
++			/* callback function */
++			isu_ins_cb_function(prv, R_VSPM_OK);
++			}
++		} else {
++			if ((status & ISU_INT_LISTERR)==ISU_INT_LISTERR){
++				/* clear interrupt */
++				isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
++
++				/* callback function */
++				isu_ins_cb_function(prv, E_ISU_DL_FORMAT);
++			} else if ((status&ISU_INT_FREND)==ISU_INT_FREND){
++				/* clear interrupt */
++				isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
++
++				/* dummy read */
++				isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
++				isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
++
++				/* callback function */
++				isu_ins_cb_function(prv, R_VSPM_OK);
++			}
++		}
++	}
++	return IRQ_HANDLED;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_reg_ih
++ * Description:	Registory interrupt handler.
++ * Returns:		0/E_ISU_DEF_INH
++ ******************************************************************************/
++long isu_ins_reg_ih(struct isu_prv_data *prv)
++{
++	int ercd;
++
++	/* get irq information from platform */
++	prv->irq = platform_get_resource(prv->pdev, IORESOURCE_IRQ, 0);
++	if (!prv->irq) {
++		EPRINT("%s: failed to get IRQ resource!!\n", __func__);
++		return E_ISU_DEF_INH;
++	}
++
++	/* registory interrupt handler */
++	ercd = request_irq(
++		prv->irq->start,
++		isu_ins_ih,
++		IRQF_SHARED,
++		dev_name(&prv->pdev->dev),
++		prv);
++	if (ercd) {
++		EPRINT("%s: failed to request irq!! ercd=%d, irq=%d\n",
++			__func__, ercd, (int)prv->irq->start);
++		prv->irq = NULL;
++		return E_VSP_DEF_INH;
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		isu_ins_unreg_ih
++ * Description:	Unregistory interrupt handler.
++ * Returns:		0
++ ******************************************************************************/
++long isu_ins_unreg_ih(struct isu_prv_data *prv)
++{
++	/* release interrupt handler */
++	if (prv->irq) {
++		free_irq(prv->irq->start, prv);
++		prv->irq = NULL;
++	}
++
++	return 0;
++}
+diff --git a/vspm-module/files/vspm/drv/isu_drv_public.h b/vspm-module/files/vspm/drv/isu_drv_public.h
+new file mode 100644
+index 0000000..96a23f9
+--- /dev/null
++++ b/vspm-module/files/vspm/drv/isu_drv_public.h
+@@ -0,0 +1,100 @@
++/*************************************************************************/ /*
++ * ISUM
++ *
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ *
++ * License        Dual MIT/GPLv2
++ *
++ * The contents of this file are subject to the MIT license as set out below.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * the GNU General Public License Version 2 ("GPL") in which case the provisions
++ * of GPL are applicable instead of those above.
++ *
++ * If you wish to allow use of your version of this file only under the terms of
++ * GPL, and not to allow others to use your version of this file under the terms
++ * of the MIT license, indicate your decision by deleting the provisions above
++ * and replace them with the notice and other provisions required by GPL as set
++ * out in the file called "GPL-COPYING" included in this distribution. If you do
++ * not delete the provisions above, a recipient may use your version of this
++ * file under the terms of either the MIT license or GPL.
++ *
++ * This License is also included in this distribution in the file called
++ * "MIT-COPYING".
++ *
++ * EXCEPT AS OTHERWISE STATED IN A NEGOTIATED AGREEMENT: (A) THE SOFTWARE IS
++ * PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
++ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++ * PARTICULAR PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS
++ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++ * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ *
++ * GPLv2:
++ * If you wish to use this file under the terms of GPL, following terms are
++ * effective.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */ /*************************************************************************/
++
++#ifndef __ISU_DRV_PUBLIC_H__
++#define __ISU_DRV_PUBLIC_H__
++
++#include "isu_drv.h"
++/* error code */
++#define E_VSP_DEF_INH			(-100)
++#define E_VSP_DEF_REG			(-101)
++#define E_VSP_NO_MEM			(-102)
++#define E_VSP_NO_INIT			(-103)
++#define E_VSP_INVALID_STATE		(-105)
++#define E_VSP_NO_CLK			(-107)
++#define E_VSP_PARA_CH			(-150)
++
++/* public structure */
++struct isu_init_t {
++	unsigned int ip_num;
++};
++
++struct isu_open_t {
++	struct platform_device *pdev;
++};
++
++struct isu_status_t {
++        unsigned int rpf_bits;
++        unsigned int wpf_bits;
++};
++
++/* public functions */
++long isu_lib_init(struct isu_init_t *param);
++long isu_lib_quit(void);
++long isu_lib_open(unsigned char ch, struct isu_open_t *param);
++long isu_lib_close(unsigned char ch);
++long isu_lib_start(
++	unsigned char ch,
++	void *callback,
++	struct isu_start_t *param,
++	void *userdata);
++long isu_lib_abort(unsigned char ch);
++long isu_lib_get_status(unsigned char ch, struct isu_status_t *status);
++long isu_lib_suspend(unsigned char ch);
++long isu_lib_resume(unsigned char ch);
++
++#endif
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c b/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
+new file mode 100644
+index 0000000..411db09
+--- /dev/null
++++ b/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
+@@ -0,0 +1,357 @@
++/*************************************************************************/ /*
++ * VSPM
++ *
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ *
++ * License        Dual MIT/GPLv2
++ *
++ * The contents of this file are subject to the MIT license as set out below.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * the GNU General Public License Version 2 ("GPL") in which case the provisions
++ * of GPL are applicable instead of those above.
++ *
++ * If you wish to allow use of your version of this file only under the terms of
++ * GPL, and not to allow others to use your version of this file under the terms
++ * of the MIT license, indicate your decision by deleting the provisions above
++ * and replace them with the notice and other provisions required by GPL as set
++ * out in the file called "GPL-COPYING" included in this distribution. If you do
++ * not delete the provisions above, a recipient may use your version of this
++ * file under the terms of either the MIT license or GPL.
++ *
++ * This License is also included in this distribution in the file called
++ * "MIT-COPYING".
++ *
++ * EXCEPT AS OTHERWISE STATED IN A NEGOTIATED AGREEMENT: (A) THE SOFTWARE IS
++ * PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
++ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++ * PARTICULAR PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS
++ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++ * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ *
++ * GPLv2:
++ * If you wish to use this file under the terms of GPL, following terms are
++ * effective.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */ /*************************************************************************/
++
++#include <linux/string.h>
++
++#include "frame.h"
++
++#include "vspm_public.h"
++#include "vspm_ip_ctrl.h"
++#include "vspm_main.h"
++#include "vspm_log.h"
++
++#include "vspm_lib_public.h"
++#include "vspm_common.h"
++
++#include "isu_drv_public.h"
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_ch
++ * Description:	Get channel number from module_id.
++ * Returns:		R_VSPM_OK/R_VSPM_NG
++ ******************************************************************************/
++long vspm_ins_isu_ch(unsigned short module_id, unsigned char *ch)
++{
++	/* check range */
++	if (!IS_ISU_CH(module_id)) {
++		EPRINT("%s: Invalid module ID module_id=%d\n",
++		       __func__, module_id);
++		return R_VSPM_NG;
++	}
++
++	/* set channel */
++	*ch = (unsigned char)(module_id - VSPM_ISU_CH_OFFSET);
++
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_cb_vsp
++ * Description:	Callback function.
++ * Returns:		void
++ ******************************************************************************/
++static void vspm_cb_vsp(unsigned long id, long ercd, void *userdata)
++{
++	unsigned long module_id = (unsigned long)userdata;
++
++	/* callback function */
++	vspm_inc_ctrl_on_driver_complete((unsigned short)module_id, ercd);
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_initialize
++ * Description:	Initialize ISU driver.
++ * Returns:		R_VSPM_OK/R_VSPM_NG
++ ******************************************************************************/
++long vspm_ins_isu_initialize(
++	struct vspm_usable_res_info *usable, struct vspm_drvdata *pdrv)
++{
++	struct isu_init_t init_param;
++	struct isu_open_t open_param;
++
++	long ercd;
++
++	unsigned int usable_bits = 0;
++	unsigned char ch;
++	int i, j;
++
++	/* set parameter */
++	init_param.ip_num = VSPM_ISU_IP_MAX;
++
++	/* initialize driver */
++	ercd = isu_lib_init(&init_param);
++	if (ercd) {
++		EPRINT("%s: failed to init!! ercd=%ld\n", __func__, ercd);
++		return R_VSPM_NG;
++	}
++
++	ch = VSPM_ISU_IP_MAX - 1;
++	for (i = 0; i < VSPM_ISU_IP_MAX; i++) {
++		if (pdrv->isu_pdev[ch]) {
++			/* set parameter */
++			open_param.pdev = pdrv->isu_pdev[ch];
++
++			/* open channel */
++			ercd = isu_lib_open(ch, &open_param);
++			if (ercd) {
++				EPRINT("%s: failed to open!! (%d, %ld)\n",
++				       __func__, ch, ercd);
++				/* forced quit */
++				(void)isu_lib_quit();
++				return R_VSPM_NG;
++			}
++
++			/* set usable channel bits */
++			for (j = 0; j < VSPM_ISU_CH_MAX; j++) {
++				usable_bits <<= 1;
++				usable_bits |= 0x1;
++			}
++		} else {
++			/* skip usable channel bits */
++			for (j = 0; j < VSPM_ISU_CH_MAX; j++)
++				usable_bits <<= 1;
++		}
++		ch--;
++	}
++
++	/* set usable channel bits */
++	usable_bits <<= VSPM_ISU_CH_OFFSET;
++	usable->ch_bits |= usable_bits;
++
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_execute
++ * Description:	Execute VSP driver.
++ * Returns:		R_VSPM_OK/R_VSPM_NG
++ *	return of isu_lib_start()
++ ******************************************************************************/
++long vspm_ins_isu_execute(unsigned short module_id, struct isu_start_t *isu_par)
++{
++	struct isu_start_t *start_param;
++	unsigned char ch = 0;
++	struct isu_status_t status;
++	long ercd;
++
++	/* convert module ID to channel */
++	ercd = vspm_ins_isu_ch(module_id, &ch);
++	if (ercd)
++		return R_VSPM_NG;
++
++	start_param = (struct isu_start_t *)isu_par;
++
++	ercd = isu_lib_get_status(ch, &status);
++	if (ercd) {
++		EPRINT("%s: failed to get status!! ercd=%ld\n", __func__, ercd);
++		return R_VSPM_NG;
++	}
++
++	/* execute VSP process */
++	ercd = isu_lib_start(
++		ch,
++		(void *)vspm_cb_vsp,
++		start_param,
++		(void *)(unsigned long)module_id);
++	if (ercd)
++		return ercd;
++
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_exec_complete
++ * Description:	Complete VSP driver.
++ * Returns:		R_VSPM_OK
++ ******************************************************************************/
++long vspm_ins_isu_exec_complete(unsigned short module_id)
++{
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_cancel
++ * Description:	Cancel VSP driver.
++ * Returns:		R_VSPM_OK/R_VSPM_NG
++ ******************************************************************************/
++long vspm_ins_isu_cancel(unsigned short module_id)
++{
++	unsigned char ch = 0;
++
++	long ercd;
++
++	/* convert module ID to channel */
++	ercd = vspm_ins_isu_ch(module_id, &ch);
++	if (ercd)
++		return R_VSPM_NG;
++
++	/* abort process */
++	ercd = isu_lib_abort(ch);
++	if (ercd) {
++		EPRINT("%s: failed to cancel!! (%d, %ld)\n",
++		       __func__, ch, ercd);
++		return R_VSPM_NG;
++	}
++
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_quit
++ * Description:	Finalize VSP driver.
++ * Returns:		R_VSPM_OK/R_VSPM_NG
++ ******************************************************************************/
++long vspm_ins_isu_quit(struct vspm_usable_res_info *usable)
++{
++	long ercd;
++
++	unsigned int usable_bits = 0;
++	int i;
++
++	/* quit driver with close all channels */
++	ercd = isu_lib_quit();
++	if (ercd) {
++		EPRINT("%s: failed to quit!!() ercd=%ld\n",
++		       __func__, ercd);
++		return R_VSPM_NG;
++	}
++
++	/* clear usable channel bits */
++	for (i = 0; i < VSPM_ISU_CH_NUM; i++) {
++		usable_bits <<= 1;
++		usable_bits |= 0x1;
++	}
++
++	usable_bits <<= VSPM_ISU_CH_OFFSET;
++	usable->ch_bits &= ~(usable_bits);
++
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_execute_low_delay
++ * Description:	Execute VSP driver VSPM task through.
++ * Returns:		R_VSPM_OK/R_VSPM_NG
++ *	return of isu_lib_start()
++ ******************************************************************************/
++long vspm_ins_isu_execute_low_delay(
++	unsigned short module_id,
++	struct vspm_api_param_entry *entry)
++{
++	struct isu_start_t *start_param;
++	unsigned char ch = 0;
++	struct isu_status_t status;
++	long ercd;
++
++	/* convert module ID to channel */
++	ercd = vspm_ins_isu_ch(module_id, &ch);
++	if (ercd)
++		return R_VSPM_NG;
++
++	start_param = entry->p_ip_par->par.isu;
++
++	ercd = isu_lib_get_status(ch, &status);
++	if (ercd) {
++		EPRINT("%s: failed to get status!! ercd=%ld\n", __func__, ercd);
++		return R_VSPM_NG;
++	}
++
++	/* execute ISU process */
++	ercd = isu_lib_start(
++		ch,
++		(void *)entry->pfn_complete_cb,
++		start_param,
++		entry->user_data);
++	if (ercd)
++		return ercd;
++
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_suspend
++ * Description:	Suspend VSP driver.
++ * Returns:		R_VSPM_OK
++ ******************************************************************************/
++long vspm_ins_isu_suspend(void)
++{
++	unsigned char ch;
++	long ercd;
++
++	for (ch = 0; ch < VSPM_ISU_IP_MAX; ch++) {
++		/* suspend */
++		ercd = isu_lib_suspend(ch);
++		if (ercd != 0) {
++			APRINT("%s: failed to suspend ch=%d\n",
++			       __func__, ch);
++		}
++	}
++
++	return R_VSPM_OK;
++}
++
++/******************************************************************************
++ * Function:		vspm_ins_isu_resume
++ * Description:	Resume VSP driver.
++ * Returns:		R_VSPM_OK
++ ******************************************************************************/
++long vspm_ins_isu_resume(void)
++{
++	unsigned char ch;
++	long ercd;
++
++	for (ch = 0; ch < VSPM_ISU_IP_MAX; ch++) {
++		/* resume */
++		ercd = isu_lib_resume(ch);
++		if (ercd != 0) {
++			APRINT("%s: failed to resume ch=%d\n",
++			       __func__, ch);
++		}
++	}
++
++	return R_VSPM_OK;
++}
+diff --git a/vspm-module/files/vspm/drv/vspm_ip_ctrl.h b/vspm-module/files/vspm/drv/vspm_ip_ctrl.h
+index 054aa01..a0c854b 100644
+--- a/vspm-module/files/vspm/drv/vspm_ip_ctrl.h
++++ b/vspm-module/files/vspm/drv/vspm_ip_ctrl.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -69,26 +69,33 @@ enum {
+ 	VSPM_TYPE_FDP_CH0,
+ 	VSPM_TYPE_FDP_CH1,
+ 	VSPM_TYPE_FDP_CH2,
++	/* ISU channel */
++	VSPM_TYPE_ISU_CH0,
+ 	VSPM_CH_MAX
+ };
+ 
+ /* maximum IP number */
+ #define VSPM_VSP_IP_MAX			(5)
+ #define VSPM_FDP_IP_MAX			(3)
++#define VSPM_ISU_IP_MAX			(1)
+ 
+ /* maximum channel number (per IP) */
+ #define VSPM_VSP_CH_MAX			(1)
+ #define VSPM_FDP_CH_MAX			(1)
++#define VSPM_ISU_CH_MAX			(1)
+ 
+ /* total channel number */
+ #define VSPM_VSP_CH_NUM \
+ 	(VSPM_VSP_IP_MAX * VSPM_VSP_CH_MAX)
+ #define VSPM_FDP_CH_NUM \
+ 	(VSPM_FDP_IP_MAX * VSPM_FDP_CH_MAX)
++#define VSPM_ISU_CH_NUM \
++	(VSPM_ISU_IP_MAX * VSPM_ISU_CH_MAX)
+ 
+ /* offset channel number */
+ #define VSPM_VSP_CH_OFFSET		VSPM_TYPE_VSP_CH0
+ #define VSPM_FDP_CH_OFFSET		VSPM_TYPE_FDP_CH0
++#define VSPM_ISU_CH_OFFSET		VSPM_TYPE_ISU_CH0
+ 
+ /* judgment macro */
+ #define IS_VSP_CH(ch) \
+@@ -97,5 +104,8 @@ enum {
+ #define IS_FDP_CH(ch) \
+ 	(((ch) >= VSPM_FDP_CH_OFFSET) && \
+ 	 ((ch) < (VSPM_FDP_CH_NUM + VSPM_FDP_CH_OFFSET)))
++#define IS_ISU_CH(ch) \
++	(((ch) >= VSPM_ISU_CH_OFFSET) && \
++	 ((ch) < (VSPM_ISU_CH_NUM + VSPM_ISU_CH_OFFSET)))
+ 
+ #endif
+diff --git a/vspm-module/files/vspm/include/isu_drv.h b/vspm-module/files/vspm/include/isu_drv.h
+new file mode 100644
+index 0000000..d97aaff
+--- /dev/null
++++ b/vspm-module/files/vspm/include/isu_drv.h
+@@ -0,0 +1,232 @@
++/*************************************************************************/ /*
++ * ISUM
++ *
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ *
++ * License        Dual MIT/GPLv2
++ *
++ * The contents of this file are subject to the MIT license as set out below.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * the GNU General Public License Version 2 ("GPL") in which case the provisions
++ * of GPL are applicable instead of those above.
++ *
++ * If you wish to allow use of your version of this file only under the terms of
++ * GPL, and not to allow others to use your version of this file under the terms
++ * of the MIT license, indicate your decision by deleting the provisions above
++ * and replace them with the notice and other provisions required by GPL as set
++ * out in the file called "GPL-COPYING" included in this distribution. If you do
++ * not delete the provisions above, a recipient may use your version of this
++ * file under the terms of either the MIT license or GPL.
++ *
++ * This License is also included in this distribution in the file called
++ * "MIT-COPYING".
++ *
++ * EXCEPT AS OTHERWISE STATED IN A NEGOTIATED AGREEMENT: (A) THE SOFTWARE IS
++ * PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
++ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++ * PARTICULAR PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS
++ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++ * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ *
++ * GPLv2:
++ * If you wish to use this file under the terms of GPL, following terms are
++ * effective.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */ /*************************************************************************/
++
++#ifndef _ISU_DRV_H_
++#define _ISU_DRV_H_
++
++/* error code */
++#define E_ISU_DEF_INH			(-100)
++#define E_ISU_DEF_REG			(-101)
++#define E_ISU_NO_MEM			(-102)
++#define E_ISU_NO_INIT			(-103)
++#define E_ISU_INVALID_STATE		(-104)
++#define E_ISU_NO_CLK			(-105)
++#define E_ISU_PARA_CH			(-106)
++
++#define E_ISU_PARA_CB			(-201)
++#define E_ISU_PARA_INPAR		(-202)
++
++#define E_ISU_PARA_NOOUT		(-210)
++#define E_ISU_PARA_NOIN			(-211)
++#define E_ISU_PARA_IN_ADDR		(-212)
++#define E_ISU_PARA_IN_STRD		(-213)
++#define E_ISU_PARA_IN_WIDTH		(-214)
++#define E_ISU_PARA_IN_HEIGHT		(-215)
++#define E_ISU_PARA_IN_FORMAT		(-216)
++#define E_ISU_PARA_ALPHA_ASEL		(-219)
++
++#define E_ISU_PARA_OUT_ADDR		(-270)
++#define E_ISU_PARA_OUT_STRD		(-271)
++#define E_ISU_PARA_OUT_CSC		(-272)
++#define E_ISU_PARA_OUT_FORMAT		(-275)
++
++#define E_ISU_PARA_RS_CROP		(-351)
++#define E_ISU_PARA_RS_RATIO		(-352)	/* illegal ratio */
++#define E_ISU_PARA_RS_START		(-353)	/* illegal resize start pos */
++#define E_ISU_PARA_RS_PAD		(-354)  /* illegal pad selection */
++#define E_ISU_PARA_RS_TUNE		(-355)  /* illegal tune */
++
++#define E_ISU_PARA_DL_ADDR		(-680)
++#define E_ISU_PARA_DL_SIZE		(-681)
++#define E_ISU_DL_FORMAT			(-682)
++
++#define ISU_RS_USE			(0x01) /* Resizer */
++
++/* lower-bit alpha value extension/compress method set */
++#define ISU_AEXT_COPY			(0x00)	/* copied  */
++#define ISU_AEXT_EXPAN			(0x01)	/* extended */
++#define ISU_AEXT_COMP			(0x02)	/* compressed */
++#define ISU_AEXT_CONV			(0x03)  /* converted */
++
++/* RPF module parameter */
++/* ISU image format */
++#define ISU_ARGB1555			(0x00)
++#define ISU_RGB565			(0x01)
++#define ISU_BGR666			(0x02)
++#define ISU_RGB888			(0x03)
++#define ISU_BGR888			(0x04)
++#define ISU_ARGB8888			(0x05)
++#define ISU_RGBA8888			(0x06)
++#define ISU_ABGR8888			(0x07)
++#define ISU_YUV422_UYVY			(0x20)
++#define ISU_YUV422_YUY2			(0x21)
++#define ISU_YUV422_NV16			(0x22)
++#define ISU_YUV420_NV12			(0x23)
++#define ISU_RAW8			(0x30)
++#define ISU_RAW10			(0x31)
++#define ISU_RAW12			(0x32)
++
++/* swap setting */
++#define ISU_SWAP_NO			(0x00)	/* disable */
++#define ISU_SWAP_B			(0x01)	/* byte units */
++#define ISU_SWAP_W			(0x02)	/* word units */
++#define ISU_SWAP_L			(0x04)	/* longword units */
++#define ISU_SWAP_LL			(0x08)	/* LONG LWORD units */
++
++/* maximum number steps tunning */
++#define ISU_TUNE_MAX			(4096)
++
++/* clip index */
++#define CLIP_MIN_INX			0
++#define CLIP_MAX_INX			1
++
++/* color space conversion */
++#define ISU_CSC_CUSTOM			(0x00)	/* enable with user custom */
++#define ISU_CSC_RAW			(0x01) 	/* enable with 709 standard */
++#define ISU_LAYER_NUM			(3)
++#define ISU_OFFSET_NUM			(2)
++#define ISU_CLIP_NUM	                (2)
++
++/* select of color space conversion scale */
++#define ISU_ITU_COLOR			(0x00)	/* YUV[16,235/140] <-> RGB[0,255] */
++#define ISU_FULL_COLOR			(0x01)	/* Full scale */
++
++/* alpha bit counte conversion selection */
++#define ISU_ALPHA_8BIT			(0x00) /* 8bit alpha is converted to 1bit */
++#define ISU_ALPHA_1BIT			(0x01) /* alpha value goes through */
++
++/* PAD data select */
++#define ISU_PAD_P			(0x00)
++#define ISU_PAD_IN			(0x01)
++
++/* color data clipping method */
++#define ISU_CLMD_NO			(0x00)	/* not clipped */
++#define ISU_CLMD_MODE1			(0x01)	/* YCbCr mode1 */
++#define ISU_CLMD_MODE2			(0x02)	/* YCbCr mode2 */
++
++struct isu_alpha_unit_t {
++    unsigned char	asel;
++    unsigned char	anum0;
++    unsigned char	anum1;
++    unsigned char	anum2;
++    unsigned char	athres0;
++    unsigned char	athres1;
++};
++
++struct isu_td_unit_t {
++    unsigned char	grada_mode;
++    unsigned char	grada_step;
++    unsigned int 	init_val;
++};
++
++struct isu_csc_t {
++    unsigned char	csc;
++    unsigned int	k_matrix[3][3];
++    unsigned int	offset[3][2];
++    unsigned int	clip[3][2];
++};
++
++struct isu_src_t {
++    unsigned long	addr;
++    unsigned long	addr_c;
++    unsigned int	stride;
++    unsigned int	stride_c;
++    unsigned int	width;
++    unsigned int	height;
++    unsigned char	format ;
++    unsigned char	swap;
++    struct isu_td_unit_t	*td ;
++    struct isu_alpha_unit_t *alpha ;
++    unsigned char	uv_conv;
++};
++
++struct isu_dst_t {
++    unsigned long	addr;
++    unsigned int	addr_c;
++    unsigned short	stride;
++    unsigned short	stride_c;
++    unsigned short	width;
++    unsigned short	height;
++    unsigned short	format ;
++    unsigned char	swap;
++    struct isu_csc_t	*csc;
++    struct isu_alpha_unit_t *alpha ;
++};
++
++
++/* RS parameter */
++struct isu_rs_t {
++    unsigned int	start_x;
++    unsigned int	start_y;
++    unsigned int	tune_x;
++    unsigned int	tune_y;
++    unsigned int	crop_w;
++    unsigned int	crop_h;
++    unsigned char       pad_mode;
++    unsigned int	pad_val;
++    unsigned short	x_ratio ;
++    unsigned short	y_ratio ;
++};
++
++
++struct isu_start_t {
++    struct isu_src_t *src_par;	    /* source parameter */
++    struct isu_dst_t *dst_par;		/* destination parameter */
++    struct isu_rs_t  *rs_par ;       /* Resizer parameter */
++    unsigned long     dl_hard_addr;			/* work memory for DL */
++};
++#endif
+diff --git a/vspm-module/files/vspm/include/vspm_cmn.h b/vspm-module/files/vspm/include/vspm_cmn.h
+index 41ae8b9..78f0bfc 100644
+--- a/vspm-module/files/vspm/include/vspm_cmn.h
++++ b/vspm-module/files/vspm/include/vspm_cmn.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -89,7 +89,8 @@ enum {
+ /* select IP */
+ enum {
+ 	VSPM_TYPE_VSP_AUTO = 0,
+-	VSPM_TYPE_FDP_AUTO
++	VSPM_TYPE_FDP_AUTO ,
++	VSPM_TYPE_ISU_AUTO
+ };
+ 
+ /* Job priority */
+@@ -128,6 +129,7 @@ struct vspm_init_t {
+ 	unsigned short type;
+ 	union {
+ 		struct vspm_init_vsp_t *vsp;
++		struct vspm_init_vsp_t *isu;
+ 		struct vspm_init_fdp_t *fdp;
+ 	} par;
+ };
+@@ -138,6 +140,7 @@ struct vspm_job_t {
+ 	union {
+ 		struct vsp_start_t *vsp;
+ 		struct fdp_start_t *fdp;
++		struct isu_start_t *isu;
+ 	} par;
+ };
+ 
+diff --git a/vspm-module/files/vspm/include/vspm_public.h b/vspm-module/files/vspm/include/vspm_public.h
+index 29c990c..0dca03f 100644
+--- a/vspm-module/files/vspm/include/vspm_public.h
++++ b/vspm-module/files/vspm/include/vspm_public.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -60,6 +60,7 @@
+ 
+ #include "vsp_drv.h"
+ #include "fdp_drv.h"
++#include "isu_drv.h"
+ #include "vspm_cmn.h"
+ 
+ /* callback function */
+-- 
+2.17.1
+

@@ -1,0 +1,429 @@
+From 50ebfd1896c3f8ee56e8d81e412606eb78342eb2 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Fri, 2 Jul 2021 09:50:24 +0700
+Subject: [PATCH 2/3] Add ISU to VSPM
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ .../files/vspm/drv/manager/vspm_common.h      |  13 +-
+ .../files/vspm/drv/manager/vspm_control.c     |  43 +++++-
+ vspm-module/files/vspm/drv/vspm_main.c        | 138 +++++++++++++++++-
+ vspm-module/files/vspm/drv/vspm_main.h        |   7 +-
+ 4 files changed, 190 insertions(+), 11 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_common.h b/vspm-module/files/vspm/drv/manager/vspm_common.h
+index 0965c81..082c5b1 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_common.h
++++ b/vspm-module/files/vspm/drv/manager/vspm_common.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -253,4 +253,15 @@ long vspm_ins_fdp_execute_low_delay(
+ long vspm_ins_fdp_suspend(void);
+ long vspm_ins_fdp_resume(void);
+ 
++/* ISU control functions */
++long vspm_ins_isu_ch(unsigned short module_id, unsigned char *ch);
++long vspm_ins_isu_initialize(
++	struct vspm_usable_res_info *usable, struct vspm_drvdata *pdrv);
++long vspm_ins_isu_cancel(unsigned short module_id);
++long vspm_ins_isu_quit(struct vspm_usable_res_info *usable);
++long vspm_ins_isu_execute_low_delay(
++	unsigned short module_id,
++	struct vspm_api_param_entry *entry);
++long vspm_ins_isu_suspend(void);
++long vspm_ins_isu_resume(void);
+ #endif /* __VSPM_COMMON_H__ */
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_control.c b/vspm-module/files/vspm/drv/manager/vspm_control.c
+index 4ffa6a0..9dd56fd 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_control.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_control.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -150,12 +150,12 @@ static unsigned short vspm_ins_ctrl_get_ch_msb(unsigned int bits)
+  *	return of vspm_inc_sort_queue_initialize()
+  *	return of vspm_ins_vsp_initialize()
+  *	return of vspm_ins_fdp_initialize()
++ *	return of vspm_ins_isu_initialize()
+  ******************************************************************************/
+ long vspm_ins_ctrl_initialize(struct vspm_drvdata *pdrv)
+ {
+ 	struct vspm_usable_res_info *usable = &g_vspm_ctrl_info.usable_info;
+ 	long ercd;
+-
+ 	/* check parameter */
+ 	if (!pdrv)
+ 		return R_VSPM_NG;
+@@ -186,6 +186,15 @@ long vspm_ins_ctrl_initialize(struct vspm_drvdata *pdrv)
+ 		return ercd;
+ 	}
+ 
++	/* initialize ISU driver */
++	ercd = vspm_ins_isu_initialize(usable, pdrv);
++	if (ercd != R_VSPM_OK) {
++		EPRINT("failed to vspm_ins_isu_initialize %ld\n", ercd);
++		/* forced quit */
++		(void)vspm_ins_isu_quit(usable);
++		return ercd;
++	}
++
+ 	return R_VSPM_OK;
+ }
+ 
+@@ -215,6 +224,13 @@ long vspm_ins_ctrl_quit(struct vspm_drvdata *pdrv)
+ 		return ercd;
+ 	}
+ 
++	/* Finalize ISU driver */
++	ercd = vspm_ins_isu_quit(usable);
++	if (ercd != R_VSPM_OK) {
++		EPRINT("failed to vspm_ins_isu_quit %ld\n", ercd);
++		return ercd;
++	}
++
+ 	return R_VSPM_OK;
+ }
+ 
+@@ -378,6 +394,9 @@ long vspm_ins_ctrl_exec_entry(struct vspm_api_param_entry *entry)
+ 	} else if (request->type == VSPM_TYPE_FDP_AUTO) {
+ 		/* execute FDP processing */
+ 		ercd = vspm_ins_fdp_execute_low_delay(module_id, entry);
++	} else if (request->type == VSPM_TYPE_ISU_AUTO) {
++		/* execute ISU processing */
++		ercd = vspm_ins_isu_execute_low_delay(module_id, entry);
+ 	} else {
+ 		ercd = R_VSPM_NG;
+ 	}
+@@ -596,6 +615,9 @@ long vspm_ins_ctrl_cancel_entry(struct vspm_privdata *priv)
+ 	} else if (request->type == VSPM_TYPE_FDP_AUTO) {
+ 		/* cancel FDP processing */
+ 		ercd = vspm_ins_fdp_cancel(module_id);
++	} else if (request->type == VSPM_TYPE_ISU_AUTO) {
++		/* cancel ISU processing */
++		ercd = vspm_ins_isu_cancel(module_id);
+ 	} else {
+ 		ercd = R_VSPM_NG;
+ 	}
+@@ -627,6 +649,10 @@ long vspm_ins_ctrl_mode_param_check(
+ 		vspm_ins_mask_low_bits(&bits, VSPM_FDP_CH_NUM);
+ 		/* shift channel bits */
+ 		bits <<= VSPM_FDP_CH_OFFSET;
++	} else if (param->type == VSPM_TYPE_ISU_AUTO) {
++		vspm_ins_mask_low_bits(&bits, VSPM_ISU_CH_NUM);
++		/* shift channel bits */
++		bits <<= VSPM_ISU_CH_OFFSET;
+ 	} else {
+ 		EPRINT("%s: Invalid type!! type=%d\n",
+ 		       __func__, param->type);
+@@ -717,6 +743,12 @@ long vspm_ins_ctrl_entry_param_check(struct vspm_api_param_entry *entry)
+ 			return R_VSPM_PARAERR;
+ 		}
+ 		break;
++	case VSPM_TYPE_ISU_AUTO:
++		if (!ip_par->par.isu) {
++			EPRINT("%s par.isu is NULL\n", __func__);
++			return R_VSPM_PARAERR;
++		}
++		break;
+ 	default:
+ 		EPRINT("%s Illegal type 0x%04x\n",
+ 		       __func__, ip_par->type);
+@@ -866,6 +898,13 @@ long vspm_ins_ctrl_assign_channel(
+ 		/* get channel from LSB */
+ 		ch_num = vspm_ins_ctrl_get_ch_lsb(assign_bits);
+ 		ch_num += VSPM_FDP_CH_OFFSET;
++	} else if (ip_par->type == VSPM_TYPE_ISU_AUTO) {
++		/* shift channel bits */
++		assign_bits >>= VSPM_ISU_CH_OFFSET;
++		/* bit mask */
++                vspm_ins_mask_low_bits(&assign_bits, VSPM_ISU_CH_NUM);
++		ch_num = vspm_ins_ctrl_get_ch_lsb(assign_bits);
++                ch_num += VSPM_ISU_CH_OFFSET;
+ 	}
+ 
+ 	/* check assignment channel number */
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 2e1f09c..f00472c 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -71,6 +71,8 @@
+ #include "vspm_lib_public.h"
+ #include "vsp_drv_public.h"
+ 
++#define CPG_CLKON_ISU	(0x1101055c)
++#define CPG_RST_ISU	(0x1101085c)
+ static struct vspm_drvdata *p_vspm_drvdata;
+ 
+ /******************************************************************************
+@@ -443,6 +445,75 @@ static int vspm_fdp_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static int vspm_isu_probe(struct platform_device *pdev)
++{
++	struct vspm_drvdata *pdrv = p_vspm_drvdata;
++	struct device_node *np = pdev->dev.of_node;
++	struct clk *clk;
++	int ch;
++
++	/* get channel */
++	of_property_read_u32(np, "renesas,#ch", &ch);
++	if (ch < 0) {
++		APRINT("Not find define of renesas,#ch.\n");
++		return -1;
++	}
++
++	if (ch >= VSPM_ISU_IP_MAX) {
++		APRINT("Invalid channel!! ch=%d\n", ch);
++		return -1;
++	}
++
++	if (pdrv->isu_pdev[ch]) {
++		APRINT("Already registered channel!! ch=%d\n", ch);
++		return -1;
++	}
++
++	/* set clocks */
++	clk = devm_clk_get(&pdev->dev, ISU_CLK_NAME);
++	if (IS_ERR(clk)) {
++		APRINT("Cannot get %s clock!! ch=%d\n",ISU_CLK_NAME, ch);
++		return -1;
++	}
++
++	pdrv->isu_clks[ch][0] = clk;
++
++	/* set driver data */
++	platform_set_drvdata(pdev, &pdrv->isu_clks[ch]);
++	pdrv->isu_pdev[ch] = pdev;
++
++	/* set runtime PM */
++	pm_suspend_ignore_children(&pdev->dev, true);
++	pm_runtime_enable(&pdev->dev);
++
++
++	return 0;
++}
++
++static int vspm_isu_remove(struct platform_device *pdev)
++{
++	struct vspm_drvdata *pdrv = p_vspm_drvdata;
++	struct device_node *np = pdev->dev.of_node;
++
++	int ch;
++
++	/* unset runtime PM */
++	pm_runtime_disable(&pdev->dev);
++
++	/* get channel */
++	of_property_read_u32(np, "renesas,#ch", &ch);
++
++	/* unset driver data */
++	platform_set_drvdata(pdev, NULL);
++	pdrv->isu_pdev[ch] = NULL;
++
++	/* unset clocks */
++	pdrv->isu_clks[ch][0] = NULL;
++
++	return 0;
++}
++
++
+ static int vspm_pm_suspend(struct device *dev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+@@ -478,6 +549,7 @@ static int vspm_pm_resume(struct device *dev)
+ static int vspm_pm_runtime_suspend(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
++
+ 	struct clk **clk = platform_get_drvdata(pdev);
+ 
+ 	int i;
+@@ -494,9 +566,7 @@ static int vspm_pm_runtime_resume(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct clk **clk = platform_get_drvdata(pdev);
+-
+ 	int i;
+-
+ 	for (i = 0; i < CLKNUM; i++) {
+ 		if (clk[i])
+ 			clk_prepare_enable(clk[i]);
+@@ -505,6 +575,34 @@ static int vspm_pm_runtime_resume(struct device *dev)
+ 	return 0;
+ }
+ 
++static int isum_pm_runtime_resume(struct device *dev)
++{
++	void __iomem *isu_rst;
++	void __iomem *isu_cpg;
++
++	isu_cpg = ioremap(CPG_CLKON_ISU, 4);
++	writel(0x30003, isu_cpg);
++
++	isu_rst = ioremap(CPG_RST_ISU, 4);
++	writel(0x30003, isu_rst);
++
++	return 0;
++}
++
++static int isum_pm_runtime_suspend(struct device *dev)
++{
++	void __iomem *isu_rst;
++	void __iomem *isu_cpg;
++
++	isu_cpg = ioremap(CPG_CLKON_ISU, 4);
++	writel(0x30000, isu_cpg);
++
++	isu_rst = ioremap(CPG_RST_ISU, 4);
++	writel(0x30000, isu_rst);
++
++	return 0;
++}
++
+ static const struct dev_pm_ops vspm_vsp_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(vspm_pm_suspend, vspm_pm_resume)
+ 	SET_RUNTIME_PM_OPS(
+@@ -517,6 +615,12 @@ static const struct dev_pm_ops vspm_fdp_pm_ops = {
+ 		vspm_pm_runtime_suspend, vspm_pm_runtime_resume, NULL)
+ };
+ 
++static const struct dev_pm_ops vspm_isu_pm_ops = {
++	SET_SYSTEM_SLEEP_PM_OPS(vspm_pm_suspend, vspm_pm_resume)
++	SET_RUNTIME_PM_OPS(
++		isum_pm_runtime_suspend, isum_pm_runtime_resume, NULL)
++};
++
+ static const struct of_device_id vspm_vsp_of_match[] = {
+ 	{ .compatible = "renesas,vspm" },
+ 	{ },
+@@ -527,6 +631,10 @@ static const struct of_device_id vspm_fdp_of_match[] = {
+ 	{ },
+ };
+ 
++static const struct of_device_id vspm_isu_of_match[] = {
++	{ .compatible = "renesas,isum" },
++};
++
+ static struct platform_driver vspm_vsp_driver = {
+ 	.driver = {
+ 		.name	= DEVNAME "-vsp",
+@@ -549,26 +657,44 @@ static struct platform_driver vspm_fdp_driver = {
+ 	.remove		= vspm_fdp_remove,
+ };
+ 
++static struct platform_driver vspm_isu_driver = {
++	.driver = {
++		.name	= DEVNAME "-isu",
++		.owner	= THIS_MODULE,
++		.pm		= &vspm_isu_pm_ops,
++		.of_match_table = vspm_isu_of_match,
++	},
++	.probe		= vspm_isu_probe,
++	.remove		= vspm_isu_remove,
++};
++
+ static int vspm_platform_driver_register(void)
+ {
+ 	int ercd;
+ 
+ 	ercd = platform_driver_register(&vspm_vsp_driver);
+ 	if (ercd) {
+-		APRINT("could not register a driver for ");
++		APRINT("could not register a driver for VSP");
+ 		APRINT("platform-level devices %d\n", ercd);
+ 		return ercd;
+ 	}
+ 
+ 	ercd = platform_driver_register(&vspm_fdp_driver);
+ 	if (ercd) {
+-		APRINT("could not register a driver for ");
++		APRINT("could not register a driver for FDP");
+ 		APRINT("platform-level devices %d\n", ercd);
+ 		/* forced quit */
+ 		platform_driver_unregister(&vspm_vsp_driver);
+ 		return ercd;
+ 	}
+ 
++	ercd = platform_driver_register(&vspm_isu_driver);
++	if (ercd) {
++		APRINT("could not register a driver for ISU ");
++		APRINT("platform-level devices %d\n", ercd);
++		return ercd;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -576,13 +702,13 @@ static void vspm_platform_driver_unregister(void)
+ {
+ 	platform_driver_unregister(&vspm_vsp_driver);
+ 	platform_driver_unregister(&vspm_fdp_driver);
++	platform_driver_unregister(&vspm_isu_driver);
+ }
+ 
+ static int __init vspm_module_init(void)
+ {
+ 	struct vspm_drvdata *pdrv = NULL;
+ 	int ercd = 0;
+-
+ 	/* allocate vspm driver data area */
+ 	pdrv = kzalloc(sizeof(*pdrv), GFP_KERNEL);
+ 	if (!pdrv) {
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 45093eb..3e6fdf2 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2021 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -70,7 +70,8 @@
+ #define VSP_CLK_NAME		"vsp"
+ #define FDP_CLK_NAME		"fdp"
+ #define FCP_CLK_NAME		"fcp"
+-#define CLKNUM				2
++#define ISU_CLK_NAME		"isu"
++#define CLKNUM			2
+ 
+ /* vspm driver data structure */
+ struct vspm_drvdata {
+@@ -78,6 +79,8 @@ struct vspm_drvdata {
+ 	struct clk *vsp_clks[VSPM_VSP_IP_MAX][CLKNUM];
+ 	struct platform_device *fdp_pdev[VSPM_FDP_IP_MAX];
+ 	struct clk *fdp_clks[VSPM_FDP_IP_MAX][CLKNUM];
++	struct platform_device *isu_pdev[VSPM_ISU_IP_MAX];
++	struct clk *isu_clks[VSPM_ISU_IP_MAX][CLKNUM];
+ 	struct task_struct *task;
+ 	atomic_t counter;
+ 	atomic_t suspend;
+-- 
+2.17.1
+
