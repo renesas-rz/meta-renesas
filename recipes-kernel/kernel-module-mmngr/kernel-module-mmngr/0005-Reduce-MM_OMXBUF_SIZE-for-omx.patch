@@ -1,0 +1,25 @@
+From 7549f1215f3281ae7c85318d68488de7cfa2a559 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Mon, 5 Jul 2021 16:59:27 +0700
+Subject: [PATCH] Reduce-MM_OMXBUF_SIZE-for-omx
+
+---
+ .../mmngr/mmngr-module/files/mmngr/include/mmngr_private.h      | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+index cea4271..c393d32 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+@@ -205,7 +205,7 @@ static void mm_exit(void);
+ static int validate_memory_map(void);
+ 
+ #ifdef MMNGR_SALVATORX
+-#define MM_OMXBUF_SIZE		(256 * 1024 * 1024)
++#define MM_OMXBUF_SIZE		(160 * 1024 * 1024)
+ #endif /* MMNGR_SALVATORX */
+ 
+ #ifdef MMNGR_EBISU
+-- 
+2.17.1
+
