@@ -1,0 +1,37 @@
+From 0fedb1f681d21d4390a8502f1aa9bf0698e13d3d Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Mon, 12 Jul 2021 11:02:49 +0700
+Subject: [PATCH 3/3] workaround wait_interrupt callback function
+
+   It seem that wait_for_completion_interruptible sometimes makes endframe
+   signal cannot be generated. It rarely happens if using delay < 20ms. So we
+   temporarily delay 40ms for sure it works fine in this term
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index 57652ed..5477b98 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -65,6 +65,7 @@
+ #include <linux/fs.h>
+ #include <linux/ioctl.h>
+ #include <linux/mod_devicetable.h>
++#include <linux/delay.h>
+
+ #include "vspm_public.h"
+ #include "vspm_if.h"
+@@ -446,6 +447,7 @@ static long vspm_ioctl_wait_interrupt(
+ 	complete(&priv->wait_thread);
+
+ 	/* wait process end */
++	msleep(40);
+ 	if (wait_for_completion_interruptible(&priv->wait_interrupt))
+ 		return -EINTR;
+
+--
+2.17.1
+

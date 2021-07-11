@@ -1,0 +1,650 @@
+From 6c06cb3118e4443066a9d0ddac739d6f57be1c5a Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Fri, 2 Jul 2021 10:18:28 +0700
+Subject: [PATCH 2/2] Add ISU to vspmif
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ .../files/vspm_if/drv/vspm_if_local.h         |  26 ++
+ .../files/vspm_if/drv/vspm_if_main.c          |  33 +-
+ .../files/vspm_if/drv/vspm_if_sub.c           | 381 ++++++++++++++++++
+ .../files/vspm_if/include/vspm_if.h           |  77 ++++
+ 4 files changed, 516 insertions(+), 1 deletion(-)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_local.h b/vspm_if-module/files/vspm_if/drv/vspm_if_local.h
+index af70784..ca623c7 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_local.h
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_local.h
+@@ -163,6 +163,26 @@ struct vspm_if_entry_data_t {
+ 				struct fdp_ipc_t ipc;
+ 			} fproc;
+ 		} fdp;
++		struct vspm_entry_isu {
++			/* parameter to VSP processing */
++			struct isu_start_t par;
++			/* input image settings */
++			struct vspm_entry_isu_in {
++				struct isu_src_t in;
++				struct isu_alpha_unit_t alpha;
++				struct isu_td_unit_t td;
++			} in;
++			/* output image settings */
++			struct vspm_entry_isu_out {
++				struct isu_dst_t out;
++				struct isu_alpha_unit_t alpha;
++				struct isu_csc_t	csc;
++			} out;
++			/* resize processing settings */
++			struct isu_rs_t rs;
++			/* memory settings */
++			struct vspm_if_work_buff_t *work_buff;
++		} isu;
+ 	} ip_par;
+ };
+ 
+@@ -206,6 +226,7 @@ int set_vsp_par(
+ 	struct vspm_if_entry_data_t *entry,
+ 	struct vsp_start_t *vsp_par);
+ int free_cb_vsp_par(struct vspm_if_cb_data_t *cb_data);
++
+ void set_cb_rsp_vsp(
+ 	struct vspm_if_cb_data_t *cb_data,
+ 	struct vspm_if_entry_data_t *entry_data);
+@@ -213,8 +234,13 @@ int set_fdp_par(
+ 	struct vspm_if_entry_data_t *entry,
+ 	struct fdp_start_t *fdp_par);
+ 
++int set_isu_par(
++	struct vspm_if_entry_data_t *entry,
++	struct isu_start_t *isu_par);
++
+ int set_compat_vsp_par(struct vspm_if_entry_data_t *entry, unsigned int src);
+ int set_compat_fdp_par(struct vspm_if_entry_data_t *entry, unsigned int src);
++int set_compat_isu_par(struct vspm_if_entry_data_t *entry, unsigned int src);
+ 
+ #endif /* __VSPM_IF_LOCAL_H__ */
+ 
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index 6eea002..57652ed 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -155,6 +155,10 @@ static long vspm_ioctl_init(
+ 			init_par.par.fdp = &init_fdp_par;
+ 		}
+ 		break;
++	case VSPM_TYPE_ISU_AUTO:
++		/* initialize parameter is not used */
++		init_par.par.isu=NULL;
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -171,7 +175,6 @@ static long vspm_ioctl_init(
+ 	default:
+ 		return -EFAULT;
+ 	}
+-
+ 	priv->handle = handle;
+ 	return 0;
+ }
+@@ -315,6 +318,18 @@ static long vspm_ioctl_entry(
+ 					&entry_data->ip_par.fdp.par;
+ 			}
+ 			break;
++		case VSPM_TYPE_ISU_AUTO:
++			if (entry_data->job.par.isu) {
++				/* copy start parameter of ISU */
++				ercd = set_isu_par(
++					entry_data, entry_data->job.par.isu);
++				if (ercd)
++					goto err_exit;
++
++				entry_req->job_param->par.isu =
++					&entry_data->ip_par.isu.par;
++			}
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -622,6 +637,10 @@ static long vspm_ioctl_init32(
+ 			init_par.par.fdp = NULL;
+ 		}
+ 		break;
++	case VSPM_TYPE_ISU_AUTO:
++		/* initialize parameter is not used */
++		init_par.par.vsp = NULL;
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -722,6 +741,18 @@ static long vspm_ioctl_entry32(
+ 					&entry_data->ip_par.fdp.par;
+ 			}
+ 			break;
++		case VSPM_TYPE_ISU_AUTO:
++			/* copy start parameter of VSP */
++			if (compat_job.par.isu) {
++				ercd = set_compat_isu_par(
++				entry_data, compat_job.par.isu);
++				if (ercd)
++					goto err_exit;
++
++				entry_data->job.par.isu =
++					&entry_data->ip_par.isu.par;
++			}
++			break;
+ 		default:
+ 			break;
+ 		}
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c b/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
+index fb2f58d..dd4d8de 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
+@@ -79,6 +79,7 @@ void release_all_entry_data(struct vspm_if_private_t *priv)
+ 		list_del(&entry_data->list);
+ 		if (entry_data->job.type == VSPM_TYPE_VSP_AUTO)
+ 			free_vsp_par(&entry_data->ip_par.vsp);
++
+ 		kfree(entry_data);
+ 	}
+ 	spin_unlock_irqrestore(&priv->lock, lock_flag);
+@@ -856,7 +857,146 @@ int set_fdp_par(
+ 
+ 	return 0;
+ }
++/* Write ISU parameters from user to kernel */
++static int set_isu_src_par(
++	struct vspm_entry_isu_in *in,
++	struct isu_src_t *src,
++	struct vspm_if_work_buff_t *work_buff)
++{
++	int ercd;
++	/* copy isu_src_t parameter */
++	if (copy_from_user(
++			&in->in,
++			(void __user *)src,
++			sizeof(struct isu_src_t))) {
++		EPRINT("failed to copy of isu_src_t\n");
++		return -EFAULT;
++	}
++
++	/* copy isu_alpha_unit_t parameter */
++	if (in->in.alpha){
++		if (copy_from_user(
++				&in->alpha,
++				(void __user *)in->in.alpha,
++				sizeof(struct isu_alpha_unit_t))) {
++			EPRINT("failed to copy of isu_alpha_unit_t\n");
++			return -EFAULT;
++		}
++		in->in.alpha = &in->alpha;
++	}
++
++	/* copy isu_td_unit_t parameter */
++	if (in->in.td){
++		if (copy_from_user(
++				&in->td,
++				(void __user *)in->in.td,
++				sizeof(struct isu_td_unit_t))) {
++			EPRINT("failed to copy of isu_td_unit_t\n");
++			return -EFAULT;
++		}
++		in->in.td = &in->td;
++	}
++
++	return 0;
++}
+ 
++static int set_isu_dst_par(
++	struct vspm_entry_isu_out *out, struct isu_dst_t *src)
++{
++	/* copy isu_dst_t parameter */
++	if (copy_from_user(
++			&out->out,
++			(void __user *)src,
++			sizeof(struct isu_dst_t))) {
++		EPRINT("failed to copy of isu_dst_t\n");
++		return -EFAULT;
++	}
++	/* copy isu_alpha_unit_t parameter */
++        if (out->out.alpha){
++		if (copy_from_user(
++				&out->alpha,
++				(void __user *)out->out.alpha,
++				sizeof(struct isu_alpha_unit_t))) {
++			EPRINT("failed to copy of isu_alpha_unit_t\n");
++			return -EFAULT;
++		}
++		out->out.alpha = &out->alpha;
++	}
++
++	if (out->out.csc){
++		if (copy_from_user(
++				&out->csc,
++				(void __user *)out->out.csc,
++				sizeof(struct isu_csc_t))){
++			EPRINT("failed to copy of isu_csc_t\n");
++			return -EFAULT;
++		}
++		out->out.csc = &out->csc;
++	}
++	return 0;
++}
++
++int set_isu_par(
++	struct vspm_if_entry_data_t *entry, struct isu_start_t *isu_par)
++{
++	struct vspm_entry_isu *isu = &entry->ip_par.isu;
++	int ercd = 0;
++
++	/* copy isu_start_t parameter */
++	if (copy_from_user(
++			&isu->par,
++			(void __user *)isu_par,
++			sizeof(struct isu_start_t))) {
++		EPRINT("failed to copy of isu_start_t\n");
++		return -EFAULT;
++	}
++
++	/* get work buffer */
++	isu->work_buff = get_work_buffer(entry->priv);
++	if (!isu->work_buff)
++		return -EFAULT;
++
++	/* copy isu_src_t parameter */
++	if(isu->par.src_par){
++		ercd = set_isu_src_par(
++			&isu->in,
++			isu->par.src_par,
++			isu->work_buff);
++		if (ercd)
++			goto err_exit;
++		isu->par.src_par = &isu->in.in;
++	}
++
++	/* copy isu_dst_t parameter */
++	if(isu->par.dst_par){
++		ercd = set_isu_dst_par(
++			&isu->out,
++			isu->par.dst_par);
++		if (ercd)
++			goto err_exit;
++		isu->par.dst_par = &isu->out.out;
++	}
++
++	/* copy isu_rs_t parameter */
++	if (isu->par.rs_par) {
++		if (copy_from_user(
++				&isu->rs,
++				(void __user *)isu->par.rs_par,
++				sizeof(struct isu_rs_t))) {
++			EPRINT("failed to copy of isu_rs_t\n");
++			return -EFAULT;
++		}
++		if (ercd)
++			goto err_exit;
++		isu->par.rs_par =  &isu->rs;
++	}
++
++	return 0;
++err_exit:
++	return ercd;
++}
++
++/* VSP 32 bits */
+ static int set_compat_vsp_src_clut_par(
+ 	struct vsp_dl_t *clut,
+ 	unsigned int src,
+@@ -1676,6 +1816,247 @@ err_exit:
+ 	return ercd;
+ }
+ 
++/*ISU 32bits */
++
++static int set_compat_isu_alpha_par(
++	struct isu_alpha_unit_t *alpha, unsigned int src)
++{
++	struct compat_isu_alpha_unit_t compat_alpha;
++
++	/* copy isu_alpha_unit_t parameter */
++	if (copy_from_user(
++		&compat_alpha,
++		VSPM_IF_INT_TO_UP(src),
++		sizeof(struct compat_isu_alpha_unit_t))) {
++		EPRINT("failed to copy of isu_alpha_unit_t\n");
++		return -EFAULT;
++	}
++
++	alpha->asel 	= compat_alpha.asel;
++	alpha->anum0 	= compat_alpha.anum0;
++	alpha->anum1 	= compat_alpha.anum1;
++	alpha->anum2 	= compat_alpha.anum2;
++	alpha->athres0 	= compat_alpha.athres0;
++	alpha->athres1 	= compat_alpha.athres1;
++
++	return 0;
++}
++
++static int set_compat_isu_src_td_par(
++	struct isu_td_unit_t *td, unsigned int src)
++{
++	struct compat_isu_td_unit_t compat_td;
++
++	/* copy isu_alpha_unit_t parameter */
++	if (copy_from_user(
++		&compat_td,
++		VSPM_IF_INT_TO_UP(src),
++		sizeof(struct compat_isu_td_unit_t))) {
++		EPRINT("failed to copy of isu_td_unit_t\n");
++		return -EFAULT;
++	}
++
++	td->grada_mode 	= compat_td.grada_mode;
++	td->grada_step	= compat_td.grada_step;
++	td->init_val 	= compat_td.init_val;
++
++	return 0;
++}
++
++static int set_compat_isu_csc_par(struct isu_csc_t *csc, unsigned int src)
++{
++	struct compat_isu_csc_t compat_csc;
++	int i,j;
++	/* copy isu_csc_t parameter */
++	if (copy_from_user(
++		&compat_csc,
++		VSPM_IF_INT_TO_UP(src),
++		sizeof(struct compat_isu_csc_t))) {
++		EPRINT("failed to copy of isu_td_unit_t\n");
++                return -EFAULT;
++	}
++	csc->csc     = compat_csc.csc;
++	for (i=0;i<3;i++){
++		for(j=0;j<3;j++){
++			if(j<2){
++				csc->clip[i][j]=compat_csc.clip[i][j];
++				csc->offset[i][j]=compat_csc.offset[i][j];
++			}
++			csc->k_matrix[i][j]=compat_csc.k_matrix[i][j];
++		}
++	}
++	return 0;
++}
++
++static int set_compat_isu_src_par(
++	struct vspm_entry_isu_in *in,
++	unsigned int src,
++	struct vspm_if_work_buff_t *work_buff)
++{
++	struct compat_isu_src_t compat_isu_src;
++	int ercd;
++
++	/* copy isu_src_t parameter */
++	if (copy_from_user(
++			&compat_isu_src,
++			VSPM_IF_INT_TO_UP(src),
++			sizeof(struct compat_isu_src_t))) {
++		EPRINT("failed to copy of isu_src_t\n");
++		return -EFAULT;
++	}
++
++	in->in.addr 	= compat_isu_src.addr;
++	in->in.addr_c 	= compat_isu_src.addr_c;
++	in->in.stride 	= compat_isu_src.stride;
++	in->in.stride_c = compat_isu_src.stride_c;
++	in->in.width 	= compat_isu_src.width;
++	in->in.height 	= compat_isu_src.height;
++	in->in.format 	= compat_isu_src.format;
++	in->in.swap 	= compat_isu_src.swap;
++	in->in.uv_conv 	= compat_isu_src.uv_conv;
++
++	/* copy isu_alpha_unit_t parameter */
++	if (compat_isu_src.alpha) {
++		ercd = set_compat_isu_alpha_par(
++                        &in->alpha, compat_isu_src.alpha);
++                if (ercd)
++                        return ercd;
++                in->in.alpha = &in->alpha;
++	}
++	/* copy isu_td_unit_t parameter */
++	if (compat_isu_src.td){
++		ercd = set_compat_isu_src_td_par(
++			&in->td, compat_isu_src.td);
++		if (ercd)
++			return ercd;
++		in->in.td = &in->td;
++	}
++
++	return 0;
++}
++
++static int set_compat_isu_dst_par(
++	struct vspm_entry_isu_out *out, unsigned int src)
++{
++	struct compat_isu_dst_t compat_isu_dst;
++	int ercd;
++	/* copy isu_dst_t parameter */
++	if (copy_from_user(
++		&compat_isu_dst,
++		VSPM_IF_INT_TO_UP(src),
++		sizeof(struct compat_isu_dst_t))) {
++		EPRINT("failed to copy of isu_dst_t\n");
++		return -EFAULT;
++	}
++
++	out->out.addr 		= compat_isu_dst.addr;
++	out->out.addr_c 	= compat_isu_dst.addr_c;
++	out->out.stride 	= compat_isu_dst.stride;
++	out->out.stride_c 	= compat_isu_dst.stride_c;
++	out->out.format 	= compat_isu_dst.format;
++	out->out.swap 		= compat_isu_dst.swap;
++	/* copy isu_csc_t parameter */
++	if (compat_isu_dst.csc){
++		ercd = set_compat_isu_csc_par(
++			&out->csc,compat_isu_dst.csc);
++		if (ercd)
++			return ercd;
++		out->out.csc = &out->csc;
++	}
++
++	/* copy isu_alpha_unit_t parameter */
++	if (compat_isu_dst.alpha) {
++		ercd = set_compat_isu_alpha_par(
++                        &out->alpha, compat_isu_dst.alpha);
++                if (ercd)
++                        return ercd;
++                out->out.alpha = &out->alpha;
++	}
++	return 0;
++}
++
++static int set_compat_isu_rs_par(struct isu_rs_t *rs, unsigned int src)
++{
++	struct compat_isu_rs_t compat_rs;
++
++	/* copy */
++	if (copy_from_user(
++		&compat_rs,
++		VSPM_IF_INT_TO_UP(src),
++		sizeof(struct compat_isu_rs_t))) {
++			EPRINT("failed to copy of isu_rs_t\n");
++			return -EFAULT;
++	}
++
++	/* set */
++	rs->start_x 	= compat_rs.start_x;
++	rs->start_y 	= compat_rs.start_y;
++	rs->tune_x 	= compat_rs.tune_x;
++	rs->tune_y 	= compat_rs.tune_y;
++	rs->crop_w 	= compat_rs.crop_w;
++	rs->crop_h 	= compat_rs.crop_h;
++	rs->pad_mode 	= compat_rs.pad_mode;
++	rs->pad_val 	= compat_rs.pad_val;
++	rs->x_ratio 	= compat_rs.x_ratio;
++	rs->y_ratio 	= compat_rs.y_ratio;
++
++	return 0;
++}
++
++int set_compat_isu_par(
++	struct vspm_if_entry_data_t *entry, unsigned int src)
++{
++	struct vspm_entry_isu *isu = &entry->ip_par.isu;
++	struct compat_isu_start_t compat_isu_par;
++	unsigned long tmp_addr;
++
++	int ercd;
++
++	/* copy isu_start_t parameter */
++	if (copy_from_user(
++			&compat_isu_par,
++			VSPM_IF_INT_TO_UP(src),
++			sizeof(struct compat_isu_start_t))) {
++		EPRINT("failed to copy of vsp_start_t\n");
++		return -EFAULT;
++	}
++
++	/* copy isu_src_t parameter */
++	if (compat_isu_par.src_par) {
++		ercd = set_compat_isu_src_par(
++			&isu->in,
++			compat_isu_par.src_par,
++			isu->work_buff);
++		if (ercd)
++			goto err_exit;
++		isu->par.src_par = &isu->in.in;
++	}
++
++	/* copy isu_dst_t parameter */
++	if (compat_isu_par.dst_par) {
++		ercd = set_compat_isu_dst_par(
++			&isu->out, compat_isu_par.dst_par);
++		if (ercd)
++			goto err_exit;
++		isu->par.dst_par = &isu->out.out;
++	}
++
++	/* copy isu_rs_t parameter */
++	if (compat_isu_par.rs_par) {
++		ercd = set_compat_isu_rs_par(
++			&isu->rs, compat_isu_par.rs_par);
++		if (ercd)
++			goto err_exit;
++		isu->par.rs_par = &isu->rs;
++	}
++
++	return 0;
++err_exit:
++	return ercd;
++}
++
++
++
+ static int set_compat_fdp_pic_par(struct fdp_pic_t *in_pic, unsigned int src)
+ {
+ 	struct compat_fdp_pic_t compat_fdp_pic;
+diff --git a/vspm_if-module/files/vspm_if/include/vspm_if.h b/vspm_if-module/files/vspm_if/include/vspm_if.h
+index 7a79d03..33afec6 100644
+--- a/vspm_if-module/files/vspm_if/include/vspm_if.h
++++ b/vspm_if-module/files/vspm_if/include/vspm_if.h
+@@ -121,6 +121,7 @@ struct vspm_compat_init_t {
+ 	union {
+ 		unsigned int vsp;
+ 		unsigned int fdp;
++		unsigned int isu;
+ 	} par;
+ };
+ 
+@@ -142,6 +143,7 @@ struct vspm_compat_job_t {
+ 	union {
+ 		unsigned int vsp;
+ 		unsigned int fdp;
++		unsigned int isu;
+ 	} par;
+ };
+ 
+@@ -372,6 +374,81 @@ struct compat_vsp_start_t {
+ 	struct compat_vsp_dl_t dl_par;
+ };
+ 
++/* ISU */
++struct compat_isu_dl_t {
++        unsigned int hard_addr;
++        unsigned int virt_addr;
++        unsigned short tbl_num;
++        unsigned int mem_par;
++};
++
++struct compat_isu_alpha_unit_t {
++        unsigned char asel;
++        unsigned char anum0;
++        unsigned char anum1;
++        unsigned char anum2;
++        unsigned char athres0;
++        unsigned char athres1;
++};
++
++struct compat_isu_td_unit_t {
++	unsigned char	grada_mode;
++	unsigned char	grada_step;
++	unsigned int 	init_val;
++};
++
++struct compat_isu_csc_t {
++        unsigned char           csc;
++        unsigned int            offset[3][2];
++        unsigned int            clip[3][2];
++        unsigned int		k_matrix[3][3];
++};
++
++struct compat_isu_src_t {
++        unsigned int            addr;
++        unsigned int            addr_c;
++        unsigned short          stride;
++        unsigned short          stride_c;
++        unsigned short          width;
++        unsigned short          height;
++        unsigned short          format;
++        unsigned char           swap;
++        unsigned int 		td;
++        unsigned int		alpha;
++        unsigned char           uv_conv;
++};
++struct compat_isu_dst_t {
++        unsigned int            addr;
++        unsigned int            addr_c;
++        unsigned short          stride;
++        unsigned short          stride_c;
++        unsigned short          width;
++        unsigned short          height;
++        unsigned short          format;
++        unsigned char           swap;
++        unsigned char           csc;
++	unsigned int		alpha;
++};
++struct compat_isu_rs_t {
++        unsigned int    start_x;
++        unsigned int    start_y;
++        unsigned int    tune_x;
++        unsigned int    tune_y;
++        unsigned int    crop_w;
++        unsigned int    crop_h;
++        unsigned char   pad_mode;
++        unsigned int    pad_val;
++        unsigned short  x_ratio;
++        unsigned short  y_ratio;
++};
++struct compat_isu_start_t {
++        unsigned int src_par;
++        unsigned int dst_par;
++        unsigned int rs_par;
++        struct compat_isu_dl_t dl_par;
++};
++
++/*FDP */
+ struct compat_fdp_pic_t {
+ 	unsigned int picid;
+ 	unsigned char chroma_format;
+-- 
+2.17.1
+

@@ -1,0 +1,27 @@
+From f9292fd94d9f4fe737fd3706c419e0a6e12193c5 Mon Sep 17 00:00:00 2001
+From: Loc Nguyen <loc.nguyen.ks@renesas.com>
+Date: Tue, 18 Dec 2018 16:35:29 +0700
+Subject: [PATCH 1/7] vspm_if_main: Add missing linux header
+
+Add header <linux/of_device.h> to use struct of_device_id
+
+Signed-off-by: Loc Nguyen <loc.nguyen.ks@renesas.com>
+---
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index f47645f..6eea002 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -64,6 +64,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/fs.h>
+ #include <linux/ioctl.h>
++#include <linux/mod_devicetable.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_if.h"
+-- 
+2.17.1
+
