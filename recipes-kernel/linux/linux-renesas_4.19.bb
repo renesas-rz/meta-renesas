@@ -11,7 +11,9 @@ BRANCH = "rzg2l-cip41"
 SRCREV = "0669afbc779a034f3f07f76d529e78d477d12789"
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
-
+SRC_URI_append += "\
+	file://patches.scc \
+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 LINUX_VERSION ?= "4.19.165"
 

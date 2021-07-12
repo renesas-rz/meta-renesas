@@ -1,0 +1,2 @@
+patch patches/main/0181-add-dts-uvcs.patch
+patch patches/main/0182-add-mmp-reserverd-range.patch
