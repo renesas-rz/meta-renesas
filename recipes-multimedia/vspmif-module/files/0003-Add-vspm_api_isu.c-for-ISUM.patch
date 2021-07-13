@@ -1,19 +1,19 @@
-From edf72c1246ee1ea3ab69a6a6f7555ced37dcdaee Mon Sep 17 00:00:00 2001
+From bca6d77650e050815208a5c9ecf05128d0f0a5d8 Mon Sep 17 00:00:00 2001
 From: Nhat Thieu <nhat.thieu.xr@renesas.com>
-Date: Mon, 5 Jul 2021 22:37:26 +0700
+Date: Tue, 13 Jul 2021 16:53:54 +0700
 Subject: [PATCH] Add-vspm_api_isu.c-for-ISUM
 
 ---
- .../files/vspm_if/if/vspm_api_isu.c           | 432 ++++++++++++++++++
- 1 file changed, 432 insertions(+)
+ .../files/vspm_if/if/vspm_api_isu.c           | 433 ++++++++++++++++++
+ 1 file changed, 433 insertions(+)
  create mode 100755 vspm_if-module/files/vspm_if/if/vspm_api_isu.c
 
 diff --git a/vspm_if-module/files/vspm_if/if/vspm_api_isu.c b/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
 new file mode 100755
-index 0000000..cda79ce
+index 0000000..93d7200
 --- /dev/null
 +++ b/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
-@@ -0,0 +1,432 @@
+@@ -0,0 +1,433 @@
 +/* 
 + * Copyright (c) 2015-2016 Renesas Electronics Corporation
 + * Released under the MIT license
@@ -165,7 +165,6 @@ index 0000000..cda79ce
 +	dst_par->swap = old_dst_par->swap;
 +	if (old_dst_par->csc != NULL){
 +		par->csc.csc = old_dst_par->csc->csc;
-+		par->csc.clrcng = old_dst_par->csc->clrcng;
 +		for(i=0;i<3;i++){
 +			for(j=0;j<3;j++){
 +				if(j<2){
@@ -175,6 +174,7 @@ index 0000000..cda79ce
 +				par->csc.k_matrix[i][j]=old_dst_par->csc->k_matrix[i][j];
 +			}
 +		}
++		dst_par->csc = &par->csc; 
 +	}
 +	if (old_dst_par->alpha != NULL) {
 +                par->alpha.asel 	= old_dst_par->alpha->asel;
@@ -183,6 +183,7 @@ index 0000000..cda79ce
 +                par->alpha.anum2 	= old_dst_par->alpha->anum2;
 +                par->alpha.athres0	= old_dst_par->alpha->athres0;
 +                par->alpha.athres1 	= old_dst_par->alpha->athres1;
++		dst_par->alpha = &par->alpha;
 +        }
 +}
 +
