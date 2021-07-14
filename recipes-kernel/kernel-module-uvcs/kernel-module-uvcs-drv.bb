@@ -10,7 +10,6 @@ LIC_FILES_CHKSUM = " \
     file://src/core/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
     file://src/cmn/MIT-COPYING;md5=fea016ce2bdf2ec10080f69e9381d378 \
 "
-require include/omx-control.inc
 inherit module
 require include/rzg2-modules-common.inc
 PR = "r0"

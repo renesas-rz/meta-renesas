@@ -15,7 +15,6 @@ IMAGE_INSTALL_append = " \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugin-vspmfilter \
-    gstreamer1.0-omx \
     kernel-module-mmngr \
     kernel-module-mmngrbuf \
     kernel-module-vspm \
