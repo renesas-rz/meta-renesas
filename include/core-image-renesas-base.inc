@@ -37,3 +37,26 @@ IMAGE_INSTALL_append = " \
 
 IMAGE_FEATURES_remove = " ssh-server-dropbear"
 IMAGE_FEATURES_append = " ssh-server-openssh"
+
+update_issue() {
+    # Set BSP version
+    BSP_VERSION="1.1"
+
+    # Set SoC and Board info
+    case "${MACHINE}" in
+    smarc-rzg2l)
+      BSP_SOC="RZG2L"
+      BSP_BOARD="RZG2L-SMARC-EVK"
+      ;;
+    rzg2l-dev)
+      BSP_SOC="RZG2L"
+      BSP_BOARD="RZG2L-DEV"
+      ;;
+    esac
+
+    # Make issue file
+    echo "BSP: ${BSP_SOC}/${BSP_BOARD}/${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
+    echo "LSI: ${BSP_SOC}" >> ${IMAGE_ROOTFS}/etc/issue
+    echo "Version: ${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
+}
+ROOTFS_POSTPROCESS_COMMAND += "update_issue; "
