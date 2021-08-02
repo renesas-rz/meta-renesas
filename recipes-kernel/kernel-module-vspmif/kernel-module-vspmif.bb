@@ -26,7 +26,6 @@ SRC_URI_append = " \
 
 SRC_URI_append = " \
 	file://0002-Add-ISU-to-vspmif.patch \
-	file://0003-workaround-wait_interrupt-callback-function.patch \
 "
 
 S = "${WORKDIR}/git"
