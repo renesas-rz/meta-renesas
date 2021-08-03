@@ -1,0 +1,100 @@
+From 15ab72a7ada84992da8054ad16f0359c3b2d3680 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Tue, 3 Aug 2021 17:20:33 +0700
+Subject: [PATCH] remove work-around clock reset supply
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/vspm_main.c | 41 +++++++++-------------------------
+ 1 file changed, 10 insertions(+), 31 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index f00472c..b11adb4 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -62,6 +62,7 @@
+ #include <linux/slab.h>
+ #include <linux/io.h>
+ #include <linux/pm_runtime.h>
++#include <linux/reset.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_ip_ctrl.h"
+@@ -71,8 +72,6 @@
+ #include "vspm_lib_public.h"
+ #include "vsp_drv_public.h"
+ 
+-#define CPG_CLKON_ISU	(0x1101055c)
+-#define CPG_RST_ISU	(0x1101085c)
+ static struct vspm_drvdata *p_vspm_drvdata;
+ 
+ /******************************************************************************
+@@ -450,6 +449,7 @@ static int vspm_isu_probe(struct platform_device *pdev)
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+ 	struct clk *clk;
++	struct reset_control *rstc;
+ 	int ch;
+ 
+ 	/* get channel */
+@@ -478,6 +478,13 @@ static int vspm_isu_probe(struct platform_device *pdev)
+ 
+ 	pdrv->isu_clks[ch][0] = clk;
+ 
++	rstc = devm_reset_control_get(&pdev->dev, NULL);
++
++        if (IS_ERR(rstc))
++                dev_warn(&pdev->dev, "Failed to get cpg reset\n");
++        else
++                reset_control_deassert(rstc);
++
+ 	/* set driver data */
+ 	platform_set_drvdata(pdev, &pdrv->isu_clks[ch]);
+ 	pdrv->isu_pdev[ch] = pdev;
+@@ -575,34 +582,6 @@ static int vspm_pm_runtime_resume(struct device *dev)
+ 	return 0;
+ }
+ 
+-static int isum_pm_runtime_resume(struct device *dev)
+-{
+-	void __iomem *isu_rst;
+-	void __iomem *isu_cpg;
+-
+-	isu_cpg = ioremap(CPG_CLKON_ISU, 4);
+-	writel(0x30003, isu_cpg);
+-
+-	isu_rst = ioremap(CPG_RST_ISU, 4);
+-	writel(0x30003, isu_rst);
+-
+-	return 0;
+-}
+-
+-static int isum_pm_runtime_suspend(struct device *dev)
+-{
+-	void __iomem *isu_rst;
+-	void __iomem *isu_cpg;
+-
+-	isu_cpg = ioremap(CPG_CLKON_ISU, 4);
+-	writel(0x30000, isu_cpg);
+-
+-	isu_rst = ioremap(CPG_RST_ISU, 4);
+-	writel(0x30000, isu_rst);
+-
+-	return 0;
+-}
+-
+ static const struct dev_pm_ops vspm_vsp_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(vspm_pm_suspend, vspm_pm_resume)
+ 	SET_RUNTIME_PM_OPS(
+@@ -618,7 +597,7 @@ static const struct dev_pm_ops vspm_fdp_pm_ops = {
+ static const struct dev_pm_ops vspm_isu_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(vspm_pm_suspend, vspm_pm_resume)
+ 	SET_RUNTIME_PM_OPS(
+-		isum_pm_runtime_suspend, isum_pm_runtime_resume, NULL)
++		vspm_pm_runtime_suspend, vspm_pm_runtime_resume, NULL)
+ };
+ 
+ static const struct of_device_id vspm_vsp_of_match[] = {
+-- 
+2.7.4
+
