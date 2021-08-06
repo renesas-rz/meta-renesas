@@ -1,5 +1,2 @@
-patch patches/main/0181-add-dts-uvcs.patch
-patch patches/main/0182-add-mmp-reserverd-range.patch
 patch patches/main/0183-add-vspm_if-node.patch
-patch patches/main/0184-Add-ISU-node-into-device-tree.patch
 patch patches/main/0185-Fixed-an-issue-that-caused-flicker-when-outputting-t.patch
