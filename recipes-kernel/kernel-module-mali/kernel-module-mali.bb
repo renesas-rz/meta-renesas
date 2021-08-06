@@ -6,7 +6,8 @@ LIC_FILES_CHKSUM = " \
 	file://license.txt;md5=13e14ae1bd7ad5bff731bba4a31bb510 "
 
 PN = "kernel-module-mali"
-PV = "r26p0"
+PV = "r30"
+PR = "p0"
 
 SRC_URI = " \
 	file://mali_km.tar.gz \
@@ -17,7 +18,7 @@ require include/rzg2-modules-common.inc
 
 S = "${WORKDIR}/mali_km"
 
-COMPATIBLE_MACHINE = "(r9a07g044l)"
+COMPATIBLE_MACHINE = "(r9a07g044l|r9a07g044c)"
 
 do_fetch[file-checksums] = ""
 

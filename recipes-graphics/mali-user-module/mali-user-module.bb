@@ -4,10 +4,10 @@ LICENSE = "CLOSED"
 require include/rzg2-path-common.inc
 
 PN = "mali-user-module"
-PV = "r26"
+PV = "r30"
 PR = "p0"
 
-COMPATIBLE_MACHINE = "(r9a07g044l)"
+COMPATIBLE_MACHINE = "(r9a07g044l|r9a07g044c)"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 S = "${WORKDIR}/mali_um"
