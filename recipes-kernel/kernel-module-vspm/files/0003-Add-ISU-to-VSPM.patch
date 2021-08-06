@@ -410,7 +410,7 @@ index 45093eb..3e6fdf2 100644
  #define FDP_CLK_NAME		"fdp"
  #define FCP_CLK_NAME		"fcp"
 -#define CLKNUM				2
-+#define ISU_CLK_NAME		"isu"
++#define ISU_CLK_NAME		"isu_aclk"
 +#define CLKNUM			2
  
  /* vspm driver data structure */
