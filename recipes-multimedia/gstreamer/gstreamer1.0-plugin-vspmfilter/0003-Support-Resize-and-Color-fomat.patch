@@ -1,14 +1,14 @@
-From e0bb8ed29503abca5e52ee29982acc7a05721509 Mon Sep 17 00:00:00 2001
+From d2f12813f47d1c2e75ad77518f36da5bfb1a81d6 Mon Sep 17 00:00:00 2001
 From: cuongdoan <cuong.doan.ra@renesas.com>
-Date: Tue, 6 Jul 2021 09:58:23 +0700
+Date: Fri, 30 Jul 2021 11:05:01 +0700
 Subject: [PATCH] Support-Resize-and-Color-fomat
 
 ---
- gstvspmfilter.c | 105 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 64 insertions(+), 41 deletions(-)
+ gstvspmfilter.c | 159 +++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 118 insertions(+), 41 deletions(-)
 
 diff --git a/gstvspmfilter.c b/gstvspmfilter.c
-index c0dacc4..6807926 100644
+index c0dacc4..d570785 100644
 --- a/gstvspmfilter.c
 +++ b/gstvspmfilter.c
 @@ -409,35 +409,30 @@ gst_vspm_filter_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
@@ -53,7 +53,7 @@ index c0dacc4..6807926 100644
 +  {GST_VIDEO_FORMAT_BGR,        ISU_BGR888,     ISU_SWAP_NO},
 +  {GST_VIDEO_FORMAT_ARGB,       ISU_ARGB8888,   ISU_SWAP_NO},
 +  {GST_VIDEO_FORMAT_RGBA,       ISU_RGBA8888,   ISU_SWAP_NO},
-+  {GST_VIDEO_FORMAT_ABGR,       ISU_ABGR8888,   ISU_SWAP_B | ISU_SWAP_W | ISU_SWAP_L},
++  {GST_VIDEO_FORMAT_ABGR,       ISU_ABGR8888,   ISU_SWAP_NO},
 +  {GST_VIDEO_FORMAT_UYVY,       ISU_YUV422_UYVY,ISU_SWAP_NO},
 +  {GST_VIDEO_FORMAT_YUY2,       ISU_YUV422_YUY2,ISU_SWAP_NO},
 +  {GST_VIDEO_FORMAT_NV16,       ISU_YUV422_NV16,ISU_SWAP_NO},
@@ -74,11 +74,11 @@ index c0dacc4..6807926 100644
  
        /* Need to reverse swap information for Little Endian */
 -      *fswap  = (VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL) ^ exts[i].vsp_swap;
-+      *fswap  = (ISU_SWAP_B | ISU_SWAP_W | ISU_SWAP_L ) ^ exts[i].isu_swap;
++      *fswap  = exts[i].isu_swap;
        return 0;
      }
    }
-@@ -1020,10 +1015,17 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1020,10 +1015,40 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
    VSPM_ISU_PAR isu_par;
  
    T_ISU_IN src_par;
@@ -88,16 +88,39 @@ index c0dacc4..6807926 100644
    T_ISU_OUT dst_par;
    T_ISU_RS rs_par;
  
-+  unsigned int csc_k_matrix_a[3][3]={{0x04A8, 0x0000, 0x0662},{0x04A8, 0x3E70, 0x3CBF},{0x04A8, 0x0812, 0x0000}};
++  /* Matrix for converting from YUV to RGB */
++  unsigned int csc_k_matrix_a[3][3]={{0x04A8, 0x0662, 0x0000},{0x04A8, 0x3CBF, 0x3E70},{0x04A8, 0x0000, 0x0812}};
 +  unsigned int csc_offset_a[3][2]={{0x10,0x00},{0x80,0x00},{0x80,0x00}};
 +  unsigned int csc_clip_a[3][2]={{0x00,0xFF},{0x00,0xFF},{0x00,0xFF}};
-+  unsigned int csc_k_matrix_b[3][3]={{0x0400, 0x0000, 0x0000},{0x0000, 0x0400, 0x0000},{0x0000, 0x0000, 0x0400}};
-+  unsigned int csc_offset_b[3][2]={{0x00,0x00},{0x00,0x00},{0x00,0x00}};
-+  unsigned int csc_clip_b[3][2]={{0x00,0xFF},{0x00,0xFF},{0x00,0xFF}};
++
++  /* Matrix for converting from RGB to YUV */
++  unsigned int csc_k_matrix_b[3][3]={{0x0107, 0x0064, 0x0204},{0x3f68, 0x01c2, 0x3ed6},{0x01c2, 0x3fd7, 0x3e87}};
++  unsigned int csc_offset_b[3][2]={{0x00,0x10},{0x00,0x80},{0x00,0x80}};
++  unsigned int csc_clip_b[3][2]={{0x10,0xEB},{0x10,0xF0},{0x10,0xF0}};
++
++  /* Matrix for converting from RGB to RAW */
++  unsigned int csc_k_matrix_c[3][3]={{0x0107, 0x0064, 0x0204},{0x0, 0x0, 0x0},{0x0, 0x0, 0x0}};
++  unsigned int csc_offset_c[3][2]={{0x00,0x10},{0x00,0x80},{0x00,0x80}};
++  unsigned int csc_clip_c[3][2]={{0x10,0xEB},{0x10,0xF0},{0x10,0xF0}};
++
++  /* Matrix for converting from RAW to RGB */
++  unsigned int csc_k_matrix_d[3][3]={{0x0400, 0x0000, 0x0000},{0x0400, 0x0, 0x0},{0x0400, 0x0, 0x0}};
++  unsigned int csc_offset_d[3][2]={{0x00,0x00},{0x00,0x00},{0x00,0x00}};
++  unsigned int csc_clip_d[3][2]={{0x00,0xFF},{0x00,0xFF},{0x00,0xFF}};
++
++  /* Matrix for converting from RAW to YUV */
++  unsigned int csc_k_matrix_e[3][3]={{0x0400, 0x0000, 0x0000},{0x0, 0x0, 0x0},{0x0, 0x0, 0x0}};
++  unsigned int csc_offset_e[3][2]={{0x00,0x00},{0x00,0x80},{0x00,0x80}};
++  unsigned int csc_clip_e[3][2]={{0x00,0xFF},{0x00,0xFF},{0x00,0xFF}};
++
++  /* Matrix for converting from YUV to RAW */
++  unsigned int csc_k_matrix_f[3][3]={{0x04A8, 0x0662, 0x0000},{0x0, 0x0, 0x0},{0x0, 0x0, 0x0}};
++  unsigned int csc_offset_f[3][2]={{0x10,0x00},{0x80,0x00},{0x80,0x00}};
++  unsigned int csc_clip_f[3][2]={{0x00,0xFF},{0x00,0xFF},{0x00,0xFF}};
  
    gint in_width, in_height;
    gint out_width, out_height;
-@@ -1096,16 +1098,21 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1096,16 +1121,21 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
      GST_ERROR("does not support number plane >= 3\n");
      return GST_FLOW_ERROR;
    }
@@ -129,7 +152,7 @@ index c0dacc4..6807926 100644
  
    {
      /* Setting input parameters */
-@@ -1115,7 +1122,6 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1115,7 +1145,6 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
      src_alpha_par.anum2		= 0;    //T.B.D
      src_alpha_par.athres0	= 0;    //T.B.D
      src_alpha_par.athres1	= 0;    //T.B.D
@@ -137,37 +160,61 @@ index c0dacc4..6807926 100644
  
      src_par.addr        = src_addr[0];
      src_par.addr_c     = src_addr[1];
-@@ -1131,6 +1137,12 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
-   }
- 
-   {
-+    /* set csc for color convert */
-+    csc_par.csc             = ISU_CSC_CUSTOM;
-+    //memcpy(csc_par.k_matrix, csc_k_matrix, sizeof(csc_k_matrix));
-+    //memcpy(csc_par.offset, csc_offset, sizeof(csc_offset));
-+    //memcpy(csc_par.clip, csc_clip, sizeof(csc_clip));
-+
-     /* Setting output parameters */
-     dst_par.addr      = dst_addr[0];
-     dst_par.addr_c    = dst_addr[1];
-@@ -1138,14 +1150,25 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1138,14 +1167,62 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
      dst_par.stride_c  = out_frame->info.stride[1];
      dst_par.format    = vsp_info->out_format;
      dst_par.swap      = vsp_info->out_swapbit;
 -    dst_par.csc       = NULL; //T.B.D
 -    dst_par.alpha		  = &src_alpha_par;
 +
++    /* set csc for color convert */
 +    if ((dst_par.format & 0xF0) == (src_par.format & 0xF0)) {
-+	memcpy(csc_par.k_matrix, csc_k_matrix_b, sizeof(csc_k_matrix_b));
-+    	memcpy(csc_par.offset, csc_offset_b, sizeof(csc_offset_b));
-+    	memcpy(csc_par.clip, csc_clip_b, sizeof(csc_clip_b));
++	/* Dont need to convert. */
++        dst_par.csc       = NULL;
 +    } else {
-+	memcpy(csc_par.k_matrix, csc_k_matrix_a, sizeof(csc_k_matrix_a));
-+    	memcpy(csc_par.offset, csc_offset_a, sizeof(csc_offset_a));
-+    	memcpy(csc_par.clip, csc_clip_a, sizeof(csc_clip_a));
++	/* Need to convert. */
++        csc_par.csc = ISU_CSC_CUSTOM;
++	if ((src_par.format & 0x30) == 0x30) { /* src format is RAW */
++	    if ((dst_par.format & 0x20) == 0x20) { /* dst format is UYV */
++		/* Conversion from RAW to YUV. */
++	        memcpy(csc_par.k_matrix, csc_k_matrix_e, sizeof(csc_k_matrix_e));
++                memcpy(csc_par.offset, csc_offset_e, sizeof(csc_offset_e));
++                memcpy(csc_par.clip, csc_clip_e, sizeof(csc_clip_e));
++	    } else { /* dst format is RGB */
++		/* Conversion from RAW to RGB. */
++	        memcpy(csc_par.k_matrix, csc_k_matrix_d, sizeof(csc_k_matrix_d));
++                memcpy(csc_par.offset, csc_offset_d, sizeof(csc_offset_d));
++                memcpy(csc_par.clip, csc_clip_d, sizeof(csc_clip_d));
++	    }
++	} else if ((src_par.format & 0x20) == 0x20) { /* src format is YUV */
++	    if ((dst_par.format & 0x30) == 0x30) { /* dst format is RAW */
++		/* Conversion from YUV to RAW. */
++		memcpy(csc_par.k_matrix, csc_k_matrix_f, sizeof(csc_k_matrix_f));
++                memcpy(csc_par.offset, csc_offset_f, sizeof(csc_offset_f));
++                memcpy(csc_par.clip, csc_clip_f, sizeof(csc_clip_f));
++	    } else { /* dst format is RGB */
++		/* Conversion from YUV to RGB. */
++	        memcpy(csc_par.k_matrix, csc_k_matrix_a, sizeof(csc_k_matrix_a));
++		memcpy(csc_par.offset, csc_offset_a, sizeof(csc_offset_a));
++		memcpy(csc_par.clip, csc_clip_a, sizeof(csc_clip_a));
++	    }
++        } else { /* src format is RGB */
++	    if ((dst_par.format & 0x30) == 0x30) { /* src format is RAW */
++                /* Conversion from RGB to RAW. */
++		memcpy(csc_par.k_matrix, csc_k_matrix_c, sizeof(csc_k_matrix_c));
++                memcpy(csc_par.offset, csc_offset_c, sizeof(csc_offset_c));
++                memcpy(csc_par.clip, csc_clip_c, sizeof(csc_clip_c));
++            } else if ((dst_par.format & 0x20) == 0x20) { /* src format is YUV */
++                /* Conversion from RGB to YUV. */
++                memcpy(csc_par.k_matrix, csc_k_matrix_b, sizeof(csc_k_matrix_b));
++                memcpy(csc_par.offset, csc_offset_b, sizeof(csc_offset_b));
++                memcpy(csc_par.clip, csc_clip_b, sizeof(csc_clip_b));
++            }
++	}
++
++        dst_par.csc = &csc_par;
 +    }
 +
-+    dst_par.csc       = &csc_par; 
 +    dst_par.alpha     = &src_alpha_par;
    }
 +
