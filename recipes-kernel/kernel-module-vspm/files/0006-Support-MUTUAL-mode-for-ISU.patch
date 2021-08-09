@@ -1,0 +1,108 @@
+From e9b778b32efbab1abe0582083123901ccbbc5af2 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Mon, 9 Aug 2021 15:32:39 +0700
+Subject: [PATCH 6/6] Support MUTUAL mode for ISU
+
++ Support MUTUAL mode for ISU
++ Add UV conv parameters definition
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/manager/vspm_common.h       | 4 ++++
+ vspm-module/files/vspm/drv/manager/vspm_drv_isu.c      | 8 ++++----
+ vspm-module/files/vspm/drv/manager/vspm_exec_manager.c | 9 +++++++++
+ vspm-module/files/vspm/include/isu_drv.h               | 3 +++
+ 4 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_common.h b/vspm-module/files/vspm/drv/manager/vspm_common.h
+index 082c5b1..afc3066 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_common.h
++++ b/vspm-module/files/vspm/drv/manager/vspm_common.h
+@@ -257,8 +257,12 @@ long vspm_ins_fdp_resume(void);
+ long vspm_ins_isu_ch(unsigned short module_id, unsigned char *ch);
+ long vspm_ins_isu_initialize(
+ 	struct vspm_usable_res_info *usable, struct vspm_drvdata *pdrv);
++long vspm_ins_isu_exec_complete(unsigned short module_id);
+ long vspm_ins_isu_cancel(unsigned short module_id);
+ long vspm_ins_isu_quit(struct vspm_usable_res_info *usable);
++long vspm_ins_isu_execute(
++	unsigned short module_id,
++	struct isu_start_t *isu_par);
+ long vspm_ins_isu_execute_low_delay(
+ 	unsigned short module_id,
+ 	struct vspm_api_param_entry *entry);
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c b/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
+index 411db09..8039068 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
+@@ -90,11 +90,11 @@ long vspm_ins_isu_ch(unsigned short module_id, unsigned char *ch)
+ }
+ 
+ /******************************************************************************
+- * Function:		vspm_cb_vsp
++ * Function:		vspm_cb_isu
+  * Description:	Callback function.
+  * Returns:		void
+  ******************************************************************************/
+-static void vspm_cb_vsp(unsigned long id, long ercd, void *userdata)
++static void vspm_cb_isu(unsigned long id, long ercd, void *userdata)
+ {
+ 	unsigned long module_id = (unsigned long)userdata;
+ 
+@@ -191,10 +191,10 @@ long vspm_ins_isu_execute(unsigned short module_id, struct isu_start_t *isu_par)
+ 		return R_VSPM_NG;
+ 	}
+ 
+-	/* execute VSP process */
++	/* execute ISU process */
+ 	ercd = isu_lib_start(
+ 		ch,
+-		(void *)vspm_cb_vsp,
++		(void *)vspm_cb_isu,
+ 		start_param,
+ 		(void *)(unsigned long)module_id);
+ 	if (ercd)
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c b/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c
+index 66c114e..e6df901 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c
+@@ -103,6 +103,10 @@ long vspm_ins_exec_start(
+ 		/* Start the FDP process */
+ 		ercd = vspm_ins_fdp_execute(
+ 			module_id, ip_par->par.fdp, request);
++	} else if (IS_ISU_CH(module_id)) {
++		/* Start the VSP process */
++		ercd = vspm_ins_isu_execute(
++			module_id, ip_par->par.isu);
+ 	} else {
+ 		EPRINT("%s Invalid module_id 0x%04x\n", __func__, module_id);
+ 		ercd = R_VSPM_NG;
+@@ -137,6 +141,11 @@ long vspm_ins_exec_complete(
+ 		ercd = vspm_ins_fdp_exec_complete(module_id);
+ 		if (ercd)
+ 			return R_VSPM_NG;
++	} else if (IS_ISU_CH(module_id)) {
++		/* ISU process complete */
++		ercd = vspm_ins_isu_exec_complete(module_id);
++		if (ercd)
++			return R_VSPM_NG;
+ 	} else {
+ 		EPRINT("%s Invalid module_id 0x%04x\n", __func__, module_id);
+ 		return R_VSPM_NG;
+diff --git a/vspm-module/files/vspm/include/isu_drv.h b/vspm-module/files/vspm/include/isu_drv.h
+index d97aaff..b744b1e 100644
+--- a/vspm-module/files/vspm/include/isu_drv.h
++++ b/vspm-module/files/vspm/include/isu_drv.h
+@@ -141,6 +141,9 @@
+ #define ISU_OFFSET_NUM			(2)
+ #define ISU_CLIP_NUM	                (2)
+ 
++/* UV conv */
++#define ISU_UV_CONV_OFF                 (0x00)
++#define ISU_UV_CONV_ON                  (0x01)
+ /* select of color space conversion scale */
+ #define ISU_ITU_COLOR			(0x00)	/* YUV[16,235/140] <-> RGB[0,255] */
+ #define ISU_FULL_COLOR			(0x01)	/* Full scale */
+-- 
+2.7.4
+

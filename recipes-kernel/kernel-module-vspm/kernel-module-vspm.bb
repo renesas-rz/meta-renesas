@@ -25,6 +25,7 @@ SRC_URI_append = " \
         file://0003-Add-ISU-to-VSPM.patch \
         file://0004-Modify-Makefile.patch \
         file://0005-remove-work-around-clock-reset-supply.patch \
+        file://0006-Support-MUTUAL-mode-for-ISU.patch \
 "
 
 S = "${WORKDIR}/git"
