@@ -16,16 +16,12 @@ PR = "r0"
 VSPMIF_DRV_URL = " \
     git://github.com/renesas-rcar/vspmif_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "6172cc7273aae0345db894faa5ab59777549c247"
+SRCREV = "34bd0c4333c3be7531702e8d70867c6ea742a558"
 
 SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH}"
 
 SRC_URI_append = " \
-	file://0001-vspm_if_main-Add-missing-linux-header.patch \
-"
-
-SRC_URI_append = " \
-	file://0002-Add-ISU-to-vspmif.patch \
+	file://0001-Add-ISU-to-vspmif.patch \
 "
 
 S = "${WORKDIR}/git"

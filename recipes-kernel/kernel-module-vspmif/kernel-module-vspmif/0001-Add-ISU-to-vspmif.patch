@@ -1,14 +1,14 @@
-From 6c06cb3118e4443066a9d0ddac739d6f57be1c5a Mon Sep 17 00:00:00 2001
+From 8176aa58fb9c55f2401368be4b1fb2efed0a598b Mon Sep 17 00:00:00 2001
 From: Nhat Thieu <nhat.thieu.xr@renesas.com>
 Date: Fri, 2 Jul 2021 10:18:28 +0700
-Subject: [PATCH 2/2] Add ISU to vspmif
+Subject: [PATCH] Add ISU to vspmif
 
 Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
 ---
- .../files/vspm_if/drv/vspm_if_local.h         |  26 ++
- .../files/vspm_if/drv/vspm_if_main.c          |  33 +-
- .../files/vspm_if/drv/vspm_if_sub.c           | 381 ++++++++++++++++++
- .../files/vspm_if/include/vspm_if.h           |  77 ++++
+ vspm_if-module/files/vspm_if/drv/vspm_if_local.h |  26 ++
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c  |  33 +-
+ vspm_if-module/files/vspm_if/drv/vspm_if_sub.c   | 381 +++++++++++++++++++++++
+ vspm_if-module/files/vspm_if/include/vspm_if.h   |  77 +++++
  4 files changed, 516 insertions(+), 1 deletion(-)
 
 diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_local.h b/vspm_if-module/files/vspm_if/drv/vspm_if_local.h
@@ -65,7 +65,7 @@ index af70784..ca623c7 100644
  #endif /* __VSPM_IF_LOCAL_H__ */
  
 diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
-index 6eea002..57652ed 100644
+index 216db1d..790dde4 100644
 --- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
 +++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
 @@ -155,6 +155,10 @@ static long vspm_ioctl_init(
@@ -646,5 +646,5 @@ index 7a79d03..33afec6 100644
  	unsigned int picid;
  	unsigned char chroma_format;
 -- 
-2.17.1
+2.7.4
 
