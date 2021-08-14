@@ -60,3 +60,14 @@ update_issue() {
     echo "Version: ${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
 }
 ROOTFS_POSTPROCESS_COMMAND += "update_issue; "
+
+# Renesas Basic packages for 32bit
+BASIC_32BIT_PKGS = " \
+    lib32-coreutils \
+    lib32-libstdc++ \
+"
+
+# Installation for 32bit packages
+IMAGE_INSTALL_append = " \
+    ${@oe.utils.conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
+"
