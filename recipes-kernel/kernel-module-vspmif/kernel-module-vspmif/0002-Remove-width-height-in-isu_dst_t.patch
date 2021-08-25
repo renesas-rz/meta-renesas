@@ -1,0 +1,25 @@
+From 653a6d28a884f065af3a6e2222319c780930b03b Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Wed, 25 Aug 2021 16:09:12 +0700
+Subject: [PATCH 2/2] Remove width/height in isu_dst_t
+
+---
+ vspm_if-module/files/vspm_if/include/vspm_if.h | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/include/vspm_if.h b/vspm_if-module/files/vspm_if/include/vspm_if.h
+index 33afec6..964b81f 100644
+--- a/vspm_if-module/files/vspm_if/include/vspm_if.h
++++ b/vspm_if-module/files/vspm_if/include/vspm_if.h
+@@ -422,8 +422,6 @@ struct compat_isu_dst_t {
+         unsigned int            addr_c;
+         unsigned short          stride;
+         unsigned short          stride_c;
+-        unsigned short          width;
+-        unsigned short          height;
+         unsigned short          format;
+         unsigned char           swap;
+         unsigned char           csc;
+-- 
+2.7.4
+

@@ -26,6 +26,7 @@ SRC_URI_append = " \
         file://0004-Modify-Makefile.patch \
         file://0005-remove-work-around-clock-reset-supply.patch \
         file://0006-Support-MUTUAL-mode-for-ISU.patch \
+        file://0007-Update-and-fix-some-small-bugs-of-ISU-driver.patch \
 "
 
 S = "${WORKDIR}/git"

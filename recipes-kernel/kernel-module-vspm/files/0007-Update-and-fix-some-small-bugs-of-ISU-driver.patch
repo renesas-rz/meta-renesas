@@ -1,0 +1,218 @@
+From 91f0feb68dec9af7743c1a3056cdf292118b53f0 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Wed, 25 Aug 2021 16:23:36 +0700
+Subject: [PATCH 7/7] Update and fix some small bugs of ISU driver
+
+This commit fixed following issues:
+    1. Fix unnecessarily checking addr_c and stride_c in use case RBG and YUV422
+    2. Fix setting x_ratio and y_ratio
+    3. Remove width/height from isu_dst_t
+    4. Width and height must be even number in case of YUV format.
+    5. Update error code
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c | 46 +++++++++++++++++-----------
+ vspm-module/files/vspm/include/isu_drv.h     | 38 +++++++++++------------
+ 2 files changed, 46 insertions(+), 38 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index 8e73a22..20ffc36 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -51,17 +51,18 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+ {
+ 	struct isu_rpf_info *rpf_info = &ch_info->rpf_info;
+ 	unsigned char grada_mode_tmp;
++	char fmt_yuv=0;
+ 
+ 	/* check pointer */
+ 	if (!src_par)
+ 		return E_ISU_PARA_NOIN;
+ 
+ 	/* check input addr 32 boundary */
+-	if ((src_par->addr%32)||(src_par->addr_c%32))
++	if (src_par->addr%32)
+ 		return E_ISU_PARA_IN_ADDR;
+ 
+ 	/* check stride 32 boundary */
+-	if ((src_par->stride%32)||(src_par->stride_c%32))
++	if (src_par->stride%32)
+ 		return E_ISU_PARA_IN_STRD;
+ 
+ 	/* check input format */
+@@ -77,14 +78,17 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+ 	case ISU_RAW8:
+ 	case ISU_RAW10:
+ 	case ISU_RAW12:
++		break;
+ 	case ISU_YUV422_UYVY:
+ 	case ISU_YUV422_YUY2:
++		fmt_yuv=1;
+ 		break;
+ 	case ISU_YUV422_NV16:
+ 	case ISU_YUV420_NV12:
+-		if(!src_par->addr_c)
++		fmt_yuv=1;
++		if((!src_par->addr_c)||(src_par->addr_c%32))
+ 			 return E_ISU_PARA_IN_ADDR;
+-		if(!src_par->stride_c)
++		if((!src_par->stride_c)||(src_par->stride_c%32))
+ 			return E_ISU_PARA_IN_STRD;
+ 		break;
+ 	default:
+@@ -117,13 +121,13 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+ 	rpf_info->swap = (unsigned int)(src_par->swap);
+ 
+ 	/* check basic area */
+-	if (src_par->width < 1 || src_par->width > 2800)
++	if ((src_par->width < 1) || (src_par->width > 2800) || ((fmt_yuv)&&(src_par->width%2)))
+ 		return E_ISU_PARA_IN_WIDTH;
+ 	else {
+ 		rpf_info->width = src_par->width;
+ 	}
+ 
+-	if (src_par->height < 1 || src_par->height > 2047)
++	if ((src_par->height < 1) || (src_par->height > 2047) || ((fmt_yuv)&&(src_par->height%2)))
+ 		return E_ISU_PARA_IN_HEIGHT;
+ 	else {
+ 		rpf_info->height = src_par->height;
+@@ -155,7 +159,7 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+  * Returns:
+  ******************************************************************************/
+ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+-				struct isu_rs_t *rs_param)
++				struct isu_rs_t *rs_param, struct isu_dst_t *dst_par)
+ {
+ 	struct isu_rpf_info *rpf_info = &ch_info->rpf_info;
+ 	struct isu_rs_info *rs_info = &ch_info->rs_info;
+@@ -178,13 +182,19 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		}
+ 
+ 		/* Check output size */
+-		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 1920)||
+-		(rs_param->crop_h < 1) ||(rs_param->crop_h > 1080))
+-			return E_ISU_PARA_RS_CROP;
+-		else {
++		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 1920))
++			return E_ISU_PARA_RS_CROP_WIDTH;
++		else if ((dst_par->format >= ISU_YUV422_UYVY) && (dst_par->format <= ISU_YUV420_NV12) && (rs_param->crop_w%2))
++			return E_ISU_PARA_RS_CROP_WIDTH;
++		else
+ 			rs_info->crop_w = rs_param->crop_w;
++
++		if ((rs_param->crop_h < 1) ||(rs_param->crop_h > 1080))
++			return E_ISU_PARA_RS_CROP_HEIGHT;
++		else if ((dst_par->format >= ISU_YUV422_UYVY) && (dst_par->format <= ISU_YUV420_NV12) && (rs_param->crop_h%2))
++			return E_ISU_PARA_RS_CROP_HEIGHT;
++		else
+ 			rs_info->crop_h = rs_param->crop_h;
+-		}
+ 
+ 		/* Check pad mode */
+ 		switch(rs_param->pad_mode){
+@@ -198,7 +208,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 			return E_ISU_PARA_RS_PAD;
+ 		}
+ 		/* Check ratio scale */
+-		if((rs_param->x_ratio & 0x0000F000)||(rs_param->y_ratio & 0x0000F000)) {
++		if((rs_param->x_ratio & 0x0000F000)&&(rs_param->y_ratio & 0x0000F000)) {
+ 			rs_info->x_scale = ((unsigned int)rs_param->x_ratio >> 12) << 16;
+ 			rs_info->x_scale |= ((unsigned int)rs_param->x_ratio);
+ 			rs_info->y_scale = ((unsigned int)rs_param->y_ratio >> 12) << 16;
+@@ -240,7 +250,7 @@ static long isu_ins_check_connection_module_from_rpf(struct isu_prv_data *prv,
+ 			return ercd;
+ 
+ 		/* check module parameter */
+-		ercd = isu_ins_check_rs_param(ch_info, param->rs_par);
++		ercd = isu_ins_check_rs_param(ch_info, param->rs_par, param->dst_par);
+ 		if (ercd)
+ 			return ercd;
+ 	}
+@@ -263,11 +273,11 @@ static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
+ 		return E_ISU_PARA_NOOUT;
+ 
+ 	/* check format parameter */
+-	if ((dst_par->addr%512)||(dst_par->addr_c%512))
++	if (dst_par->addr%512)
+ 		return E_ISU_PARA_OUT_ADDR;
+ 
+ 	/* check stride 32 boundary */
+-	if ((dst_par->stride%32)||(dst_par->stride_c%32))
++	if (dst_par->stride%32)
+ 		return E_ISU_PARA_OUT_STRD;
+ 
+ 	/* check format parameter */
+@@ -288,9 +298,9 @@ static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
+ 		break;
+ 	case ISU_YUV422_NV16:
+ 	case ISU_YUV420_NV12:
+-		if(!dst_par->addr_c)
++		if((!dst_par->addr_c)||(dst_par->addr_c%512))
+ 			return E_ISU_PARA_OUT_ADDR;
+-		if(!dst_par->stride_c)
++		if((!dst_par->stride_c)||(dst_par->stride_c%32))
+ 			return E_ISU_PARA_OUT_STRD;
+ 		break;
+ 	default:
+diff --git a/vspm-module/files/vspm/include/isu_drv.h b/vspm-module/files/vspm/include/isu_drv.h
+index d97aaff..8c1eae5 100644
+--- a/vspm-module/files/vspm/include/isu_drv.h
++++ b/vspm-module/files/vspm/include/isu_drv.h
+@@ -72,26 +72,26 @@
+ 
+ #define E_ISU_PARA_NOOUT		(-210)
+ #define E_ISU_PARA_NOIN			(-211)
+-#define E_ISU_PARA_IN_ADDR		(-212)
+-#define E_ISU_PARA_IN_STRD		(-213)
+-#define E_ISU_PARA_IN_WIDTH		(-214)
+-#define E_ISU_PARA_IN_HEIGHT		(-215)
+-#define E_ISU_PARA_IN_FORMAT		(-216)
+-#define E_ISU_PARA_ALPHA_ASEL		(-219)
+-
+-#define E_ISU_PARA_OUT_ADDR		(-270)
+-#define E_ISU_PARA_OUT_STRD		(-271)
+-#define E_ISU_PARA_OUT_CSC		(-272)
+-#define E_ISU_PARA_OUT_FORMAT		(-275)
+-
+-#define E_ISU_PARA_RS_CROP		(-351)
+-#define E_ISU_PARA_RS_RATIO		(-352)	/* illegal ratio */
+-#define E_ISU_PARA_RS_START		(-353)	/* illegal resize start pos */
+-#define E_ISU_PARA_RS_PAD		(-354)  /* illegal pad selection */
+-#define E_ISU_PARA_RS_TUNE		(-355)  /* illegal tune */
++#define E_ISU_PARA_IN_ADDR		(-412)
++#define E_ISU_PARA_IN_STRD		(-413)
++#define E_ISU_PARA_IN_WIDTH		(-414)
++#define E_ISU_PARA_IN_HEIGHT		(-415)
++#define E_ISU_PARA_IN_FORMAT		(-416)
++#define E_ISU_PARA_ALPHA_ASEL		(-419)
++
++#define E_ISU_PARA_OUT_ADDR		(-470)
++#define E_ISU_PARA_OUT_STRD		(-471)
++#define E_ISU_PARA_OUT_CSC		(-472)
++#define E_ISU_PARA_OUT_FORMAT		(-475)
++
++#define E_ISU_PARA_RS_CROP_WIDTH	(-550)
++#define E_ISU_PARA_RS_CROP_HEIGHT	(-551)
++#define E_ISU_PARA_RS_RATIO		(-552)	/* illegal ratio */
++#define E_ISU_PARA_RS_START		(-553)	/* illegal resize start pos */
++#define E_ISU_PARA_RS_PAD		(-554)  /* illegal pad selection */
++#define E_ISU_PARA_RS_TUNE		(-555)  /* illegal tune */
+ 
+ #define E_ISU_PARA_DL_ADDR		(-680)
+-#define E_ISU_PARA_DL_SIZE		(-681)
+ #define E_ISU_DL_FORMAT			(-682)
+ 
+ #define ISU_RS_USE			(0x01) /* Resizer */
+@@ -199,8 +199,6 @@ struct isu_dst_t {
+     unsigned int	addr_c;
+     unsigned short	stride;
+     unsigned short	stride_c;
+-    unsigned short	width;
+-    unsigned short	height;
+     unsigned short	format ;
+     unsigned char	swap;
+     struct isu_csc_t	*csc;
+-- 
+2.7.4
+
