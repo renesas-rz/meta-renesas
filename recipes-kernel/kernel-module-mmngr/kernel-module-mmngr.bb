@@ -15,6 +15,7 @@ SRC_URI_append = " \
     file://0004-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
     file://0005-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
     file://0006-Fix-lossy.patch \
+    file://0007-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
 "
 
 MMNGR_CFG = "MMNGR_SALVATORX"
