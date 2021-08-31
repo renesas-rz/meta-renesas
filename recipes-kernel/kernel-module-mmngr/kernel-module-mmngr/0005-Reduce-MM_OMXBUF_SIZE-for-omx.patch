@@ -16,7 +16,7 @@ index cea4271..c393d32 100644
  
  #ifdef MMNGR_SALVATORX
 -#define MM_OMXBUF_SIZE		(256 * 1024 * 1024)
-+#define MM_OMXBUF_SIZE		(160 * 1024 * 1024)
++#define MM_OMXBUF_SIZE		(128 * 1024 * 1024)
  #endif /* MMNGR_SALVATORX */
  
  #ifdef MMNGR_EBISU
