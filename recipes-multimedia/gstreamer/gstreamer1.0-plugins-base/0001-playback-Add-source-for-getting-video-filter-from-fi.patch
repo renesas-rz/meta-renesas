@@ -1,0 +1,321 @@
+From 9db0bb1f606512b43ebb8e74f6be49d618516910 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 24 Aug 2021 15:51:04 +0700
+Subject: [PATCH] playback: Add source for getting video filter from file for
+ user
+
+These changing will let user select their filter for their use case.
+If "video-filter=XXX" haven't set in "/etc/gstpbfilter.conf", playbin
+will use the default filter.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ gst/playback/Makefile.am               |  6 +++--
+ gst/playback/gstfilterconfig.c         | 35 ++++++++++++++++++++++++++
+ gst/playback/gstfilterconfig.h         | 10 ++++++++
+ gst/playback/gstplayback.c             |  3 +++
+ gst/playback/gstplaysink.c             | 12 ++++++---
+ gst/playback/gstplaysinkvideoconvert.c | 17 ++++++++++---
+ gst/playback/gstsubtitleoverlay.c      | 22 ++++++++++------
+ gst/playback/meson.build               |  3 ++-
+ 8 files changed, 89 insertions(+), 19 deletions(-)
+ create mode 100644 gst/playback/gstfilterconfig.c
+ create mode 100644 gst/playback/gstfilterconfig.h
+
+diff --git a/gst/playback/Makefile.am b/gst/playback/Makefile.am
+index ff5b8b4..610b485 100644
+--- a/gst/playback/Makefile.am
++++ b/gst/playback/Makefile.am
+@@ -19,7 +19,8 @@ libgstplayback_la_SOURCES = \
+ 	gstplaysinkaudioconvert.c \
+ 	gstplaysinkconvertbin.c \
+ 	gststreamsynchronizer.c \
+-	gstplaybackutils.c
++	gstplaybackutils.c \
++	gstfilterconfig.c
+ 
+ nodist_libgstplayback_la_SOURCES = $(built_sources)
+ libgstplayback_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(csp_cflags)
+@@ -43,7 +44,8 @@ noinst_HEADERS = \
+ 	gstplaysinkaudioconvert.h \
+ 	gstplaysinkconvertbin.h \
+ 	gststreamsynchronizer.h \
+-	gstplaybackutils.h
++	gstplaybackutils.h \
++	gstfilterconfig.h
+ 
+ BUILT_SOURCES = $(built_headers) $(built_sources)
+ 
+diff --git a/gst/playback/gstfilterconfig.c b/gst/playback/gstfilterconfig.c
+new file mode 100644
+index 0000000..f9db59f
+--- /dev/null
++++ b/gst/playback/gstfilterconfig.c
+@@ -0,0 +1,35 @@
++#include <string.h>
++#include <stdio.h>
++#include <stdlib.h>
++
++#include <glib.h>
++#include "gstfilterconfig.h"
++
++char *vfilter_name;
++void gst_filter_get_vfilter_config_file ()
++{
++  static const gchar *config_name = "gstpbfilter.conf";
++  gchar filename[256];
++  gchar str[256];
++  FILE *fp;
++
++  snprintf (filename, sizeof (filename), "/etc/%s", config_name);
++
++  fp = fopen (filename, "r");
++  if (!fp) {
++    goto skip_config;
++  }
++
++  while (fgets (str, sizeof (str), fp) != NULL) {
++    if (strncmp (str, FILTER_CONF_VFILTER_NAME, strlen (FILTER_CONF_VFILTER_NAME)) == 0) {
++      str[strlen (str) - 1] = '\0';
++      vfilter_name = g_strdup (str + strlen (FILTER_CONF_VFILTER_NAME));
++      goto exit;
++    }
++  };
++skip_config:
++  vfilter_name = COLORSPACE;
++exit:
++  fclose(fp);
++}
++
+diff --git a/gst/playback/gstfilterconfig.h b/gst/playback/gstfilterconfig.h
+new file mode 100644
+index 0000000..c1c5b51
+--- /dev/null
++++ b/gst/playback/gstfilterconfig.h
+@@ -0,0 +1,10 @@
++#ifndef _GST_PLAY_BACK_CONFIG_H_
++#define _GST_PLAY_BACK_CONFIG_H_
++
++#define FILTER_CONF_VFILTER_NAME "video-filter="
++
++extern gchar *vfilter_name;
++
++void gst_filter_get_vfilter_config_file ();
++
++#endif
+diff --git a/gst/playback/gstplayback.c b/gst/playback/gstplayback.c
+index 3c3efa5..0076b4a 100644
+--- a/gst/playback/gstplayback.c
++++ b/gst/playback/gstplayback.c
+@@ -31,6 +31,7 @@
+ #include "gstplaysink.h"
+ #include "gstsubtitleoverlay.h"
+ #include "gststreamsynchronizer.h"
++#include "gstfilterconfig.h"
+ 
+ static gboolean
+ plugin_init (GstPlugin * plugin)
+@@ -55,6 +56,8 @@ plugin_init (GstPlugin * plugin)
+       res = gst_play_bin2_plugin_init (plugin);
+   }
+ 
++  gst_filter_get_vfilter_config_file ();
++
+   res &= gst_play_bin3_plugin_init (plugin, FALSE);
+   res &= gst_play_sink_plugin_init (plugin);
+   res &= gst_subtitle_overlay_plugin_init (plugin);
+diff --git a/gst/playback/gstplaysink.c b/gst/playback/gstplaysink.c
+index f216862..bdbc798 100644
+--- a/gst/playback/gstplaysink.c
++++ b/gst/playback/gstplaysink.c
+@@ -37,6 +37,7 @@
+ #include "gststreamsynchronizer.h"
+ #include "gstplaysinkvideoconvert.h"
+ #include "gstplaysinkaudioconvert.h"
++#include "gstfilterconfig.h"
+ 
+ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
+ #define GST_CAT_DEFAULT gst_play_sink_debug
+@@ -1514,17 +1515,20 @@ gen_video_deinterlace_chain (GstPlaySink * playsink)
+   bin = GST_BIN_CAST (chain->chain.bin);
+   gst_object_ref_sink (bin);
+ 
+-  GST_DEBUG_OBJECT (playsink, "creating " COLORSPACE);
+-  chain->conv = gst_element_factory_make (COLORSPACE, "vdconv");
++  GST_DEBUG_OBJECT (playsink, "creating %s", vfilter_name);
++  chain->conv = gst_element_factory_make (vfilter_name, "vdconv");
+   if (chain->conv == NULL) {
+-    post_missing_element_message (playsink, COLORSPACE);
++    post_missing_element_message (playsink, vfilter_name);
+     GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+         (_("Missing element '%s' - check your GStreamer installation."),
+-            COLORSPACE), ("video rendering might fail"));
++            vfilter_name), ("video rendering might fail"));
+   } else {
+     gst_bin_add (bin, chain->conv);
+     head = chain->conv;
+     prev = chain->conv;
++    if (g_object_class_find_property (G_OBJECT_GET_CLASS (G_OBJECT (head)),
++        "dmabuf-use"))
++      g_object_set (G_OBJECT(head), "dmabuf-use", TRUE, NULL);
+   }
+ 
+   GST_DEBUG_OBJECT (playsink, "creating deinterlace");
+diff --git a/gst/playback/gstplaysinkvideoconvert.c b/gst/playback/gstplaysinkvideoconvert.c
+index 5bac5d0..214f2f0 100644
+--- a/gst/playback/gstplaysinkvideoconvert.c
++++ b/gst/playback/gstplaysinkvideoconvert.c
+@@ -25,6 +25,7 @@
+ 
+ #include <gst/pbutils/pbutils.h>
+ #include <gst/gst-i18n-plugin.h>
++#include "gstfilterconfig.h"
+ 
+ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_video_convert_debug);
+ #define GST_CAT_DEFAULT gst_play_sink_video_convert_debug
+@@ -56,9 +57,13 @@ gst_play_sink_video_convert_add_conversion_elements (GstPlaySinkVideoConvert *
+ 
+   if (self->use_converters) {
+     el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
+-        COLORSPACE, "conv");
+-    if (el)
++        vfilter_name, "conv");
++    if (el) {
+       prev = el;
++      if (g_object_class_find_property (G_OBJECT_GET_CLASS (G_OBJECT (el)),
++          "dmabuf-use"))
++        g_object_set (G_OBJECT(el), "dmabuf-use", TRUE, NULL);
++    }
+ 
+     el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
+         "videoscale", "scale");
+@@ -85,14 +90,18 @@ gst_play_sink_video_convert_add_conversion_elements (GstPlaySinkVideoConvert *
+     prev = el;
+ 
+     el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
+-        COLORSPACE, "conv2");
++        vfilter_name, "conv2");
+     if (prev) {
+       if (!gst_element_link_pads_full (prev, "src", el, "sink",
+               GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
+         goto link_failed;
+     }
+-    if (el)
++    if (el) {
+       prev = el;
++      if (g_object_class_find_property (G_OBJECT_GET_CLASS (G_OBJECT (el)),
++          "dmabuf-use"))
++        g_object_set (G_OBJECT(el), "dmabuf-use", TRUE, NULL);
++    }
+   }
+ 
+   return TRUE;
+diff --git a/gst/playback/gstsubtitleoverlay.c b/gst/playback/gstsubtitleoverlay.c
+index 6de3e2f..d329569 100644
+--- a/gst/playback/gstsubtitleoverlay.c
++++ b/gst/playback/gstsubtitleoverlay.c
+@@ -44,6 +44,7 @@
+ #include <gst/pbutils/missing-plugins.h>
+ #include <gst/video/video.h>
+ #include <string.h>
++#include "gstfilterconfig.h"
+ 
+ GST_DEBUG_CATEGORY_STATIC (subtitle_overlay_debug);
+ #define GST_CAT_DEFAULT subtitle_overlay_debug
+@@ -602,6 +603,11 @@ _create_element (GstSubtitleOverlay * self, GstElement ** element,
+ 
+   gst_element_sync_state_with_parent (elt);
+   *element = elt;
++
++  if (g_object_class_find_property (G_OBJECT_GET_CLASS (G_OBJECT (elt)),
++      "dmabuf-use"))
++    g_object_set (G_OBJECT(elt), "dmabuf-use", TRUE, NULL);
++
+   return TRUE;
+ }
+ 
+@@ -863,7 +869,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
+     if (!is_hw) {
+       /* First link everything internally */
+       if (G_UNLIKELY (!_create_element (self, &self->post_colorspace,
+-                  COLORSPACE, NULL, "post-colorspace", FALSE))) {
++                  vfilter_name, NULL, "post-colorspace", FALSE))) {
+         return FALSE;
+       }
+       src = gst_element_get_static_pad (renderer, "src");
+@@ -874,13 +880,13 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
+ 
+       sink = gst_element_get_static_pad (self->post_colorspace, "sink");
+       if (G_UNLIKELY (!sink)) {
+-        GST_WARNING_OBJECT (self, "Can't get sink pad from " COLORSPACE);
++        GST_WARNING_OBJECT (self, "Can't get sink pad from %s", vfilter_name);
+         gst_object_unref (src);
+         return FALSE;
+       }
+ 
+       if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
+-        GST_WARNING_OBJECT (self, "Can't link renderer with " COLORSPACE);
++        GST_WARNING_OBJECT (self, "Can't link renderer with %s", vfilter_name);
+         gst_object_unref (src);
+         gst_object_unref (sink);
+         return FALSE;
+@@ -889,7 +895,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
+       gst_object_unref (sink);
+ 
+       if (G_UNLIKELY (!_create_element (self, &self->pre_colorspace,
+-                  COLORSPACE, NULL, "pre-colorspace", FALSE))) {
++                  vfilter_name, NULL, "pre-colorspace", FALSE))) {
+         return FALSE;
+       }
+ 
+@@ -901,13 +907,13 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
+ 
+       src = gst_element_get_static_pad (self->pre_colorspace, "src");
+       if (G_UNLIKELY (!src)) {
+-        GST_WARNING_OBJECT (self, "Can't get srcpad from " COLORSPACE);
++        GST_WARNING_OBJECT (self, "Can't get srcpad from %s", vfilter_name);
+         gst_object_unref (sink);
+         return FALSE;
+       }
+ 
+       if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
+-        GST_WARNING_OBJECT (self, "Can't link " COLORSPACE " to renderer");
++        GST_WARNING_OBJECT (self, "Can't link %s to renderer", vfilter_name);
+         gst_object_unref (src);
+         gst_object_unref (sink);
+         return FALSE;
+@@ -918,7 +924,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
+       /* Set src ghostpad target */
+       src = gst_element_get_static_pad (self->post_colorspace, "src");
+       if (G_UNLIKELY (!src)) {
+-        GST_WARNING_OBJECT (self, "Can't get src pad from " COLORSPACE);
++        GST_WARNING_OBJECT (self, "Can't get src pad from %s", vfilter_name);
+         return FALSE;
+       }
+     } else {
+@@ -988,7 +994,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
+   if (self->pre_colorspace) {
+     sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
+     if (G_UNLIKELY (!sink)) {
+-      GST_WARNING_OBJECT (self, "Can't get sink pad from " COLORSPACE);
++      GST_WARNING_OBJECT (self, "Can't get sink pad from %s", vfilter_name);
+       return FALSE;
+     }
+   } else {
+diff --git a/gst/playback/meson.build b/gst/playback/meson.build
+index fc0e5d9..9c39618 100644
+--- a/gst/playback/meson.build
++++ b/gst/playback/meson.build
+@@ -15,7 +15,8 @@ playback_sources = [
+   'gstplaysinkvideoconvert.c',
+   'gstplaysinkaudioconvert.c',
+   'gstplaysinkconvertbin.c',
+-  'gststreamsynchronizer.c'
++  'gststreamsynchronizer.c',
++  'gstfilterconfig.c',
+ ]
+ 
+ gstplayback = library('gstplayback',
+-- 
+2.17.1
+
