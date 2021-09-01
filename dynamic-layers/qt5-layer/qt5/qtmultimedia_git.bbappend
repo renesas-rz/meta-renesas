@@ -16,6 +16,9 @@ SRC_URI_append = " \
 	file://0004-qtmultimedia-qmlvideo-add-fullscreen-display-support.patch \
 	file://0005-qtmultimedia-qmlvideofx-update-GUI-compatible-RZ-G-p.patch \
 	file://0006-GStreamer-fix-video-output-stopping-when-the-main-th.patch \
+	file://0007-qtmultimedia-Add-function-to-store-get-array-of-fd.patch \
+	file://0008-qtmultimedia-Add-render-by-EGLImage-for-video-playba.patch \
+	file://0009-qsgvideonode-fix-issue-double-free-in-race-condition.patch \
 "
 
 PACKAGECONFIG_append = " gstreamer alsa"

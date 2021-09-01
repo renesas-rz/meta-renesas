@@ -1,0 +1,182 @@
+From 802e70777071a8dd02f1612e2aa5210ecdd32b39 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Mon, 16 Aug 2021 14:50:30 +0700
+Subject: [PATCH] qtmultimedia: Add function to store/get array of fd.
+
+This commit will help to store fd of dmabuf from gst side in Qt-Gst
+connection before going to rendersink of Qt. Then in Qtrendersink, we
+can get it for doing more things.
+
+This patch will change as below:
++ Add constructor function for single fd
++ Add constructor function for array of fd
++ Add function to get fd of each plane by input parameter
++ Fetch all fd of available plane before create new QVideoFrame
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ src/gsttools/gsttools.pro              |  2 ++
+ src/gsttools/qgstvideorenderersink.cpp | 16 ++++++++-
+ src/multimedia/video/qvideoframe.cpp   | 45 ++++++++++++++++++++++++++
+ src/multimedia/video/qvideoframe.h     |  6 ++++
+ 4 files changed, 68 insertions(+), 1 deletion(-)
+
+diff --git a/src/gsttools/gsttools.pro b/src/gsttools/gsttools.pro
+index a5c1d949..dee1cbf3 100644
+--- a/src/gsttools/gsttools.pro
++++ b/src/gsttools/gsttools.pro
+@@ -140,3 +140,5 @@ DESTDIR = $$QT.multimedia.libs
+ target.path = $$[QT_INSTALL_LIBS]
+ 
+ INSTALLS += target
++
++LIBS_PRIVATE += -lgstallocators-$$GST_VERSION
+diff --git a/src/gsttools/qgstvideorenderersink.cpp b/src/gsttools/qgstvideorenderersink.cpp
+index 68c7a80d..23c3ea19 100644
+--- a/src/gsttools/qgstvideorenderersink.cpp
++++ b/src/gsttools/qgstvideorenderersink.cpp
+@@ -45,6 +45,7 @@
+ #include "qgstvideorenderersink_p.h"
+ 
+ #include <gst/video/video.h>
++#include <gst/allocators/allocators.h>
+ 
+ #include "qgstutils_p.h"
+ 
+@@ -83,11 +84,24 @@ void QGstDefaultVideoRenderer::stop(QAbstractVideoSurface *surface)
+ 
+ bool QGstDefaultVideoRenderer::present(QAbstractVideoSurface *surface, GstBuffer *buffer)
+ {
++    int fd[3];
++    int n_mem;
++    GstMemory *mem;
++
++    n_mem = gst_buffer_n_memory(buffer);
++
++    for (int i = 0; i < n_mem; i++)
++    {
++      mem = gst_buffer_peek_memory(buffer, i);
++      fd[i] = gst_is_dmabuf_memory(mem) ? gst_dmabuf_memory_get_fd(mem) : -1;
++    }
++
+     m_flushed = false;
+     QVideoFrame frame(
+                 new QGstVideoBuffer(buffer, m_videoInfo),
+                 m_format.frameSize(),
+-                m_format.pixelFormat());
++                m_format.pixelFormat(),
++                fd);
+     QGstUtils::setFrameTimeStamps(&frame, buffer);
+ 
+     return surface->present(frame);
+diff --git a/src/multimedia/video/qvideoframe.cpp b/src/multimedia/video/qvideoframe.cpp
+index f0495577..69192280 100644
+--- a/src/multimedia/video/qvideoframe.cpp
++++ b/src/multimedia/video/qvideoframe.cpp
+@@ -332,6 +332,32 @@ QVideoFrame::QVideoFrame(int bytes, const QSize &size, int bytesPerLine, PixelFo
+     }
+ }
+ 
++/*!
++    Constructs a video frame from a \a buffer with the given pixel \a format and \a size in pixels,
++    include with fd for dma_buf.
++    \note This doesn't increment the reference count of the video buffer.
++*/
++QVideoFrame::QVideoFrame(
++        QAbstractVideoBuffer *buffer, const QSize &size, PixelFormat format, int fd)
++     : d(new QVideoFramePrivate(size, format))
++{
++    d->buffer = buffer;
++    buf_fd[0] = fd;
++}
++
++/*!
++    Constructs a video frame from a \a buffer with the given pixel \a format and \a size in pixels,
++    include with array of fd for dma_buf.
++    \note This doesn't increment the reference count of the video buffer.
++*/
++QVideoFrame::QVideoFrame(
++        QAbstractVideoBuffer *buffer, const QSize &size, PixelFormat format, int fd[])
++    : d(new QVideoFramePrivate(size, format))
++{
++    d->buffer = buffer;
++    memcpy(&buf_fd, fd, sizeof(buf_fd));
++ }
++
+ /*!
+     Constructs a video frame from an \a image.
+ 
+@@ -356,6 +382,7 @@ QVideoFrame::QVideoFrame(const QImage &image)
+ QVideoFrame::QVideoFrame(const QVideoFrame &other)
+     : d(other.d)
+ {
++   memcpy(&buf_fd, &other.buf_fd, sizeof(buf_fd));
+ }
+ 
+ /*!
+@@ -366,6 +393,7 @@ QVideoFrame::QVideoFrame(const QVideoFrame &other)
+ QVideoFrame &QVideoFrame::operator =(const QVideoFrame &other)
+ {
+     d = other.d;
++    memcpy(&buf_fd, &other.buf_fd, sizeof(buf_fd));
+ 
+     return *this;
+ }
+@@ -414,6 +442,23 @@ QVideoFrame::PixelFormat QVideoFrame::pixelFormat() const
+     return d->pixelFormat;
+ }
+ 
++/*!
++    Returns the fd of buffer.
++*/
++int QVideoFrame::fd() const
++{
++    return buf_fd[0];
++}
++ 
++/*!
++    Returns the plane dmabuf fd of buffer.
++*/
++int QVideoFrame::fd(int plane) const
++{
++    return plane >= 0 && plane < d->planeCount ? buf_fd[plane] : -1 ;
++}
++
++
+ /*!
+     Returns the type of a video frame's handle.
+ 
+diff --git a/src/multimedia/video/qvideoframe.h b/src/multimedia/video/qvideoframe.h
+index 633604eb..89e9a4af 100644
+--- a/src/multimedia/video/qvideoframe.h
++++ b/src/multimedia/video/qvideoframe.h
+@@ -104,6 +104,8 @@ public:
+ 
+     QVideoFrame();
+     QVideoFrame(QAbstractVideoBuffer *buffer, const QSize &size, PixelFormat format);
++    QVideoFrame(QAbstractVideoBuffer *buffer, const QSize &size, PixelFormat format, int fd);
++    QVideoFrame(QAbstractVideoBuffer *buffer, const QSize &size, PixelFormat format, int fd[]);
+     QVideoFrame(int bytes, const QSize &size, int bytesPerLine, PixelFormat format);
+     QVideoFrame(const QImage &image);
+     QVideoFrame(const QVideoFrame &other);
+@@ -117,6 +119,9 @@ public:
+ 
+     PixelFormat pixelFormat() const;
+ 
++    int fd() const;
++    int fd(int plane) const;
++
+     QAbstractVideoBuffer::HandleType handleType() const;
+ 
+     QSize size() const;
+@@ -162,6 +167,7 @@ public:
+ 
+ private:
+     QExplicitlySharedDataPointer<QVideoFramePrivate> d;
++    int buf_fd[3] = { 0, 0, 0};
+ };
+ 
+ #ifndef QT_NO_DEBUG_STREAM
+-- 
+2.17.1
+
