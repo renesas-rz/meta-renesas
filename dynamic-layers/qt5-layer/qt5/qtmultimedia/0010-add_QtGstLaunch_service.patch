@@ -1,0 +1,2877 @@
+From 50b75f33f31625210ec44a1f8a3c1602f0de6ef9 Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Fri, 12 May 2017 15:53:46 +0700
+Subject: [PATCH] add_QtGstLaunch
+
+QtGstLaunch service that supports to execute Gstreamer pipeline in qml application, it also provides the method for checking input content format/codecs
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Signed-off-by: Hung Huynh <hung.huynh.wz@rvc.renesas.com>
+---
+ src/imports/multimedia/multimedia.cpp         |   2 +
+ src/imports/multimedia/multimedia.pro         |   8 +-
+ .../multimedia/qdeclarativegstlaunch.cpp      | 234 +++++
+ .../multimedia/qdeclarativegstlaunch_p.h      |  77 ++
+ src/multimedia/gstlaunch/gstlaunch.pri        |   9 +
+ src/multimedia/gstlaunch/qgstlaunch.cpp       | 385 +++++++
+ src/multimedia/gstlaunch/qgstlaunch.h         | 184 ++++
+ .../gstlaunch/qgstlaunchcontrol.cpp           |  16 +
+ src/multimedia/gstlaunch/qgstlaunchcontrol.h  |  54 +
+ src/multimedia/multimedia.pro                 |   1 +
+ src/multimedia/qgstlaunch.h                   |   1 +
+ src/multimedia/qgstlaunchcontrol.h            |   1 +
+ src/multimedia/qmediaserviceproviderplugin.h  |   8 +
+ src/plugins/gstreamer/common.pri              |   1 +
+ .../gstreamer/gstlaunch/gst-i18n-app.h        |  44 +
+ .../gstreamer/gstlaunch/gstlaunch.json        |   4 +
+ src/plugins/gstreamer/gstlaunch/gstlaunch.pro |  25 +
+ .../gstlaunch/qgstreamergstlaunchcontrol.cpp  | 205 ++++
+ .../gstlaunch/qgstreamergstlaunchcontrol.h    |  57 ++
+ .../gstlaunch/qgstreamergstlaunchservice.cpp  |  54 +
+ .../gstlaunch/qgstreamergstlaunchservice.h    |  30 +
+ .../qgstreamergstlaunchserviceplugin.cpp      |  32 +
+ .../qgstreamergstlaunchserviceplugin.h        |  26 +
+ .../gstlaunch/qgstreamergstlaunchsession.cpp  | 944 ++++++++++++++++++
+ .../gstlaunch/qgstreamergstlaunchsession.h    | 127 +++
+ src/plugins/gstreamer/gstlaunch/tools.h       |  60 ++
+ src/plugins/gstreamer/gstreamer.json          |   2 +-
+ src/plugins/gstreamer/gstreamer.pro           |   3 +-
+ 28 files changed, 2590 insertions(+), 4 deletions(-)
+ create mode 100644 src/imports/multimedia/qdeclarativegstlaunch.cpp
+ create mode 100644 src/imports/multimedia/qdeclarativegstlaunch_p.h
+ create mode 100644 src/multimedia/gstlaunch/gstlaunch.pri
+ create mode 100644 src/multimedia/gstlaunch/qgstlaunch.cpp
+ create mode 100644 src/multimedia/gstlaunch/qgstlaunch.h
+ create mode 100644 src/multimedia/gstlaunch/qgstlaunchcontrol.cpp
+ create mode 100644 src/multimedia/gstlaunch/qgstlaunchcontrol.h
+ create mode 100644 src/multimedia/qgstlaunch.h
+ create mode 100644 src/multimedia/qgstlaunchcontrol.h
+ create mode 100644 src/plugins/gstreamer/gstlaunch/gst-i18n-app.h
+ create mode 100644 src/plugins/gstreamer/gstlaunch/gstlaunch.json
+ create mode 100644 src/plugins/gstreamer/gstlaunch/gstlaunch.pro
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.cpp
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.h
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.cpp
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.h
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.cpp
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.h
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp
+ create mode 100644 src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.h
+ create mode 100644 src/plugins/gstreamer/gstlaunch/tools.h
+
+diff --git a/src/imports/multimedia/multimedia.cpp b/src/imports/multimedia/multimedia.cpp
+index 7d34672a..41f888f2 100644
+--- a/src/imports/multimedia/multimedia.cpp
++++ b/src/imports/multimedia/multimedia.cpp
+@@ -54,6 +54,7 @@
+ #include "qdeclarativecameraimageprocessing_p.h"
+ #include "qdeclarativecameraviewfinder_p.h"
+ #include "qdeclarativetorch_p.h"
++#include "qdeclarativegstlaunch_p.h"
+ 
+ QML_DECLARE_TYPE(QSoundEffect)
+ 
+@@ -84,6 +85,7 @@ public:
+         qmlRegisterType<QDeclarativeRadioData>(uri, 5, 0, "RadioData");
+         qmlRegisterType<QDeclarativeCamera>(uri, 5, 0, "Camera");
+         qmlRegisterType<QDeclarativeTorch>(uri, 5, 0, "Torch");
++	qmlRegisterType<QDeclarativeGstLaunch>(uri, 5, 0, "QtGstLaunch");
+         qmlRegisterUncreatableType<QDeclarativeCameraCapture>(uri, 5, 0, "CameraCapture",
+                                 trUtf8("CameraCapture is provided by Camera"));
+         qmlRegisterUncreatableType<QDeclarativeCameraRecorder>(uri, 5, 0, "CameraRecorder",
+diff --git a/src/imports/multimedia/multimedia.pro b/src/imports/multimedia/multimedia.pro
+index 606fb396..3a7345f1 100644
+--- a/src/imports/multimedia/multimedia.pro
++++ b/src/imports/multimedia/multimedia.pro
+@@ -16,7 +16,8 @@ HEADERS += \
+         qdeclarativecamerapreviewprovider_p.h \
+         qdeclarativetorch_p.h \
+         qdeclarativecameraviewfinder_p.h \
+-        qdeclarativemultimediaglobal_p.h
++        qdeclarativemultimediaglobal_p.h \
++	qdeclarativegstlaunch_p.h
+ 
+ SOURCES += \
+         multimedia.cpp \
+@@ -34,7 +35,10 @@ SOURCES += \
+         qdeclarativecamerapreviewprovider.cpp \
+         qdeclarativetorch.cpp \
+         qdeclarativecameraviewfinder.cpp \
+-        qdeclarativemultimediaglobal.cpp
++        qdeclarativemultimediaglobal.cpp \
++	qdeclarativegstlaunch.cpp
++
++INCLUDEPATH += ../../multimedia
+ 
+ QML_FILES += \
+     Video.qml
+diff --git a/src/imports/multimedia/qdeclarativegstlaunch.cpp b/src/imports/multimedia/qdeclarativegstlaunch.cpp
+new file mode 100644
+index 00000000..8d9219f6
+--- /dev/null
++++ b/src/imports/multimedia/qdeclarativegstlaunch.cpp
+@@ -0,0 +1,234 @@
++#include <sys/types.h>
++#include <sys/wait.h>
++#include <unistd.h>
++#include <stdio.h>
++#include <QtQml/qqmlinfo.h>
++#include <qmediaservice.h>
++#include <private/qmediaserviceprovider_p.h>
++#include <qmetadatareadercontrol.h>
++#include <qmediaavailabilitycontrol.h>
++#include "qdeclarativemediametadata_p.h"
++#include "qdeclarativegstlaunch_p.h"
++
++// #define DEBUG_GSTLAUNCH
++QT_BEGIN_NAMESPACE
++
++QDeclarativeGstLaunch::QDeclarativeGstLaunch(QObject *parent)
++    : QObject(parent)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++QDeclarativeGstLaunch::~QDeclarativeGstLaunch()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    delete m_qtgstlaunch;
++}
++
++void QDeclarativeGstLaunch::classBegin()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_qtgstlaunch = new QGstLaunch(this);
++    connect(m_qtgstlaunch, SIGNAL(signal_qtgStateChanged()), this, SIGNAL(qtgStateChanged()));
++    connect(m_qtgstlaunch, SIGNAL(signal_qtgStateChangeChanged()), this, SIGNAL(qtgStateChangeChanged()));
++    connect(m_qtgstlaunch, SIGNAL(signal_qtgStateChangeReturnChanged()), this, SIGNAL(qtgStateChangeReturnChanged()));
++    connect(m_qtgstlaunch, SIGNAL(signal_qtgMessageTypeChanged()), this, SIGNAL(qtgMessageTypeChanged()));
++    connect(m_qtgstlaunch, SIGNAL(signal_errorChanged()), this, SIGNAL(errorChanged()));
++    connect(m_qtgstlaunch, SIGNAL(signal_fpsChanged()), this, SIGNAL(fpsChanged()));
++}
++
++void QDeclarativeGstLaunch::componentComplete()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_qtgstlaunch->componentComplete();
++}
++
++QString QDeclarativeGstLaunch::pipeline() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->pipeline();
++}
++
++void QDeclarativeGstLaunch::setPipeline(QString pipeline)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_qtgstlaunch->setPipeline(pipeline);
++}
++
++QGstLaunch::QtGstState QDeclarativeGstLaunch::qtGstState() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->qtGstState();
++}
++
++void QDeclarativeGstLaunch::setQtGstState(QGstLaunch::QtGstState qtgstate)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_qtgstlaunch->setQtGstState(qtgstate);
++}
++
++QGstLaunch::QtGstStateChange QDeclarativeGstLaunch::qtGstStateChange() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->qtGstStateChange();
++}
++
++QGstLaunch::QtGstStateChangeReturn QDeclarativeGstLaunch::qtGstStateChangeReturn() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->qtGstStateChangeReturn();
++}
++
++QGstLaunch::QtGstMessageType QDeclarativeGstLaunch::qtGstMessageType() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->qtGstMessageType();
++}
++
++QGstLaunch::Error QDeclarativeGstLaunch::error() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->error();
++}
++
++qint64 QDeclarativeGstLaunch::fps() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->fps();
++}
++
++QGstLaunch::MediaFormat QDeclarativeGstLaunch::mediaFormat() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_mediaFormat;
++}
++
++QGstLaunch::MediaCodecs QDeclarativeGstLaunch::mediaCodecs() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_mediaCodecs;
++}
++
++void QDeclarativeGstLaunch::analyzePipeline()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->analyzePipeline();
++}
++
++void QDeclarativeGstLaunch::finalize()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->finalize();
++}
++
++QString QDeclarativeGstLaunch::errorString() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->errorString();
++}
++
++QString QDeclarativeGstLaunch::infoString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->infoString();
++}
++
++QString QDeclarativeGstLaunch::warningString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->warningString();
++}
++
++qint64 QDeclarativeGstLaunch::duration()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->duration();
++}
++
++qint64 QDeclarativeGstLaunch::position()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_qtgstlaunch->position();
++}
++
++void QDeclarativeGstLaunch::seek(int position)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << position;
++#endif
++    m_qtgstlaunch->setPosition(position);
++}
++
++void QDeclarativeGstLaunch::sendEOS()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_qtgstlaunch->sendEOS();
++}
++
++void QDeclarativeGstLaunch::searchMediaFormat(QString source)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_mediaFormat = QGstLaunch::UnSupportFormat;
++    m_mediaFormat = m_qtgstlaunch->searchMediaFormat(source);
++}
++
++void QDeclarativeGstLaunch::searchMediaCodecs(QString source, QGstLaunch::MediaFormat format)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_mediaCodecs = QGstLaunch::UnSupportCodecs;
++    m_mediaCodecs = m_qtgstlaunch->searchMediaCodecs(source, format);
++}
++
++QT_END_NAMESPACE
++#include "moc_qdeclarativegstlaunch_p.cpp"
+\ No newline at end of file
+diff --git a/src/imports/multimedia/qdeclarativegstlaunch_p.h b/src/imports/multimedia/qdeclarativegstlaunch_p.h
+new file mode 100644
+index 00000000..3db9bbaf
+--- /dev/null
++++ b/src/imports/multimedia/qdeclarativegstlaunch_p.h
+@@ -0,0 +1,77 @@
++#ifndef QDECLARATIVEGSTLAUNCH_P_H
++#define QDECLARATIVEGSTLAUNCH_P_H
++
++#include <QtCore/qbasictimer.h>
++#include <QtQml/qqmlparserstatus.h>
++#include <QtQml/qqml.h>
++#include <QtMultimedia/qmediaobject.h>
++#include <qgstlaunch.h>
++
++QT_BEGIN_NAMESPACE
++
++class QDeclarativeGstLaunch : public QObject, public QQmlParserStatus
++{
++    Q_OBJECT
++    Q_PROPERTY(QString pipeline READ pipeline WRITE setPipeline)
++    Q_PROPERTY(QGstLaunch::QtGstState qtGstState READ qtGstState WRITE setQtGstState NOTIFY qtgStateChanged)
++    Q_PROPERTY(QGstLaunch::QtGstStateChange qtGstStateChange READ qtGstStateChange NOTIFY qtgStateChangeChanged)
++    Q_PROPERTY(QGstLaunch::QtGstStateChangeReturn qtGstStateChangeReturn READ qtGstStateChangeReturn NOTIFY qtgStateChangeReturnChanged)
++    Q_PROPERTY(QGstLaunch::QtGstMessageType qtGstMessageType READ qtGstMessageType NOTIFY qtgMessageTypeChanged)
++    Q_PROPERTY(QGstLaunch::Error error READ error NOTIFY errorChanged)
++    Q_PROPERTY(QGstLaunch::MediaFormat mediaFormat READ mediaFormat)
++    Q_PROPERTY(QGstLaunch::MediaCodecs mediaCodecs READ mediaCodecs)
++    Q_PROPERTY(QString errorString READ errorString)
++    Q_PROPERTY(qint64 fps READ fps NOTIFY fpsChanged)
++    Q_INTERFACES(QQmlParserStatus)
++
++public:
++    QDeclarativeGstLaunch(QObject *parent = 0);
++    ~QDeclarativeGstLaunch();
++
++    void classBegin();
++    void componentComplete();
++
++    QString pipeline() const;
++    void setPipeline(QString pipeline);
++    QGstLaunch::QtGstState qtGstState() const;
++    void setQtGstState(QGstLaunch::QtGstState qtgstate);
++    QGstLaunch::QtGstStateChange qtGstStateChange() const;
++    QGstLaunch::QtGstStateChangeReturn qtGstStateChangeReturn() const;
++    QGstLaunch::QtGstMessageType qtGstMessageType() const;
++    QGstLaunch::Error error() const;
++    QString errorString() const;
++    qint64 fps() const;
++    QGstLaunch::MediaFormat mediaFormat() const;
++    QGstLaunch::MediaCodecs mediaCodecs() const;
++
++public Q_SLOTS:
++    void analyzePipeline();
++    void finalize();
++    QString infoString();
++    QString warningString();
++    qint64 duration();
++    qint64 position();
++    void seek(int position);
++    void sendEOS();
++    void searchMediaFormat(QString source);
++    void searchMediaCodecs(QString source, QGstLaunch::MediaFormat format);
++
++Q_SIGNALS:
++    void qtgStateChanged();
++    void qtgStateChangeChanged();
++    void qtgStateChangeReturnChanged();
++    void qtgMessageTypeChanged();
++    void errorChanged();
++    void fpsChanged();
++
++private:
++    Q_DISABLE_COPY(QDeclarativeGstLaunch)
++    QGstLaunch* m_qtgstlaunch;
++    QGstLaunch::MediaFormat m_mediaFormat;
++    QGstLaunch::MediaCodecs m_mediaCodecs;
++
++};
++
++QT_END_NAMESPACE
++QML_DECLARE_TYPE(QT_PREPEND_NAMESPACE(QDeclarativeGstLaunch))
++#endif
+\ No newline at end of file
+diff --git a/src/multimedia/gstlaunch/gstlaunch.pri b/src/multimedia/gstlaunch/gstlaunch.pri
+new file mode 100644
+index 00000000..3781713b
+--- /dev/null
++++ b/src/multimedia/gstlaunch/gstlaunch.pri
+@@ -0,0 +1,9 @@
++INCLUDEPATH += gstlaunch
++
++PUBLIC_HEADERS += \
++    gstlaunch/qgstlaunch.h \
++    gstlaunch/qgstlaunchcontrol.h
++
++SOURCES += \
++    gstlaunch/qgstlaunch.cpp \
++    gstlaunch/qgstlaunchcontrol.cpp
+diff --git a/src/multimedia/gstlaunch/qgstlaunch.cpp b/src/multimedia/gstlaunch/qgstlaunch.cpp
+new file mode 100644
+index 00000000..ffd07922
+--- /dev/null
++++ b/src/multimedia/gstlaunch/qgstlaunch.cpp
+@@ -0,0 +1,385 @@
++#include "qgstlaunch.h"
++#include "qmediaobject_p.h"
++#include <qmediaservice.h>
++#include <qmediaserviceprovider_p.h>
++#include <qgstlaunchcontrol.h>
++
++#include <QtCore/qdebug.h>
++#include <QtCore/qurl.h>
++#include <QtCore/qstringlist.h>
++#include <QtCore/qmetaobject.h>
++
++// #define DEBUG_QGSTLAUNCH
++
++QT_BEGIN_NAMESPACE
++
++static void qRegisterMediaPlayerMetaTypes()
++{
++    qRegisterMetaType<QGstLaunch::QtGstState>("QGstLaunch::QtGstState");
++    qRegisterMetaType<QGstLaunch::QtGstStateChange>("QGstLaunch::QtGstStateChange");
++    qRegisterMetaType<QGstLaunch::QtGstStateChangeReturn>("QGstLaunch::QtGstStateChangeReturn");
++    qRegisterMetaType<QGstLaunch::QtGstMessageType>("QGstLaunch::QtGstMessageType");
++    qRegisterMetaType<QGstLaunch::Error>("QGstLaunch::Error");
++    qRegisterMetaType<QGstLaunch::MediaFormat>("QGstLaunch::MediaFormat");
++    qRegisterMetaType<QGstLaunch::MediaCodecs>("QGstLaunch::MediaCodecs");
++}
++Q_CONSTRUCTOR_FUNCTION(qRegisterMediaPlayerMetaTypes)
++
++class QGstLaunchPrivate : public QMediaObjectPrivate
++{
++    Q_DECLARE_NON_CONST_PUBLIC(QGstLaunch)
++
++public:
++    QGstLaunchPrivate()
++        : provider(0)
++        , control(0)
++    {}
++
++    QMediaServiceProvider *provider;
++    QGstLaunchControl* control;
++};
++
++static QMediaService *playerService()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    QMediaServiceProvider *provider = QMediaServiceProvider::defaultServiceProvider();
++    return provider->requestService(Q_MEDIASERVICE_GSTLAUNCH);
++}
++
++QGstLaunch::QGstLaunch(QObject *parent):QMediaObject(*new QGstLaunchPrivate, parent, playerService())
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->provider = QMediaServiceProvider::defaultServiceProvider();
++    if (d->service == 0) {
++
++    }else{
++        d->control = qobject_cast<QGstLaunchControl*>(d->service->requestControl(QGstLaunchControl_iid));
++        if (d->control != 0) {
++            // connect(d->control, SIGNAL(signal_controlQtgStateChanged()), this, SIGNAL(signal_qtgStateChanged()));
++            connect(d->control, SIGNAL(signal_controlQtgStateChanged()), SLOT(slot_qtgStateChanged()));
++            connect(d->control, SIGNAL(signal_controlQtgStateChangeChanged()), this, SIGNAL(signal_qtgStateChangeChanged()));
++            connect(d->control, SIGNAL(signal_controlQtgStateChangeReturnChanged()), this, SIGNAL(signal_qtgStateChangeReturnChanged()));
++            connect(d->control, SIGNAL(signal_controlQtgMessageTypeChanged()), this, SIGNAL(signal_qtgMessageTypeChanged()));
++            connect(d->control, SIGNAL(signal_controlErrorChanged()), this, SIGNAL(signal_errorChanged()));
++            connect(d->control, SIGNAL(signal_controlFpsChanged()), this, SIGNAL(signal_fpsChanged()));
++        }
++    }
++}
++
++QGstLaunch::~QGstLaunch()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++
++    if (d->service) {
++        if (d->control)
++            d->service->releaseControl(d->control);
++
++        d->provider->releaseService(d->service);
++    }
++}
++
++/*========================================================
++                Properties processing
++========================================================*/
++/*
++    return current pipeline of QT gst-launch
++*/
++QString QGstLaunch::pipeline() const
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(const QGstLaunch);
++    return d->control->pipeline();
++}
++
++/*
++    setting pipeline that is input by user via application
++    this pipeline will be sent to Gstreamer for processing
++*/
++void QGstLaunch::setPipeline(QString pipeline)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->setPipeline(pipeline);
++}
++
++/*
++    return current QtGstState of QT gst-launch
++*/
++QGstLaunch::QtGstState QGstLaunch::qtGstState() const
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(const QGstLaunch);
++    return d->control->qtGstState();
++}
++
++/*
++    set new QtGstState of QT gst-launch
++*/
++void QGstLaunch::setQtGstState(QGstLaunch::QtGstState qtgstate)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->setQtGstState(qtgstate);
++}
++
++/*
++    return current QtGstStateChange information of QT gst-launch
++*/
++QGstLaunch::QtGstStateChange QGstLaunch::qtGstStateChange() const
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(const QGstLaunch);
++    return d->control->qtGstStateChange();
++}
++
++/*
++    return current QtGstStateChangeReturn information of QT gst-launch
++*/
++QGstLaunch::QtGstStateChangeReturn QGstLaunch::qtGstStateChangeReturn() const
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(const QGstLaunch);
++    return d->control->qtGstStateChangeReturn();
++}
++
++/*
++    return current QtGstMessageType information of QT gst-launch
++*/
++QGstLaunch::QtGstMessageType QGstLaunch::qtGstMessageType() const
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(const QGstLaunch);
++    return d->control->qtGstMessageType();
++}
++
++/*
++    return Error information of QT gst-launch
++*/
++QGstLaunch::Error QGstLaunch::error() const
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(const QGstLaunch);
++    return d->control->error();
++}
++
++qint64 QGstLaunch::fps() const
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(const QGstLaunch);
++    return d->control->fps();
++}
++
++bool QGstLaunch::updateFps()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    calculateFps();
++    return true;
++}
++
++/*========================================================
++                    Slots processing
++========================================================*/
++/*
++    this is called at the end of initalization phase
++*/
++void QGstLaunch::componentComplete()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->componentComplete();
++}
++
++/*
++    this function will analyze the pipeline including detecting options and plugins
++*/
++void QGstLaunch::analyzePipeline()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->analyzePipeline();
++}
++
++void QGstLaunch::finalize()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->finalize();
++}
++
++QString QGstLaunch::errorString()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    return d->control->errorString();
++}
++
++QString QGstLaunch::infoString()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    return d->control->infoString();
++}
++
++QString QGstLaunch::warningString()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    return d->control->warningString();
++}
++
++void QGstLaunch::calculateFps()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->calculateFps();
++}
++
++qint64 QGstLaunch::duration()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    return d->control->duration();
++}
++
++qint64 QGstLaunch::position()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    return d->control->position();
++}
++
++void QGstLaunch::setPosition(qint64 position)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->setPosition(position);
++}
++
++void QGstLaunch::sendEOS()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    d->control->sendEOS();
++}
++
++QGstLaunch::MediaFormat QGstLaunch::searchMediaFormat(QString source)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    return d->control->searchMediaFormat(source);
++}
++
++QGstLaunch::MediaCodecs QGstLaunch::searchMediaCodecs(QString source, QGstLaunch::MediaFormat format)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    Q_D(QGstLaunch);
++    return d->control->searchMediaCodecs(source, format);
++}
++
++/*========================================================
++                    Signal processing
++========================================================*/
++void QGstLaunch::slot_qtgStateChanged()
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    emit signal_qtgStateChanged();
++    Q_D(const QGstLaunch);
++    if(d->control->qtGstState() == QGstLaunch::QTGST_STATE_PLAYING)
++    {
++        addPropertyWatch("updateFps");
++    }else{
++        removePropertyWatch("updateFps");
++    }
++}
++
++void QGstLaunch::slot_qtgStateChangeChanged(QGstLaunch::QtGstStateChange qtgstatechange)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++void QGstLaunch::slot_qtgStateChangeReturnChanged(QGstLaunch::QtGstStateChangeReturn qtgstatechangereturn)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++void QGstLaunch::slot_qtgMessageTypeChanged(QGstLaunch::QtGstMessageType qtgmessagetype)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++void QGstLaunch::slot_errorChanged(QGstLaunch::Error error)
++{
++#ifdef DEBUG_QGSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++
++#include "moc_qgstlaunch.cpp"
++QT_END_NAMESPACE
+\ No newline at end of file
+diff --git a/src/multimedia/gstlaunch/qgstlaunch.h b/src/multimedia/gstlaunch/qgstlaunch.h
+new file mode 100644
+index 00000000..05f75752
+--- /dev/null
++++ b/src/multimedia/gstlaunch/qgstlaunch.h
+@@ -0,0 +1,184 @@
++#ifndef QGSTLAUNCH_H
++#define QGSTLAUNCH_H
++
++#include <QtMultimedia/qmediaobject.h>
++#include <QtMultimedia/qmediacontent.h>
++#include <QtMultimedia/qmediaenumdebug.h>
++
++QT_BEGIN_NAMESPACE
++
++class QGstLaunchPrivate;
++class Q_MULTIMEDIA_EXPORT QGstLaunch : public QMediaObject
++{
++    Q_OBJECT
++    Q_PROPERTY(QString pipeline READ pipeline WRITE setPipeline)
++    Q_PROPERTY(QtGstState qtGstState READ qtGstState WRITE setQtGstState NOTIFY signal_qtgStateChanged)
++    Q_PROPERTY(QtGstStateChange qtGstStateChange READ qtGstStateChange NOTIFY signal_qtgStateChangeChanged)
++    Q_PROPERTY(QtGstStateChangeReturn qtGstStateChangeReturn READ qtGstStateChangeReturn NOTIFY signal_qtgStateChangeReturnChanged)
++    Q_PROPERTY(QtGstMessageType qtGstMessageType READ qtGstMessageType NOTIFY signal_qtgMessageTypeChanged)
++    Q_PROPERTY(Error error READ error NOTIFY signal_errorChanged)
++    Q_PROPERTY(qint64 fps READ fps)
++    Q_PROPERTY(bool updateFps READ updateFps NOTIFY signal_fpsChanged)
++
++    Q_ENUMS(QtGstState)
++    Q_ENUMS(QtGstStateChange)
++    Q_ENUMS(QtGstStateChangeReturn)
++    Q_ENUMS(QtGstMessageType)
++    Q_ENUMS(Error)
++    Q_ENUMS(MediaFormat)
++    Q_ENUMS(MediaCodecs)
++
++public:
++
++    /*
++        GstState -> QtGstState
++    */
++    enum QtGstState
++    {
++        QTGST_STATE_VOID_PENDING, // GST_STATE_VOID_PENDING
++        QTGST_STATE_NULL,         // GST_STATE_NULL
++        QTGST_STATE_READY,        // GST_STATE_READY
++        QTGST_STATE_PAUSED,       // GST_STATE_PAUSED
++        QTGST_STATE_PLAYING       // GST_STATE_PLAYING
++    };
++
++    /*
++        GstStateChange -> QtGstStateChange
++    */
++    enum QtGstStateChange
++    {
++        QTGST_STATE_CHANGE_NULL_TO_READY,     // GST_STATE_CHANGE_NULL_TO_READY
++        QTGST_STATE_CHANGE_READY_TO_PAUSED,   // GST_STATE_CHANGE_READY_TO_PAUSED
++        QTGST_STATE_CHANGE_PAUSED_TO_PLAYING, // GST_STATE_CHANGE_PAUSED_TO_PLAYING
++        QTGST_STATE_CHANGE_PLAYING_TO_PAUSED, // GST_STATE_CHANGE_PLAYING_TO_PAUSED
++        QTGST_STATE_CHANGE_PAUSED_TO_READY,   // GST_STATE_CHANGE_PAUSED_TO_READY
++        QTGST_STATE_CHANGE_READY_TO_NULL      // GST_STATE_CHANGE_READY_TO_NULL
++    };
++
++    /*
++        GstStateChangeReturn -> QtGstStateChangeReturn
++    */
++    enum QtGstStateChangeReturn
++    {
++        QTGST_STATE_CHANGE_FAILURE,   // GST_STATE_CHANGE_FAILURE
++        QTGST_STATE_CHANGE_SUCCESS,   // GST_STATE_CHANGE_SUCCESS
++        QTGST_STATE_CHANGE_ASYNC,     // GST_STATE_CHANGE_ASYNC
++        QTGST_STATE_CHANGE_NO_PREROLL // GST_STATE_CHANGE_NO_PREROLL
++    };
++
++    /*
++        GstMessageType -> QtGstMessageType
++    */
++    enum QtGstMessageType
++    {
++        QTGST_MESSAGE_UNKNOWN,        // GST_MESSAGE_UNKNOWN
++        QTGST_MESSAGE_EOS,            // GST_MESSAGE_EOS
++        QTGST_MESSAGE_ERROR,          // GST_MESSAGE_ERROR
++        QTGST_MESSAGE_WARNING,        // GST_MESSAGE_WARNING
++        QTGST_MESSAGE_INFO,           // GST_MESSAGE_INFO
++        QTGST_MESSAGE_TAG,            // GST_MESSAGE_TAG
++        QTGST_MESSAGE_STATE_CHANGED,  // GST_MESSAGE_STATE_CHANGED
++        QTGST_MESSAGE_ASYNC_START,    // GST_MESSAGE_ASYNC_START
++        QTGST_MESSAGE_ASYNC_DONE      // GST_MESSAGE_ASYNC_DONE
++    };
++
++    /* Media Format */
++    enum MediaFormat
++    {
++        UnSupportFormat,
++        H264ES,
++        MP4,
++        X3GP,
++        M4A,
++        A_MPEGES
++    };
++
++    /* Media Codecs */
++    enum MediaCodecs
++    {
++        CodecsError,
++        UnSupportCodecs,
++        V_H264,
++        A_AAC,
++        A_MPEG,
++        V_H264_A_AAC,
++        V_H264_A_MPEG
++    };
++
++    enum Error
++    {
++        NoError,
++        OptionError,
++        PipelineError,
++        PluginError
++    };
++
++    QGstLaunch(QObject *parent = 0);
++    ~QGstLaunch();
++
++    //properties processing
++    QString pipeline() const;
++    void setPipeline(QString pipeline);
++    QtGstState qtGstState() const;
++    void setQtGstState(QtGstState qtgstate);
++    QtGstStateChange qtGstStateChange() const;
++    QtGstStateChangeReturn qtGstStateChangeReturn() const;
++    QtGstMessageType qtGstMessageType() const;
++    Error error() const;
++    qint64 fps() const;
++    bool updateFps();
++
++public Q_SLOTS:
++    void componentComplete();
++    void analyzePipeline();
++    void finalize();
++    QString errorString();
++    QString infoString();
++    QString warningString();
++    void calculateFps();
++    qint64 duration();
++    qint64 position();
++    void setPosition(qint64 position);
++    void sendEOS();
++    QGstLaunch::MediaFormat searchMediaFormat(QString source);
++    QGstLaunch::MediaCodecs searchMediaCodecs(QString source, QGstLaunch::MediaFormat format);
++
++    //signals processing
++    void slot_qtgStateChanged();
++    void slot_qtgStateChangeChanged(QGstLaunch::QtGstStateChange);
++    void slot_qtgStateChangeReturnChanged(QGstLaunch::QtGstStateChangeReturn);
++    void slot_qtgMessageTypeChanged(QGstLaunch::QtGstMessageType);
++    void slot_errorChanged(QGstLaunch::Error);
++
++Q_SIGNALS:
++    void signal_qtgStateChanged();
++    void signal_qtgStateChangeChanged();
++    void signal_qtgStateChangeReturnChanged();
++    void signal_qtgMessageTypeChanged();
++    void signal_errorChanged();
++    void signal_fpsChanged();
++
++private:
++    Q_DISABLE_COPY(QGstLaunch)
++    Q_DECLARE_PRIVATE(QGstLaunch)
++};
++
++QT_END_NAMESPACE
++
++Q_DECLARE_METATYPE(QGstLaunch::QtGstState)
++Q_DECLARE_METATYPE(QGstLaunch::QtGstStateChange)
++Q_DECLARE_METATYPE(QGstLaunch::QtGstStateChangeReturn)
++Q_DECLARE_METATYPE(QGstLaunch::QtGstMessageType)
++Q_DECLARE_METATYPE(QGstLaunch::Error)
++Q_DECLARE_METATYPE(QGstLaunch::MediaFormat)
++Q_DECLARE_METATYPE(QGstLaunch::MediaCodecs)
++
++Q_MEDIA_ENUM_DEBUG(QGstLaunch, QtGstState)
++Q_MEDIA_ENUM_DEBUG(QGstLaunch, QtGstStateChange)
++Q_MEDIA_ENUM_DEBUG(QGstLaunch, QtGstStateChangeReturn)
++Q_MEDIA_ENUM_DEBUG(QGstLaunch, QtGstMessageType)
++Q_MEDIA_ENUM_DEBUG(QGstLaunch, Error)
++Q_MEDIA_ENUM_DEBUG(QGstLaunch, MediaFormat)
++Q_MEDIA_ENUM_DEBUG(QGstLaunch, MediaCodecs)
++
++#endif  // QGSTLAUNCH_H
+\ No newline at end of file
+diff --git a/src/multimedia/gstlaunch/qgstlaunchcontrol.cpp b/src/multimedia/gstlaunch/qgstlaunchcontrol.cpp
+new file mode 100644
+index 00000000..98ab4c71
+--- /dev/null
++++ b/src/multimedia/gstlaunch/qgstlaunchcontrol.cpp
+@@ -0,0 +1,16 @@
++#include "qmediacontrol_p.h"
++#include "qgstlaunchcontrol.h"
++
++QT_BEGIN_NAMESPACE
++
++QGstLaunchControl::~QGstLaunchControl()
++{}
++
++QGstLaunchControl::QGstLaunchControl(QObject *parent):
++    QMediaControl(*new QMediaControlPrivate, parent)
++{
++}
++
++
++#include "moc_qgstlaunchcontrol.cpp"
++QT_END_NAMESPACE
+diff --git a/src/multimedia/gstlaunch/qgstlaunchcontrol.h b/src/multimedia/gstlaunch/qgstlaunchcontrol.h
+new file mode 100644
+index 00000000..dad5f599
+--- /dev/null
++++ b/src/multimedia/gstlaunch/qgstlaunchcontrol.h
+@@ -0,0 +1,54 @@
++#ifndef QGSTLAUNCHCONTROL_H
++#define QGSTLAUNCHCONTROL_H
++
++#include <QtMultimedia/qmediacontrol.h>
++#include <qgstlaunch.h>
++#include <QtCore/qpair.h>
++
++QT_BEGIN_NAMESPACE
++class Q_MULTIMEDIA_EXPORT QGstLaunchControl : public QMediaControl
++{
++    Q_OBJECT
++public:
++    ~QGstLaunchControl();
++    virtual void componentComplete() = 0;
++    virtual void analyzePipeline() = 0;
++    virtual void finalize() = 0;
++    virtual QString errorString() = 0;
++    virtual QString infoString() = 0;
++    virtual QString warningString() = 0;
++    virtual void calculateFps() = 0;
++    virtual qint64 duration() = 0;
++    virtual qint64 position() = 0;
++    virtual void setPosition(qint64 position) = 0;
++    virtual void sendEOS() = 0;
++    virtual QGstLaunch::MediaFormat searchMediaFormat(QString source) = 0;
++    virtual QGstLaunch::MediaCodecs searchMediaCodecs(QString source, QGstLaunch::MediaFormat format) = 0;
++
++    virtual QString pipeline() const = 0;
++    virtual void setPipeline(QString pipeline) = 0;
++    virtual QGstLaunch::QtGstState qtGstState() const = 0;
++    virtual void setQtGstState(QGstLaunch::QtGstState qtgstate) = 0;
++    virtual QGstLaunch::QtGstStateChange qtGstStateChange() const = 0;
++    virtual QGstLaunch::QtGstStateChangeReturn qtGstStateChangeReturn() const = 0;
++    virtual QGstLaunch::QtGstMessageType qtGstMessageType() const = 0;
++    virtual QGstLaunch::Error error() const = 0;
++    virtual qint64 fps() const = 0;
++
++Q_SIGNALS:
++    void signal_controlQtgStateChanged();
++    void signal_controlQtgStateChangeChanged();
++    void signal_controlQtgStateChangeReturnChanged();
++    void signal_controlQtgMessageTypeChanged();
++    void signal_controlErrorChanged();
++    void signal_controlFpsChanged();
++
++protected:
++    QGstLaunchControl(QObject* parent = 0);
++};
++
++#define QGstLaunchControl_iid "org.qt-project.qt.gstlaunchcontrol/5.0"
++Q_MEDIA_DECLARE_CONTROL(QGstLaunchControl, QGstLaunchControl_iid)
++
++QT_END_NAMESPACE
++#endif // QGSTLAUNCHCONTROL_H
+diff --git a/src/multimedia/multimedia.pro b/src/multimedia/multimedia.pro
+index 761e488b..304f36f9 100644
+--- a/src/multimedia/multimedia.pro
++++ b/src/multimedia/multimedia.pro
+@@ -64,6 +64,7 @@ include(playback/playback.pri)
+ include(radio/radio.pri)
+ include(recording/recording.pri)
+ include(video/video.pri)
++include(gstlaunch/gstlaunch.pri)
+ 
+ ANDROID_BUNDLED_JAR_DEPENDENCIES = \
+     jar/QtMultimedia-bundled.jar:org.qtproject.qt5.android.multimedia.QtMultimediaUtils
+diff --git a/src/multimedia/qgstlaunch.h b/src/multimedia/qgstlaunch.h
+new file mode 100644
+index 00000000..94772458
+--- /dev/null
++++ b/src/multimedia/qgstlaunch.h
+@@ -0,0 +1 @@
++#include "../../src/multimedia/gstlaunch/qgstlaunch.h"
+diff --git a/src/multimedia/qgstlaunchcontrol.h b/src/multimedia/qgstlaunchcontrol.h
+new file mode 100644
+index 00000000..f382e656
+--- /dev/null
++++ b/src/multimedia/qgstlaunchcontrol.h
+@@ -0,0 +1 @@
++#include "../../src/multimedia/gstlaunch/qgstlaunchcontrol.h"
+diff --git a/src/multimedia/qmediaserviceproviderplugin.h b/src/multimedia/qmediaserviceproviderplugin.h
+index 6e8bdc52..97c92462 100644
+--- a/src/multimedia/qmediaserviceproviderplugin.h
++++ b/src/multimedia/qmediaserviceproviderplugin.h
+@@ -194,6 +194,14 @@ public:
+ };
+ 
+ /*!
++    Service with support for executing gst-launch pipeline
++    Required Controls: QGstLaunchControl
++    Optional Controls: None
++*/
++#define Q_MEDIASERVICE_GSTLAUNCH "org.qt-project.qt.gstlaunch"
++  
++  /*!
++
+     Service with support for media playback
+     Required Controls: QMediaPlayerControl
+     Optional Controls: QMediaPlaylistControl, QAudioDeviceControl
+diff --git a/src/plugins/gstreamer/common.pri b/src/plugins/gstreamer/common.pri
+index babdb7cf..8057e92e 100644
+--- a/src/plugins/gstreamer/common.pri
++++ b/src/plugins/gstreamer/common.pri
+@@ -35,3 +35,4 @@ config_gstreamer_appsrc {
+     LIBS += -lgstapp-$$GST_VERSION
+ }
+ 
++INCLUDEPATH += ../../../multimedia
+diff --git a/src/plugins/gstreamer/gstlaunch/gst-i18n-app.h b/src/plugins/gstreamer/gstlaunch/gst-i18n-app.h
+new file mode 100644
+index 00000000..56140e5a
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/gst-i18n-app.h
+@@ -0,0 +1,44 @@
++/* GStreamer
++ * Copyright (C) 2004 Thomas Vander Stichele <thomas@apestaart.org>
++ *
++ * gst-i18n-app.h: internationalization macros for the GStreamer tools
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++
++#ifndef __GST_I18N_APP_H__
++#define __GST_I18N_APP_H__
++
++#ifdef ENABLE_NLS
++
++#include <locale.h>  /* some people need it and some people don't */
++#include "gettext.h" /* included with gettext distribution and copied */
++
++/* we want to use shorthand _() for translating and N_() for marking */
++#define _(String) gettext (String)
++#define N_(String) gettext_noop (String)
++/* FIXME: if we need it, we can add Q_ as well, like in glib */
++
++#else
++
++#define _(String) String
++#define N_(String) String
++#define ngettext(Singular,Plural,Count) ((Count>1)?Plural:Singular)
++
++#endif
++
++#endif /* __GST_I18N_APP_H__ */
+diff --git a/src/plugins/gstreamer/gstlaunch/gstlaunch.json b/src/plugins/gstreamer/gstlaunch/gstlaunch.json
+new file mode 100644
+index 00000000..3479ad71
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/gstlaunch.json
+@@ -0,0 +1,4 @@
++{
++    "Keys": ["gstreamergstlaunch"],
++    "Services": ["org.qt-project.qt.gstlaunch"]
++}
+diff --git a/src/plugins/gstreamer/gstlaunch/gstlaunch.pro b/src/plugins/gstreamer/gstlaunch/gstlaunch.pro
+new file mode 100644
+index 00000000..18b2ce4d
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/gstlaunch.pro
+@@ -0,0 +1,25 @@
++TARGET = gstlaunch
++
++PLUGIN_TYPE = mediaservice
++PLUGIN_CLASS_NAME = QGstreamerPlayerServicePlugin
++load(qt_plugin)
++
++include(../common.pri)
++
++INCLUDEPATH += $$PWD
++
++HEADERS += \
++    $$PWD/qgstreamergstlaunchcontrol.h \
++    $$PWD/qgstreamergstlaunchservice.h \
++    $$PWD/qgstreamergstlaunchsession.h \
++    $$PWD/qgstreamergstlaunchserviceplugin.h
++
++SOURCES += \
++    $$PWD/qgstreamergstlaunchcontrol.cpp \
++    $$PWD/qgstreamergstlaunchservice.cpp \
++    $$PWD/qgstreamergstlaunchsession.cpp \
++    $$PWD/qgstreamergstlaunchserviceplugin.cpp
++
++OTHER_FILES += \
++    gstlaunch.json
++
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.cpp b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.cpp
+new file mode 100644
+index 00000000..23187b75
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.cpp
+@@ -0,0 +1,205 @@
++#include "qgstreamergstlaunchcontrol.h"
++#include "qgstreamergstlaunchsession.h"
++
++// #define DEBUG_GSTLAUNCH
++QT_BEGIN_NAMESPACE
++
++QGstreamerGstLaunchControl::QGstreamerGstLaunchControl(QGstreamerGstLaunchSession *session, QObject *parent)
++    : QGstLaunchControl(parent)
++    , m_session(session)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    connect(m_session, SIGNAL(signal_sessionQtgStateChanged()), this, SIGNAL(signal_controlQtgStateChanged()));
++    connect(m_session, SIGNAL(signal_sessionQtgStateChangeChanged()), this, SIGNAL(signal_controlQtgStateChangeChanged()));
++    connect(m_session, SIGNAL(signal_sessionQtgStateChangeReturnChanged()), this, SIGNAL(signal_controlQtgStateChangeReturnChanged()));
++    connect(m_session, SIGNAL(signal_sessionQtgMessageTypeChanged()), this, SIGNAL(signal_controlQtgMessageTypeChanged()));
++    connect(m_session, SIGNAL(signal_sessionErrorChanged()), this, SIGNAL(signal_controlErrorChanged()));
++    connect(m_session, SIGNAL(signal_sessionFpsChanged()), this, SIGNAL(signal_controlFpsChanged()));
++}
++
++QGstreamerGstLaunchControl::~QGstreamerGstLaunchControl()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++}
++
++void QGstreamerGstLaunchControl::componentComplete()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->componentComplete();
++}
++
++QString QGstreamerGstLaunchControl::pipeline() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->pipeline();
++}
++
++void QGstreamerGstLaunchControl::setPipeline(QString pipeline)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->setPipeline(pipeline);
++}
++
++QGstLaunch::QtGstState QGstreamerGstLaunchControl::qtGstState() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->qtGstState();
++}
++
++void QGstreamerGstLaunchControl::setQtGstState(QGstLaunch::QtGstState qtgstate)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->setQtGstState(qtgstate);
++}
++
++QGstLaunch::QtGstStateChange QGstreamerGstLaunchControl::qtGstStateChange() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->qtGstStateChange();
++}
++
++QGstLaunch::QtGstStateChangeReturn QGstreamerGstLaunchControl::qtGstStateChangeReturn() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->qtGstStateChangeReturn();
++}
++
++QGstLaunch::QtGstMessageType QGstreamerGstLaunchControl::qtGstMessageType() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->qtGstMessageType();
++}
++
++QGstLaunch::Error QGstreamerGstLaunchControl::error() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->error();
++}
++
++qint64 QGstreamerGstLaunchControl::fps() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->fps();
++}
++
++void QGstreamerGstLaunchControl::analyzePipeline()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->analyzePipeline();
++}
++
++void QGstreamerGstLaunchControl::finalize()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->finalize();
++}
++
++QString QGstreamerGstLaunchControl::errorString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->errorString();
++}
++
++QString QGstreamerGstLaunchControl::infoString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->infoString();
++}
++
++QString QGstreamerGstLaunchControl::warningString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->warningString();
++}
++
++void QGstreamerGstLaunchControl::calculateFps()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->calculateFps();
++}
++
++qint64 QGstreamerGstLaunchControl::duration()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->duration();
++}
++
++qint64 QGstreamerGstLaunchControl::position()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->position();
++}
++
++void QGstreamerGstLaunchControl::setPosition(qint64 position)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << position;
++#endif
++    m_session->seek(position);
++}
++
++void QGstreamerGstLaunchControl::sendEOS()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session->sendEOS();
++}
++
++QGstLaunch::MediaFormat QGstreamerGstLaunchControl::searchMediaFormat(QString source)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->searchMediaFormat(source);
++}
++
++QGstLaunch::MediaCodecs QGstreamerGstLaunchControl::searchMediaCodecs(QString source, QGstLaunch::MediaFormat format)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_session->searchMediaCodecs(source, format);
++}
++
++QT_END_NAMESPACE
+\ No newline at end of file
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.h b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.h
+new file mode 100644
+index 00000000..16014d5e
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchcontrol.h
+@@ -0,0 +1,57 @@
++#ifndef QGSTREAMERGSTLAUNCHCONTROL_H
++#define QGSTREAMERGSTLAUNCHCONTROL_H
++
++#include <QtCore/qobject.h>
++#include <QtCore/qstack.h>
++#include <qgstlaunchcontrol.h>
++#include <qgstlaunch.h>
++#include <limits.h>
++
++QT_BEGIN_NAMESPACE
++
++class QGstreamerGstLaunchService;
++class QGstreamerGstLaunchSession;
++
++class QGstreamerGstLaunchControl : public QGstLaunchControl
++{
++    Q_OBJECT
++
++public:
++    QGstreamerGstLaunchControl(QGstreamerGstLaunchSession *session, QObject *parent = 0);
++    ~QGstreamerGstLaunchControl();
++
++    void componentComplete();
++
++    QString pipeline() const;
++    void setPipeline(QString pipeline);
++    QGstLaunch::QtGstState qtGstState() const;
++    void setQtGstState(QGstLaunch::QtGstState qtgstate);
++    QGstLaunch::QtGstStateChange qtGstStateChange() const;
++    QGstLaunch::QtGstStateChangeReturn qtGstStateChangeReturn() const;
++    QGstLaunch::QtGstMessageType qtGstMessageType() const;
++    QGstLaunch::Error error() const;
++    qint64 fps() const;
++
++public slots:
++    // void slot_Control_StateStatusChanged(QMP4Playback::State, QMP4Playback::Status);
++    void analyzePipeline();
++    void finalize();
++    QString errorString();
++    QString infoString();
++    QString warningString();
++    void calculateFps();
++    qint64 duration();
++    qint64 position();
++    void setPosition(qint64 position);
++    void sendEOS();
++    QGstLaunch::MediaFormat searchMediaFormat(QString source);
++    QGstLaunch::MediaCodecs searchMediaCodecs(QString source, QGstLaunch::MediaFormat format);
++
++private:
++    QGstreamerGstLaunchSession *m_session;
++    // QMP4Playback::State m_currentState;
++    // QMP4Playback::Status m_currentStatus;
++};
++
++QT_END_NAMESPACE
++#endif //QGSTREAMERGSTLAUNCHCONTROL_H
+\ No newline at end of file
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.cpp b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.cpp
+new file mode 100644
+index 00000000..2bfd06f8
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.cpp
+@@ -0,0 +1,54 @@
++#include <QtCore/qvariant.h>
++#include <QtCore/qdebug.h>
++
++#include "qgstreamergstlaunchservice.h"
++#include "qgstreamergstlaunchcontrol.h"
++#include "qgstreamergstlaunchsession.h"
++
++
++#include <private/qmediaplaylistnavigator_p.h>
++#include <qmediaplaylist.h>
++#include <private/qmediaresourceset_p.h>
++
++// #define DEBUG_GSTLAUNCH
++
++QT_BEGIN_NAMESPACE
++
++QGstreamerGstLaunchService::QGstreamerGstLaunchService(QObject *parent):
++     QMediaService(parent)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_session = new QGstreamerGstLaunchSession(this);
++    m_control = new QGstreamerGstLaunchControl(m_session, this);
++}
++
++QGstreamerGstLaunchService::~QGstreamerGstLaunchService()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++QMediaControl *QGstreamerGstLaunchService::requestControl(const char *name)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    if (qstrcmp(name, QGstLaunchControl_iid) == 0){
++        return m_control;
++    }
++
++    return 0;
++}
++
++void QGstreamerGstLaunchService::releaseControl(QMediaControl *control)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++}
++
++QT_END_NAMESPACE
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.h b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.h
+new file mode 100644
+index 00000000..315b516f
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchservice.h
+@@ -0,0 +1,30 @@
++#ifndef QGSTREAMERGSTLAUNCHSERVICE_H
++#define QGSTREAMERGSTLAUNCHSERVICE_H
++
++#include <QtCore/qobject.h>
++#include <QtCore/qiodevice.h>
++
++#include <qmediaservice.h>
++
++QT_BEGIN_NAMESPACE
++class QGstreamerGstLaunchControl;
++class QGstreamerGstLaunchSession;
++
++class QGstreamerGstLaunchService : public QMediaService
++{
++    Q_OBJECT
++public:
++    QGstreamerGstLaunchService(QObject *parent = 0);
++    ~QGstreamerGstLaunchService();
++
++    QMediaControl *requestControl(const char *name);
++    void releaseControl(QMediaControl *control);
++
++private:
++    QGstreamerGstLaunchControl *m_control;
++    QGstreamerGstLaunchSession *m_session;
++};
++
++QT_END_NAMESPACE
++
++#endif //QGSTREAMERGSTLAUNCHSERVICE_H
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.cpp b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.cpp
+new file mode 100644
+index 00000000..99ee2540
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.cpp
+@@ -0,0 +1,32 @@
++#include <QtCore/qstring.h>
++#include <QtCore/qdebug.h>
++#include <QtCore/QDir>
++#include <QtCore/QDebug>
++
++#include "qgstreamergstlaunchserviceplugin.h"
++#include "qgstreamergstlaunchservice.h"
++#include <private/qgstutils_p.h>
++
++// #define DEBUG_GSTLAUNCH
++
++QMediaService* QGstreamerGstLaunchServicePlugin::create(const QString &key)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    QGstUtils::initializeGst();
++
++    if (key == QLatin1String(Q_MEDIASERVICE_GSTLAUNCH))
++        return new QGstreamerGstLaunchService;
++
++    qWarning() << "Gstreamer service plugin: unsupported key:" << key;
++    return 0;
++}
++
++void QGstreamerGstLaunchServicePlugin::release(QMediaService *service)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    delete service;
++}
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.h b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.h
+new file mode 100644
+index 00000000..4e0d8707
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchserviceplugin.h
+@@ -0,0 +1,26 @@
++#ifndef QGSTREAMERGSTLAUNCHSERVICEPLUGIN_H
++#define QGSTREAMERGSTLAUNCHSERVICEPLUGIN_H
++
++#include <qmediaserviceproviderplugin.h>
++#include <QtCore/qset.h>
++#include <QtCore/QObject>
++
++QT_BEGIN_NAMESPACE
++
++
++class QGstreamerGstLaunchServicePlugin
++    : public QMediaServiceProviderPlugin
++{
++    Q_OBJECT
++    Q_PLUGIN_METADATA(IID "org.qt-project.qt.mediaserviceproviderfactory/5.0" FILE "gstlaunch.json")
++public:
++    QMediaService* create(QString const& key);
++    void release(QMediaService *service);
++
++private:
++};
++
++QT_END_NAMESPACE
++
++#endif // QGSTREAMERGSTLAUNCHSERVICEPLUGIN_H
++
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp
+new file mode 100644
+index 00000000..1a4dd399
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp
+@@ -0,0 +1,944 @@
++#include <sys/types.h>
++#include <sys/wait.h>
++#include <unistd.h>
++#include <stdio.h>
++#include "qgstreamergstlaunchsession.h"
++#include <private/qgstreamerbushelper_p.h>
++
++// #define DEBUG_GSTLAUNCH
++QT_BEGIN_NAMESPACE
++
++static gboolean
++idle_exit_loop (gpointer data)
++{
++  g_main_loop_quit ((GMainLoop *) data);
++
++  /* once */
++  return FALSE;
++}
++
++static void
++on_pad_added (GstElement *,
++              GstPad     *pad,
++              gpointer    data)
++{
++	GstPad *sinkpad;
++	GstElement *decoder	 = (GstElement *) data;
++
++	sinkpad = gst_element_get_static_pad (decoder, "sink");
++
++	gst_pad_link (pad, sinkpad);
++
++	gst_object_unref (sinkpad);
++}
++
++static gboolean
++bus_call (GstBus     *,
++          GstMessage *msg,
++          gpointer    data)
++{
++  QGstreamerGstLaunchSession* session = reinterpret_cast<QGstreamerGstLaunchSession*>(data);
++	GMainLoop *loop = session->getGMainLoop();
++
++	switch (GST_MESSAGE_TYPE (msg)) {
++
++    case GST_MESSAGE_ERROR:
++		gchar  *debug;
++		GError *error;
++
++		gst_message_parse_error (msg, &error, &debug);
++		g_free (debug);
++
++		qDebug() <<error->message;
++		g_error_free (error);
++
++        session->setMediaCodecs(NULL, NULL);
++        g_idle_add (idle_exit_loop, loop);
++    default:
++		break;
++  }
++
++  return TRUE;
++}
++
++static void cb_formatfound (GstElement *typefind,
++                          guint probability,
++                          GstCaps    *caps,
++                          gpointer    data)
++{
++  QGstreamerGstLaunchSession* session = reinterpret_cast<QGstreamerGstLaunchSession*>(data);
++  GMainLoop *loop = session->getGMainLoop();
++  gchar *type;
++
++  type = gst_caps_to_string (caps);
++  // g_print ("Media type %s found, probability %d%%\n", type, probability);
++  session->setMediaFormat(type);
++  g_free (type);
++
++  /* since we connect to a signal in the pipeline thread context, we need
++   * to set an idle handler to exit the main loop in the mainloop context.
++   * Normally, your app should not need to worry about such things. */
++  g_idle_add (idle_exit_loop, loop);
++}
++
++static void cb_codecsfound (GstElement *typefind,
++                          guint probability,
++                          GstCaps    *caps,
++                          gpointer    data)
++{
++  GstPad *viPad, *auPad;
++  GstCaps *viCap, *auCap;
++  const GstStructure *vistructure, *austructure;
++  const gchar *viformat, *auformat;
++  GstElement* demuxer;
++
++  QGstreamerGstLaunchSession* session = reinterpret_cast<QGstreamerGstLaunchSession*>(data);
++  GMainLoop *loop = session->getGMainLoop();
++  demuxer = session->getInternalDemuxer();
++
++  //Get video&audio pad
++  viPad = gst_element_get_static_pad (demuxer, "video_0");
++  auPad = gst_element_get_static_pad (demuxer, "audio_0");
++
++  if(viPad && auPad){ //contains Video and Audio
++      //get video codecs
++      viCap = gst_pad_get_current_caps (viPad);
++      vistructure = gst_caps_get_structure (viCap, 0);
++      viformat = gst_structure_get_name (vistructure);
++      // g_print("Video Format is %s\n", viformat);
++
++      //get audio codecs
++      auCap = gst_pad_get_current_caps (auPad);
++      austructure = gst_caps_get_structure (auCap, 0);
++      auformat = gst_structure_get_name (austructure);
++      // g_print("Audio Format is %s\n", auformat);
++
++      session->setMediaCodecs((char*)viformat, (char*)auformat);
++  }else if(viPad){ //contains Video only
++      //get video codecs
++      viCap = gst_pad_get_current_caps (viPad);
++      vistructure = gst_caps_get_structure (viCap, 0);
++      viformat = gst_structure_get_name (vistructure);
++      // g_print("Video Format is %s\n", viformat);
++      session->setMediaCodecs((char*)viformat, NULL);
++  }else if(auPad){ //contains Audio only
++      //get audio codecs
++      auCap = gst_pad_get_current_caps (auPad);
++      austructure = gst_caps_get_structure (auCap, 0);
++      auformat = gst_structure_get_name (austructure);
++      // g_print("Audio Format is %s\n", auformat);
++      session->setMediaCodecs(NULL, (char*)auformat);
++  }
++
++  g_idle_add (idle_exit_loop, loop);
++}
++
++static GstPadProbeReturn cb_have_data_sink (GstPad  *pad,
++    GstPadProbeInfo *info, gpointer   u_data)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << "++++++++++cb_have_data_sink++++++++++++";
++#endif
++    QGstreamerGstLaunchSession* session = reinterpret_cast<QGstreamerGstLaunchSession*>(u_data);
++    session->increaseFrames();
++    // return TRUE;
++}
++
++QGstreamerGstLaunchSession::QGstreamerGstLaunchSession(QObject *parent)
++    :QObject(parent),
++    m_currenterror(QGstLaunch::NoError)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++QGstreamerGstLaunchSession::~QGstreamerGstLaunchSession()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    // sendEOS();
++    finalize();
++}
++
++/*========================================================
++                Messages processing
++========================================================*/
++bool QGstreamerGstLaunchSession::processBusMessage(const QGstreamerMessage &message)
++{
++// #ifdef DEBUG_GSTLAUNCH
++    // qDebug() << Q_FUNC_INFO;
++// #endif
++    GstMessage* gm = message.rawMessage();
++    if (gm) {
++        if (GST_MESSAGE_SRC(gm) == GST_OBJECT_CAST(m_pipeline)) {
++            switch (GST_MESSAGE_TYPE(gm))  {
++                case GST_MESSAGE_STATE_CHANGED:
++                {
++
++                    GstState    oldState;
++                    GstState    newState;
++                    GstState    pending;
++
++                    gst_message_parse_state_changed(gm, &oldState, &newState, &pending);
++
++                    switch (newState) {
++                    case GST_STATE_VOID_PENDING:
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_NULL";
++#endif
++                        m_currentstate = QGstLaunch::QTGST_STATE_VOID_PENDING;
++                        break;
++                    case GST_STATE_NULL:
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_NULL";
++#endif
++                        m_currentstate = QGstLaunch::QTGST_STATE_NULL;
++                        break;
++                    case GST_STATE_READY:
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_READY";
++#endif
++                        m_currentstate = QGstLaunch::QTGST_STATE_READY;
++                        break;
++                    case GST_STATE_PAUSED:
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_PAUSED";
++#endif
++                        m_currentstate = QGstLaunch::QTGST_STATE_PAUSED;
++                        break;
++                    case GST_STATE_PLAYING:
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_STATE_PLAYING";
++#endif
++                        GstFormat format = GST_FORMAT_TIME;
++                        gint64 gstDuration = 0;
++                        int duration = -1;
++                        if (m_pipeline && gst_element_query_duration(m_pipeline, format, &gstDuration)){
++                            m_duration = gstDuration / 1000000;
++                        }
++                        m_currentstate = QGstLaunch::QTGST_STATE_PLAYING;
++                        break;
++                    }
++                    m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_STATE_CHANGED;
++
++                    emit signal_sessionQtgStateChanged();
++                    break;
++                }
++
++                case GST_MESSAGE_EOS:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_EOS";
++#endif
++                    m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_EOS;
++                    break;
++                }
++
++
++            }
++            // emit signal_sessionQtgMessageTypeChanged();
++        }
++
++        switch (GST_MESSAGE_TYPE(gm))  {
++            case GST_MESSAGE_UNKNOWN:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_UNKNOWN";
++#endif
++                m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_UNKNOWN;
++                break;
++            }
++            case GST_MESSAGE_ERROR:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_ERROR";
++#endif
++                m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_ERROR;
++                GError *err = NULL;
++                gchar *name, *debug = NULL;
++                name = gst_object_get_path_string (gm->src);
++                gst_message_parse_error (gm, &err, &debug);
++
++                m_currenterror = QGstLaunch::PluginError;
++                m_errorstring = "ERROR: from element ";
++                m_errorstring += name;
++                m_errorstring += ": ";
++                m_errorstring += GST_STR_NULL (err->message);
++                if(debug != NULL){
++                    m_errorstring += "Additional debug info:\n";
++                    m_errorstring += debug;
++                }
++
++                g_error_free (err);
++                g_free (debug);
++                g_free (name);
++                emit signal_sessionErrorChanged();
++                break;
++            }
++            case GST_MESSAGE_INFO:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_INFO";
++#endif
++                m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_INFO;
++                GError *gerror;
++                gchar *debug;
++                gchar *name = gst_object_get_path_string (GST_MESSAGE_SRC (gm));
++                gst_message_parse_info (gm, &gerror, &debug);
++
++                m_infostring = debug;
++                g_error_free (gerror);
++                g_free (debug);
++                g_free (name);
++                break;
++            }
++            case GST_MESSAGE_WARNING:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_WARNING";
++#endif
++                m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_WARNING;
++                GError *gerror;
++                gchar *debug;
++                gchar *name = gst_object_get_path_string (GST_MESSAGE_SRC (gm));
++                gst_message_parse_warning (gm, &gerror, &debug);
++
++                m_warningstring = "WARNING: from element ";
++                m_warningstring += name;
++                m_warningstring += ": ";
++                m_warningstring += gerror->message;
++                m_warningstring += "\nAdditional debug info:\n";
++                m_warningstring += debug;
++                g_error_free (gerror);
++                g_free (debug);
++                g_free (name);
++                break;
++            }
++            case GST_MESSAGE_TAG:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_TAG";
++#endif
++                m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_TAG;
++                break;
++            }
++            case GST_MESSAGE_ASYNC_START:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_ASYNC_START";
++#endif
++                m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_ASYNC_START;
++                break;
++            }
++            case GST_MESSAGE_ASYNC_DONE:{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << "Change to GST_MESSAGE_ASYNC_DONE";
++#endif
++                m_currentmessagetype = QGstLaunch::QTGST_MESSAGE_ASYNC_DONE;
++                break;
++            }
++        }
++
++        emit signal_sessionQtgMessageTypeChanged();
++    }
++
++    return true;
++}
++
++
++/*========================================================
++                Properties processing
++========================================================*/
++QString QGstreamerGstLaunchSession::pipeline() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_stringpipeline;
++}
++
++void QGstreamerGstLaunchSession::setPipeline(QString pipeline)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_stringpipeline = pipeline;
++
++}
++
++QGstLaunch::QtGstState QGstreamerGstLaunchSession::qtGstState() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_currentstate;
++}
++
++void QGstreamerGstLaunchSession::setQtGstState(QGstLaunch::QtGstState qtgstate)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    GstStateChangeReturn ret;
++
++    switch (qtgstate){
++        case QGstLaunch::QTGST_STATE_VOID_PENDING:
++        {
++            ret = gst_element_set_state (m_pipeline, GST_STATE_VOID_PENDING);
++            break;
++        }
++        case QGstLaunch::QTGST_STATE_NULL:
++        {
++            ret = gst_element_set_state (m_pipeline, GST_STATE_NULL);
++            break;
++        }
++        case QGstLaunch::QTGST_STATE_READY:
++        {
++            ret = gst_element_set_state (m_pipeline, GST_STATE_READY);
++            break;
++        }
++        case QGstLaunch::QTGST_STATE_PAUSED:
++        {
++            ret = gst_element_set_state (m_pipeline, GST_STATE_PAUSED);
++            break;
++        }
++        case QGstLaunch::QTGST_STATE_PLAYING:
++        {
++            ret = gst_element_set_state (m_pipeline, GST_STATE_PLAYING);
++            break;
++        }
++    }
++
++    switch (ret) {
++        case GST_STATE_CHANGE_FAILURE:
++        {
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << "GST_STATE_CHANGE_FAILURE";
++#endif
++            m_currentstatechangereturn = QGstLaunch::QTGST_STATE_CHANGE_FAILURE;
++            break;
++        }
++        case GST_STATE_CHANGE_NO_PREROLL:
++        {
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << "GST_STATE_CHANGE_NO_PREROLL";
++#endif
++            m_currentstatechangereturn = QGstLaunch::QTGST_STATE_CHANGE_NO_PREROLL;
++            break;
++        }
++        case GST_STATE_CHANGE_ASYNC:
++        {
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << "GST_STATE_CHANGE_ASYNC";
++#endif
++            m_currentstatechangereturn = QGstLaunch::QTGST_STATE_CHANGE_ASYNC;
++            break;
++        }
++        case GST_STATE_CHANGE_SUCCESS:
++        {
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << "GST_STATE_CHANGE_SUCCESS";
++#endif
++            m_currentstatechangereturn = QGstLaunch::QTGST_STATE_CHANGE_SUCCESS;
++
++
++            break;
++        }
++    }
++    emit signal_sessionQtgStateChangeReturnChanged();
++}
++
++QGstLaunch::QtGstStateChange QGstreamerGstLaunchSession::qtGstStateChange() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_currentstatechange;
++}
++
++QGstLaunch::QtGstStateChangeReturn QGstreamerGstLaunchSession::qtGstStateChangeReturn() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_currentstatechangereturn;
++}
++
++QGstLaunch::QtGstMessageType QGstreamerGstLaunchSession::qtGstMessageType() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_currentmessagetype;
++}
++
++QGstLaunch::Error QGstreamerGstLaunchSession::error() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_currenterror;
++}
++
++qint64 QGstreamerGstLaunchSession::fps() const
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_framesinsec;
++}
++
++/*========================================================
++                    Slots processing
++========================================================*/
++void QGstreamerGstLaunchSession::componentComplete()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++}
++
++void QGstreamerGstLaunchSession::analyzePipeline()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    char* temp_pipeline[1024];
++
++    QStringList temp = m_stringpipeline.split(" ", QString::SkipEmptyParts);
++
++    m_separatepipeline = g_new0 (char *, temp.length());
++    m_numofitems = temp.length();
++    for(int xi = 0; xi < temp.length(); xi ++)
++    {
++        temp_pipeline[xi] = (char *) malloc(temp.at(xi).length()+1);
++        strcpy(temp_pipeline[xi], temp.at(xi).toLocal8Bit().constData());
++
++    }
++    memcpy (m_separatepipeline, temp_pipeline, sizeof (char *) * (m_numofitems));
++
++    optionParsing();
++    if(m_currenterror != QGstLaunch::NoError) //Error when parsing options
++        return;
++
++    pipelineParsing();
++    if(m_currenterror != QGstLaunch::NoError) //Error when parsing plugins
++        return;
++    m_bus = gst_element_get_bus(m_pipeline);
++    m_busHelper = new QGstreamerBusHelper(m_bus, this);
++    m_busHelper->installMessageFilter(this);
++
++    m_count = 0;
++    m_past_count = 0;
++    m_framesinsec = 0;
++}
++
++void QGstreamerGstLaunchSession::finalize()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    if (m_pipeline) {
++        gst_object_unref(GST_OBJECT(m_bus));
++        gst_object_unref(GST_OBJECT(m_pipeline));
++        delete m_busHelper;
++    }
++}
++
++QString QGstreamerGstLaunchSession::errorString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_errorstring;
++}
++
++QString QGstreamerGstLaunchSession::infoString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_infostring;
++}
++
++QString QGstreamerGstLaunchSession::warningString()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_warningstring;
++}
++
++void QGstreamerGstLaunchSession::increaseFrames()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_count++;
++}
++
++void QGstreamerGstLaunchSession::calculateFps()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    m_framesinsec = m_count-m_past_count;
++    m_past_count = m_count;
++
++}
++
++qint64 QGstreamerGstLaunchSession::duration()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_duration;
++}
++
++qint64 QGstreamerGstLaunchSession::position()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    GstFormat   format = GST_FORMAT_TIME;
++    gint64      position = 0;
++
++    if( m_pipeline && gst_element_query_position(m_pipeline, format, &position))
++        m_lastPosition = position / 1000000;
++    return m_lastPosition;
++}
++
++void QGstreamerGstLaunchSession::seek(qint64 position)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO << position;
++#endif
++    position = qMax(position,qint64(0));
++    gint64 newposition = position * 1000000;
++
++    gst_element_seek( m_pipeline,
++                            1.0,
++                            GST_FORMAT_TIME,
++                            GstSeekFlags(GST_SEEK_FLAG_FLUSH),
++                            GST_SEEK_TYPE_SET,
++                            newposition,
++                            GST_SEEK_TYPE_NONE,
++                            0);
++}
++
++void QGstreamerGstLaunchSession::sendEOS()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    if (eos_on_shutdown) {
++        qDebug() << "send EOS";
++        gst_element_send_event (m_pipeline, gst_event_new_eos ());
++    }
++}
++
++QGstLaunch::MediaFormat QGstreamerGstLaunchSession::searchMediaFormat(QString source)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    GstElement *pipeline, *filesrc, *typefind, *fakesink;
++    GstBus *bus;
++
++    m_mediaFormat = QGstLaunch::UnSupportFormat;
++
++    m_loop = g_main_loop_new (NULL, FALSE);
++
++    /* create a new pipeline to hold the elements */
++    pipeline = gst_pipeline_new ("pipe");
++    bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
++    gst_bus_add_watch (bus, bus_call, this);
++    gst_object_unref (bus);
++
++    /* create file source and typefind element */
++    filesrc = gst_element_factory_make ("filesrc", "source");
++    QString tempSource = source.right(source.length() - 7);
++    g_object_set (G_OBJECT (filesrc), "location", tempSource.toLocal8Bit().constData(), NULL);
++    typefind = gst_element_factory_make ("typefind", "typefinder");
++    g_signal_connect (typefind, "have-type", G_CALLBACK (cb_formatfound), this);
++    fakesink = gst_element_factory_make ("fakesink", "sink");
++
++    /* setup */
++    gst_bin_add_many (GST_BIN (pipeline), filesrc, typefind, fakesink, NULL);
++    gst_element_link_many (filesrc, typefind, fakesink, NULL);
++    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
++    g_main_loop_run (m_loop);
++
++    /* unset */
++    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
++    gst_object_unref (GST_OBJECT (pipeline));
++
++    return m_mediaFormat;
++}
++
++QGstLaunch::MediaCodecs QGstreamerGstLaunchSession::searchMediaCodecs(QString source, QGstLaunch::MediaFormat format)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    GstElement *pipeline, *filesrc, *typefind, *fakesink;
++    GstBus *bus;
++
++    m_loop = g_main_loop_new (NULL, FALSE);
++
++    /* create a new pipeline to hold the elements */
++    pipeline = gst_pipeline_new ("pipe");
++    bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
++    gst_bus_add_watch (bus, bus_call, this);
++    gst_object_unref (bus);
++
++    /* create file source and typefind element */
++    filesrc = gst_element_factory_make ("filesrc", "source");
++    QString tempSource = source.right(source.length() - 7);
++    g_object_set (G_OBJECT (filesrc), "location", tempSource.toLocal8Bit().constData(), NULL);
++    typefind = gst_element_factory_make ("typefind", "typefinder");
++    g_signal_connect (typefind, "have-type", G_CALLBACK (cb_codecsfound), this);
++    fakesink = gst_element_factory_make ("fakesink", "sink");
++
++    switch(format)
++    {
++      case QGstLaunch::MP4: //MP4 container
++      case QGstLaunch::X3GP: //3GP container
++      case QGstLaunch::M4A: //3GP container
++        m_iDemuxer = gst_element_factory_make("qtdemux", NULL);
++        break;
++      default:
++        break;
++    }
++
++    /* setup */
++    gst_bin_add_many (GST_BIN (pipeline), filesrc, m_iDemuxer, typefind, fakesink, NULL);
++    gst_element_link (filesrc, m_iDemuxer);
++    gst_element_link_many (typefind, fakesink, NULL);
++    g_signal_connect (m_iDemuxer, "pad-added", G_CALLBACK (on_pad_added), typefind);
++
++    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
++    g_main_loop_run (m_loop);
++
++    /* unset */
++    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
++    gst_object_unref (GST_OBJECT (pipeline));
++
++    return m_mediaCodecs;
++}
++
++GMainLoop* QGstreamerGstLaunchSession::getGMainLoop()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_loop;
++}
++
++GstElement* QGstreamerGstLaunchSession::getInternalDemuxer()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    return m_iDemuxer;
++}
++
++void QGstreamerGstLaunchSession::setMediaFormat(char* format)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    QString temp(format);
++    if(temp.contains("video/quicktime")){ // MP4
++        m_mediaFormat = QGstLaunch::MP4;
++    }else if(temp.contains("video/x-h264")){ // H264 ES
++        m_mediaFormat = QGstLaunch::H264ES;
++    }else if(temp.contains("application/x-3gp")) //3GP
++    {
++        m_mediaFormat = QGstLaunch::X3GP;
++    }else if(temp.contains("application/x-m4a")) //M4A
++    {
++        m_mediaFormat = QGstLaunch::M4A;
++    }else if(temp.contains("audio/mpeg")) //MPEG
++    {
++        m_mediaFormat = QGstLaunch::A_MPEGES;
++    }
++    else{ // Others
++        m_mediaFormat = QGstLaunch::UnSupportFormat;
++    }
++}
++
++void QGstreamerGstLaunchSession::setMediaCodecs(char* videocodecs, char* audiocodecs)
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++
++    if(videocodecs && audiocodecs){ //contains Video and Audio
++        QString temp_video(videocodecs);
++        QString temp_audio(audiocodecs);
++        if(temp_video.contains("video/x-h264")){ //H264
++            if(temp_audio.contains("audio/mpeg")){ //MPEG
++                m_mediaCodecs = QGstLaunch::V_H264_A_MPEG;
++            }
++        }else{
++            m_mediaCodecs = QGstLaunch::UnSupportCodecs;
++        }
++    }else if(videocodecs){ //contains Video only
++        QString temp_video(videocodecs);
++        if(temp_video.contains("video/x-h264")){ //H264
++            m_mediaCodecs = QGstLaunch::V_H264;
++        }else{
++            m_mediaCodecs = QGstLaunch::UnSupportCodecs;
++        }
++    }else if(audiocodecs){ //contains Audio only
++        QString temp_audio(audiocodecs);
++        if(temp_audio.contains("audio/mpeg")){ //MPEG
++            m_mediaCodecs = QGstLaunch::A_MPEG;
++        }else{
++            m_mediaCodecs = QGstLaunch::UnSupportCodecs;
++        }
++    }else{
++        m_mediaCodecs = QGstLaunch::CodecsError;
++    }
++}
++
++void QGstreamerGstLaunchSession::optionParsing()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    GOptionContext *ctx;
++    GError *err = NULL;
++    GOptionEntry options[] = {
++        {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
++            N_("Output tags (also known as metadata)"), NULL},
++        {"toc", 'c', 0, G_OPTION_ARG_NONE, &toc,
++            N_("Output TOC (chapters and editions)"), NULL},
++        {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
++            N_("Output status information and property notifications"), NULL},
++        {"quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet,
++            N_("Do not print any progress information"), NULL},
++        {"messages", 'm', 0, G_OPTION_ARG_NONE, &messages,
++            N_("Output messages"), NULL},
++        {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
++            N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
++        {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
++            N_("Do not install a fault handler"), NULL},
++        {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
++            N_("Force EOS on sources before shutting the pipeline down"), NULL},
++        {"padprobe", 'p', 0, G_OPTION_ARG_STRING, &element_pad,
++            N_("Instrumentation metrics for calculating frames per second"), NULL},
++        {"timer", 'r', 0, G_OPTION_ARG_NONE, &timer,
++            N_("Display FPS timer every second"), NULL},
++        {NULL}
++    };
++    ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
++    g_option_context_add_main_entries (ctx, options, "gstreamer-1.0");
++    g_option_context_add_group (ctx, gst_init_get_option_group ());
++    if (!g_option_context_parse (ctx, &m_numofitems, &m_separatepipeline, &err)) {
++        if (err){
++            m_currenterror = QGstLaunch::OptionError;
++            m_errorstring = GST_STR_NULL (err->message);
++
++            emit signal_sessionErrorChanged();
++        }else{
++            qDebug() << "Error initializing: Unknown error!";
++        }
++    }
++    g_option_context_free (ctx);
++
++    if (verbose) {
++        qDebug() << "Supports display debug log";
++    }
++
++    if (eos_on_shutdown) {
++        qDebug() << "Supports eos_on_shutdown";
++    }
++
++}
++
++void QGstreamerGstLaunchSession::pipelineParsing()
++{
++#ifdef DEBUG_GSTLAUNCH
++    qDebug() << Q_FUNC_INFO;
++#endif
++    GError *error = NULL;
++    gchar **argvn;
++
++    /* make a null-terminated version of m_separatepipeline */
++    argvn = g_new0 (char *, m_numofitems);
++    memcpy (argvn, m_separatepipeline + 1, sizeof (char *) * (m_numofitems - 1));
++    m_pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &error);
++    g_free (argvn);
++    if (!m_pipeline) {
++        if (error) {
++            m_currenterror = QGstLaunch::PipelineError;
++            m_errorstring = GST_STR_NULL (error->message);
++            g_error_free (error);
++            emit signal_sessionErrorChanged();
++
++        }
++    } else if (error) {
++        m_currenterror = QGstLaunch::PipelineError;
++        m_errorstring = GST_STR_NULL (error->message);
++        g_error_free (error);
++        emit signal_sessionErrorChanged();
++
++    }
++
++    if (element_pad)
++    {
++        qDebug() << "Supports measuring FPS...";
++        char e_name[50], e_pad[30];
++        GstElement *element = NULL;
++        GstPad *pad;
++        char *pch;
++        int l1, l2;
++
++        pch = strchr (element_pad, ':');
++        if (pch != NULL)
++            strncpy (e_name, element_pad, pch-element_pad + 1);
++        else{
++
++            m_currenterror = QGstLaunch::OptionError;
++            m_errorstring = "Couldn't find character ':'; -padprobe discarded.";
++            emit signal_sessionErrorChanged();
++
++        }
++
++        e_name[pch-element_pad] = '\0';
++        strcpy (e_pad, pch+1);
++        l1 = strlen (e_name);
++        l2 = strlen (e_pad);
++
++        element = gst_bin_get_by_name (GST_BIN (m_pipeline), e_name);
++        if (element == NULL) {
++            m_currenterror = QGstLaunch::OptionError;
++            m_errorstring = "Couldn't find element ";
++            m_errorstring += e_name;
++            m_errorstring += "; -padprobe discarded.";
++            emit signal_sessionErrorChanged();
++        }
++        else
++        {
++            pad = gst_element_get_static_pad (element, e_pad);
++            if (pad == NULL) {
++                m_currenterror = QGstLaunch::OptionError;
++                m_errorstring = "Couldn't find pad ";
++                m_errorstring += e_pad;
++                m_errorstring += "; -padprobe discarded.";
++                emit signal_sessionErrorChanged();
++            } else
++                gst_pad_add_probe (pad, (GstPadProbeType)(GST_PAD_PROBE_TYPE_BUFFER), cb_have_data_sink, this, NULL);
++            gst_object_unref (element);
++        }
++        /* TI change */
++    }
++
++    if (verbose) {
++        gchar **exclude_list =
++        exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
++        deep_notify_id = g_signal_connect (m_pipeline, "deep-notify",
++        G_CALLBACK (gst_object_default_deep_notify), exclude_list);
++    }
++}
++
++QT_END_NAMESPACE
+\ No newline at end of file
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.h b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.h
+new file mode 100644
+index 00000000..c57b65ff
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.h
+@@ -0,0 +1,127 @@
++#ifndef QGSTREAMERGSTLAUNCHSESSION_H
++#define QGSTREAMERGSTLAUNCHSESSION_H
++
++#include <QObject>
++#include <QtCore/qmutex.h>
++#include <QtNetwork/qnetworkrequest.h>
++#include "qgstreamergstlaunchcontrol.h"
++#include <private/qgstreamerbushelper_p.h>
++#include <qmediastreamscontrol.h>
++#include <qaudioformat.h>
++#include <gst/gst.h>
++
++#define _(String) String
++#define N_(String) String
++
++QT_BEGIN_NAMESPACE
++class QGstreamerBusHelper;
++class QGstreamerMessage;
++
++class QGstreamerGstLaunchSession : public QObject, public QGstreamerBusMessageFilter
++{
++Q_OBJECT
++Q_INTERFACES(QGstreamerBusMessageFilter)
++public:
++    QGstreamerGstLaunchSession(QObject *parent);
++    virtual ~QGstreamerGstLaunchSession();
++
++    bool processBusMessage(const QGstreamerMessage &message);
++    QGstreamerBusHelper *bus() const { return m_busHelper; }
++
++    void componentComplete();
++
++    QString pipeline() const;
++    void setPipeline(QString pipeline);
++    QGstLaunch::QtGstState qtGstState() const;
++    void setQtGstState(QGstLaunch::QtGstState qtgstate);
++    QGstLaunch::QtGstStateChange qtGstStateChange() const;
++    QGstLaunch::QtGstStateChangeReturn qtGstStateChangeReturn() const;
++    QGstLaunch::QtGstMessageType qtGstMessageType() const;
++    QGstLaunch::Error error() const;
++    qint64 fps() const;
++
++public slots:
++    void analyzePipeline();
++    void finalize();
++    QString errorString();
++    QString infoString();
++    QString warningString();
++    void increaseFrames(); //increase 1 frame when this function is called
++    void calculateFps();
++    qint64 duration();
++    qint64 position();
++    void seek(qint64 position);
++    void sendEOS();
++
++    GMainLoop* getGMainLoop();
++    GstElement *getInternalDemuxer();
++
++    QGstLaunch::MediaFormat searchMediaFormat(QString source);
++    void setMediaFormat(char* format);
++
++    QGstLaunch::MediaCodecs searchMediaCodecs(QString source, QGstLaunch::MediaFormat format);
++    void setMediaCodecs(char* videocodecs, char* audiocodecs);
++
++private slots:
++    void optionParsing();
++    void pipelineParsing();
++
++signals:
++    void signal_sessionQtgStateChanged();
++    void signal_sessionQtgStateChangeChanged();
++    void signal_sessionQtgStateChangeReturnChanged();
++    void signal_sessionQtgMessageTypeChanged();
++    void signal_sessionErrorChanged();
++    void signal_sessionFpsChanged();
++
++private:
++    GstBus* m_bus;
++    QGstreamerBusHelper* m_busHelper;
++    QGstLaunch::QtGstState m_currentstate;
++    QGstLaunch::QtGstStateChange m_currentstatechange;
++    QGstLaunch::QtGstStateChangeReturn m_currentstatechangereturn;
++    QGstLaunch::QtGstMessageType m_currentmessagetype;
++    QGstLaunch::Error m_currenterror;
++
++    QString m_errorstring;
++    QString m_infostring;
++    QString m_warningstring;
++
++    gboolean tags = FALSE;
++    gboolean toc = FALSE;
++    gboolean verbose = FALSE;
++    gboolean quiet = FALSE;
++    gboolean messages = FALSE;
++    gchar *exclude_args = NULL;
++    gboolean no_fault = FALSE;
++    gboolean eos_on_shutdown = FALSE;
++    gulong deep_notify_id = 0;
++    gchar *element_pad = NULL;
++    gboolean        timer = FALSE;
++
++    //for measuring FPS
++    long m_count=0;
++    long m_past_count=0;
++    long m_framesinsec=0;
++
++    //for get duration
++    qint64 m_duration;
++    qint64 m_lastPosition;
++
++    QString m_stringpipeline;
++    int m_numofitems;
++
++    char** m_separatepipeline;
++
++    GstElement *m_pipeline;
++
++    //for checking format/codecs
++    GMainLoop *m_loop;
++    QGstLaunch::MediaFormat m_mediaFormat;
++    QGstLaunch::MediaCodecs m_mediaCodecs;
++    GstElement *m_iDemuxer;
++};
++
++QT_END_NAMESPACE
++
++#endif //QGSTREAMERGSTLAUNCHSESSION_H
+\ No newline at end of file
+diff --git a/src/plugins/gstreamer/gstlaunch/tools.h b/src/plugins/gstreamer/gstlaunch/tools.h
+new file mode 100644
+index 00000000..015779cf
+--- /dev/null
++++ b/src/plugins/gstreamer/gstlaunch/tools.h
+@@ -0,0 +1,60 @@
++/* GStreamer
++ * Copyright (C) 2005 Benjamin Otte <otte@gnome.org>
++ *
++ * tools.h: header for common stuff of all GStreamer tools
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++
++#ifndef __GST_TOOLS_H__
++#define __GST_TOOLS_H__
++
++#include <stdlib.h>
++
++#include <gst/gst.h>
++#include "gst-i18n-app.h"
++
++/*
++ * This is a kind of hacky way to make all the tools use the same version code.
++ * If anyone knows a less hacky way to get this done, feel free to implement it.
++ *
++ * It also includes all the files that all the tools require.
++ */
++
++static gboolean __gst_tools_version = FALSE;
++
++#define GST_TOOLS_GOPTION_VERSION \
++    { "version", 0, 0, G_OPTION_ARG_NONE, &__gst_tools_version, \
++      N_("Print version information and exit"), NULL }
++
++// static void
++// gst_tools_print_version (void)
++// {
++  // if (__gst_tools_version) {
++    // gchar *version_str;
++
++    // version_str = gst_version_string ();
++    // g_print ("%s version %d.%d.%d\n", g_get_prgname (),
++        // GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO);
++    // g_print ("%s\n", version_str);
++    // g_print ("%s\n", GST_PACKAGE_ORIGIN);
++    // g_free (version_str);
++    // exit (0);
++  // }
++// }
++
++#endif /* __GST_TOOLS_H__ */
+diff --git a/src/plugins/gstreamer/gstreamer.json b/src/plugins/gstreamer/gstreamer.json
+index 0656cce4..90758ed6 100644
+--- a/src/plugins/gstreamer/gstreamer.json
++++ b/src/plugins/gstreamer/gstreamer.json
+@@ -1,4 +1,4 @@
+ {
+     "Keys": ["gstreamer"],
+-    "Services": ["org.qt-project.qt.mediaplayer", "org.qt-project.qt.audiosource", "org.qt-project.qt.camera", "org.qt-project.qt.audiodecode"]
++    "Services": ["org.qt-project.qt.gstlaunch", "org.qt-project.qt.mediaplayer", "org.qt-project.qt.audiosource", "org.qt-project.qt.camera", "org.qt-project.qt.audiodecode"]
+ }
+diff --git a/src/plugins/gstreamer/gstreamer.pro b/src/plugins/gstreamer/gstreamer.pro
+index 5fb8f83c..52c8a737 100644
+--- a/src/plugins/gstreamer/gstreamer.pro
++++ b/src/plugins/gstreamer/gstreamer.pro
+@@ -4,7 +4,8 @@ SUBDIRS += \
+     audiodecoder \
+     camerabin \
+     mediaplayer \
+-    mediacapture
++    mediacapture \
++    gstlaunch
+ 
+ OTHER_FILES += \
+     gstreamer.json
+-- 
+2.17.1
+
