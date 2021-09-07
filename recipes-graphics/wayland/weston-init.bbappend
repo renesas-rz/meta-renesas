@@ -7,9 +7,9 @@ SRC_URI_append = " \
 "
 
 do_install_append() {
-	# Use own weston.init file
+	# Use own weston.ini file
 	install -d ${D}/${sysconfdir}/xdg/weston
-	install -m 0755 ${WORKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/weston.init
+	install -m 0755 ${WORKDIR}/weston.ini ${D}/${sysconfdir}/xdg/weston/weston.ini
 
         # Set XDG_RUNTIME_DIR to /run/user/$UID (e.g. run/user/0)
         install -d ${D}/${sysconfdir}/profile.d
