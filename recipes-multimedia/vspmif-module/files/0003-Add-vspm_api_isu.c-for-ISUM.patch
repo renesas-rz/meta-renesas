@@ -259,7 +259,7 @@ index 0000000..93d7200
 +
 +	/* set parameter */
 +	init_par.use_ch = VSPM_EMPTY_CH;
-+	init_par.mode = VSPM_MODE_OCCUPY;
++	init_par.mode = VSPM_MODE_MUTUAL;
 +	init_par.type = VSPM_TYPE_ISU_AUTO;
 +
 +	/* initialize VSP manager */
