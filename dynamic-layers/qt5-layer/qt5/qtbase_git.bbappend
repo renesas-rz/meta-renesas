@@ -61,3 +61,6 @@ PACKAGECONFIG_append += " sm linuxfb gles2"
 PACKAGECONFIG[nis] = ""
 
 INSANE_SKIP_qtbase-plugins = " file-rdeps"
+
+#Skip QA for patch-fuzz here because main layer meta-qt5 has patch that is not matched with source, also their source too.
+WARN_QA_remove = "patch-fuzz"

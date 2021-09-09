@@ -17,3 +17,6 @@ LIC_FILES_CHKSUM = " \
 
 # Solve issue build qtbase-native due to no exist "-no-nis" and "-no-gui" setting anymore.
 PACKAGECONFIG_CONFARGS_remove = "-no-nis -no-gui"
+
+#Skip QA for patch-fuzz here because main layer meta-qt5 has patch that is not matched with source, also their source too.
+WARN_QA_remove = "patch-fuzz"
