@@ -23,6 +23,7 @@ SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH}"
 SRC_URI_append = " \
 	file://0001-Add-ISU-to-vspmif.patch \
 	file://0002-Remove-width-height-in-isu_dst_t.patch \
+	file://0003-Correcting-variable-type.patch \
 "
 
 S = "${WORKDIR}/git"

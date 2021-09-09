@@ -1,0 +1,104 @@
+From 50b14d0c78dc43e6504a32a1168b77105a8896f6 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Thu, 9 Sep 2021 11:35:29 +0700
+Subject: [PATCH 3/3] Correcting variable type
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm_if-module/files/vspm_if/include/vspm_if.h | 49 +++++++++++---------------
+ 1 file changed, 21 insertions(+), 28 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/include/vspm_if.h b/vspm_if-module/files/vspm_if/include/vspm_if.h
+index 964b81f..1c0617b 100644
+--- a/vspm_if-module/files/vspm_if/include/vspm_if.h
++++ b/vspm_if-module/files/vspm_if/include/vspm_if.h
+@@ -375,13 +375,6 @@ struct compat_vsp_start_t {
+ };
+ 
+ /* ISU */
+-struct compat_isu_dl_t {
+-        unsigned int hard_addr;
+-        unsigned int virt_addr;
+-        unsigned short tbl_num;
+-        unsigned int mem_par;
+-};
+-
+ struct compat_isu_alpha_unit_t {
+         unsigned char asel;
+         unsigned char anum0;
+@@ -399,51 +392,51 @@ struct compat_isu_td_unit_t {
+ 
+ struct compat_isu_csc_t {
+         unsigned char           csc;
+-        unsigned int            offset[3][2];
+-        unsigned int            clip[3][2];
+-        unsigned int		k_matrix[3][3];
++        unsigned short          offset[3][2];
++        unsigned short          clip[3][2];
++        unsigned short          k_matrix[3][3];
+ };
+ 
+ struct compat_isu_src_t {
+-        unsigned int            addr;
+-        unsigned int            addr_c;
++        unsigned long           addr;
++        unsigned long           addr_c;
+         unsigned short          stride;
+         unsigned short          stride_c;
+         unsigned short          width;
+         unsigned short          height;
+-        unsigned short          format;
++        unsigned char           format;
+         unsigned char           swap;
+         unsigned int 		td;
+         unsigned int		alpha;
+         unsigned char           uv_conv;
+ };
+ struct compat_isu_dst_t {
+-        unsigned int            addr;
+-        unsigned int            addr_c;
++        unsigned long           addr;
++        unsigned long           addr_c;
+         unsigned short          stride;
+         unsigned short          stride_c;
+-        unsigned short          format;
++        unsigned char           format;
+         unsigned char           swap;
+-        unsigned char           csc;
++        unsigned int            csc;
+ 	unsigned int		alpha;
+ };
+ struct compat_isu_rs_t {
+-        unsigned int    start_x;
+-        unsigned int    start_y;
+-        unsigned int    tune_x;
+-        unsigned int    tune_y;
+-        unsigned int    crop_w;
+-        unsigned int    crop_h;
+-        unsigned char   pad_mode;
+-        unsigned int    pad_val;
+-        unsigned short  x_ratio;
+-        unsigned short  y_ratio;
++        unsigned short   start_x;
++        unsigned short   start_y;
++        unsigned short   tune_x;
++        unsigned short   tune_y;
++        unsigned short   crop_w;
++        unsigned short   crop_h;
++        unsigned char    pad_mode;
++        unsigned int     pad_val;
++        unsigned int     x_ratio;
++        unsigned int     y_ratio;
+ };
+ struct compat_isu_start_t {
+         unsigned int src_par;
+         unsigned int dst_par;
+         unsigned int rs_par;
+-        struct compat_isu_dl_t dl_par;
++        unsigned int dl_hard_addr;
+ };
+ 
+ /*FDP */
+-- 
+2.7.4
+

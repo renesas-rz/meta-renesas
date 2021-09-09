@@ -1,0 +1,152 @@
+From 65c94774343f6f542fa191e3088e9a8a672da596 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Thu, 9 Sep 2021 12:54:52 +0700
+Subject: [PATCH 8/8] Correcting variable type
+
+Correcting variable type following its size in HW manual
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_local.h | 38 +++++++++++++-------------
+ vspm-module/files/vspm/include/isu_drv.h       | 34 +++++++++++------------
+ 2 files changed, 36 insertions(+), 36 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_local.h b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+index a5a970b..c015071 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_local.h
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+@@ -116,12 +116,12 @@ Sets input/ouput, reduction ratio and color conversion coefficient
+ struct isu_rpf_info {
+ 	unsigned long addr;
+ 	unsigned long addr_c;
+-	unsigned int stride;
+-	unsigned int stride_c;
+-	unsigned int height;
+-	unsigned int width;
++	unsigned short stride;
++	unsigned short stride_c;
++	unsigned short height;
++	unsigned short width;
+ 	unsigned char format;
+-	unsigned int swap;	/* Data swap for input images */
++	unsigned char  swap;	/* Data swap for input images */
+ 	unsigned int rpf_alpha_val;
+ 	unsigned int src_td1;
+ 	unsigned int src_td2;
+@@ -130,13 +130,13 @@ struct isu_rpf_info {
+ 
+ /* Scaling factor information */
+ struct isu_rs_info {
+-	unsigned int start_x;
+-	unsigned int start_y;
+-	unsigned int tune_x;
+-	unsigned int tune_y;
+-	unsigned int crop_w;
+-	unsigned int crop_h;
+-	unsigned int pad_mode;
++	unsigned short start_x;
++	unsigned short start_y;
++	unsigned short tune_x;
++	unsigned short tune_y;
++	unsigned short crop_w;
++	unsigned short crop_h;
++	unsigned char pad_mode;
+ 	unsigned int pad_val;
+ 	unsigned int x_scale;
+ 	unsigned int y_scale;
+@@ -146,17 +146,17 @@ struct isu_rs_info {
+ struct isu_wpf_info {
+ 	unsigned long addr;
+ 	unsigned long addr_c;
+-	unsigned int stride;
+-	unsigned int stride_c;
++	unsigned short stride;
++	unsigned short stride_c;
+ 	unsigned char format;
+-	unsigned int swap;
++	unsigned char swap;
+ 	unsigned int alpha_asel1;
+ 	unsigned int alpha_asel2;
+ 	unsigned int alpha_val;
+-	unsigned int ccol;
+-	unsigned int k_matrix[3][3];
+-	unsigned int offset[3][2];
+-	unsigned int clip[3][2];
++	unsigned char ccol;
++	unsigned short k_matrix[3][3];
++	unsigned short offset[3][2];
++	unsigned short clip[3][2];
+ };
+ 
+ /* channel information structure */
+diff --git a/vspm-module/files/vspm/include/isu_drv.h b/vspm-module/files/vspm/include/isu_drv.h
+index 3aff50b..9a13d1c 100644
+--- a/vspm-module/files/vspm/include/isu_drv.h
++++ b/vspm-module/files/vspm/include/isu_drv.h
+@@ -178,18 +178,18 @@ struct isu_td_unit_t {
+ 
+ struct isu_csc_t {
+     unsigned char	csc;
+-    unsigned int	k_matrix[3][3];
+-    unsigned int	offset[3][2];
+-    unsigned int	clip[3][2];
++    unsigned short	k_matrix[3][3];
++    unsigned short	offset[3][2];
++    unsigned short	clip[3][2];
+ };
+ 
+ struct isu_src_t {
+     unsigned long	addr;
+     unsigned long	addr_c;
+-    unsigned int	stride;
+-    unsigned int	stride_c;
+-    unsigned int	width;
+-    unsigned int	height;
++    unsigned short	stride;
++    unsigned short	stride_c;
++    unsigned short	width;
++    unsigned short	height;
+     unsigned char	format ;
+     unsigned char	swap;
+     struct isu_td_unit_t	*td ;
+@@ -199,10 +199,10 @@ struct isu_src_t {
+ 
+ struct isu_dst_t {
+     unsigned long	addr;
+-    unsigned int	addr_c;
++    unsigned long	addr_c;
+     unsigned short	stride;
+     unsigned short	stride_c;
+-    unsigned short	format ;
++    unsigned char	format ;
+     unsigned char	swap;
+     struct isu_csc_t	*csc;
+     struct isu_alpha_unit_t *alpha ;
+@@ -211,16 +211,16 @@ struct isu_dst_t {
+ 
+ /* RS parameter */
+ struct isu_rs_t {
+-    unsigned int	start_x;
+-    unsigned int	start_y;
+-    unsigned int	tune_x;
+-    unsigned int	tune_y;
+-    unsigned int	crop_w;
+-    unsigned int	crop_h;
++    unsigned short	start_x;
++    unsigned short	start_y;
++    unsigned short	tune_x;
++    unsigned short	tune_y;
++    unsigned short	crop_w;
++    unsigned short	crop_h;
+     unsigned char       pad_mode;
+     unsigned int	pad_val;
+-    unsigned short	x_ratio ;
+-    unsigned short	y_ratio ;
++    unsigned int	x_ratio ;
++    unsigned int	y_ratio ;
+ };
+ 
+ 
+-- 
+2.7.4
+
