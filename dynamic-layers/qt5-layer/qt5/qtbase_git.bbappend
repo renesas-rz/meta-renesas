@@ -23,8 +23,8 @@ SRC_URI_append = " \
 # switch to GLES 2 support
 PACKAGECONFIG_GL = "${@bb.utils.contains('DISTRO_FEATURES', 'opengl', 'gles2', '', d)}"
 
-DEP = " mali-user-module ${@bb.utils.contains('DISTRO_FEATURES', 'opengl', 'mali-user-module', '', d)} \
-       mtdev libxkbcommon freetype fontconfig libinput libproxy"
+DEP = " mtdev libxkbcommon freetype fontconfig libinput libproxy"
+
 RDEPENDS_${PN} += "${DEP}"
 RDEPENDS_${PN}-plugins += "${DEP}"
 RDEPENDS_${PN}-examples += "${DEP}"
@@ -51,8 +51,6 @@ PACKAGECONFIG_CONFARGS_append += "\
 	-no-sse3 \
 	${CONF_ADD_WAYLAND} \
 "
-
-DEPENDS_append = " mali-user-module"
 
 # add necessary packages
 PACKAGECONFIG_append += " sm linuxfb gles2"

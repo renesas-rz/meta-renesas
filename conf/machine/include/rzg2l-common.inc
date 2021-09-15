@@ -1,5 +1,7 @@
 require conf/machine/include/${SOC_FAMILY}.inc
 
+EXT_GFX_BACKEND = "${@oe.utils.ifelse((d.getVar('RZ_FEATURE') == 'True') and (d.getVar('USE_RENESAS_GLES') == '1'), '1', '0')}"
+
 # 32BIT package install (default is disable)
 # This variables can be used only in multilib.
 USE_32BIT_PKGS ?= "0"
@@ -30,13 +32,6 @@ EXTRA_IMAGEDEPENDS += " u-boot"
 
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"
-
-PREFERRED_PROVIDER_virtual/libgles1 = "mali-user-module"
-PREFERRED_PROVIDER_virtual/libgles2 = "mali-user-module"
-PREFERRED_PROVIDER_virtual/egl = "mali-user-module"
-PREFERRED_PROVIDER_virtual/libgl = ""
-PREFERRED_PROVIDER_egl = "mali-user-module"
-PREFERRED_PROVIDER_libgles2 = "mali-user-module"
 
 # We must disable ptest when can not use GPLv3 License,
 # ptest require many package, which have GPLv3 License,
