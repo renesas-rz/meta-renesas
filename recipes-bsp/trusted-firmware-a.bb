@@ -1,12 +1,12 @@
-LIC_FILES_CHKSUM = "file://docs/license.rst;md5=189505435dbcdcc8caa63c46fe93fa89"
+LIC_FILES_CHKSUM = "file://docs/license.rst;md5=713afe122abbe07f067f939ca3c480c5"
 
 require trusted-firmware-a.inc
 
 URL = "git://git@github.com/renesas-rz/rzg_trusted-firmware-a.git"
-BRANCH = "v2.3/rzg2l"
-SRCREV = "baee1ff9a7ab159453776930bc5fa36ba5f05b7b"
+BRANCH = "v2.5/rzg2l"
+SRCREV = "8e2054e9cff87b889eeea2679d0fd47faa04c195"
 
 SRC_URI += "${URL};protocol=ssh;branch=${BRANCH}"
 
-PV = "2.3-rzg+git${SRCPV}"
+PV = "2.5-rzg+git${SRCPV}"
 PR = "r1"
