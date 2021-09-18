@@ -8,19 +8,29 @@ DEPENDS = "bootparameter-native u-boot fiptool-native"
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev)"
+COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev)"
 
-PLATFORM_smarc-rzg2l = "rzg2l"
-EXTRA_FLAGS_smarc-rzg2l = "BOARD_TYPE=BOARD_RZG2L_EVA"
+PLATFORM ?= "g2l"
+PLATFORM_smarc-rzg2l = "g2l"
+EXTRA_FLAGS_smarc-rzg2l = "BOARD=smarc_2"
 FLASH_ADDRESS_BL2_BP_smarc-rzg2l = "00000"
 FLASH_ADDRESS_FIP_smarc-rzg2l = "1D200"
 
-PLATFORM_rzg2l-dev = "rzg2l"
-EXTRA_FLAGS_rzg2l-dev = "BOARD_TYPE=BOARD_RZG2L_15MMSQ"
+PLATFORM_rzg2l-dev = "g2l"
+EXTRA_FLAGS_rzg2l-dev = "BOARD=dev15_4"
 FLASH_ADDRESS_BL2_BP_rzg2l-dev = "00000"
 FLASH_ADDRESS_FIP_rzg2l-dev = "1D200"
 
-PLATFORM = "rzg2l"
+PLATFORM_rzg2lc-dev = "g2l"
+EXTRA_FLAGS_rzg2lc-dev = "BOARD=dev13_1"
+FLASH_ADDRESS_BL2_BP_rzg2lc-dev = "00000"
+FLASH_ADDRESS_FIP_rzg2lc-dev = "1D200"
+
+# Temporarily use same config with RZ/G2LC Dev board
+PLATFORM_smarc-rzg2lc = "g2lc"
+EXTRA_FLAGS_smarc-rzg2lc = "BOARD=dev13_1"
+FLASH_ADDRESS_BL2_BP_smarc-rzg2lc = "00000"
+FLASH_ADDRESS_FIP_smarc-rzg2lc = "1D200"
 
 # Requires CROSS_COMPILE set by hand as there is no configure script
 export CROSS_COMPILE="${TARGET_PREFIX}"
