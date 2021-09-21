@@ -4,7 +4,8 @@ LICENSE = "BSD-3-Clause"
 
 inherit deploy
 
-DEPENDS = "bootparameter-native u-boot fiptool-native"
+#DEPENDS = "bootparameter-native u-boot fiptool-native"
+#DEPENDS = " u-boot"
 
 S = "${WORKDIR}/git"
 
@@ -47,20 +48,6 @@ do_configure[noexec] = "1"
 do_compile () {
 	# Build TF-A
 	oe_runmake PLAT=${PLATFORM} ${EXTRA_FLAGS} bl2 bl31
-
-	# Create bl2_bp.bin
-	bootparameter build/${PLATFORM}/release/bl2.bin bl2_bp.bin
-	cat build/${PLATFORM}/release/bl2.bin >> bl2_bp.bin
-
-	# Create fip.bin
-	fiptool create --align 16 --soc-fw build/${PLATFORM}/release/bl31.bin --nt-fw ${WORKDIR}/recipe-sysroot/boot/u-boot.bin fip.bin
-
-	# Convert to srec
-	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
-	objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip.bin fip.srec
-
-	PROGRAM_SIZE_BL2_BP=$(printf "%x" `wc -c < bl2_bp.bin`)
-	PROGRAM_SIZE_FIP=$(printf "%x" `wc -c < fip.bin`)
 }
 
 do_deploy () {
@@ -72,12 +59,6 @@ do_deploy () {
 	install -m 0644 ${S}/build/${PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${MACHINE}.bin
 	install -m 0644 ${S}/build/${PLATFORM}/release/bl31/bl31.elf ${DEPLOYDIR}/bl31-${MACHINE}.elf
 	install -m 0644 ${S}/build/${PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}.bin
-
-	# Copy fip images
-	install -m 0644 ${S}/bl2_bp.bin ${DEPLOYDIR}/bl2_bp-${MACHINE}.bin
-	install -m 0644 ${S}/bl2_bp.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}.srec
-	install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
-	install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/fip-${MACHINE}.srec
 }
 
 addtask deploy before do_build after do_compile
