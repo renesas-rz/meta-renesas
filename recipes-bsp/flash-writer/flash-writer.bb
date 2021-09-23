@@ -14,6 +14,7 @@ inherit deploy
 #require include/provisioning.inc
 
 S = "${WORKDIR}/git"
+PMIC_BUILD_DIR = "${S}/build_pmic"
 
 do_compile() {
         if [ "${MACHINE}" = "smarc-rzg2l" ]; then
@@ -31,7 +32,8 @@ do_compile() {
 	oe_runmake BOARD=${BOARD}
 
         if [ "${PMIC_SUPPORT}" = "1" ]; then
-		oe_runmake BOARD=${PMIC_BOARD};
+		oe_runmake OUTPUT_DIR=${PMIC_BUILD_DIR} clean;
+		oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_DIR};
 	fi
 }
 
@@ -40,6 +42,9 @@ do_install[noexec] = "1"
 do_deploy() {
         install -d ${DEPLOYDIR}
         install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}
+        if [ "${PMIC_SUPPORT}" = "1" ]; then
+        	install -m 644 ${PMIC_BUILD_DIR}/*.mot ${DEPLOYDIR}
+	fi
 }
 PARALLEL_MAKE = "-j 1"
 addtask deploy after do_compile
