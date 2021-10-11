@@ -1,0 +1,77 @@
+From c3dbe1602779a7683cd27784a3531885ab9c241f Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Mon, 28 Jun 2021 14:22:45 +0700
+Subject: [PATCH] plat-rzg: add some missing reference functions
+
+This commit is created to add some missing reference functions
+when OPTEE-os is updated to v3.13.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ core/arch/arm/plat-rzg/kern.ld.S     |  6 ++++++
+ core/arch/arm/plat-rzg/link_dummy.ld |  6 ++++++
+ 2 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/core/arch/arm/plat-rzg/kern.ld.S b/core/arch/arm/plat-rzg/kern.ld.S
+index 5fbe131..50f1491 100644
+--- a/core/arch/arm/plat-rzg/kern.ld.S
++++ b/core/arch/arm/plat-rzg/kern.ld.S
+@@ -467,15 +467,19 @@ __vcore_unpg_ro_size = __flatmap_unpg_ro_size;
+ __vcore_unpg_rx_size = __flatmap_unpg_rx_size + __flatmap_unpg_ro_size;
+ __vcore_unpg_ro_size = 0;
+ #endif
++__vcore_unpg_rx_end = __vcore_unpg_rx_start + __vcore_unpg_rx_size;
++__vcore_unpg_ro_end = __vcore_unpg_ro_start + __vcore_unpg_ro_size;
+ 
+ /* Unpaged read-write memory */
+ __vcore_unpg_rw_start = __flatmap_unpg_rw_start;
+ __vcore_unpg_rw_size = __flatmap_unpg_rw_size;
++__vcore_unpg_rw_end = __vcore_unpg_rw_start + __vcore_unpg_rw_size;
+ 
+ #ifdef CFG_VIRTUALIZATION
+ /* Nexus read-write memory */
+ __vcore_nex_rw_start = __flatmap_nex_rw_start;
+ __vcore_nex_rw_size = __flatmap_nex_rw_size;
++__vcore_nex_rw_end = __vcore_nex_rw_start + __vcore_nex_rw_size;
+ #endif
+ 
+ #ifdef CFG_WITH_PAGER
+@@ -499,6 +503,8 @@ __vcore_init_rx_size = __flatmap_init_rx_size + __flatmap_init_ro_size +
+ 		       __FLATMAP_PAGER_TRAILING_SPACE;
+ __vcore_init_ro_size = 0;
+ #endif /* CFG_CORE_RODATA_NOEXEC */
++__vcore_init_rx_end = __vcore_init_rx_start + __vcore_init_rx_size;
++__vcore_init_ro_end = __vcore_init_ro_start + __vcore_init_ro_size;
+ #endif /* CFG_WITH_PAGER */
+ 
+ #ifdef CFG_CORE_SANITIZE_KADDRESS
+diff --git a/core/arch/arm/plat-rzg/link_dummy.ld b/core/arch/arm/plat-rzg/link_dummy.ld
+index 1efc585..cd73fc1 100644
+--- a/core/arch/arm/plat-rzg/link_dummy.ld
++++ b/core/arch/arm/plat-rzg/link_dummy.ld
+@@ -76,16 +76,22 @@ __tmp_hashes_size = .;
+ __tmp_hashes_start = .;
+ __vcore_init_ro_size = .;
+ __vcore_init_ro_start = .;
++__vcore_init_ro_end = .;
+ __vcore_init_rx_size = .;
+ __vcore_init_rx_start = .;
++__vcore_init_rx_end = .;
+ __vcore_nex_rw_size = .;
+ __vcore_nex_rw_start = .;
++__vcore_nex_rw_end = .;
+ __vcore_unpg_ro_size = .;
+ __vcore_unpg_ro_start = .;
++__vcore_unpg_ro_end = .;
+ __vcore_unpg_rw_size = .;
+ __vcore_unpg_rw_start = .;
++__vcore_unpg_rw_end = .;
+ __vcore_unpg_rx_size = .;
+ __vcore_unpg_rx_start = .;
++__vcore_unpg_rx_end = .;
+ __suspend_to_ram_backup_end = .;
+ __suspend_to_ram_backup_start = .;
+ __suspend_to_ram_backup_num_end = .;
+-- 
+2.7.4
+

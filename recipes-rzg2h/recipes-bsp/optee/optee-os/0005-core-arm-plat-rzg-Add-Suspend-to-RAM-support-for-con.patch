@@ -1,0 +1,61 @@
+From 0c45071c6e02d361078c843ad6dde54a0a2bd756 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 29 Apr 2021 14:43:56 +0700
+Subject: [PATCH 5/5] core: arm: plat-rzg: Add Suspend to RAM support for
+ console
+
+This patch will add support suspend to RAM for console.
+It also fix the address to setting register when init console.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ core/arch/arm/plat-rzg/main.c | 18 ++++++++++++++++++
+ core/drivers/scif.c           |  5 ++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/core/arch/arm/plat-rzg/main.c b/core/arch/arm/plat-rzg/main.c
+index 853a126..bab5075 100644
+--- a/core/arch/arm/plat-rzg/main.c
++++ b/core/arch/arm/plat-rzg/main.c
+@@ -96,3 +96,21 @@ void console_init(void)
+ 	scif_uart_init(&console_data, CONSOLE_UART_BASE);
+ 	register_serial_console(&console_data.chip);
+ }
++
++#if defined(PLATFORM_FLAVOR_hihope_rzg2n)
++#if (PMIC_ROHM_BD9571)
++static void scif_backup_cb(enum suspend_to_ram_state state,
++			   uint32_t cpu_id __unused)
++{
++	if (state == SUS2RAM_STATE_SUSPEND) {
++		/* We must un-assign console chip to avoid other using. */
++		register_serial_console(NULL);
++	} else if (state == SUS2RAM_STATE_RESUME) {
++		/* We must re-init the console before using it. */
++		console_init();
++	}
++}
++
++suspend_to_ram_cbfunc(scif_backup_cb);
++#endif
++#endif
+diff --git a/core/drivers/scif.c b/core/drivers/scif.c
+index ff33ea3..ac0a48c 100644
+--- a/core/drivers/scif.c
++++ b/core/drivers/scif.c
+@@ -85,7 +85,10 @@ void scif_uart_init(struct scif_uart_data *pd, paddr_t base)
+ 	pd->chip.ops = &scif_uart_ops;
+ 
+ 	/* Set Transmit Enable in Control register */
+-	io_setbits16(base + SCIF_SCSCR, SCSCR_TE);
++	/* We must use the address by MMU setting instead of hard code
++	 * using physical address.
++	 */
++	io_setbits16(io_pa_or_va(&pd->base) + SCIF_SCSCR, SCSCR_TE);
+ 
+ 	scif_uart_flush(&pd->chip);
+ }
+-- 
+2.7.4
+
