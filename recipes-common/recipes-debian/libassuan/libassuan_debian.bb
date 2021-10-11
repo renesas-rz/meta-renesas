@@ -13,7 +13,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=f27defe1e96c2e1ecd4e0c9be8967949 \
                     file://src/assuan-defs.h;endline=20;md5=15d950c83e82978e35b35e790d7e4d39"
 
 inherit debian-package
-require recipes-debian/sources/libassuan.inc
+require recipes-common/recipes-debian/sources/libassuan.inc
 
 DEPENDS = "libgpg-error"
 FILESEXTRAPATHS =. "${COREBASE}/meta/recipes-support/libassuan/libassuan:"

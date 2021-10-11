@@ -5,7 +5,7 @@ LICENSE = "Artistic-1.0 | GPL-1.0+"
 LIC_FILES_CHKSUM = "file://README;beginline=2;endline=6;md5=c8767d7516229f07b26e42d1cf8b51f1"
 
 inherit debian-package
-require recipes-debian/sources/libxml-parser-perl.inc
+require recipes-common/recipes-debian/sources/libxml-parser-perl.inc
 DEBIAN_UNPACK_DIR = "${WORKDIR}/XML-Parser-2.44"
 
 DEPENDS += "expat"

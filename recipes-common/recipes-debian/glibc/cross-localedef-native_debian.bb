@@ -16,7 +16,7 @@ file://posix/rxspencer/COPYRIGHT;md5=dc5485bb394a13b2332ec1c785f5d83a \
 
 
 inherit debian-package
-require recipes-debian/sources/glibc.inc
+require recipes-common/recipes-debian/sources/glibc.inc
 BPN = "glibc"
 
 # Tell autotools that we're working in the localedef directory

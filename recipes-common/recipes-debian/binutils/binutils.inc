@@ -7,7 +7,7 @@
 require binutils-core.inc
 
 inherit debian-package
-require recipes-debian/sources/binutils.inc
+require recipes-common/recipes-debian/sources/binutils.inc
 BPN = "binutils"
 
 LICENSE = "GPLv3"

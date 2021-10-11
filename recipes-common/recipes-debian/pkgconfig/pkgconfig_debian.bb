@@ -10,7 +10,7 @@ works with automake and autoconf."
 HOMEPAGE = "http://pkg-config.freedesktop.org"
 
 inherit debian-package
-require recipes-debian/sources/pkg-config.inc
+require recipes-common/recipes-debian/sources/pkg-config.inc
 BPN = "pkg-config"
 
 LICENSE = "GPLv2+"

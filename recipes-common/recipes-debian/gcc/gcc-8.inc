@@ -10,7 +10,7 @@ require gcc-8.3.inc
 BINV = "${PV}"
 
 inherit debian-package
-require recipes-debian/sources/gcc-8.inc
+require recipes-common/recipes-debian/sources/gcc-8.inc
 BPN = "gcc-8"
 DEBIAN_UNPACK_DIR = "${TMPDIR}/work-shared/gcc-${PV}-${PR}/gcc-8-${PV}"
 S = "${DEBIAN_UNPACK_DIR}/src"

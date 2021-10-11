@@ -13,7 +13,7 @@ LIC_FILES_CHKSUM = " \
 "
 
 inherit debian-package
-require recipes-debian/sources/perl.inc
+require recipes-common/recipes-debian/sources/perl.inc
 
 FILESPATH_append = ":${COREBASE}/meta/recipes-devtools/perl-sanity/files"
 SRC_URI += " \

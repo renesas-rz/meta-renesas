@@ -7,7 +7,7 @@
 require glib.inc
 
 inherit debian-package
-require recipes-debian/sources/glib2.0.inc
+require recipes-common/recipes-debian/sources/glib2.0.inc
 DEBIAN_UNPACK_DIR = "${WORKDIR}/glib-${PV}"
 
 FILESPATH_append = ":${FILE_DIRNAME}/glib2.0"

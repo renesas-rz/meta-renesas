@@ -19,7 +19,7 @@ LIC_FILES_CHKSUM = " \
 
 
 inherit debian-package
-require recipes-debian/sources/libgcrypt20.inc
+require recipes-common/recipes-debian/sources/libgcrypt20.inc
 
 FILESPATH_append = ":${COREBASE}/meta/recipes-support/libgcrypt/files"
 SRC_URI += " \
