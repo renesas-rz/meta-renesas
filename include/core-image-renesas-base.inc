@@ -75,6 +75,15 @@ BASIC_32BIT_PKGS = " \
     lib32-libstdc++ \
 "
 
+# Support secure environment
+IMAGE_INSTALL_append_rzg2h = " \
+    optee-client \
+"
+
+BASIC_32BIT_PKGS_append_rzg2h = " \
+    lib32-optee-client \
+"
+
 # Installation for 32bit packages
 IMAGE_INSTALL_append = " \
     ${@oe.utils.conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
