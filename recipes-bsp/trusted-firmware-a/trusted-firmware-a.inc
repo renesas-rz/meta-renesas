@@ -48,12 +48,26 @@ LD[unexport] = "1"
 # No configure
 do_configure[noexec] = "1"
 
+FILES_${PN} = "/boot "
+SYSROOT_DIRS += "/boot"
+
 do_compile () {
 	# Build TF-A
 	oe_runmake PLAT=${PLATFORM} ${EXTRA_FLAGS} bl2 bl31
 
 	if [ "${PMIC_SUPPORT}" = "1" ]; then
 		oe_runmake PLAT=${PLATFORM} ${PMIC_EXTRA_FLAGS} BUILD_PLAT=${PMIC_BUILD_DIR} bl2 bl31
+	fi
+}
+
+do_install () { 
+	install -d ${D}/boot 
+	install -m 644 ${S}/build/${PLATFORM}/release/bl2.bin ${D}/boot/bl2-${MACHINE}.bin
+	install -m 644 ${S}/build/${PLATFORM}/release/bl31.bin ${D}/boot/bl31-${MACHINE}.bin
+
+	if [ "${PMIC_SUPPORT}" = "1" ]; then
+		install -m 0644 ${PMIC_BUILD_DIR}/bl2.bin ${D}/boot/bl2-${MACHINE}_pmic.bin
+		install -m 0644 ${PMIC_BUILD_DIR}/bl31.bin ${D}/boot/bl31-${MACHINE}_pmic.bin
 	fi
 }
 

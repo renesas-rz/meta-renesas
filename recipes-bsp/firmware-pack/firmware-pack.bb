@@ -15,20 +15,20 @@ do_configure[noexec] = "1"
 do_compile () {
 
 	# Create bl2_bp.bin
-	bootparameter ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}.bin bl2_bp.bin
-	cat ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}.bin >> bl2_bp.bin
+	bootparameter ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}.bin bl2_bp.bin
+	cat ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}.bin >> bl2_bp.bin
 
 	# Create fip.bin
-	fiptool create --align 16 --soc-fw ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}.bin --nt-fw ${DEPLOY_DIR_IMAGE}/u-boot-${MACHINE}.bin fip.bin
+	fiptool create --align 16 --soc-fw ${WORKDIR}/recipe-sysroot/boot/bl31-${MACHINE}.bin --nt-fw ${WORKDIR}/recipe-sysroot/boot/u-boot.bin fip.bin
 
 	# Convert to srec
 	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
 	objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip.bin fip.srec
 
         if [ "${PMIC_SUPPORT}" = "1" ]; then
-		bootparameter ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}_pmic.bin bl2_bp_pmic.bin
-		cat ${DEPLOY_DIR_IMAGE}/bl2-${MACHINE}_pmic.bin >> bl2_bp_pmic.bin
-		fiptool create --align 16 --soc-fw ${DEPLOY_DIR_IMAGE}/bl31-${MACHINE}_pmic.bin --nt-fw ${DEPLOY_DIR_IMAGE}/u-boot-${MACHINE}.bin fip_pmic.bin
+		bootparameter ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}_pmic.bin bl2_bp_pmic.bin
+		cat ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}_pmic.bin >> bl2_bp_pmic.bin
+		fiptool create --align 16 --soc-fw ${WORKDIR}/recipe-sysroot/boot/bl31-${MACHINE}_pmic.bin --nt-fw ${WORKDIR}/recipe-sysroot/boot/u-boot.bin fip_pmic.bin
 		objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp_pmic.bin bl2_bp_pmic.srec
 		objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip_pmic.bin fip_pmic.srec
 	fi
