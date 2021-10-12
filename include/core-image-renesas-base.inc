@@ -60,6 +60,23 @@ update_issue() {
       BSP_SOC="RZG2LC"
       BSP_BOARD="RZG2LC-DEV"
       ;;
+    hihope-rzg2h)
+      BSP_SOC="RZG2H"
+      BSP_BOARD="HIHOPE-RZG2H"
+      ;;
+    hihope-rzg2m)
+      BSP_SOC="RZG2M"
+      BSP_BOARD="HIHOPE-RZG2M"
+      ;;
+    hihope-rzg2n)
+      BSP_SOC="RZG2N"
+      BSP_BOARD="HIHOPE-RZG2N"
+      ;;
+    ek874)
+      BSP_SOC="RZG2E"
+      BSP_BOARD="EK874"
+      ;;
+
     esac
 
     # Make issue file
