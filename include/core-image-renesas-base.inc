@@ -118,3 +118,18 @@ IMAGE_INSTALL_append_rzg2h = " \
     kernel-module-qos \
     ${QOS_USER_PKGS} \
 "
+
+# Installation for Wifi/Bluetooth packages
+IMAGE_INSTALL_append_rzg2h = " \
+    linux-firmware-ti-connectivity-license \
+    linux-firmware-wl18xx \
+    init-ifupdown \
+    wlconf \
+    init-wl18xx \
+    iw \
+    wpa-supplicant \
+    kernel-module-wlcore-sdio \
+    bt-fw \
+    obexftp \
+    bluez-alsa \
+"
