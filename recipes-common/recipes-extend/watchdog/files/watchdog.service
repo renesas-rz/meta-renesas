@@ -1,0 +1,10 @@
+[Unit]
+Description=WatchdogTimer
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/watchdog-test -d -t 60 -e
+ExecStop=/usr/bin/killall -s INT watchdog-test
+
+[Install]
+WantedBy=multi-user.target
