@@ -105,3 +105,16 @@ BASIC_32BIT_PKGS_append_rzg2h = " \
 IMAGE_INSTALL_append = " \
     ${@oe.utils.conditional("USE_32BIT_PKGS", "1", "${BASIC_32BIT_PKGS}", "", d)} \
 "
+
+# Qos user packages only supports 64bit.
+QOS_USER_PKGS = ""
+QOS_USER_PKGS_aarch64-poky-linux = " \
+    qosif-user-module \
+    qosif-tp-user-module \
+"
+
+# Installation for QoS packages
+IMAGE_INSTALL_append_rzg2h = " \
+    kernel-module-qos \
+    ${QOS_USER_PKGS} \
+"
