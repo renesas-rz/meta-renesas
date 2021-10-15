@@ -13,7 +13,7 @@ VSPMIF_TP_DIR = "vspm_if-tp-user/files/vspm_if"
 WS_aarch64 = ""
 WS_virtclass-multilib-lib32 = "32"
 
-SRC_URI_append = " \
+SRC_URI_append_rzg2l = " \
         file://0001-Add-ISU-One-pass-test.patch \
 "
 

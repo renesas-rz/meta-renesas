@@ -13,7 +13,7 @@ EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
 includedir = "${RENESAS_DATADIR}/include"
 
-SRC_URI_append = " \
+SRC_URI_append_rzg2l = " \
 	file://0001-Modify-vspm_public.h-for-ISUM.patch \
 	file://0002-Modify-Makefile-for-building-vspm_api_isu.patch \
 	file://0003-Add-vspm_api_isu.c-for-ISUM.patch \
