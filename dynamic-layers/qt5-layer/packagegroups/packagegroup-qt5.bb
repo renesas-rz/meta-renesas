@@ -40,8 +40,9 @@ RDEPENDS_${PN} += " \
 	qtgraphicaleffects-qmlplugins \
 	qtconnectivity \
 	qtconnectivity-qmlplugins \
-	qtlocation-plugins \
-	qtlocation-qmlplugins \
+	qtlocation-plugins-position \
+	qtlocation-qmlplugins-positioning \
+	qtlocation-positioning \
 	qtsvg \
 	qtsvg-plugins \
 	qtsensors \
@@ -51,7 +52,6 @@ RDEPENDS_${PN} += " \
 	qtserialport \
 	qt5-qml-presentation-system \
 	qtwebkit \
-	qtquickcontrols \
 "
 
 RDEPENDS_${PN}-examples += " \
