@@ -28,9 +28,8 @@ EXTRA_FLAGS_rzg2lc-dev = "BOARD=dev13_1"
 FLASH_ADDRESS_BL2_BP_rzg2lc-dev = "00000"
 FLASH_ADDRESS_FIP_rzg2lc-dev = "1D200"
 
-# Temporarily use same config with RZ/G2LC Dev board
-PLATFORM_smarc-rzg2lc = "g2lc"
-EXTRA_FLAGS_smarc-rzg2lc = "BOARD=dev13_1"
+PLATFORM_smarc-rzg2lc = "g2l"
+EXTRA_FLAGS_smarc-rzg2lc = "BOARD=smarc_1"
 FLASH_ADDRESS_BL2_BP_smarc-rzg2lc = "00000"
 FLASH_ADDRESS_FIP_smarc-rzg2lc = "1D200"
 
