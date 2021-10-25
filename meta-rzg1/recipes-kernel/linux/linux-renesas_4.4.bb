@@ -22,8 +22,6 @@ S = "${WORKDIR}/git"
 SRC_URI_append = " \
 	file://defconfig \
 	file://common.cfg \
-	file://patches/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
-	file://patches/0001-include-uapi-linux-if_pppox.h-include-linux-in.h-and.patch \
 	file://patches.scc \
 "
 
