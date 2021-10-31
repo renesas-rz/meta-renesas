@@ -3,19 +3,17 @@ DESCRIPTION = "Linux kernel for the RZG2 based board"
 require recipes-kernel/linux/linux-yocto.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev|rzg2lc-dev|smarc-rzg2lc)"
+COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|rzg2l-dev|rzg2lc-dev|smarc-rzg2lc)"
+COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2n|hihope-rzg2m|hihope-rzg2h)"
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "rzg2l-cip41"
-SRCREV = "c819d510b2b02511f083023bcd8d6cd41f9d003c"
+BRANCH = "trial/rzg-5.10"
+SRCREV = "f0b35e1942432bb17b640c2b5a8c021e0f84689f"
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
-SRC_URI_append = "\
-	file://patches.scc \
-"
-LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
-LINUX_VERSION ?= "4.19.165"
+LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
+LINUX_VERSION ?= "5.10.8"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
