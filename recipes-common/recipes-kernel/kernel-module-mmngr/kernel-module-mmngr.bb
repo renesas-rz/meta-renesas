@@ -8,17 +8,9 @@ PR = "r0"
 
 S = "${WORKDIR}/git"
 MMNGR_DRV_DIR = "mmngr_drv/mmngr/mmngr-module/files/mmngr"
-SRC_URI_append = " \
-    file://0001-Add-physical-address-translating-feature.patch \
-    file://0002-mmngr_drv-mmngr-Add-checking-NULL-vma-in-mm_cnv_addr.patch \
-    file://0003-mmngr-Get-start-address-of-MMP-area-from-DT.patch \
-    file://0004-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
-    file://0005-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
-    file://0006-Fix-lossy.patch \
-    file://0007-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
-"
 
-MMNGR_CFG = "MMNGR_SALVATORX"
+MMNGR_CFG ?= "MMNGR_SALVATORX"
+MMNGR_CFG_ek874 = "MMNGR_EBISU"
 
 includedir = "${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"

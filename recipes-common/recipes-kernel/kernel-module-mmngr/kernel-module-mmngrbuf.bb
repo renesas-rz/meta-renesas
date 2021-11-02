@@ -9,10 +9,6 @@ PR = "r0"
 S = "${WORKDIR}/git"
 MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 
-SRC_URI_append = " \
-	file://0001-supporting-kernel-version-4.19-and-later-for-kernel-.patch \
-"
-
 includedir = "${RENESAS_DATADIR}/include"
 SSTATE_DUPWHITELIST += "${STAGING_INCDIR}"
 

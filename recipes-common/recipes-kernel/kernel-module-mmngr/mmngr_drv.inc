@@ -9,4 +9,4 @@ require include/rzg2-modules-common.inc
 MMNGR_DRV_URI = "git://github.com/renesas-rcar/mmngr_drv.git"
 
 SRC_URI = "${MMNGR_DRV_URI};branch=rcar_gen3"
-SRCREV = "85d0042924de379307115533d7b6284333409bb3"
+SRCREV = "2439802426474136312bd10bc4c143fbf1c84850"
