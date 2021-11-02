@@ -15,11 +15,11 @@ PR = "r0"
 
 VSPM_DRV_URL = "git://github.com/renesas-rcar/vspm_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "7f854a9a1c4760255a54b7c14891d1545ed1bf43"
+SRCREV = "07787fc1168e7fe37c305aca151a6f756f35874f"
 
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH}"
 
-SRC_URI_append = " \
+SRC_URI_append_rzg2l = " \
         file://0001-Add-ISU-driver.patch \
         file://0002-Add-option-ISU_CSC_RAW.patch \
         file://0003-Add-ISU-to-VSPM.patch \
@@ -60,12 +60,15 @@ do_install () {
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_cmn.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${KERNELSRC}/include/
-    install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${KERNELSRC}/include/
 
     # Install shared header files
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_cmn.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${D}/${includedir}/
+}
+
+do_install_append_rzg2l () {
+    install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${D}/${includedir}/
 }
 
