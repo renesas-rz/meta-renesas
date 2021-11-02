@@ -16,11 +16,11 @@ PR = "r0"
 VSPMIF_DRV_URL = " \
     git://github.com/renesas-rcar/vspmif_drv.git"
 BRANCH = "rcar_gen3"
-SRCREV = "34bd0c4333c3be7531702e8d70867c6ea742a558"
+SRCREV = "2fdb2838a5625e4231f1cff5d10079acc4954952"
 
 SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH}"
 
-SRC_URI_append = " \
+SRC_URI_append_rzg2l = " \
 	file://0001-Add-ISU-to-vspmif.patch \
 	file://0002-Remove-width-height-in-isu_dst_t.patch \
 	file://0003-Correcting-variable-type.patch \
