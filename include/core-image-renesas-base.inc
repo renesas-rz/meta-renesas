@@ -1,38 +1,9 @@
 # Basic packages
 IMAGE_INSTALL_append = " \
     bash \
-    bonnie++ \
     v4l-utils \
     i2c-tools \
     coreutils \
-    util-linux \
-    busybox \
-    libusb1 \
-    pciutils \
-    iproute2 \
-    i2c-tools \
-    can-utils \
-    ethtool \
-    iperf3 \
-    openssh \
-    openssh-sshd \
-    usbutils \
-    mtd-utils \
-    dosfstools \
-    e2fsprogs-badblocks \
-    e2fsprogs-dumpe2fs \
-    e2fsprogs-e2fsck \
-    e2fsprogs-e2scrub \
-    e2fsprogs-mke2fs \
-    e2fsprogs-resize2fs \
-    e2fsprogs-tune2fs \
-    minicom \
-    memtester \
-    alsa-utils \
-    libdrm \
-    libdrm-tests \
-    yavta \
-    kernel-module-uvcvideo \
     watchdog \
 "
 
@@ -120,17 +91,7 @@ IMAGE_INSTALL_append_rzg2h = " \
     ${QOS_USER_PKGS} \
 "
 
-# Installation for Wifi/Bluetooth packages
-IMAGE_INSTALL_append_rzg2h = " \
-    linux-firmware-ti-connectivity-license \
-    linux-firmware-wl18xx \
-    init-ifupdown \
-    wlconf \
-    init-wl18xx \
-    iw \
-    wpa-supplicant \
-    kernel-module-wlcore-sdio \
-    bt-fw \
-    obexftp \
-    bluez-alsa \
-"
+# Environment setup, support building kernel modules with kernel src in SDK
+export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
+export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
+export HOST_EXTRACFLAGS="-I${OECORE_NATIVE_SYSROOT}/usr/include/ -L${OECORE_NATIVE_SYSROOT}/usr/lib"
