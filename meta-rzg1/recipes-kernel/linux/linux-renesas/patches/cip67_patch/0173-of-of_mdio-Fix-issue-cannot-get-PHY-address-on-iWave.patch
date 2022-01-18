@@ -1,0 +1,42 @@
+From a7a6fc1e65b38a45da97da8d6c10dab694158c15 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Wed, 14 Oct 2020 10:15:03 +0700
+Subject: [PATCH 173/433] of: of_mdio: Fix issue cannot get PHY address on
+ iWave RZ/G1E
+
+This is a workaround to fix issue about cannot get PHY address on iWave
+RZ/G1E board in which there are multiple PHY addresses are defined.
+
+This uses a loop to check and get the right PHY address.
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/of/of_mdio.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/of/of_mdio.c b/drivers/of/of_mdio.c
+index 2b1ccb8..f1f1b89 100644
+--- a/drivers/of/of_mdio.c
++++ b/drivers/of/of_mdio.c
+@@ -54,8 +54,15 @@ static int of_mdiobus_register_phy(struct mii_bus *mdio, struct device_node *chi
+ 
+ 	if (!is_c45 && !of_get_phy_id(child, &phy_id))
+ 		phy = phy_device_create(mdio, addr, phy_id, 0, NULL);
+-	else
+-		phy = get_phy_device(mdio, addr, is_c45);
++	else {
++		for (addr = 1; addr < PHY_MAX_ADDR ; addr++) {
++			phy = get_phy_device(mdio, addr, is_c45);
++			if (!phy || IS_ERR(phy))
++				continue;
++			else
++				break;
++		}
++	}
+ 	if (!phy || IS_ERR(phy))
+ 		return 1;
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,92 @@
+From c454dc5f9c6f3fcb88ffe71b9658ea588ea7b4be Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+Date: Mon, 26 Oct 2020 09:52:28 +0700
+Subject: [PATCH 283/433] ARM: dts: r8a7742-iwg21d-q7-dbcm-ca: Enable PWM
+ modules
+
+Signed-off-by: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca.dts | 60 +++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca.dts b/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca.dts
+index 6920b05..5e34d0e 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca.dts
+@@ -152,6 +152,31 @@
+ 		function = "i2c3";
+ 	};
+ 
++	pwm0_pins: pwm0 {
++		groups = "pwm0";
++		function = "pwm0";
++	};
++
++	pwm3_pins: pwm3 {
++		groups = "pwm3";
++		function = "pwm3";
++	};
++
++	pwm4_pins: pwm4 {
++		groups = "pwm4";
++		function = "pwm4";
++	};
++
++	pwm5_pins: pwm5 {
++		groups = "pwm5";
++		function = "pwm5";
++	};
++
++	pwm6_pins: pwm6 {
++		groups = "pwm6";
++		function = "pwm6";
++	};
++
+ 	scif0_pins: scif0 {
+ 		groups = "scif0_data";
+ 		function = "scif0";
+@@ -188,6 +213,41 @@
+ 	};
+ };
+ 
++&pwm0 {
++	pinctrl-0 = <&pwm0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm3 {
++	pinctrl-0 = <&pwm3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm4 {
++	pinctrl-0 = <&pwm4_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm5 {
++	pinctrl-0 = <&pwm5_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pwm6 {
++	pinctrl-0 = <&pwm6_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
+ &scif0 {
+ 	pinctrl-0 = <&scif0_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

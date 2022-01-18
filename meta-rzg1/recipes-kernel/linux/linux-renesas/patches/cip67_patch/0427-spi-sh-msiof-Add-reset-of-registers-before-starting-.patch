@@ -1,0 +1,68 @@
+From 9adbbb3b62d35c0554016075349e7ac4b17ade38 Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Sat, 23 Jan 2021 11:16:19 +0700
+Subject: [PATCH 427/433] spi: sh-msiof: Add reset of registers before starting
+ transfer
+
+commit fedd6940682afeddb22bfd855d8eaf527bcc473a upstream.
+
+In accordance with hardware specification Ver 1.0, reset register
+transmission / reception setting before transfer.
+
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ drivers/spi/spi-sh-msiof.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index 5ea5c71..3568a3b 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -130,6 +130,8 @@ struct sh_msiof_spi_priv {
+ #define CTR_TFSE	0x00004000 /* Transmit Frame Sync Signal Output Enable */
+ #define CTR_TXE		0x00000200 /* Transmit Enable */
+ #define CTR_RXE		0x00000100 /* Receive Enable */
++#define CTR_TXRST	0x00000002 /* Transmit Reset */
++#define CTR_RXRST	0x00000001 /* Receive Reset */
+ 
+ /* FCTR */
+ #define FCTR_TFWM_MASK	0xe0000000 /* Transmit FIFO Watermark */
+@@ -252,6 +254,25 @@ static irqreturn_t sh_msiof_spi_irq(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void sh_msiof_spi_reset_regs(struct sh_msiof_spi_priv *p)
++{
++	u32 mask = CTR_TXRST | CTR_RXRST;
++	u32 data;
++	int k;
++
++	data = sh_msiof_read(p, CTR);
++	data |= mask;
++
++	sh_msiof_write(p, CTR, data);
++
++	for (k = 100; k > 0; k--) {
++		if (!(sh_msiof_read(p, CTR) & mask))
++			break;
++
++		udelay(1);
++	}
++}
++
+ static struct {
+ 	unsigned short div;
+ 	unsigned short brdv;
+@@ -899,6 +920,9 @@ static int sh_msiof_transfer_one(struct spi_master *master,
+ 	bool swab;
+ 	int ret;
+ 
++	/* reset registers */
++	sh_msiof_spi_reset_regs(p);
++
+ 	/* setup clocks (clock already enabled in chipselect()) */
+ 	if (p->mode == MSIOF_SPI_MASTER)
+ 		sh_msiof_spi_set_clk_regs(p, clk_get_rate(p->clk), t->speed_hz);
+-- 
+2.7.4
+

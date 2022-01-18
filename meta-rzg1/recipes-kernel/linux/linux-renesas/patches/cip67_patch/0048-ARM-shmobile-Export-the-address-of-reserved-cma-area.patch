@@ -1,0 +1,45 @@
+From 170491acfc9a5dde43e3224eb62b08c1ceb86523 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Fri, 19 Oct 2018 14:33:44 +0700
+Subject: [PATCH 048/433] ARM: shmobile: Export the address of reserved cma
+ area
+
+This patch makes rcar_gen2_dma_contiguous a global static variable and
+export it for future usage.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-rcar-gen2.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-rcar-gen2.c b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+index bd99854..56a21cc 100644
+--- a/arch/arm/mach-shmobile/setup-rcar-gen2.c
++++ b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+@@ -169,6 +169,9 @@ static int __init rcar_gen2_scan_mem(unsigned long node, const char *uname,
+ 	return 0;
+ }
+ 
++struct cma *rcar_gen2_dma_contiguous;
++EXPORT_SYMBOL(rcar_gen2_dma_contiguous);
++
+ void __init rcar_gen2_reserve(void)
+ {
+ 	struct memory_reserve_config mrc;
+@@ -179,12 +182,9 @@ void __init rcar_gen2_reserve(void)
+ 
+ 	of_scan_flat_dt(rcar_gen2_scan_mem, &mrc);
+ #ifdef CONFIG_DMA_CMA
+-	if (mrc.size && memblock_is_region_memory(mrc.base, mrc.size)) {
+-		static struct cma *rcar_gen2_dma_contiguous;
+-
++	if (mrc.size && memblock_is_region_memory(mrc.base, mrc.size))
+ 		dma_contiguous_reserve_area(mrc.size, mrc.base, 0,
+ 					    &rcar_gen2_dma_contiguous, true);
+-	}
+ #endif
+ }
+ 
+-- 
+2.7.4
+

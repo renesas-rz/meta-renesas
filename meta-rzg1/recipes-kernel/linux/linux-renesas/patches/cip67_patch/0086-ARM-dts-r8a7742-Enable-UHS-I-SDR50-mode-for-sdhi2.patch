@@ -1,0 +1,27 @@
+From 6250d1bb1ecbd3fe62624902fd0583acd5f609e2 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Tue, 17 Apr 2018 09:53:48 +0700
+Subject: [PATCH 086/433] ARM: dts: r8a7742: Enable UHS-I SDR50 mode for sdhi2
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 5b749ae..6125ec2 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -1840,6 +1840,8 @@
+ 			dma-names = "tx", "rx", "tx", "rx";
+ 			max-frequency = <97500000>;
+ 			power-domains = <&cpg_clocks>;
++			renesas,mmc-scc-tapnum = <8>;
++			sd-uhs-sdr50;
+ 			status = "disabled";
+ 		};
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,35 @@
+From e2195637921a5dfc03b6f9c255ab08a9229128a2 Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Wed, 15 Jul 2020 14:50:58 +0700
+Subject: [PATCH 046/433] ARM: dts: r8a7745: Add power-domain for CPU
+
+Add specified SYSC power-domain for CPU[01].
+
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 33aca33..b719ffe 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -75,6 +75,7 @@
+ 			reg = <0>;
+ 			clock-frequency = <1000000000>;
+ 			clocks = <&z2_clk>;
++			power-domains = <&sysc R8A7745_PD_CA7_CPU0>;
+ 			operating-points = <1000000 1000000>;
+ 			next-level-cache = <&L2_CA7>;
+ 		};
+@@ -85,6 +86,7 @@
+ 			reg = <1>;
+ 			clock-frequency = <1000000000>;
+ 			clocks = <&z2_clk>;
++			power-domains = <&sysc R8A7745_PD_CA7_CPU1>;
+ 			next-level-cache = <&L2_CA7>;
+ 		};
+ 
+-- 
+2.7.4
+

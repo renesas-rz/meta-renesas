@@ -1,0 +1,28 @@
+From 8c30f377a5fae77c70333a49054fbd624d2aa70e Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Tue, 28 Jul 2020 10:39:55 +0700
+Subject: [PATCH 163/433] ARM: dts: iwg22m: enable cmt1
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745-iwg22m.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+index c9fb476..6098899 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
++++ b/arch/arm/boot/dts/r8a7745-iwg22m.dtsi
+@@ -50,6 +50,10 @@
+ 	status = "okay";
+ };
+ 
++&cmt1 {
++	status = "okay";
++};
++
+ &extal_clk {
+ 	clock-frequency = <20000000>;
+ };
+-- 
+2.7.4
+

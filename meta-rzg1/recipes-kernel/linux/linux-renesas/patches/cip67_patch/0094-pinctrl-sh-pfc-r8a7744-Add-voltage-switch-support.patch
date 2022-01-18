@@ -1,0 +1,27 @@
+From bf43285532ab34c97616e45eab77ad3dc7a81ba5 Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Tue, 21 Apr 2020 17:15:16 +0700
+Subject: [PATCH 094/433] pinctrl: sh-pfc: r8a7744: Add voltage switch support
+
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+Signed-off-by: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+---
+ drivers/pinctrl/sh-pfc/pfc-r8a7791.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/sh-pfc/pfc-r8a7791.c b/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
+index 3836197..eca670f 100644
+--- a/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
++++ b/drivers/pinctrl/sh-pfc/pfc-r8a7791.c
+@@ -6707,7 +6707,7 @@ const struct sh_pfc_soc_info r8a7743_pinmux_info = {
+ const struct sh_pfc_soc_info r8a7744_pinmux_info = {
+ 	.name = "r8a77440_pfc",
+ 	.unlock_reg = 0xe6060000, /* PMMR */
+-
++	.ops = &pinmux_ops,
+ 	.function = { PINMUX_FUNCTION_BEGIN, PINMUX_FUNCTION_END },
+ 
+ 	.pins = pinmux_pins,
+-- 
+2.7.4
+

@@ -1,0 +1,25 @@
+From 69113a25c6539bf52409002e4ebc93999e747cab Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+Date: Fri, 25 May 2018 11:19:15 +0700
+Subject: [PATCH 126/433] spi: sh-msiof: add compatible for r8a7742
+
+Signed-off-by: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+---
+ drivers/spi/spi-sh-msiof.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/spi/spi-sh-msiof.c b/drivers/spi/spi-sh-msiof.c
+index a199529..c0645e4 100644
+--- a/drivers/spi/spi-sh-msiof.c
++++ b/drivers/spi/spi-sh-msiof.c
+@@ -1022,6 +1022,7 @@ static const struct of_device_id sh_msiof_match[] = {
+ 	{ .compatible = "renesas,msiof-r8a7744",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7745",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a77470",   .data = &r8a779x_data },
++	{ .compatible = "renesas,msiof-r8a7742",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7790",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7791",   .data = &r8a779x_data },
+ 	{ .compatible = "renesas,msiof-r8a7792",   .data = &r8a779x_data },
+-- 
+2.7.4
+

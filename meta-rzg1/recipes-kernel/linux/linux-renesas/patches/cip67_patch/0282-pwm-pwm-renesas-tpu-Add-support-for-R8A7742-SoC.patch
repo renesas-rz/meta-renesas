@@ -1,0 +1,25 @@
+From 4cab643795fba87662594af1f5d858bf32b70830 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Tue, 28 Jul 2020 10:06:09 +0700
+Subject: [PATCH 282/433] pwm: pwm-renesas-tpu: Add support for R8A7742 SoC
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ drivers/pwm/pwm-renesas-tpu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pwm/pwm-renesas-tpu.c b/drivers/pwm/pwm-renesas-tpu.c
+index fafdb4b..84e94c8 100644
+--- a/drivers/pwm/pwm-renesas-tpu.c
++++ b/drivers/pwm/pwm-renesas-tpu.c
+@@ -453,6 +453,7 @@ static int tpu_remove(struct platform_device *pdev)
+ static const struct of_device_id tpu_of_table[] = {
+ 	{ .compatible = "renesas,tpu-r8a73a4", },
+ 	{ .compatible = "renesas,tpu-r8a7740", },
++	{ .compatible = "renesas,tpu-r8a7742", },
+ 	{ .compatible = "renesas,tpu-r8a7744", },
+ 	{ .compatible = "renesas,tpu-r8a7745", },
+ 	{ .compatible = "renesas,tpu-r8a7790", },
+-- 
+2.7.4
+

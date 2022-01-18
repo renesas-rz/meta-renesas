@@ -1,0 +1,38 @@
+From ae57a7c7c8c087385b4b8110d347b8481e1b8ccb Mon Sep 17 00:00:00 2001
+From: Duy Dang <duy.dang.yb@renesas.com>
+Date: Wed, 22 Jul 2020 09:47:45 +0700
+Subject: [PATCH 266/433] ARM: dts: r8a77470: Add 3DX graphics (PowerVR SGX531)
+ node
+
+Add definition of 3DX graphics module to the R8A77470 (RZ/G1C) SoC dtsi.
+
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 104414d..9ec021a 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -252,6 +252,17 @@
+ 			status = "disabled";
+ 		};
+ 
++		sgx@fd800000 {
++			compatible = "renesas,sgx";
++			reg = <0 0xfd800000 0 0x10000>;
++			interrupts = <0 119 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "irq_sgx";
++			clocks = <&mstp1_clks R8A77470_CLK_3DG>,
++				<&mstp8_clks R8A77470_CLK_IPMMU_SGX>;
++			clock-names = "sgx_clk", "ipmmu_clk";
++			power-domains = <&sysc R8A77470_PD_SGX>;
++		};
++
+ 		irqc: interrupt-controller@e61c0000 {
+ 			compatible = "renesas,irqc-r8a77470", "renesas,irqc";
+ 			#interrupt-cells = <2>;
+-- 
+2.7.4
+

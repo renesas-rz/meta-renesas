@@ -1,0 +1,55 @@
+From 65937d38063c80cf98418e220863f5dc87f848d0 Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+Date: Mon, 13 Jul 2020 16:13:52 +0700
+Subject: [PATCH 129/433] ARM: dts: iwg22m: enable CAN module
+
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts | 9 +++++++++
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts         | 9 +++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts
+index b01405f..46416ce 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm-dbhd-ca.dts
+@@ -61,6 +61,15 @@
+ 	status = "okay";
+ };
+ 
++&gpio4 {
++	can1-trx-en-gpio {
++		gpio-hog;
++		gpios = <10 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can1-trx-en-gpio";
++	};
++};
++
+ &hscif2 {
+ 	pinctrl-0 = <&hscif2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index d40c0a5..6fe9f0a 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -134,6 +134,15 @@
+ 	status = "okay";
+ };
+ 
++&gpio4 {
++	can0-trx-en-gpio {
++		gpio-hog;
++		gpios = <2 GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can0-trx-en-gpio";
++	};
++};
++
+ &hscif1 {
+ 	pinctrl-0 = <&hscif1_pins>;
+ 	pinctrl-names = "default";
+-- 
+2.7.4
+

@@ -1,0 +1,40 @@
+From 401e1c6cf4b0d706719afb9bf821e3c42803863c Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Date: Fri, 14 Sep 2018 11:52:04 +0700
+Subject: [PATCH 344/433] Revert "drm: rcar-du: Fix H/V sync signal polarity
+ configuration"
+
+This reverts commit 0d2b7767611f ("drm: rcar-du: Fix H/V sync
+signal polarity configuration").
+
+We got issue du crash when doing IT, The failed cases are random and not
+always. After comparing with cip3 which gave a good IT result, we found
+that the commit 0d2b7767611f ("drm: rcar-du: Fix H/V sync
+signal polarity configuration") made issue.
+
+More investigation is needed, but we revert it for now.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index d6d2076..596c71b 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -150,8 +150,8 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	rcar_du_group_write(rcrtc->group, rcrtc->index % 2 ? OTAR2 : OTAR, 0);
+ 
+ 	/* Signal polarities */
+-	value = ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DSMR_VSL : 0)
+-	      | ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DSMR_HSL : 0)
++	value = ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? 0 : DSMR_VSL)
++	      | ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? 0 : DSMR_HSL)
+ 	      | DSMR_DIPM_DISP | DSMR_CSPM;
+ 	rcar_du_crtc_write(rcrtc, DSMR, value);
+ 
+-- 
+2.7.4
+

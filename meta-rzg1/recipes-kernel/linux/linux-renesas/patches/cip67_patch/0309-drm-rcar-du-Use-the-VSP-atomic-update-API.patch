@@ -1,0 +1,102 @@
+From 9c0173b1ca082fd3182bacc2cb91d7fdc708b479 Mon Sep 17 00:00:00 2001
+From: vietn <vietn@fsoft.com.vn>
+Date: Wed, 13 Dec 2017 16:19:57 +0700
+Subject: [PATCH 309/433] drm: rcar-du: Use the VSP atomic update API
+
+Signed-off-by: vietn <vietn@fsoft.com.vn>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c |  6 ++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vsp.c  | 18 ++++++++++++++----
+ drivers/gpu/drm/rcar-du/rcar_du_vsp.h  |  4 ++++
+ 3 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 47ca545..2a35829 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -542,6 +542,9 @@ static void rcar_du_crtc_atomic_begin(struct drm_crtc *crtc,
+ 		rcrtc->event = event;
+ 		spin_unlock_irqrestore(&dev->event_lock, flags);
+ 	}
++
++	if (rcar_du_has(rcrtc->group->dev, RCAR_DU_FEATURE_VSP1_SOURCE))
++		rcar_du_vsp_atomic_begin(rcrtc);
+ }
+ 
+ static void rcar_du_crtc_atomic_flush(struct drm_crtc *crtc,
+@@ -550,6 +553,9 @@ static void rcar_du_crtc_atomic_flush(struct drm_crtc *crtc,
+ 	struct rcar_du_crtc *rcrtc = to_rcar_crtc(crtc);
+ 
+ 	rcar_du_crtc_update_planes(rcrtc);
++
++	if (rcar_du_has(rcrtc->group->dev, RCAR_DU_FEATURE_VSP1_SOURCE))
++		rcar_du_vsp_atomic_flush(rcrtc);
+ }
+ 
+ static const struct drm_crtc_helper_funcs crtc_helper_funcs = {
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+index ea5c496..7c7d6f2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+@@ -69,6 +69,16 @@ void rcar_du_vsp_disable(struct rcar_du_crtc *crtc)
+ 	vsp1_du_setup_lif(crtc->vsp->vsp, 0, 0);
+ }
+ 
++void rcar_du_vsp_atomic_begin(struct rcar_du_crtc *crtc)
++{
++	vsp1_du_atomic_begin(crtc->vsp->vsp);
++}
++
++void rcar_du_vsp_atomic_flush(struct rcar_du_crtc *crtc)
++{
++	vsp1_du_atomic_flush(crtc->vsp->vsp);
++}
++
+ /* Keep the two tables in sync. */
+ static const u32 formats_kms[] = {
+ 	DRM_FORMAT_RGB332,
+@@ -155,8 +165,8 @@ static void rcar_du_vsp_plane_setup(struct rcar_du_vsp_plane *plane)
+ 
+ 	WARN_ON(!pixelformat);
+ 
+-	vsp1_du_setup_rpf(plane->vsp->vsp, plane->index, pixelformat,
+-			  fb->pitches[0], paddr, &src, &dst);
++	vsp1_du_atomic_update(plane->vsp->vsp, plane->index, pixelformat,
++			      fb->pitches[0], paddr, &src, &dst);
+ }
+ 
+ static int rcar_du_vsp_plane_atomic_check(struct drm_plane *plane,
+@@ -195,8 +205,8 @@ static void rcar_du_vsp_plane_atomic_update(struct drm_plane *plane,
+ 	if (plane->state->crtc)
+ 		rcar_du_vsp_plane_setup(rplane);
+ 	else
+-		vsp1_du_setup_rpf(rplane->vsp->vsp, rplane->index, 0, 0, 0,
+-				  NULL, NULL);
++		vsp1_du_atomic_update(rplane->vsp->vsp, rplane->index, 0, 0, 0,
++				      NULL, NULL);
+ }
+ 
+ static const struct drm_plane_helper_funcs rcar_du_vsp_plane_helper_funcs = {
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vsp.h b/drivers/gpu/drm/rcar-du/rcar_du_vsp.h
+index 7a6ed21..df3bf38 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vsp.h
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vsp.h
+@@ -63,10 +63,14 @@ to_rcar_vsp_plane_state(struct drm_plane_state *state)
+ int rcar_du_vsp_init(struct rcar_du_vsp *vsp);
+ void rcar_du_vsp_enable(struct rcar_du_crtc *crtc);
+ void rcar_du_vsp_disable(struct rcar_du_crtc *crtc);
++void rcar_du_vsp_atomic_begin(struct rcar_du_crtc *crtc);
++void rcar_du_vsp_atomic_flush(struct rcar_du_crtc *crtc);
+ #else
+ static inline int rcar_du_vsp_init(struct rcar_du_vsp *vsp) { return 0; };
+ static inline void rcar_du_vsp_enable(struct rcar_du_crtc *crtc) { };
+ static inline void rcar_du_vsp_disable(struct rcar_du_crtc *crtc) { };
++static inline void rcar_du_vsp_atomic_begin(struct rcar_du_crtc *crtc) { };
++static inline void rcar_du_vsp_atomic_flush(struct rcar_du_crtc *crtc) { };
+ #endif
+ 
+ #endif /* __RCAR_DU_VSP_H__ */
+-- 
+2.7.4
+

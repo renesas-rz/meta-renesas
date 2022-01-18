@@ -1,0 +1,49 @@
+From ca7e74f87703588ab51bbb8221bb8a2a16164d0e Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 22 Jul 2019 11:22:15 +0700
+Subject: [PATCH 357/433] ARM: dts: r8a77470: Support VSP control by DU
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index b85c657..8dae6bc 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -511,6 +511,22 @@
+ 			dma-channels = <2>;
+ 		};
+ 
++		vspm@fe928000 {
++			compatible = "renesas,vspm-vsps", "renesas-vspm";
++			reg = <0 0xfe928000 0 0x7404>;
++			interrupts = <0 267 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A77470_CLK_VSP1_SY>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		};
++
++		vspdu0: vspdu0@fe930000 {
++			compatible = "renesas,vsp1";
++			reg = <0 0xfe930000 0 0x7404>;
++			interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A77470_CLK_VSP1DU0>;
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		};
++
+ 		du: display@feb00000 {
+ 			compatible = "renesas,du-r8a77470";
+ 			reg = <0 0xfeb00000 0 0x40000>;
+@@ -523,6 +539,8 @@
+ 			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			status = "disabled";
+ 
++			vsps = <&vspdu0>;
++
+ 			ports {
+ 				#address-cells = <1>;
+ 				#size-cells = <0>;
+-- 
+2.7.4
+

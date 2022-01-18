@@ -1,0 +1,33 @@
+From 2120cee8a13c3d54d3a66ee5b495f1999e7bfbd7 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Fri, 8 Jun 2018 14:23:13 +0700
+Subject: [PATCH 089/433] ARM: dts: r8a7743: Enable UHS SDR50 for sdhi1
+
+According to the HW manual, SDHI1 of the RZ/G1M (R8A7743) SoC does
+support UHS-I SDR50 mode. This patch enables it.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renenas.com>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index 79caa29..17261ce 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -927,8 +927,10 @@
+ 			dmas = <&dmac0 0xc1>, <&dmac0 0xc2>,
+ 			       <&dmac1 0xc1>, <&dmac1 0xc2>;
+ 			dma-names = "tx", "rx", "tx", "rx";
+-			max-frequency = <97500000>;
+ 			power-domains = <&cpg_clocks>;
++			renesas,clk-rate = <97500000>;
++			renesas,mmc-scc-tapnum = <8>;
++			sd-uhs-sdr50;
+ 			status = "disabled";
+ 		};
+ 
+-- 
+2.7.4
+
