@@ -90,7 +90,7 @@ index 0000000..43c00aa
 +	uint32_t lifec_va;
 +	uint32_t uid_addr;
 +
-+	lifec_va = (uint32_t) phys_to_virt_io(LIFEC_BASE);
++	lifec_va = (uint32_t) phys_to_virt_io(LIFEC_BASE, 0x50U);
 +	uid_addr = lifec_va + 0x40U;
 +
 +	/* get uid from LifeC register. */

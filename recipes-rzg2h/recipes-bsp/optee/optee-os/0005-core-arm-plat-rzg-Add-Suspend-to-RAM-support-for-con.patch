@@ -52,7 +52,7 @@ index ff33ea3..ac0a48c 100644
 +	/* We must use the address by MMU setting instead of hard code
 +	 * using physical address.
 +	 */
-+	io_setbits16(io_pa_or_va(&pd->base) + SCIF_SCSCR, SCSCR_TE);
++	io_setbits16(io_pa_or_va(&pd->base, SCIF_REG_SIZE) + SCIF_SCSCR, SCSCR_TE);
  
  	scif_uart_flush(&pd->chip);
  }

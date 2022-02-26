@@ -837,10 +837,10 @@ index 0000000..3861b6d
 +static void convert_p2v_register(struct reg_backup_info *bkinfo)
 +{
 +	bkinfo->reg_vaddr = (vaddr_t)phys_to_virt(bkinfo->reg_paddr,
-+					MEM_AREA_IO_SEC);
++					MEM_AREA_IO_SEC, 0x4);
 +	if (bkinfo->reg_vaddr == 0U) {
 +		bkinfo->reg_vaddr = (vaddr_t)phys_to_virt(bkinfo->reg_paddr,
-+						MEM_AREA_IO_NSEC);
++						MEM_AREA_IO_NSEC, 0x4);
 +		if (bkinfo->reg_vaddr == 0U) {
 +			EMSG("Convert error! phys_to_virt reg_paddr=%08zX",
 +				bkinfo->reg_paddr);

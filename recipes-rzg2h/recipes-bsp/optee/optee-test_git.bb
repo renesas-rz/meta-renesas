@@ -6,10 +6,10 @@ inherit deploy python3native
 LICENSE = "BSD & GPLv2"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE.md;md5=daa2bcccc666345ab8940aab1315a4fa"
 
-#TAG: 3.14.0
-PV = "3.14.0+git${SRCPV}"
+#TAG: 3.15.0
+PV = "3.15.0+git${SRCPV}"
 BRANCH = "master"
-SRCREV = "f2eb88affbb7f028561b4fd5cbd049d5d704f741"
+SRCREV = "f88f69eb27beda52998de09cd89a7ee422da00d9"
 
 SRC_URI = " \
 	git://github.com/OP-TEE/optee_test.git;branch=${BRANCH} \
