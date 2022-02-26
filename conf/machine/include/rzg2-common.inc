@@ -16,10 +16,6 @@ SERIAL_CONSOLES = "115200;ttySC0"
 # Configuration for ARM Trusted Firmware
 EXTRA_IMAGEDEPENDS += " trusted-firmware-a"
 
-# u-boot
-PREFERRED_VERSION_u-boot = "v2020.10%"
-EXTRA_IMAGEDEPENDS += " u-boot"
-
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"
 
