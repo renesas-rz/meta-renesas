@@ -4,7 +4,6 @@ IMAGE_INSTALL_append = " \
     v4l-utils \
     i2c-tools \
     coreutils \
-    watchdog \
 "
 
 IMAGE_FEATURES_remove = " ssh-server-dropbear"

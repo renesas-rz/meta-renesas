@@ -33,6 +33,7 @@ IMAGE_INSTALL_append = " \
 
 # Installation for Wifi/Bluetooth packages
 IMAGE_INSTALL_append_rzg2h = " \
+    watchdog \
     linux-firmware-ti-connectivity-license \
     linux-firmware-wl18xx \
     init-ifupdown \
