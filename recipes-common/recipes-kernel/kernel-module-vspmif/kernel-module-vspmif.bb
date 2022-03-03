@@ -24,6 +24,7 @@ SRC_URI_append_rzg2l = " \
 	file://0001-Add-ISU-to-vspmif.patch \
 	file://0002-Remove-width-height-in-isu_dst_t.patch \
 	file://0003-Correcting-variable-type.patch \
+	file://0004-Remove-unused-memory.patch \
 "
 
 S = "${WORKDIR}/git"
