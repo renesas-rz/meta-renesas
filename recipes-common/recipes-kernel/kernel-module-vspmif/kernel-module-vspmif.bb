@@ -25,6 +25,7 @@ SRC_URI_append_rzg2l = " \
 	file://0002-Remove-width-height-in-isu_dst_t.patch \
 	file://0003-Correcting-variable-type.patch \
 	file://0004-Remove-unused-memory.patch \
+	file://0005-Correction-32bit-variable.patch \
 "
 
 S = "${WORKDIR}/git"

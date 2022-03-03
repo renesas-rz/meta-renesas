@@ -1,0 +1,37 @@
+From 890beda95be1c295dcfa70c1d32914b90be66ed8 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Thu, 2 Dec 2021 09:31:02 +0700
+Subject: [PATCH 5/5] Correction 32bit variable
+
+---
+ vspm_if-module/files/vspm_if/include/vspm_if.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/include/vspm_if.h b/vspm_if-module/files/vspm_if/include/vspm_if.h
+index 1c0617b..6a451b0 100644
+--- a/vspm_if-module/files/vspm_if/include/vspm_if.h
++++ b/vspm_if-module/files/vspm_if/include/vspm_if.h
+@@ -398,8 +398,8 @@ struct compat_isu_csc_t {
+ };
+ 
+ struct compat_isu_src_t {
+-        unsigned long           addr;
+-        unsigned long           addr_c;
++        unsigned int           addr;
++        unsigned int           addr_c;
+         unsigned short          stride;
+         unsigned short          stride_c;
+         unsigned short          width;
+@@ -411,8 +411,8 @@ struct compat_isu_src_t {
+         unsigned char           uv_conv;
+ };
+ struct compat_isu_dst_t {
+-        unsigned long           addr;
+-        unsigned long           addr_c;
++        unsigned int           addr;
++        unsigned int           addr_c;
+         unsigned short          stride;
+         unsigned short          stride_c;
+         unsigned char           format;
+-- 
+2.7.4

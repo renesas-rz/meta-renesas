@@ -13,11 +13,21 @@ EXTRA_OEMAKE = "ARCH=${TARGET_ARCH}"
 
 includedir = "${RENESAS_DATADIR}/include"
 
+WS_aarch64 = ""
+WS_virtclass-multilib-lib32 = "32"
+
 SRC_URI_append_rzg2l = " \
 	file://0001-Modify-vspm_public.h-for-ISUM.patch \
 	file://0002-Modify-Makefile-for-building-vspm_api_isu.patch \
 	file://0003-Add-vspm_api_isu.c-for-ISUM.patch \
+	file://0004-Support-libvspm-32bit.patch \
 "
+
+do_compile_prepend_rzg2l() {
+    if [ X${WS} = "X32" ]; then
+        export VSPM32="1"
+    fi
+}
 
 do_compile() {
     export VSPM_LEGACY_IF="1"
