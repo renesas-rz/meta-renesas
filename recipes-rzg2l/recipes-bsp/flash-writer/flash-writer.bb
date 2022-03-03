@@ -8,7 +8,7 @@ FLASH_WRITER_URL = "git://github.com/renesas-rz/rzg2_flash_writer"
 BRANCH = "rz_g2l"
 
 SRC_URI = "${FLASH_WRITER_URL};branch=${BRANCH}"
-SRCREV = "126ed36e30594869d4ecec45fc28cb15ea91c1c2"
+SRCREV = "4168466783f06fa7f2aa5782c597803a6882ed2f"
 
 inherit deploy
 #require include/provisioning.inc
@@ -26,6 +26,8 @@ do_compile() {
                 BOARD="RZG2LC_DEV";
         elif [ "${MACHINE}" = "smarc-rzg2lc" ]; then
                 BOARD="RZG2LC_SMARC";
+	elif [ "${MACHINE}" = "smarc-rzg2ul" ]; then
+		BOARD="RZG2UL_SMARC";
         fi
         cd ${S}
 
