@@ -14,3 +14,7 @@ S = "${WORKDIR}/git"
 EXTRA_OEMESON_append = " \
     -Dignore-fps-of-video-standard=true \
 "
+
+EXTRA_OEMESON_append_rzg2h = " \
+     -Dcont-frame-capture=true \
+"
