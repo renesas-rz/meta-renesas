@@ -1,0 +1,43 @@
+From a20bd6c58791b4db7109ef37d2b58193085d546d Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 3 Mar 2022 20:56:27 +0700
+Subject: [PATCH] gstreamer: waylandsink: disable subsurface in fullscreen mode
+
+Subsurface created from externally-supplied surface causes waylandsink
+in fullscreen mode sometimes display at wrong position.
+
+This commit disable this subsurface when using fullscreen mode.
+
+Signed-off-by: Son Lam <son.lam.ym@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ ext/wayland/gstwaylandsink.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 951576aa1..bcb950ccf 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -345,12 +345,19 @@ gst_wayland_sink_set_property (GObject * object,
+     case PROP_FULLSCREEN:
+       GST_OBJECT_LOCK (sink);
+       gst_wayland_sink_set_fullscreen (sink, g_value_get_boolean (value));
++      if (sink->fullscreen && sink->use_subsurface){
++        GST_WARNING_OBJECT (sink,
++            "Could not set use_subsurface to TRUE in fullscreen mode.");
++        sink->use_subsurface = FALSE;
++      }
+       GST_OBJECT_UNLOCK (sink);
+     case PROP_USE_SUBSURFACE:
+       GST_WARNING_OBJECT (sink, "The option \"use-subsurface\" is deprecated"
+           "and this option is NOP");
+       GST_OBJECT_LOCK (sink);
+       sink->use_subsurface = g_value_get_boolean (value);
++      if (sink->fullscreen)
++        sink->use_subsurface = FALSE;
+       GST_OBJECT_UNLOCK (sink);
+       break;
+     case PROP_SUPPRESS_INTERLACE:
+-- 
+2.25.1
+
