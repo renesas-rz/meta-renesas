@@ -20,6 +20,7 @@ SRC_URI_append = " \
 	file://0008-qtmultimedia-Add-render-by-EGLImage-for-video-playba.patch \
 	file://0009-qsgvideonode-fix-issue-double-free-in-race-condition.patch \
 	file://0010-add_QtGstLaunch_service.patch \
+	file://0011-qgstlaunch-Add-returned-value-for-callback-function-.patch \
 "
 
 PACKAGECONFIG_append = " gstreamer alsa"

@@ -1,0 +1,29 @@
+From e6177e842a6ca590f8daa766496dac322805a06e Mon Sep 17 00:00:00 2001
+From: Cuong Doan <cuong.doan.ra@renesas.com>
+Date: Mon, 27 Dec 2021 11:40:05 +0700
+Subject: [PATCH] qgstlaunch: Add returned value for callback function of pad
+ probe
+
+When we not return the GST_PAD_PROBE_OK for callback function, the
+pipeline will not send the frame to the pad we assigned.
+
+Signed-off-by: Cuong Doan <cuong.doan.ra@renesas.com>
+---
+ src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp
+index 5a79066f..6ef4b5aa 100644
+--- a/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp
++++ b/src/plugins/gstreamer/gstlaunch/qgstreamergstlaunchsession.cpp
+@@ -141,7 +141,7 @@ static GstPadProbeReturn cb_have_data_sink (GstPad  *pad,
+ #endif
+     QGstreamerGstLaunchSession* session = reinterpret_cast<QGstreamerGstLaunchSession*>(u_data);
+     session->increaseFrames();
+-    // return TRUE;
++    return GST_PAD_PROBE_OK;
+ }
+ 
+ QGstreamerGstLaunchSession::QGstreamerGstLaunchSession(QObject *parent)
+-- 
+2.17.1
