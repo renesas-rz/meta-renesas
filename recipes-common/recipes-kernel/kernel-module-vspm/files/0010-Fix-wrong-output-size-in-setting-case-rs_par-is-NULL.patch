@@ -1,0 +1,89 @@
+From 4ec67d5d6cd6b553cccf87888b0918cd546ef3a0 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Wed, 3 Nov 2021 10:04:32 +0700
+Subject: [PATCH 10/10] Fix wrong output size in setting case rs_par is NULL
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c | 53 +++++++++++++++++++++++++---
+ 1 file changed, 49 insertions(+), 4 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index 97acd61..ae09b70 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -184,14 +184,30 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		/* Check output size */
+ 		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 1920))
+ 			return E_ISU_PARA_RS_CROP_WIDTH;
+-		else if ((dst_par->format >= ISU_YUV422_UYVY) && (dst_par->format <= ISU_YUV420_NV12) && (rs_param->crop_w%2))
++		else if ((dst_par->format ==
++					ISU_YUV422_UYVY ||
++				dst_par->format ==
++					ISU_YUV422_YUY2 ||
++				dst_par->format ==
++					ISU_YUV422_NV16 ||
++				dst_par->format ==
++					ISU_YUV420_NV12) &&
++				rs_param->crop_w%2)
+ 			return E_ISU_PARA_RS_CROP_WIDTH;
+ 		else
+ 			rs_info->crop_w = rs_param->crop_w;
+ 
+ 		if ((rs_param->crop_h < 1) ||(rs_param->crop_h > 1080))
+ 			return E_ISU_PARA_RS_CROP_HEIGHT;
+-		else if ((dst_par->format >= ISU_YUV422_UYVY) && (dst_par->format <= ISU_YUV420_NV12) && (rs_param->crop_h%2))
++		else if ((dst_par->format ==
++					ISU_YUV422_UYVY ||
++				dst_par->format ==
++					ISU_YUV422_YUY2 ||
++				dst_par->format ==
++					ISU_YUV422_NV16 ||
++				dst_par->format ==
++					ISU_YUV420_NV12) &&
++				rs_param->crop_h%2)
+ 			return E_ISU_PARA_RS_CROP_HEIGHT;
+ 		else
+ 			rs_info->crop_h = rs_param->crop_h;
+@@ -220,8 +236,37 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		rs_info->start_y = 0;
+ 		rs_info->tune_x = 0;
+ 		rs_info->tune_y = 0;
+-		rs_info->crop_w = rpf_info->width;
+-		rs_info->crop_h = rpf_info->height;
++
++		if ((rpf_info->width < 1)||(rpf_info->width > 1920))
++			return E_ISU_PARA_RS_CROP_WIDTH;
++		else if ((dst_par->format ==
++					ISU_YUV422_UYVY ||
++				dst_par->format ==
++					ISU_YUV422_YUY2 ||
++				dst_par->format ==
++					ISU_YUV422_NV16 ||
++				dst_par->format ==
++					ISU_YUV420_NV12)&&
++				rpf_info->width%2)
++			return E_ISU_PARA_RS_CROP_WIDTH;
++		else
++			rs_info->crop_w = rpf_info->width;
++
++		if ((rpf_info->height < 1) ||(rpf_info->height > 1080))
++			return E_ISU_PARA_RS_CROP_HEIGHT;
++		else if ((dst_par->format ==
++					ISU_YUV422_UYVY ||
++				dst_par->format ==
++					ISU_YUV422_YUY2 ||
++				dst_par->format ==
++					ISU_YUV422_NV16 ||
++				dst_par->format ==
++					ISU_YUV420_NV12)&&
++				rpf_info->height%2)
++			return E_ISU_PARA_RS_CROP_HEIGHT;
++		else
++			rs_info->crop_h = rpf_info->height;
++
+ 		rs_info->x_scale |= ISU_RS_NO_RESIZE;
+ 		rs_info->y_scale |= ISU_RS_NO_RESIZE;
+ 		rs_info->pad_mode=0;
+-- 
+2.7.4

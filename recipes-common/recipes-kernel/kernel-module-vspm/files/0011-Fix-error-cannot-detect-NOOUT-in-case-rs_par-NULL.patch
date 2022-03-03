@@ -1,0 +1,34 @@
+From 4d90b07765afb139bede6fb465d9afe4a7b115db Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Wed, 8 Dec 2021 09:43:24 +0700
+Subject: [PATCH 11/11] Fix error cannot detect NOOUT in case rs_par=NULL
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index ae09b70..32a6eb1 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -496,13 +496,13 @@ long isu_ins_check_start_parameter(struct isu_prv_data *prv,
+ 	struct isu_ch_info *ch_info = &prv->ch_info;
+ 	long ercd;
+ 
+-	/* check connection module parameter (RPF->RS or WPF) */
+-	ercd = isu_ins_check_connection_module_from_rpf(prv, param);
++	/* check WPF module parameter */
++	ercd = isu_ins_check_output_module(ch_info, param);
+ 	if (ercd)
+ 		return ercd;
+ 
+-	/* check WPF module parameter */
+-	ercd = isu_ins_check_output_module(ch_info, param);
++	/* check connection module parameter (RPF->RS or WPF) */
++	ercd = isu_ins_check_connection_module_from_rpf(prv, param);
+ 	if (ercd)
+ 		return ercd;
+ 
+-- 
+2.7.4
