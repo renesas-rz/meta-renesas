@@ -1,0 +1,1314 @@
+From 97624953d9cf5564d2438c4359f430066dca9f85 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Mon, 20 Sep 2021 07:52:32 +0700
+Subject: [PATCH 2/2] add ISU IT
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm_if-tp-user/files/vspm_if/Makefile      |    6 +
+ vspm_if-tp-user/files/vspm_if/vspm_isu_IT.c |  129 +++
+ vspm_if-tp-user/files/vspm_if/vspm_isu_IT.h | 1140 +++++++++++++++++++++++++++
+ 3 files changed, 1275 insertions(+)
+ create mode 100644 vspm_if-tp-user/files/vspm_if/vspm_isu_IT.c
+ create mode 100644 vspm_if-tp-user/files/vspm_if/vspm_isu_IT.h
+
+diff --git a/vspm_if-tp-user/files/vspm_if/Makefile b/vspm_if-tp-user/files/vspm_if/Makefile
+index 7c79a2a..56976fa 100644
+--- a/vspm_if-tp-user/files/vspm_if/Makefile
++++ b/vspm_if-tp-user/files/vspm_if/Makefile
+@@ -41,6 +41,12 @@ all:
+ 	-lvspm -lmmngr -lpthread \
+ 	-o vspm_isu_ip_conv
+ 
++	${CC} vspm_isu_IT.c \
++	-I$(INCSHARED) \
++	-L$(LIBSHARED) \
++	-lvspm -lmmngr -lpthread \
++	-o vspm_isu_IT
++
+ clean:
+ 	rm -f vspm_tp
+ 	rm -f fdpm_tp
+diff --git a/vspm_if-tp-user/files/vspm_if/vspm_isu_IT.c b/vspm_if-tp-user/files/vspm_if/vspm_isu_IT.c
+new file mode 100644
+index 0000000..08e51f2
+--- /dev/null
++++ b/vspm_if-tp-user/files/vspm_if/vspm_isu_IT.c
+@@ -0,0 +1,129 @@
++/*
++ * Copyright (c) 2018 Renesas Electronics Corporation
++ * Released under the MIT license
++ * http://opensource.org/licenses/mit-license.php
++ */
++
++#include "vspm_isu_IT.h"
++
++static void printUsage( const char *execName )
++{
++	const char *p = strrchr( execName, '/' );
++	if ( p != NULL )
++	    execName = p + 1;
++
++	printf( "Usage: %s [Options] [Test_names]\n", execName );
++	printf( "Options:\n" );
++	printf( "\tdebug_trace - Enables additional debug info logging\n" );
++	printf( "\texport_image - Enables export output and input image. Default is disable\n" );
++	printf( "\n" );
++	printf( "Test names:\n" );
++	printf( "\tformat\n");
++	printf( "\tchannel\n");
++	printf( "\tapi\n");
++	printf( "\tmode_setting\n");
++	printf( "\tjob_priority\n");
++	printf( "\talpha\n");
++	printf( "\tdl_setting\n");
++	printf( "\n" );
++}
++
++int main(int argc, char *argv[])
++{
++	struct vspm_tp_private_t *priv = NULL;
++	struct vspm_init_t init_par;
++	struct isu_start_t isu_par;
++	struct isu_dst_t dst_par;
++	struct isu_src_t src_par;
++	int fail_cnt = 0;
++	int total_fail=0;
++	int sub_test_fail=0;
++	unsigned long dl_hard_addr=0;
++	unsigned int num_of_test=0;
++	unsigned int num_of_sub_test=0;
++	int ercd=0;
++	int run_all_test=1;
++	int tmp=0;
++
++	// Parse arguments
++	for ( int i = 1; i < argc; i++ )
++	{
++		if ( strcmp( argv[i], "debug_trace" ) == 0 )
++			g_DebugTrace = 1;
++		else if( strcmp( argv[i], "export_image" ) == 0 )
++			g_ExportImage = 1;
++		else if (strcmp( argv[i], "--help" ) == 0 || strcmp( argv[i], "-h" ) == 0 )
++		{
++			printUsage( argv[0] );
++			return -1;
++		}
++	}
++
++	/* allocate private memory */
++	priv = malloc(sizeof(struct vspm_tp_private_t));
++	if (priv == NULL) {
++		printf("Error: failed to allocate private memory!!\n");
++		return -1;
++	}
++	memset(priv, 0, sizeof(struct vspm_tp_private_t));
++	/* allocate memory from memory manager */
++	ercd = (long)allocate_memory(priv);
++	if (ercd != 0) {
++		printf("Error: failed to allocate in/out buffer!!\n");
++		goto err_exit0;
++	}
++
++	InitPara(&src_par,&dst_par,NULL,priv);
++
++	for ( int i = 1; i < argc; i++ ){
++		for(int j = 0; j<NUM_OF_TEST;j++){
++			if ( strcmp( argv[i], testlist[j].name ) == 0 )
++			{
++				run_all_test=0;
++				printf("test %s...\n",testlist[j].name);
++				fail_cnt=testlist[j].test(&init_par,&src_par,&dst_par,priv,&tmp);
++				if (fail_cnt){
++					printf("test %s FAILED\n",testlist[j].name);
++					sub_test_fail=sub_test_fail+fail_cnt;
++					total_fail++;
++				}else{
++					printf("test %s PASSED\n",testlist[j].name);
++				}
++				num_of_test++;
++				num_of_sub_test=num_of_sub_test+tmp;
++				break;
++			}
++		}
++	}
++
++	if(run_all_test){
++		for(int j = 0; j<NUM_OF_TEST;j++){
++			printf("test %s...\n",testlist[j].name);
++			fail_cnt=testlist[j].test(&init_par,&src_par,&dst_par,priv,&tmp);
++			if (fail_cnt){
++				printf("test %s FAILED\n",testlist[j].name);
++				sub_test_fail=sub_test_fail+fail_cnt;
++				total_fail++;
++
++			}else{
++				printf("test %s PASSED\n",testlist[j].name);
++			}
++			num_of_sub_test=num_of_sub_test+tmp;
++		}
++		num_of_test=NUM_OF_TEST;
++	}
++
++	if(total_fail==0)
++	{
++		printf("PASS %i of %i sub-tests\n",num_of_sub_test-sub_test_fail,num_of_sub_test);
++		printf("PASS %i of %i tests\n",num_of_test-total_fail,num_of_test);
++	}else{
++		printf("FAIL %i sub-tests\n",sub_test_fail);
++		printf("FAIL %i of %i tests\n",total_fail,num_of_test);
++	}
++
++err_exit1:
++	release_memory(priv);
++err_exit0:
++	free(priv);
++}
+diff --git a/vspm_if-tp-user/files/vspm_if/vspm_isu_IT.h b/vspm_if-tp-user/files/vspm_if/vspm_isu_IT.h
+new file mode 100644
+index 0000000..093071e
+--- /dev/null
++++ b/vspm_if-tp-user/files/vspm_if/vspm_isu_IT.h
+@@ -0,0 +1,1140 @@
++/*
++ * Copyright (c) 2021 Renesas Electronics Corporation
++ * Released under the MIT license
++ * http://opensource.org/licenses/mit-license.php
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdint.h>
++#include <ctype.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <sys/types.h>
++#include <pthread.h>
++#include <errno.h>
++#include <signal.h>
++#include <termios.h>
++
++#include "vspm_public.h"
++#include "mmngr_user_public.h"
++
++#define IN_MAX_HSIZE	2800
++#define IN_MAX_VSIZE	2047
++#define IN_MIN_HSIZE	1
++#define IN_MIN_VSIZE	1
++#define OUT_MAX_HSIZE	1920
++#define OUT_MAX_VSIZE	1080
++#define OUT_MIN_HSIZE	1
++#define OUT_MIN_VSIZE	1
++#define TUNE_MAX	4096
++#define TUNE_MIN	0
++#define NUM_OF_FMT	15
++#define NUM_OF_TEST	6
++#define NUM_OF_CH	6
++#define NUM_OF_ERR	9
++#define HAVE_STRICT_DEVMEM (-1)
++#define DEFAULT_WIDTH	(720)
++#define DEFAULT_HEIGHT	(480)
++
++#define MAP_SIZE 4096UL
++#define MAP_MASK (MAP_SIZE - 1)
++
++
++struct vspm_tp_private_t {
++	void *in_virt;
++	unsigned int in_hard;
++	MMNGR_ID in_fd;
++
++	void *out_virt;
++	unsigned int out_hard;
++	MMNGR_ID out_fd;
++
++	void *inc_virt;
++	unsigned int inc_hard;
++	MMNGR_ID inc_fd;
++
++	void *outc_virt;
++	unsigned int outc_hard;
++	MMNGR_ID outc_fd;
++
++	void *dl_virt;
++	unsigned int dl_hard;
++	MMNGR_ID dl_fd;
++
++	void *handle;
++};
++
++static uint32_t write_reg(off_t target, unsigned long write_val)
++{
++	int fd;
++	void *map_base, *virt_addr;
++
++	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) return HAVE_STRICT_DEVMEM;
++	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
++	if(map_base == (void *)-1) return HAVE_STRICT_DEVMEM;
++	virt_addr = map_base + (target & MAP_MASK);
++
++	*((uint32_t *) virt_addr) = write_val;
++	if(munmap(map_base, MAP_SIZE) == -1) HAVE_STRICT_DEVMEM;
++	close(fd);
++}
++
++uint32_t read_reg(off_t target)
++{
++	int fd;
++	void *map_base, *virt_addr;
++	uint32_t read_val;
++
++	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1)
++		return HAVE_STRICT_DEVMEM;
++	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, target & ~MAP_MASK);
++	if(map_base == (void *) -1)
++		return HAVE_STRICT_DEVMEM;
++	virt_addr = map_base + (target & MAP_MASK);
++	read_val = *((uint32_t *) virt_addr);
++	if(munmap(map_base, MAP_SIZE) == -1)
++		return HAVE_STRICT_DEVMEM;
++	close(fd);
++	return read_val;
++}
++
++int test_format            (struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++int test_channel           (struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++int test_api               (struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++int test_mode_setting      (struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++int test_job_priority_limit(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++int test_alpha             (struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++int test_dl_setting        (struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++
++
++int g_seed = 0;
++char g_ExportImage = 0;
++char g_DebugTrace = 0;
++
++typedef struct _ImageProperties_
++{
++	unsigned short format;
++	float sz_of_pxl;
++	float sz_of_pxl_c;
++} ImageProperties;
++
++typedef int (*TestList)(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests);
++
++typedef struct _TestProperties_
++{
++	char *name;
++	TestList test;
++	int fail_case;
++	char enable;
++} TestProperties;
++
++TestProperties testlist[NUM_OF_TEST]=
++{
++	{ "format",
++	  &test_format,
++	  0,
++	  0
++	},
++	{ "channel",
++	  &test_channel,
++	  0,
++	  0
++	},
++	{ "api",
++	  &test_api,
++	  0,
++          0
++	},
++	{ "mode_setting",
++	  &test_mode_setting,
++	  0,
++          0
++	},
++	{ "job_priority_limit",
++	  &test_job_priority_limit,
++	  0,
++          0
++	},
++	{ "dl_setting",
++	  &test_dl_setting,
++	  0,
++          0
++	}
++};
++
++ImageProperties g_properties[NUM_OF_FMT]=
++{
++	{ ISU_ARGB1555,
++	  2,
++	  0
++	},
++	{ ISU_RGB565,
++	  2,
++	  0
++	},
++	{ ISU_BGR666,
++	  2.25,
++	  0
++	},
++	{ ISU_RGB888,
++	  3,
++	  0
++	},
++	{ ISU_BGR888,
++	  3,
++	  0
++	},
++	{ ISU_ARGB8888,
++	  4,
++	  0
++	},
++	{ ISU_RGBA8888,
++	  4,
++	  0
++	},
++	{ ISU_ABGR8888,
++	  4,
++	  0
++	},
++	{ ISU_RAW8,
++	  1,
++	  0
++	},
++	{ ISU_RAW10,
++	  1.25,
++	  0
++	},
++	{ ISU_RAW12,
++	  1.5,
++	  0
++	},
++	{ ISU_YUV422_UYVY,
++	  1,
++	  0
++	},
++	{ ISU_YUV422_YUY2,
++	  1,
++	  0
++	},
++	{ ISU_YUV422_NV16,
++	  1,
++	  1
++	},
++	{ ISU_YUV420_NV12,
++	  1,
++	  1
++	}
++};
++
++int ErrorList[NUM_OF_ERR] = {
++	E_ISU_PARA_IN_STRD,
++	E_ISU_PARA_IN_WIDTH,
++	E_ISU_PARA_IN_HEIGHT,
++	E_ISU_PARA_OUT_STRD,
++	E_ISU_PARA_RS_CROP_WIDTH,
++	E_ISU_PARA_RS_CROP_HEIGHT,
++	E_ISU_PARA_RS_RATIO,
++	E_ISU_PARA_RS_START,
++	E_ISU_PARA_RS_TUNE
++};
++
++struct vspm_tp_cb_info_t {
++	unsigned long job_id;
++	long ercd;
++	pthread_mutex_t mutex;
++	pthread_cond_t cond;
++};
++
++/* release memory of memory manager */
++int release_memory(struct vspm_tp_private_t *priv)
++{
++	if (priv->out_fd != 0)
++	        (void)mmngr_free_in_user_ext(priv->out_fd);
++	if (priv->in_fd != 0)
++	        (void)mmngr_free_in_user_ext(priv->in_fd);
++	if (priv->outc_fd != 0)
++	        (void)mmngr_free_in_user_ext(priv->outc_fd);
++	if (priv->inc_fd != 0)
++	        (void)mmngr_free_in_user_ext(priv->inc_fd);
++	return 0;
++}
++
++/* allocate memory from memory manager */
++int allocate_memory(struct vspm_tp_private_t *priv)
++{
++	int ercd;
++	int dl_size = 49*8+16;
++
++	/* input buffer */
++	ercd = mmngr_alloc_in_user_ext(
++	        &priv->in_fd, IN_MAX_HSIZE*IN_MAX_VSIZE*4, &priv->in_hard, &priv->in_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input!! ercd=%d\n", ercd);
++		return -1;
++	}
++	memset(priv->in_virt, 0xBB, IN_MAX_HSIZE*IN_MAX_VSIZE*4);
++
++	ercd = mmngr_alloc_in_user_ext(
++	        &priv->inc_fd, IN_MAX_HSIZE*IN_MAX_VSIZE, &priv->inc_hard, &priv->inc_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for input!! ercd=%d\n", ercd);
++		return -1;
++	}
++	memset(priv->inc_virt, 0xAA, IN_MAX_HSIZE*IN_MAX_VSIZE);
++
++	/* output buffer */
++	ercd = mmngr_alloc_in_user_ext(
++	        &priv->out_fd, OUT_MAX_HSIZE*OUT_MAX_VSIZE*4, &priv->out_hard, &priv->out_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output!! ercd=%d\n", ercd);
++		return -1;
++	}
++	memset(priv->out_virt, 0, OUT_MAX_HSIZE*OUT_MAX_VSIZE*4);
++
++	ercd = mmngr_alloc_in_user_ext(
++	        &priv->outc_fd, OUT_MAX_HSIZE*OUT_MAX_VSIZE, &priv->outc_hard, &priv->outc_virt, MMNGR_VA_SUPPORT, NULL);
++	if (ercd != R_MM_OK) {
++		printf("Error: failed to allocate memory for output!! ercd=%d\n", ercd);
++		return -1;
++	}
++	memset(priv->outc_virt, 0, OUT_MAX_HSIZE*OUT_MAX_VSIZE);
++
++	ercd = mmngr_alloc_in_user_ext(
++                &priv->dl_fd, dl_size, &priv->dl_hard, &priv->dl_virt, MMNGR_VA_SUPPORT, NULL);
++        if (ercd != R_MM_OK) {
++                printf("Error: failed to allocate memory for input!! ercd=%ld\n", ercd);
++                return -1;
++        }
++
++        memset(priv->dl_virt, 0, dl_size);
++	return 0;
++}
++
++void output_img(struct vspm_tp_private_t *priv, unsigned int dst_size, TestProperties test)
++{
++	FILE *fp;
++	char file_name[100];
++	strcpy(file_name,test.name);
++	strcat(file_name,".IMG");
++	fp = fopen(file_name, "w");
++	if( fp != NULL )
++	{
++		fwrite(priv->out_virt, 1, dst_size, fp);
++		fclose(fp);
++	}
++}
++
++/* callback function */
++void cb_func(unsigned long job_id, long result, void *user_data)
++{
++	struct vspm_tp_cb_info_t *cb_info = (struct vspm_tp_cb_info_t *)user_data;
++
++	cb_info->job_id = job_id;
++	cb_info->ercd = result;
++	pthread_cond_signal(&cb_info->cond);
++}
++
++unsigned int align32(unsigned int in)
++{
++	if(in==0)
++		return in;
++	if(in%32){
++		in = ((in/32)+1)*32;
++	}
++	return in;
++}
++
++void InitPara(struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct isu_rs_t *rs_par, struct vspm_tp_private_t *priv)
++{
++	if(src_par){
++		memset(src_par, 0, sizeof(*src_par));
++		src_par->format          = g_properties[5].format;
++		src_par->stride          = align32(DEFAULT_WIDTH*g_properties[5].sz_of_pxl);
++		src_par->stride_c        = align32(DEFAULT_WIDTH*g_properties[5].sz_of_pxl_c);
++		src_par->addr            = priv->in_hard;
++		src_par->addr_c          = priv->inc_hard;
++		src_par->width           = DEFAULT_WIDTH;
++		src_par->height          = DEFAULT_HEIGHT;
++		src_par->swap            = 0;
++		src_par->td              = NULL;
++		src_par->alpha           = NULL;
++		src_par->uv_conv         = 0;
++	}
++
++	if(dst_par){
++		memset(dst_par, 0, sizeof(*dst_par));
++		dst_par->format          = g_properties[5].format;
++		dst_par->stride          = align32(DEFAULT_WIDTH*g_properties[5].sz_of_pxl);
++		dst_par->stride_c        = align32(DEFAULT_WIDTH*g_properties[5].sz_of_pxl_c);
++		dst_par->addr            = priv->out_hard;
++		dst_par->addr_c          = priv->outc_hard;
++		dst_par->swap            = 0;
++		dst_par->csc             = NULL;
++		dst_par->alpha           = NULL;
++	}
++
++	if(rs_par){
++		memset(rs_par, 0, sizeof(*rs_par));
++		rs_par->start_x          = 0;
++		rs_par->start_y          = 0;
++		rs_par->tune_x           = 0;
++		rs_par->tune_y           = 0;
++		rs_par->crop_w           = DEFAULT_WIDTH;
++		rs_par->crop_h           = DEFAULT_HEIGHT;
++		rs_par->pad_mode         = 0;
++		rs_par->pad_val          = 0;
++		rs_par->x_ratio          = 0x1000;
++		rs_par->y_ratio          = 0x1000;
++	}
++}
++
++int run_test(struct vspm_job_t *vspm_ip, char job_priority, struct vspm_tp_private_t *priv)
++
++{
++	struct vspm_tp_cb_info_t *cb_info = NULL;
++	unsigned long job_id=0;
++	int ercd=0;
++
++	cb_info = malloc(sizeof(struct vspm_tp_cb_info_t));
++	if (cb_info == NULL) {
++		printf("Error: failed to allocate callback function info!!\n");
++		return -1;
++	}
++
++	memset(cb_info, 0, sizeof(struct vspm_tp_cb_info_t));
++	pthread_mutex_init(&cb_info->mutex, NULL);
++	pthread_cond_init(&cb_info->cond, NULL);
++
++	/* entry */
++	ercd = vspm_entry_job(priv->handle, &job_id, job_priority, vspm_ip, (void *)cb_info, cb_func);
++	if (ercd != R_VSPM_OK) {
++	        pthread_mutex_destroy(&cb_info->mutex);
++	        free(cb_info);
++	        return ercd;
++	}
++
++	/* wait callback */
++	pthread_mutex_lock(&cb_info->mutex);
++	pthread_cond_wait(&cb_info->cond, &cb_info->mutex);
++	/* check callback information */
++	if ((cb_info->ercd != 0) || (cb_info->job_id != job_id)){
++		ercd = cb_info->ercd;
++        }
++	pthread_mutex_unlock(&cb_info->mutex);
++	pthread_mutex_destroy(&cb_info->mutex);
++	free(cb_info);
++	return ercd;
++}
++
++const char* GetFormatStr(unsigned int format)
++{
++  const char *pszFormatStr = NULL;
++
++  switch(format)
++  {
++      case ISU_ARGB1555:    pszFormatStr  ="ISU_ARGB1555"   ; break;
++      case ISU_RGB565:      pszFormatStr  ="ISU_RGB565"     ; break;
++      case ISU_BGR666:      pszFormatStr  ="ISU_BGR666"     ; break;
++      case ISU_RGB888:      pszFormatStr  ="ISU_RGB888"     ; break;
++      case ISU_BGR888:      pszFormatStr  ="ISU_BGR888"     ; break;
++      case ISU_ARGB8888:    pszFormatStr  ="ISU_ARGB8888"   ; break;
++      case ISU_RGBA8888:    pszFormatStr  ="ISU_RGBA8888"   ; break;
++      case ISU_ABGR8888:    pszFormatStr  ="ISU_ABGR8888"   ; break;
++      case ISU_RAW8:        pszFormatStr  ="ISU_RAW8"       ; break;
++      case ISU_RAW10:       pszFormatStr  ="ISU_RAW10"      ; break;
++      case ISU_RAW12:       pszFormatStr  ="ISU_RAW12"      ; break;
++      case ISU_YUV422_UYVY: pszFormatStr  ="ISU_YUV422_UYVY"; break;
++      case ISU_YUV422_YUY2: pszFormatStr  ="ISU_YUV422_YUY2"; break;
++      case ISU_YUV422_NV16: pszFormatStr  ="ISU_YUV422_NV16"; break;
++      case ISU_YUV420_NV12: pszFormatStr  ="ISU_YUV420_NV12"; break;
++      default:
++      {
++         pszFormatStr = "Unknown Format";
++      }
++  }
++  return pszFormatStr;
++}
++
++const char* GetChannelStr(unsigned int channel)
++{
++	const char *pszChannelStr = NULL;
++	switch(channel)
++	{
++		case VSPM_EMPTY_CH:   pszChannelStr  ="VSPM_EMPTY_CH"; break;
++		case VSPM_USE_CH0:    pszChannelStr  ="VSPM_USE_CH0" ; break;
++		case VSPM_USE_CH1:    pszChannelStr  ="VSPM_USE_CH1" ; break;
++		case VSPM_USE_CH2:    pszChannelStr  ="VSPM_USE_CH2" ; break;
++		case VSPM_USE_CH3:    pszChannelStr  ="VSPM_USE_CH3" ; break;
++		case VSPM_USE_CH4:    pszChannelStr  ="VSPM_USE_CH4" ; break;
++		default:   pszChannelStr = "Unknown Format";
++	}
++	return pszChannelStr;
++}
++
++const char* GetErrorStr(int error){
++	const char *pszErrorStr = NULL;
++	switch(error){
++		case E_ISU_INVALID_STATE:         pszErrorStr = "E_ISU_INVALID_STATE"; break;
++		case E_ISU_PARA_CH:               pszErrorStr = "E_ISU_PARA_CH"; break;
++		case E_ISU_PARA_CB:               pszErrorStr = "E_ISU_PARA_CB"; break;
++		case E_ISU_PARA_INPAR:            pszErrorStr = "E_ISU_PARA_INPAR"; break;
++		case E_ISU_PARA_NOOUT:            pszErrorStr = "E_ISU_PARA_NOOUT"; break;
++		case E_ISU_PARA_NOIN:             pszErrorStr = "E_ISU_PARA_NOIN"; break;
++		case E_ISU_PARA_IN_ADDR:          pszErrorStr = "E_ISU_PARA_IN_ADDR"; break;
++		case E_ISU_PARA_IN_STRD:          pszErrorStr = "E_ISU_PARA_IN_STRD"; break;
++		case E_ISU_PARA_IN_WIDTH:         pszErrorStr = "E_ISU_PARA_IN_WIDTH"; break;
++		case E_ISU_PARA_IN_HEIGHT:        pszErrorStr = "E_ISU_PARA_IN_HEIGHT"; break;
++		case E_ISU_PARA_OUT_ADDR:         pszErrorStr = "E_ISU_PARA_OUT_ADDR"; break;
++		case E_ISU_PARA_OUT_STRD:         pszErrorStr = "E_ISU_PARA_OUT_STRD"; break;
++		case E_ISU_PARA_RS_CROP_WIDTH:    pszErrorStr = "E_ISU_PARA_RS_CROP_WIDTH"; break;
++		case E_ISU_PARA_RS_CROP_HEIGHT:   pszErrorStr = "E_ISU_PARA_RS_CROP_HEIGHT"; break;
++		case E_ISU_PARA_RS_RATIO:         pszErrorStr = "E_ISU_PARA_RS_RATIO"; break;
++		case E_ISU_PARA_RS_START:         pszErrorStr = "E_ISU_PARA_RS_START"; break;
++		case E_ISU_PARA_RS_TUNE:          pszErrorStr = "E_ISU_PARA_RS_TUNE"; break;
++		case E_ISU_PARA_DL_ADDR:          pszErrorStr = "E_ISU_PARA_DL_ADDR"; break;
++		case E_ISU_DL_FORMAT:             pszErrorStr = "E_ISU_DL_FORMAT"; break;
++		default:   pszErrorStr = "Unknown Format";
++	}
++	return pszErrorStr;
++}
++
++int CheckErrorSetting(int error_code,struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct isu_rs_t *rs_par,struct vspm_tp_private_t *priv)
++{
++	struct isu_start_t isu_par;
++        struct vspm_job_t vspm_ip;
++	int count=0;
++	int ercd;
++
++	InitPara(src_par,dst_par,rs_par,priv);
++	do{
++		switch(error_code)
++		{
++			case E_ISU_PARA_IN_STRD:
++				if(count==0){
++					count=5;
++				}
++				if(count==5){
++					src_par->stride=50;
++				} else if (count==4){
++					src_par->format=g_properties[NUM_OF_FMT-1].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl);
++					src_par->stride_c=0;
++				} else if (count==3){
++					src_par->stride_c=50;
++				} else if (count==2){
++					src_par->format=g_properties[NUM_OF_FMT-2].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl);
++					src_par->stride_c=0;
++				} else if (count==1){
++					src_par->stride_c=50;
++				}
++				break;
++			case E_ISU_PARA_IN_WIDTH:
++				if(count==0){
++					count=6;
++				}
++				if(count==6){
++					src_par->width=IN_MAX_HSIZE+1;
++				} else if (count==5){
++					src_par->width=IN_MIN_HSIZE-1;
++				} else if (count==4){
++					src_par->width=3;
++					src_par->format=g_properties[NUM_OF_FMT-1].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl_c);
++				} else if (count==3){
++					src_par->format=g_properties[NUM_OF_FMT-2].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl_c);
++					src_par->width=3;
++				} else if (count==2){
++					src_par->format=g_properties[NUM_OF_FMT-3].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl_c);
++					src_par->width=3;
++				} else if (count==1){
++					src_par->format=g_properties[NUM_OF_FMT-4].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl_c);
++					src_par->width=3;
++				}
++				break;
++			case E_ISU_PARA_IN_HEIGHT:
++				if(count==0){
++					count=6;
++				}
++				if(count==6){
++					src_par->height=IN_MAX_VSIZE+1;
++				} else if (count==5){
++					src_par->height=IN_MIN_VSIZE-1;
++				} else if (count==4){
++					src_par->format=g_properties[NUM_OF_FMT-1].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl_c);
++					src_par->height=3;
++				} else if (count==3){
++					src_par->format=g_properties[NUM_OF_FMT-2].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl_c);
++					src_par->height=3;
++				} else if (count==2){
++					src_par->format=g_properties[NUM_OF_FMT-3].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl_c);
++					src_par->height=3;
++				} else if (count==1){
++					src_par->format=g_properties[NUM_OF_FMT-4].format;
++					src_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl);
++					src_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl_c);
++					src_par->height=3;
++				}
++				break;
++			case E_ISU_PARA_OUT_STRD:
++				if(count==0){
++					count=5;
++				}
++				if(count==5){
++					dst_par->stride=50;
++				} else if (count==4){
++					dst_par->format=g_properties[NUM_OF_FMT-1].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl);
++					dst_par->stride_c=0;
++				} else if (count==3){
++					dst_par->stride_c=50;
++				} else if (count==2){
++					dst_par->format=g_properties[NUM_OF_FMT-2].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl);
++					dst_par->stride_c=0;
++				} else if (count==1){
++					dst_par->stride_c=50;
++				}
++				break;
++			case E_ISU_PARA_RS_CROP_WIDTH:
++				if(count==0){
++					count=6;
++				}
++				if(count==6){
++					rs_par->crop_w=OUT_MAX_HSIZE+1;
++				} else if (count==5){
++					rs_par->crop_w=OUT_MIN_HSIZE-1;
++				} else if (count==4){
++					dst_par->format=g_properties[NUM_OF_FMT-1].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl_c);
++					rs_par->crop_w=3;
++				} else if (count==3){
++					dst_par->format=g_properties[NUM_OF_FMT-2].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl_c);
++					rs_par->crop_w=3;
++				} else if (count==2){
++					dst_par->format=g_properties[NUM_OF_FMT-3].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl_c);
++					rs_par->crop_w=3;
++				} else if (count==1){
++					dst_par->format=g_properties[NUM_OF_FMT-4].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl_c);
++					rs_par->crop_w=3;
++				}
++				break;
++			case E_ISU_PARA_RS_CROP_HEIGHT:
++				if(count==0){
++					count=6;
++				}
++				if(count==6){
++					rs_par->crop_h=OUT_MAX_VSIZE+1;
++				} else if (count==5){
++					rs_par->crop_h=OUT_MIN_VSIZE-1;
++				} else if (count==4){
++					dst_par->format=g_properties[NUM_OF_FMT-1].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-1].sz_of_pxl_c);
++					rs_par->crop_h=3;
++				} else if (count==3){
++					dst_par->format=g_properties[NUM_OF_FMT-2].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-2].sz_of_pxl_c);
++					rs_par->crop_h=3;
++				} else if (count==2){
++					dst_par->format=g_properties[NUM_OF_FMT-3].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-3].sz_of_pxl_c);
++					rs_par->crop_h=3;
++				} else if (count==1){
++					dst_par->format=g_properties[NUM_OF_FMT-4].format;
++					dst_par->stride = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl);
++					dst_par->stride_c = align32(src_par->width*g_properties[NUM_OF_FMT-4].sz_of_pxl_c);
++					rs_par->crop_h=3;
++				}
++				break;
++			case E_ISU_PARA_RS_RATIO:
++				if(count==0){
++					count=2;
++				}
++				if (count==2){
++					rs_par->x_ratio=0x0800;
++				} else if (count==1){
++					rs_par->y_ratio=0x0800;
++				}
++				break;
++			case E_ISU_PARA_RS_START:
++				if(count==0){
++					count=2;
++				}
++				if (count==2){
++					rs_par->start_x=src_par->width;
++				} else if (count==1){
++					rs_par->start_y=src_par->height;
++				}
++				break;
++			case E_ISU_PARA_RS_TUNE:
++				if(count==0){
++					count=4;
++				}
++				if (count==4){
++					rs_par->tune_x=TUNE_MAX+1;
++				} else if (count==3){
++					rs_par->tune_x=TUNE_MIN-1;
++				} else if (count==2){
++					rs_par->tune_y=TUNE_MAX+1;
++				} else if (count==1){
++					rs_par->tune_y=TUNE_MIN-1;
++				}
++				break;
++			default:
++			{
++				return -1;
++			}
++		}
++		memset(&isu_par, 0x00, sizeof(isu_par));
++		isu_par.src_par         = src_par;
++		isu_par.dst_par         = dst_par;
++		isu_par.rs_par          = rs_par;
++		isu_par.dl_hard_addr    = 0;
++		memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++		vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++		vspm_ip.par.isu = &isu_par;
++		ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++		if(ercd!=error_code){
++			if(g_DebugTrace){
++				printf("\tCheck error setting FAIL! expected error %s, actual error %s\n",GetErrorStr(error_code),GetErrorStr(ercd));
++				printf("\tCase number = %i\n",count);
++			}
++			return -1;
++		} else {
++			count--;
++		}
++	}while(count);
++
++	return 0;
++}
++
++int test_format(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests)
++{
++
++	struct isu_start_t isu_par;
++        struct vspm_job_t vspm_ip;
++	int ercd=0;
++	int fail_cnt=0;
++
++	*sub_tests=NUM_OF_FMT;
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++
++	init_par->use_ch = VSPM_EMPTY_CH;
++	init_par->mode = VSPM_MODE_MUTUAL;
++	init_par->type = VSPM_TYPE_ISU_AUTO;
++
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd!=0){
++		printf("Error: fail to init driver\n");
++		return (int)*sub_tests;
++	}
++
++	for (int i=5;i<NUM_OF_FMT;i++){
++		if(g_DebugTrace)
++			printf("\t%s\n",GetFormatStr(g_properties[i].format));
++		src_par->format = g_properties[i].format;
++		src_par->stride = align32(src_par->width*g_properties[i].sz_of_pxl);
++		src_par->stride_c = align32(src_par->width*g_properties[i].sz_of_pxl_c);
++
++		dst_par->format = src_par->format;
++		dst_par->stride = src_par->stride;
++		dst_par->stride_c = src_par->stride_c;
++
++		/* set isu */
++		isu_par.src_par         = src_par;
++		isu_par.dst_par         = dst_par;
++		isu_par.rs_par          = NULL;
++		isu_par.dl_hard_addr    = 0;
++
++		vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++		vspm_ip.par.isu = &isu_par;
++
++		ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++		if(ercd){
++			fail_cnt++;
++			printf("\t%s failed: stride = %i, stride_c = %i\n",
++				GetFormatStr(g_properties[i].format),src_par->stride, src_par->stride_c);
++		} else {
++			if(g_DebugTrace)
++				printf("\t%s passed\n",GetFormatStr(g_properties[i].format));
++		}
++
++	}
++	(void)vspm_quit_driver(priv->handle);
++	return fail_cnt;
++}
++
++int test_channel(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests)
++{
++	int ercd=0;
++	int fail_cnt=0;
++	unsigned int ch[] = {VSPM_EMPTY_CH,VSPM_USE_CH0,VSPM_USE_CH1,VSPM_USE_CH2,VSPM_USE_CH3,VSPM_USE_CH4};
++	*sub_tests=1;
++
++	init_par->mode = VSPM_MODE_MUTUAL;
++	init_par->type = VSPM_TYPE_ISU_AUTO;
++
++	for(int i=0; i<NUM_OF_CH; i++){
++		init_par->use_ch = ch[i];
++		ercd = vspm_init_driver(&priv->handle, init_par);
++		if(ercd!=0){
++			if(i==0){
++				printf("Error: failed to vspm_init_driver() ercd=%d\n", ercd);
++				return (int)*sub_tests;
++			}else
++				printf("\tMaximum channel number: %s\n",GetChannelStr(ch[i-1]));
++			break;
++		}else{
++			(void)vspm_quit_driver(priv->handle);
++		}
++	}
++	return fail_cnt;
++}
++
++
++int test_api(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests)
++{
++	struct isu_start_t isu_par;
++        struct vspm_job_t vspm_ip;
++	struct isu_td_unit_t td_par;
++	struct isu_rs_t rs_par;
++	int ercd;
++	uint32_t check_val=0;
++	uint32_t input_val=0xAAAAAAAA;
++	int fail_cnt=0;
++	*sub_tests = 3+NUM_OF_ERR;
++
++	init_par->use_ch = VSPM_EMPTY_CH;
++	init_par->mode = VSPM_MODE_MUTUAL;
++	init_par->type = VSPM_TYPE_ISU_AUTO;
++
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd!=0){
++		printf("Error: fail to init driver\n");
++		return (int)*sub_tests;
++	}
++
++	/* NOIN error test */
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	isu_par.src_par         = NULL;
++	isu_par.dst_par         = dst_par;
++	isu_par.rs_par          = NULL;
++	isu_par.dl_hard_addr    = 0;
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++	ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++	if(ercd != E_ISU_PARA_NOIN){
++		fail_cnt++;
++	}
++
++	/* NOOUT error test */
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	isu_par.src_par         = src_par;
++	isu_par.dst_par         = NULL;
++	isu_par.rs_par          = NULL;
++	isu_par.dl_hard_addr    = 0;
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++	ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++	if(ercd != E_ISU_PARA_NOOUT){
++		fail_cnt++;
++	}
++
++	/* test generation test pattern */
++	td_par.grada_mode = 0b11111;
++	td_par.grada_step = 0;
++	td_par.init_val   = input_val;
++
++	src_par->format = g_properties[5].format;
++	src_par->stride = align32(src_par->width*g_properties[5].sz_of_pxl);
++	src_par->stride_c = align32(src_par->width*g_properties[5].sz_of_pxl_c);
++	src_par->td = &td_par;
++
++	dst_par->format = src_par->format;
++	dst_par->stride = src_par->stride;
++	dst_par->stride_c = src_par->stride_c;
++
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	isu_par.src_par         = src_par;
++	isu_par.dst_par         = dst_par;
++	isu_par.rs_par          = NULL;
++	isu_par.dl_hard_addr    = 0;
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++	ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++	if(ercd){
++		fail_cnt++;
++	} else {
++		check_val = read_reg(priv->out_hard);
++		if(check_val==HAVE_STRICT_DEVMEM){
++			if(g_DebugTrace){
++				printf("\tSkipping verify output image because CONFIG_STRICT_DEVMEM is ON\n");
++				printf("\tyou can recheck by command:\n\t\tzcat /proc/config.gz | grep CONFIG_STRICT_DEVMEM\n");
++				printf("\tYou can use option g_ExportImage to see output image\n");
++			}
++		} else if (check_val!=input_val){
++			printf("\tThe first pixel value is wrong:\n");
++			printf("\t\tExpected value: 0x%x\n", input_val);
++			printf("\t\tActual value: 0x%x\n", check_val);
++			fail_cnt++;
++		}
++		if (g_ExportImage){
++			output_img(priv,src_par->width*src_par->height*src_par->stride,testlist[2]);
++		}
++	}
++
++	for(int i=0;i<NUM_OF_ERR;i++){
++		ercd=CheckErrorSetting(ErrorList[i],src_par,dst_par,&rs_par,priv);
++		if(ercd){
++			fail_cnt++;
++		}
++	}
++	return fail_cnt;
++}
++
++int test_mode_setting(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests)
++{
++	int ercd=0;
++	int fail_cnt=0;
++
++	*sub_tests = 2;
++	/* Occupy mode */
++	init_par->use_ch = VSPM_USE_CH0;
++	init_par->type = VSPM_TYPE_ISU_AUTO;
++	init_par->mode = VSPM_MODE_OCCUPY;
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd!=0){
++		printf("Error: failed to vspm_init_driver() ercd=%d\n", ercd);
++		return (int)*sub_tests;
++	}
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd==R_VSPM_ALREADY_USED){
++		if(g_DebugTrace)
++			printf("\tMODE OCCUPY passed\n");
++	}else {
++		if(g_DebugTrace)
++			printf("\tMODE OCCUPY failed\n");
++		fail_cnt++;
++	}
++	(void)vspm_quit_driver(priv->handle);
++
++	/* Mutual mode */
++	init_par->use_ch = VSPM_USE_CH0;
++	init_par->type = VSPM_TYPE_ISU_AUTO;
++	init_par->mode = VSPM_MODE_MUTUAL;
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd!=0){
++		printf("Error: failed to vspm_init_driver() ercd=%d\n", ercd);
++		return (int)*sub_tests;
++	}
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd==R_VSPM_ALREADY_USED){
++		if(g_DebugTrace)
++			printf("\tMODE MUTUAL failed\n");
++		fail_cnt++;
++	} else {
++		if(g_DebugTrace)
++			printf("\tMODE MUTUAL passed\n");
++	}
++	(void)vspm_quit_driver(priv->handle);
++	return fail_cnt;
++}
++
++int test_job_priority_limit(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests)
++{
++	struct isu_start_t isu_par;
++        struct vspm_job_t vspm_ip;
++	int ercd;
++	int fail_cnt=0;
++	*sub_tests=VSPM_PRI_MAX-VSPM_PRI_MIN+2;
++
++	init_par->use_ch = VSPM_EMPTY_CH;
++	init_par->mode = VSPM_MODE_MUTUAL;
++	init_par->type = VSPM_TYPE_ISU_AUTO;
++
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd!=0){
++		printf("Error: fail to init driver\n");
++		return (int)*sub_tests;
++	}
++
++	src_par->format = g_properties[3].format;
++	src_par->stride = align32(src_par->width*g_properties[3].sz_of_pxl);
++	src_par->stride_c = align32(src_par->width*g_properties[3].sz_of_pxl_c);
++
++	dst_par->format = src_par->format;
++	dst_par->stride = src_par->stride;
++	dst_par->stride_c = src_par->stride_c;
++
++	/* set isu */
++	memset(&isu_par, 0x00, sizeof(isu_par));
++	isu_par.src_par         = src_par;
++	isu_par.dst_par         = dst_par;
++	isu_par.rs_par          = NULL;
++	isu_par.dl_hard_addr    = 0;
++
++
++	for (int i=VSPM_PRI_MIN-1;i<=VSPM_PRI_MAX+1;i++){
++		memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++		vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++		vspm_ip.par.isu = &isu_par;
++		ercd = run_test(&vspm_ip,i,priv);
++		if(ercd==R_VSPM_PARAERR){
++			if ((i>=VSPM_PRI_MIN)&&(i<=VSPM_PRI_MAX)){
++				fail_cnt++;
++				if(g_DebugTrace)printf("\tJob priority %i failed",i);
++			}
++		}
++	}
++	(void)vspm_quit_driver(priv->handle);
++	return fail_cnt;
++}
++
++int test_dl_setting(struct vspm_init_t *init_par, struct isu_src_t *src_par, struct isu_dst_t *dst_par, struct vspm_tp_private_t *priv, unsigned int *sub_tests)
++{
++	struct isu_start_t isu_par;
++        struct vspm_job_t vspm_ip;
++	int ercd=0;
++	int fail_cnt=0;
++	*sub_tests=3;
++
++	memset(&vspm_ip, 0, sizeof(struct vspm_job_t));
++	memset(&isu_par, 0x00, sizeof(isu_par));
++
++	isu_par.dl_hard_addr    = priv->dl_hard+8;
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++
++	ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++	if(ercd!=E_ISU_PARA_DL_ADDR){
++		fail_cnt++;
++	}
++
++	/* check CONFIG_STRICT_DEVMEM flag */
++	ercd = write_reg(priv->dl_hard,1);
++	if(ercd==HAVE_STRICT_DEVMEM){
++		if(g_DebugTrace) printf("\tCONFIG_STRICT_DEVMEM is ON. Skipping test\n");
++		return 0;
++	}
++	/* Normal case */
++	/* DL header */
++	write_reg(priv->dl_hard,4*36);
++	/* input size */
++	write_reg(priv->dl_hard+4*1,0x00000100);
++	write_reg(priv->dl_hard+4*2,src_par->width*src_par->height);
++	/* image stride */
++	write_reg(priv->dl_hard+4*3,0x00000104);
++	write_reg(priv->dl_hard+4*4,align32(src_par->width*g_properties[5].sz_of_pxl));
++	/* input image addr */
++	write_reg(priv->dl_hard+4*5,0x00000108);
++	write_reg(priv->dl_hard+4*6,0);
++	write_reg(priv->dl_hard+4*7,0x0000010C);
++	write_reg(priv->dl_hard+4*8,priv->in_hard);
++	/* image format */
++	write_reg(priv->dl_hard+4*9,0x00000118);
++	write_reg(priv->dl_hard+4*10,g_properties[5].format);
++	/* scaling factor */
++	write_reg(priv->dl_hard+4*11,0x00000140);
++	write_reg(priv->dl_hard+4*12,0x10000);
++	write_reg(priv->dl_hard+4*13,0x00000144);
++	write_reg(priv->dl_hard+4*14,0x10000);
++	/* output size */
++	write_reg(priv->dl_hard+4*15,0x00000150);
++	write_reg(priv->dl_hard+4*16,src_par->width*src_par->height);
++	/* ouptut addr */
++	write_reg(priv->dl_hard+4*17,0x00000180);
++	write_reg(priv->dl_hard+4*18,0);
++	write_reg(priv->dl_hard+4*19,0x00000184);
++	write_reg(priv->dl_hard+4*20,priv->out_hard);
++	/* output stride */
++	write_reg(priv->dl_hard+4*21,0x00000190);
++	write_reg(priv->dl_hard+4*22,align32(src_par->width*g_properties[5].sz_of_pxl));
++	/* output format */
++	write_reg(priv->dl_hard+4*23,0x00000194);
++	write_reg(priv->dl_hard+4*24,g_properties[5].format);
++	/* color correction */
++	write_reg(priv->dl_hard+4*25,0x0000019C);
++	write_reg(priv->dl_hard+4*26,0x400); /* K11 */
++	write_reg(priv->dl_hard+4*27,0x000001A8);
++	write_reg(priv->dl_hard+4*28,0x400); /* ISU_WPF_MUL4 : K22 */
++	write_reg(priv->dl_hard+4*29,0x000001B0);
++	write_reg(priv->dl_hard+4*30,0x4000000); /* ISU_WPF_MUL6 : K33 */
++	/* clip */
++	write_reg(priv->dl_hard+4*31,0x000001BC);
++	write_reg(priv->dl_hard+4*32,0xFF00); /* layer A */
++	write_reg(priv->dl_hard+4*33,0x000001C0);
++	write_reg(priv->dl_hard+4*34,0xFF00FF00); /* layer B+C */
++	/* ISU_AXI_BLEN */
++	write_reg(priv->dl_hard+4*35,0x000001F0);
++
++	write_reg(priv->dl_hard+4*36,0x000F000F);
++	/* Footer */
++	write_reg(priv->dl_hard+4*37,0);
++	write_reg(priv->dl_hard+4*38,0);
++	write_reg(priv->dl_hard+4*39,2);
++
++	init_par->use_ch = VSPM_EMPTY_CH;
++	init_par->mode = VSPM_MODE_OCCUPY;
++	init_par->type = VSPM_TYPE_ISU_AUTO;
++
++	ercd = vspm_init_driver(&priv->handle, init_par);
++	if(ercd!=0){
++		printf("Error: fail to init driver\n");
++		return (int)*sub_tests;
++	}
++
++	isu_par.dl_hard_addr    = priv->dl_hard;
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++
++	ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++	if(ercd){
++		fail_cnt++;
++	}
++
++	/* Abnormal case */
++	write_reg(priv->dl_hard,4*35);
++	isu_par.dl_hard_addr = priv->dl_hard;
++	vspm_ip.type = VSPM_TYPE_ISU_AUTO;
++	vspm_ip.par.isu = &isu_par;
++
++	ercd = run_test(&vspm_ip,VSPM_PRI_MAX,priv);
++	if(ercd!=E_ISU_DL_FORMAT){
++		fail_cnt++;
++	}
++
++	(void)vspm_quit_driver(priv->handle);
++
++	return fail_cnt;
++}
+-- 
+2.7.4
