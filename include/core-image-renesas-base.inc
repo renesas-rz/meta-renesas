@@ -2,6 +2,7 @@
 IMAGE_INSTALL_append = " \
     bash \
     v4l-utils \
+    v4l2-init \
     i2c-tools \
     coreutils \
     packagegroup-multimedia-libs \
