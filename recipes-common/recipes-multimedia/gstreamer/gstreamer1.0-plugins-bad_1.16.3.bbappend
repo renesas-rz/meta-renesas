@@ -5,6 +5,8 @@ SRC_URI_remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plug
 SRC_URI_append = " \
     gitsm://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3e/1.16.3;name=base \
     file://0001_fix_waylandsink_fullscreen.patch \
+    file://0002-waylandsink-Add-set-window-position.patch \
+    file://0003-waylandsink-Add-property-out-w-out-h-to-display-expe.patch \
 "
 
 SRCREV_base = "3ef17d3c57e12f9d7536e464656b871a8949fa5b"

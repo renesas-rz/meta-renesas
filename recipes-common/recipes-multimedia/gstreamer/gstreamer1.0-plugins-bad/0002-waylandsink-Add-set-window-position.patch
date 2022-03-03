@@ -1,0 +1,173 @@
+From 2dd02d7635f06a1c5f6b9d062aa2047189e817e8 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 23 Sep 2021 14:47:18 +0700
+Subject: [PATCH] waylandsink: Add set window position
+
+This commit adds window position setting property for waylandsink.
+This commit assume we can set position over set_window_geometry of
+xdg_surface or set_transient of wl_shell_surface by Wayland Compositor
+server
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ ext/wayland/gstwaylandsink.c | 38 ++++++++++++++++++++++++++++++++++++--
+ ext/wayland/gstwaylandsink.h |  2 ++
+ ext/wayland/wlwindow.c       | 17 ++++++++++++++++-
+ ext/wayland/wlwindow.h       |  3 ++-
+ 4 files changed, 56 insertions(+), 4 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 8e9feae..1a498f8 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -65,7 +65,9 @@ enum
+   PROP_DISPLAY,
+   PROP_FULLSCREEN,
+   PROP_USE_SUBSURFACE,
+-  PROP_SUPPRESS_INTERLACE
++  PROP_SUPPRESS_INTERLACE,
++  PROP_WAYLAND_POSITION_X,    /* add property (position_x) */
++  PROP_WAYLAND_POSITION_Y,    /* add property (position_y) */
+ };
+ 
+ #define DEFAULT_USE_SUBSURFACE          TRUE
+@@ -225,6 +227,19 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+           "When enabled, dmabuf are created without flag of interlaced buffer",
+           DEFAULT_SUPPRESS_INTERLACE,
+           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++
++  /* install property (position_x) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_POSITION_X,
++      g_param_spec_int ("position_x", "Position_X",
++                        "Wayland  Position X value from the application ",
++                        0, G_MAXINT, 0, G_PARAM_READWRITE));
++
++  /* install property (position_y) */
++  g_object_class_install_property (G_OBJECT_CLASS(klass), PROP_WAYLAND_POSITION_Y,
++      g_param_spec_int ("position_y", "Position_Y",
++                        "Wayland  Position Y value from the application ",
++                        0, G_MAXINT, 0, G_PARAM_READWRITE));
++
+ }
+ 
+ static void
+@@ -235,6 +250,8 @@ gst_wayland_sink_init (GstWaylandSink * sink)
+ 
+   sink->use_subsurface = DEFAULT_USE_SUBSURFACE;
+   sink->enable_interlace = !DEFAULT_SUPPRESS_INTERLACE;
++  sink->position_x = -1;
++  sink->position_y = -1;
+ }
+ 
+ static void
+@@ -275,6 +292,14 @@ gst_wayland_sink_get_property (GObject * object,
+       g_value_set_boolean (value, !sink->enable_interlace);
+       GST_OBJECT_UNLOCK (sink);
+       break;
++    case PROP_WAYLAND_POSITION_X:
++      /* set position_x property */
++      g_value_set_int (value, sink->position_x);
++      break;
++    case PROP_WAYLAND_POSITION_Y:
++      /* set position_y property */
++      g_value_set_int (value, sink->position_y);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -309,6 +334,14 @@ gst_wayland_sink_set_property (GObject * object,
+       sink->enable_interlace = !g_value_get_boolean (value);
+       GST_OBJECT_UNLOCK (sink);
+       break;
++    case PROP_WAYLAND_POSITION_X:
++      /* get position_x property */
++      sink->position_x = g_value_get_int (value);
++      break;
++    case PROP_WAYLAND_POSITION_Y:
++      /* get position_y property */
++      sink->position_y = g_value_get_int (value);
++      break;
+     default:
+       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+       break;
+@@ -747,7 +780,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+     if (!sink->window) {
+       /* if we were not provided a window, create one ourselves */
+       sink->window = gst_wl_window_new_toplevel (sink->display,
+-          &sink->video_info, sink->fullscreen, &sink->render_lock);
++          &sink->video_info, sink->fullscreen, &sink->render_lock,
++          sink->position_x, sink->position_y);
+       g_signal_connect_object (sink->window, "closed",
+           G_CALLBACK (on_window_closed), sink, 0);
+     }
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index b3869fb..ffbb1ea 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -73,6 +73,8 @@ struct _GstWaylandSink
+   struct wl_callback *callback;
+   gboolean use_subsurface;
+   gboolean enable_interlace;
++  gint position_x;
++  gint position_y;
+ };
+ 
+ struct _GstWaylandSinkClass
+diff --git a/ext/wayland/wlwindow.c b/ext/wayland/wlwindow.c
+index 239b4ba..8123900 100644
+--- a/ext/wayland/wlwindow.c
++++ b/ext/wayland/wlwindow.c
+@@ -251,7 +251,7 @@ gst_wl_window_ensure_fullscreen (GstWlWindow * window, gboolean fullscreen)
+ 
+ GstWlWindow *
+ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+-    gboolean fullscreen, GMutex * render_lock)
++    gboolean fullscreen, GMutex * render_lock, gint posx, gint posy)
+ {
+   GstWlWindow *window;
+ 
+@@ -282,6 +282,14 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+ 
+     gst_wl_window_ensure_fullscreen (window, fullscreen);
+ 
++    /* We expect wayland server can handle set new position by new window geometry */
++    if (!fullscreen && (posx != -1) && (posy != -1)){
++      /* Only re-position when input valid position and not fullscreen mode*/
++      gint width =
++        gst_util_uint64_scale_int_round (info->width, info->par_n, info->par_d);
++      xdg_surface_set_window_geometry(window->xdg_surface, posx, posy, width, info->height);
++    }
++
+     /* Finally, commit the xdg_surface state as toplevel */
+     window->configured = FALSE;
+     wl_surface_commit (window->video_surface);
+@@ -308,6 +316,13 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+ 
+     wl_shell_surface_add_listener (window->wl_shell_surface,
+         &wl_shell_surface_listener, window);
++
++    /* We expect wayland server can handle new position by set_transient API*/
++    if (!fullscreen && (posx != -1) && (posy != -1)){
++      /* Only re-position when input valid position and not fullscreen mode*/
++      wl_shell_surface_set_transient (window->wl_shell_surface, window->area_surface, posx, posy, 0);
++    }
++
+     gst_wl_window_ensure_fullscreen (window, fullscreen);
+   } else if (display->fullscreen_shell) {
+     zwp_fullscreen_shell_v1_present_surface (display->fullscreen_shell,
+diff --git a/ext/wayland/wlwindow.h b/ext/wayland/wlwindow.h
+index 8c03320..11b1413 100644
+--- a/ext/wayland/wlwindow.h
++++ b/ext/wayland/wlwindow.h
+@@ -85,7 +85,8 @@ GType gst_wl_window_get_type (void);
+ void gst_wl_window_ensure_fullscreen (GstWlWindow * window,
+         gboolean fullscreen);
+ GstWlWindow *gst_wl_window_new_toplevel (GstWlDisplay * display,
+-        const GstVideoInfo * info, gboolean fullscreen, GMutex * render_lock);
++        const GstVideoInfo * info, gboolean fullscreen, GMutex * render_lock,
++        gint posx, gint posy);
+ GstWlWindow *gst_wl_window_new_in_surface (GstWlDisplay * display,
+         struct wl_surface * parent, GMutex * render_lock);
+ 
+-- 
+2.7.4
