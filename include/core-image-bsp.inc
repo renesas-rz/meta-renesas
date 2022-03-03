@@ -45,6 +45,7 @@ IMAGE_INSTALL_append_rzg2h = " \
     bt-fw \
     obexftp \
     bluez-alsa \
+    audio-init \
 "
 
 # Additional tools for support Tool develop
