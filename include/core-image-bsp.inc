@@ -61,3 +61,8 @@ IMAGE_INSTALL_append = " \
     lttng-ust \
     tcf-agent \
 "
+
+# Additional tools for support testing Realtime characteristic in system
+IMAGE_INSTALL_append = " \
+	${@oe.utils.conditional("IS_RT_BSP", "1", " rt-tests ", " ",d)} \
+"
