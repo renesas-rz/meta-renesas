@@ -7,6 +7,7 @@ SRC_URI_append = " \
     file://0001_fix_waylandsink_fullscreen.patch \
     file://0002-waylandsink-Add-set-window-position.patch \
     file://0003-waylandsink-Add-property-out-w-out-h-to-display-expe.patch \
+    file://0004-waylandsink-Add-mising-code-for-scale-feature.patch \
 "
 
 SRCREV_base = "3ef17d3c57e12f9d7536e464656b871a8949fa5b"
