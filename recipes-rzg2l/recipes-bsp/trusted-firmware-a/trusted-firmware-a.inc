@@ -9,7 +9,7 @@ inherit deploy
 
 S = "${WORKDIR}/git"
 
-COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev)"
+COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev|smarc-rzg2ul)"
 
 PLATFORM ?= "g2l"
 PLATFORM_smarc-rzg2l = "g2l"
@@ -32,6 +32,11 @@ PLATFORM_smarc-rzg2lc = "g2l"
 EXTRA_FLAGS_smarc-rzg2lc = "BOARD=smarc_1"
 FLASH_ADDRESS_BL2_BP_smarc-rzg2lc = "00000"
 FLASH_ADDRESS_FIP_smarc-rzg2lc = "1D200"
+
+PLATFORM_smarc-rzg2ul = "g2ul"
+EXTRA_FLAGS_smarc-rzg2ul = "BOARD=g2ul_smarc SOC_TYPE=1 SPI_FLASH=AT25QL128A"
+FLASH_ADDRESS_BL2_BP_smarc-rzg2ul = "00000"
+FLASH_ADDRESS_FIP_smarc-rzg2ul = "1D200"
 
 PMIC_BUILD_DIR = "${S}/build_pmic"
 
