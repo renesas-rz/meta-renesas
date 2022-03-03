@@ -4,6 +4,8 @@ IMAGE_INSTALL_append = " \
     v4l-utils \
     i2c-tools \
     coreutils \
+    packagegroup-multimedia-libs \
+    packagegroup-multimedia-kernel-modules \
 "
 
 IMAGE_FEATURES_remove = " ssh-server-dropbear"
