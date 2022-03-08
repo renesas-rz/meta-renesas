@@ -1,0 +1,71 @@
+From 580b6b41e5ee8ec80851472276fd13a43157ce7d Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:51:01 +0700
+Subject: [PATCH 05/11] mmngr-module: mmngr_drv: add support IPMMU for RZG2M
+
+This commit add support IPMMU for r8a774a1 (RZG2M) to support
+40bits address for MMP CMA. Below points are added:
+- Reuse code from r8a7796 since these two SoCs are similar.
+- Set dma_coherent_mask to 40bits when IPMMU enabled
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 20 ++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 5a562c0..288e61f 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -195,6 +195,12 @@ static const struct soc_device_attribute r8a77990es1[]  = {
+ 	{}
+ };
+ 
++/* G2M */
++static const struct soc_device_attribute r8a774a1[]  = {
++	{ .soc_id = "r8a774a1" },
++	{}
++};
++
+ /* For IPMMU Main Memory (IPMMUMM) */
+ static struct hw_register ipmmumm_ip_regs[] = {
+ 	{"IMCTR",	IMCTRn_OFFSET(CUR_TTSEL)},
+@@ -1626,7 +1632,7 @@ static int ipmmu_probe(struct platform_device *pdev)
+ 	else
+ 		is_mmu_tlb_disabled = false;
+ 
+-	if (soc_device_match(r8a7796))
++	if (soc_device_match(r8a7796) || soc_device_match(r8a774a1))
+ 		ipmmu_mmu_trans_table = m3_mmu_table;
+ 	else if (soc_device_match(r8a77965))
+ 		ipmmu_mmu_trans_table = m3n_mmu_table;
+@@ -1687,6 +1693,10 @@ static const struct of_device_id ipmmu_of_match[] = {
+ 	  .compatible	= "renesas,ipmmu-mmu-r8a77990",
+ 	  .data = &r8a77990_ipmmu_data
+ 	},
++	{
++	  .compatible   = "renesas,ipmmu-mmu-r8a774a1",
++	  .data = &r8a7796_ipmmu_data
++	},
+ 	{ },
+ };
+ 
+@@ -1829,6 +1839,14 @@ static int mm_probe(struct platform_device *pdev)
+ 	p->mm_dev_reserve = dev;
+ 	of_reserved_mem_device_init(p->mm_dev_reserve);
+ 
++#ifdef IPMMU_MMU_SUPPORT
++	ret = dma_set_coherent_mask(p->mm_dev_reserve, DMA_BIT_MASK(40));
++	if (ret) {
++		pr_err("MMD dma_set_coherent_mask ERROR\n");
++		return -1;
++	}$
++#endif
++
+ 	pkernel_virt_addr = dma_alloc_coherent(p->mm_dev_reserve,
+ 					mm_kernel_reserve_size,
+ 					(dma_addr_t *)&phy_addr,
+-- 
+2.25.1
+

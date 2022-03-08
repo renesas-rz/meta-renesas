@@ -1,0 +1,71 @@
+From f376b6de2783e3104cee2798238c2183a31bca4b Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 15:00:39 +0700
+Subject: [PATCH 09/11] mmngr_drv: mmngr: Add IPMMU support for RZ/G2M v3.0
+
+This patch does some following things:
+- Add support for RZ/G2M v3.0 based on RCar M3 Ver3.0.
+- Correct support for RZ/G2M v1.3 based on RCar M3 Ver1.x
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c    | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 0cedeb4..777755f 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -195,12 +195,18 @@ static const struct soc_device_attribute r8a77990es1[]  = {
+ 	{}
+ };
+ 
+-/* G2M */
++/* G2M v1.3 */
+ static const struct soc_device_attribute r8a774a1[]  = {
+ 	{ .soc_id = "r8a774a1" },
+ 	{}
+ };
+ 
++/* G2M v3.0 */
++static const struct soc_device_attribute r8a774a3[]  = {
++	{ .soc_id = "r8a774a3" },
++	{}
++};
++
+ /* G2N */
+ static const struct soc_device_attribute r8a774b1[]  = {
+ 	{ .soc_id = "r8a774b1" },
+@@ -1638,7 +1644,7 @@ static int ipmmu_probe(struct platform_device *pdev)
+ 
+ 	if (soc_device_match(r8a7795es1))
+ 		rcar_gen3_ipmmu = r8a7795es1_ipmmu;
+-	else if (soc_device_match(r8a7796es1))
++	else if (soc_device_match(r8a7796es1) || soc_device_match(r8a774a1))
+ 		rcar_gen3_ipmmu = r8a7796es1_ipmmu;
+ 	else
+ 		rcar_gen3_ipmmu = data->ipmmu_data;
+@@ -1650,7 +1656,8 @@ static int ipmmu_probe(struct platform_device *pdev)
+ 	else
+ 		is_mmu_tlb_disabled = false;
+ 
+-	if (soc_device_match(r8a7796) || soc_device_match(r8a774a1))
++	if (soc_device_match(r8a7796) || soc_device_match(r8a774a1) ||
++	    soc_device_match(r8a774a3))
+ 		ipmmu_mmu_trans_table = m3_mmu_table;
+ 	else if (soc_device_match(r8a77965) || soc_device_match(r8a774b1))
+ 		ipmmu_mmu_trans_table = m3n_mmu_table;
+@@ -1715,6 +1722,10 @@ static const struct of_device_id ipmmu_of_match[] = {
+ 	  .compatible   = "renesas,ipmmu-mmu-r8a774a1",
+ 	  .data = &r8a7796_ipmmu_data
+ 	},
++	{
++	  .compatible   = "renesas,ipmmu-mmu-r8a774a3",
++	  .data = &r8a7796_ipmmu_data
++	},
+ 	{
+ 	  .compatible = "renesas,ipmmu-mmu-r8a774b1",
+ 	  .data = &r8a77965_ipmmu_data
+-- 
+2.25.1
+

@@ -9,6 +9,26 @@ PR = "r0"
 S = "${WORKDIR}/git"
 MMNGR_DRV_DIR = "mmngr_drv/mmngr/mmngr-module/files/mmngr"
 
+SRC_URI_append = " \
+    file://0001-Add-physical-address-translating-feature.patch \
+    file://0002-mmngr_drv-mmngr-Add-checking-NULL-vma-in-mm_cnv_addr.patch \
+    file://0003-mmngr-Get-start-address-of-MMP-area-from-DT.patch \
+    file://0004-Do-not-parse-and-init-lossy-mem-area-for-RZ-G2L-Seri.patch \
+    file://0005-mmngr-module-mmngr_drv-add-support-IPMMU-for-RZG2M.patch \
+    file://0006-mmngr-module-mmngr_drv-add-support-IPMMU-for-RZG2N.patch \
+    file://0007-mmngr-module-mmngr_drv-add-support-IPMMU-for-RZG2E.patch \
+    file://0008-mmngr-module-mmngr_drv-add-support-IPMMU-for-RZ-G2H.patch \
+    file://0009-mmngr_drv-mmngr-Add-IPMMU-support-for-RZ-G2M-v3.0.patch \
+    file://0010-mmngr_drv-mmngr-Update-PA-VA-mapping-table-for-HiHop.patch \
+    file://0011-mmngr-change-address-setting-for-H3N-Swap-mode.patch \
+"
+
+SRC_URI_append_rzg2l = " \
+    file://0001-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
+    file://0002-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
+    file://0003-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
+"
+
 MMNGR_CFG ?= "MMNGR_SALVATORX"
 MMNGR_CFG_ek874 = "MMNGR_EBISU"
 

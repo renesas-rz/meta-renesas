@@ -1,0 +1,81 @@
+From 775604e0e2df1dc713b527cfd5557c9b56e50824 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:45:47 +0700
+Subject: [PATCH 3/3] mmngr_drv: mmngr-module: drv: Update physical convert
+ func
+
+Reduce parameter of physical convert fuction
+
+Signed-off-by: Triet Nguyen <triet.nguyen.te@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 32 +++++++++----------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 0ad8df1..346f272 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -871,23 +871,21 @@ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
+ }
+ 
+ /* change virtual address to physical address */
+-static void mm_cnv_addr(void *out)
++static void mm_cnv_addr(struct MM_PARAM *tmp)
+ {
+ 	struct vm_area_struct *vma;
+ 	struct mm_struct *mm = current->mm;
+-	struct MM_PARAM *tmp = (struct MM_PARAM *)out;
+ 	unsigned long start;
+ 	unsigned long pfn;
+ 	int lp = 0;
++	int ret = 0;
+ 
+-	for (lp = 0; lp < 2; lp++) {
+-		vma = find_vma(mm, tmp[lp].user_virt_addr);
+-		if(!vma)
+-			continue;
+-		start = tmp[lp].user_virt_addr & PAGE_MASK;
+-		follow_pfn(vma, start, &pfn);
+-		tmp[lp].hard_addr = pfn << PAGE_SHIFT;
+-	}
++	vma = find_vma(mm, tmp->user_virt_addr);
++	start = tmp->user_virt_addr & PAGE_MASK;
++	ret = follow_pfn(vma, start, &pfn);
++	if(ret != 0)
++		 pr_warn("Could not convert virt[%p] addr", tmp->user_virt_addr);
++	tmp->hard_addr = pfn << PAGE_SHIFT;
+ 
+ 	return;
+ }
+@@ -965,7 +963,6 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 	struct MM_PARAM	*p = file->private_data;
+ 	struct MM_CACHE_PARAM *cachep;
+ 	struct device	*mm_dev;
+-	struct MM_PARAM temp[2];
+ 
+ 	mm_dev = mm_drvdata->mm_dev;
+ 
+@@ -1027,11 +1024,14 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 					cachep->len, DMA_TO_DEVICE);
+ 		break;
+ 	case MM_IOC_VTOP:   /* change virtual address to physical address */
+-		copy_from_user(&temp, (const void __user *)arg,
+-				2 * sizeof(struct MM_PARAM));
+-		mm_cnv_addr(&temp);
+-		copy_to_user((void*)arg, &temp, 2 * sizeof(struct MM_PARAM));
+-		break;
++		{
++			struct MM_PARAM temp;
++
++			mm_ioc_set((int __user *) arg, &temp);
++			mm_cnv_addr(&temp);
++			mm_ioc_get(&temp, (int __user *)arg);
++			break;
++		}
+ 	default:
+ 		pr_err("%s MMD CMD EFAULT\n", __func__);
+ 		ret = -EFAULT;
+-- 
+2.25.1
+

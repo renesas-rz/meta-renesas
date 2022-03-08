@@ -1,0 +1,51 @@
+From 5bf132ed13d40af6fbd545f285c21667412404b0 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 15:03:49 +0700
+Subject: [PATCH 11/11] mmngr: change address setting for H3N Swap mode
+
+Change address setting for H3N Swap mode as it is the only
+support mode for now.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.jz@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c  | 2 +-
+ .../mmngr-module/files/mmngr/include/mmngr_private.h      | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 777755f..ec78a71 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -108,7 +108,7 @@ static u64			ipmmu_addr_section_3;
+ static phys_addr_t		*ipmmu_mmu_trans_table;
+ static pgdval_t			*ipmmu_mmu_pgd;
+ 
+-/* Translation table for all IPMMU in R-Car H3 */
++/* Translation table for all IPMMU in R-Car H3N - Swap mode */
+ static phys_addr_t h3_mmu_table[4] = {
+ 	H3_IPMMU_ADDR_SECTION_0,
+ 	H3_IPMMU_ADDR_SECTION_1,
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+index b2c0af6..2d012b2 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+@@ -296,11 +296,11 @@ static int validate_memory_map(void);
+ #define BLOCK_ENTRY_CONFIG	(0x721 | BIT(2))
+ #define IPMMU_BLOCK_PGDVAL(phys_addr)	((phys_addr) | BLOCK_ENTRY_CONFIG)
+ 
+-/* Table entries for H3 */
+-#define H3_IPMMU_ADDR_SECTION_0	0x0700000000ULL
++/* Table entries for H3N - Swap mode */
++#define H3_IPMMU_ADDR_SECTION_0	0x0540000000ULL
+ #define H3_IPMMU_ADDR_SECTION_1	0x0040000000ULL
+-#define H3_IPMMU_ADDR_SECTION_2	0x0500000000ULL
+-#define H3_IPMMU_ADDR_SECTION_3	0x0600000000ULL
++#define H3_IPMMU_ADDR_SECTION_2	0x0080000000ULL
++#define H3_IPMMU_ADDR_SECTION_3	0x0500000000ULL
+ /* Table entries for M3 */
+ #define M3_IPMMU_ADDR_SECTION_0	0x0640000000ULL
+ #define M3_IPMMU_ADDR_SECTION_1	0x0040000000ULL
+-- 
+2.25.1
+

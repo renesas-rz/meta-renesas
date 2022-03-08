@@ -1,0 +1,30 @@
+From d76abd5897dbc0691dbbc535e5de5bbdb6e9acd6 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:03:22 +0700
+Subject: [PATCH 02/11] mmngr_drv: mmngr: Add checking NULL vma in mm_cnv_addr
+
+When vma return NULL, follow_pfn will make kernel dump.
+Add checking NULL to prevent it.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index db4324c..0889f26 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -849,6 +849,8 @@ static void mm_cnv_addr(int __user *out)
+ 
+ 	for (lp = 0; lp < 2; lp++) {
+ 		vma = find_vma(mm, tmp[lp].user_virt_addr);
++		if(!vma)
++			continue;
+ 		start = tmp[lp].user_virt_addr & PAGE_MASK;
+ 		follow_pfn(vma, start, &pfn);
+ 		tmp[lp].hard_addr = pfn << PAGE_SHIFT;
+-- 
+2.25.1
+

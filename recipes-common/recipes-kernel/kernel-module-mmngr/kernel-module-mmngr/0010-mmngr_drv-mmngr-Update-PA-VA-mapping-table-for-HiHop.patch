@@ -1,0 +1,39 @@
+From e0a88b762bfefc6266c612b8a446eca3ab2fb48f Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 15:01:38 +0700
+Subject: [PATCH 10/11] mmngr_drv: mmngr: Update PA-VA mapping table for HiHope
+ RZ/G2N
+
+HiHope board with RZ/G2N have 4 GB SDRAM for LPDDR4-CH0.
+This commit assign 3rd and 4th PA-VA mapping table entry
+for not-shadowed 2 GB part of 4 GB.
+
+  - 3rd entry: 0x4_8000_0000 to 0x4_BFFF_FFFF
+  - 4th entry: 0x4_C000_0000 to 0x4_FFFF_FFFF
+
+Signed-off-by: Yu KANECHIKA <yu.kanechika.uw@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../mmngr/mmngr-module/files/mmngr/include/mmngr_private.h    | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+index 56ab1f6..b2c0af6 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+@@ -307,10 +307,10 @@ static int validate_memory_map(void);
+ #define M3_IPMMU_ADDR_SECTION_2	0x0080000000ULL
+ #define M3_IPMMU_ADDR_SECTION_3	0x0600000000ULL
+ /* Table entries for M3N */
+-#define M3N_IPMMU_ADDR_SECTION_0	0x0
++#define M3N_IPMMU_ADDR_SECTION_0	0x04C0000000ULL
+ #define M3N_IPMMU_ADDR_SECTION_1	0x0040000000ULL
+ #define M3N_IPMMU_ADDR_SECTION_2	0x0080000000ULL
+-#define M3N_IPMMU_ADDR_SECTION_3	0x0
++#define M3N_IPMMU_ADDR_SECTION_3	0x0480000000ULL
+ /* Table entries for E3 */
+ #define E3_IPMMU_ADDR_SECTION_0	0x0
+ #define E3_IPMMU_ADDR_SECTION_1	0x0040000000ULL
+-- 
+2.25.1
+

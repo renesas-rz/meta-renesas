@@ -1,0 +1,46 @@
+From fd7ed33d111b2995f6a89dda34e865f193eb3359 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:16:23 +0700
+Subject: [PATCH 2/3] Fix-ioctl-MM_IOC_VTOP-hang-up
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index ec78a71..0ad8df1 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -871,7 +871,7 @@ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
+ }
+ 
+ /* change virtual address to physical address */
+-static void mm_cnv_addr(int __user *out)
++static void mm_cnv_addr(void *out)
+ {
+ 	struct vm_area_struct *vma;
+ 	struct mm_struct *mm = current->mm;
+@@ -965,6 +965,7 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 	struct MM_PARAM	*p = file->private_data;
+ 	struct MM_CACHE_PARAM *cachep;
+ 	struct device	*mm_dev;
++	struct MM_PARAM temp[2];
+ 
+ 	mm_dev = mm_drvdata->mm_dev;
+ 
+@@ -1026,7 +1027,10 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 					cachep->len, DMA_TO_DEVICE);
+ 		break;
+ 	case MM_IOC_VTOP:   /* change virtual address to physical address */
+-		mm_cnv_addr((int __user *)arg);
++		copy_from_user(&temp, (const void __user *)arg,
++				2 * sizeof(struct MM_PARAM));
++		mm_cnv_addr(&temp);
++		copy_to_user((void*)arg, &temp, 2 * sizeof(struct MM_PARAM));
+ 		break;
+ 	default:
+ 		pr_err("%s MMD CMD EFAULT\n", __func__);
+-- 
+2.25.1
+

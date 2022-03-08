@@ -1,0 +1,79 @@
+From fef3f5d6d1d40d99e0e172b352f71e0f01658156 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:38:38 +0700
+Subject: [PATCH 04/11] Do not parse and init lossy mem area for RZ/G2L Series
+
+RZ/G2L Series do not support lossy mem area.
+So this commit is created to let mmngr not parse and init
+lossy mem area for RZ/G2L Series (RZ/G2{L/LC/UL}).
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 37 ++++++++++++-------
+ 1 file changed, 24 insertions(+), 13 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 107a90c..5a562c0 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -1257,6 +1257,12 @@ static int parse_legacy_memory_node(struct device_node *np)
+ }
+ #endif
+ 
++static const struct soc_device_attribute rzg2l_match[] = {
++	{ .family = "RZ/G2L" },
++	{ .family = "RZ/G2UL" },
++	{ /* sentinel*/ }
++};
++
+ static int parse_reserved_mem_dt(struct device_node *np)
+ {
+ 	int ret = 0;
+@@ -1271,15 +1277,18 @@ static int parse_reserved_mem_dt(struct device_node *np)
+ 			 "(linux,multimedia) from DT\n");
+ 		return ret;
+ 	}
+-	/* Parse reserved memory for lossy compression feature */
+-	ret = _parse_reserved_mem_dt(np, "memory-region",
+-				     "linux,lossy_decompress",
+-				     &mm_lossybuf_addr,
+-				     &mm_lossybuf_size);
+-	if (ret) {
+-		pr_warn("Failed to parse Lossy reserved area" \
+-			"(linux,lossy_decompress) from DT\n");
+-		ret = 0; /* Let MMNGR support other features */
++
++	if (!soc_device_match(rzg2l_match)) {
++		/* Parse reserved memory for lossy compression feature */
++		ret = _parse_reserved_mem_dt(np, "memory-region",
++					     "linux,lossy_decompress",
++					     &mm_lossybuf_addr,
++					     &mm_lossybuf_size);
++		if (ret) {
++			pr_warn("Failed to parse Lossy reserved area" \
++				"(linux,lossy_decompress) from DT\n");
++			ret = 0; /* Let MMNGR support other features */
++		}
+ 	}
+ 	return ret;
+ }
+@@ -1789,10 +1798,12 @@ static int mm_probe(struct platform_device *pdev)
+ 	}
+ #endif
+ 
+-	ret = init_lossy_info();
+-	if (ret) {
+-		pr_err("MMD mm_init ERROR\n");
+-		return -1;
++	if (!soc_device_match(rzg2l_match)) {
++		ret = init_lossy_info();
++		if (ret) {
++			pr_err("MMD mm_init ERROR\n");
++			return -1;
++		}
+ 	}
+ 
+ 	p = kzalloc(sizeof(struct MM_DRVDATA), GFP_KERNEL);
+-- 
+2.25.1
+

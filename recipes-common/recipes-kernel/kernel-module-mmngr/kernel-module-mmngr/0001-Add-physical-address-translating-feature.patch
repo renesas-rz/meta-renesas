@@ -1,0 +1,79 @@
+From 4c48e13bde931f2ff1e2a6180fc4ec755ffb3c18 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:00:17 +0700
+Subject: [PATCH 01/11] Add physical address translating feature
+
+This patch adds physical address translating feature
+
+Signed-off-by: Son Lam <son.lam.ym@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 25 +++++++++++++++++++
+ .../files/mmngr/include/mmngr_private_cmn.h   |  2 ++
+ 2 files changed, 27 insertions(+)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 020b8ec..db4324c 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -67,6 +67,8 @@
+ #include <linux/bitmap.h>
+ #include <linux/cdev.h>
+ #include <linux/platform_device.h>
++#include <linux/sched.h>
++#include <linux/mm.h>
+ #include <linux/miscdevice.h>
+ #include <linux/dma-map-ops.h>
+ #include <linux/of.h>
+@@ -835,6 +837,26 @@ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
+ 	return ret;
+ }
+ 
++/* change virtual address to physical address */
++static void mm_cnv_addr(int __user *out)
++{
++	struct vm_area_struct *vma;
++	struct mm_struct *mm = current->mm;
++	struct MM_PARAM *tmp = (struct MM_PARAM *)out;
++	unsigned long start;
++	unsigned long pfn;
++	int lp = 0;
++
++	for (lp = 0; lp < 2; lp++) {
++		vma = find_vma(mm, tmp[lp].user_virt_addr);
++		start = tmp[lp].user_virt_addr & PAGE_MASK;
++		follow_pfn(vma, start, &pfn);
++		tmp[lp].hard_addr = pfn << PAGE_SHIFT;
++	}
++
++	return;
++}
++
+ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma)
+ {
+ 	if (dev)
+@@ -968,6 +990,9 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		dma_sync_single_for_cpu(mm_dev, p->hard_addr + cachep->offset,
+ 					cachep->len, DMA_TO_DEVICE);
+ 		break;
++	case MM_IOC_VTOP:   /* change virtual address to physical address */
++		mm_cnv_addr((int __user *)arg);
++		break;
+ 	default:
+ 		pr_err("%s MMD CMD EFAULT\n", __func__);
+ 		ret = -EFAULT;
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private_cmn.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private_cmn.h
+index 5f137c6..f8a60bd 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private_cmn.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private_cmn.h
+@@ -87,5 +87,7 @@ struct MM_CACHE_PARAM {
+ #define MM_IOC_SHARE	_IOWR(MM_IOC_MAGIC, 6, struct MM_PARAM)
+ #define MM_IOC_FLUSH	_IOWR(MM_IOC_MAGIC, 7, struct MM_CACHE_PARAM)
+ #define MM_IOC_INVAL	_IOWR(MM_IOC_MAGIC, 8, struct MM_CACHE_PARAM)
++/* virt to phys */
++#define MM_IOC_VTOP     _IOWR(MM_IOC_MAGIC, 9, struct MM_PARAM)
+ 
+ #endif	/* __MMNGR_PRIVATE_CMN_H__ */
+-- 
+2.25.1
+

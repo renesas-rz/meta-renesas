@@ -1,0 +1,54 @@
+From 534cdb8230982053d235268b665a24920f9c577c Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:57:43 +0700
+Subject: [PATCH 08/11] mmngr-module: mmngr_drv: add support IPMMU for RZ/G2H
+
+This commit add support IPMMU for r8a774e1 (RZ/G2H) to support
+40bits address for MMP CMA.
+Reuse code from r8a7795 since these two SoCs are similar.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ .../mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c   | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index fe1294c..0cedeb4 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -213,6 +213,12 @@ static const struct soc_device_attribute r8a774c0[]  = {
+ 	{}
+ };
+ 
++/* G2H */
++static const struct soc_device_attribute r8a774e1[]  = {
++	{ .soc_id = "r8a774e1" },
++	{}
++};
++
+ /* For IPMMU Main Memory (IPMMUMM) */
+ static struct hw_register ipmmumm_ip_regs[] = {
+ 	{"IMCTR",	IMCTRn_OFFSET(CUR_TTSEL)},
+@@ -1650,7 +1656,7 @@ static int ipmmu_probe(struct platform_device *pdev)
+ 		ipmmu_mmu_trans_table = m3n_mmu_table;
+ 	else if (soc_device_match(r8a77990) || soc_device_match(r8a774c0))
+ 		ipmmu_mmu_trans_table = e3_mmu_table;
+-	else /* H3 */
++	else /* H3 or RZ/G2H */
+ 		ipmmu_mmu_trans_table = h3_mmu_table;
+ 
+ 	ipmmu_addr_section_0 = ipmmu_mmu_trans_table[0];
+@@ -1717,6 +1723,10 @@ static const struct of_device_id ipmmu_of_match[] = {
+ 	  .compatible = "renesas,ipmmu-mmu-r8a774c0",
+ 	  .data = &r8a77990_ipmmu_data
+ 	},
++	{
++	  .compatible	= "renesas,ipmmu-mmu-r8a774e1",
++	  .data		= &r8a7795_ipmmu_data
++	},
+ 	{ },
+ };
+ 
+-- 
+2.25.1
+
