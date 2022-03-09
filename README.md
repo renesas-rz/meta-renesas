@@ -1,9 +1,15 @@
 # meta-rzg2
 
-This is a Yocto build layer(version:dunfell) that provides support for the RZ/G2L Group of 64bit Arm-based MPUs from Renesas Electronics.
+This is a Yocto build layer(version:dunfell) that provides support for the RZ/G2 Group of 64bit Arm-based MPUs from Renesas Electronics.
 Currently the following boards and MPUs are supported:
 
-- Board: RZG2L SMARC Evaluation Kit / MPU: R9A77G044L2 (RZ/G2L)
+- Board: EK874 / MPU: R8A774C0 (RZ/G2E)
+- Board: HIHOPE-RZG2M / MPU: R8A774A1 (RZ/G2M v1.3) and R8A774A3 (RZ/G2M v3.0)
+- Board: HIHOPE-RZG2N / MPU: R8A774B1 (RZG2N)
+- Board: HIHOPE-RZG2H / MPU: R8A774E1 (RZG2H)
+- Board: RZG2L SMARC Evaluation Kit / MPU: R9A77G044L (RZ/G2L)
+- Board: RZG2LC SMARC Evaluation Kit / MPU: R9A77G044C (RZ/G2LC)
+- Board: RZG2UL SMARC Evaluation Kit / MPU: R9A77G043U (RZ/G2UL)
 
 ## Patches
 
@@ -16,14 +22,14 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
     branch: dunfell
-    revision: 74b22db6879b388d700f61e08cb3f239cf940d18
-    (tag: dunfell-23.0.11)
+    revision: bba323389749ec3e306509f8fb12649f031be152
+    (tag: dunfell-23.0.14)
     (Need to cherry-pick a commit: git cherry-pick 9e444)
 
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python, meta-multimedia
     branch: dunfell
-    revision: 814eec96c2a29172da57a425a3609f8b6fcc6afe
+    revision: ec978232732edbdd875ac367b5a9c04b881f2e19
     
     URI: http://git.yoctoproject.org/cgit.cgi/meta-gplv2/
     layers: meta-gplv2
@@ -50,13 +56,13 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
 ```bash
     $ git clone https://git.yoctoproject.org/git/poky
     $ cd poky
-    $ git checkout dunfell-23.0.11
+    $ git checkout dunfell-23.0.14
     $ git cherry-pick 9e444
     $ cd ..
     $     
     $ git clone https://github.com/openembedded/meta-openembedded
     $ cd meta-openembedded
-    $ git checkout 814eec96c2a29172da57a425a3609f8b6fcc6afe
+    $ git checkout ec978232732edbdd875ac367b5a9c04b881f2e19
     $ cd ..
     $    
     $ git clone https://git.yoctoproject.org/git/meta-gplv2
@@ -69,7 +75,7 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ cd ..
 ```
 \<tag\> can be selected in any tags of meta-rzg2.
-Now the latest version is **rzg2l_bsp_v1.1**
+Now the latest version is **BSP-3.x**
 
 [Optional] If you need GPU/Codec support, or build Weston image, this step helps to copy them to build environment. Copy file proprietary_mmp.tar.gz and vspmfilter.tar.xz to $WORK and do below commands.
 ```bash
@@ -78,7 +84,7 @@ Now the latest version is **rzg2l_bsp_v1.1**
     $ ./copy_gfx_mmp.sh ../meta-rzg2
     $ cd ..
     $
-    $ cp vspmfilter.tar.xz meta-rzg2/recipes-multimedia/gstreamer/gstreamer1.0-plugin-vspmfilter
+    $ cp vspmfilter.tar.xz meta-rzg2/recipes-common/recipes-multimedia/gstreamer/gstreamer1.0-plugin-vspmfilter
     $ 
 ```
 
@@ -97,7 +103,7 @@ Build the target file system image using bitbake:
 ```bash
     $ bitbake core-image-<target>
 ```
-\<target\>:minimal,weston
+\<target\>:bsp, weston, qt
 
 After completing the images for the target machine will be available in the output
 directory _'tmp/deploy/images/\<supported board name\>'_.

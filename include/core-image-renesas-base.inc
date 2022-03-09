@@ -14,7 +14,7 @@ IMAGE_FEATURES_append = " ssh-server-openssh"
 
 update_issue() {
     # Set BSP version
-    BSP_VERSION="1.3"
+    BSP_VERSION="3.0"
 
     # Set SoC and Board info
     case "${MACHINE}" in
