@@ -1,0 +1,104 @@
+From 859e28970c722f45e444c0aefd4e1483f0f096bd Mon Sep 17 00:00:00 2001
+From: Cuong Doan <cuong.doan.ra@renesas.com>
+Date: Wed, 9 Mar 2022 15:31:11 +0700
+Subject: [PATCH] vspm_main: Update isu clock enable.
+
+Update isu clock enable to fix with kernel 5.10 cpg.
+
+Signed-off-by: Cuong Doan <cuong.doan.ra@renesas.com>
+---
+ vspm-module/files/vspm/drv/vspm_main.c | 35 ++++++++++++++++----------
+ vspm-module/files/vspm/drv/vspm_main.h |  5 +++-
+ 2 files changed, 26 insertions(+), 14 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index b11adb4..65edb84 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -448,9 +448,12 @@ static int vspm_isu_probe(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
++	char *clk_names[CLKNUM] = {ISU_ACLK_NAME, ISU_PCLK_NAME};
++	char *reset_names[CLKNUM] = {ISU_ARST_NAME, ISU_PRST_NAME};
+ 	struct clk *clk;
+ 	struct reset_control *rstc;
+ 	int ch;
++	int i;
+ 
+ 	/* get channel */
+ 	of_property_read_u32(np, "renesas,#ch", &ch);
+@@ -470,20 +473,24 @@ static int vspm_isu_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	/* set clocks */
+-	clk = devm_clk_get(&pdev->dev, ISU_CLK_NAME);
+-	if (IS_ERR(clk)) {
+-		APRINT("Cannot get %s clock!! ch=%d\n",ISU_CLK_NAME, ch);
+-		return -1;
++	for (i = 0; i < CLKNUM; i++) {
++		clk = devm_clk_get(&pdev->dev, clk_names[i]);
++		if (IS_ERR(clk)) {
++			APRINT("Cannot get %s clock!! ch=%d\n", clk_names[i], ch);
++			for (; i > 0; i--)
++				pdrv->isu_clks[ch][i - 1] = NULL;
++			return -1;
++		}
++		pdrv->isu_clks[ch][i] = clk;
+ 	}
+ 
+-	pdrv->isu_clks[ch][0] = clk;
+-
+-	rstc = devm_reset_control_get(&pdev->dev, NULL);
+-
+-        if (IS_ERR(rstc))
+-                dev_warn(&pdev->dev, "Failed to get cpg reset\n");
+-        else
+-                reset_control_deassert(rstc);
++	for (i = 0; i < CLKNUM; i++) {
++		rstc = devm_reset_control_get(&pdev->dev, reset_names[i]);
++	        if (IS_ERR(rstc))
++	                dev_warn(&pdev->dev, "Failed to get cpg reset\n");
++	        else
++	                reset_control_deassert(rstc);
++	}
+ 
+ 	/* set driver data */
+ 	platform_set_drvdata(pdev, &pdrv->isu_clks[ch]);
+@@ -503,6 +510,7 @@ static int vspm_isu_remove(struct platform_device *pdev)
+ 	struct device_node *np = pdev->dev.of_node;
+ 
+ 	int ch;
++	int i;
+ 
+ 	/* unset runtime PM */
+ 	pm_runtime_disable(&pdev->dev);
+@@ -515,7 +523,8 @@ static int vspm_isu_remove(struct platform_device *pdev)
+ 	pdrv->isu_pdev[ch] = NULL;
+ 
+ 	/* unset clocks */
+-	pdrv->isu_clks[ch][0] = NULL;
++	for (i = 0; i < CLKNUM; i++)
++		pdrv->isu_clks[ch][i] = NULL;
+ 
+ 	return 0;
+ }
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 29fdc80..3737d68 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -70,7 +70,10 @@
+ #define VSP_CLK_NAME		"vsp"
+ #define FDP_CLK_NAME		"fdp"
+ #define FCP_CLK_NAME		"fcp"
+-#define ISU_CLK_NAME		"isu_aclk"
++#define ISU_ACLK_NAME		"isu_aclk"
++#define ISU_PCLK_NAME		"isu_pclk"
++#define ISU_ARST_NAME		"aresetn"
++#define ISU_PRST_NAME		"presetn"
+ #define CLKNUM			2
+ 
+ /* vspm driver data structure */
+-- 
+2.17.1
+

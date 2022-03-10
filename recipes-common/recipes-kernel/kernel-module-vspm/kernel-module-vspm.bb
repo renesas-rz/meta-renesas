@@ -31,6 +31,7 @@ SRC_URI_append_rzg2l = " \
 	file://0009-Wrong-initialize-value-of-clip.patch \
 	file://0010-Fix-wrong-output-size-in-setting-case-rs_par-is-NULL.patch \
 	file://0011-Fix-error-cannot-detect-NOOUT-in-case-rs_par-NULL.patch \
+	file://0012-vspm_main-Update-isu-clock-enable.patch \
 "
 
 S = "${WORKDIR}/git"
