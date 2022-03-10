@@ -1,6 +1,7 @@
 DESCRIPTION = "Linux kernel for the RZG2 based board"
 
 require recipes-kernel/linux/linux-yocto.inc
+require include/docker-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul)"
@@ -17,6 +18,10 @@ LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.83-cip1-rt1", 
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
+
+SRC_URI_append = "\
+  ${@oe.utils.conditional("USE_DOCKER", "1", " file://docker.cfg ", "", d)} \
+"
 
 KBUILD_DEFCONFIG = "defconfig"
 KCONFIG_MODE = "alldefconfig"
