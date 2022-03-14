@@ -1,0 +1,34 @@
+From 518657b383d722db4dd8450dd598cd79aab33587 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Thu, 5 Nov 2020 17:35:24 +0700
+Subject: [PATCH 417/433] ARM: dts: r8a7745-iwg22d-sodimm: Enable touch
+ interrupt via gpio-hog
+
+Enable touch panel interrupt GPIO (GPIO_4_4) via gpio-hog on the iWave
+RZ/G1E (iwg22d) board.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index d52fed4..82f04aa 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -143,6 +143,12 @@
+ 		output-low;
+ 		line-name = "can0-trx-en-gpio";
+ 	};
++
++	touch-interrupt {
++		gpio-hog;
++		gpios = <4 GPIO_ACTIVE_LOW>;
++		input;
++	};
+ };
+ 
+ &hscif1 {
+-- 
+2.7.4
+

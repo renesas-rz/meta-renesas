@@ -1,0 +1,125 @@
+From 9bb61952ed24e1ff9c7eeba78b68c3ce5111ad7b Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Fri, 23 Oct 2020 11:02:44 +0700
+Subject: [PATCH 234/433] ARM: dts: iwg23s-sbc: Enable more serial ports
+
+Add support for scif{2,4,5} and hscif{1,2} serial ports on iWave RZ/G1C
+board.
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 66 ++++++++++++++++++++++++++++++-
+ 1 file changed, 65 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 09e72fa..61d9714 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -15,6 +15,11 @@
+ 	aliases {
+ 		ethernet0 = &avb;
+ 		serial1 = &scif1;
++		serial2 = &scif2;
++		serial3 = &scif4;
++		serial4 = &scif5;
++		serial5 = &hscif1;
++		serial6 = &hscif2;
+ 	};
+ 
+ 	chosen {
+@@ -112,6 +117,22 @@
+ 	clock-frequency = <20000000>;
+ };
+ 
++&hscif1 {
++	pinctrl-0 = <&hscif1_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	status = "okay";
++};
++
++&hscif2 {
++	pinctrl-0 = <&hscif2_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	status = "okay";
++};
++
+ &hsusb0 {
+ 	status = "okay";
+ };
+@@ -164,6 +185,16 @@
+ 		function = "can0";
+ 	};
+ 
++	hscif1_pins: serial5 {
++		groups = "hscif1_data", "hscif1_ctrl_a";
++		function = "hscif1";
++	};
++
++	hscif2_pins: serial6 {
++		groups = "hscif2_data", "hscif2_clk", "hscif2_ctrl";
++		function = "hscif2";
++	};
++
+ 	i2c3_pins: i2c3 {
+ 		groups = "i2c3_c";
+ 		function = "i2c3";
+@@ -191,11 +222,26 @@
+ 		function = "qspi0";
+ 	};
+ 
+-	scif1_pins: scif1 {
++	scif1_pins: serial1 {
+ 		groups = "scif1_data_b";
+ 		function = "scif1";
+ 	};
+ 
++	scif2_pins: serial2 {
++		groups = "scif2_data_b";
++		function = "scif2";
++	};
++
++	scif4_pins: serial3 {
++		groups = "scif4_data_b";
++		function = "scif4";
++	};
++
++	scif5_pins: serial4 {
++		groups = "scif5_data_b";
++		function = "scif5";
++	};
++
+ 	sdhi2_pins: sd2 {
+ 		groups = "sdhi2_data4", "sdhi2_ctrl";
+ 		function = "sdhi2";
+@@ -269,6 +315,24 @@
+ 	status = "okay";
+ };
+ 
++&scif2 {
++	pinctrl-0 = <&scif2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif4 {
++	pinctrl-0 = <&scif4_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif5 {
++	pinctrl-0 = <&scif5_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
+ &tmu1 {
+ 	status = "okay";
+ };
+-- 
+2.7.4
+

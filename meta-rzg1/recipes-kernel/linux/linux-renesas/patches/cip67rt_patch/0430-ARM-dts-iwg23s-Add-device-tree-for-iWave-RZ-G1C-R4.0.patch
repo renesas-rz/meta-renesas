@@ -1,0 +1,523 @@
+From 45c088d6e7febc5283931ac534175136ac1a6c92 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Wed, 27 Jan 2021 14:16:49 +0700
+Subject: [PATCH 430/433] ARM: dts: iwg23s: Add device tree for iWave RZ/G1C
+ R4.0 board
+
+Add basic support for the iWave RZ/G1C R4.0 board.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc-rev4.dts | 500 +++++++++++++++++++++++++
+ 1 file changed, 500 insertions(+)
+ create mode 100644 arch/arm/boot/dts/r8a77470-iwg23s-sbc-rev4.dts
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc-rev4.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc-rev4.dts
+new file mode 100644
+index 0000000..6032748
+--- /dev/null
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc-rev4.dts
+@@ -0,0 +1,500 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Device Tree Source for the iWave-RZ/G1C single board computer
++ *
++ * Copyright (C) 2018 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include <dt-bindings/gpio/gpio.h>
++#include "r8a77470.dtsi"
++/ {
++	model = "iWave iW-RainboW-G23S single board computer based on RZ/G1C";
++	compatible = "iwave,g23s", "renesas,r8a77470";
++
++	aliases {
++		ethernet0 = &avb;
++		serial1 = &scif1;
++		serial2 = &scif2;
++		serial3 = &scif4;
++		serial4 = &scif5;
++		serial5 = &hscif1;
++		serial6 = &hscif2;
++	};
++
++	chosen {
++		bootargs = "ignore_loglevel rw root=/dev/nfs ip=dhcp";
++		stdout-path = "serial1:115200n8";
++	};
++
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0 0x40000000 0 0x20000000>;
++	};
++
++	reg_1p0v: 1p0v {
++		compatible = "regulator-fixed";
++		regulator-name = "1P0V";
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_1p8v: reg-1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: reg-3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vccq_sdhi2: regulator-vccq-sdhi2 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI2 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio2 24 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++		states = <3300000 1
++			  1800000 0>;
++	};
++
++	hdmi-out {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_con: endpoint {
++				remote-endpoint = <&sii9022_out>;
++			};
++		};
++	};
++};
++
++&cpu0 {
++	cpu0-supply = <&reg_1p0v>;
++};
++
++&avb {
++	pinctrl-0 = <&avb_pins>;
++	pinctrl-names = "default";
++
++	phy-handle = <&phy3>;
++	phy-mode = "gmii";
++	renesas,no-ether-link;
++	status = "okay";
++
++	phy3: ethernet-phy@3 {
++		reg = <3>;
++		interrupt-parent = <&gpio5>;
++		interrupts = <16 IRQ_TYPE_LEVEL_LOW>;
++		micrel,led-mode = <1>;
++	};
++};
++
++&can0 {
++	pinctrl-0 = <&can0_pins>;
++	pinctrl-names = "default";
++	renesas,can-clock-select = <0x0>;
++	status = "okay";
++};
++
++&cmt0 {
++	status = "okay";
++};
++
++&cmt1 {
++	status = "okay";
++};
++
++&du {
++	pinctrl-0 = <&du0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	ports {
++		port@0 {
++			endpoint {
++				remote-endpoint = <&sii9022_in>;
++			};
++		};
++	};
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&extal_clk {
++	clock-frequency = <20000000>;
++};
++
++&hscif1 {
++	pinctrl-0 = <&hscif1_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	status = "okay";
++};
++
++&hscif2 {
++	pinctrl-0 = <&hscif2_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	status = "okay";
++};
++
++&hsusb0 {
++	status = "okay";
++};
++
++&i2c3 {
++	pinctrl-0 = <&i2c3_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <400000>;
++
++	rtc@51 {
++		compatible = "nxp,pcf85263";
++		reg = <0x51>;
++	};
++};
++
++&i2c4 {
++	pinctrl-0 = <&i2c4_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	clock-frequency = <100000>;
++
++	rcar_dvdec@0 {
++		compatible = "rcar-dvdec";
++		reg = <0x49>;
++		clocks = <&mstp8_clks R8A77470_CLK_DVD>;
++
++		port {
++			dvdec: endpoint {
++				remote-endpoint = <&vin0ep>;
++			};
++		};
++	};
++};
++
++&ohci1 {
++	status = "okay";
++};
++
++&pfc {
++	avb_pins: avb {
++		groups = "avb_mdio", "avb_gmii_tx_rx", "avb_phy_int";
++		function = "avb";
++	};
++
++	can0_pins: can0 {
++		groups = "can0_data_a";
++		function = "can0";
++	};
++
++	du0_pins: du0 {
++		groups = "du0_rgb888", "du0_clk0_out", "du0_sync",
++			 "du0_cde", "du0_disp";
++		function = "du0";
++	};
++
++	hscif1_pins: serial5 {
++		groups = "hscif1_data", "hscif1_ctrl_a";
++		function = "hscif1";
++	};
++
++	hscif2_pins: serial6 {
++		groups = "hscif2_data", "hscif2_clk", "hscif2_ctrl";
++		function = "hscif2";
++	};
++
++	i2c3_pins: i2c3 {
++		groups = "i2c3_c";
++		function = "i2c3";
++	};
++
++	i2c4_pins: i2c4 {
++		groups = "i2c4_e";
++		function = "i2c4";
++	};
++
++	mmc_pins_uhs: mmc_uhs {
++		groups = "mmc_data8", "mmc_ctrl";
++		function = "mmc";
++		power-source = <1800>;
++	};
++
++	msiof2_pins: spi4 {
++		groups = "msiof2_clk_a", "msiof2_sync_a",
++			 "msiof2_ss1_a", "msiof2_rx_a", "msiof2_tx_a";
++		function = "msiof2";
++	};
++
++	pwm0_pins: pwm0 {
++		groups = "pwm0_c";
++		function = "pwm0";
++	};
++
++	pwm2_pins: pwm2 {
++		groups = "pwm2_d";
++		function = "pwm2";
++	};
++
++	pwm6_pins: pwm6 {
++		groups = "pwm6_c";
++		function = "pwm6";
++	};
++
++	qspi0_pins: qspi0 {
++		groups = "qspi0_ctrl", "qspi0_data2";
++		function = "qspi0";
++	};
++
++	scif1_pins: serial1 {
++		groups = "scif1_data_b";
++		function = "scif1";
++	};
++
++	scif2_pins: serial2 {
++		groups = "scif2_data_b";
++		function = "scif2";
++	};
++
++	scif4_pins: serial3 {
++		groups = "scif4_data_b";
++		function = "scif4";
++	};
++
++	scif5_pins: serial4 {
++		groups = "scif5_data_b";
++		function = "scif5";
++	};
++
++	sdhi2_pins: sd2 {
++		groups = "sdhi2_data4", "sdhi2_ctrl";
++		function = "sdhi2";
++		power-source = <3300>;
++	};
++
++	sdhi2_pins_uhs: sd2_uhs {
++		groups = "sdhi2_data4", "sdhi2_ctrl";
++		function = "sdhi2";
++		power-source = <1800>;
++	};
++
++	usb0_pins: usb0 {
++		groups = "usb0";
++		function = "usb0";
++	};
++
++	usb1_pins: usb1 {
++		groups = "usb1";
++		function = "usb1";
++	};
++
++	vin0_pins: vin0 {
++		groups = "vin0_data8", "vin0_sync", "vin0_clkenb", "vin0_clk";
++		function = "vin0";
++	};
++};
++
++&msiof2 {
++	pinctrl-0 = <&msiof2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	spidev@0 {
++		compatible = "renesas,spidev-r8a77470";
++		reg = <0>;
++		spi-max-frequency = <1000000>;
++	};
++};
++
++&pwm0 {
++	pinctrl-0 = <&pwm0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm2 {
++	pinctrl-0 = <&pwm2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm6 {
++	pinctrl-0 = <&pwm6_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&qspi0 {
++	pinctrl-0 = <&qspi0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	/* WARNING - This device contains the bootloader. Handle with care. */
++	flash: flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "sst,sst25vf016b", "issi,is25lp016d", "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <50000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		m25p,fast-read;
++		spi-cpol;
++		spi-cpha;
++	};
++};
++
++&rwdt {
++	timeout-sec = <60>;
++	status = "okay";
++};
++
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&scif2 {
++	pinctrl-0 = <&scif2_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif4 {
++	pinctrl-0 = <&scif4_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&scif5 {
++	pinctrl-0 = <&scif5_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&tmu1 {
++	status = "okay";
++};
++
++&sdhi1 {
++	pinctrl-0 = <&mmc_pins_uhs>;
++	pinctrl-names = "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&reg_1p8v>;
++	bus-width = <8>;
++	mmc-hs200-1_8v;
++	non-removable;
++	fixed-emmc-driver-type = <1>;
++	status = "okay";
++};
++
++&sdhi2 {
++	pinctrl-0 = <&sdhi2_pins>;
++	pinctrl-1 = <&sdhi2_pins_uhs>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&vccq_sdhi2>;
++	bus-width = <4>;
++	cd-gpios = <&gpio4 20 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&i2c4 {
++	pinctrl-0 = <&i2c4_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <100000>;
++	status = "okay";
++
++	hdmi@39 {
++		compatible = "sil,sii9022";
++		reg = <0x39>;
++		interrupt-parent = <&gpio2>;
++		interrupts = <29 IRQ_TYPE_LEVEL_LOW>;
++
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				sii9022_in: endpoint {
++					remote-endpoint = <&du_out_rgb0>;
++				};
++			};
++
++			port@1 {
++				reg = <1>;
++				sii9022_out: endpoint {
++					remote-endpoint = <&hdmi_con>;
++				};
++			};
++	        };
++	};
++};
++
++&usb2_phy0 {
++	status = "okay";
++};
++
++&usb2_phy1 {
++	status = "okay";
++};
++
++&usbphy0 {
++	pinctrl-0 = <&usb0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++	renesas,id-gpio = <&gpio0 1 GPIO_ACTIVE_LOW>;
++	renesas,vbus-pwr-gpio = <&gpio0 0 GPIO_ACTIVE_LOW>;
++	renesas,wakeup;
++};
++
++&usbphy1 {
++	pinctrl-0 = <&usb1_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&vin0 {
++	status = "okay";
++	pinctrl-0 = <&vin0_pins>;
++	pinctrl-names = "default";
++
++	port {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		vin0ep: endpoint {
++			remote-endpoint = <&dvdec>;
++		};
++	};
++};
+-- 
+2.7.4
+

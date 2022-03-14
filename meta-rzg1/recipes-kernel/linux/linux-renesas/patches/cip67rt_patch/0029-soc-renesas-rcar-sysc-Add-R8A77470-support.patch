@@ -1,0 +1,97 @@
+From 9686960353d951f6b0c4c3a37ad9a00c2531309c Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Thu, 27 Sep 2018 14:43:26 +0700
+Subject: [PATCH 029/433] soc: renesas: rcar-sysc: Add R8A77470 support
+
+Add support for RZ/G1C (R8A77470) SoC power areas to the R-Car SYSC
+driver.
+
+Signed-off-by: thongsyho <thong.ho.px@rvc.renesas.com>
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ drivers/soc/renesas/Makefile        |  1 +
+ drivers/soc/renesas/r8a77470-sysc.c | 33 +++++++++++++++++++++++++++++++++
+ drivers/soc/renesas/rcar-sysc.c     |  3 +++
+ drivers/soc/renesas/rcar-sysc.h     |  3 ++-
+ 4 files changed, 39 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/soc/renesas/r8a77470-sysc.c
+
+diff --git a/drivers/soc/renesas/Makefile b/drivers/soc/renesas/Makefile
+index 60abaac..4272a51 100644
+--- a/drivers/soc/renesas/Makefile
++++ b/drivers/soc/renesas/Makefile
+@@ -1,5 +1,6 @@
+ obj-$(CONFIG_ARCH_RCAR_GEN2)	+= rcar-rst.o
+ obj-$(CONFIG_ARCH_R8A7743)	+= rcar-sysc.o r8a7743-sysc.o
+ obj-$(CONFIG_ARCH_R8A7745)	+= rcar-sysc.o r8a7745-sysc.o
++obj-$(CONFIG_ARCH_R8A77470)	+= rcar-sysc.o r8a77470-sysc.o
+ 
+ obj-$(CONFIG_SOC_BUS)		+= renesas-soc.o
+diff --git a/drivers/soc/renesas/r8a77470-sysc.c b/drivers/soc/renesas/r8a77470-sysc.c
+new file mode 100644
+index 0000000..f275858
+--- /dev/null
++++ b/drivers/soc/renesas/r8a77470-sysc.c
+@@ -0,0 +1,33 @@
++/*
++ * Renesas R-Car E2 System Controller
++ *
++ * Copyright (C) 2016 Glider bvba
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ */
++
++#include <linux/bug.h>
++#include <linux/kernel.h>
++
++#include <dt-bindings/power/r8a77470-sysc.h>
++
++#include "rcar-sysc.h"
++
++static const struct rcar_sysc_area r8a77470_areas[] __initconst = {
++	{ "always-on",	    0, 0, R8A77470_PD_ALWAYS_ON, -1, PD_ALWAYS_ON },
++	{ "ca7-scu",	0x100, 0, R8A77470_PD_CA7_SCU,	R8A77470_PD_ALWAYS_ON,
++	  PD_SCU },
++	{ "ca7-cpu0",	0x1c0, 0, R8A77470_PD_CA7_CPU0,	R8A77470_PD_CA7_SCU,
++	  PD_CPU_NOCR },
++	{ "ca7-cpu1",	0x1c0, 1, R8A77470_PD_CA7_CPU1,	R8A77470_PD_CA7_SCU,
++	  PD_CPU_NOCR },
++	{ "sh-4a",	 0x80, 0, R8A77470_PD_SH_4A,	R8A77470_PD_ALWAYS_ON },
++	{ "sgx",	 0xc0, 0, R8A77470_PD_SGX,	R8A77470_PD_ALWAYS_ON },
++};
++
++const struct rcar_sysc_info r8a77470_sysc_info __initconst = {
++	.areas = r8a77470_areas,
++	.num_areas = ARRAY_SIZE(r8a77470_areas),
++};
+diff --git a/drivers/soc/renesas/rcar-sysc.c b/drivers/soc/renesas/rcar-sysc.c
+index 98b97d5..fb5e3b5 100644
+--- a/drivers/soc/renesas/rcar-sysc.c
++++ b/drivers/soc/renesas/rcar-sysc.c
+@@ -281,6 +281,9 @@ static const struct of_device_id rcar_sysc_matches[] = {
+ #ifdef CONFIG_ARCH_R8A7745
+ 	{ .compatible = "renesas,r8a7745-sysc", .data = &r8a7745_sysc_info },
+ #endif
++#ifdef CONFIG_ARCH_R8A77470
++	{ .compatible = "renesas,r8a77470-sysc", .data = &r8a77470_sysc_info },
++#endif
+ 	{ /* sentinel */ }
+ };
+ 
+diff --git a/drivers/soc/renesas/rcar-sysc.h b/drivers/soc/renesas/rcar-sysc.h
+index d8d9227..7734edd 100644
+--- a/drivers/soc/renesas/rcar-sysc.h
++++ b/drivers/soc/renesas/rcar-sysc.h
+@@ -53,4 +53,5 @@ struct rcar_sysc_info {
+ 
+ extern const struct rcar_sysc_info r8a7745_sysc_info;
+ extern const struct rcar_sysc_info r8a7743_sysc_info;
+-#endif /* __SOC_RENESAS_RCAR_SYSC_H__ */
++extern const struct rcar_sysc_info r8a77470_sysc_info;
++#endif /* __SOC_RENESAS_RCAR_SYSC_H__ */
+\ No newline at end of file
+-- 
+2.7.4
+

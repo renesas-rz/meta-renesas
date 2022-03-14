@@ -1,0 +1,40 @@
+From 8acaf0e300515b8eedf0794ec35f882a8becfbaa Mon Sep 17 00:00:00 2001
+From: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+Date: Tue, 10 Nov 2015 11:39:00 -0200
+Subject: [PATCH 183/433] media: adv7180: increase delay after reset to 5ms
+
+Initialization of the ADV7180 chip fails on the Renesas R8A7790-based
+Lager board about 50% of the time.  This patch resolves the issue by
+increasing the minimum delay after reset from 2 ms to 5 ms, following the
+recommendation in the ADV7180 datasheet:
+
+"Executing a software reset takes approximately 2 ms. However, it is
+recommended to wait 5 ms before any further I2C writes are performed."
+
+Signed-off-by: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Acked-by: Lars-Peter Clausen <lars@metafoo.de>
+Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/media/i2c/adv7180.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/adv7180.c b/drivers/media/i2c/adv7180.c
+index f82c8aa..3c3c4bf 100644
+--- a/drivers/media/i2c/adv7180.c
++++ b/drivers/media/i2c/adv7180.c
+@@ -1112,7 +1112,7 @@ static int init_device(struct adv7180_state *state)
+ 	mutex_lock(&state->mutex);
+ 
+ 	adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_RES);
+-	usleep_range(2000, 10000);
++	usleep_range(5000, 10000);
+ 
+ 	ret = state->chip_info->init(state);
+ 	if (ret)
+-- 
+2.7.4
+

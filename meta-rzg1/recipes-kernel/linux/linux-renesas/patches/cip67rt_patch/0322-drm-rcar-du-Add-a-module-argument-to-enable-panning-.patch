@@ -1,0 +1,52 @@
+From 19afceb05f69d331875323e839034272ee6089b8 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Thu, 29 Oct 2020 19:03:46 +0700
+Subject: [PATCH 322/433] drm: rcar-du: Add a module argument to enable panning
+ in fbdev emulation
+
+When set to true, the fbdev_pan argument forces the driver to allocate a
+frame buffer for fbdev emulation twice as high as the screen size. This
+allows implementing page flipping through panning with the emulated
+fbdev device.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index d009aa4..47bdc63 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -10,6 +10,7 @@
+  * the Free Software Foundation; either version 2 of the License, or
+  * (at your option) any later version.
+  */
++#include <linux/moduleparam.h>
+ 
+ #include <drm/drmP.h>
+ #include <drm/drm_atomic.h>
+@@ -30,6 +31,9 @@
+ #include "rcar_du_regs.h"
+ #include "rcar_du_vsp.h"
+ 
++static bool rcar_du_fbdev_pan = true;
++module_param_named(fb_cma_pan, rcar_du_fbdev_pan, bool, 0444);
++
+ /* -----------------------------------------------------------------------------
+  * Format helpers
+  */
+@@ -627,7 +631,8 @@ int rcar_du_modeset_init(struct rcar_du_device *rcdu)
+ 
+ 	if (dev->mode_config.num_connector) {
+ 		fbdev = drm_fbdev_cma_init(dev, 32, dev->mode_config.num_crtc,
+-					   dev->mode_config.num_connector, 1);
++					   dev->mode_config.num_connector,
++					   rcar_du_fbdev_pan ? 2 : 1);
+ 		if (IS_ERR(fbdev))
+ 			return PTR_ERR(fbdev);
+ 
+-- 
+2.7.4
+

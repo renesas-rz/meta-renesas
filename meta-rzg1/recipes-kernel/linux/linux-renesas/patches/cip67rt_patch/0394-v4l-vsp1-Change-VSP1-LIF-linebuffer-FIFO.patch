@@ -1,0 +1,51 @@
+From 8fb92485055ec53982dd9f72a7866cd1718889ff Mon Sep 17 00:00:00 2001
+From: Le Hoang Minh Thuan <thuanlhm@fsoft.com.vn>
+Date: Thu, 22 Aug 2019 08:33:05 +0700
+Subject: [PATCH 394/433] v4l: vsp1: Change VSP1 LIF linebuffer FIFO
+
+refer to https://patchwork.kernel.org/patch/6013141/
+
+Change to VSPD hardware recommended value.
+Purpose is highest pixel clock without underruns.
+In the default R-Car Linux BSP config this value is
+wrong and therefore there are many underruns.
+
+Here are the original settings:
+HBTH = 1300 (VSPD stops when 1300 pixels are buffered)
+LBTH = 200 (VSPD resumes when buffer level has decreased
+            below 200 pixels)
+
+The display underruns can be eliminated
+by applying the following settings:
+HBTH = 1504
+LBTH = 1248
+
+Reported-by: Peter Fiedler <peter.fiedler@renesas.com>
+Signed-off-by: Yoshifumi Hosoya <yoshifumi.hosoya.wj@renesas.com>
+Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/media/platform/vsp1/vsp1_lif.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/platform/vsp1/vsp1_lif.c b/drivers/media/platform/vsp1/vsp1_lif.c
+index 433853c..818f71c 100644
+--- a/drivers/media/platform/vsp1/vsp1_lif.c
++++ b/drivers/media/platform/vsp1/vsp1_lif.c
+@@ -39,9 +39,9 @@ static int lif_s_stream(struct v4l2_subdev *subdev, int enable)
+ {
+ 	const struct v4l2_mbus_framefmt *format;
+ 	struct vsp1_lif *lif = to_lif(subdev);
+-	unsigned int hbth = 1300;
+-	unsigned int obth = 400;
+-	unsigned int lbth = 200;
++	unsigned int hbth = 1536;
++	unsigned int obth = 128;
++	unsigned int lbth = 1520;
+ 
+ 	if (!enable) {
+ 		vsp1_write(lif->entity.vsp1, VI6_LIF_CTRL, 0);
+-- 
+2.7.4
+

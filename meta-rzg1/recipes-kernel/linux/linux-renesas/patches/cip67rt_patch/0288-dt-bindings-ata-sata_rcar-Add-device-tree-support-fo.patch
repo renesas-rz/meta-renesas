@@ -1,0 +1,26 @@
+From 6d907197eae568588bdfbe1c3e86f9a56bc66e56 Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+Date: Wed, 14 Oct 2020 16:56:08 +0700
+Subject: [PATCH 288/433] dt-bindings: ata: sata_rcar: Add device tree support
+ for r8a7744
+
+Signed-off-by: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+---
+ Documentation/devicetree/bindings/ata/sata_rcar.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+index 2c3a2eb..2b8c606 100644
+--- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
++++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+@@ -3,6 +3,7 @@
+ Required properties:
+ - compatible		: should contain one or more of the following:
+ 			  - "renesas,sata-r8a7742" for RZ/G1H
++			  - "renesas,sata-r8a7744" for the R8A7744 SoC
+ 			  - "renesas,sata-r8a7779" for R-Car H1
+ 			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
+ 			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
+-- 
+2.7.4
+

@@ -1,0 +1,51 @@
+From 71477a8075ae69e420be6d8345d787c62d1e7bd9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Niklas=20S=C3=B6derlund?=
+ <niklas.soderlund+renesas@ragnatech.se>
+Date: Sat, 2 Apr 2016 14:42:18 -0300
+Subject: [PATCH 184/433] media: adv7180: Add g_std operation
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add support to get the standard to the adv7180 driver.
+
+Signed-off-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
+Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/media/i2c/adv7180.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/media/i2c/adv7180.c b/drivers/media/i2c/adv7180.c
+index 3c3c4bf..358d3c9 100644
+--- a/drivers/media/i2c/adv7180.c
++++ b/drivers/media/i2c/adv7180.c
+@@ -434,6 +434,15 @@ out:
+ 	return ret;
+ }
+ 
++static int adv7180_g_std(struct v4l2_subdev *sd, v4l2_std_id *norm)
++{
++	struct adv7180_state *state = to_state(sd);
++
++	*norm = state->curr_norm;
++
++	return 0;
++}
++
+ static int adv7180_set_power(struct adv7180_state *state, bool on)
+ {
+ 	u8 val;
+@@ -719,6 +728,7 @@ static int adv7180_g_mbus_config(struct v4l2_subdev *sd,
+ 
+ static const struct v4l2_subdev_video_ops adv7180_video_ops = {
+ 	.s_std = adv7180_s_std,
++	.g_std = adv7180_g_std,
+ 	.querystd = adv7180_querystd,
+ 	.g_input_status = adv7180_g_input_status,
+ 	.s_routing = adv7180_s_routing,
+-- 
+2.7.4
+

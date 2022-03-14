@@ -1,0 +1,93 @@
+From 89f2fd4272e4eb54602f68ecf5a32274e46923e5 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Fri, 30 Oct 2020 14:47:17 +0700
+Subject: [PATCH 353/433] ARM: dts: r8a7742-iwg21d-q7: Add HDMI output support
+
+This patch adds support for HDMI by enabling LVDS-1 output to
+CH7036 LVDS-to-HDMI converter which located on I2C2.
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21d-q7.dts | 41 ++++++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+index 3db3e6f..6170e78 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+@@ -62,12 +62,12 @@
+ 		enable-gpios = <&gpio3 11 GPIO_ACTIVE_HIGH>;
+ 	};
+ 
+-	panel {
++	panel_lvds: panel@0 {
+ 		compatible = "edt,etm0700g0dh6";
+ 		backlight = <&lcd_backlight>;
+ 
+ 		port {
+-			panel_in: endpoint {
++			panel_lvds_in: endpoint {
+ 				remote-endpoint = <&du_out_lvds0>;
+ 			};
+ 		};
+@@ -87,6 +87,31 @@
+ 		};
+ 	};
+ 
++	panel_hdmi: panel@1 {
++		compatible = "simple-panel";
++
++		width-mm = <200>;
++		height-mm = <150>;
++
++		port {
++			panel_hdmi_in: endpoint {
++				remote-endpoint = <&du_out_lvds1>;
++			};
++		};
++
++		panel-timing {
++			clock-frequency = <65000000>;
++			hactive = <1024>;
++			vactive = <768>;
++			hfront-porch = <24>;
++			hback-porch = <296>;
++			hsync-len = <19>;
++			vfront-porch = <19>;
++			vback-porch = <32>;
++			vsync-len = <6>;
++		};
++	};
++
+ 	reg_1p5v: 1p5v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "1P5V";
+@@ -191,6 +216,11 @@
+ 	status = "okay";
+ 	clock-frequency = <400000>;
+ 
++	ch7036@76 {
++		compatible = "cil,ch7036";
++		reg = <0x76>;
++	};
++
+ 	sgtl5000: codec@a {
+ 		compatible = "fsl,sgtl5000";
+ 		#sound-dai-cells = <0>;
+@@ -230,7 +260,12 @@
+ 	ports {
+ 		port@1 {
+ 			endpoint {
+-				remote-endpoint = <&panel_in>;
++				remote-endpoint = <&panel_lvds_in>;
++			};
++		};
++		port@2 {
++			 endpoint {
++				remote-endpoint = <&panel_hdmi_in>;
+ 			};
+ 		};
+ 	};
+-- 
+2.7.4
+

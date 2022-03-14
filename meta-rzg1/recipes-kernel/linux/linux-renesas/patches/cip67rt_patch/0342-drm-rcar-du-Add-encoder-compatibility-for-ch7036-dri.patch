@@ -1,0 +1,27 @@
+From e12c0c82137102f361ca9a524f7d8dbf1815dbf7 Mon Sep 17 00:00:00 2001
+From: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Date: Tue, 17 Apr 2018 18:41:52 +0700
+Subject: [PATCH 342/433] drm: rcar-du: Add encoder compatibility for ch7036
+ driver
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 454738f..7dd98b2 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -338,6 +338,7 @@ static int rcar_du_encoders_init_one(struct rcar_du_device *rcdu,
+ 		{ "adi,adv7511w", RCAR_DU_ENCODER_HDMI },
+ 		{ "sil,sii9022", RCAR_DU_ENCODER_HDMI },
+ 		{ "thine,thc63lvdm83d", RCAR_DU_ENCODER_LVDS },
++		{ "cil,ch7036", RCAR_DU_ENCODER_LVDS },
+ 	};
+ 
+ 	enum rcar_du_encoder_type enc_type = RCAR_DU_ENCODER_NONE;
+-- 
+2.7.4
+

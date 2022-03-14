@@ -1,0 +1,27 @@
+From aa959df55e73281835bd0699097efd6a26de4476 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Wed, 14 Oct 2020 11:28:41 +0700
+Subject: [PATCH 181/433] net: ethernet: sh_eth: Add R8A7742 support
+
+Add support for R8A7742 (RZ/G1H) SoC.
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ drivers/net/ethernet/renesas/sh_eth.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/renesas/sh_eth.c b/drivers/net/ethernet/renesas/sh_eth.c
+index 71a5fc5..43cf539 100644
+--- a/drivers/net/ethernet/renesas/sh_eth.c
++++ b/drivers/net/ethernet/renesas/sh_eth.c
+@@ -3345,6 +3345,7 @@ static struct platform_device_id sh_eth_id_table[] = {
+ 	{ "sh7763-gether", (kernel_ulong_t)&sh7763_data },
+ 	{ "r7s72100-ether", (kernel_ulong_t)&r7s72100_data },
+ 	{ "r8a7740-gether", (kernel_ulong_t)&r8a7740_data },
++	{ "r8a7742-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a7744-ether", (kernel_ulong_t)&r8a779x_data },
+ 	{ "r8a777x-ether", (kernel_ulong_t)&r8a777x_data },
+ 	{ "r8a7790-ether", (kernel_ulong_t)&r8a779x_data },
+-- 
+2.7.4
+

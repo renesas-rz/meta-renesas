@@ -1,0 +1,82 @@
+From 5860670fa8f05fe670ef0ac7338106cce617b651 Mon Sep 17 00:00:00 2001
+From: Duy Bao Dang <duy.dang.yb@renesas.com>
+Date: Tue, 4 Aug 2020 11:48:02 +0700
+Subject: [PATCH 265/433] ARM: dts: r8a7745: Use sysc power domain for
+ multimedia IPs
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+Signed-off-by: Duy Bao Dang <duy.dang.yb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index 5beff9e..69b46a0 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -1015,7 +1015,7 @@
+ 			interrupts = <0 258 IRQ_TYPE_LEVEL_HIGH>,
+ 				<0 259 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_VCP0>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			renesas,#ch = <0>;
+ 		};
+ 
+@@ -1023,7 +1023,7 @@
+ 			compatible = "renesas,vpc0";
+ 			reg = <0 0xfe908000 0 0x90>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_VPC0>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			renesas,#ch = <0>;
+ 		};
+ 
+@@ -1031,7 +1031,7 @@
+ 			compatible = "renesas,vpc1";
+ 			reg = <0 0xfe918000 0 0x90>;
+ 			/* clocks = <&mstp1_clks R8A7745_CLK_VPC1>; */
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			renesas,#ch = <0>;
+ 		};
+ 
+@@ -1039,7 +1039,7 @@
+ 			compatible = "renesas,vpc0xy";
+ 			reg = <0 0xfe960380 0 0x4>;
+ 			/* clocks = <&mstp1_clks R8A7745_CLK_VPC0>; */
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			renesas,#ch = <0>;
+ 		};
+ 
+@@ -1047,7 +1047,7 @@
+ 			compatible = "renesas,vpc1xy";
+ 			reg = <0 0xfe960384 0 0x4>;
+ 			/* #clocks = <&mstp1_clks R8A7745_CLK_VPC1>; */
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 			renesas,#ch = <0>;
+ 		};
+ 
+@@ -1415,7 +1415,7 @@
+ 			reg = <0 0xfea00000 0 0x0200>;
+ 			interrupts = <0 285 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_2DDMAC>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		vsp@fe928000 {
+@@ -1451,7 +1451,7 @@
+ 			reg = <0 0xfe940000 0 0x2400>;
+ 			interrupts = <0 262 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7745_CLK_FDP1_0>;
+-			power-domains = <&cpg_clocks>;
++			power-domains = <&sysc R8A7745_PD_ALWAYS_ON>;
+ 		};
+ 
+ 		du: display@feb00000 {
+-- 
+2.7.4
+
