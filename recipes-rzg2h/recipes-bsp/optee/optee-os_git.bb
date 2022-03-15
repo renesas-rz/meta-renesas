@@ -7,7 +7,6 @@ LIC_FILES_CHKSUM = " \
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 inherit deploy python3native
-require include/ecc-control.inc
 
 PV = "3.15.0+git${SRCPV}"
 BRANCH = "master"
