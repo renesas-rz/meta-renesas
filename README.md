@@ -36,6 +36,12 @@ This layer depends on:
     branch: dunfell
     revision: 60b251c25ba87e946a0ca4cdc8d17b1cb09292ac
 
+    (Optional)
+    URI: https://git.yoctoproject.org/git/meta-virtualization
+    layers: meta-virtualization
+    branch: dunfell
+    revision: c5f61e547b90aa8058cf816f00902afed9c96f72
+
 ## Build Instructions
 
 Assume that $WORK is the current working directory.
@@ -72,6 +78,11 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ git clone  https://github.com/renesas-rz/meta-rzg2.git
     $ cd meta-rzg2
     $ git checkout <tag>
+    $ cd ..
+    $
+    $ git clone  https://git.yoctoproject.org/git/meta-virtualization -b dunfell
+    $ cd meta-virtualization
+    $ git checkout c5f61e547b90aa8058cf816f00902afed9c96f72
     $ cd ..
 ```
 \<tag\> can be selected in any tags of meta-rzg2.
