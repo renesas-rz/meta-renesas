@@ -21,6 +21,7 @@ PR = "r1"
 
 SRC_URI_append = "\
   ${@oe.utils.conditional("USE_DOCKER", "1", " file://docker.cfg ", "", d)} \
+  file://touch.cfg \
 "
 
 KBUILD_DEFCONFIG = "defconfig"
