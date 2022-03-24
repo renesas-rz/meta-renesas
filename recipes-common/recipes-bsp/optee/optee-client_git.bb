@@ -3,11 +3,14 @@ LICENSE = "BSD-2-Clause"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=69663ab153298557a59c67a60a743e5b"
 PR = "r0"
-PV = "3.15.0+git${SRCPV}"
+PV_rzg2h = "3.15.0+git${SRCPV}"
+PV_rzg2l = "3.14.0+git${SRCPV}"
 BRANCH = "master"
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;branch=${BRANCH}"
 # Tag 3.15.0
-SRCREV = "182874320395787a389e5b0f7df02b32f3c0a1b0"
+SRCREV_rzg2h = "182874320395787a389e5b0f7df02b32f3c0a1b0"
+# Tag 3.14.0
+SRCREV_rzg2l = "06e1b32f6a7028e039c625b07cfc25fda0c17d53"
 
 SRC_URI += " \
     file://optee.service \
@@ -15,8 +18,6 @@ SRC_URI += " \
 
 inherit python3native systemd
 SYSTEMD_SERVICE_${PN} = "optee.service"
-
-COMPATIBLE_MACHINE = "ek874|hihope-rzg2m|hihope-rzg2n|hihope-rzg2h"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 

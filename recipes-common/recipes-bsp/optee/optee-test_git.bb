@@ -7,9 +7,13 @@ LICENSE = "BSD & GPLv2"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE.md;md5=daa2bcccc666345ab8940aab1315a4fa"
 
 #TAG: 3.15.0
-PV = "3.15.0+git${SRCPV}"
+PV_rzg2h = "3.15.0+git${SRCPV}"
+SRCREV_rzg2h = "f88f69eb27beda52998de09cd89a7ee422da00d9"
+#TAG: 3.14.0
+PV_rzg2l = "3.14.0+git${SRCPV}"
+SRCREV_rzg2l = "f2eb88affbb7f028561b4fd5cbd049d5d704f741"
+
 BRANCH = "master"
-SRCREV = "f88f69eb27beda52998de09cd89a7ee422da00d9"
 
 SRC_URI = " \
 	git://github.com/OP-TEE/optee_test.git;branch=${BRANCH} \
@@ -21,8 +25,9 @@ DEPENDS += "python3-pyelftools-native python3-pycryptodome-native python3-pycryp
 OPTEE_CLIENT_EXPORT = "${STAGING_DIR_HOST}${prefix}"
 TA_DEV_KIT_DIR = "${STAGING_INCDIR}/optee/export-user_ta/"
 
+CFLAGS_prepend = "--sysroot=${STAGING_DIR_HOST}"
+
 EXTRA_OEMAKE = " \
-	LIBGCC_LOCATE_CFLAGS=--sysroot=${STAGING_DIR_HOST} \
 	TA_DEV_KIT_DIR=${TA_DEV_KIT_DIR} \
 	OPTEE_CLIENT_EXPORT=${OPTEE_CLIENT_EXPORT} \
 	CROSS_COMPILE=${TARGET_PREFIX} \
