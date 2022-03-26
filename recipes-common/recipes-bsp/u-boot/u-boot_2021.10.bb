@@ -4,13 +4,11 @@ require u-boot.inc
 DEPENDS += "bc-native dtc-native"
 
 UBOOT_URL = "git://github.com/renesas-rz/renesas-u-boot-cip.git"
-BRANCH = "v2020.10/rzg2l"
-SRCREV = "0767c36bea79f82c27e4efd3f3d11670c81741b0"
+BRANCH = "v2021.10/rz"
 
-# When using private git repo, you can append ";user=username:password" to SRC_URI
-# to download the remote repo.
-SRC_URI = "${UBOOT_URL};branch=${BRANCH};protocol=https"
-PV = "v2020.10+git${SRCPV}"
+SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
+SRCREV = "c37ea6d9ffc2c5c2a0d1d0ad960404f050f89d02"
+PV = "v2021.10+git${SRCPV}"
 
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
@@ -41,5 +39,4 @@ do_deploy_append() {
         ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC_SYMLINK}
         ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC}
     fi
-
 }

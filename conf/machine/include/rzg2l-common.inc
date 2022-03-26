@@ -7,7 +7,3 @@ EXTRA_IMAGEDEPENDS += " firmware-pack"
 MACHINEOVERRIDES =. "rzg2l:"
 
 BBMASK_append = " recipes-rzg2h"
-
-# u-boot
-PREFERRED_VERSION_u-boot = "v2020.10%"
-EXTRA_IMAGEDEPENDS += " u-boot"
