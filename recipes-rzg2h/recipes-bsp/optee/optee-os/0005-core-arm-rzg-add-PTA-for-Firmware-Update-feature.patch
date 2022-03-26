@@ -1,0 +1,464 @@
+From 142f1d5abff0c974a996d4bcda695da344342553 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 15 Jul 2021 15:10:52 +0700
+Subject: [PATCH 3/3] core: arm: rzg: add PTA for Firmware Update feature
+
+This commit is created to add PTA for Firmware Update feature.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ core/arch/arm/plat-rzg/include/pta/flash_pta.h |  27 +++
+ core/arch/arm/plat-rzg/include/pta/tsip_pta.h  |  51 ++++++
+ core/arch/arm/plat-rzg/pta/flash.c             |  98 +++++++++++
+ core/arch/arm/plat-rzg/pta/sub.mk              |   2 +
+ core/arch/arm/plat-rzg/pta/tsip.c              | 222 +++++++++++++++++++++++++
+ core/arch/arm/plat-rzg/sub.mk                  |   1 +
+ 6 files changed, 401 insertions(+)
+ create mode 100644 core/arch/arm/plat-rzg/include/pta/flash_pta.h
+ create mode 100644 core/arch/arm/plat-rzg/include/pta/tsip_pta.h
+ create mode 100644 core/arch/arm/plat-rzg/pta/flash.c
+ create mode 100644 core/arch/arm/plat-rzg/pta/sub.mk
+ create mode 100644 core/arch/arm/plat-rzg/pta/tsip.c
+
+diff --git a/core/arch/arm/plat-rzg/include/pta/flash_pta.h b/core/arch/arm/plat-rzg/include/pta/flash_pta.h
+new file mode 100644
+index 0000000..edd446b
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/include/pta/flash_pta.h
+@@ -0,0 +1,27 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef FLASH_PTA_H_
++#define FLASH_PTA_H_
++
++#define FLASH_UUID                                         \
++    {                                                      \
++        0x2c0fca92, 0x5ab1, 0x11eb,                        \
++        {                                                  \
++            0x81, 0x53, 0xc7, 0xd7, 0x50, 0xe0, 0xae, 0x47 \
++        }                                                  \
++    }
++
++/*
++ * FLASH_CMD_WRITE_SPI - Write data to SPI Flash
++ * param[0] (value) spi save offset address
++ * param[1] (memref) Write data buffer
++ * param[2] unused
++ * param[3] unused
++ */
++#define FLASH_CMD_WRITE_SPI 1
++
++#endif /* FLASH_PTA_H_ */
+diff --git a/core/arch/arm/plat-rzg/include/pta/tsip_pta.h b/core/arch/arm/plat-rzg/include/pta/tsip_pta.h
+new file mode 100644
+index 0000000..6def88d
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/include/pta/tsip_pta.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef TSIP_PTA_H_
++#define TSIP_PTA_H_
++
++#define TSIP_UUID                                          \
++    {                                                      \
++        0x5f20b54e, 0x5a26, 0x11eb,                        \
++        {                                                  \
++            0x89, 0xb9, 0x2b, 0x53, 0x8d, 0xa4, 0xb7, 0xec \
++        }                                                  \
++    }
++
++/*
++ * TSIP_CMD_UPDATE_KEYRING - Re-encrypt Keyring
++ * param[0] (memref) Input Temp-encrypt Keyring data (688 bytes size)
++ * param[1] (memref) Output Re-encrypted Keyring data (1296 bytes size)
++ * param[2] unused
++ * param[3] unused
++ */
++#define TSIP_CMD_UPDATE_KEYRING 1
++
++/*
++ * TSIP_CMD_UPDATE_FIRMWARE - Re-Encrypt Firmware data
++ * param[0] (value.a) Firmware data index number (maximum 16)
++ * param[1] (memref) Input Temp-Encrypt firmware data (update_fw_t array)
++ * param[2] (memref) Output Re-Encrypt firmware data (update_fw_t array)
++ * param[3] unused
++ */
++#define TSIP_CMD_UPDATE_FIRMWARE 2
++
++/*
++ * Input/Output structure for TSIP_CMD_UPDATE_FIRMWARE
++ * [Input]
++ *   unsigned long size  : Input data size
++ *   unsigned char *data : Input data
++ * [Output] 
++ *   unsigned long size  : Input data size + 64 (update_fw_t[0])
++ *                         Input data size + 16 (update_fw_t[1-15])
++ *   unsigned char *data : Output data
++ */
++typedef struct {
++    unsigned long size;
++    unsigned char *data;
++} update_fw_t;
++
++#endif /* TSIP_PTA_H_ */
+diff --git a/core/arch/arm/plat-rzg/pta/flash.c b/core/arch/arm/plat-rzg/pta/flash.c
+new file mode 100644
+index 0000000..a7842c2
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/pta/flash.c
+@@ -0,0 +1,98 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <compiler.h>
++#include <stdio.h>
++#include <trace.h>
++#include <kernel/pseudo_ta.h>
++#include <mm/tee_pager.h>
++#include <mm/tee_mm.h>
++#include <string.h>
++#include <string_ext.h>
++
++#include "drivers/spi/spi.h"
++#include "pta/flash_pta.h"
++
++#define TA_NAME "spi_pta.ta"
++
++static TEE_Result spi_write(uint32_t param_types, TEE_Param p[TEE_NUM_PARAMS])
++{
++    uintptr_t write_buff;
++    uint32_t write_size;
++    uint32_t exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
++                                               TEE_PARAM_TYPE_MEMREF_INPUT,
++                                               TEE_PARAM_TYPE_NONE,
++                                               TEE_PARAM_TYPE_NONE);
++
++    DMSG("has been called");
++
++    if (param_types != exp_param_types)
++        return TEE_ERROR_BAD_PARAMETERS;
++
++    if (0 != p[1].memref.size)
++    {
++        write_buff = (uint32_t)p[1].memref.buffer;
++        write_size = p[1].memref.size;
++
++        if (rzg_spi_write_buff(p[0].value.a, write_buff, write_size))
++        {
++            EMSG("Fail to write data to SPI");
++            return TEE_ERROR_GENERIC;
++        }
++    }
++
++    return TEE_SUCCESS;
++}
++
++/*
++ * Trusted Application Entry Points
++ */
++static TEE_Result create_ta(void)
++{
++    DMSG("create entry point for pseudo TA \"%s\"", TA_NAME);
++    return TEE_SUCCESS;
++}
++
++static void destroy_ta(void)
++{
++    DMSG("destroy entry point for pseudo ta \"%s\"", TA_NAME);
++}
++
++static TEE_Result open_session(uint32_t nParamTypes __unused,
++                               TEE_Param pParams[TEE_NUM_PARAMS] __unused,
++                               void **ppSessionContext __unused)
++{
++    DMSG("open entry point for pseudo ta \"%s\"", TA_NAME);
++    rzg_spi_init_driver();
++    return TEE_SUCCESS;
++}
++
++static void close_session(void *pSessionContext __unused)
++{
++    rzg_spi_deinit_driver();
++    DMSG("close entry point for pseudo ta \"%s\"", TA_NAME);
++}
++
++static TEE_Result invoke_command(void *psess __unused,
++                                 uint32_t cmd, uint32_t ptypes,
++                                 TEE_Param params[TEE_NUM_PARAMS])
++{
++    switch (cmd)
++    {
++    case FLASH_CMD_WRITE_SPI:
++        return spi_write(ptypes, params);
++    default:
++        break;
++    }
++    return TEE_ERROR_BAD_PARAMETERS;
++}
++
++pseudo_ta_register(.uuid = FLASH_UUID, .name = TA_NAME,
++                   .flags = PTA_DEFAULT_FLAGS,
++                   .create_entry_point = create_ta,
++                   .destroy_entry_point = destroy_ta,
++                   .open_session_entry_point = open_session,
++                   .close_session_entry_point = close_session,
++                   .invoke_command_entry_point = invoke_command);
+diff --git a/core/arch/arm/plat-rzg/pta/sub.mk b/core/arch/arm/plat-rzg/pta/sub.mk
+new file mode 100644
+index 0000000..f0eb2c3
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/pta/sub.mk
+@@ -0,0 +1,2 @@
++srcs-$(CFG_RZG_SEC_IP_DRV) += tsip.c
++srcs-$(CFG_RZG_SPI_DRV) += flash.c
+diff --git a/core/arch/arm/plat-rzg/pta/tsip.c b/core/arch/arm/plat-rzg/pta/tsip.c
+new file mode 100644
+index 0000000..f512538
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/pta/tsip.c
+@@ -0,0 +1,222 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <compiler.h>
++#include <stddef.h>
++#include <string.h>
++#include <stdio.h>
++#include <trace.h>
++#include <kernel/pseudo_ta.h>
++#include <kernel/thread.h>
++#include <mm/core_memprot.h>
++#include <mm/core_mmu.h>
++
++#include "drivers/tsip/R_TSIP_Core_Lib.h" 
++#include "pta/tsip_pta.h"
++
++#define TA_NAME "tsip.ta"
++
++#define S_INSTDATA_ADDR (0x440FE000)
++#define S_INSTDATA_SIZE (0x510)
++
++#define TEMP_ENC_KEYRING_SIZE (0x2B0)
++#define BOOT_HEADER_SIZE (0x30)
++
++
++static bool tsip_su_activate = false;
++vaddr_t s_instdata;
++
++static TEE_Result tsip_update_keyring(uint32_t type, TEE_Param p[TEE_NUM_PARAMS])
++{
++    uint32_t err;
++    uint8_t *input_keyring = NULL;
++
++    uint32_t exp_type = TEE_PARAM_TYPES(TEE_PARAM_TYPE_MEMREF_INPUT,
++                                        TEE_PARAM_TYPE_MEMREF_OUTPUT,
++                                        TEE_PARAM_TYPE_NONE,
++                                        TEE_PARAM_TYPE_NONE);
++
++    DMSG("has been called");
++
++    if (type != exp_type)
++    {
++        return TEE_ERROR_BAD_PARAMETERS;
++    }
++    
++    if (!tsip_su_activate)
++    {
++        DMSG("Enable Firmware Update Process !");
++
++        err = R_TSIP_SU_Activate();
++        if (R_PASS != err) {
++            EMSG("Failed to enable Firmware Update Process (0x%08x).", err);
++            return TEE_ERROR_GENERIC;
++        }
++        tsip_su_activate = true;
++    }
++
++    s_instdata = (vaddr_t)phys_to_virt_io(S_INSTDATA_ADDR, S_INSTDATA_SIZE);
++
++    if ((TEMP_ENC_KEYRING_SIZE > p[0].memref.size) || (S_INSTDATA_SIZE > p[1].memref.size))
++        return TEE_ERROR_BAD_PARAMETERS;
++
++    /* Re-encrypt Keyring data */
++    input_keyring = (uint8_t *)p[0].memref.buffer;
++
++    DMSG("Re-Encrypt Keyring data via TSIP");
++    err = R_TSIP_SU_Key(input_keyring);
++    if (R_PASS != err) {
++        EMSG("Failed to Re-Encrypt Keyring data via TSIP (0x%08x).", err);
++        return TEE_ERROR_GENERIC;
++    }
++
++    memcpy((uint8_t *)p[1].memref.buffer,(void *)s_instdata, S_INSTDATA_SIZE);
++    p[1].memref.size = S_INSTDATA_SIZE;
++
++    return TEE_SUCCESS;
++}
++
++static TEE_Result tsip_update_firmware(uint32_t type, TEE_Param p[TEE_NUM_PARAMS])
++{
++
++    uint32_t err;
++    uint32_t data_max;
++
++    uint8_t *boot_header_src = NULL;
++    uint8_t *boot_header_dst = NULL;
++    update_fw_t *input_update_fw;
++    update_fw_t *output_update_fw;
++    TSIP_UPDATE_BOOT_DATA tsip_update_boot_data;
++
++    uint32_t exp_type = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,
++                                        TEE_PARAM_TYPE_MEMREF_INPUT,
++                                        TEE_PARAM_TYPE_MEMREF_INOUT,
++                                        TEE_PARAM_TYPE_NONE);
++
++    DMSG("has been called");
++
++    if (type != exp_type)
++    {
++        return TEE_ERROR_BAD_PARAMETERS;
++    }
++
++    if ((0 == p[1].memref.size) || (0 == p[2].memref.size))
++        return TEE_ERROR_BAD_PARAMETERS;
++
++    if (!tsip_su_activate)
++    {
++        DMSG("Enable Firmware Update Process !");
++
++        err = R_TSIP_SU_Activate();
++        if (R_PASS != err) {
++            EMSG("Failed to enable Firmware Update Process (0x%08x).", err);
++            return TEE_ERROR_GENERIC;
++        }
++        tsip_su_activate = true;
++    }
++    
++    s_instdata = (vaddr_t)phys_to_virt_io(S_INSTDATA_ADDR, S_INSTDATA_SIZE);
++
++    data_max = p[0].value.a;
++    input_update_fw = (update_fw_t *)p[1].memref.buffer;
++    output_update_fw = (update_fw_t *)p[2].memref.buffer;
++
++    for (int i = 0; i < data_max; i++)
++    {
++        tsip_update_boot_data[i].InData_BootData_UpdateFlag = 0;
++        if ((0 != input_update_fw[i].size))
++        {
++            if (0 == i)
++            {
++                if (output_update_fw[i].size < (input_update_fw[i].size + 64))
++                {
++                    return TEE_ERROR_BAD_PARAMETERS;
++                }
++                output_update_fw[i].size = input_update_fw[i].size + 64;
++            }
++            else
++            {
++                if (output_update_fw[i].size < (input_update_fw[i].size + 16))
++                {
++                    return TEE_ERROR_BAD_PARAMETERS;
++                }
++                output_update_fw[i].size = input_update_fw[i].size + 16;
++            }
++
++            tsip_update_boot_data[i].InData_BootData_UpdateFlag = 1;
++            tsip_update_boot_data[i].InData_BootData = input_update_fw[i].data;
++            tsip_update_boot_data[i].InData_BootData_ByteSize = input_update_fw[i].size;
++            tsip_update_boot_data[i].OutData_BootData = output_update_fw[i].data;
++        }
++    }
++
++    err = R_TSIP_UpdateBootData(&tsip_update_boot_data);
++    if (R_PASS != err) {
++        EMSG("Failed to Re-Encypt Firmware data via TSIP (0x%08x).", err);
++        return TEE_ERROR_GENERIC;
++    }
++
++    /* Get boot header information for 1st boot data */
++    if (tsip_update_boot_data[0].InData_BootData_UpdateFlag)
++    {
++        boot_header_src = s_instdata + S_INSTDATA_SIZE;
++        boot_header_dst = (output_update_fw[0].data + output_update_fw[0].size) - BOOT_HEADER_SIZE;
++        memcpy(boot_header_dst, boot_header_src, BOOT_HEADER_SIZE);
++    }
++
++    return TEE_SUCCESS;
++}
++
++/*
++ * Trusted Application Entry Points
++ */
++
++static TEE_Result create_ta(void)
++{
++    DMSG("create entry point for pseudo TA \"%s\"", TA_NAME);
++    return TEE_SUCCESS;
++}
++
++static void destroy_ta(void)
++{
++    DMSG("destroy entry point for pseudo ta \"%s\"", TA_NAME);
++}
++
++static TEE_Result open_session(uint32_t nParamTypes __unused,
++                               TEE_Param pParams[TEE_NUM_PARAMS] __unused,
++                               void **ppSessionContext __unused)
++{
++    DMSG("open entry point for pseudo ta \"%s\"", TA_NAME);
++    return TEE_SUCCESS;
++}
++
++static void close_session(void *pSessionContext __unused)
++{
++    DMSG("close entry point for pseudo ta \"%s\"", TA_NAME);
++}
++
++static TEE_Result invoke_command(void *psess __unused,
++                                 uint32_t cmd, uint32_t ptypes,
++                                 TEE_Param params[TEE_NUM_PARAMS])
++{
++    switch (cmd)
++    {
++    case TSIP_CMD_UPDATE_KEYRING:
++        return tsip_update_keyring(ptypes, params);
++    case TSIP_CMD_UPDATE_FIRMWARE:
++        return tsip_update_firmware(ptypes, params);
++    default:
++        break;
++    }
++    return TEE_ERROR_NOT_IMPLEMENTED;
++}
++
++pseudo_ta_register(.uuid = TSIP_UUID, .name = TA_NAME,
++                   .flags = PTA_DEFAULT_FLAGS,
++                   .create_entry_point = create_ta,
++                   .destroy_entry_point = destroy_ta,
++                   .open_session_entry_point = open_session,
++                   .close_session_entry_point = close_session,
++                   .invoke_command_entry_point = invoke_command);
+diff --git a/core/arch/arm/plat-rzg/sub.mk b/core/arch/arm/plat-rzg/sub.mk
+index 199068b..47d79c9 100644
+--- a/core/arch/arm/plat-rzg/sub.mk
++++ b/core/arch/arm/plat-rzg/sub.mk
+@@ -12,3 +12,4 @@ endif
+ 
+ cppflags-y += -DLTC_NO_PROTOTYPES -DRZG_DRAM_ECC=$(RZG_DRAM_ECC) -DRZG_ECC_FULL=$(RZG_ECC_FULL) -DPMIC_ROHM_BD9571=$(PMIC_ROHM_BD9571)
+ subdirs-y += drivers
++subdirs-y += pta
+-- 
+2.7.4
+

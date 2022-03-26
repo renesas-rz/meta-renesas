@@ -1,0 +1,3628 @@
+From 840d0d383de51ac0c3b2b50fe3678044b1fee0d7 Mon Sep 17 00:00:00 2001
+From: Takunori Otsuka <takunori.otsuka.ur@renesas.com>
+Date: Mon, 22 Mar 2021 15:28:14 +0900
+Subject: [PATCH 1/2] core: arm: plat-rzg: Add Secure IP driver
+
+This commit adds Secure IP driver to the platform.
+
+Signed-off-by: Takunori Otsuka <takunori.otsuka.ur@renesas.com>
+---
+ core/arch/arm/plat-rzg/conf.mk                     |   2 +
+ core/arch/arm/plat-rzg/drivers/secip_drv.c         |  64 ++
+ core/arch/arm/plat-rzg/drivers/sub.mk              |   5 +
+ .../arm/plat-rzg/drivers/tsip/R_TSIP_Core_Lib.h    |  83 +++
+ .../drivers/tsip/common/TSIP_Common_Define.h       | 196 ++++++
+ .../arm/plat-rzg/drivers/tsip/core/TSIP_Core_API.h | 109 +++
+ .../tsip/core/TSIP_Core_BasicEncryption_API.c      |  90 +++
+ .../drivers/tsip/core/TSIP_Core_Lib_Init_API.c     | 158 +++++
+ .../drivers/tsip/core/TSIP_Core_Local_API.c        | 233 +++++++
+ .../drivers/tsip/core/TSIP_Core_Local_API.h        |  37 ++
+ .../drivers/tsip/core/TSIP_Core_Proc_API.c         | 729 +++++++++++++++++++++
+ .../drivers/tsip/core/TSIP_Core_Proc_API.h         |  60 ++
+ .../drivers/tsip/core/TSIP_Core_SecureUpdate_API.c | 241 +++++++
+ .../plat-rzg/drivers/tsip/proc/TSIP_Procedure.h    | 412 ++++++++++++
+ .../arm/plat-rzg/drivers/tsip/stub/TSIP_Driver.h   |  60 ++
+ .../plat-rzg/drivers/tsip/stub/TSIP_Driver_optee.c | 125 ++++
+ .../arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API.h |  36 +
+ .../drivers/tsip/stub/TSIP_Stub_API_optee.c        | 146 +++++
+ core/arch/arm/plat-rzg/drivers/tsip/sub.mk         |  28 +
+ .../wrapper/TSIP_Wrapper_BasicEncryption_API.c     |  79 +++
+ .../wrapper/TSIP_Wrapper_BasicEncryption_API.h     |  38 ++
+ .../tsip/wrapper/TSIP_Wrapper_Lib_Init_API.c       |  80 +++
+ .../tsip/wrapper/TSIP_Wrapper_Lib_Init_API.h       |  29 +
+ .../drivers/tsip/wrapper/TSIP_Wrapper_Local_API.c  |  83 +++
+ .../drivers/tsip/wrapper/TSIP_Wrapper_Local_API.h  |  29 +
+ .../tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.c   | 165 +++++
+ .../tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.h   |  44 ++
+ core/arch/arm/plat-rzg/include/drivers/secip_drv.h |  12 +
+ core/arch/arm/plat-rzg/sub.mk                      |   2 +
+ 29 files changed, 3375 insertions(+)
+ create mode 100644 core/arch/arm/plat-rzg/drivers/secip_drv.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/sub.mk
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/R_TSIP_Core_Lib.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/common/TSIP_Common_Define.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_API.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_BasicEncryption_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Lib_Init_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_SecureUpdate_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/proc/TSIP_Procedure.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver_optee.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API_optee.c
+ create mode 100755 core/arch/arm/plat-rzg/drivers/tsip/sub.mk
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.h
+ create mode 100644 core/arch/arm/plat-rzg/include/drivers/secip_drv.h
+
+diff --git a/core/arch/arm/plat-rzg/conf.mk b/core/arch/arm/plat-rzg/conf.mk
+index 71e4048..869d28f 100644
+--- a/core/arch/arm/plat-rzg/conf.mk
++++ b/core/arch/arm/plat-rzg/conf.mk
+@@ -47,3 +47,5 @@ endif
+ CFG_DT ?= y
+ RZG_DRAM_ECC ?= 0
+ RZG_ECC_FULL ?= 0
++
++CFG_RZG_SEC_IP_DRV ?= n
+diff --git a/core/arch/arm/plat-rzg/drivers/secip_drv.c b/core/arch/arm/plat-rzg/drivers/secip_drv.c
+new file mode 100644
+index 0000000..4a00195
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/secip_drv.c
+@@ -0,0 +1,64 @@
++// SPDX-License-Identifier: BSD-2-Clause
++/*
++ * Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
++ */
++
++#include <initcall.h>
++#include <io.h>
++#include <mm/core_memprot.h>
++#include <kernel/panic.h>
++
++#include "tsip/R_TSIP_Core_Lib.h"
++
++#define S_INST_DATA_ADDR    (0x440FE000)
++#define S_INST_DATA_SIZE    (0x2000)
++
++static uint8_t s_ram_data[480];
++vaddr_t s_inst_data = (vaddr_t)NULL;
++
++register_phys_mem_pgdir(MEM_AREA_IO_SEC, TSIP_BASE_ADDR, TSIP_SIZE);
++register_phys_mem_pgdir(MEM_AREA_IO_SEC, S_INST_DATA_ADDR, S_INST_DATA_SIZE);
++
++TEE_Result secip_rng(void *buf, size_t blen)
++{
++    uint32_t err;
++    
++    if(!buf){
++        EMSG("Invalid buffer");
++        return TEE_ERROR_BAD_PARAMETERS;
++    }
++
++    if (0 < blen) {
++        err = R_TSIP_BCF_GenerateRandom(blen, 0, buf);
++        if (R_PASS != err) {
++            EMSG("Failed to generate a random number (0x%08x).", err);
++            return TEE_ERROR_GENERIC;
++        }
++    }
++
++    return TEE_SUCCESS;
++}
++
++static TEE_Result init_secip(void)
++{
++    uint32_t err;
++    vaddr_t tsip_base_address;
++    vaddr_t mstp_base_address;
++
++    tsip_base_address = (vaddr_t)phys_to_virt_io(TSIP_BASE_ADDR, TSIP_SIZE);
++    mstp_base_address = (vaddr_t)phys_to_virt_io(MSTP_BASE_ADDR, MSTP_SIZE);
++
++    s_inst_data = (vaddr_t)phys_to_virt_io(S_INST_DATA_ADDR, S_INST_DATA_SIZE);
++
++    err = R_TSIP_Lib_Init((uint8_t *)s_ram_data, (uint8_t *)s_inst_data, 
++                          (uint8_t *)tsip_base_address, (uint8_t *)mstp_base_address);
++    if (R_PASS != err)
++    {
++        EMSG("Failed to initialize TSIP Library (0x%08x).", err);
++        panic();
++    }
++    
++    return TEE_SUCCESS;
++}
++
++driver_init(init_secip);
+diff --git a/core/arch/arm/plat-rzg/drivers/sub.mk b/core/arch/arm/plat-rzg/drivers/sub.mk
+new file mode 100644
+index 0000000..d37a87c
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/sub.mk
+@@ -0,0 +1,5 @@
++
++ifeq ($(CFG_RZG_SEC_IP_DRV),y)
++srcs-y += secip_drv.c
++subdirs-y += tsip
++endif
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/R_TSIP_Core_Lib.h b/core/arch/arm/plat-rzg/drivers/tsip/R_TSIP_Core_Lib.h
+new file mode 100644
+index 0000000..638e354
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/R_TSIP_Core_Lib.h
+@@ -0,0 +1,83 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    R_TSIP_Core_Lib.h
++    @brief   TSIP Security Driver Core Library API(Linux)
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  R_TSIP_CORE_LIB_H_
++#define  R_TSIP_CORE_LIB_H_
++
++/* Define */
++#define R_PASS                       (0x00000000)
++#define R_INITIALIZATION_FAIL        (0x00000001)
++#define R_PARAMETER_FAIL             (0x00000002)
++#define R_SEQUENCE_FAIL              (0x00000003)
++#define R_RESOURCE_CONFLICT_FAIL     (0x00000004)
++#define R_VERIFICATION_FAIL          (0x00000005)
++#define R_SERVERMESSAGE_FAIL         (0x00000006)
++#define R_SERVER_VERIFICATION_FAIL   (0x00000007)
++#define R_ROOTCA_CERTIFICATION_FAIL  (0x00000008)
++#define R_USEKEY_FAIL                (0x00000009)
++#define R_CONNECTSESSION_FAIL        (0x0000000A)
++#define R_INDATA_OUTDATA_ACCESS_FAIL (0x0000000B)
++#define R_PROVISIONING_KEY_FAIL      (0x0000000C)
++#define R_GENERATION_FAIL            (0x0000000D)
++#define R_KEYRING_FORMAT_FAIL        (0x0000000E)
++#define R_ALLOCATE_MEMORY_FAIL       (0x00000020)
++#define R_MMAP_FAIL                  (0x00000021)
++#define R_FALSIFICATION_ERROR        (0x00000022)
++#define R_INITIALIZATION_ERROR       (0x00000080)
++
++/* MSTP Base Address and size */
++#define  MSTP_BASE_ADDR             (0xE6150000U)
++#define  MSTP_SIZE                  (0x00001000U)
++/* TSIP Base Address and size */
++#define  TSIP_BASE_ADDR             (0xE7800000U)
++#define  TSIP_SIZE                  (0x00000200U)
++
++#define UPDATE_BOOT_DATA_MAX             (16)
++
++/* typedef */
++typedef struct str_tsip_update_boot_data {
++    unsigned long InData_BootData_UpdateFlag;
++    unsigned char *InData_BootData;
++    unsigned long InData_BootData_ByteSize;
++    unsigned char *OutData_BootData;
++} TSIP_UPDATE_BOOT_DATA[UPDATE_BOOT_DATA_MAX];
++
++
++/* API */
++/*                             */
++/*  TSIP Library Initial API   */
++/*                             */
++unsigned long R_TSIP_Lib_Init(unsigned char *S_RAMData, unsigned char *S_INSTData, unsigned char *TSIP_BaseAddress, unsigned char *MSTP_BaseAddress);
++
++
++/*                           */
++/*  TSIP Secure Update API   */
++/*                           */
++unsigned long R_TSIP_SU_Activate(void);
++unsigned long R_TSIP_UpdateBootData(TSIP_UPDATE_BOOT_DATA *tsip_update_bootdata);
++unsigned long R_TSIP_SU_Key(unsigned char *InData_KeyRingOperationCode);
++
++
++/*                          */
++/*  TSIP Basic Encrypt API  */
++/*                          */
++unsigned long R_TSIP_BCF_GenerateRandom(
++    unsigned long InData_GenByteSize,
++    unsigned long InData_UseCASE,
++    unsigned char *OutData);
++
++
++
++#endif  /* R_TSIP_CORE_LIB_H_ */
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/common/TSIP_Common_Define.h b/core/arch/arm/plat-rzg/drivers/tsip/common/TSIP_Common_Define.h
+new file mode 100644
+index 0000000..77598d6
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/common/TSIP_Common_Define.h
+@@ -0,0 +1,196 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Common_Define.h
++    @brief   TSIP Common Define
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version
++ ********************************************************************************/
++
++#ifndef  TSIP_COMMON_DEFINE_H_
++#define  TSIP_COMMON_DEFINE_H_
++
++#include <stdint.h>
++#include <stddef.h>
++
++#define  ROUNDUP_DWORD_BOUNDARY(n)    ((((n) + 3U) / 4U) * 4U)       /*!< Round up to multiple of 4 for procedural processing */
++#define  ROUNDUP_AESBLOCK(n)          ((((n) + 16U) / 16U) * 16U)    /*!< Round up to multiple of 16 for AES (it always needs padding in AES. if the specified bytes are multiple of 16, it should be added 16Byte) */
++#define  ROUNDUP_SIGBLOCK(n)          ((((n) + 63U) / 64U) * 64U)    /*!< Round up to multiple of 64 for signature process */
++
++#define  TLS_SESSION_ID_MASK      (0xFFFFFF00)
++/*!
++    @name Security Driver API Return code
++ */
++/* @{ */
++
++#define R_PASS                       (0x00000000U)
++#define R_INITIALIZATION_FAIL        (0x00000001U)
++#define R_PARAMETER_FAIL             (0x00000002U)
++#define R_SEQUENCE_FAIL              (0x00000003U)
++#define R_RESOURCE_CONFLICT_FAIL     (0x00000004U)
++#define R_VERIFICATION_FAIL          (0x00000005U)
++#define R_SERVERMESSAGE_FAIL         (0x00000006U)
++#define R_SERVER_VERIFICATION_FAIL   (0x00000007U)
++#define R_ROOTCA_CERTIFICATION_FAIL  (0x00000008U)
++#define R_USEKEY_FAIL                (0x00000009U)
++#define R_CONNECTSESSION_FAIL        (0x0000000AU)
++#define R_INDATA_OUTDATA_ACCESS_FAIL (0x0000000BU)
++#define R_PROVISIONING_KEY_FAIL      (0x0000000CU)
++#define R_GENERATION_FAIL            (0x0000000DU)
++#define R_KEYRING_FORMAT_FAIL        (0x0000000EU)
++#define R_ALLOCATE_MEMORY_FAIL       (0x00000020U)
++#define R_MMAP_FAIL                  (0x00000021U)
++#define R_FALSIFICATION_ERROR        (0x00000022U)
++#define R_PROC_RETRY                 (0x00000040U)
++#define R_PROC_CONT                  (0x00000041U)
++#define R_INITIALIZATION_ERROR       (0x00000080U)
++/* @} */
++
++
++/*!
++    @name Procedure Return Code
++ */
++/* @{ */
++#define RETURN_OK               ((uint8_t)0x00)    /*!< command success */ 
++#define ILLEGAL_PARAMETER       ((uint8_t)0x11)    /*!< command parameter error */
++#define SELFTEST_FAIL           ((uint8_t)0x51)    /*!< selftest failure */
++#define FALSIFICATION_ERROR     ((uint8_t)0x60)    /*!< tamper detection error */
++
++#define FORMAT_ERROR            ((uint8_t)0xF3)    /*!< format error */
++#define VERIFY_ERROR            ((uint8_t)0xF5)    /*!< verification failure */
++
++#define HW_BUSY                 ((uint8_t)0x62)    /*!< [internal] hardware busy */
++
++#define PROC_RETRY              ((uint8_t)0x63)    /*!< [internal] retry */
++#define PROC_CONT               ((uint8_t)0x64)    /*!< [internal] continue  */
++
++#define INTERNAL_ERROR          ((uint8_t)0x81)    /*!< [internal] internal error */
++
++
++/* @} */
++
++
++/*!
++    @name API TAG used for Require State Table
++ */
++/* @{ */
++#define TSIP_INIT                   (0)
++#define TSIP_INJECT_KEY             (1)
++#define TSIP_LIB_INIT               (6)
++#define TSIP_LIB_APIS               (7)
++#define TSIP_LIB_SECURE_UPDATE_APIS (8)
++#define TSIP_INJECT_KEY_SKIP        (9)
++#define TSIP_INJECT_ADDON_KEY       (11)
++#define TSIP_INJECT_ADDON_KEY_SKIP  (12)
++#define TSIP_INJECT_ADDON_KEY_FIXEDSTATE (13)
++#define TSIP_KEYRING_VERIFY         (14)
++#define TSIP_REENC_BOOTDATA         (15)
++#define TSIP_REENC_BOOTDATA_SKIP    (16)
++#define TSIP_VERIFYBOOTDATA         (17)
++#define TSIP_VERIFYBOOTDATA_SKIP    (18)
++#define TSIP_STATE_TAG_MAX          (19)
++/* @} */
++
++
++/*!
++    @name State Change Number
++ */
++/* @{ */
++#define TSIP_CORE_STATE00      (0x0000)
++#define TSIP_CORE_STATE01      (0x0001)
++#define TSIP_CORE_STATE02      (0x0002)
++#define TSIP_CORE_STATE03      (0x0003)
++#define TSIP_CORE_STATE04      (0x0004)
++#define TSIP_CORE_STATE05      (0x0005)
++#define TSIP_CORE_STATE06      (0x0006)
++#define TSIP_CORE_STATE07      (0x0007)
++#define TSIP_CORE_STATE08      (0x0008)
++#define TSIP_CORE_STATE09      (0x0009)
++#define TSIP_CORE_STATE10      (0x000A)
++#define TSIP_CORE_STATE11      (0x000B)
++#define TSIP_CORE_STATE20      (0x0014)
++#define TSIP_CORE_STATE21      (0x0015)
++#define TSIP_CORE_STATE22      (0x0016)
++#define TSIP_CORE_STATE23      (0x0017)
++#define TSIP_CORE_STATE24      (0x0018)
++#define TSIP_CORE_STATE25      (0x0019)
++#define TSIP_CORE_STATE26      (0x001A)
++#define TSIP_CORE_STATE27      (0x001B)
++#define TSIP_CORE_STATE_STOP   (0x00F0)
++#define TSIP_CORE_STATE_NONE   (0x00FF)
++#define TSIP_CORE_STATE_MAX    (0x0011)
++/* @} */
++
++
++/*!
++    @name KeyOperation Code Value
++ */
++/* @{ */
++#define KEYOPERATION_CRYPTO_TYPE_MIN       (0x00U)
++#define KEYOPERATION_CRYPTO_TYPE_MAX       (0x09U)
++#define KEYOPERATION_USE_BITFIELD_UNMASK   (0x07U)
++#define KEYOPERATION_CRYPTO_TYPE_OFFSET    (0x00U)
++#define KEYOPERATION_USE_BITFIELD_OFFSET   (0x01U)
++#define KEYOPERATION_LIFE_TYPE_OFFSET      (0x02U)
++
++#define KEYOPERATION_CRYPTO_AES128         (0x00U)
++#define KEYOPERATION_CRYPTO_AES256         (0x01U)
++#define KEYOPERATION_CRYPTO_HMAC_SHA256    (0x02U)
++#define KEYOPERATION_CRYPTO_HMAC_SHA1      (0x03U)
++#define KEYOPERATION_CRYPTO_RSA1024Pub     (0x04U)
++#define KEYOPERATION_CRYPTO_RSA2048Pub     (0x05U)
++#define KEYOPERATION_CRYPTO_RSA1024Pri_CRT (0x06U)
++#define KEYOPERATION_CRYPTO_RSA2048Pri_CRT (0x07U)
++#define KEYOPERATION_CRYPTO_RSA1024Pri_STD (0x08U)
++#define KEYOPERATION_CRYPTO_RSA2048Pri_STD (0x09U)
++
++#define KEYOPERATION_USE_ENCRYPT           (0x80U)
++#define KEYOPERATION_USE_DECRYPT           (0x40U)
++#define KEYOPERATION_USE_GENERATE_MAC      (0x20U)
++#define KEYOPERATION_USE_VERIFY_MAC        (0x10U)
++#define KEYOPERATION_USE_VERIFY_SIGN       (0x08U)
++
++
++#define KEYOPERATION_CRYPTO_AESEnc_TYPE               (0x00000100U)
++#define KEYOPERATION_CRYPTO_AESDec_TYPE               (0x00000200U)
++#define KEYOPERATION_CRYPTO_MAC_TYPE                  (0x00000300U)
++#define KEYOPERATION_CRYPTO_MAC_HMAC_SHA1_TYPE        (0x00000301U)
++#define KEYOPERATION_CRYPTO_MAC_HMAC_SHA1_GEN_TYPE    (0x00000311U)
++#define KEYOPERATION_CRYPTO_MAC_HMAC_SHA1_VERI_TYPE   (0x00000321U)
++#define KEYOPERATION_CRYPTO_MAC_HMAC_SHA256_TYPE      (0x00000302U)
++#define KEYOPERATION_CRYPTO_MAC_HMAC_SHA256_GEN_TYPE  (0x00000312U)
++#define KEYOPERATION_CRYPTO_MAC_HMAC_SHA256_VERI_TYPE (0x00000322U)
++#define KEYOPERATION_CRYPTO_MAC_CMAC128_TYPE          (0x00000303U)
++#define KEYOPERATION_CRYPTO_MAC_CMAC128_GEN_TYPE      (0x00000313U)
++#define KEYOPERATION_CRYPTO_MAC_CMAC128_VERI_TYPE     (0x00000323U)
++#define KEYOPERATION_CRYPTO_MAC_CMAC256_TYPE          (0x00000304U)
++#define KEYOPERATION_CRYPTO_MAC_CMAC256_GEN_TYPE      (0x00000314U)
++#define KEYOPERATION_CRYPTO_MAC_CMAC256_VERI_TYPE     (0x00000324U)
++#define KEYOPERATION_CRYPTO_RSAPub_TYPE               (0x00000400U)
++#define KEYOPERATION_CRYPTO_RSAPri_TYPE               (0x00000500U)
++/* @} */
++
++
++/* Core Layer Define */
++#define TSIP_CORE_STATE_MAX_ARRAY    (0x0004)
++
++#define TSIP_TRUE    (0x01)
++#define TSIP_FALSE   (0x00)
++
++#define UNUSED(x) ((void)x)
++
++#define REENC_BOOT_DATA_MAX             (16)
++#define UPDATE_BOOT_DATA_MAX            (16)
++
++/* REG18H JUDG_FLAG_NG */
++#define  MASK_JUDG_FLAG_NG      (0x00008000U)
++#define  TSIP_JUDG_FLAG_NG      (0x00008000U)
++
++#endif  /* TSIP_COMMON_DEFINE_H_ */
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_API.h b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_API.h
+new file mode 100644
+index 0000000..436a76e
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_API.h
+@@ -0,0 +1,109 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_API.h
++    @brief   TSIP Core API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_CORE_API_H_
++#define  TSIP_CORE_API_H_
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++#include <stdint.h>
++#include <stddef.h>
++
++#include "common/TSIP_Common_Define.h"
++
++typedef struct str_bootdata {
++    uint8_t *InData_BootData;
++    uint64_t InData_BootData_ByteSize;
++    uint8_t *OutData_BootData;
++} BOOTDATA;
++
++typedef struct str_updatebootdata {
++    uint32_t InData_BootData_UpdateFlag;
++    uint8_t *InData_BootData;
++    uint64_t InData_BootData_ByteSize;
++    uint8_t *OutData_BootData;
++} UPDATEBOOTDATA;
++
++#ifdef _TSIP_SB
++
++typedef struct str_reenc_boot_data {
++    uint8_t *InData_BootData;
++    uint64_t InData_BootData_ByteSize;
++    uint8_t *OutData_BootData;
++} REENC_BOOT_DATA[REENC_BOOT_DATA_MAX];
++
++
++/*                             */
++/*  TSIP Core Initial API      */
++/*                             */
++uint32_t TSIP_Init_Core(uint8_t *S_RAMData, uint8_t *S_INSTData);
++
++
++/*                            */
++/*  TSIP Advance preparation  */
++/*                            */
++uint32_t TSIP_Inject_Key(uint8_t *InData_ProvisioningKeyOperationCode, uint8_t *InData_KeyRingOperationCode);
++uint32_t TSIP_ReEncBootData(REENC_BOOT_DATA *reenc_bootdata);
++uint32_t TSIP_Inject_Addon_Key(uint32_t InData_Operation, uint8_t *InData_IV, uint8_t *InData_KeyOperationCode, uint8_t *OutData_KeyOperationCode);
++
++
++/*                  */
++/* TSIP Verfy Boot Data */
++/*                  */
++uint32_t TSIP_VerifyBootData(uint8_t *InData_BootData, uint32_t InData_BootData_ByteSize, uint8_t *InData_BootData_HeapArea, uint8_t *OutData_BootData);
++
++/*                     */
++/* TSIP KeyRing Verify */
++/*                     */
++uint32_t TSIP_KeyRing_Verify(void);
++
++#else  /* _TSIP_SB */
++
++typedef struct str_update_boot_data {
++    uint32_t InData_BootData_UpdateFlag;
++    uint8_t *InData_BootData;
++    uint64_t InData_BootData_ByteSize;
++    uint8_t *OutData_BootData;
++} UPDATE_BOOT_DATA[UPDATE_BOOT_DATA_MAX];
++
++/*                             */
++/*  TSIP Library Initial API   */
++/*                             */
++uint32_t TSIP_Lib_Init(uint8_t *S_RAMData, uint8_t *S_INSTData, uint8_t *TSIP_BaseAddress, uint8_t *MSTP_BaseAddress);
++
++
++/*                           */
++/*  TSIP Secure Update API   */
++/*                           */
++uint32_t TSIP_SU_Activate(void);
++uint32_t TSIP_UpdateBootData(UPDATE_BOOT_DATA *update_bootdata);
++uint32_t TSIP_SU_Key(uint8_t *InData_KeyRingOperationCode);
++
++
++/*                                         */
++/*  TSIP Basic Cryptographic Function API  */
++/*                                         */
++
++uint32_t TSIP_BCF_GenerateRandom(
++    uint32_t InData_GenByteSize,
++    uint32_t InData_UseCASE,
++    uint8_t *OutData);
++
++
++#endif /* _TSIP_SB */
++
++#endif  /* TSIP_CORE_API_H_ */
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_BasicEncryption_API.c b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_BasicEncryption_API.c
+new file mode 100644
+index 0000000..bd050fc
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_BasicEncryption_API.c
+@@ -0,0 +1,90 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_BasicEncryption_API.c
++    @brief   Basic encryption
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "core/TSIP_Core_API.h"
++#include "core/TSIP_Core_Proc_API.h"
++#include "core/TSIP_Core_Local_API.h"
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_BCF_GenerateRandom(uint32_t InData_GenByteSize, uint32_t InData_UseCASE, uint8_t *OutData)
++    @brief    Random number generation
++    
++    @param     [in]        InData_GenByteSize         Bytes number of generated random
++    @param     [in]        InData_UseCASE             Use case of random (set only 0)
++    @param     [out]       *OutData                   Pointer of random
++
++    @retval    R_PASS                   success
++    @retval    R_PARAMETER_FAIL         invalid input parameter
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_RESOURCE_CONFLICT_FAIL resource for this process already used in other process
++    
++    @par    Details
++    It generates random number \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Core layer
++        - Is_TSIP_Core_Init()
++    -# check transition state in TSIP Core layer
++        - TSIP_Core_Check_State()
++    -# check parameter
++    -# generate random
++        - in the case of InData_UseCASE = 0
++            - TSIP_Core_Prc_p3f()
++ ********************************************************************************/
++uint32_t TSIP_BCF_GenerateRandom(
++    uint32_t  InData_GenByteSize,
++    uint32_t  InData_UseCASE,
++    uint8_t  *OutData)
++{
++    uint8_t  BoolFg;
++    uint32_t RetCode;
++
++    BoolFg = Is_TSIP_Core_Init();
++    RetCode = TSIP_Core_Check_State(TSIP_LIB_APIS);
++    if((BoolFg == TSIP_TRUE) && (RetCode == R_PASS)) {
++        if((InData_GenByteSize > 0U) && (InData_UseCASE == 0U) && (OutData != NULL)) {
++            RetCode = TSIP_Core_Prc_p3f(InData_GenByteSize, (uint32_t *)OutData);  /* PRQA S 3305 */
++        }
++        else if((InData_UseCASE == 1U) && (OutData != NULL)) {
++            RetCode = R_PARAMETER_FAIL;
++        }
++        else {
++            RetCode = R_PARAMETER_FAIL;
++        }
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++
++    return RetCode;
++}
++
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Lib_Init_API.c b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Lib_Init_API.c
+new file mode 100644
+index 0000000..018a5d6
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Lib_Init_API.c
+@@ -0,0 +1,158 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_Lib_Init_API.c
++    @brief   Library initialization
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "core/TSIP_Core_API.h"
++#include "core/TSIP_Core_Proc_API.h"
++#include "core/TSIP_Core_Local_API.h"
++#include "proc/TSIP_Procedure.h"
++#include "stub/TSIP_Driver.h"
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++static uint32_t get_TSIP_Core_TSIPStatus(void);
++
++/*! *****************************************************************************
++    @fn       static uint32_t get_TSIP_Core_TSIPStatus(void)
++    @brief    get TSIP library state
++    
++    @param     nothing
++    
++    @retval    R_PASS                  success
++    @retval    R_SEQUENCE_FAIL         cannot perform in current state
++    @retval    R_FALSIFICATION_ERROR   tampering detection error
++    
++    @par    Details
++    It get library state by checking TSIP state(FSM1,FSM2) and tampering detection flag(REG18H)
++    
++    @par    Processing flow
++    -# get tampering detection flag of TSIP REG18H
++        - TSIPDrv_Read()
++    -# check tampering detection flag and retrun error in tamper detection
++    -# get state of TSIP FSM1
++        - TSIPDrv_Read()
++    -# get state of TSIP FSM2
++        - TSIPDrv_Read()
++    -# check FSM1 and FSM2 to confirm if library is available
++    -# return check result
++ ********************************************************************************/
++static uint32_t get_TSIP_Core_TSIPStatus(void)
++{
++    uint32_t  regData0;
++    uint32_t  regData1;
++    uint32_t  regData2;
++
++    regData0 = TSIPDrv_Read(REG_18H);  /* read REG18 */
++    if ((regData0 & MASK_JUDG_FLAG_NG) == TSIP_JUDG_FLAG_NG) {
++        return R_FALSIFICATION_ERROR;  /* tampering detection error */
++    }
++
++    regData1 = TSIPDrv_Read(REG_144H); /* read FSM1 */
++    regData2 = TSIPDrv_Read(REG_148H); /* read FSM2 */
++    if(((regData1 & MASK_DGSTATE_REG) != TSIP_STATE_MAIN07) ||    /* Don't Executed SecureBoot */
++       ((regData2 & MASK_DGSTATE_REG) != TSIP_STATE_SECURE01)) {  /* Now Execute SecureUpdate */
++        return R_SEQUENCE_FAIL;
++    }
++    return R_PASS;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Lib_Init(uint8_t *S_RAMData,
++                                     uint8_t *S_INSTData,
++                                     uint8_t *TSIP_BaseAddress,
++                                     uint8_t *MSTP_BaseAddress)
++    @brief    Library initiaization
++    
++    @param     [in]        *S_RAMData          Pointer of S_RAM data(it needs 480Byte area)
++    @param     [in]        *S_INSTData         Pointer of S_INST data(it needs 1296Byte area)
++    @param     [in]        *TSIP_BaseAddress   Logical pointer of TSIP Base Address
++    @param     [in]        *MSTP_BaseAddress   Logical pointer of MSTP Base Address
++    
++    @retval    R_PASS                   success
++    @retval    R_PARAMETER_FAIL         invalid input parameter
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_MMAP_FAIL              error occur of mmap()
++    @retval    R_FALSIFICATION_ERROR    tampering detection error
++    
++    @par    Details
++    It performs initialization of TSIP library and self-checking of TSIP \n
++    
++    @par    Processing flow
++    -# check initialization state of TSIP_Core layer
++        - Is_TSIP_Core_Init()
++    -# check parameter
++    -# perform initialization in TSIP driver
++        - TSIPDrv_Initialize()
++    -# check TSIP state to confirm if library is available
++        - Is_TSIP_Core_TSIPCondition_Enable()
++    -# set initialization state in TSIP Core layer
++        - TSIP_Core_Set_Init()
++    -# set transition state in TSIP_Core layer
++        - TSIP_Core_Set_State()
++ ********************************************************************************/
++uint32_t TSIP_Lib_Init(uint8_t *S_RAMData, uint8_t *S_INSTData,
++                        uint8_t *TSIP_BaseAddress, uint8_t *MSTP_BaseAddress)
++{
++    uint8_t  BoolFg;
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    BoolFg = Is_TSIP_Core_Init();
++    if(BoolFg == TSIP_FALSE) {
++        if((S_RAMData != NULL) && (S_INSTData != NULL)
++        && (TSIP_BaseAddress != NULL) && (MSTP_BaseAddress != NULL)){
++            Ret = TSIPDrv_Initialize(TSIP_BaseAddress, MSTP_BaseAddress);
++            if(Ret == DRIVER_OK) {
++                RetCode = get_TSIP_Core_TSIPStatus();
++                if(RetCode == R_PASS) {
++                    RetCode = TSIP_Core_Init(S_RAMData, S_INSTData);
++                }
++
++                if(RetCode != R_PASS) {
++                    TSIPDrv_Finalize();
++                }
++            }
++            else {
++                RetCode = R_MMAP_FAIL;
++            }
++        }
++        else {
++            RetCode = R_PARAMETER_FAIL;
++        }
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++
++    if(RetCode == R_PASS) {
++        TSIP_Core_Set_Init(TSIP_TRUE);
++        TSIP_Core_Set_State(TSIP_CORE_STATE10);
++    }
++
++    return RetCode;
++}
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.c b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.c
+new file mode 100644
+index 0000000..d1c126e
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.c
+@@ -0,0 +1,233 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_Local_API.c
++    @brief   TSIP Core Layer Local API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "core/TSIP_Core_Local_API.h"
++#include "stub/TSIP_Stub_API.h"
++
++/*!
++    @name  TSIP use RAM Area in Systm Memory
++ */
++/* @{ */
++uint32_t *S_RAM  = NULL;
++uint32_t *S_INST = NULL;
++uint32_t *S_HEAP = NULL;
++/* @} */
++
++
++/*!
++    @name State Flag in TSIP Core Layer
++ */
++
++static uint8_t TSIP_Core_Init_Flag  = TSIP_FALSE;
++
++#ifdef _TSIP_SB
++static uint32_t TSIP_Core_State_Flag = TSIP_CORE_STATE00;
++#else
++static uint32_t TSIP_Core_State_Flag = TSIP_CORE_STATE09;
++#endif
++/* @} */
++
++
++
++/*!
++    @name State Require Table for API in TSIP Core Layer
++ */
++/* @{ */
++const uint16_t RequireState_TBL[TSIP_STATE_TAG_MAX][TSIP_CORE_STATE_MAX_ARRAY] = {
++    {TSIP_CORE_STATE00, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INIT                            */
++    {TSIP_CORE_STATE01, TSIP_CORE_STATE03,    TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INJECT_KEY                      */
++    {TSIP_CORE_STATE01, TSIP_CORE_STATE05,    TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INSTALL_UIMAGE(No Used)         */
++    {TSIP_CORE_STATE04, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INSTALL_DEVICETREE(No Used)     */
++    {TSIP_CORE_STATE01, TSIP_CORE_STATE07,    TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_SB_UIMAGE(No Used)              */
++    {TSIP_CORE_STATE08, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_SB_DEVICETREE(No Used)          */
++    {TSIP_CORE_STATE09, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_LIB_INIT                        */
++    {TSIP_CORE_STATE10, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_LIB_APIS                        */
++    {TSIP_CORE_STATE11, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_LIB_SECURE_UPDATE_APIS          */
++    {TSIP_CORE_STATE03, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INJECT_KEY_SKIP                 */
++    {TSIP_CORE_STATE05, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INSTALL_UIMAGE_SKIP(No Used)    */
++    {TSIP_CORE_STATE01, TSIP_CORE_STATE20,    TSIP_CORE_STATE21,    TSIP_CORE_STATE_NONE}, /* TSIP_INJECT_ADDON_KEY                */
++    {TSIP_CORE_STATE20, TSIP_CORE_STATE21,    TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INJECT_ADDON_KEY_SKIP           */
++    {TSIP_CORE_STATE20, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_INJECT_ADDON_KEY_FIXEDSTATE     */
++    {TSIP_CORE_STATE01, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_KEYRING_VERIFY(RZG2 New)        */
++    {TSIP_CORE_STATE01, TSIP_CORE_STATE24,    TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_REENC_BOOTDATA(RZG2 New)        */
++    {TSIP_CORE_STATE24, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_REENC_BOOTDATA_SKIP(RZG2 New)   */
++    {TSIP_CORE_STATE01, TSIP_CORE_STATE25,    TSIP_CORE_STATE26,    TSIP_CORE_STATE_NONE}, /* TSIP_VERIFY_BOOTDATA(RZG2 New)       */
++    {TSIP_CORE_STATE25, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE, TSIP_CORE_STATE_NONE}, /* TSIP_VERIFY_BOOTDATA_SKIP(RZG2 New)  */
++};
++/* @} */
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++
++/*! *****************************************************************************
++    @fn       void TSIP_Core_Set_Init(uint8_t SetValue)
++    @brief    set initialization flag of TSIP Core layer
++
++    @param     [in]        SetValue         transition state
++
++    @retval    void
++    
++    @par    Details
++    It set initialization flag of TSIP Core layer
++
++    @par    Processing flow
++    -# set initialization flag
++ ********************************************************************************/
++void TSIP_Core_Set_Init(uint8_t SetValue)
++{
++    if(SetValue==TSIP_FALSE) {
++        TSIP_Core_Init_Flag = TSIP_FALSE;
++    }
++    else {
++        TSIP_Core_Init_Flag = TSIP_TRUE;
++    }
++}
++
++/*! *****************************************************************************
++    @fn       void TSIP_Core_Set_State(uint32_t State)
++    @brief    set transition state of TSIP Core layer
++
++    @param     [in]        State         transition state
++
++    @retval    R_PASS                  success
++    @retval    R_PARAMETER_FAIL        invalid input parameter
++    
++    @par    Details
++    It set transition state of TSIP Core layer
++
++    @par    Processing flow
++    -# set transition state
++ ********************************************************************************/
++void TSIP_Core_Set_State(uint32_t State)
++{
++   TSIP_Core_State_Flag = State;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Init(unsigned char *S_RAMData, unsigned char *S_INSTData)
++    @brief    Initialize in TSIP Core
++
++    @param     [in]        S_RAMData         Pointer of S_RAM area
++    @param     [in]        S_INSTData        Pointer of S_INST area
++
++    @retval    R_PASS                  success
++    
++    @par    Details
++    It perform initialization of TSIP Core
++
++    @par    Processing flow
++    -# save pointer of S_RAM and S_INT
++ ********************************************************************************/
++uint32_t TSIP_Core_Init(unsigned char *S_RAMData, unsigned char *S_INSTData)
++{
++    uint32_t RetCode = R_PASS;
++
++    S_RAM  = (uint32_t *)S_RAMData;  /* PRQA S 3305 */
++    S_INST = (uint32_t *)S_INSTData; /* PRQA S 3305 */
++
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint8_t Is_TSIP_Core_Init(void)
++    @brief    check initialization of TSIP Core Layer
++    
++    @retval    TSIP_TRUE                  initialized
++    @retval    TSIP_FALSE                 not initialized
++    
++    @par    Details
++    It check if it has been initialized in TSIP Core Layer
++
++    @par    Processing flow
++    -# return the TSIP_Core_Init_Flag
++ ********************************************************************************/
++uint8_t Is_TSIP_Core_Init(void)
++{
++    return(TSIP_Core_Init_Flag);
++}
++
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Check_State(uint32_t Tag)
++    @brief    check transition state of TSIP Core layer
++
++    @param     [in]        Tag         TAG of checked API
++
++    @retval    R_PASS                  success
++    @retval    R_SEQUENCE_FAIL         cannot perform in current state
++    
++    @par    Details
++    It checks transition state that API can perform
++
++    @par    Processing flow
++    -# check if TAG API can perform in current state by using RequireState_TBL
++ ********************************************************************************/
++uint32_t TSIP_Core_Check_State(uint32_t Tag)
++{
++   uint32_t RetCode = R_SEQUENCE_FAIL;
++   uint32_t Cnt;
++
++   for(Cnt = 0;Cnt < TSIP_CORE_STATE_MAX_ARRAY;Cnt++) {
++       if(TSIP_Core_State_Flag == RequireState_TBL[Tag][Cnt]) {
++           RetCode = R_PASS;
++           break;
++       }
++       if(RequireState_TBL[Tag][Cnt] == TSIP_CORE_STATE_NONE) {
++           break;
++       }
++   }
++
++   return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint64_t TSIP_Core_Bswap_64(uint64_t Data)
++    @brief    Endian swap for 64bit data
++
++    @param     [in]        Data         64bit data
++
++    @retval    endian swapped data
++    
++    @par    Details
++    It perform endian swapping for 64bit data.
++
++    @par    Processing flow
++    -# endian swapping for 64bit data
++ ********************************************************************************/
++#ifndef _SB_COVERAGE
++uint64_t TSIP_Core_Bswap_64(uint64_t Data)
++{
++    uint64_t Ret;
++    Ret = ((((Data) & 0xff00000000000000ULL) >> 56) |  /* PRQA S 2984, 0580, 2984, 2790 */
++           (((Data) & 0x00ff000000000000ULL) >> 40) |  /* PRQA S 2984, 0580, 2984, 2790 */
++           (((Data) & 0x0000ff0000000000ULL) >> 24) |  /* PRQA S 2984, 0580, 2984 */
++           (((Data) & 0x000000ff00000000ULL) >> 8)  |  /* PRQA S 2984, 0580, 2984 */
++           (((Data) & 0x00000000ff000000ULL) << 8)  |  /* PRQA S 2984, 0580, 2984 */
++           (((Data) & 0x0000000000ff0000ULL) << 24) |  /* PRQA S 2984, 0580, 2984 */
++           (((Data) & 0x000000000000ff00ULL) << 40) |  /* PRQA S 2984, 0580, 2984, 2790 */
++           (((Data) & 0x00000000000000ffULL) << 56) ); /* PRQA S 2984, 0580, 2984, 2790 */
++
++    return Ret;
++}
++#endif
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.h b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.h
+new file mode 100644
+index 0000000..6479889
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Local_API.h
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_Local_API.h
++    @brief   TSIP Core Local API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_CORE_Local_API_H_
++#define  TSIP_CORE_Local_API_H_
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stdint.h>
++#include <stddef.h>
++
++#include "common/TSIP_Common_Define.h"
++
++void TSIP_Core_Set_Init(uint8_t SetValue);
++void TSIP_Core_Set_State(uint32_t State);
++uint32_t TSIP_Core_Init(unsigned char *S_RAMData, unsigned char *S_INSTData);
++uint8_t Is_TSIP_Core_Init(void);
++uint32_t TSIP_Core_Check_State(uint32_t Tag);
++uint64_t TSIP_Core_Bswap_64(uint64_t Data);
++
++
++#endif  /* TSIP_CORE_Local_API_H_ */
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.c b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.c
+new file mode 100644
+index 0000000..b45c052
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.c
+@@ -0,0 +1,729 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_Proc_API.c
++    @brief   TSIP Core Layer Procedure API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "core/TSIP_Core_API.h"
++#include "core/TSIP_Core_Proc_API.h"
++#include "core/TSIP_Core_Local_API.h"
++#include "proc/TSIP_Procedure.h"
++#include "stub/TSIP_Stub_API.h"
++
++static unsigned char OutPut_S_INST[1296U];
++
++/*! @var TSIP_Core_Share_InData_IV
++    @brief IV for Keyring injection
++*/
++static const uint8_t TSIP_Core_Share_InData_IV[] = {
++    0x85, 0xc1, 0x67, 0x34, 0x83, 0xd5, 0xd2, 0x91,  0xf0, 0xd0, 0x71, 0x3e,  0x3e, 0xa4, 0x34, 0xa3,
++};
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_softreset(void)
++    @brief    software reset
++    
++    @param    void
++    
++    @retval    R_PASS                success
++    
++    @par    Details
++    It performs software reset.
++
++    @par    Processing flow
++    -# perform software reset
++        - TSIPPrc_p00()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_softreset(void)
++{
++    TSIPPrc_p00();
++    return R_PASS;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p01(void)
++    @brief    TSIP self-check1
++    
++    @param    void
++    
++    @retval    R_PASS                           success
++    @retval    R_INITIALIZATION_ERROR           TSIP initialization error
++    @retval    R_RESOURCE_CONFLICT_FAIL         resource for this process already used in other process
++    
++    @par    Details
++    It performs TSIP self-check1
++
++    @par    Processing flow
++    -# TSIP self-check1
++        - TSIPPrc_p01()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p01(void)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    Ret = TSIPPrc_p01();
++    switch(Ret) {
++        case SELFTEST_FAIL:
++            RetCode = R_INITIALIZATION_ERROR;
++            break;
++        case RETURN_OK:
++            RetCode = R_PASS;
++            break;
++        default:
++           RetCode = R_RESOURCE_CONFLICT_FAIL;
++            break;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p02(void)
++    @brief    TSIP self-check2
++    
++    @retval    R_PASS                           success
++    @retval    R_PROC_RETRY                     retry
++    @retval    R_RESOURCE_CONFLICT_FAIL         resource for this process already used in other process
++
++    @par    Details
++    It performs TSIP self-check2
++
++    @par    Processing flow
++    -# TSIP self-check2
++        - TSIPPrc_p02()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p02(void)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    Ret = TSIPPrc_p02();
++    switch(Ret) {
++        case PROC_RETRY:
++            RetCode = R_PROC_RETRY;
++            break;
++        case RETURN_OK:
++            RetCode = R_PASS;
++            break;
++        default:
++            RetCode = R_RESOURCE_CONFLICT_FAIL;
++            break;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p03(void)
++    @brief    change status for injection
++    
++    @param    void
++    
++    @retval    R_PASS                       success
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It performs to change status for injection
++
++    @par    Processing flow
++    -# change status for injection
++        - TSIPPrc_p03()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p03(void)
++{
++    uint32_t RetCode;
++    uint8_t Ret;
++
++    Ret = TSIPPrc_p03();
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p04(const uint32_t *InData_CustomerKeyOperationCode, const uint32_t *InData_KeyRingOperationCode)
++    @brief    Inject Key
++    
++    @param     [in]        *InData_CustomerKeyOperationCode   key data combined with CustomrKey1 and CustomerKey2 including identifier (data size:36Byte)
++    @param     [in]        *InData_KeyRingOperationCode       Keyring data (data size:1840Byte)
++    
++    @retval    R_PASS                           success
++    @retval    R_VERIFICATION_FAIL              verification failed
++    @retval    R_PROVISIONING_KEY_FAIL          provisioning key failed
++    @retval    R_RESOURCE_CONFLICT_FAIL         resource for this process already used in other process
++    
++    @par    Details
++    It moves to Inject process.
++
++    @par    Processing flow
++    -# perform Inject Key process
++        - TSIPPrc_p04()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p04(const uint32_t *InData_CustomerKeyOperationCode, const uint32_t *InData_KeyRingOperationCode)
++{
++    uint32_t  RetCode;
++    uint8_t   Ret;
++    uint8_t   Count;
++    uint32_t  InData_SharedKeyIndex[1];
++    uint32_t  InData_SessionKey[8];
++    uint32_t  i;
++    uint8_t   *workp;
++    
++    for(i = 0; i < sizeof(OutPut_S_INST); i++) {
++        OutPut_S_INST[i] = 0U;
++    }
++    InData_SharedKeyIndex[0] = InData_CustomerKeyOperationCode[0];
++    for(Count = 1; Count < 9; Count++){
++        InData_SessionKey[Count - 1] = InData_CustomerKeyOperationCode[Count];
++    }
++    Ret = TSIPPrc_p04(InData_SharedKeyIndex, InData_SessionKey, (const uint32_t *)TSIP_Core_Share_InData_IV, InData_KeyRingOperationCode, (uint32_t *)OutPut_S_INST);  /* PRQA S 3305 */
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++        workp = (uint8_t *)S_INST;
++        for(i = 0; i < sizeof(OutPut_S_INST); i++) {
++             workp[i] = OutPut_S_INST[i];
++        }
++    }
++    else if(Ret == INTERNAL_ERROR) {
++        RetCode = R_PROVISIONING_KEY_FAIL;
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p10(void)
++    @brief    Inject key for basic encryption
++    
++    @param    void
++    
++    @retval    R_PASS                       success
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It moves to inject key process for basic encryption
++
++    @par    Processing flow
++    -# perform key install for basic encryption
++        - TSIPPrc_p10()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p10(void)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    Ret = TSIPPrc_p10();
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p11(uint32_t InData_Operation, const uint32_t *InData_IV, const uint32_t *InData_KeyOperationCode, uint32_t *OutData_KeyOperationCode)
++    @brief    install key for basic encryption 
++    
++    @param     [in]        InData_Operation          Key information
++    @param     [in]        *InData_IV                Initial Vector
++    @param     [in]        *InData_KeyOperationCode  Input key data
++    @param     [out]       *OutData_KeyOperationCode Output key data
++    
++    @retval    R_PASS                       success
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    @retval    R_PARAMETER_FAIL             invalid input parameter
++    @retval    R_VERIFICATION_FAIL          verification failed
++
++    @par    Details
++    It installs key for basic encryption
++
++    @par    Processing flow
++    -# perform key install process for basic encryption
++        - TSIPPrc_p11()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p11(
++    uint32_t InData_Operation,
++    const uint32_t *InData_IV,
++    const uint32_t *InData_KeyOperationCode,
++          uint32_t *OutData_KeyOperationCode)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++
++    Ret = TSIPPrc_p11(&InData_Operation, InData_IV, InData_KeyOperationCode, OutData_KeyOperationCode);
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == ILLEGAL_PARAMETER) {
++        RetCode = R_PARAMETER_FAIL;
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++   
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p12(void)
++    @brief    verify Keyring
++    
++    @retval    R_PASS                       success
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_KEYRING_FORMAT_FAIL        Keyring format failed
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Deatails
++    It verifies Keyring.
++
++    @par    Processing flow
++    -#  perform Keyring verification process
++        - TSIPPrc_p12()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p12(void)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    Ret = TSIPPrc_p12();
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else if(Ret == FORMAT_ERROR) {
++        RetCode = R_KEYRING_FORMAT_FAIL;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++   
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p13(void)
++    @brief    select write process for Boot Program
++    
++    @param    void
++    
++    @retval    R_PASS                       success
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It selects write process for Boot Program
++
++    @par    Processing flow
++    -# Select write process for Boot Program
++        - TSIPPrc_p13()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p13(void)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    Ret = TSIPPrc_p13();
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p14(uint32_t InData_Prog_Num)
++    @brief    specify number of Boot Program
++    
++    @param     [in]        InData_Prog_Num  number of Boot Program
++    
++    @retval    R_PASS                       success
++    @retval    R_PARAMETER_FAIL             invalid input parameter
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It specifies number of Boot Program for writting
++
++    @par    Processing flow
++    -# specify number of Boot Program
++        - TSIPPrc_p14()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p14(uint32_t InData_Prog_Num)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    Ret = TSIPPrc_p14((const uint32_t *)&InData_Prog_Num);
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == ILLEGAL_PARAMETER) {
++        RetCode = R_PARAMETER_FAIL;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p15(const uint32_t *InData_Prog, uint32_t InData_Prog_ByteSize, uint32_t *OutData_Prog, uint32_t *OutData_Header)
++    @brief    write Boot Program
++    
++    @param     [in]        *InData_Prog             Pointer of encrypted Boot Program
++    @param     [in]        InData_Prog_ByteSize     Size of encrypted Boot Program(multiple of 16)
++    @param     [out]       *OutData_Prog            Pointer of re-encrypted Boot Program by TSIP Key
++    @param     [out]       *OutData_Header          Pointer of Heder Information(48Byte)
++    
++    @retval    R_PASS                       success
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    @retval    PROC_CONT                    process continue
++    
++    @par    Details
++    It writes Boot Program
++
++    @par    Processing flow
++    -# Perform write process for Boot Program
++        - TSIPPrc_p15()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p15(const uint32_t *InData_Prog, uint32_t InData_Prog_ByteSize, uint32_t *OutData_Prog, uint32_t *OutData_Header)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    InData_Prog_ByteSize = InData_Prog_ByteSize / 4U;
++    
++    Ret = TSIPPrc_p15(InData_Prog, (const uint32_t *)&InData_Prog_ByteSize, OutData_Prog, OutData_Header);
++    if((Ret == RETURN_OK) || (Ret == PROC_CONT)) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p16(const uint32_t *InData_Header)
++    @brief    select verification process for Boot Program
++    
++    @param     [in]        *InData_Header   Pointer of header information
++    
++    @retval    R_PASS                       success
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It selects verification process of Boot Program.
++
++    @par    Processing flow
++    -# select verification process 
++        - TSIPPrc_p16()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p16(const uint32_t *InData_Header)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    
++    Ret = TSIPPrc_p16(InData_Header);
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p17(const uint32_t *InData_Prog, uint32_t InData_Prog_ByteSize, uint32_t *InData_HeapArea, uint32_t *OutData_Prog)
++    @brief    Verify Boot Progaram
++    
++    @param     [in]        *InData_Prog              Pointer of re-encrypted program by TSIP Key
++    @param     [in]        InData_Prog_ByteSize      Size of re-encrypted program by TSIP Key(multiple of 16)
++    @param     [in]        *InData_HeapArea          Heap area using by TSIP
++    @param     [out]       *OutData_Prog             Pointer of decrypted program by TSIP Key
++    
++    @retval    R_PASS                       success(all data)
++    @retval    R_PROC_CONT                  success
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It verifies Boot Program.
++
++    @par    Processing flow
++    -# perform verification for Boot Program
++        - TSIPPrc_p17()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p17(const uint32_t *InData_Prog, uint32_t InData_Prog_ByteSize, uint32_t *InData_HeapArea, uint32_t *OutData_Prog)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    S_HEAP = InData_HeapArea;
++
++    InData_Prog_ByteSize = InData_Prog_ByteSize / 4U;
++    
++    Ret = TSIPPrc_p17(InData_Prog, &InData_Prog_ByteSize, OutData_Prog);
++    if((Ret == RETURN_OK)) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == PROC_CONT) {
++        RetCode = R_PROC_CONT;
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p40(void)
++    @brief    Initialize update process
++    
++    @param     void        *Param   not used
++    
++    @retval    R_PASS                       success
++    @retval    R_FALSIFICATION_ERROR        tamper detection error
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It initializes update process
++
++    @par    Processing flow
++    -# perform initialization of update process
++        - TSIPPrc_p40()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p40(void)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    Ret = TSIPPrc_p40();
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == FALSIFICATION_ERROR) {
++        RetCode = R_FALSIFICATION_ERROR;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++    
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p45(const uint32_t *InData_Prog, uint32_t InData_Prog_ByteSize, 
++                                         uint32_t *OutData_Prog)
++    @brief    update Boot Program
++    
++    @param     [in]        *InData_ProgNo          Pointer of number of update Boot Program
++    @param     [in]        *InData_Prog            Pointer of encrypted Boot Program
++    @param     [in]        InData_Prog_ByteSize    Byte size of Boot Program
++    @param     [out]       *OutData_Prog           Pointer of re-encrypted Boot Program by TSIP Key
++
++    @retval    R_PASS                       success
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_PARAMETER_FAIL             invalid InData_ProgNo
++    @retval    R_FALSIFICATION_ERROR        tamper detection error
++
++    @par    Details
++    It perform Boot Program update
++
++    @par    Processing flow
++    -# perform Boot Program update
++        - TSIPPrc_p45()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p45(
++           uint32_t InData_ProgNo,
++     const uint32_t *InData_Prog, 
++           uint32_t InData_Prog_ByteSize, 
++           uint32_t *OutData_Prog)
++{
++    uint32_t RetCode;
++    uint8_t Ret;
++
++    InData_Prog_ByteSize = InData_Prog_ByteSize / 4;
++    Ret = TSIPPrc_p45((const uint32_t *)&InData_ProgNo, InData_Prog, (const uint32_t *)&InData_Prog_ByteSize, OutData_Prog);
++    if((Ret == RETURN_OK) || (Ret == PROC_CONT)) {
++        RetCode = R_PASS;
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else if(Ret == ILLEGAL_PARAMETER) {
++        RetCode = R_PARAMETER_FAIL;
++    }
++    else if(Ret == FALSIFICATION_ERROR) {
++        RetCode = R_FALSIFICATION_ERROR;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++   
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p43(const uint32_t *InData_KeyRingOperationCode)
++    @brief    Keyring decryption
++    
++    @param     [in]        *InData_KeyRingOperationCode     Pointer of Keyring
++
++    @retval    R_PASS                       success
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_FALSIFICATION_ERROR        tamper detection error
++    
++    @par    Details
++    It re-encrypts Keyring by TSIP Key
++
++    @par    Processing flow
++    -# re-encrypt Keyring by TSIP Key
++        - TSIPPrc_p43()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p43(const uint32_t *InData_KeyRingOperationCode)
++{
++    uint32_t RetCode;
++    uint8_t  Ret;
++
++    TSIP_Memset(OutPut_S_INST, 0, sizeof(OutPut_S_INST));
++    Ret = TSIPPrc_p43((const uint32_t *)TSIP_Core_Share_InData_IV, InData_KeyRingOperationCode, (uint32_t *)OutPut_S_INST); /* PRQA S 3305 */
++    if(Ret == RETURN_OK) {
++        RetCode = R_PASS;
++        TSIP_Memcpy(S_INST, OutPut_S_INST, sizeof(OutPut_S_INST));
++    }
++    else if(Ret == VERIFY_ERROR) {
++        RetCode = R_VERIFICATION_FAIL;
++    }
++    else if(Ret == FALSIFICATION_ERROR) {
++        RetCode = R_FALSIFICATION_ERROR;
++    }
++    else {
++        RetCode = R_RESOURCE_CONFLICT_FAIL;
++    }
++
++     return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Core_Prc_p3f(uint32_t InData_GenByteSize, uint32_t *OutData)
++    @brief    random number generation
++    
++    @param     [in]        InData_GenByteSize         Byte of generated random number
++    @param     [out]       *OutData                   Pointer of random number
++
++    @retval    R_PASS                       success
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    @retval    R_PARAMETER_FAIL             invalid input parameter
++    
++    @par    Details
++    It generates random number \n
++    
++    @par    Processing flow
++    -# Perform random number generation process
++        - TSIPPrc_p3f()
++ ********************************************************************************/
++uint32_t TSIP_Core_Prc_p3f(
++    uint32_t InData_GenByteSize, 
++    uint32_t *OutData)
++{
++    uint32_t RetCode = R_PASS;
++    uint32_t OutData_Text[4];
++    uint32_t Count;
++    uint32_t Last_Len;
++    uint32_t iLoop;
++    uint8_t  Ret = RETURN_OK;
++
++    if((InData_GenByteSize != 0U) && (OutData != NULL)) {
++        Count = InData_GenByteSize / 16U;
++        Last_Len = InData_GenByteSize % 16U;
++        for(iLoop = 0U; iLoop < Count; iLoop++) {
++            Ret = TSIPPrc_p3f(OutData_Text);
++            if(Ret != RETURN_OK) {
++                RetCode = R_RESOURCE_CONFLICT_FAIL;
++                break;
++            }
++            TSIP_Memcpy(&OutData[iLoop * 4U], OutData_Text, 16U);
++        }
++
++        if(Ret == RETURN_OK) {
++            if(Last_Len != 0U) {
++                Ret = TSIPPrc_p3f(OutData_Text);
++                if(Ret == RETURN_OK) {
++                    TSIP_Memcpy(&OutData[Count * 4U], OutData_Text, Last_Len);
++                    RetCode = R_PASS;
++                }
++                else {
++                    RetCode = R_RESOURCE_CONFLICT_FAIL;
++                }
++            }
++            else {
++                RetCode = R_PASS;
++            }
++        }
++    }
++    else {
++        RetCode = R_PARAMETER_FAIL;
++    }
++    return RetCode;
++}
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.h b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.h
+new file mode 100644
+index 0000000..54e036b
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_Proc_API.h
+@@ -0,0 +1,60 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_Proc_API.H
++    @brief   TSIP Core Layer Procedure API Headder
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#ifndef TSIP_CORE_PROC_API_H_
++#define TSIP_CORE_PROC_API_H_
++
++#include <stdint.h>
++#include <stddef.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "core/TSIP_Core_API.h"
++#include "core/TSIP_Core_Local_API.h"
++#include "stub/TSIP_Stub_API.h"
++
++uint32_t TSIP_Core_Prc_softreset(void);
++uint32_t TSIP_Core_Prc_p01(void);
++uint32_t TSIP_Core_Prc_p02(void);
++uint32_t TSIP_Core_Prc_p03(void);
++uint32_t TSIP_Core_Prc_p04(const uint32_t *InData_CustomerKeyOperationCode, const uint32_t *InData_KeyRingOperationCode);
++uint32_t TSIP_Core_Prc_p10(void);
++uint32_t TSIP_Core_Prc_p11(
++          uint32_t InData_Operation,
++    const uint32_t *InData_IV,
++    const uint32_t *InData_KeyOperationCode,
++          uint32_t *OutData_KeyIndex);
++uint32_t TSIP_Core_Prc_p12(void);
++
++uint32_t TSIP_Core_Prc_p13(void);
++uint32_t TSIP_Core_Prc_p14(uint32_t InData_Prog_Num);
++uint32_t TSIP_Core_Prc_p15(const uint32_t *InData_Prog, uint32_t InData_Prog_ByteSize, uint32_t *OutData_Prog, uint32_t *OutData_Header);
++uint32_t TSIP_Core_Prc_p16(const uint32_t *InData_Header);
++uint32_t TSIP_Core_Prc_p17(const uint32_t *InData_Prog, uint32_t InData_Prog_ByteSize, uint32_t *InData_HeapArea, uint32_t *OutData_Prog);
++
++    
++uint32_t TSIP_Core_Prc_p40(void);
++uint32_t TSIP_Core_Prc_p43(const uint32_t *InData_KeyRingOperationCode);
++uint32_t TSIP_Core_Prc_p45(      uint32_t InData_ProgNo,
++                            const uint32_t *InData_Prog,
++                                 uint32_t InData_Prog_ByteSize,
++                                 uint32_t *OutData_Prog);
++
++uint32_t TSIP_Core_Prc_p3f(uint32_t InData_GenByteSize, uint32_t *OutData);
++
++#endif  /* TSIP_CORE_PROC_API_H_ */
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_SecureUpdate_API.c b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_SecureUpdate_API.c
+new file mode 100644
+index 0000000..908e679
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/core/TSIP_Core_SecureUpdate_API.c
+@@ -0,0 +1,241 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Core_SecureUpdate_API.c
++    @brief   Secure Firmware update
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "core/TSIP_Core_API.h"
++#include "core/TSIP_Core_Proc_API.h"
++#include "core/TSIP_Core_Local_API.h"
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++static uint32_t Get_UpdateBootData_Num(UPDATE_BOOT_DATA *update_bootdata);
++
++/*! *****************************************************************************
++    @fn       static uint32_t Get_UpdateBootData_Num(UPDATE_BOOT_DATA *update_bootdata)
++    @brief    get number of valid Boot data
++    
++    @param     [in]    *update_bootdata     BootData structure
++    @param     [in]    *DataNum             number of valid Boot data
++
++    @retval    0                            no valid data
++    @retval    1 - 16                       number of valid data
++    
++    @par    Details
++    It gets number of valid Boot data from BootData structure \n
++    
++    @par    Processing flow
++    -# check parameter
++    -# get number of valid Boot data
++ ********************************************************************************/
++static uint32_t Get_UpdateBootData_Num(UPDATE_BOOT_DATA *update_bootdata)
++{
++    uint32_t DataNum = 0;
++    uint32_t LooopCount;
++    uint64_t Maximum = 0xFFFFFFE0U;
++    uint64_t Minimum = 0x00000110U;
++    UPDATEBOOTDATA *bootdata;
++
++    if(update_bootdata == NULL) {
++        DataNum = 0;
++    }
++    else {
++        bootdata = (UPDATEBOOTDATA *)update_bootdata;
++        for(LooopCount = 0; LooopCount < UPDATE_BOOT_DATA_MAX; LooopCount++, bootdata++) {
++            if (bootdata->InData_BootData_UpdateFlag == 0) { /* Not Update */
++                continue;
++            }
++
++            if ((bootdata->InData_BootData_UpdateFlag != 1)
++            || (bootdata->InData_BootData == NULL)
++            || (bootdata->OutData_BootData == NULL)
++            || (bootdata->InData_BootData_ByteSize < Minimum) 
++            || (bootdata->InData_BootData_ByteSize > Maximum)
++            || ((bootdata->InData_BootData_ByteSize%16) != 0)) {
++                DataNum = 0;
++                break;
++            }
++
++            DataNum ++;
++        }
++    }
++
++    return DataNum;
++}
++
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_SU_Activate(void)
++    @brief    Initialization for Secure firmware update
++    
++    @retval    R_PASS                   success
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_FALSIFICATION_ERROR    tampering detection error
++    @retval    R_RESOURCE_CONFLICT_FAIL resource for this process already used in other process
++    
++    @par    Details
++    It performs initilization for Secure firmware update \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Core layer
++        - Is_TSIP_Core_Init()
++    -# check transition state in TSIP Core layer
++        - TSIP_Core_Check_State()
++    -# initialize for Secure firmware update
++        - TSIP_Core_Prc_p40()
++    -# set transition state in TSIP_Core layer
++        - TSIP_Core_Set_State()
++ ********************************************************************************/
++uint32_t TSIP_SU_Activate(void)
++{
++    uint8_t  BoolFg;
++    uint32_t RetCode;
++
++    BoolFg = Is_TSIP_Core_Init();
++    RetCode = TSIP_Core_Check_State(TSIP_LIB_APIS);
++    if((BoolFg == TSIP_TRUE) && (RetCode == R_PASS)) {
++        RetCode = TSIP_Core_Prc_p40();
++        if(RetCode == R_PASS) {
++            TSIP_Core_Set_State(TSIP_CORE_STATE11);
++        }
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t uint32_t TSIP_UpdateBootData(UPDATE_BOOT_DATA *update_bootdata)
++    @brief    convert Boot data for update
++    
++    @param     [in/out]    *update_bootdata Pointer of Boot data
++
++    @retval    R_PASS                       success
++    @retval    R_PARAMETER_FAIL             invalid input parameter
++    @retval    R_SEQUENCE_FAIL              cannot perform in current state
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_FALSIFICATION_ERROR        tampering detection error
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It decrypts encrypted Boot data and re-encrypts by TSIP key
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Core layer
++        - Is_TSIP_Core_Init()
++    -# check transition state in TSIP Core layer
++        - TSIP_Core_Check_State()
++    -# decrypt encrypted Boot data and output re-encrypted Boot data
++       - TSIP_Core_Prc_p45()  loop for number of valid data
++ ********************************************************************************/
++uint32_t TSIP_UpdateBootData(UPDATE_BOOT_DATA *update_bootdata)
++{
++    uint8_t  BoolFg;
++    uint32_t RetCode;
++    uint32_t DataNum;
++    uint32_t LoopCount;
++    UPDATEBOOTDATA *bootdata;
++
++    BoolFg = Is_TSIP_Core_Init();
++    RetCode = TSIP_Core_Check_State(TSIP_LIB_SECURE_UPDATE_APIS);
++    if((BoolFg == TSIP_TRUE) && (RetCode == R_PASS)) {
++        DataNum = Get_UpdateBootData_Num(update_bootdata);
++        if(DataNum != 0) {
++            bootdata  = (UPDATEBOOTDATA *)update_bootdata;
++            for(LoopCount = 0; LoopCount < UPDATE_BOOT_DATA_MAX; LoopCount++, bootdata++) {
++                if (bootdata->InData_BootData_UpdateFlag != 1) {    /* Not Updateing */
++                    continue;
++                }
++                RetCode = TSIP_Core_Prc_p45( LoopCount,
++                                        (const uint32_t *)bootdata->InData_BootData,  /* PRQA S 3305 */
++                                                (uint32_t)bootdata->InData_BootData_ByteSize,
++                                                (uint32_t *)bootdata->OutData_BootData); /* PRQA S 3305 */
++                if(RetCode != R_PASS) {
++                    break;
++                }
++            }
++        }
++        else {
++            RetCode = R_PARAMETER_FAIL;
++        }
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++    return RetCode;
++}
++
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_SU_Key(uint8_t *InData_KeyRingOperationCode)
++    @brief    Keyring decryption and re-encryption
++    
++    @param     [in]        *InData_KeyRingOperationCode       Pointer of Keyring(size:688Byte)
++   
++    @retval    R_PASS                   success
++    @retval    R_PARAMETER_FAIL         invalid input parameter
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_VERIFICATION_FAIL      verification failed
++    @retval    R_FALSIFICATION_ERROR    tampering detection error
++    @retval    R_RESOURCE_CONFLICT_FAIL resource for this process already used in other process
++    
++    @par    Details
++    It decrypts encrypted Keyring and re-encrypts by TSIP key \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Core layer
++        - Is_TSIP_Core_Init()
++    -# check transition state in TSIP Core layer
++        - TSIP_Core_Check_State()
++    -# check parameter
++    -# re-encrypt Keyring by TSIP key
++       - TSIP_Core_Prc_p43()
++ ********************************************************************************/
++uint32_t TSIP_SU_Key(uint8_t *InData_KeyRingOperationCode)
++{
++    uint8_t  BoolFg;
++    uint32_t RetCode;
++
++    BoolFg = Is_TSIP_Core_Init();
++    RetCode = TSIP_Core_Check_State(TSIP_LIB_SECURE_UPDATE_APIS);
++    if((BoolFg == TSIP_TRUE) && (RetCode == R_PASS)) {
++        if(InData_KeyRingOperationCode != NULL) {
++            RetCode = TSIP_Core_Prc_p43((const uint32_t *)InData_KeyRingOperationCode); /* PRQA S 3305 */
++        }
++        else {
++            RetCode = R_PARAMETER_FAIL;
++        }
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++
++    return RetCode;
++}
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/proc/TSIP_Procedure.h b/core/arch/arm/plat-rzg/drivers/tsip/proc/TSIP_Procedure.h
+new file mode 100644
+index 0000000..afddb32
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/proc/TSIP_Procedure.h
+@@ -0,0 +1,412 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Procedure.h
++    @brief   TSIP Procedure
++    
++    @par    History
++    @subsection sub_history 
++    - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_PROCEDURE_H_
++#define  TSIP_PROCEDURE_H_
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include  <stdint.h>
++#include  <stddef.h>
++
++#define  REG_00H    0U
++#define  REG_04H    1U
++#define  REG_08H    2U
++#define  REG_0CH    3U
++#define  REG_10H    4U
++#define  REG_14H    5U
++#define  REG_18H    6U
++#define  REG_1CH    7U
++#define  REG_20H    8U
++#define  REG_24H    9U
++#define  REG_28H    10U
++#define  REG_2CH    11U
++#define  REG_30H    12U
++#define  REG_34H    13U
++#define  REG_38H    14U
++#define  REG_3CH    15U
++#define  REG_40H    16U
++#define  REG_44H    17U
++#define  REG_48H    18U
++#define  REG_4CH    19U
++#define  REG_50H    20U
++#define  REG_54H    21U
++#define  REG_58H    22U
++#define  REG_5CH    23U
++#define  REG_60H    24U
++#define  REG_64H    25U
++#define  REG_68H    26U
++#define  REG_6CH    27U
++#define  REG_70H    28U
++#define  REG_74H    29U
++#define  REG_78H    30U
++#define  REG_7CH    31U
++#define  REG_80H    32U
++#define  REG_84H    33U
++#define  REG_88H    34U
++#define  REG_8CH    35U
++#define  REG_90H    36U
++#define  REG_94H    37U
++#define  REG_98H    38U
++#define  REG_9CH    39U
++#define  REG_A0H    40U
++#define  REG_A4H    41U
++#define  REG_A8H    42U
++#define  REG_ACH    43U
++#define  REG_B0H    44U
++#define  REG_B4H    45U
++#define  REG_B8H    46U
++#define  REG_BCH    47U
++#define  REG_C0H    48U
++#define  REG_C4H    49U
++#define  REG_C8H    50U
++#define  REG_CCH    51U
++#define  REG_D0H    52U
++#define  REG_D4H    53U
++#define  REG_D8H    54U
++#define  REG_DCH    55U
++#define  REG_E0H    56U
++#define  REG_E4H    57U
++#define  REG_E8H    58U
++#define  REG_ECH    59U
++#define  REG_F0H    60U
++#define  REG_F4H    61U
++#define  REG_F8H    62U
++#define  REG_FCH    63U
++#define  REG_100H    64U
++#define  REG_104H    65U
++#define  REG_108H    66U
++#define  REG_10CH    67U
++#define  REG_110H    68U
++#define  REG_114H    69U
++#define  REG_118H    70U
++#define  REG_11CH    71U
++#define  REG_120H    72U
++#define  REG_124H    73U
++#define  REG_128H    74U
++#define  REG_12CH    75U
++#define  REG_130H    76U
++#define  REG_134H    77U
++#define  REG_138H    78U
++#define  REG_13CH    79U
++#define  REG_140H    80U
++#define  REG_144H    81U
++#define  REG_148H    82U
++#define  REG_14CH    83U
++#define  REG_150H    84U
++#define  REG_154H    85U
++#define  REG_158H    86U
++#define  REG_15CH    87U
++#define  REG_160H    88U
++#define  REG_164H    89U
++#define  REG_168H    90U
++#define  REG_16CH    91U
++#define  REG_170H    92U
++#define  REG_174H    93U
++#define  REG_178H    94U
++#define  REG_17CH    95U
++#define  REG_180H    96U
++#define  REG_184H    97U
++#define  REG_188H    98U
++#define  REG_18CH    99U
++#define  REG_190H    100U
++#define  REG_194H    101U
++#define  REG_198H    102U
++#define  REG_19CH    103U
++#define  REG_1A0H    104U
++#define  REG_1A4H    105U
++#define  REG_1A8H    106U
++#define  REG_1ACH    107U
++#define  REG_1B0H    108U
++#define  REG_1B4H    109U
++#define  REG_1B8H    110U
++#define  REG_1BCH    111U
++#define  REG_1C0H    112U
++#define  REG_1C4H    113U
++#define  REG_1C8H    114U
++#define  REG_1CCH    115U
++#define  REG_1D0H    116U
++#define  REG_1D4H    117U
++#define  REG_1D8H    118U
++#define  REG_1DCH    119U
++#define  REG_1E0H    120U
++#define  REG_1E4H    121U
++#define  REG_1E8H    122U
++#define  REG_1ECH    123U
++#define  REG_1F0H    124U
++#define  REG_1F4H    125U
++#define  REG_1F8H    126U
++#define  REG_1FCH    127U
++
++extern volatile uint32_t* gpTSIP;
++extern uint32_t *S_RAM;
++extern uint32_t *S_INST;
++extern uint32_t *S_HEAP;
++
++extern void TSIPPrc_p00(void);
++extern uint8_t TSIPPrc_p01(void);
++extern uint8_t TSIPPrc_p02(void);
++extern uint8_t TSIPPrc_p03(void);
++extern uint8_t TSIPPrc_p04(const uint32_t InData_SharedKeyIndex[],
++                           const uint32_t InData_SessionKey[],
++                           const uint32_t InData_IV[],
++                           const uint32_t InData_InstData[],
++                                 uint32_t OutData_InstData[]);
++extern uint8_t TSIPPrc_p10(void);
++extern uint8_t TSIPPrc_p11(const uint32_t InData_Operation[],
++                           const uint32_t InData_IV[],
++                           const uint32_t InData_KeyOperationCode[],
++                                 uint32_t OutData_KeyIndex[]);
++extern uint8_t TSIPPrc_p12(void);
++extern uint8_t TSIPPrc_p13(void);
++extern uint8_t TSIPPrc_p14(const uint32_t InData_Prog_Num[]);
++extern uint8_t TSIPPrc_p15(const uint32_t InData_Prog[],
++                           const uint32_t InData_ProgLength[],
++                                 uint32_t OutData_Prog[],
++                                 uint32_t OutData_Header[]);
++extern uint8_t TSIPPrc_p16(const uint32_t InData_Header[]);
++extern uint8_t TSIPPrc_p17(const uint32_t InData_Prog[],
++                           const uint32_t InData_ProgLength[],
++                                 uint32_t OutData_Prog[]);
++
++
++extern uint8_t TSIPPrc_p40(void);
++extern uint8_t TSIPPrc_p43(const uint32_t InData_IV[],
++                           const uint32_t InData_InstData[],
++                                 uint32_t OutData_InstData[]);
++extern uint8_t TSIPPrc_p44(const uint32_t InData_Prog_Num[]);
++extern uint8_t TSIPPrc_p45(const uint32_t InData_ProgNo[],
++                           const uint32_t InData_Prog[],
++                           const uint32_t InData_ProgLength[],
++                                 uint32_t OutData_Prog[]);
++
++extern uint8_t TSIPPrc_p30(const uint32_t InData_Text[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_Text_Last[],
++                           const uint32_t InData_Text_Last_LEN[],
++                                 uint32_t OutData_Text[],
++                                 uint32_t OutData_Text_Last[],
++                                 uint32_t OutData_Header[]);
++extern uint8_t TSIPPrc_p31(const uint32_t InData_Header[],
++                           const uint32_t InData_Text[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_Text_Last[],
++                           const uint32_t InData_Text_Last_LEN[],
++                                 uint32_t OutData_Text[],
++                                 uint32_t OutData_Text_Last[]);
++
++extern uint8_t TSIPPrc_p3c(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p3d(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p4c(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p4d(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++
++extern uint8_t TSIPPrc_p7a(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p7b(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p7c(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p7d(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p7e(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++extern uint8_t TSIPPrc_p7f(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_Text[],
++                                 uint32_t OutData_Text[]);
++
++extern uint8_t TSIPPrc_p5f(const uint32_t InData_SHA1InitVal[],
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t Last_Data[],
++                           const uint32_t Last_Data_Cnt,
++                                 uint32_t OutData_MsgDigest[]);
++extern uint8_t TSIPPrc_p6f(const uint32_t InData_SHA256InitVal[],
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t Last_Data[],
++                           const uint32_t Last_Data_Cnt,
++                                 uint32_t OutData_MsgDigest[]);
++
++extern uint8_t TSIPPrc_p8a(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p8b(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t InData_MsgType[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p8c(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t InData_MsgType[],
++                           const uint32_t InData_CompareMAC[],
++                           const uint32_t InData_CompareMACLen[]);
++extern uint8_t TSIPPrc_p9a(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p9b(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t InData_MsgType[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p9c(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_IV[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t InData_MsgType[],
++                           const uint32_t InData_CompareMAC[],
++                           const uint32_t InData_CompareMACLen[]);
++
++extern uint8_t TSIPPrc_p5a(const uint32_t InData_KeyIndex[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p5b(const uint32_t InData_MAC[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p5c(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_MAC[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t Last_Data_Cnt,
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p5d(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_MAC[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t Last_Data_Cnt,
++                           const uint32_t InData_CompareMAC[],
++                           const uint32_t InData_CompareMACLen[]);
++extern uint8_t TSIPPrc_p6a(const uint32_t InData_KeyIndex[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p6b(const uint32_t InData_MAC[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p6c(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_MAC[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t Last_Data_Cnt,
++                                 uint32_t OutData_MAC[]);
++extern uint8_t TSIPPrc_p6d(const uint32_t InData_KeyIndex[],
++                           const uint32_t InData_MAC[],
++                           const uint32_t MAX_CNT,
++                           const uint32_t InData_PaddedMsg[],
++                           const uint32_t Last_Data[],
++                           const uint32_t Last_Data_Cnt,
++                           const uint32_t InData_CompareMAC[],
++                           const uint32_t InData_CompareMACLen[]);
++
++extern uint8_t TSIPPrc_p3f(uint32_t OutData_Text[]);
++
++extern uint8_t TSIPPrc_p3e(const uint32_t InData_Operation[],
++                           const uint32_t InData_IV[],
++                           const uint32_t InData_KeyOperationCode[],
++                                 uint32_t OutData_KeyIndex[]);
++
++extern uint8_t TSIPPrc_p50(const uint32_t InData_Certificates[],
++                           const uint32_t InData_CertificatesLength[],
++                           const uint32_t InData_Signature[],
++                           const uint32_t InData_CertificatesInfo[],
++                                 uint32_t OutData_PubKey[]);
++extern uint8_t TSIPPrc_p51(const uint32_t InData_PubKey[],
++                           const uint32_t InData_TBSCertificate[],
++                           const uint32_t InData_TBSCertificateLength[],
++                           const uint32_t InData_Signature[],
++                           const uint32_t InData_TBSCertificateInfo[],
++                                 uint32_t OutData_PubKey[]);
++extern uint8_t TSIPPrc_p52(const uint32_t InData_PubKey[],
++                           const uint32_t InData_TBSCertificate[],
++                           const uint32_t InData_TBSCertificateLength[],
++                           const uint32_t InData_Signature[],
++                           const uint32_t InData_TBSCertificateInfo[],
++                                 uint32_t OutData_PubKey[]);
++
++extern uint8_t TSIPPrc_p61(const uint32_t InData_PubKey[],
++                           const uint32_t InData_PreMasterSecret[],
++                                 uint32_t OutData_PreMasterSecret[]);
++
++extern uint8_t TSIPPrc_p70(uint32_t OutData_PreMasterSecret[]);
++extern uint8_t TSIPPrc_p71(const uint32_t InData_PreMasterSecret[],
++                           const uint32_t InData_ClientRandom[],
++                           const uint32_t InData_ServerRandom[],
++                                 uint32_t OutData_MasterSecret[]);
++extern uint8_t TSIPPrc_p72(const uint32_t InData_Sel_CipherSuite[],
++                           const uint32_t InData_MasterSecret[],
++                           const uint32_t InData_ClientRandom[],
++                           const uint32_t InData_ServerRandom[],
++                                 uint32_t OutData_ClientMACKeyOperationCode[],
++                                 uint32_t OutData_ServerMACKeyOperationCode[],
++                                 uint32_t OutData_ClientEncKeyOperationCode[],
++                                 uint32_t OutData_ServerEncKeyOperationCode[],
++                                 uint32_t OutData_ClientIV[],
++                                 uint32_t OutData_ServerIV[]);
++extern uint8_t TSIPPrc_p73(const uint32_t InData_Sel_VerifyData[],
++                           const uint32_t InData_MasterSecret[],
++                           const uint32_t InData_HandShakeHash[],
++                                 uint32_t OutData_VerifyData[]);
++extern uint8_t TSIPPrc_p74(const uint32_t MAX_CNT,
++                                 uint32_t OutData_KeyIndex[],
++                                 uint32_t OutData_Modulus[],
++                                 uint32_t OutData_PubExp[]);
++
++extern uint8_t TSIPPrc_subprc01(void);
++extern uint8_t TSIPPrc_subprc02(void);
++extern uint8_t TSIPPrc_subprc18(void);
++
++extern uint8_t TSIPPrc_subprc22(void);
++extern uint8_t TSIPPrc_subprc70(void);
++extern uint8_t TSIPPrc_subprc71(void);
++extern uint8_t TSIPPrc_subprc72(void);
++
++#endif  /* TSIP_PROCEDURE_H */
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver.h b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver.h
+new file mode 100644
+index 0000000..7ccea9d
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver.h
+@@ -0,0 +1,60 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Driver.h
++    @brief   TSIP Driver API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  R__TSIP_DRIVER_H__
++#define  R__TSIP_DRIVER_H__
++
++#define  DRIVER_OK           ((uint8_t)0x00)
++#define  DRIVER_ERROR        ((uint8_t)0x01)
++
++#define  MASK_DGSTATE_REG    (0x0000FF00U)
++#define  TSIP_STATE_MAIN07   (0x00000700U)
++#define  TSIP_STATE_SECURE01 (0x00000100U)
++
++#define  TSIP_BASE_ADDR      (0xE7800000U)
++#define  TSIP_SIZE           (0x00000200U)
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stdint.h>
++
++extern volatile uint32_t* gpTSIP;
++
++#ifdef _TSIP_SB
++uint8_t TSIPDrv_Initialize(void);
++#else
++uint8_t TSIPDrv_Initialize(uint8_t *TSIP_BaseAddress, uint8_t *MSTP_BaseAddress);
++#endif
++void TSIPDrv_Finalize(void);
++
++/*!
++    @def    TSIPDrv_Read(regNumber)
++    @brief     TSIP Drier read macro
++ */
++#define TSIPDrv_Read(regNumber) \
++     *((gpTSIP) + regNumber)
++
++/*! 
++	@def    TSIPDrv_Write(regNumber, value)
++    @brief     TSIP Driver write macro
++ */
++#define TSIPDrv_Write(regNumber, value) \
++    *((gpTSIP) + regNumber) = value
++
++#endif  /* R__TSIP_DRIVER_H__ */
++
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver_optee.c b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver_optee.c
+new file mode 100644
+index 0000000..e7f22d0
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Driver_optee.c
+@@ -0,0 +1,125 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Driver_optee.c
++    @brief   TSIP Driver API for OP-TEE
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "stub/TSIP_Driver.h"
++#include "proc/TSIP_Procedure.h"
++#include "common/TSIP_Common_Define.h"
++
++/*------------------------------------------------------------------------------*/
++/*                        Macro Definition                                      */
++/*------------------------------------------------------------------------------*/
++
++#define  MSTP_BASE_ADDR  (0xE6150000U)
++#define  MSTP_SIZE       (0x00001000U)
++#define  MSTPSR1         (0x00000038 >> 2)
++#define  RMSTPCR1        (0x00000114 >> 2)
++#define  SMSTPCR1        (0x00000134 >> 2)
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++/*!
++    @var      gpTSIP
++    @brief    TSIP register
++    
++    @par    
++    - TSIP_Driver.c
++        - TSIPDrv_Initialize()
++        - TSIPDrv_Finalize()
++ */
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++
++/*! *****************************************************************************
++    @fn       uint8_t TSIPDrv_Initialize(void)
++    @brief    TSIP Driver initialization
++    
++    @param     [in]        *TSIP_BaseAddress   TSIP Base Address
++    @param     [in]        *MSTP_BaseAddress   MSTP Base Address
++
++    @retval    DRIVER_OK        success
++    @retval    DRIVER_ERROR     error
++    
++    @par    Global veriables
++    <table class="params">
++    <tr><td class="paramdir"> [out] </td><td> @ref gpTSIP   </td></tr>
++    </table>
++    
++    @post
++    - call TSIPDrv_Finalize()
++    
++    @par    Details
++    It initializes TSIP driver. \n
++    
++    @par    Processing flow
++    -# Map the registry
++ ********************************************************************************/
++uint8_t TSIPDrv_Initialize(uint8_t *TSIP_BaseAddress, uint8_t *MSTP_BaseAddress) {
++
++    volatile uint32_t* pMSTPCR;
++    uint8_t ret;
++
++    if (TSIP_BaseAddress == NULL || MSTP_BaseAddress == NULL) {
++        ret = DRIVER_ERROR;         /* error */
++    } else {
++        ret = DRIVER_OK;
++        pMSTPCR = (uint32_t *)MSTP_BaseAddress; /* PRQA S 3305 */
++        pMSTPCR[RMSTPCR1] &= 0xFFFFFFBFU;
++        pMSTPCR[SMSTPCR1] &= 0xFFFFFFBFU;
++        gpTSIP = (uint32_t *)TSIP_BaseAddress;  /* PRQA S 3305 */
++    }
++
++    return ret;
++}
++
++/*! *****************************************************************************
++    @fn       void TSIPDrv_Finalize(void)
++    @brief    TSIP Driver finalization
++    
++    @par    Global veriables
++    <table class="params">
++    <tr><td class="paramdir"> [in,out] </td><td> @ref gpTSIP   </td></tr>
++    </table>
++    
++    @pre
++    - call TSIPDrv_Initialize() \n
++    
++    @par    Details
++    It finish TSIP driver \n
++    
++    @par    Processing flow
++    -# Unmap the registry
++ ********************************************************************************/
++void TSIPDrv_Finalize(void) {
++
++    if (gpTSIP != NULL) {
++        gpTSIP = NULL;
++    }
++
++    return;
++}
++
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API.h b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API.h
+new file mode 100644
+index 0000000..d403397
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API.h
+@@ -0,0 +1,36 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Stub_API.h
++    @brief   TSIP Stub Layer API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_STUB_API_H_
++#define  TSIP_STUB_API_H_
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stdint.h>
++#include <stddef.h>
++
++#include "common/TSIP_Common_Define.h"
++
++void *TSIP_Malloc(size_t Size);
++void *TSIP_Calloc(size_t Nmemb, size_t Size);
++void TSIP_Free(void *Ptr);
++int  TSIP_uSleep(uint32_t uTime);
++void *TSIP_Memcpy(void *Buf1, const void *Buf2, size_t Num);
++void *TSIP_Memset(void *Buf, int Ch, size_t Num);
++
++#endif  /* TSIP_STUB_API_H_ */
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API_optee.c b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API_optee.c
+new file mode 100644
+index 0000000..cdcc46a
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/stub/TSIP_Stub_API_optee.c
+@@ -0,0 +1,146 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Stub_API_optee.c
++    @brief   TSIP Stub Layer Local API
++
++    @par    Copyright
++    @subsection sub_history
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++#include <string.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "stub/TSIP_Stub_API.h"
++
++/*! *****************************************************************************
++    @fn       void *TSIP_Malloc(size_t Size)
++    @brief    Malloc process(No OS)
++
++    @param     [in]        Size          Size of memory to be allcated
++    @retval    NULL
++
++    @par    Details
++    dummy function of Malloc
++
++    @par    Processing flow
++    -# return NULL
++ ********************************************************************************/
++void *TSIP_Malloc(size_t Size)
++{
++    UNUSED(Size);/* PRQA S 3112 */
++    return NULL;
++}
++
++/*! *****************************************************************************
++    @fn       void *TSIP_Calloc(size_t Nmemb, size_t Size)
++    @brief    Calloc process(No OS)
++
++    @param     [in]        Nmemb         number of member
++    @param     [in]        Size          sizeo of member
++    @retval    NULL
++
++    @par    Details
++    dummy function of Calloc
++
++    @par    Processing flow
++    -# return NULL
++ ********************************************************************************/
++void *TSIP_Calloc(size_t Nmemb, size_t Size)
++{
++    UNUSED(Nmemb);/* PRQA S 3112 */
++    UNUSED(Size);/* PRQA S 3112 */
++    return NULL;
++}
++
++/*! *****************************************************************************
++    @fn       void TSIP_Free(void *Ptr)
++    @brief    Calloc process(No OS)
++
++    @param     [in]        Ptr          Pointer of memory to be free
++    @retval    NULL
++
++    @par    Details
++    dummy function of free
++
++    @par    Processing flow
++    -# nothing
++ ********************************************************************************/
++void TSIP_Free(void *Ptr)
++{
++    UNUSED(Ptr);/* PRQA S 3112 */
++    return;
++}
++
++/*! *****************************************************************************
++    @fn       void TSIP_uSleep(uint32_t uTime)
++    @brief    usleep process
++
++    @param     [in]        uTime          time of sleep(uSec)
++    @retval    0           success
++    @retval    -1          failure
++
++    @par    Details
++    It free memory allocated by TSIP_Malloc and TSIP_Calloc
++
++    @par    Processing flow
++    -# nothing
++ ********************************************************************************/
++int TSIP_uSleep(uint32_t uTime)
++{
++    UNUSED(uTime);/* PRQA S 3112 */
++    return 0;
++}
++
++/*! *****************************************************************************
++    @fn       void *TSIP_Memcpy(void *Buf1, const void *Buf2, size_t Num)
++    @brief    memcpy process
++
++    @param     [out]       Buf1          Pointer to the destination array
++    @param     [in]        Buf2          Pointer to the source of data
++    @param     [in]        Num           Number of bytes
++    @retval    Buf1 is returned.
++
++    @par    Details
++    Copy memory area
++
++    @par    Processing flow
++    -# Copy Num bytes from memory area Buf2 to memory area buf1.
++ ********************************************************************************/
++void *TSIP_Memcpy(void *Buf1, const void *Buf2, size_t Num)
++{
++    return memcpy(Buf1, Buf2, Num);
++}
++
++/*! *****************************************************************************
++    @fn       void *TSIP_Memset(void *Buf, int Ch, size_t Num)
++    @brief    memcpy process
++
++    @param     [out]       Buf           Pointer to the block of memory to fill
++    @param     [in]        Ch            Value to be set
++    @param     [in]        Num           Number of bytes
++    @retval    Buf is returned.
++
++    @par    Details
++    fill memory with a constant byte
++
++    @par    Processing flow
++    -# Fill the first Num bytes of the memory area pointed to by Buf
++       with the constant byte Ch.
++ ********************************************************************************/
++void *TSIP_Memset(void *Buf, int Ch, size_t Num)
++{
++    return memset(Buf, Ch, Num);
++}
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/sub.mk b/core/arch/arm/plat-rzg/drivers/tsip/sub.mk
+new file mode 100755
+index 0000000..343e7c5
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/sub.mk
+@@ -0,0 +1,28 @@
++
++
++incdirs-y += .
++
++srcs-y += wrapper/TSIP_Wrapper_BasicEncryption_API.c
++srcs-y += wrapper/TSIP_Wrapper_Local_API.c
++srcs-y += wrapper/TSIP_Wrapper_Lib_Init_API.c
++srcs-y += wrapper/TSIP_Wrapper_SecureUpdate_API.c
++srcs-y += core/TSIP_Core_Proc_API.c
++srcs-y += core/TSIP_Core_SecureUpdate_API.c
++srcs-y += core/TSIP_Core_Lib_Init_API.c
++srcs-y += core/TSIP_Core_Local_API.c
++srcs-y += core/TSIP_Core_BasicEncryption_API.c
++srcs-y += stub/TSIP_Stub_API_optee.c
++srcs-y += stub/TSIP_Driver_optee.c
++
++ifeq ($(PLATFORM_FLAVOR),ek874)
++libdeps += $(CFG_RZG_SEC_LIB_DIR)/libr_secure_ip_lib_g2e.a
++endif
++ifeq ($(PLATFORM_FLAVOR),hihope_rzg2m)
++libdeps += $(CFG_RZG_SEC_LIB_DIR)/libr_secure_ip_lib_g2m.a
++endif
++ifeq ($(PLATFORM_FLAVOR),hihope_rzg2n)
++libdeps += $(CFG_RZG_SEC_LIB_DIR)/libr_secure_ip_lib_g2n.a
++endif
++ifeq ($(PLATFORM_FLAVOR),hihope_rzg2h)
++libdeps += $(CFG_RZG_SEC_LIB_DIR)/libr_secure_ip_lib_g2h.a
++endif
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.c b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.c
+new file mode 100644
+index 0000000..f71f601
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.c
+@@ -0,0 +1,79 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_BasicEncryption_API.c
++    @brief   Basic encryption
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "wrapper/TSIP_Wrapper_BasicEncryption_API.h"
++#include "wrapper/TSIP_Wrapper_Local_API.h"
++#include "core/TSIP_Core_API.h"
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++
++/*! *****************************************************************************
++    @fn       unsigned long R_TSIP_BCF_GenerateRandom(unsigned long InData_GenByteSize,
++                                                      unsigned long InData_UseCASE, 
++                                                      unsigned char *OutData)
++    @brief    Random number generation
++    
++    @param     [in]        InData_GenByteSize         Bytes number of generated random
++    @param     [in]        InData_UseCASE             Use case of random (set only 0)
++    @param     [out]       *OutData                   Pointer of random
++    
++    @retval    R_PASS                   success
++    @retval    R_PARAMETER_FAIL         invalid input parameter
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_RESOURCE_CONFLICT_FAIL resource for this process already used in other process
++
++    @par    Details
++    It generates random number \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Wrapper layer
++        - Is_TSIP_Wrapper_Init()
++    -# generate random number
++        - TSIP_BCF_GenerateRandom()
++ ********************************************************************************/
++unsigned long R_TSIP_BCF_GenerateRandom(
++    unsigned long InData_GenByteSize,
++    unsigned long InData_UseCASE,
++    unsigned char *OutData)
++{
++    uint8_t BoolFg;
++    unsigned long RetCode;
++
++    BoolFg = Is_TSIP_Wrapper_Init();
++    if(BoolFg == TSIP_TRUE) {
++        RetCode = TSIP_BCF_GenerateRandom((uint32_t)InData_GenByteSize, (uint32_t)InData_UseCASE, (uint8_t *)OutData);
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++
++    return RetCode;
++}
++
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.h b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.h
+new file mode 100644
+index 0000000..4acb069
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_BasicEncryption_API.h
+@@ -0,0 +1,38 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_BasicEncryption_API.h
++    @brief   Basic encryption
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_WRAPPER_BASICENCRYPTION_API_H
++#define  TSIP_WRAPPER_BASICENCRYPTION_API_H
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include "common/TSIP_Common_Define.h"
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++unsigned long R_TSIP_BCF_GenerateRandom(
++    unsigned long InData_GenByteSize,
++    unsigned long InData_UseCASE,
++    unsigned char *OutData);
++
++#endif /* TSIP_WRAPPER_BASICENCRYPTION_API_H */
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.c b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.c
+new file mode 100644
+index 0000000..0ec1a81
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.c
+@@ -0,0 +1,80 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_Lib_Init_API.c
++    @brief   Library initialization
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "wrapper/TSIP_Wrapper_Lib_Init_API.h"
++#include "wrapper/TSIP_Wrapper_Local_API.h"
++#include "core/TSIP_Core_API.h"
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++/*! *****************************************************************************
++    @fn       unsigned long R_TSIP_Lib_Init(unsigned char *S_RAMData,
++                                            unsigned char *S_INSTData, 
++                                            unsigned char *TSIP_BaseAddress, 
++                                            unsigned char *MSTP_BaseAddress)
++    @brief    Library initiaization
++    
++    @param     [in]        *S_RAMData          Pointer of S_RAM data(it needs 432Byte area)
++    @param     [in]        *S_INSTData         Pointer of S_INST data(it needs 1296Byte area)
++    @param     [in]        *TSIP_BaseAddress   Logical pointer of TSIP Base Address
++    @param     [in]        *MSTP_BaseAddress   Logical pointer of MSTP Base Address
++    
++    @retval    R_PASS                   success
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_PARAMETER_FAIL         invalid input parameter
++    @retval    R_MMAP_FAIL              error occur of mmap()
++    
++    @par    Details
++    It performs initialization of TSIP library and self-checking of TSIP \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Wrapper layer
++        - Is_TSIP_Wrapper_Init()
++    -# initialize TSIP library
++        - TSIP_Lib_Init()
++    -# initialize in TSIP_Wrapper layer
++        - TSIP_Wrapper_Init()
++ ********************************************************************************/
++unsigned long R_TSIP_Lib_Init(unsigned char *S_RAMData, unsigned char *S_INSTData,
++                                unsigned char *TSIP_BaseAddress, unsigned char *MSTP_BaseAddress)
++{
++    uint8_t BoolFg;
++    unsigned long RetCode;
++
++    BoolFg = Is_TSIP_Wrapper_Init();
++    if(BoolFg == TSIP_FALSE) {
++        RetCode = TSIP_Lib_Init(S_RAMData, S_INSTData, TSIP_BaseAddress, MSTP_BaseAddress);
++        if(RetCode == R_PASS) {
++            RetCode = TSIP_Wrapper_Init();
++        }
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++    return RetCode;
++}
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.h b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.h
+new file mode 100644
+index 0000000..c62dab3
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Lib_Init_API.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_Lib_Init_API.h
++    @brief   Library initialization
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_WRAPPER_LIB_INIT_API_H
++#define  TSIP_WRAPPER_LIB_INIT_API_H
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include "common/TSIP_Common_Define.h"
++
++unsigned long R_TSIP_Lib_Init(unsigned char *S_RAMData, unsigned char *S_INSTData,
++                              unsigned char *TSIP_BaseAddress, unsigned char *MSTP_BaseAddress);
++
++#endif  /* TSIP_WRAPPER_LIB_INIT_API_H */
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.c b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.c
+new file mode 100644
+index 0000000..e3e0669
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.c
+@@ -0,0 +1,83 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_Local_API.c
++    @brief   TSIP Wrapper Local API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "common/TSIP_Common_Define.h"
++#include "wrapper/TSIP_Wrapper_Local_API.h"
++
++
++static uint8_t TSIP_Wrapper_Init_Flag = TSIP_FALSE;
++
++/*! *****************************************************************************
++    @fn       void TSIP_Wrapper_Set_Init(uint8_t BoolFg)
++    @brief    Initialization flag setting
++    
++    @retval    void
++    
++    @par    Details
++    It set the initialization flag in TSIP Wrapper Layer.
++
++    @par    Procession flow
++    -# set the flag to initialized
++ ********************************************************************************/
++void TSIP_Wrapper_Set_Init(uint8_t BoolFg)
++{
++    TSIP_Wrapper_Init_Flag = BoolFg;
++}
++
++/*! *****************************************************************************
++    @fn       uint32_t TSIP_Wrapper_Init(void)
++    @brief    Initialization of TSIP Wrapper Layer
++    
++    @retval    R_PASS           success
++    
++    @par    Details
++    It performs the initialization in TSIP Wrapper Layer.
++
++    @par    Processing flow
++    -# set the initialization flag in TSIP Wrapper Layer
++        - TSIP_Wrapper_Set_Init()
++ ********************************************************************************/
++uint32_t TSIP_Wrapper_Init(void)
++{
++    TSIP_Wrapper_Set_Init(TSIP_TRUE);
++    return R_PASS;
++}
++
++/*! *****************************************************************************
++    @fn       uint8_t Is_TSIP_Wrapper_Init(void)
++    @brief    Initialization checking
++    
++    @retval    TSIP_TRUE           initialized
++    @retval    TSIP_FALSE          not initialized
++    
++    @par    Details
++    It check if it has been initialized in TSIP Wrapper Layer.
++
++    @par    Processing flow
++    -# return the TSIP_Wrapper_Init_Flag
++ ********************************************************************************/
++uint8_t Is_TSIP_Wrapper_Init(void)
++{
++    return(TSIP_Wrapper_Init_Flag);
++}
++
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.h b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.h
+new file mode 100644
+index 0000000..4dab674
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_Local_API.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_Local_API.h
++    @brief   Wrapper Layer Local API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_WRAPPER_LOCAL_API_H
++#define  TSIP_WRAPPER_LOCAL_API_H
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++#include "common/TSIP_Common_Define.h"
++
++void     TSIP_Wrapper_Set_Init(uint8_t BoolFg);
++uint32_t TSIP_Wrapper_Init(void);
++uint8_t  Is_TSIP_Wrapper_Init(void);
++
++#endif  /* TSIP_WRAPPER_LOCAL_API_H */
++
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.c b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.c
+new file mode 100644
+index 0000000..0060832
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.c
+@@ -0,0 +1,165 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_SecureUpdate_API.c
++    @brief   Secure Firmware update
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include <stddef.h>
++#include <stdint.h>
++
++#include "wrapper/TSIP_Wrapper_SecureUpdate_API.h"
++#include "wrapper/TSIP_Wrapper_Local_API.h"
++#include "core/TSIP_Core_API.h"
++#include "stub/TSIP_Stub_API.h"
++
++/*------------------------------------------------------------------------------*/
++/*                        Prototype Definition                                  */
++/*------------------------------------------------------------------------------*/
++
++
++/*------------------------------------------------------------------------------*/
++/*                        Function Definition                                   */
++/*------------------------------------------------------------------------------*/
++/*! *****************************************************************************
++    @fn       unsigned long R_TSIP_SU_Activate(void)
++    @brief    Initialization for Secure firmware update
++    
++
++    @retval    R_PASS                   success
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_FALSIFICATION_ERROR    tampering detection error
++    @retval    R_RESOURCE_CONFLICT_FAIL resource for this process already used in other process
++    
++    @par    Details
++    It performs initilization for Secure firmware update \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Wrapper layer
++        - Is_TSIP_Wrapper_Init()
++    -# initialize for Secure firmware update
++        - TSIP_SU_Activate()
++ ********************************************************************************/
++unsigned long R_TSIP_SU_Activate(void)
++{
++    uint8_t BoolFg;
++    unsigned long RetCode;
++
++    BoolFg = Is_TSIP_Wrapper_Init();
++    if(BoolFg == TSIP_TRUE) {
++        RetCode = TSIP_SU_Activate();
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++
++    return RetCode;
++}
++
++/*! *****************************************************************************
++    @fn       unsigned long unsigned long R_TSIP_UpdateBootData(TSIP_UPDATE_BOOT_DATA *tsip_update_bootdata)
++    @brief    convert Boot data for update
++    
++    @param     [in/out]        *tsip_update_bootdata            BootData structure
++
++    @retval    R_PASS                       success
++    @retval    R_PARAMETER_FAIL             invalid input parameter
++    @retval    R_SEQUENCE_FAIL              cannot perform in current state
++    @retval    R_VERIFICATION_FAIL          verification failed
++    @retval    R_FALSIFICATION_ERROR        tampering detection error
++    @retval    R_RESOURCE_CONFLICT_FAIL     resource for this process already used in other process
++    
++    @par    Details
++    It decrypts encrypted Boot data(max 16 data) and re-encrypts by TSIP key after verification \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Wrapper layer
++        - Is_TSIP_Wrapper_Init()
++    -# decrypts Boot data and output re-encrypted Boot data
++        - TSIP_UpdateBootData()
++ ********************************************************************************/
++unsigned long R_TSIP_UpdateBootData(TSIP_UPDATE_BOOT_DATA *tsip_update_bootdata)
++{
++    uint8_t           BoolFg;
++    unsigned long     RetCode;
++    UPDATE_BOOT_DATA  updatebootdata;
++    UPDATEBOOTDATA    *bdata;
++    WRAP_UP_BOOT_DATA *wrap_bdata;
++    unsigned long     cnt;
++
++    BoolFg = Is_TSIP_Wrapper_Init();
++    if(BoolFg == TSIP_TRUE) {
++        if(tsip_update_bootdata == NULL) {
++            RetCode = TSIP_UpdateBootData(NULL);
++        }
++        else {
++            /* copy each member of structure for common impelemantation between 32bit and 64bit. */
++            TSIP_Memset(&updatebootdata, 0, sizeof(updatebootdata));
++            bdata = (UPDATEBOOTDATA *)&updatebootdata;
++            wrap_bdata = (WRAP_UP_BOOT_DATA *)tsip_update_bootdata;
++            for(cnt = 0; cnt < UPDATE_BOOT_DATA_MAX; cnt++, bdata++, wrap_bdata++ ) {
++                bdata->InData_BootData_UpdateFlag = (uint32_t)wrap_bdata->InData_BootData_UpdateFlag;
++                bdata->InData_BootData = (uint8_t *)wrap_bdata->InData_BootData;
++                bdata->InData_BootData_ByteSize = (uint64_t )wrap_bdata->InData_BootData_ByteSize;
++                bdata->OutData_BootData = (uint8_t *)wrap_bdata->OutData_BootData;
++            }
++            RetCode = TSIP_UpdateBootData(&updatebootdata);
++        }
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++
++    return RetCode;
++}
++
++
++/*! *****************************************************************************
++    @fn       unsigned long R_TSIP_SU_Key(unsigned char *InData_KeyRingOperationCode)
++    @brief    Keyring decryption and re-encryption
++    
++    @param     [in]        *InData_KeyRingOperationCode        Pointer of Keyring(size:1840Byte)
++
++    @retval    R_PASS                   success
++    @retval    R_PARAMETER_FAIL         invalid input parameter
++    @retval    R_SEQUENCE_FAIL          cannot perform in current state
++    @retval    R_VERIFICATION_FAIL      verification failed
++    @retval    R_FALSIFICATION_ERROR    tampering detection error
++    @retval    R_RESOURCE_CONFLICT_FAIL resource for this process already used in other process
++    
++    @par    Details
++    It decrypts encrypted Keyring and re-encrypts by TSIP key \n
++    
++    @par    Processing flow
++    -# check initialization state in TSIP_Wrapper layer
++        - Is_TSIP_Wrapper_Init()
++    -# decrypts and re-encrypts Keyring
++        - TSIP_SU_Key()
++ ********************************************************************************/
++unsigned long R_TSIP_SU_Key(unsigned char *InData_KeyRingOperationCode)
++{
++    uint8_t BoolFg;
++    unsigned long RetCode;
++
++    BoolFg = Is_TSIP_Wrapper_Init();
++    if(BoolFg == TSIP_TRUE) {
++        RetCode = TSIP_SU_Key((uint8_t *)InData_KeyRingOperationCode);
++    }
++    else {
++        RetCode = R_SEQUENCE_FAIL;
++    }
++
++    return RetCode;
++}
+diff --git a/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.h b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.h
+new file mode 100644
+index 0000000..32477dc
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/tsip/wrapper/TSIP_Wrapper_SecureUpdate_API.h
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (c) 2020, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++/*! *****************************************************************************
++    @file    TSIP_Wrapper_SecureUpdate_API.h
++    @brief   SecureUpdate API
++    
++    @par    History
++    @subsection sub_history 
++      - Initial version\n
++ ********************************************************************************/
++
++#ifndef  TSIP_WRAPPER_SECUREUPDATE_API_H
++#define  TSIP_WRAPPER_SECUREUPDATE_API_H
++
++/*------------------------------------------------------------------------------*/
++/*                        Include Files                                         */
++/*------------------------------------------------------------------------------*/
++
++#include "common/TSIP_Common_Define.h"
++
++typedef struct str_tsip_update_boot_data {
++    unsigned long InData_BootData_UpdateFlag;
++    unsigned char *InData_BootData;
++    unsigned long *InData_BootData_ByteSize;
++    unsigned char *OutData_BootData;
++} TSIP_UPDATE_BOOT_DATA[UPDATE_BOOT_DATA_MAX];
++
++typedef struct wrap_reenc_boot_data {
++    unsigned long InData_BootData_UpdateFlag;
++    unsigned char *InData_BootData;
++    unsigned long  InData_BootData_ByteSize;
++    unsigned char *OutData_BootData;
++} WRAP_UP_BOOT_DATA;
++
++unsigned long R_TSIP_SU_Activate(void);
++unsigned long R_TSIP_UpdateBootData(TSIP_UPDATE_BOOT_DATA *tsip_update_bootdata);
++unsigned long R_TSIP_SU_Key(unsigned char *InData_KeyRingOperationCode);
++
++
++#endif  /* TSIP_WRAPPER_SECUREUPDATE_API_H */
+diff --git a/core/arch/arm/plat-rzg/include/drivers/secip_drv.h b/core/arch/arm/plat-rzg/include/drivers/secip_drv.h
+new file mode 100644
+index 0000000..29cb9f2
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/include/drivers/secip_drv.h
+@@ -0,0 +1,12 @@
++// SPDX-License-Identifier: BSD-2-Clause
++/*
++ * Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
++ */
++
++#ifndef SECIP_DRV_H
++#define SECIP_DRV_H
++
++/* Random Number Generator */
++TEE_Result secip_rng(void *buf, size_t blen);
++
++#endif
+diff --git a/core/arch/arm/plat-rzg/sub.mk b/core/arch/arm/plat-rzg/sub.mk
+index fa699ea..f6bd050 100644
+--- a/core/arch/arm/plat-rzg/sub.mk
++++ b/core/arch/arm/plat-rzg/sub.mk
+@@ -1,4 +1,5 @@
+ global-incdirs-y += .
++global-incdirs-y += include
+ srcs-y += main.c
+ srcs-y += tee_common_otp.c
+ 
+@@ -9,3 +10,4 @@ ifeq (${PLATFORM_FLAVOR_hihope_rzg2n},y)
+ endif
+ 
+ cppflags-y += -DLTC_NO_PROTOTYPES -DRZG_DRAM_ECC=$(RZG_DRAM_ECC) -DRZG_ECC_FULL=$(RZG_ECC_FULL) -DPMIC_ROHM_BD9571=$(PMIC_ROHM_BD9571)
++subdirs-y += drivers
+-- 
+2.7.4
+

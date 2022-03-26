@@ -1,0 +1,55 @@
+From 3088c05260dbdbaad80943dc432f86039be9afe0 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 15 Jul 2021 15:50:16 +0700
+Subject: [PATCH] tools: rzg: change Security Module address in boot device
+
+This commit is created to change Security Module address.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ tools/renesas/rzg_layout_create/sa6.c                      | 4 ++--
+ tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/tools/renesas/rzg_layout_create/sa6.c b/tools/renesas/rzg_layout_create/sa6.c
+index 41abf95..9cbbd0d 100644
+--- a/tools/renesas/rzg_layout_create/sa6.c
++++ b/tools/renesas/rzg_layout_create/sa6.c
+@@ -14,11 +14,11 @@
+ /* Number of content cert for Non-secure Target Program(BL33x) */
+ #define RCAR_IMAGE_NUM			(0x00000001U)
+ /* Source address on Security Module */
+-#define SEC_MODSRC_ADDRESS		(0x00400000U)
++#define SEC_MODSRC_ADDRESS		(0x00500000U)
+ /* Reserved */
+ #define SEC_MOD_PARTITION		(0x00000000U)
+ /* Source address on Trusted Keyring */
+-#define SEC_KEYSRC_ADDRESS		(0x00500000U)
++#define SEC_KEYSRC_ADDRESS		(0x005A0000U)
+ /* Reserved */
+ #define SEC_KEY_PARTITION		(0x00000000U)
+ /* Source address on flash for BL31 */
+diff --git a/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c b/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c
+index db557da..f072e7d 100644
+--- a/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c
++++ b/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c
+@@ -36,14 +36,14 @@ toc_entry_t toc_entries[] = {
+ 		.name = "Trusted Boot Firmware Security Module",
+ 		.uuid = UUID_TRUSTED_BOOT_SEC_MODULE,
+ 		.cmdline_name = "sec-mod",
+-		.nvm_offset = 0x00400000U
++		.nvm_offset = 0x00500000U
+ 	},
+ #elif defined(_PKG_KEYRING)
+ 	{
+ 		.name = "Trusted Boot Keyring",
+ 		.uuid = UUID_TRUSTED_BOOT_KEYRING,
+ 		.cmdline_name = "key-ring",
+-		.nvm_offset = 0x00500000U
++		.nvm_offset = 0x005A0000U
+ 	},
+ #elif defined(_PKG_BOOT_FW)
+ 	{
+-- 
+2.7.4
+

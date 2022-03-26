@@ -1,0 +1,34 @@
+From 3bc6f13d38d42a46239236cfcf84024438dd9fcb Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 15 Jul 2021 16:01:56 +0700
+Subject: [PATCH] Fix Provisioning function for SECURE BOOT
+
+This commit is created to fix provisioning function for SECURE BOOT
+by changing module address.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ fiploader.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fiploader.c b/fiploader.c
+index 89af1b9..3066b6d 100644
+--- a/fiploader.c
++++ b/fiploader.c
+@@ -73,11 +73,11 @@
+ 
+ #define SEC_MOD_EXEC_ADDR           (0x440E0000)
+ #define SEC_MOD_LOAD_SIZE           (0x0001E000)
+-#define SEC_MOD_LOAD_ADDR_SPI       (0x00400000)
++#define SEC_MOD_LOAD_ADDR_SPI       (0x00500000)
+ 
+ #define S_INST_EXEC_ADDR            (0x440FE000)
+ #define S_INST_LOAD_SIZE            (1296)
+-#define S_INST_LOAD_ADDR_SPI        (0x00500000)
++#define S_INST_LOAD_ADDR_SPI        (0x005A0000)
+ 
+ #define ENC_HEADER_SIZE             (48)
+ 
+-- 
+2.7.4
+

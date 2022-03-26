@@ -1,0 +1,29 @@
+From d48607b2e5a61325d3c42a78fe2e5811d4b61edb Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Sat, 26 Mar 2022 19:20:11 +0700
+Subject: [PATCH] Fix build with gcc 8.3
+
+This commit is created to fix build with gcc 8.3 by ignoring
+stack protector option.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/makefile b/makefile
+index e311495..90e1f0d 100644
+--- a/makefile
++++ b/makefile
+@@ -111,7 +111,7 @@ ifneq (${DEBUG}, 0)
+ 	NS_BL2U_ASFLAGS += -g
+ endif
+ 
+-NS_BL2U_CFLAGS += -mgeneral-regs-only -mstrict-align
++NS_BL2U_CFLAGS += -mgeneral-regs-only -mstrict-align -fno-stack-protector
+ NS_BL2U_CPPFLAGS += -mgeneral-regs-only -mstrict-align
+ NS_BL2U_ASFLAGS += -nostdinc -ffreestanding -Wa,--fatal-warnings	\
+ 				-Werror -Wmissing-include-dirs			\
+-- 
+2.25.1
+

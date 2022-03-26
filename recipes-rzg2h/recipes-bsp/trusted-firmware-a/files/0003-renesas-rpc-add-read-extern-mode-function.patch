@@ -1,0 +1,78 @@
+From 9f49ffbffa79d72d02bc05b9f61e7bfdf8c6bbd0 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 15 Jul 2021 10:59:54 +0700
+Subject: [PATCH 1/2] renesas: rpc: add read extern mode function
+
+This commit is create to add init extern read mode for rpc.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ drivers/renesas/common/rpc/rpc_driver.c    | 39 ++++++++++++++++++++++++++++++
+ drivers/renesas/common/rpc/rpc_registers.h |  1 +
+ 2 files changed, 40 insertions(+)
+
+diff --git a/drivers/renesas/common/rpc/rpc_driver.c b/drivers/renesas/common/rpc/rpc_driver.c
+index 63de5b8..09f1ebc 100644
+--- a/drivers/renesas/common/rpc/rpc_driver.c
++++ b/drivers/renesas/common/rpc/rpc_driver.c
+@@ -50,6 +50,45 @@ static void rpc_setup(void)
+ 	mmio_write_32(RPC_PHYCNT, reg);
+ }
+ 
++void rpc_init_read_ext_mode(void)
++{
++	uint32_t product;
++	uint32_t cut;
++
++	product = mmio_read_32(PRR) & PRR_PRODUCT_MASK;
++	cut = mmio_read_32(PRR) & PRR_CUT_MASK;
++
++	if ((product == PRR_PRODUCT_M3) && (cut < PRR_PRODUCT_30)) {
++		mmio_write_32(RPC_PHYCNT, 0x00030260);
++		mmio_write_32(RPC_PHYCNT, 0x80030260);
++	} else {
++		mmio_write_32(RPC_PHYCNT, 0x00038260);
++		mmio_write_32(RPC_PHYCNT, 0x80030260);
++	}
++
++	mmio_write_32(RPC_CMNCR, 0x01FFF300);
++	mmio_write_32(RPC_DRCR, 0x001F0100);
++		//bit20-16 RBURST[4:0] = 11111 : 32 continuous data unit
++		//bit8     RBE         =     1 : Burst read
++	mmio_write_32(RPC_DRCMR, 0x000C0000);
++		//bit23-16 CMD[7:0] = 0x0C : 4FAST_READ 0Ch Command 4-byte address command
++	mmio_write_32(RPC_DREAR, 0x00000001);
++		//bit23-16 EAV[7:0]   = 0    : ADR[32:26] output set0
++		//bit2-0   EAC[2:0]   = 001  : ADR[25:0 ] Enable
++	mmio_write_32(RPC_DRENR, 0x0000CF00);
++		//bit31-30 CDB[1:0]   =   00 : 1bit width command (QSPI0_MOSI)
++		//bit25-24 ADB[1:0]   =   00 : 1bit width address (QSPI0_MOSI)
++		//bit17-16 DRDB[1:0]  =   00 : 1bit width transfer data (QSPI0_IO0)
++		//bit15    DME        =    1 : dummy cycle enable
++		//bit14    CDE        =    1 : Command enable
++		//bit11-8  ADE[3:0]   = 1111 : ADR[23:0] output (32 Bit Address)
++	mmio_write_32(RPC_DRDMCR, 0x00000007);
++		//bit2-0 DMCYC[2:0]   = 111 : 8 cycle dummy wait
++	mmio_write_32(RPC_DRDRENR, 0x00000000);
++		//bit8 ADDRE  = 0 : Address SDR transfer
++		//bit0 DRDRE  = 0 : DATA SDR transfer
++}
++
+ void rcar_rpc_init(void)
+ {
+ 	rpc_enable();
+diff --git a/drivers/renesas/common/rpc/rpc_registers.h b/drivers/renesas/common/rpc/rpc_registers.h
+index 79aea85..a1aea39 100644
+--- a/drivers/renesas/common/rpc/rpc_registers.h
++++ b/drivers/renesas/common/rpc/rpc_registers.h
+@@ -12,6 +12,7 @@
+ #define RPC_SSLDR	(RPC_BASE + 0x0004U)
+ #define RPC_DRCR	(RPC_BASE + 0x000CU)
+ #define RPC_DRCMR	(RPC_BASE + 0x0010U)
++#define RPC_DREAR	(RPC_BASE + 0x0014U)
+ #define RPC_DRENR	(RPC_BASE + 0x001CU)
+ #define RPC_SMCR	(RPC_BASE + 0x0020U)
+ #define RPC_SMCMR	(RPC_BASE + 0x0024U)
+-- 
+2.7.4
+

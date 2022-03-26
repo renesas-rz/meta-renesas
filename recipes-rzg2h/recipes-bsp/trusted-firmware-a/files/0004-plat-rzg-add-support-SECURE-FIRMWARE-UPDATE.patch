@@ -1,0 +1,652 @@
+From 6d095a2effd93a59ad639e7714f63622cc5c13ff Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 20 Jan 2022 15:29:33 +0700
+Subject: [PATCH 4/5] plat: rzg: add support SECURE FIRMWARE UPDATE
+
+This commit is created to add support SECURE FIRMWARE UPDATE for RZ/G2
+platform.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ drivers/renesas/common/auth/auth_mod.c        |   2 +
+ drivers/renesas/common/io/io_rcar.c           |  38 ++---
+ plat/renesas/common/aarch64/plat_helpers.S    |   7 +
+ .../renesas/common/bl2_plat_mem_params_desc.c |  31 ++++
+ plat/renesas/common/include/platform_def.h    |  11 ++
+ plat/renesas/common/plat_storage.c            |  16 ++
+ plat/renesas/rzg/bl2_plat_fwu.c               | 151 ++++++++++++++++++
+ plat/renesas/rzg/bl2_plat_setup.c             |   9 ++
+ plat/renesas/rzg/platform.mk                  |   7 +-
+ tools/renesas/rzg_layout_create/sa6.c         |  39 +++++
+ tools/renesas/rzg_layout_create/sa6.ld.S      |  20 +++
+ .../rzg_security_tools/fiptool/Makefile       |  16 +-
+ .../fiptool/src/rzg_firmware_image_package.h  |   2 +
+ .../fiptool/src/tbbr_config.c                 |   7 +
+ 14 files changed, 324 insertions(+), 32 deletions(-)
+ create mode 100644 plat/renesas/rzg/bl2_plat_fwu.c
+
+diff --git a/drivers/renesas/common/auth/auth_mod.c b/drivers/renesas/common/auth/auth_mod.c
+index bf72426b0..03c4212c0 100644
+--- a/drivers/renesas/common/auth/auth_mod.c
++++ b/drivers/renesas/common/auth/auth_mod.c
+@@ -137,6 +137,7 @@ int auth_mod_verify_img(unsigned int img_id, void *ptr, unsigned int len)
+ 	case BL336_CERT_ID:
+ 	case BL337_CERT_ID:
+ 	case BL338_CERT_ID:
++	case SEC_TRIGGER_ID:
+ 		return ret;
+ 	case BL31_IMAGE_ID:
+ 	case BL32_IMAGE_ID:
+@@ -168,6 +169,7 @@ int auth_mod_verify_img(unsigned int img_id, void *ptr, unsigned int len)
+ 	case BL31_IMAGE_ID:
+ 	case BL32_IMAGE_ID:
+ 	case BL33_IMAGE_ID:
++	case SEC_UPDATER_ID:
+ 		/* Authenticate the loaded program with Security Module. */
+ 		if (NULL == secure_boot_arg) {
+ 			ERROR("Security Module is not loaded.\n");
+diff --git a/drivers/renesas/common/io/io_rcar.c b/drivers/renesas/common/io/io_rcar.c
+index ab2d53780..a3780261d 100644
+--- a/drivers/renesas/common/io/io_rcar.c
++++ b/drivers/renesas/common/io/io_rcar.c
+@@ -81,25 +81,27 @@ typedef struct {
+ #define RCAR_FLASH_CERT_HEADER		RCAR_GET_FLASH_ADR(6U, 0U)
+ #define RCAR_EMMC_CERT_HEADER		(0x00030000U)
+ 
+-#define RCAR_COUNT_LOAD_BL33		(4U)
+-#define RCAR_COUNT_LOAD_BL33X		(5U)
++#define RCAR_COUNT_LOAD_BL33		(6U)
++#define RCAR_COUNT_LOAD_BL33X		(7U)
+ 
+ static const plat_rcar_name_offset_t name_offset[] = {
+ 	{SEC_MODULE_ID,  0U, RCAR_ATTR_SET_ALL(0, 0, 0)},
+ 	{SEC_KEYRING_ID, 0U, RCAR_ATTR_SET_ALL(1, 0, 1)},
++	{SEC_TRIGGER_ID, 0U, RCAR_ATTR_SET_ALL(2, 0, 2)},
++	{SEC_UPDATER_ID, 0U, RCAR_ATTR_SET_ALL(3, 0, 3)},
+ 
+-	{BL31_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(2, 0, 2)},
++	{BL31_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(4, 0, 4)},
+ 
+ 	/* BL3-2 is optional in the platform */
+-	{BL32_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(3, 0, 3)},
+-	{BL33_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(4, 0, 4)},
+-	{BL332_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(5, 0, 5)},
+-	{BL333_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(6, 0, 6)},
+-	{BL334_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(7, 0, 7)},
+-	{BL335_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(8, 0, 8)},
+-	{BL336_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(9, 0, 9)},
+-	{BL337_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(10, 0, 10)},
+-	{BL338_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(11, 0, 11)},
++	{BL32_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(5, 0, 5)},
++	{BL33_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(6, 0, 6)},
++	{BL332_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(7, 0, 7)},
++	{BL333_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(8, 0, 8)},
++	{BL334_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(9, 0, 9)},
++	{BL335_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(10, 0, 10)},
++	{BL336_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(11, 0, 11)},
++	{BL337_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(12, 0, 12)},
++	{BL338_IMAGE_ID, 0U, RCAR_ATTR_SET_ALL(13, 0, 13)},
+ };
+ 
+ #if TRUSTED_BOARD_BOOT
+@@ -125,8 +127,8 @@ static const plat_rcar_name_offset_t cert_offset[] = {
+ static file_state_t current_file = { 0 };
+ 
+ static uintptr_t rcar_handle, rcar_spec;
+-static uint64_t rcar_image_header[RCAR_MAX_BL3X_IMAGE + 4U] = { 0U };
+-static uint64_t rcar_image_header_prttn[RCAR_MAX_BL3X_IMAGE + 4U] = { 0U };
++static uint64_t rcar_image_header[RCAR_MAX_BL3X_IMAGE + 6U] = { 0U };
++static uint64_t rcar_image_header_prttn[RCAR_MAX_BL3X_IMAGE + 6U] = { 0U };
+ static uint64_t rcar_image_number = { 0U };
+ static uint32_t rcar_cert_load = { 0U };
+ 
+@@ -170,7 +172,7 @@ static int32_t file_to_offset(const int32_t name, uintptr_t *offset,
+ 		}
+ 
+ 		addr = RCAR_ATTR_GET_CALCADDR(name_offset[i].attr);
+-		if (rcar_image_number + 4U < addr) {
++		if (rcar_image_number + 6U < addr) {
+ 			continue;
+ 		}
+ 
+@@ -438,7 +440,7 @@ static int32_t rcar_dev_init(io_dev_info_t *dev_info, const uintptr_t name)
+ #endif
+ 
+ 	rcar_image_number = header[0];
+-	for (i = 0; i < rcar_image_number + 4; i++) {
++	for (i = 0; i < rcar_image_number + 6; i++) {
+ 		rcar_image_header[i] = header[i * 2 + 1];
+ 		rcar_image_header_prttn[i] = header[i * 2 + 2];
+ 	}
+@@ -456,7 +458,7 @@ static int32_t rcar_dev_init(io_dev_info_t *dev_info, const uintptr_t name)
+ 	}
+ 
+ 	rc = io_read(handle, RCAR_SDRAM_certESS,
+-		     RCAR_CERT_SIZE * (4 + rcar_image_number), &cnt);
++		     RCAR_CERT_SIZE * (6 + rcar_image_number), &cnt);
+ 	if (rc != IO_SUCCESS) {
+ 		WARN("cert file read error.\n");
+ 		goto error;
+@@ -464,7 +466,7 @@ static int32_t rcar_dev_init(io_dev_info_t *dev_info, const uintptr_t name)
+ 
+ #if RCAR_BL2_DCACHE == 1
+ 	inv_dcache_range(RCAR_SDRAM_certESS,
+-			 RCAR_CERT_SIZE * (4 + rcar_image_number));
++			 RCAR_CERT_SIZE * (6 + rcar_image_number));
+ #endif
+ 
+ 	rcar_cert_load = RCAR_CERT_LOAD;
+diff --git a/plat/renesas/common/aarch64/plat_helpers.S b/plat/renesas/common/aarch64/plat_helpers.S
+index 21c3bedaf..95affda3b 100644
+--- a/plat/renesas/common/aarch64/plat_helpers.S
++++ b/plat/renesas/common/aarch64/plat_helpers.S
+@@ -221,6 +221,13 @@ endfunc platform_mem_init
+ 	 * ---------------------------------------------
+ 	 */
+ func plat_report_exception
++	/* Temp smc handler for fwu_done function */
++	/* Expect only SMC exceptions */
++	mrs	x30, esr_el3
++	ubfx	x30, x30, #ESR_EC_SHIFT, #ESR_EC_LENGTH
++	cmp	x30, #EC_AARCH64_SMC
++	b.eq	bl2_plat_fmu_smc_handler
++
+ 	/* Switch to SP_EL0 */
+ 	msr	spsel, #0
+ #if IMAGE_BL2
+diff --git a/plat/renesas/common/bl2_plat_mem_params_desc.c b/plat/renesas/common/bl2_plat_mem_params_desc.c
+index 08a83d00c..961bbe8f8 100644
+--- a/plat/renesas/common/bl2_plat_mem_params_desc.c
++++ b/plat/renesas/common/bl2_plat_mem_params_desc.c
+@@ -51,6 +51,37 @@ static bl_mem_params_node_t bl2_mem_params_descs[] = {
+ 		.image_info.image_base = SEC_KEYRING_BASE,
+ 		.image_info.image_max_size = SEC_KEYRING_LIMIT - SEC_KEYRING_BASE,
+ 
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		.image_id = SEC_TRIGGER_ID,
++		
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++		entry_point_info_t, SECURE | NON_EXECUTABLE),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_IMAGE_BINARY, VERSION_2,
++		image_info_t, 0),
++
++		.image_info.image_base = SEC_TRIGGER_BASE,
++		.image_info.image_max_size = SEC_TRIGGER_LIMIT - SEC_TRIGGER_BASE,
++
++		.next_handoff_image_id = INVALID_IMAGE_ID,
++	},
++	{
++		.image_id = SEC_UPDATER_ID,
++
++		SET_STATIC_PARAM_HEAD(ep_info, PARAM_EP, VERSION_2,
++	        entry_point_info_t, NON_SECURE | EXECUTABLE),
++		.ep_info.pc = SEC_UPDATER_BASE,
++		.ep_info.spsr = SPSR_64(MODE_EL1, MODE_SP_ELX,
++		DISABLE_ALL_EXCEPTIONS),
++
++		SET_STATIC_PARAM_HEAD(image_info, PARAM_EP, VERSION_2,
++		image_info_t, IMAGE_ATTRIB_SKIP_LOADING),
++
++		.image_info.image_base = SEC_UPDATER_BASE,
++		.image_info.image_max_size = SEC_UPDATER_LIMIT - SEC_UPDATER_BASE,
++		
+ 		.next_handoff_image_id = INVALID_IMAGE_ID,
+ 	},
+ #endif
+diff --git a/plat/renesas/common/include/platform_def.h b/plat/renesas/common/include/platform_def.h
+index f57456eb1..4ee1785a1 100644
+--- a/plat/renesas/common/include/platform_def.h
++++ b/plat/renesas/common/include/platform_def.h
+@@ -70,6 +70,8 @@
+ #define BL338_CERT_ID		(NS_BL2U_IMAGE_ID + 21)
+ #define SEC_MODULE_ID		(NS_BL2U_IMAGE_ID + 22)
+ #define SEC_KEYRING_ID		(NS_BL2U_IMAGE_ID + 23)
++#define SEC_TRIGGER_ID		(NS_BL2U_IMAGE_ID + 24)
++#define SEC_UPDATER_ID		(NS_BL2U_IMAGE_ID + 25)
+ 
+ /* io drivers id */
+ #define FLASH_DEV_ID		U(0)
+@@ -167,6 +169,15 @@
+ 
+ #define SEC_MODULE_HEAP		U(0x50100000)
+ 
++/*******************************************************************************
++ * Firmware Updater
++ ******************************************************************************/
++#define SEC_UPDATER_BASE	U(0x48000000)
++#define SEC_UPDATER_LIMIT	(SEC_UPDATER_BASE + 0x1E000)
++
++#define SEC_TRIGGER_BASE	U(0x44300000)
++#define SEC_TRIGGER_LIMIT	(SEC_TRIGGER_BASE + 0x1000)
++
+ /*******************************************************************************
+  * Platform specific page table and MMU setup constants
+  ******************************************************************************/
+diff --git a/plat/renesas/common/plat_storage.c b/plat/renesas/common/plat_storage.c
+index 7a6b420fc..ebf9416a0 100644
+--- a/plat/renesas/common/plat_storage.c
++++ b/plat/renesas/common/plat_storage.c
+@@ -81,6 +81,14 @@ static const io_block_spec_t secmod_file_spec = {
+ static const io_block_spec_t seckey_file_spec = {
+ 	.offset = SEC_KEYRING_ID,
+ };
++
++static const io_block_spec_t trigger_file_spec = {
++	.offset = SEC_TRIGGER_ID,
++};
++
++static const io_block_spec_t updater_file_spec = {
++	.offset = SEC_UPDATER_ID,
++};
+ #endif
+ 
+ static int32_t open_emmcdrv(const uintptr_t spec);
+@@ -152,6 +160,14 @@ static const struct plat_io_policy policies[] = {
+ 			    &rcar_dev_handle,
+ 			    (uintptr_t) &seckey_file_spec,
+ 			    &open_rcar},
++	[SEC_TRIGGER_ID] = {
++			   &rcar_dev_handle,
++			   (uintptr_t) &trigger_file_spec,
++			   &open_rcar},
++	[SEC_UPDATER_ID] = {
++			   &rcar_dev_handle,
++			   (uintptr_t) &updater_file_spec,
++			   &open_rcar},
+ #endif
+ 					{
+ 					 0, 0, 0}
+diff --git a/plat/renesas/rzg/bl2_plat_fwu.c b/plat/renesas/rzg/bl2_plat_fwu.c
+new file mode 100644
+index 000000000..336618a22
+--- /dev/null
++++ b/plat/renesas/rzg/bl2_plat_fwu.c
+@@ -0,0 +1,151 @@
++/*
++ * bl2_plat_fwu.c -
++ *
++ * Copyright (C) 2021 Renesas Electronics Corporation.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <string.h>
++#include <assert.h>
++#include <libfdt.h>
++
++#include <platform_def.h>
++
++#include <arch_helpers.h>
++#include <common/bl_common.h>
++#include <common/debug.h>
++#include <common/desc_image_load.h>
++#include <drivers/console.h>
++#include <drivers/io/io_storage.h>
++#include <lib/mmio.h>
++#include <lib/xlat_tables/xlat_tables_defs.h>
++#include <lib/el3_runtime/context_mgmt.h>
++#include <plat/common/platform.h>
++#include <context.h>
++#include <tools_share/firmware_image_package.h>
++
++#define FWU_SMC_UPDATE_DONE	0x15
++#define BIT_SOFTRESET	(1U << 15)
++#define TOC_HEADER_NAME_EMPTY	0xFFFFFFFF
++
++void el3_exit(void);
++extern void rcar_micro_delay(uint64_t micro_sec);
++extern void bl2_secure_setting(void);
++extern void bl2_run_next_image(const struct entry_point_info *bl_ep_info);
++static void bl2_prepare_next_ns_image(entry_point_info_t *next_ep_info);
++static void bl2_plat_fwu_done(void);
++static void bl2_load_fw_updater(bl_mem_params_node_t *bl_mem_params);
++
++/*
++ * Following array will be used for context management.
++ * There are 2 instances, for the Secure and Non-Secure contexts.
++ */
++static cpu_context_t cpu_context[2];
++
++/* Following contains the cpu context pointers. */
++static void *cpu_context_ptr[2];
++
++void bl2_plat_fmu_smc_handler(
++	u_register_t x0,
++	unsigned int smc_fid,
++	u_register_t x2,
++	u_register_t x3,
++	u_register_t x4,
++	u_register_t x5,
++	u_register_t x6,
++	u_register_t x7)
++{
++	switch (smc_fid)
++	{
++	case FWU_SMC_UPDATE_DONE:
++		bl2_plat_fwu_done();
++	default:
++		ERROR("BL2: unknown smc call functions\n");
++		panic();
++		break;
++	}
++}
++
++void *cm_get_context(uint32_t security_state)
++{
++	assert(sec_state_is_valid(security_state));
++	return cpu_context_ptr[security_state];
++}
++
++void cm_set_context(void *context, uint32_t security_state)
++{
++	assert(sec_state_is_valid(security_state));
++	cpu_context_ptr[security_state] = context;
++}
++
++static void bl2_plat_fwu_done(void)
++{
++	NOTICE("BL2: *******FWU Process Completed*******\n");
++	/* delay time for console output */
++	rcar_micro_delay(10000);
++
++	/* reset the system by Soft Power On Reset Control Register */
++	mmio_write_32(RCAR_SRESCR, 0x5AA50000U | BIT_SOFTRESET);
++}
++
++static void bl2_prepare_next_ns_image(entry_point_info_t *next_ep_info)
++{
++	unsigned int security_state = NON_SECURE;
++
++	/* Setup the Secure/Non-Secure context if not done already. */
++	if (cm_get_context(security_state) == NULL)
++		cm_set_context(&cpu_context[security_state], security_state);
++
++	/* Prepare the context for the next BL image. */
++	cm_init_my_context(next_ep_info);
++	cm_prepare_el3_exit(security_state);
++
++	print_entry_point_info(next_ep_info);
++}
++
++static void bl2_load_fw_updater(bl_mem_params_node_t *bl_mem_params)
++{
++	int err;
++
++	err = load_auth_image(bl_mem_params->image_id, &bl_mem_params->image_info);
++
++	/* delay time for console output */
++	rcar_micro_delay(10000);
++
++	if (0 != err)
++	{
++		ERROR("BL2: Failed to load image (%i)\n", err);
++		plat_error_handler(err);
++		panic();
++	}
++	return;
++}
++
++void bl2_plat_firmware_update_execute(uint32_t *trigger_ptr)
++{
++	unsigned int image_id;
++	uint32_t reg;
++	bl_mem_params_node_t *bl_mem_params;
++
++	fip_toc_header_t *toc_header = (fip_toc_header_t *)trigger_ptr;
++
++	reg = mmio_read_32(RCAR_MODEMR);
++	if ((reg & MODEMR_BOOT_CPU_MASK) == MODEMR_BOOT_CPU_CR7)
++		return;
++
++	if (TOC_HEADER_NAME_EMPTY == toc_header->name)
++		return;
++
++	image_id = SEC_UPDATER_ID;
++	bl_mem_params = get_bl_mem_params_node(image_id);
++
++	bl2_load_fw_updater(bl_mem_params);
++
++	INFO("BL2: Preparing for EL3 exit to normal world\n");
++	bl2_prepare_next_ns_image(&bl_mem_params->ep_info);
++
++	bl2_secure_setting();
++	el3_exit();
++	/* should never reach here */
++	panic();
++}
+diff --git a/plat/renesas/rzg/bl2_plat_setup.c b/plat/renesas/rzg/bl2_plat_setup.c
+index 3e2fcd333..53bedc9f9 100644
+--- a/plat/renesas/rzg/bl2_plat_setup.c
++++ b/plat/renesas/rzg/bl2_plat_setup.c
+@@ -74,6 +74,8 @@ extern void rcar_rpc_init(void);
+ extern void rcar_dma_init(void);
+ extern void rzg_pfc_init(void);
+ extern void bl2_ecc_init(uint32_t major, uint32_t minor);
++extern void rpc_init_read_ext_mode(void);
++extern void bl2_plat_firmware_update_execute(uint32_t * trigger_ptr);
+ 
+ static void bl2_init_generic_timer(void);
+ 
+@@ -337,6 +339,9 @@ int bl2_plat_handle_pre_image_load(unsigned int image_id)
+ 	u_register_t *boot_kind = (void *)BOOT_KIND_BASE;
+ 	bl_mem_params_node_t *bl_mem_params;
+ 
++	if (SEC_TRIGGER_ID == image_id)
++		rpc_init_read_ext_mode();
++
+ 	if (image_id != BL31_IMAGE_ID) {
+ 		return 0;
+ 	}
+@@ -412,6 +417,10 @@ int bl2_plat_handle_post_image_load(unsigned int image_id)
+ 		memcpy(&params->bl33_ep_info, &bl_mem_params->ep_info,
+ 		       sizeof(entry_point_info_t));
+ 		break;
++	case SEC_TRIGGER_ID:
++		/* may not return. */
++		bl2_plat_firmware_update_execute((uint32_t *)(bl_mem_params->image_info).image_base);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/plat/renesas/rzg/platform.mk b/plat/renesas/rzg/platform.mk
+index a870b8099..078afd3b4 100644
+--- a/plat/renesas/rzg/platform.mk
++++ b/plat/renesas/rzg/platform.mk
+@@ -253,7 +253,12 @@ PLAT_INCLUDES	+=	-Idrivers/renesas/common/ddr		\
+ 
+ BL2_SOURCES	+=	plat/renesas/rzg/bl2_plat_setup.c	\
+ 			plat/renesas/rzg/bl2_fusa.c		\
+-			drivers/renesas/rzg/board/board.c
++			drivers/renesas/rzg/board/board.c	\
++			plat/renesas/rzg/bl2_plat_fwu.c         \
++			drivers/renesas/rzg/board/board.c       \
++			lib/el3_runtime/aarch64/context_mgmt.c  \
++			lib/el3_runtime/aarch64/context.S
++
+ 
+ BL31_SOURCES	+=	plat/renesas/rzg/rzg_sip_svc.c
+ 
+diff --git a/tools/renesas/rzg_layout_create/sa6.c b/tools/renesas/rzg_layout_create/sa6.c
+index d9d57ea6d..79ec8a01e 100644
+--- a/tools/renesas/rzg_layout_create/sa6.c
++++ b/tools/renesas/rzg_layout_create/sa6.c
+@@ -55,6 +55,15 @@
+ /* Reserved */
+ #define RCAR_BL338_PARTITION		(0x00000000U)
+ 
++/* Source address on Security Trigger */
++#define FWU_TRGSRC_ADDRESS		(0x03000000U)
++/* Reserved */
++#define FWU_TRG_PARTITION		(0x00000000U)
++/* Source address on Secure Updater */
++#define FWU_NSBL2USRC_ADDRESS		(0x00600000U)
++/* Reserved */
++#define FWU_NSBL2U_PARTITION		(0x00000000U)
++
+ #else /* RCAR_SA6_TYPE == RCAR_SA6_TYPE_EMMC */
+ 
+ /* Number of content cert for Non-secure Target Program(BL33x) */
+@@ -105,6 +114,16 @@
+ #define SEC_KEYDST_ADDRESSH		(0x00000000U)
+ /* Destination size for Secure Keys */
+ #define SEC_KEYDST_SIZE			(0x00000400U)
++/* Destination address for Security Trigger */
++#define FWU_TRGDST_ADDRESS		(0x44300000U)
++#define FWU_TRGDST_ADDRESSH		(0x00000000U)
++/* Destination size for Security Trigger */
++#define FWU_TRGDST_SIZE			(0x00000400U)
++/* Destination address for Secure Updater */
++#define FWU_BL2UDST_ADDRESS		(0x48000000U)
++#define FWU_BL2UDST_ADDRESSH		(0x00000000U)
++/* Destination size for Secure Updater */
++#define FWU_BL2UDST_SIZE		(0x00007800U)
+ /* Destination address for BL31 */
+ #define RCAR_BL31DST_ADDRESS		(0x44000000U)
+ #define RCAR_BL31DST_ADDRESSH		(0x00000000U)
+@@ -200,6 +219,14 @@ const uint64_t __attribute__ ((section(".sa6_bl338src_addr")))
+ 				bl338src_addr	= RCAR_BL338SRC_ADDRESS;
+ const uint64_t __attribute__ ((section(".sa6_bl338partition")))
+ 				bl338partition	= RCAR_BL338_PARTITION;
++const uint64_t __attribute__ ((section (".sa6_fwutrgsrc_addr")))
++				fwutrgsrc_addr  = FWU_TRGSRC_ADDRESS;
++const uint64_t __attribute__ ((section (".sa6_fwutrgpartition")))
++				fwutrgpartition = FWU_TRG_PARTITION;
++const uint64_t __attribute__ ((section (".sa6_nsbl2usrc_addr")))
++				nsbl2usrc_addr  = FWU_NSBL2USRC_ADDRESS;
++const uint64_t __attribute__ ((section (".sa6_nsbl2upartition")))
++				nsbl2upartition = FWU_NSBL2U_PARTITION;
+ const uint32_t __attribute__ ((section (".sa6_secmoddst_addr")))
+ 				secmoddst_addr  = SEC_MODDST_ADDRESS;
+ const uint32_t __attribute__ ((section (".sa6_secmoddst_addrh")))
+@@ -272,3 +299,15 @@ const uint32_t __attribute__ ((section(".sa6_bl338dst_addrh")))
+ 				bl338dst_addrh	= RCAR_BL338DST_ADDRESSH;
+ const uint32_t __attribute__ ((section(".sa6_bl338dst_size")))
+ 				bl338dst_size	= RCAR_BL338DST_SIZE;
++const uint32_t __attribute__ ((section (".sa6_fwutrgdst_addr")))
++				fwutrgdst_addr  = FWU_TRGDST_ADDRESS;
++const uint32_t __attribute__ ((section (".sa6_fwutrgdst_addrh")))
++				fwutrgdst_addrh = FWU_TRGDST_ADDRESSH;
++const uint32_t __attribute__ ((section (".sa6_fwutrgdst_size")))
++				fwutrgdst_size  = FWU_TRGDST_SIZE;
++const uint32_t __attribute__ ((section (".sa6_nsbl2udst_addr")))
++				nsbl2udst_addr  = FWU_BL2UDST_ADDRESS;
++const uint32_t __attribute__ ((section (".sa6_nsbl2udst_addrh")))
++				nsbl2udst_addrh = FWU_BL2UDST_ADDRESSH;
++const uint32_t __attribute__ ((section (".sa6_nsbl2udst_size")))
++				nsbl2udst_size  = FWU_BL2UDST_SIZE;
+diff --git a/tools/renesas/rzg_layout_create/sa6.ld.S b/tools/renesas/rzg_layout_create/sa6.ld.S
+index 5820d9722..ab1927008 100644
+--- a/tools/renesas/rzg_layout_create/sa6.ld.S
++++ b/tools/renesas/rzg_layout_create/sa6.ld.S
+@@ -20,6 +20,14 @@ SECTIONS
+ 		. = 0x000000018;
+ 		KEEP(*(.sa6_seckeypartition))
+ 		. = 0x00000020;
++		KEEP(*(.sa6_fwutrgsrc_addr))
++		. = 0x00000028;
++		KEEP(*(.sa6_fwutrgpartition))
++		. = 0x00000030;
++		KEEP(*(.sa6_nsbl2usrc_addr))
++		. = 0x00000038;
++		KEEP(*(.sa6_nsbl2upartition))
++		. = 0x00000040;
+ 	}
+ 	.src_addr : {
+ 		KEEP(*(.sa6_bl31src_addr))
+@@ -76,6 +84,18 @@ SECTIONS
+ 		. = 0x00000910;
+ 		KEEP(*(.sa6_seckeydst_size))
+ 		. = 0x00001000;
++		KEEP(*(.sa6_fwutrgdst_addr))
++		. = 0x00001004;
++		KEEP(*(.sa6_fwutrgdst_addrh))
++		. = 0x00001110;
++		KEEP(*(.sa6_fwutrgdst_size))
++		. = 0x00001800;
++		KEEP(*(.sa6_nsbl2udst_addr))
++		. = 0x00001804;
++		KEEP(*(.sa6_nsbl2udst_addrh))
++		. = 0x00001910;
++		KEEP(*(.sa6_nsbl2udst_size))
++		. = 0x00002000;
+ 	}
+ 	.dst_addr : {
+ 		KEEP(*(.sa6_bl31dst_addr))
+diff --git a/tools/renesas/rzg_security_tools/fiptool/Makefile b/tools/renesas/rzg_security_tools/fiptool/Makefile
+index 40d9e2ade..aa68a6021 100644
+--- a/tools/renesas/rzg_security_tools/fiptool/Makefile
++++ b/tools/renesas/rzg_security_tools/fiptool/Makefile
+@@ -12,8 +12,9 @@ include ${MAKE_HELPERS_DIRECTORY}build_env.mk
+ TARGET1 := keyring
+ TARGET2 := fw_ipl
+ TARGET3 := boot_fw
++TARGET4 := fwu_ns
+ 
+-TARGETS := $(TARGET1) $(TARGET2) $(TARGET3)
++TARGETS := $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4)
+ SOURCES := ./src/tbbr_config.c ./src/fiptool.c
+ OBJ_DIR := ./obj
+ V ?= 0
+@@ -23,6 +24,7 @@ override CPPFLAGS += -D_GNU_SOURCE -D_XOPEN_SOURCE=700
+ ${TARGET1}: CPPFLAGS += -D_PKG_KEYRING
+ ${TARGET2}: CPPFLAGS += -D_PKG_FW_IPL
+ ${TARGET3}: CPPFLAGS += -D_PKG_BOOT_FW
++${TARGET4}: CPPFLAGS += -D_PKG_FWU_NS
+ 
+ HOSTCCFLAGS := -Wall -Werror -pedantic -std=c99
+ ifeq (${DEBUG},1)
+@@ -38,18 +40,6 @@ else
+   Q :=
+ endif
+ 
+-# Process RCAR_SA6_TYPE flag
+-ifndef RCAR_SA6_TYPE
+-RCAR_SA6_TYPE := 0
+-else
+-ifeq (${RCAR_SA6_TYPE},0)
+-RCAR_SA6_TYPE := 0
+-else
+-RCAR_SA6_TYPE := 1
+-endif
+-endif
+-$(eval $(call add_define,RCAR_SA6_TYPE))
+-
+ INCLUDE_PATHS := -I./src -I../include  -I../../../../include/tools_share
+ VPATH := $(subst ,:,$(sort $(dir $(SOURCES))))
+ 
+diff --git a/tools/renesas/rzg_security_tools/fiptool/src/rzg_firmware_image_package.h b/tools/renesas/rzg_security_tools/fiptool/src/rzg_firmware_image_package.h
+index c520c7dea..bd58beba6 100644
+--- a/tools/renesas/rzg_security_tools/fiptool/src/rzg_firmware_image_package.h
++++ b/tools/renesas/rzg_security_tools/fiptool/src/rzg_firmware_image_package.h
+@@ -19,6 +19,8 @@
+ 	#define TOC_HEADER_NAME	0xAA640002
+ #elif defined(_PKG_BOOT_FW)
+ 	#define TOC_HEADER_NAME	0xAA640003
++#elif defined(_PKG_FWU_NS)
++	#define TOC_HEADER_NAME 0xAA640004
+ #else
+ 	#error "The package definition cannot be found."
+ #endif
+diff --git a/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c b/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c
+index 2f8159e09..db557dab0 100644
+--- a/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c
++++ b/tools/renesas/rzg_security_tools/fiptool/src/tbbr_config.c
+@@ -142,6 +142,13 @@ toc_entry_t toc_entries[] = {
+ 		.cmdline_name = "nt-fw-extra8",
+ 		.nvm_offset = 0xFFFFFFFFU
+ 	},
++#elif defined(_PKG_FWU_NS)
++	{
++		.name = "Firmware Updater NS_BL2U",
++		.uuid = UUID_TRUSTED_UPDATE_FIRMWARE_NS_BL2U,
++		.cmdline_name = "nt-fwu",
++		.nvm_offset = 0x00600000U
++	},
+ #else
+ 	#error "The package definition cannot be found."
+ #endif
+-- 
+2.25.1
+

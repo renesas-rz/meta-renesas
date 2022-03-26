@@ -1,0 +1,791 @@
+From a2bacbad82dd71f162d213e983fc63c39e8770fc Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 15 Jul 2021 15:05:36 +0700
+Subject: [PATCH] core: arm: rzg: add RPC driver support
+
+This commit is created to add support RPC driver.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ core/arch/arm/plat-rzg/conf.mk                    |   4 +
+ core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.c | 399 ++++++++++++++++++++++
+ core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.h | 102 ++++++
+ core/arch/arm/plat-rzg/drivers/spi/spi.c          | 145 ++++++++
+ core/arch/arm/plat-rzg/drivers/spi/sub.mk         |   4 +
+ core/arch/arm/plat-rzg/drivers/sub.mk             |   4 +
+ core/arch/arm/plat-rzg/include/drivers/spi/spi.h  |  27 ++
+ core/arch/arm/plat-rzg/main.c                     |   5 +
+ core/arch/arm/plat-rzg/platform_config.h          |   5 +
+ 9 files changed, 695 insertions(+)
+ create mode 100644 core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.h
+ create mode 100644 core/arch/arm/plat-rzg/drivers/spi/spi.c
+ create mode 100644 core/arch/arm/plat-rzg/drivers/spi/sub.mk
+ create mode 100644 core/arch/arm/plat-rzg/include/drivers/spi/spi.h
+
+diff --git a/core/arch/arm/plat-rzg/conf.mk b/core/arch/arm/plat-rzg/conf.mk
+index f324320..3f67c45 100644
+--- a/core/arch/arm/plat-rzg/conf.mk
++++ b/core/arch/arm/plat-rzg/conf.mk
+@@ -57,3 +57,7 @@ endif
+ ifeq ($(CFG_RZG_SEC_IP_RNG),y)
+ $(call force,CFG_WITH_SOFTWARE_PRNG,n)
+ endif
++
++CFG_RZG_SPI_DRV ?= n
++
++CFG_MMAP_REGIONS ?= 15
+diff --git a/core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.c b/core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.c
+new file mode 100644
+index 0000000..237e945
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.c
+@@ -0,0 +1,399 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <stdint.h>
++#include <string.h>
++#include <io.h>
++#include <compiler.h>
++#include <stdio.h>
++#include <trace.h>
++#include <mm/tee_pager.h>
++#include <mm/tee_mm.h>
++#include <mm/core_memprot.h>
++#include <kernel/delay.h>
++
++#include "rpc_accessor.h"
++
++static vaddr_t prr_vaddr; 
++static vaddr_t base_cpg_vaddr;
++static vaddr_t base_rpc_vaddr;
++
++static void rpc_wait_trans_end(void);
++static void convert_pa_to_va(void);
++
++void rzg_rpc_power_on(void)
++{
++    uint32_t data = 0;
++    convert_pa_to_va();
++    // power on rpc
++    data = io_read32(base_cpg_vaddr + CPG_RPCCKCR);
++    if (data & BIT8)
++    {
++        // case RPCD2ϕ Clock Stop
++        data &= ~BIT8;
++        io_write32((base_cpg_vaddr + CPG_CPGWPR), ~data);
++        io_write32((base_cpg_vaddr + CPG_RPCCKCR), data);
++        while (BIT8 & io_read32((base_cpg_vaddr + CPG_RPCCKCR)))
++            ; // wait bit=0
++    }
++
++    if (data & BIT9)
++    {
++        // case RPCϕ Clock Stop
++        data &= ~BIT9;
++        io_write32((base_cpg_vaddr + CPG_CPGWPR), ~data);
++        io_write32((base_cpg_vaddr + CPG_RPCCKCR), data);
++        while (BIT9 & io_read32((base_cpg_vaddr + CPG_RPCCKCR)))
++            ; // wait bit=0
++    }
++
++    data = io_read32(base_cpg_vaddr + CPG_MSTPSR9);
++    if (data & BIT17)
++    {
++        // case RPC(QSPI) Standby
++        data &= ~BIT17;
++        io_write32((base_cpg_vaddr + CPG_CPGWPR), ~data);
++        io_write32((base_cpg_vaddr + CPG_SMSTPCR9), data);
++        while (BIT17 & io_read32((base_cpg_vaddr + CPG_MSTPSR9)))
++            ; // wait bit=0
++    }
++}
++
++void rzg_rpc_power_off(void)
++{
++    uint32_t data = 0;
++    // power off rpc
++    data = io_read32(base_cpg_vaddr + CPG_RPCCKCR);
++    if (0 == (data & BIT8))
++    {
++        // case RPCD2ϕ Clock enable
++        data |= BIT8;
++        io_write32((base_cpg_vaddr + CPG_CPGWPR), ~data);
++        io_write32((base_cpg_vaddr + CPG_RPCCKCR), data);
++        while (BIT8 != (BIT8 & io_read32((base_cpg_vaddr + CPG_RPCCKCR))))
++            ; // wait bit=1
++    }
++
++    if (0 == (data & BIT9))
++    {
++        // case RPCϕ Clock enable
++        data |= BIT9;
++        io_write32((base_cpg_vaddr + CPG_CPGWPR), ~data);
++        io_write32((base_cpg_vaddr + CPG_RPCCKCR), data);
++        while (BIT9 != (BIT9 & io_read32((base_cpg_vaddr + CPG_RPCCKCR))))
++            ; // wait bit=1
++    }
++
++}
++
++void rzg_rpc_manual_mode_init(void)
++{
++    // set SSL delay bit10-8  SLNDL[2:0] =  100 : 5.5 cycles of QSPIn_SPCLK
++    io_write32((base_rpc_vaddr + RPC_SSLDR), 0x00000400);
++}
++
++void rzg_rpc_read_ext_mode_init(void)
++{
++    uint32_t product;
++    uint32_t cut;
++
++    product = io_read32(prr_vaddr) & PRR_PRODUCT_MASK;
++    cut = io_read32(prr_vaddr) & PRR_CUT_MASK;
++
++    if ((product == PRR_PRODUCT_G2M) && (cut < PRR_CUT_30))
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x00030260);
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80030260);
++    }
++    else
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x00038260);
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80038260);
++    }
++
++    io_write32((base_rpc_vaddr + RPC_CMNCR), 0x01FFF300);
++    io_write32((base_rpc_vaddr + RPC_DRCR), 0x001F0100);
++        //bit20-16 RBURST[4:0] = 11111 : 32 continuous data unit
++        //bit8     RBE         =     1 : Burst read
++    io_write32((base_rpc_vaddr + RPC_DRCMR), 0x000C0000);
++        //bit23-16 CMD[7:0] = 0x0C : 4FAST_READ 0Ch Command 4-byte address command
++    io_write32((base_rpc_vaddr + RPC_DREAR), 0x00000001);
++        //bit23-16 EAV[7:0]   = 0    : ADR[32:26] output set0
++        //bit2-0   EAC[2:0]   = 001  : ADR[25:0 ] Enable
++    io_write32((base_rpc_vaddr + RPC_DRENR), 0x0000CF00);
++        //bit31-30 CDB[1:0]   =   00 : 1bit width command (QSPI0_MOSI)
++        //bit25-24 ADB[1:0]   =   00 : 1bit width address (QSPI0_MOSI)
++        //bit17-16 DRDB[1:0]  =   00 : 1bit width transfer data (QSPI0_IO0)
++        //bit15    DME        =    1 : dummy cycle enable
++        //bit14    CDE        =    1 : Command enable
++        //bit11-8  ADE[3:0]   = 1111 : ADR[23:0] output (32 Bit Address)
++    io_write32((base_rpc_vaddr + RPC_DRDMCR), 0x00000007);
++        //bit2-0 DMCYC[2:0]   = 111 : 8 cycle dummy wait
++    io_write32((base_rpc_vaddr + RPC_DRDRENR), 0x00000000);
++        //bit8 ADDRE  = 0 : Address SDR transfer
++        //bit0 DRDRE  = 0 : DATA SDR transfer
++}
++
++void rzg_rpc_reset(void)
++{
++    io_write32((base_cpg_vaddr + CPG_CPGWPR), ~BIT17);
++    io_write32((base_cpg_vaddr + CPG_SRCR9), BIT17);
++    //wait: tRLRH Reset# low pulse width 10us
++    udelay(20); // wait 20us
++
++    io_write32((base_cpg_vaddr+ CPG_CPGWPR), ~BIT17);
++    io_write32((base_cpg_vaddr+ CPG_SRSTCLR9), BIT17);
++    //wait: tREADY1(35us) - tRHSL(10us) = 25us
++    udelay(40); // wait 40us
++}
++
++void rzg_rpc_erase_sector(uint32_t sector_addr)
++{
++    uint32_t product;
++    uint32_t cut;
++
++    product = io_read32(prr_vaddr) & PRR_PRODUCT_MASK;
++    cut = io_read32(prr_vaddr) & PRR_CUT_MASK;
++
++    if ((product == PRR_PRODUCT_G2M) && (cut < PRR_CUT_30))
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80030260);
++    }
++    else
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80038260);
++        //bit31  CAL         =  1 : PHY calibration
++        //bit1-0 PHYMEM[1:0] = 00 : QSPI-SDR
++    }
++
++    io_write32((base_rpc_vaddr + RPC_CMNCR), 0x81FFF300);
++    //bit31  MD       =  1 : Manual mode
++    //bit1-0 BSZ[1:0] = 00 : QSPI Flash x 1
++    io_write32((base_rpc_vaddr + RPC_SMCMR), 0x00DC0000);
++    //bit23-16 CMD[7:0] = 0xDC : Sector Erase 4-byte address command
++    io_write32((base_rpc_vaddr + RPC_SMADR), sector_addr);
++    io_write32((base_rpc_vaddr + RPC_SMDRENR), 0x00000000);
++    //bit8 ADDRE  = 0 : Address SDR transfer
++    //bit0 SPIDRE = 0 : DATA SDR transfer
++    io_write32((base_rpc_vaddr + RPC_SMENR), 0x00004F00);
++    //bit31-30 CDB[1:0]   =   00 : 1bit width command (QSPI0_MOSI)
++    //bit25-24 ADB[1:0]   =   00 : 1bit width address (QSPI0_MOSI)
++    //bit17-16 SPIDB[1:0] =   00 : 1bit width transfer data (QSPI0_MISO)
++    //bit15    DME        =    0 : No dummy cycle
++    //bit14    CDE        =    1 : Command enable
++    //bit11-8  ADE[3:0]   = 1111 : ADR[31:0] output (32 Bit Address)
++    //bit3-0   SPIDE[3:0] = 0000 : No transfer
++    io_write32((base_rpc_vaddr + RPC_SMCR), 0x00000001);
++    //bit2     SPIRE      = 0 : Data read disable
++    //bit1     SPIWE      = 0 : Data write disable
++    //bit0     SPIE       = 1 : SPI transfer start
++
++    rpc_wait_trans_end();
++}
++
++void rzg_rpc_write_buff(uint32_t addr, uint64_t source_addr)
++{
++    uintptr_t i = 0;
++    uint32_t product;
++    uint32_t cut;
++    uint32_t data;
++
++    io_write32((base_rpc_vaddr + RPC_DRCR), 0x011F0301);
++    //bit9   RCF         =  1 : Read Cache Clear
++
++    product = io_read32(prr_vaddr) & PRR_PRODUCT_MASK;
++    cut = io_read32(prr_vaddr) & PRR_CUT_MASK;
++
++    if ((product == PRR_PRODUCT_G2M) && (cut < PRR_CUT_30))
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80030274);
++    }
++    else
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80038274);
++        //bit31  CAL         =  1 : PHY calibration
++        //bit2   WBUF        =  1 : Write Buffer Enable
++        //bit1-0 PHYMEM[1:0] = 00 : QSPI-SDR
++    }
++
++    for (i = 0; i < 256; i = (i + 0x4))
++    {
++        data = *(volatile uint32_t *)(source_addr + i);
++        io_write32(((base_rpc_vaddr + RPC_WRBUF) + i), data);
++    }
++    //bit31  CAL         =  1 : PHY calibration
++    //bit2   WBUF        =  1 : Write Buffer Enable
++    //bit1-0 PHYMEM[1:0] = 00 : QSPI-SDR
++    io_write32((base_rpc_vaddr + RPC_CMNCR), 0x81FFF300);
++    //bit31  MD       =  1 : Manual mode
++    //bit1-0 BSZ[1:0] = 00 : QSPI Flash x 1
++    io_write32((base_rpc_vaddr + RPC_SMCMR), 0x00120000);
++    //bit23-16 CMD[7:0] = 0x12 : Page Program 4-byte address
++    io_write32((base_rpc_vaddr + RPC_SMADR), addr);
++    io_write32((base_rpc_vaddr + RPC_SMDRENR), 0x00000000);
++    //bit8 ADDRE  = 0 : Address SDR transfer
++    //bit0 SPIDRE = 0 : DATA SDR transfer
++    io_write32((base_rpc_vaddr + RPC_SMENR), 0x00004F0F);
++    //bit31-30 CDB[1:0]   =   00 : 1bit width command (QSPI0_MOSI)
++    //bit25-24 ADB[1:0]   =   00 : 1bit width address (QSPI0_MOSI)
++    //bit17-16 SPIDB[1:0] =   00 : 1bit width transfer data (QSPI0_MISO)
++    //bit15    DME        =    0 : No dummy cycle
++    //bit14    CDE        =    1 : Command enable
++    //bit11-8  ADE[3:0]   = 1111 : ADR[23:0] is output
++    //bit3-0   SPIDE[3:0] = 1111 : 32bit transfer
++    io_write32((base_rpc_vaddr + RPC_SMCR), 0x00000003);
++    //bit2     SPIRE      = 0 : Data read disable
++    //bit1     SPIWE      = 1 : Data write enable
++    //bit0     SPIE       = 1 : SPI transfer start
++
++    rpc_wait_trans_end();
++
++    if ((product == PRR_PRODUCT_G2M) && (cut < PRR_CUT_30))
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x00030273);
++    }
++    else
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x00038273);
++        //bit31  CAL         =  0 : No PHY calibration
++        //bit2   WBUF        =  0 : Write Buffer Disable
++        //bit1-0 PHYMEM[1:0] = 11 : HyperFlash
++    }
++    io_write32((base_rpc_vaddr + RPC_DRCR), 0x011F0301);
++    //bit9   RCF         =  1 : Read Cache Clear
++}
++
++void rzg_rpc_read_status(uint32_t *readData)
++{
++    uint32_t product;
++    uint32_t cut;
++
++    product = io_read32(prr_vaddr) & PRR_PRODUCT_MASK;
++    cut = io_read32(prr_vaddr) & PRR_CUT_MASK;
++
++    if ((product == PRR_PRODUCT_G2M) && (cut < PRR_CUT_30))
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x00030260);
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80030260);
++    }
++    else
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x00038260);
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80038260);
++        //bit31  CAL         =  1 : PHY calibration
++        //bit1-0 PHYMEM[1:0] = 00 : QSPI-SDR
++    }
++    io_write32((base_rpc_vaddr + RPC_CMNCR), 0x81FFF300);
++    //bit31  MD       =  1 : Manual mode
++    //bit1-0 BSZ[1:0] = 00 : QSPI Flash x 1
++    io_write32((base_rpc_vaddr + RPC_SMCMR), 0x00050000);
++    //bit23-16 CMD[7:0] = 0x05 : Status Read command (for Palladium QSPI model)
++    io_write32((base_rpc_vaddr + RPC_SMDRENR), 0x00000000);
++    //bit8 ADDRE  = 0 : Address SDR transfer
++    //bit0 SPIDRE = 0 : DATA SDR transfer
++    io_write32((base_rpc_vaddr + RPC_SMENR), 0x0000400F);
++    //bit31-30 CDB[1:0]   =   00 : 1bit width command (QSPI0_MOSI)
++    //bit25-24 ADB[1:0]   =   00 : 1bit width address (QSPI0_MOSI)
++    //bit17-16 SPIDB[1:0] =   00 : 1bit width transfer data (QSPI0_MISO)
++    //bit15    DME        =    0 : No dummy cycle
++    //bit14    CDE        =    1 : Command enable
++    //bit11-8  ADE[3:0]   = 0000 : Address output disable
++    //bit3-0   SPIDE[3:0] = 1111 : 32bit transfer
++    io_write32((base_rpc_vaddr + RPC_SMCR), 0x00000005);
++    //bit2     SPIRE      = 1 : Data read enable
++    //bit1     SPIWE      = 0 : Data write disable
++    //bit0     SPIE       = 1 : SPI transfer start
++
++    rpc_wait_trans_end();
++
++    readData[0] = io_read32((base_rpc_vaddr + RPC_SMRDR0)); //read data[31:0]
++}
++
++void rzg_rpc_write_cmd(uint32_t command)
++{
++    uint32_t product;
++    uint32_t cut;
++
++    product = io_read32(prr_vaddr) & PRR_PRODUCT_MASK;
++    cut = io_read32(prr_vaddr) & PRR_CUT_MASK;
++
++    if ((product == PRR_PRODUCT_G2M) && (cut < PRR_CUT_30))
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80030260);
++    }
++    else
++    {
++        io_write32((base_rpc_vaddr + RPC_PHYCNT), 0x80038260);
++        //bit31  CAL         =  1 : PHY calibration
++        //bit1-0 PHYMEM[1:0] = 00 : QSPI-SDR
++    }
++    io_write32((base_rpc_vaddr + RPC_CMNCR), 0x81FFF300);
++    //bit31  MD       =  1 : Manual mode
++    //bit1-0 BSZ[1:0] = 00 : QSPI Flash x 1
++    io_write32((base_rpc_vaddr + RPC_SMCMR), command);
++    //bit23-16 CMD[7:0] : command
++    io_write32((base_rpc_vaddr + RPC_SMDRENR), 0x00000000);
++    //bit8 ADDRE  = 0 : Address SDR transfer
++    //bit0 SPIDRE = 0 : DATA SDR transfer
++    io_write32((base_rpc_vaddr + RPC_SMENR), 0x00004000);
++    //bit31-30 CDB[1:0]   =   00 : 1bit width command (QSPI0_MOSI)
++    //bit25-24 ADB[1:0]   =   00 : 1bit width address (QSPI0_MOSI)
++    //bit17-16 SPIDB[1:0] =   00 : 1bit width transfer data (QSPI0_MISO)
++    //bit15    DME        =    0 : No dummy cycle
++    //bit14    CDE        =    1 : Command enable
++    //bit11-8  ADE[3:0]   = 0000 : Address output disable
++    //bit3-0   SPIDE[3:0] = 0000 : No transfer
++    io_write32((base_rpc_vaddr + RPC_SMCR), 0x00000001);
++    //bit2     SPIRE      = 0 : Data read disable
++    //bit1     SPIWE      = 0 : Data write disable
++    //bit0     SPIE       = 1 : SPI transfer start
++
++    rpc_wait_trans_end();
++}
++
++static void rpc_wait_trans_end(void)
++{
++    uint32_t data = 0;
++
++    while (1)
++    {
++        data = io_read32((base_rpc_vaddr + RPC_CMNSR));
++        if (data & BIT0)
++        {
++            break;
++        }
++        // Wait for TEND = 1
++    }
++}
++
++static void convert_pa_to_va(void)
++{
++    prr_vaddr = (vaddr_t)phys_to_virt(PRR,MEM_AREA_IO_SEC,PRR_REG_SIZE);
++
++    if (prr_vaddr == 0U) {
++        prr_vaddr = (vaddr_t)phys_to_virt(PRR,MEM_AREA_IO_NSEC,PRR_REG_SIZE);
++        if (prr_vaddr == 0U) {
++            EMSG("Convert error! phys_to_virt reg_paddr=%08X",PRR);
++        }
++    }
++
++    base_rpc_vaddr = (vaddr_t)phys_to_virt(RPC_BASE,MEM_AREA_IO_SEC,RPC_REG_SIZE);
++
++    if (base_rpc_vaddr == 0U) {
++        base_rpc_vaddr = (vaddr_t)phys_to_virt(RPC_BASE,MEM_AREA_IO_NSEC,RPC_REG_SIZE);
++        if (base_rpc_vaddr == 0U) {
++            EMSG("Convert error! phys_to_virt reg_paddr=%08X",RPC_BASE);
++        }
++    }
++
++    base_cpg_vaddr = (vaddr_t)phys_to_virt(CPG_BASE,MEM_AREA_IO_SEC,0x0bb0);
++
++    if (base_cpg_vaddr == 0U) {
++        base_cpg_vaddr = (vaddr_t)phys_to_virt(CPG_BASE,MEM_AREA_IO_NSEC,0x0bb0);
++        if (base_cpg_vaddr == 0U) {
++            EMSG("Convert error! phys_to_virt reg_paddr=%08X",CPG_BASE);
++        }
++    }
++}
+diff --git a/core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.h b/core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.h
+new file mode 100644
+index 0000000..e2cd09d
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/spi/rpc_accessor.h
+@@ -0,0 +1,102 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef RPC_FOR_QSPI_H_
++#define RPC_FOR_QSPI_H_
++
++#define RPC_BASE	(0xEE200000U)
++//RPC register offset
++#define RPC_CMNCR	(0x0000U)
++#define RPC_SSLDR	(0x0004U)
++#define RPC_DRCR	(0x000CU)
++#define RPC_DRCMR	(0x0010U)
++#define RPC_DREAR	(0x0014U)
++#define RPC_DRENR	(0x001CU)
++#define RPC_SMCR	(0x0020U)
++#define RPC_SMCMR	(0x0024U)
++#define RPC_SMADR	(0x0028U)
++#define RPC_SMENR	(0x0030U)
++#define RPC_SMRDR0	(0x0038U)
++#define RPC_SMWDR0	(0x0040U)
++#define RPC_CMNSR	(0x0048U)
++#define RPC_DRDMCR	(0x0058U)
++#define RPC_DRDRENR	(0x005CU)
++#define RPC_SMDMCR	(0x0060U)
++#define RPC_SMDRENR	(0x0064U)
++#define RPC_PHYCNT	(0x007CU)
++#define RPC_PHYINT	(0x0088U)
++#define RPC_WRBUF	(0x8000U)
++
++#define	CPG_BASE    (0xE6150000U)
++#define CPG_CPGWPR	(0x0900U)
++#define CPG_RPCCKCR (0x0238U)
++
++//MSTPRST register offset
++#define	CPG_SRCR9	(0x0924U)
++#define	CPG_SRSTCLR9    (0x0964U)
++#define	CPG_MSTPSR9 (0x09A4U)
++#define CPG_SMSTPCR9    (0x0994U)
++
++
++#define	PRR				    (0xFFF00044U)	// R	32	Product Register
++#define PRR_PRODUCT_MASK    (0x00007F00U)
++#define PRR_CUT_MASK		(0x000000FFU)
++#define PRR_PRODUCT_G2H		(0x00004F00U)	/* RZ/G2H	*/
++#define PRR_PRODUCT_G2M		(0x00005200U)	/* RZ/G2M 	*/
++#define PRR_PRODUCT_G2N		(0x00005500U)	/* RZ/G2N 	*/
++#define PRR_PRODUCT_G2E		(0x00005700U)	/* RZ/G2E	*/
++
++#define PRR_CUT_10  (0x00U)		/* Ver.1.0	*/
++#define PRR_CUT_11	(0x01U)		/* Ver.1.1	*/
++#define PRR_CUT_20	(0x10U)		/* Ver.2.0	*/
++#define PRR_CUT_30	(0x20U)		/* Ver.3.0	*/
++
++#define	RZG2M_CUT_11    (0x10)		/* Ver.1.1/1.2	*/
++
++#define		BIT0	0x00000001
++#define		BIT1	0x00000002
++#define		BIT2	0x00000004
++#define		BIT3	0x00000008
++#define		BIT4	0x00000010
++#define		BIT5	0x00000020
++#define		BIT6	0x00000040
++#define		BIT7	0x00000080
++#define		BIT8	0x00000100
++#define		BIT9	0x00000200
++#define		BIT10	0x00000400
++#define		BIT11	0x00000800
++#define		BIT12	0x00001000
++#define		BIT13	0x00002000
++#define		BIT14	0x00004000
++#define		BIT15	0x00008000
++#define		BIT16	0x00010000
++#define		BIT17	0x00020000
++#define		BIT18	0x00040000
++#define		BIT19	0x00080000
++#define		BIT20	0x00100000
++#define		BIT21	0x00200000
++#define		BIT22	0x00400000
++#define		BIT23	0x00800000
++#define		BIT24	0x01000000
++#define		BIT25	0x02000000
++#define		BIT26	0x04000000
++#define		BIT27	0x08000000
++#define		BIT28	0x10000000
++#define		BIT29	0x20000000
++#define		BIT30	0x40000000
++#define		BIT31	0x80000000
++
++void rzg_rpc_manual_mode_init(void);
++void rzg_rpc_read_ext_mode_init(void);
++void rzg_rpc_reset(void);
++void rzg_rpc_erase_sector(uint32_t sector_addr);
++void rzg_rpc_write_buff(uint32_t addr, uint64_t source_addr);
++void rzg_rpc_read_status(uint32_t *readData);
++void rzg_rpc_write_cmd(uint32_t command);
++void rzg_rpc_power_on(void);
++void rzg_rpc_power_off(void);
++
++#endif /* RPC_FOR_QSPI_H_ */
+diff --git a/core/arch/arm/plat-rzg/drivers/spi/spi.c b/core/arch/arm/plat-rzg/drivers/spi/spi.c
+new file mode 100644
+index 0000000..ae0095f
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/spi/spi.c
+@@ -0,0 +1,145 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <stdint.h>
++#include <string.h>
++
++#include "rpc_accessor.h"
++#include "drivers/spi/spi.h"
++
++static void spi_write_buff(uint64_t buff, uint32_t spi_addr, uint32_t len);
++static void spi_erase_1sector(uint32_t sec_addr);
++uint32_t page_fraction_buff[QSPI_PAGE_SIZE] = {0};
++
++int32_t rzg_spi_init_driver(void)
++{
++    rzg_rpc_power_on();
++}
++
++int32_t rzg_spi_deinit_driver(void)
++{
++    rzg_rpc_power_off();
++}
++
++int32_t rzg_spi_write_buff(uint32_t spi_addr, uint64_t buff, uint32_t len)
++{
++    if ((spi_addr + len) > QSPI_END_ADDR)
++    {
++        return SPI_RET_NG;
++    }
++
++    /*
++     * If we want to write a value different than 0
++     * then we have to erase the full block because
++     * otherwise we cannot ensure that the value programmed
++     * into the flash is going to be the same than the value
++     * requested
++     */
++    if (rzg_spi_erase_sectors(spi_addr, len))
++    {
++        return SPI_RET_NG;
++    }
++
++    rzg_rpc_manual_mode_init();
++
++    /* write data to spi using write buffer operation */
++    spi_write_buff(buff, spi_addr, len);
++
++    rzg_rpc_read_ext_mode_init();
++
++    return SPI_RET_OK;
++}
++
++int32_t rzg_spi_erase_sectors(uint32_t spi_addr, uint32_t len)
++{
++    uint32_t erase_sector_addr;
++    uint32_t mask_sec_size;
++    uint32_t erase_sec_top_addr, erase_sec_end_addr;
++
++    if ((spi_addr + len) > QSPI_END_ADDR)
++    {
++        return SPI_RET_NG;
++    }
++
++    rzg_rpc_manual_mode_init();
++
++    mask_sec_size = (~QSPI_SEC_SIZE) + 1;
++    erase_sec_top_addr = spi_addr & mask_sec_size;
++    erase_sec_end_addr = (spi_addr + len) | ~(mask_sec_size);
++
++    for (erase_sector_addr = erase_sec_top_addr;
++         erase_sector_addr <= erase_sec_end_addr;
++         erase_sector_addr = erase_sector_addr + QSPI_SEC_SIZE)
++    {
++        spi_erase_1sector(erase_sector_addr);
++    }
++
++    rzg_rpc_read_ext_mode_init();
++
++    return SPI_RET_OK;
++}
++
++static void spi_erase_1sector(uint32_t sec_addr)
++{
++    uint32_t status;
++    /* WRITE ENABLE */
++    rzg_rpc_write_cmd(0x00060000);
++    rzg_rpc_erase_sector(sec_addr);
++
++    while (1)
++    {
++        rzg_rpc_read_status(&status);
++        if (!(status & BIT0))
++        {
++            break;
++        }
++    }
++}
++
++static void spi_write_buff(uint64_t buff, uint32_t spi_addr, uint32_t len)
++{
++    uint32_t flash_addr;
++    uint32_t status;
++    uint32_t fraction_len;
++    uint8_t *fraction_buff;
++
++    for (int i = 0; i < (QSPI_PAGE_SIZE/4); i++)
++    {
++        page_fraction_buff[i] = 0xFFFFFFFF;
++    }
++
++    fraction_buff = &page_fraction_buff;
++    fraction_len = len;
++
++    for (flash_addr = spi_addr; flash_addr < (spi_addr + len); flash_addr += 256)
++    {
++        if (QSPI_PAGE_SIZE > fraction_len)
++        {
++            for (uint32_t i = 0; i < fraction_len; i++)
++            {
++                fraction_buff[i] = *(volatile uint8_t *)(buff + i);
++            }
++            rzg_rpc_write_cmd(0x00060000);
++            rzg_rpc_write_buff(flash_addr, (uint64_t)fraction_buff);
++        }
++        else
++        {
++            rzg_rpc_write_cmd(0x00060000);
++            rzg_rpc_write_buff(flash_addr, buff);
++        }
++
++        while (1)
++        {
++            rzg_rpc_read_status(&status);
++            if (!(status & BIT0))
++            {
++                break;
++            }
++        }
++        buff = buff + 256;
++        fraction_len = fraction_len - 256;
++    }
++}
+diff --git a/core/arch/arm/plat-rzg/drivers/spi/sub.mk b/core/arch/arm/plat-rzg/drivers/spi/sub.mk
+new file mode 100644
+index 0000000..1057048
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/drivers/spi/sub.mk
+@@ -0,0 +1,4 @@
++incdirs-y += .
++
++srcs-y += rpc_accessor.c
++srcs-y += spi.c
+diff --git a/core/arch/arm/plat-rzg/drivers/sub.mk b/core/arch/arm/plat-rzg/drivers/sub.mk
+index aeafd76..60f375a 100644
+--- a/core/arch/arm/plat-rzg/drivers/sub.mk
++++ b/core/arch/arm/plat-rzg/drivers/sub.mk
+@@ -3,3 +3,7 @@ ifeq ($(CFG_RZG_SEC_IP_DRV),y)
+ srcs-y += tsip_init.c
+ subdirs-y += tsip
+ endif
++
++ifeq ($(CFG_RZG_SPI_DRV),y)
++subdirs-y += spi
++endif
+diff --git a/core/arch/arm/plat-rzg/include/drivers/spi/spi.h b/core/arch/arm/plat-rzg/include/drivers/spi/spi.h
+new file mode 100644
+index 0000000..9b9d41b
+--- /dev/null
++++ b/core/arch/arm/plat-rzg/include/drivers/spi/spi.h
+@@ -0,0 +1,27 @@
++/*
++ * Copyright (c) 2021, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef SPI_H_
++#define SPI_H_
++
++#include <stdint.h>
++#include <string.h>
++
++#define SPI_RET_OK 	0
++#define SPI_RET_NG	1
++
++#define FLASH_MEMORY_SIZE   0x04000000
++#define SPI_IOADDRESS_TOP   0x08000000
++#define QSPI_PAGE_SIZE      0x100
++#define QSPI_SEC_SIZE       0x10000
++#define QSPI_END_ADDR       0x04000000
++
++int32_t rzg_spi_erase_sectors(uint32_t spi_addr, uint32_t len);
++int32_t rzg_spi_write_buff(uint32_t spi_addr, uint64_t buff, uint32_t len);
++int32_t rzg_spi_init_driver(void);
++int32_t rzg_spi_deinit_driver(void);
++
++#endif /* SPI_H_ */
+diff --git a/core/arch/arm/plat-rzg/main.c b/core/arch/arm/plat-rzg/main.c
+index 2b4bfd8..6206921 100644
+--- a/core/arch/arm/plat-rzg/main.c
++++ b/core/arch/arm/plat-rzg/main.c
+@@ -32,6 +32,11 @@ register_phys_mem_pgdir(MEM_AREA_IO_SEC, TSIP_BASE_ADDR, TSIP_SIZE);
+ register_phys_mem_pgdir(MEM_AREA_IO_SEC, S_INST_DATA_ADDR, S_INST_DATA_SIZE);
+ #endif
+ 
++#if defined(CFG_RZG_SPI_DRV)
++register_phys_mem_pgdir(MEM_AREA_IO_SEC, PRR_BASE, PRR_REG_SIZE);
++register_phys_mem_pgdir(MEM_AREA_IO_NSEC, RPC_BASE, RPC_REG_SIZE);
++#endif
++
+ register_dynamic_shm(NSEC_DDR_0_BASE, NSEC_DDR_0_SIZE);
+ #ifdef NSEC_DDR_1_BASE
+ register_dynamic_shm(NSEC_DDR_1_BASE, NSEC_DDR_1_SIZE);
+diff --git a/core/arch/arm/plat-rzg/platform_config.h b/core/arch/arm/plat-rzg/platform_config.h
+index a64c844..1e0823b 100644
+--- a/core/arch/arm/plat-rzg/platform_config.h
++++ b/core/arch/arm/plat-rzg/platform_config.h
+@@ -19,6 +19,11 @@
+ #define GICC_BASE		0xF1020000
+ #define GICD_BASE		0xF1010000
+ 
++#define PRR_BASE		0xFFF00044
++#define PRR_REG_SIZE		0x00000200
++#define RPC_BASE		0xEE200000
++#define RPC_REG_SIZE		0x00009000
++
+ #define S_INST_DATA_ADDR	0x440FE000
+ #define S_INST_DATA_SIZE	0x00002000
+ #define TSIP_BASE_ADDR		0xE7800000
+-- 
+2.7.4
+
