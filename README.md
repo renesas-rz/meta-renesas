@@ -36,7 +36,12 @@ This layer depends on:
     branch: dunfell
     revision: 60b251c25ba87e946a0ca4cdc8d17b1cb09292ac
 
-    (Optional)
+    (Optional: core-image-qt)
+    URI: https://github.com/meta-qt5/meta-qt5.git
+    layers: meta-qt5
+    revision: c1b0c9f546289b1592d7a895640de103723a0305
+
+    (Optional: Docker)
     URI: https://git.yoctoproject.org/git/meta-virtualization
     layers: meta-virtualization
     branch: dunfell
@@ -78,6 +83,11 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ git clone  https://github.com/renesas-rz/meta-rzg2.git
     $ cd meta-rzg2
     $ git checkout <tag>
+    $ cd ..
+    $
+    $ git clone  https://github.com/meta-qt5/meta-qt5.git
+    $ cd meta-qt5
+    $ git checkout -b tmp c1b0c9f546289b1592d7a895640de103723a0305
     $ cd ..
     $
     $ git clone  https://git.yoctoproject.org/git/meta-virtualization -b dunfell
@@ -161,4 +171,13 @@ It is possible to change some build configs as below:
 * CIP Core: choose the version of CIP Core to build with. CIP Core are software packages that are maintained for long term by CIP community. You can select the value "1" or "0" for CIP_CORE variable
   ```
   CIP_CORE = "1"
+  ```
+* QT Demo: choose QT5 Demonstration to build with core-image-qt. QT5 Demos are some applications to demonstrate QT5 framework.
+  * Unset QT_DEMO (default): all QT5 Demos are not built with core-image-qt.
+  ```
+  #QT_DEMO = "1"
+  ```
+  * Allow QT_DEMO: all QT5 Demos are built and included in core-image-qt.
+  ```
+  QT_DEMO = "1"
   ```
