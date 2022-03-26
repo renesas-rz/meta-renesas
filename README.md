@@ -1,4 +1,4 @@
-# meta-rzg2
+# meta-renesas
 
 This is a Yocto build layer(version:dunfell) that provides support for the RZ/G2 Group of 64bit Arm-based MPUs from Renesas Electronics.
 Currently the following boards and MPUs are supported:
@@ -80,8 +80,8 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ cd meta-gplv2 
     $ git checkout 60b251c25ba87e946a0ca4cdc8d17b1cb09292ac
     $
-    $ git clone  https://github.com/renesas-rz/meta-rzg2.git
-    $ cd meta-rzg2
+    $ git clone  https://github.com/renesas-rz/meta-renesas.git
+    $ cd meta-renesas
     $ git checkout <tag>
     $ cd ..
     $
@@ -95,17 +95,17 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ git checkout c5f61e547b90aa8058cf816f00902afed9c96f72
     $ cd ..
 ```
-\<tag\> can be selected in any tags of meta-rzg2.
-Now the latest version is **BSP-3.x**
+\<tag\> can be selected in any tags of meta-renesas.
+Now the latest version is **BSP-3.0.x**
 
 [Optional] If you need GPU/Codec support, or build Weston image, this step helps to copy them to build environment. Copy file proprietary_mmp.tar.gz and vspmfilter.tar.xz to $WORK and do below commands.
 ```bash
     $ tar -xf proprietary_mmp.tar.gz
     $ cd proprietary_mmp
-    $ ./copy_gfx_mmp.sh ../meta-rzg2
+    $ ./copy_gfx_mmp.sh ../meta-renesas
     $ cd ..
     $
-    $ cp vspmfilter.tar.xz meta-rzg2/recipes-common/recipes-multimedia/gstreamer/gstreamer1.0-plugin-vspmfilter
+    $ cp vspmfilter.tar.xz meta-renesas/recipes-common/recipes-multimedia/gstreamer/gstreamer1.0-plugin-vspmfilter
     $ 
 ```
 
@@ -116,7 +116,7 @@ Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
 
 Prepare default configuration files. :
 ```bash
-    $ cp $WORK/meta-rzg2/docs/template/conf/<board>/*.conf ./conf/
+    $ cp $WORK/meta-renesas/docs/template/conf/<board>/*.conf ./conf/
 ```
 \<board\> : smarc-rzg2l, rzg2l-dev
 
