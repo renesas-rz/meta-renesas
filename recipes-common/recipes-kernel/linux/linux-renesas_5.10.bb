@@ -33,6 +33,17 @@ do_kernel_metadata_af_patch() {
 	do_kernel_metadata
 }
 
+do_deploy_append() {
+	for dtbf in ${KERNEL_DEVICETREE}; do
+		dtb=`normalize_dtb "$dtbf"`
+		dtb_ext=${dtb##*.}
+		dtb_base_name=`basename $dtb .$dtb_ext`
+		for type in ${KERNEL_IMAGETYPE_FOR_MAKE}; do
+			ln -sf $dtb_base_name-${KERNEL_DTB_NAME}.$dtb_ext $deployDir/$type-$dtb_base_name.$dtb_ext
+		done
+	done
+}
+
 addtask do_kernel_metadata_af_patch after do_patch before do_kernel_configme
 
 # Fix race condition, which can causes configs in defconfig file be ignored
