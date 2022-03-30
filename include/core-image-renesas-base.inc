@@ -72,7 +72,7 @@ BASIC_32BIT_PKGS = " \
 "
 
 # Support secure environment
-IMAGE_INSTALL = " \
+IMAGE_INSTALL_append = " \
     optee-client \
 "
 
