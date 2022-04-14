@@ -19,11 +19,13 @@ SRC_URI = " \
 	git://github.com/renesas-rz/rzg_optee-os.git;branch=${BRANCH} \
 "
 
-COMPATIBLE_MACHINE = "(smarc-rzg2l|smarc-rzg2lc)"
+COMPATIBLE_MACHINE = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzv2l|rzv2l-dev)"
 
 PLATFORM = "rz"
 PLATFORM_FLAVOR_smarc-rzg2l = "g2l_smarc_2"
 PLATFORM_FLAVOR_smarc-rzg2lc = "g2l_smarc_1"
+PLATFORM_FLAVOR_smarc-rzv2l = "g2l_smarc_4"
+PLATFORM_FLAVOR_rzv2l-dev = "g2l_dev15_4"
 
 DEPENDS = " \
 	python3-pyelftools-native python3-pycryptodome-native python3-pycryptodomex-native secprv-native \
