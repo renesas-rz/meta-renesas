@@ -1,0 +1,30 @@
+From 487f0ef2d2bd90e6472c7e739cd9d67fa5a8ea09 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 14 Apr 2022 17:15:05 +0700
+Subject: [PATCH] Add RZ/V2L into rzg2l_match to not parse and init lossy mem
+ area
+
+RZ/V2L is same as RZ/G2L that it do not have lossy mem area.
+So this commit is created to add RZ/V2L into rzg2l_match to not parse
+and init lossy mem area.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index ec78a71..4488837 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -1290,6 +1290,7 @@ static int parse_legacy_memory_node(struct device_node *np)
+ static const struct soc_device_attribute rzg2l_match[] = {
+ 	{ .family = "RZ/G2L" },
+ 	{ .family = "RZ/G2UL" },
++	{ .family = "RZ/V2L" },
+ 	{ /* sentinel*/ }
+ };
+ 
+-- 
+2.25.1
+
