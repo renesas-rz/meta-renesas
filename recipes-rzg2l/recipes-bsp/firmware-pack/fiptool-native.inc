@@ -1,6 +1,6 @@
 SECTION = "bootloaders"
 SUMMARY = "Fiptool from Trusted Firmware-A"
-LICENSE = "BSD-3-Clause"
+LICENSE = "MIT"
 
 inherit native
 
