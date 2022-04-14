@@ -4,13 +4,13 @@ require recipes-kernel/linux/linux-yocto.inc
 require include/docker-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul)"
+COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
 COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2n|hihope-rzg2m|hihope-rzg2h)"
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
 BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip1-rt1", "rz-5.10-cip1",d)}"
-SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "4394838d911d3f4894212375d47d946568c2cc46", "f223930be911a670018bf64156e3ebf1b4547fd0",d)}"
+SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "6555822d2b9195b136c8c4a14d2ead0c392e4c1e", "e5d98675a47ac4a3d20e277f5d474a3ca92168f5",d)}"
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
