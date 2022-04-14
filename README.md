@@ -7,9 +7,11 @@ Currently the following boards and MPUs are supported:
 - Board: HIHOPE-RZG2M / MPU: R8A774A1 (RZ/G2M v1.3) and R8A774A3 (RZ/G2M v3.0)
 - Board: HIHOPE-RZG2N / MPU: R8A774B1 (RZG2N)
 - Board: HIHOPE-RZG2H / MPU: R8A774E1 (RZG2H)
-- Board: RZG2L SMARC Evaluation Kit / MPU: R9A77G044L (RZ/G2L)
-- Board: RZG2LC SMARC Evaluation Kit / MPU: R9A77G044C (RZ/G2LC)
-- Board: RZG2UL SMARC Evaluation Kit / MPU: R9A77G043U (RZ/G2UL)
+- Board: RZG2L SMARC Evaluation Kit / MPU: R9A07G044L (RZ/G2L)
+- Board: RZG2LC SMARC Evaluation Kit / MPU: R9A07G044C (RZ/G2LC)
+- Board: RZG2UL SMARC Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
+- Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
+- Board: RZV2L Development Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 
 ## Patches
 
