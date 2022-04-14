@@ -39,6 +39,14 @@ update_issue() {
       BSP_SOC="RZG2UL"
       BSP_BOARD="RZG2UL-SMARC-EVK"
       ;;
+    smarc-rzv2l)
+      BSP_SOC="RZV2L"
+      BSP_BOARD="RZV2L-SMARC-EVK"
+      ;;
+    rzv2l-dev)
+      BSP_SOC="RZV2L"
+      BSP_BOARD="RZV2L-DEV"
+      ;;
     hihope-rzg2h)
       BSP_SOC="RZG2H"
       BSP_BOARD="HIHOPE-RZG2H"
