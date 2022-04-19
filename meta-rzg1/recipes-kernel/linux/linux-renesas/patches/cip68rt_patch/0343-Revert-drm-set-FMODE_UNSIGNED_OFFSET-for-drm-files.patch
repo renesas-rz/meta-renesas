@@ -1,0 +1,44 @@
+From 0ccc5cb898d8831efcfc979f6c9e7e72fe686f11 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Thu, 29 Oct 2020 19:31:28 +0700
+Subject: [PATCH 343/433] Revert "drm: set FMODE_UNSIGNED_OFFSET for drm files"
+
+This reverts commit 12958d0ffa66 ("drm: set FMODE_UNSIGNED_OFFSET
+for drm files")
+
+Starting to revert 3 commits:
+ commit bd2f9ce5bacb ("mmap: introduce sane default mmap limits")
+ commit 6ea1dc96a03a ("mmap: relax file size limit for regular files")
+ commit 12958d0ffa66 ("drm: set FMODE_UNSIGNED_OFFSET for drm files")
+
+These commits make the new mmap() limitation for regular files. But the
+platforms with 512MB RAM had problem with mapping regular files and
+device drivers/kernel modules.
+
+We have met issue "Unable to allocate required memory" with GPU maybe
+due to big physical address space required.
+
+Revert these commits can fix our issues but need further investigation
+on other platforms.
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/drm_fops.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
+index 88ceac0..6b5625e 100644
+--- a/drivers/gpu/drm/drm_fops.c
++++ b/drivers/gpu/drm/drm_fops.c
+@@ -209,7 +209,6 @@ static int drm_open_helper(struct file *filp, struct drm_minor *minor)
+ 		return -ENOMEM;
+ 
+ 	filp->private_data = priv;
+-	filp->f_mode |= FMODE_UNSIGNED_OFFSET;
+ 	priv->filp = filp;
+ 	priv->uid = current_euid();
+ 	priv->pid = get_pid(task_pid(current));
+-- 
+2.7.4
+

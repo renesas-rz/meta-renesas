@@ -1,0 +1,33 @@
+From a77351ff25973149734a6043c472c0c2f097857b Mon Sep 17 00:00:00 2001
+From: Duy Dang <duy.dang.yb@renesas.com>
+Date: Sat, 23 Dec 2017 22:28:10 +0700
+Subject: [PATCH 293/433] drm: rcar-du: Output the DISP signal on the DISP pin
+
+commit d792bc77e5080c1df2b585b69182fc2762cc2673 upstream.
+
+The DE signal is currently configured to be identical to the DISP
+signal and is used for the same purpose. To make it clearer that the
+DISP pin outputs the DISP signal, select it explicitly.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 6fab079..911b137 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -150,7 +150,7 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	/* Signal polarities */
+ 	value = ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DSMR_VSL : 0)
+ 	      | ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DSMR_HSL : 0)
+-	      | DSMR_DIPM_DE | DSMR_CSPM;
++	      | DSMR_DIPM_DISP | DSMR_CSPM;
+ 	rcar_du_crtc_write(rcrtc, DSMR, value);
+ 
+ 	/* Display timings */
+-- 
+2.7.4
+

@@ -1,0 +1,29 @@
+From 0f888219f6fc8a4a3890b62ddcd447b57195e47d Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Tue, 28 Jul 2020 10:50:00 +0700
+Subject: [PATCH 160/433] ARM: dts: iwg20d-q7-common: Enable tmu1
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/iwg20d-q7-common.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-common.dtsi b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+index bdc2be1..8c67fa8 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-common.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-common.dtsi
+@@ -363,6 +363,10 @@
+ 	status = "okay";
+ };
+ 
++&tmu1 {
++	status = "okay";
++};
++
+ &ssi1 {
+ 	shared-pin;
+ };
+-- 
+2.7.4
+

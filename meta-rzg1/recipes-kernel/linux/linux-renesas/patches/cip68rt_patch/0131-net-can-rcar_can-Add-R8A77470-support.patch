@@ -1,0 +1,26 @@
+From e1a7f24654d45271f1038379a1f0c54f99ae0f30 Mon Sep 17 00:00:00 2001
+From: thongsyho <thong.ho.px@rvc.renesas.com>
+Date: Mon, 13 Jul 2020 16:23:36 +0700
+Subject: [PATCH 131/433] net: can: rcar_can: Add R8A77470 support
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renesas.com>
+Signed-off-by: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+---
+ drivers/net/can/rcar_can.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/can/rcar_can.c b/drivers/net/can/rcar_can.c
+index 0ee9f9f..bd8a7ba 100644
+--- a/drivers/net/can/rcar_can.c
++++ b/drivers/net/can/rcar_can.c
+@@ -908,6 +908,7 @@ static SIMPLE_DEV_PM_OPS(rcar_can_pm_ops, rcar_can_suspend, rcar_can_resume);
+ 
+ static const struct of_device_id rcar_can_of_table[] __maybe_unused = {
+ 	{ .compatible = "renesas,can-r8a7745" },
++	{ .compatible = "renesas,can-r8a77470" },
+ 	{ .compatible = "renesas,can-r8a7778" },
+ 	{ .compatible = "renesas,can-r8a7779" },
+ 	{ .compatible = "renesas,can-r8a7790" },
+-- 
+2.7.4
+

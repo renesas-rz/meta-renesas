@@ -1,0 +1,38 @@
+From 79bbc047c8147eaf2bd35c51c929a4cd15192c36 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Wed, 28 Oct 2020 17:25:46 +0700
+Subject: [PATCH 285/433] ARM: dts: r8a7742-iwg21d-q7: Add power-supply support
+ buzzer
+
+Signed-off-by: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21d-q7.dts | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+index 9f0b149..b7d85f6 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+@@ -137,10 +137,19 @@
+ 		pwms = <&tpu 0 5000000 GPIO_ACTIVE_HIGH>;
+ 		brightness-levels = <0 4 8 16 32 64 128 255>;
+ 		default-brightness-level = <7>;
++		power-supply = <&vcc_buzzer>;
+ 		pinctrl-0 = <&buzzer_pins>;
+ 		pinctrl-names = "default";
+ 	};
+ 
++	vcc_buzzer: regulator@5 {
++		compatible = "regulator-fixed";
++		regulator-name = "buzzer vcc";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++	};
++
+ 	fan {
+ 		compatible = "pwm-backlight";
+ 		pwms = <&tpu 1 5000000 GPIO_ACTIVE_HIGH>;
+-- 
+2.7.4
+

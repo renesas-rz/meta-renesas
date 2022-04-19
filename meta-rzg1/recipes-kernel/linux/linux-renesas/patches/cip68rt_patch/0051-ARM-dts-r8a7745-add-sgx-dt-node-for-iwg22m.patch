@@ -1,0 +1,37 @@
+From adee13f6564f3f90da6379fb8ab59c7ec214d896 Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Tue, 13 Nov 2018 14:08:42 +0700
+Subject: [PATCH 051/433] ARM: dts: r8a7745: add sgx dt node for iwg22m
+
+add sgx dt node for iwg22m
+
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745.dtsi b/arch/arm/boot/dts/r8a7745.dtsi
+index bdd32b4..c361ddc 100644
+--- a/arch/arm/boot/dts/r8a7745.dtsi
++++ b/arch/arm/boot/dts/r8a7745.dtsi
+@@ -216,6 +216,17 @@
+ 			#power-domain-cells = <1>;
+ 		};
+ 
++		sgx@fd800000 {
++			compatible = "renesas,sgx";
++			reg = <0 0xfd800000 0 0x10000>;
++			interrupts = <0 119 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "irq_sgx";
++			clocks = <&mstp1_clks R8A7745_CLK_3DG>,
++				 <&mstp8_clks R8A7745_CLK_IPMMU_SGX>;
++			clock-names = "sgx_clk", "ipmmu_clk";
++			power-domains = <&sysc R8A7745_PD_SGX>;
++		};
++
+ 		pfc: pin-controller@e6060000 {
+ 			compatible = "renesas,pfc-r8a7745";
+ 			reg = <0 0xe6060000 0 0x11c>;
+-- 
+2.7.4
+

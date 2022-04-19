@@ -1,0 +1,40 @@
+From ef935008513f7f63ff0141302f100e0ffdf1a6bb Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+Date: Mon, 9 Apr 2018 23:33:47 +0700
+Subject: [PATCH 244/433] serial: sh-sci: Fix illegal use of disable_irq_nosync
+ in error interrupt
+
+	Commit: <f76321458b56ad651563fa82bce43ad5b1c0a3a5>
+	From:	git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas-backport.git
+
+	If error interrupt occurs during the DMA transfer enabled,
+	the sci_er_interrupt() and sci_rx_interrupt() in sci_mpxed_interrupt()
+	calls disable_irq_nosync() twice.
+	This patch avoids called disable_irq_nosync() in sci_er_interrupt().
+
+Signed-off-by: Kazuya Mizuguchi <kazuya.mizuguchi.ks@renesas.com>
+Signed-off-by: tungvo <tung.vo.eb@rvc.renesas.com>
+Signed-off-by: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+---
+ drivers/tty/serial/sh-sci.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index f9eae4c..895a329 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -1578,8 +1578,9 @@ static irqreturn_t sci_er_interrupt(int irq, void *ptr)
+ 		}
+ 	} else {
+ 		sci_handle_fifo_overrun(port);
+-		if (!s->chan_rx)
+-			sci_receive_chars(ptr);
++		if ((!s->chan_rx) && (port->type != PORT_SCIFA) &&
++			(port->type != PORT_SCIFB))
++			sci_rx_interrupt(irq, ptr);
+ 	}
+ 
+ 	sci_clear_SCxSR(port, SCxSR_ERROR_CLEAR(port));
+-- 
+2.7.4
+

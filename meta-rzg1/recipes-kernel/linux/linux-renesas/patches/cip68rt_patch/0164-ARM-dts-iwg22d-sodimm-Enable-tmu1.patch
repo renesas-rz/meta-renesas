@@ -1,0 +1,28 @@
+From 07950ba5b8fafd448cbef2a63a362ecebf654d04 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Tue, 28 Jul 2020 11:16:15 +0700
+Subject: [PATCH 164/433] ARM: dts: iwg22d-sodimm: Enable tmu1
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+index 6fe9f0a..8509f32 100644
+--- a/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
++++ b/arch/arm/boot/dts/r8a7745-iwg22d-sodimm.dts
+@@ -308,6 +308,10 @@
+ 	};
+ };
+ 
++&tmu1 {
++	status = "okay";
++};
++
+ &sdhi0 {
+ 	pinctrl-0 = <&sdhi0_pins>;
+ 	pinctrl-1 = <&sdhi0_pins_uhs>;
+-- 
+2.7.4
+

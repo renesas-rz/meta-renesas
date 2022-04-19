@@ -1,0 +1,64 @@
+From e22936fb7c9255da5c8d7d21e73ef91a8048aa7e Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+Date: Mon, 26 Oct 2020 09:55:13 +0700
+Subject: [PATCH 284/433] ARM: dts: r8a7742-iwg21d-q7: Enable buzzer and fan
+ along with TPU
+
+TPU acts as PWM controller for buzzer and fan.
+This commit enables all of them on the r8a7742-iwg21d-q7 (RZ/G1H board).
+
+Signed-off-by: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21d-q7.dts | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+index bbfbe27..9f0b149 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+@@ -131,6 +131,24 @@
+ 		gpios-states = <1>;
+ 		states = <3300000 1>, <1800000 0>;
+ 	};
++
++	buzzer {
++		compatible = "pwm-backlight";
++		pwms = <&tpu 0 5000000 GPIO_ACTIVE_HIGH>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		pinctrl-0 = <&buzzer_pins>;
++		pinctrl-names = "default";
++	};
++
++	fan {
++		compatible = "pwm-backlight";
++		pwms = <&tpu 1 5000000 GPIO_ACTIVE_HIGH>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <7>;
++		pinctrl-0 = <&fan_pins>;
++		pinctrl-names = "default";
++	};
+ };
+ 
+ &avb {
+@@ -295,6 +313,16 @@
+ 		function = "can1";
+ 	};
+ 
++	buzzer_pins: buzzer {
++		groups = "tpu0_to0";
++		function = "tpu0";
++	};
++
++	fan_pins: fan {
++		groups = "tpu0_to1";
++		function = "tpu0";
++	};
++
+ 	i2c2_pins: i2c2 {
+ 		groups = "i2c2_b";
+ 		function = "i2c2";
+-- 
+2.7.4
+

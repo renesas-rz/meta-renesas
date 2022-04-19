@@ -1,0 +1,38 @@
+From 629f8063ea9ffbd1dac2a504ac8f9a4ab30031b3 Mon Sep 17 00:00:00 2001
+From: Duy Dang <duy.dang.yb@renesas.com>
+Date: Wed, 22 Jul 2020 09:43:29 +0700
+Subject: [PATCH 258/433] ARM: dts: r8a7744: Add 3DX graphics (PowerVR
+ SGX544MP2) node
+
+Add definition of 3DX graphics module to the R8A7744 (RZ/G1N) SoC dtsi.
+
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ arch/arm/boot/dts/r8a7744.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7744.dtsi b/arch/arm/boot/dts/r8a7744.dtsi
+index 1a04b45..4f1e05c 100644
+--- a/arch/arm/boot/dts/r8a7744.dtsi
++++ b/arch/arm/boot/dts/r8a7744.dtsi
+@@ -285,6 +285,17 @@
+ 			reg = <0 0xe6060000 0 0x250>;
+ 		};
+ 
++		sgx@fd800000 {
++			compatible = "renesas,sgx";
++			reg = <0 0xfd800000 0 0x10000>;
++			interrupts = <0 119 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "irq_sgx";
++			clocks = <&mstp1_clks R8A7744_CLK_3DG>,
++				 <&mstp8_clks R8A7744_CLK_IPMMU_SGX>;
++			clock-names = "sgx_clk", "ipmmu_clk";
++			power-domains = <&sysc R8A7744_PD_SGX>;
++		};
++
+ 		tpu: pwm@e60f0000 {
+ 			compatible = "renesas,tpu-r8a7744", "renesas,tpu";
+ 			reg = <0 0xe60f0000 0 0x148>;
+-- 
+2.7.4
+

@@ -1,0 +1,34 @@
+From a7b4920d2ca1fdefe098e9a49bd24ae6750f84a1 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Wed, 14 Oct 2020 10:24:10 +0700
+Subject: [PATCH 173/433] ARM: dts: r8a77470: Add EthernetAVB device node
+
+Add device node for Gigabit Ethernet device (EthernetAVB) of R8A77470
+(RZ/G1H) SoC.
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index 7dae563..e92693b 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -539,10 +539,11 @@
+ 		avb: ethernet@e6800000 {
+ 			compatible = "renesas,etheravb-r8a77470",
+ 				     "renesas,etheravb-rcar-gen2";
+-			reg = <0 0xe6800000 0 0x800>, <0 0xee0e8000 0 0x4000>;
++			reg = <0 0xe6800000 0 0x7bf>;
+ 			interrupts = <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp8_clks R8A77470_CLK_ETHERAVB>;
+-			power-domains = <&cpg_clocks>;
++			phy-mode = "gmii";
++			power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 			status = "disabled";
+-- 
+2.7.4
+

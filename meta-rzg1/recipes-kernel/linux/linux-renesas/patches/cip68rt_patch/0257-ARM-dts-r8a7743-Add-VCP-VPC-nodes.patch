@@ -1,0 +1,87 @@
+From 77ab17b5dbe7f255a699339fdb6d19f7539db240 Mon Sep 17 00:00:00 2001
+From: Duy Dang <duy.dang.yb@renesas.com>
+Date: Wed, 22 Jul 2020 11:19:53 +0700
+Subject: [PATCH 257/433] ARM: dts: r8a7743: Add VCP/VPC nodes
+
+Add device nodes of Video Processing Unit Cache (VPC IP) and
+Multi-codec module (VCP IP) to the R8A7743 (RZ/G1M) SoC dtsi.
+
+These IPs are controlled by Renesas UVCS kernel driver module
+(uvcs-kernel-module).
+
+There are issues when porting from 3.10 to 4.4
+	1. Cannot request interrupt for HW IP (VCP)
+	2. Cannot map HW IP register (VPC)
+
+Some differences in register platform device comparing to
+previous kernel are as following:
+	-Old method: driver use kernel API (platform_device_register())
+	to register it device to kernel,
+	-New method: devices are registered basing on the information
+	provided by device tree.
+
+Currently, only vcp0, vpc0 are used.
+vpc1, vpc0xy, and vpc1xy are added as a reserve.
+
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index b884c9d..e0ef95f 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -1752,6 +1752,48 @@
+ 			status = "disabled";
+ 		};
+ 
++		vcp0: vcp0@fe900000 {
++			compatible = "renesas,vcp0";
++			reg = <0 0xfe900000 0 0x200>, <0 0xfe900200 0 0x200>;
++			interrupts = <0 258 IRQ_TYPE_LEVEL_HIGH>,
++				<0 259 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_VCP0>;
++			power-domains = <&cpg_clocks>;
++			renesas,#ch = <0>;
++		};
++
++		vpc0: vcp0@fe908000 {
++			compatible = "renesas,vpc0";
++			reg = <0 0xfe908000 0 0x90>;
++			clocks = <&mstp1_clks R8A7743_CLK_VPC0>;
++			power-domains = <&cpg_clocks>;
++			renesas,#ch = <0>;
++		};
++
++		vpc1: vcp0@fe918000 {
++			compatible = "renesas,vpc1";
++			reg = <0 0xfe918000 0 0x90>;
++			/* clocks = <&mstp1_clks R8A7743_CLK_VPC1>; */
++			power-domains = <&cpg_clocks>;
++			renesas,#ch = <0>;
++		};
++
++		vpc0xy: vcp0@fe960380 {
++			compatible = "renesas,vpc0xy";
++			reg = <0 0xfe960380 0 0x4>;
++			/* clocks = <&mstp1_clks R8A7743_CLK_VPC0>; */
++			power-domains = <&cpg_clocks>;
++			renesas,#ch = <0>;
++		};
++
++		vpc1xy: vcp0@fe960384 {
++			compatible = "renesas,vpc1xy";
++			reg = <0 0xfe960384 0 0x4>;
++			/* #clocks = <&mstp1_clks R8A7743_CLK_VPC1>; */
++			power-domains = <&cpg_clocks>;
++			renesas,#ch = <0>;
++		};
++
+ 		vsp@fe928000 {
+ 			compatible = "renesas,vsp1";
+ 			reg = <0 0xfe928000 0 0x8000>;
+-- 
+2.7.4
+

@@ -1,0 +1,138 @@
+From 09c87ea979d4d90380f7dc49ececd04b5e79c56f Mon Sep 17 00:00:00 2001
+From: Duy Dang <duy.dang.yb@renesas.com>
+Date: Thu, 29 Oct 2020 18:37:35 +0700
+Subject: [PATCH 299/433] drm: Constify drm_encoder_slave_funcs
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+commit 16c3719c17d355b12fe2dac4458bd598f9204d6f upstream.
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.com>
+Link: http://patchwork.freedesktop.org/patch/msgid/1450178476-26284-11-git-send-email-boris.brezillon@free-electrons.com
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/drm_encoder_slave.c       | 2 +-
+ drivers/gpu/drm/nouveau/nouveau_encoder.h | 2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c | 6 +++---
+ drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c | 8 ++++----
+ include/drm/drm_encoder_slave.h           | 2 +-
+ 5 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_encoder_slave.c b/drivers/gpu/drm/drm_encoder_slave.c
+index 5c595d9..0e9e8b6 100644
+--- a/drivers/gpu/drm/drm_encoder_slave.c
++++ b/drivers/gpu/drm/drm_encoder_slave.c
+@@ -125,7 +125,7 @@ EXPORT_SYMBOL(drm_i2c_encoder_destroy);
+  * Wrapper fxns which can be plugged in to drm_encoder_helper_funcs:
+  */
+ 
+-static inline struct drm_encoder_slave_funcs *
++static inline const struct drm_encoder_slave_funcs *
+ get_slave_funcs(struct drm_encoder *enc)
+ {
+ 	return to_encoder_slave(enc)->slave_funcs;
+diff --git a/drivers/gpu/drm/nouveau/nouveau_encoder.h b/drivers/gpu/drm/nouveau/nouveau_encoder.h
+index b37da95..07527db 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_encoder.h
++++ b/drivers/gpu/drm/nouveau/nouveau_encoder.h
+@@ -80,7 +80,7 @@ static inline struct drm_encoder *to_drm_encoder(struct nouveau_encoder *enc)
+ 	return &enc->base.base;
+ }
+ 
+-static inline struct drm_encoder_slave_funcs *
++static inline const struct drm_encoder_slave_funcs *
+ get_slave_funcs(struct drm_encoder *enc)
+ {
+ 	return to_encoder_slave(enc)->slave_funcs;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
+index 6038be9..6c92714 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_hdmicon.c
+@@ -28,7 +28,7 @@ static int rcar_du_hdmi_connector_get_modes(struct drm_connector *connector)
+ {
+ 	struct rcar_du_connector *con = to_rcar_connector(connector);
+ 	struct drm_encoder *encoder = rcar_encoder_to_drm_encoder(con->encoder);
+-	struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
++	const struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
+ 
+ 	if (sfuncs->get_modes == NULL)
+ 		return 0;
+@@ -41,7 +41,7 @@ static int rcar_du_hdmi_connector_mode_valid(struct drm_connector *connector,
+ {
+ 	struct rcar_du_connector *con = to_rcar_connector(connector);
+ 	struct drm_encoder *encoder = rcar_encoder_to_drm_encoder(con->encoder);
+-	struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
++	const struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
+ 
+ 	if (sfuncs->mode_valid == NULL)
+ 		return MODE_OK;
+@@ -60,7 +60,7 @@ rcar_du_hdmi_connector_detect(struct drm_connector *connector, bool force)
+ {
+ 	struct rcar_du_connector *con = to_rcar_connector(connector);
+ 	struct drm_encoder *encoder = rcar_encoder_to_drm_encoder(con->encoder);
+-	struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
++	const struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
+ 
+ 	if (sfuncs->detect == NULL)
+ 		return connector_status_unknown;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c b/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c
+index 11267de..2567efc 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_hdmienc.c
+@@ -35,7 +35,7 @@ struct rcar_du_hdmienc {
+ static void rcar_du_hdmienc_disable(struct drm_encoder *encoder)
+ {
+ 	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
+-	struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
++	const struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
+ 
+ 	if (sfuncs->dpms)
+ 		sfuncs->dpms(encoder, DRM_MODE_DPMS_OFF);
+@@ -50,7 +50,7 @@ static void rcar_du_hdmienc_disable(struct drm_encoder *encoder)
+ static void rcar_du_hdmienc_enable(struct drm_encoder *encoder)
+ {
+ 	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
+-	struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
++	const struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
+ 
+ 	if (hdmienc->renc->lvds)
+ 		rcar_du_lvdsenc_enable(hdmienc->renc->lvds, encoder->crtc,
+@@ -67,7 +67,7 @@ static int rcar_du_hdmienc_atomic_check(struct drm_encoder *encoder,
+ 					struct drm_connector_state *conn_state)
+ {
+ 	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
+-	struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
++	const struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
+ 	struct drm_display_mode *adjusted_mode = &crtc_state->adjusted_mode;
+ 	const struct drm_display_mode *mode = &crtc_state->mode;
+ 
+@@ -89,7 +89,7 @@ static void rcar_du_hdmienc_mode_set(struct drm_encoder *encoder,
+ 				     struct drm_display_mode *adjusted_mode)
+ {
+ 	struct rcar_du_hdmienc *hdmienc = to_rcar_hdmienc(encoder);
+-	struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
++	const struct drm_encoder_slave_funcs *sfuncs = to_slave_funcs(encoder);
+ 
+ 	if (sfuncs->mode_set)
+ 		sfuncs->mode_set(encoder, mode, adjusted_mode);
+diff --git a/include/drm/drm_encoder_slave.h b/include/drm/drm_encoder_slave.h
+index 8b9cc36..82cdf61 100644
+--- a/include/drm/drm_encoder_slave.h
++++ b/include/drm/drm_encoder_slave.h
+@@ -95,7 +95,7 @@ struct drm_encoder_slave_funcs {
+ struct drm_encoder_slave {
+ 	struct drm_encoder base;
+ 
+-	struct drm_encoder_slave_funcs *slave_funcs;
++	const struct drm_encoder_slave_funcs *slave_funcs;
+ 	void *slave_priv;
+ 	void *bus_priv;
+ };
+-- 
+2.7.4
+

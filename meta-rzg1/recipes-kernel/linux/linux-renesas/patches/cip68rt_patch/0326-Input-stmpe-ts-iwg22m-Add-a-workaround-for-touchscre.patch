@@ -1,0 +1,62 @@
+From ca49beb0d20bd3ef07436eaaa0a9f59b6d3c6802 Mon Sep 17 00:00:00 2001
+From: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Date: Thu, 2 Nov 2017 11:19:40 +0700
+Subject: [PATCH 326/433] Input: stmpe-ts: iwg22m: Add a workaround for
+ touchscreen calibration
+
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/input/touchscreen/stmpe-ts.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/input/touchscreen/stmpe-ts.c b/drivers/input/touchscreen/stmpe-ts.c
+index e414d43..7ffd981 100644
+--- a/drivers/input/touchscreen/stmpe-ts.c
++++ b/drivers/input/touchscreen/stmpe-ts.c
+@@ -63,6 +63,23 @@
+ #define STMPE_TS_NAME			"stmpe-ts"
+ #define XY_MASK				0xfff
+ 
++#define STMPE_MIN_Y                    120
++#define STMPE_MAX_Y                   4210
++
++static int calibrate = 1;
++
++module_param(calibrate, int, 0644);
++MODULE_PARM_DESC(calibrate, "Calibrate position for iWave iwg22m");
++
++static void calibration_pointer(int *y_orig)
++{
++	int  y;
++
++	/*( 100 / 93 ) is the scalling factor*/
++	y = (*y_orig - STMPE_MIN_Y) * 100/93;
++	*y_orig = STMPE_MAX_Y - y;
++}
++
+ struct stmpe_touch {
+ 	struct stmpe *stmpe;
+ 	struct input_dev *idev;
+@@ -150,13 +167,17 @@ static irqreturn_t stmpe_ts_handler(int irq, void *data)
+ 	y = ((data_set[1] & 0xf) << 8) | data_set[2];
+ 	z = data_set[3];
+ 
++	if (calibrate == 1) {
++		calibration_pointer(&y);
++	}
++
+ 	input_report_abs(ts->idev, ABS_X, x);
+ 	input_report_abs(ts->idev, ABS_Y, y);
+ 	input_report_abs(ts->idev, ABS_PRESSURE, z);
+ 	input_report_key(ts->idev, BTN_TOUCH, 1);
+ 	input_sync(ts->idev);
+ 
+-       /* flush the FIFO after we have read out our values. */
++	/* flush the FIFO after we have read out our values. */
+ 	__stmpe_reset_fifo(ts->stmpe);
+ 
+ 	/* reenable the tsc */
+-- 
+2.7.4
+

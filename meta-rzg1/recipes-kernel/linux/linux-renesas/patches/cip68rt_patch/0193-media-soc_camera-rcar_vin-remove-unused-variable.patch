@@ -1,0 +1,27 @@
+From 0f2343fa56bd17588ac8f89837e475833a534a74 Mon Sep 17 00:00:00 2001
+From: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Date: Mon, 19 Jun 2017 07:08:49 +0700
+Subject: [PATCH 193/433] media: soc_camera: rcar_vin: remove unused variable
+
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/media/platform/soc_camera/rcar_vin.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/soc_camera/rcar_vin.c b/drivers/media/platform/soc_camera/rcar_vin.c
+index b6d505d..262ccf3 100644
+--- a/drivers/media/platform/soc_camera/rcar_vin.c
++++ b/drivers/media/platform/soc_camera/rcar_vin.c
+@@ -1066,7 +1066,7 @@ static int rcar_vin_set_rect(struct soc_camera_device *icd)
+ 	unsigned int left_offset, top_offset;
+ 	unsigned char dsize = 0;
+ 	struct v4l2_rect *cam_subrect = &cam->subrect;
+-	u32 value, addon = 0;
++	u32 value = 0;
+ 
+ 	dev_dbg(icd->parent, "Crop %ux%u@%u:%u\n",
+ 		icd->user_width, icd->user_height, cam->vin_left, cam->vin_top);
+-- 
+2.7.4
+

@@ -1,0 +1,88 @@
+From 08e5393ebf78d12cdbb9c3bc092f5ce99d93c2db Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+Date: Tue, 27 Oct 2020 10:45:09 +0700
+Subject: [PATCH 062/433] ARM: shmobile: Support PSCI/smp_ops for r8a7742
+
+This patch adds new DT_MACHINE_START macro entry with PSCI/smp_ops for
+the Renesas R8A7742 (RZ/G1H) SoC.
+
+Signed-off-by: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/mach-shmobile/Makefile          |  3 +++
+ arch/arm/mach-shmobile/setup-rcar-gen2.c | 20 +++++++++++++++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
+index a783af3..61a8b2f 100644
+--- a/arch/arm/mach-shmobile/Makefile
++++ b/arch/arm/mach-shmobile/Makefile
+@@ -12,6 +12,7 @@ obj-$(CONFIG_ARCH_R8A7740)	+= setup-r8a7740.o
+ obj-$(CONFIG_ARCH_R8A7778)	+= setup-r8a7778.o
+ obj-$(CONFIG_ARCH_R8A7779)	+= setup-r8a7779.o pm-r8a7779.o
+ obj-$(CONFIG_ARCH_R8A7790)	+= setup-r8a7790.o
++obj-$(CONFIG_ARCH_R8A7742)	+= setup-r8a7790.o
+ obj-$(CONFIG_ARCH_R8A7791)	+= setup-r8a7791.o
+ obj-$(CONFIG_ARCH_R8A7745)	+= setup-r8a7745.o sgx-r8a7745-quirk.o
+ obj-$(CONFIG_ARCH_EMEV2)	+= setup-emev2.o
+@@ -25,6 +26,7 @@ obj-$(CONFIG_ARCH_RCAR_GEN2)	+= setup-rcar-gen2.o platsmp-apmu.o $(cpu-y)
+ CFLAGS_setup-rcar-gen2.o	+= -march=armv7-a
+ obj-$(CONFIG_ARCH_RCAR_GEN2)	+= headsmp-apmu.o
+ obj-$(CONFIG_ARCH_R8A7790)	+= regulator-quirk-rcar-gen2.o
++obj-$(CONFIG_ARCH_R8A7742)	+= regulator-quirk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7791)	+= regulator-quirk-rcar-gen2.o
+ obj-$(CONFIG_ARCH_R8A7793)	+= regulator-quirk-rcar-gen2.o
+ 
+@@ -33,6 +35,7 @@ smp-y				:= $(cpu-y)
+ smp-$(CONFIG_ARCH_SH73A0)	+= smp-sh73a0.o headsmp-scu.o platsmp-scu.o
+ smp-$(CONFIG_ARCH_R8A7779)	+= smp-r8a7779.o headsmp-scu.o platsmp-scu.o
+ smp-$(CONFIG_ARCH_R8A7790)	+= smp-r8a7790.o
++smp-$(CONFIG_ARCH_R8A7742)	+= smp-r8a7790.o
+ smp-$(CONFIG_ARCH_R8A7791)	+= smp-r8a7791.o
+ smp-$(CONFIG_ARCH_EMEV2)	+= smp-emev2.o headsmp-scu.o platsmp-scu.o
+ 
+diff --git a/arch/arm/mach-shmobile/setup-rcar-gen2.c b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+index 56a21cc..e33912a 100644
+--- a/arch/arm/mach-shmobile/setup-rcar-gen2.c
++++ b/arch/arm/mach-shmobile/setup-rcar-gen2.c
+@@ -26,6 +26,7 @@
+ #include <linux/of_fdt.h>
+ #include <linux/of_platform.h>
+ #include <asm/mach/arch.h>
++#include "r8a7790.h"
+ #include "common.h"
+ #include "rcar-gen2.h"
+ 
+@@ -207,7 +208,10 @@ DT_MACHINE_START(RCAR_GEN2_DT, "Generic R-Car Gen2 (Flattened Device Tree)")
+ MACHINE_END
+ 
+ static const char * const rz_g1_boards_compat_dt[] __initconst = {
+-	"renesas,r8a7742",
++	/*
++	 * R8A7742 can't be handled here as long as they need SMP
++	 * initialization fallback.
++	 */
+ 	"renesas,r8a7743",
+ 	"renesas,r8a7744",
+ 	"renesas,r8a7745",
+@@ -222,3 +226,17 @@ DT_MACHINE_START(RZ_G1_DT, "Generic RZ/G1 (Flattened Device Tree)")
+ 	.reserve	= rcar_gen2_reserve,
+ 	.dt_compat	= rz_g1_boards_compat_dt,
+ MACHINE_END
++
++static const char * const r8a7742_boards_compat_dt[] __initconst = {
++	"renesas,r8a7742",
++	NULL,
++};
++
++DT_MACHINE_START(R8A7742_DT, "Generic R8A7742 (Flattened Device Tree)")
++	.smp		= smp_ops(r8a7790_smp_ops),
++	.init_early	= shmobile_init_delay,
++	.init_time	= rcar_gen2_timer_init,
++	.init_late	= shmobile_init_late,
++	.reserve	= rcar_gen2_reserve,
++	.dt_compat	= r8a7742_boards_compat_dt,
++MACHINE_END
+-- 
+2.7.4
+

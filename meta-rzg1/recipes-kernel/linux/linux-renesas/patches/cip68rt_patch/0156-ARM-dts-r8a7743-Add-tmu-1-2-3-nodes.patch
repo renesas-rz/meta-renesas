@@ -1,0 +1,71 @@
+From 55abbd970bd44e430afcb448e5abce1abe2b5517 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Tue, 28 Jul 2020 10:10:17 +0700
+Subject: [PATCH 156/433] ARM: dts: r8a7743: Add tmu{1,2,3} nodes
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7743.dtsi | 46 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7743.dtsi b/arch/arm/boot/dts/r8a7743.dtsi
+index f1830705..aed0674 100644
+--- a/arch/arm/boot/dts/r8a7743.dtsi
++++ b/arch/arm/boot/dts/r8a7743.dtsi
+@@ -252,6 +252,52 @@
+ 			power-domains = <&cpg_clocks>;
+ 		};
+ 
++		tmu1: timer@fff60000 {
++			compatible = "renesas,tmu-r8a7743", "renesas,tmu";
++			reg = <0 0xfff60000 0 0x30>;
++			interrupts = <0 128 IRQ_TYPE_LEVEL_HIGH>,
++				     <0 129 IRQ_TYPE_LEVEL_HIGH>,
++				     <0 130 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_TMU1>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7743_PD_ALWAYS_ON>;
++
++			#renesas,channels = <3>;
++
++			status = "disabled";
++		};
++
++		tmu2: timer@fff70000 {
++			compatible = "renesas,tmu-r8a7743", "renesas,tmu";
++			reg = <0 0xfff70000 0 0x30>;
++			interrupts = <0 303 IRQ_TYPE_LEVEL_HIGH>,
++				<0 304 IRQ_TYPE_LEVEL_HIGH>,
++				<0 305 IRQ_TYPE_LEVEL_HIGH>,
++				<0 306 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_TMU2>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7743_PD_ALWAYS_ON>;
++
++			#renesas,channels = <3>;
++
++			status = "disabled";
++		};
++
++		tmu3: timer@fff80000 {
++			compatible = "renesas,tmu-r8a7743", "renesas,tmu";
++			reg = <0 0xfff80000 0 0x30>;
++			interrupts = <0 131 IRQ_TYPE_LEVEL_HIGH>,
++				<0 132 IRQ_TYPE_LEVEL_HIGH>,
++				<0 133 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7743_CLK_TMU3>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7743_PD_ALWAYS_ON>;
++
++			#renesas,channels = <3>;
++
++			status = "disabled";
++		};
++
+ 		irqc: interrupt-controller@e61c0000 {
+ 			compatible = "renesas,irqc-r8a7743", "renesas,irqc";
+ 			#interrupt-cells = <2>;
+-- 
+2.7.4
+
