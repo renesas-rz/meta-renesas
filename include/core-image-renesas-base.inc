@@ -18,9 +18,6 @@ IMAGE_INSTALL_append = " \
     packagegroup-multimedia-kernel-modules \
 "
 
-IMAGE_FEATURES_remove = " ssh-server-dropbear"
-IMAGE_FEATURES_append = " ssh-server-openssh"
-
 update_issue() {
     # Set BSP version
     BSP_VERSION="3.0.0"

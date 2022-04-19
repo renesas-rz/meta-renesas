@@ -27,7 +27,6 @@ inherit populate_sdk_qt5
 IMAGE_FEATURES += " \
     dev-pkgs tools-sdk \
     tools-debug debug-tweaks \
-    ssh-server-openssh \
 "
 
 TOOLCHAIN_HOST_TASK_append = " nativesdk-bison nativesdk-flex nativesdk-python3-pycryptodome nativesdk-python3-pycryptodomex "

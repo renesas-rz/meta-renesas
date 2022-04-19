@@ -10,8 +10,6 @@ IMAGE_INSTALL_append = " \
     can-utils \
     ethtool \
     iperf3 \
-    openssh \
-    openssh-sshd \
     usbutils \
     mtd-utils \
     dosfstools \
