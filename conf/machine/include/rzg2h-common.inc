@@ -6,4 +6,4 @@ EXTRA_IMAGEDEPENDS += " optee-os"
 
 MACHINEOVERRIDES =. "rzg2h:"
 
-BBMASK_append = " recipes-rzg2l|recipes-rzv2"
+BBMASK_append = " recipes-rzg2l|recipes-rzv2l"
