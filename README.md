@@ -60,10 +60,15 @@ Below git configuration is required:
     $ git config --global user.name "Your Name"
 ```
 
-Download proprietary graphics and multimedia drivers from Renesas, include:
-- proprietary_mmp.tar.gz
-- vspmfilter.tar.xz
-(Graphic drivers are required for Wayland. Multimedia drivers are optional)
+Download proprietary graphics and multimedia drivers from Renesas.
+To download Multimedia and Graphics library and related Linux drivers, please use the following link:
+
+    English: https://www.renesas.com/us/en/products/microcontrollers-microprocessors/rz-mpus/rzg-linux-platform/rzg-marketplace/verified-linux-package/rzg-verified-linux-package
+    Japanese: https://www.renesas.com/jp/ja/products/microcontrollers-microprocessors/rz-mpus/rzg-linux-platform/rzg-marketplace/verified-linux-package/rzg-verified-linux-package
+
+Please choose correct packages that matches with your MPU.
+Graphic drivers are required for Wayland. Multimedia drivers are optional.
+After downloading the proprietary package, please decompress them then put meta-rz-features folder at $WORK.
 
 You can get all Yocto build environment from Renesas, or download all Yocto related public source to prepare the build environment as below.
 ```bash
@@ -81,6 +86,7 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ git clone https://git.yoctoproject.org/git/meta-gplv2
     $ cd meta-gplv2 
     $ git checkout 60b251c25ba87e946a0ca4cdc8d17b1cb09292ac
+    $ cd ..
     $
     $ git clone  https://github.com/renesas-rz/meta-renesas.git
     $ cd meta-renesas
@@ -98,18 +104,7 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ cd ..
 ```
 \<tag\> can be selected in any tags of meta-renesas.
-Now the latest version is **BSP-3.0.x**
-
-[Optional] If you need GPU/Codec support, or build Weston image, this step helps to copy them to build environment. Copy file proprietary_mmp.tar.gz and vspmfilter.tar.xz to $WORK and do below commands.
-```bash
-    $ tar -xf proprietary_mmp.tar.gz
-    $ cd proprietary_mmp
-    $ ./copy_gfx_mmp.sh ../meta-renesas
-    $ cd ..
-    $
-    $ cp vspmfilter.tar.xz meta-renesas/recipes-common/recipes-multimedia/gstreamer/gstreamer1.0-plugin-vspmfilter
-    $ 
-```
+Now the latest version is **BSP-3.0.x** or **BSP-3.0.x-updatey** if any new updates are applied.
 
 Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
 ```bash
@@ -120,7 +115,15 @@ Prepare default configuration files. :
 ```bash
     $ cp $WORK/meta-renesas/docs/template/conf/<board>/*.conf ./conf/
 ```
-\<board\> : smarc-rzg2l, rzg2l-dev
+\<board\>: can be selected in any platforms:
+* RZ/G2H:  hihope-rzg2h
+* RZ/G2M:  hihope-rzg2m
+* RZ/G2N:  hihope-rzg2n
+* RZ/G2E:  ek874
+* RZ/G2L:  smarc-rzg2l
+* RZ/G2LC: smarc-rzg2lc
+* RZ/G2UL: smarc-rzg2ul
+* RZ/V2L:  smarc-rzv2l, rzv2l-dev
 
 Build the target file system image using bitbake:
 ```bash
@@ -182,4 +185,8 @@ It is possible to change some build configs as below:
   * Allow QT_DEMO: all QT5 Demos are built and included in core-image-qt.
   ```
   QT_DEMO = "1"
+  ```
+* Realtime Linux: choose realtime characteristic of Linux kernel to build with. You can enable this feature by setting the value "1" to IS_RT_BSP variable in local.conf:
+  ```
+  IS_RT_BSP = "1"
   ```
