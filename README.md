@@ -147,6 +147,15 @@ For 64-bit target SDK (aarch64):
 ```bash
     $ bitbake core-image-weston -c populate_sdk
 ```
+When below error occurs during building sdk:
+```bash
+    The basehash value changed. The meta data is not deterministic and this needs to be fixed.
+```
+Please change directory to poky, cherry-pick following commit then rebuild the sdk:
+```bash
+    $ cd poky
+    $ git cherry-pick cfd897e213debb2e32589378b2f5d390a265eb7f
+```
 The SDK can be found in the output directory _'tmp/deploy/sdk'_
 
     poky-glibc-x86_64-core-image-weston-aarch64-toolchain-x.x.sh
