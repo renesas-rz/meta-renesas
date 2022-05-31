@@ -2,7 +2,7 @@ include core-image-weston.inc
 
 update_issue() {
     # Set BSP version
-    BSP_VERSION="2.1.13"
+    BSP_VERSION="2.1.14"
 
     # Set SoC and Board info
     case "${MACHINE}" in
