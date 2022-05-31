@@ -1,0 +1,68 @@
+From 515da13ec1ada883a1f7e2924eb20e1c0ed37732 Mon Sep 17 00:00:00 2001
+From: khatran <kha.tran.px@rvc.renesas.com>
+Date: Fri, 30 Oct 2020 18:00:34 +0700
+Subject: [PATCH 414/433] usb: host: ohci-hcd : Workaround for reboot issue on
+ RZ/G1C
+
+On RZ/G1C platform, ohci and ehci share the same IRQ ID. That may cause
+issue that system fails to handle OHCI interrupt and reboot unexpectedly.
+Working around this by diabling ohci IRQ when ohci is in OHCI_RH_HALTED
+state.
+
+Signed-off-by: khatran <kha.tran.px@rvc.renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@rvc.renesas.com>
+---
+ drivers/usb/host/ohci-hcd.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/host/ohci-hcd.c b/drivers/usb/host/ohci-hcd.c
+index 1cf867b..3a39438 100644
+--- a/drivers/usb/host/ohci-hcd.c
++++ b/drivers/usb/host/ohci-hcd.c
+@@ -80,6 +80,7 @@ static const char	hcd_name [] = "ohci_hcd";
+ static void ohci_dump(struct ohci_hcd *ohci);
+ static void ohci_stop(struct usb_hcd *hcd);
+ static void io_watchdog_func(unsigned long _ohci);
++int is_ohci_shutdown;
+ 
+ #include "ohci-hub.c"
+ #include "ohci-dbg.c"
+@@ -419,6 +420,7 @@ static void _ohci_shutdown(struct usb_hcd *hcd)
+ {
+ 	struct ohci_hcd *ohci;
+ 
++	is_ohci_shutdown = 1;
+ 	ohci = hcd_to_ohci (hcd);
+ 	if (!ohci_readl(ohci, &ohci->regs->intrdisable))
+ 		ohci_writel(ohci, (u32) ~0, &ohci->regs->intrdisable);
+@@ -893,8 +895,25 @@ static irqreturn_t ohci_irq (struct usb_hcd *hcd)
+ 	ints &= ohci_readl(ohci, &regs->intrenable);
+ 
+ 	/* interrupt for some other device? */
+-	if (ints == 0 || unlikely(ohci->rh_state == OHCI_RH_HALTED))
+-		return IRQ_NOTMINE;
++	if (ints == 0 || unlikely(ohci->rh_state == OHCI_RH_HALTED)) {
++		if (is_ohci_shutdown) {
++			if (of_machine_is_compatible("renesas,r8a77470")) {
++				/*
++				* Try to disable the detection of resume
++				* signaling and the change of the status
++				* of root hub before shutdowning ohci
++				*/
++				ohci_writel(ohci, OHCI_INTR_RD,
++						&regs->intrdisable);
++				ohci_writel(ohci, OHCI_INTR_RHSC,
++						&regs->intrdisable);
++				is_ohci_shutdown = 0;
++				return IRQ_HANDLED;
++			}
++		} else {
++			return IRQ_NOTMINE;
++		}
++	}
+ 
+ 	if (ints & OHCI_INTR_UE) {
+ 		// e.g. due to PCI Master/Target Abort
+-- 
+2.7.4
+

@@ -1,0 +1,29 @@
+From 8dbc0b616386d5e0231badfa25e91539e5817d43 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Tue, 28 Jul 2020 11:28:06 +0700
+Subject: [PATCH 166/433] ARM: dts: iwg23s-sbc: Enable tmu1
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index 30c3d63..2e93220 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -240,6 +240,10 @@
+ 	status = "okay";
+ };
+ 
++&tmu1 {
++	status = "okay";
++};
++
+ &sdhi1 {
+ 	pinctrl-0 = <&mmc_pins_uhs>;
+ 	pinctrl-names = "state_uhs";
+-- 
+2.7.4
+

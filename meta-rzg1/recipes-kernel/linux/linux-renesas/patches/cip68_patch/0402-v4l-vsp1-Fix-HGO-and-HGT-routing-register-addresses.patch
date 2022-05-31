@@ -1,0 +1,31 @@
+From 843dffe14db7272c08d8822a68bbf7236543576c Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Wed, 7 Sep 2016 09:36:31 -0300
+Subject: [PATCH 402/433] v4l: vsp1: Fix HGO and HGT routing register addresses
+
+The addresses are incorrect, fix them.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+---
+ drivers/media/platform/vsp1/vsp1_regs.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/vsp1/vsp1_regs.h b/drivers/media/platform/vsp1/vsp1_regs.h
+index 104a632..63eab89 100644
+--- a/drivers/media/platform/vsp1/vsp1_regs.h
++++ b/drivers/media/platform/vsp1/vsp1_regs.h
+@@ -311,8 +311,8 @@
+ #define VI6_DPR_ROUTE_RT_MASK		(0x3f << 0)
+ #define VI6_DPR_ROUTE_RT_SHIFT		0
+ 
+-#define VI6_DPR_HGO_SMPPT		0x2050
+-#define VI6_DPR_HGT_SMPPT		0x2054
++#define VI6_DPR_HGO_SMPPT		0x2054
++#define VI6_DPR_HGT_SMPPT		0x2058
+ #define VI6_DPR_SMPPT_TGW_MASK		(7 << 8)
+ #define VI6_DPR_SMPPT_TGW_SHIFT		8
+ #define VI6_DPR_SMPPT_PT_MASK		(0x3f << 0)
+-- 
+2.7.4
+

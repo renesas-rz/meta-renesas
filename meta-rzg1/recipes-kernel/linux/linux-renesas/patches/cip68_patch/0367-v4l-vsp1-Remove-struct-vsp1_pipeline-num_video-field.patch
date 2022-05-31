@@ -1,0 +1,64 @@
+From af113bcd5ac40a865dc623f784f587e4dcce234a Mon Sep 17 00:00:00 2001
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Date: Sun, 2 Aug 2015 23:17:15 +0300
+Subject: [PATCH 367/433] v4l: vsp1: Remove struct vsp1_pipeline num_video
+ field
+
+The field is always equal to the num_inputs field plus one, remove the
+duplicate.
+
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/media/platform/vsp1/vsp1_video.c | 7 ++-----
+ drivers/media/platform/vsp1/vsp1_video.h | 1 -
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/platform/vsp1/vsp1_video.c b/drivers/media/platform/vsp1/vsp1_video.c
+index 8ffe542..e9c5682 100644
+--- a/drivers/media/platform/vsp1/vsp1_video.c
++++ b/drivers/media/platform/vsp1/vsp1_video.c
+@@ -396,7 +396,6 @@ static void __vsp1_pipeline_cleanup(struct vsp1_pipeline *pipe)
+ 	INIT_LIST_HEAD(&pipe->entities);
+ 	pipe->state = VSP1_PIPELINE_STOPPED;
+ 	pipe->buffers_ready = 0;
+-	pipe->num_video = 0;
+ 	pipe->num_inputs = 0;
+ 	pipe->output = NULL;
+ 	pipe->bru = NULL;
+@@ -423,10 +422,8 @@ static int vsp1_pipeline_validate(struct vsp1_pipeline *pipe,
+ 		struct vsp1_rwpf *rwpf;
+ 		struct vsp1_entity *e;
+ 
+-		if (media_entity_type(entity) != MEDIA_ENT_T_V4L2_SUBDEV) {
+-			pipe->num_video++;
++		if (media_entity_type(entity) != MEDIA_ENT_T_V4L2_SUBDEV)
+ 			continue;
+-		}
+ 
+ 		subdev = media_entity_to_v4l2_subdev(entity);
+ 		e = to_vsp1_entity(subdev);
+@@ -894,7 +891,7 @@ static int vsp1_video_start_streaming(struct vb2_queue *vq, unsigned int count)
+ 	int ret;
+ 
+ 	mutex_lock(&pipe->lock);
+-	if (pipe->stream_count == pipe->num_video - 1) {
++	if (pipe->stream_count == pipe->num_inputs) {
+ 		if (pipe->uds) {
+ 			struct vsp1_uds *uds = to_uds(&pipe->uds->subdev);
+ 
+diff --git a/drivers/media/platform/vsp1/vsp1_video.h b/drivers/media/platform/vsp1/vsp1_video.h
+index 21096d8..e9d0e1a 100644
+--- a/drivers/media/platform/vsp1/vsp1_video.h
++++ b/drivers/media/platform/vsp1/vsp1_video.h
+@@ -75,7 +75,6 @@ struct vsp1_pipeline {
+ 	unsigned int stream_count;
+ 	unsigned int buffers_ready;
+ 
+-	unsigned int num_video;
+ 	unsigned int num_inputs;
+ 	struct vsp1_rwpf *inputs[VSP1_MAX_RPF];
+ 	struct vsp1_rwpf *output;
+-- 
+2.7.4
+

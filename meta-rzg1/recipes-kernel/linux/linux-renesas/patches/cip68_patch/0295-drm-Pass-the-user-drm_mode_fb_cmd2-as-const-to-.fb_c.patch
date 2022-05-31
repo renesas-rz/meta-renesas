@@ -1,0 +1,932 @@
+From bbd01a66341732f8ea7e8ae8ca348bae723e9df0 Mon Sep 17 00:00:00 2001
+From: Duy Dang <duy.dang.yb@renesas.com>
+Date: Wed, 13 Dec 2017 14:13:45 +0700
+Subject: [PATCH 295/433] drm: Pass the user drm_mode_fb_cmd2 as const to
+ .fb_create()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+commit 1eb83451ba55d7a8c82b76b1591894ff2d4a95f2 upstream.
+
+Drivers shouldn't clobber the passed in addfb ioctl parameters.
+i915 was doing just that. To prevent it from happening again,
+pass the struct around as const, starting all the way from
+internal_framebuffer_create().
+
+Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu_display.c  | 4 ++--
+ drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h     | 2 +-
+ drivers/gpu/drm/armada/armada_fb.c           | 4 ++--
+ drivers/gpu/drm/armada/armada_fb.h           | 2 +-
+ drivers/gpu/drm/ast/ast_drv.h                | 2 +-
+ drivers/gpu/drm/ast/ast_fb.c                 | 2 +-
+ drivers/gpu/drm/ast/ast_main.c               | 4 ++--
+ drivers/gpu/drm/atmel-hlcdc/atmel_hlcdc_dc.c | 3 ++-
+ drivers/gpu/drm/bochs/bochs.h                | 2 +-
+ drivers/gpu/drm/bochs/bochs_fbdev.c          | 2 +-
+ drivers/gpu/drm/bochs/bochs_mm.c             | 4 ++--
+ drivers/gpu/drm/cirrus/cirrus_drv.h          | 2 +-
+ drivers/gpu/drm/cirrus/cirrus_fbdev.c        | 2 +-
+ drivers/gpu/drm/cirrus/cirrus_main.c         | 4 ++--
+ drivers/gpu/drm/drm_crtc.c                   | 4 ++--
+ drivers/gpu/drm/drm_crtc_helper.c            | 2 +-
+ drivers/gpu/drm/drm_fb_cma_helper.c          | 7 ++++---
+ drivers/gpu/drm/exynos/exynos_drm_fb.c       | 4 ++--
+ drivers/gpu/drm/exynos/exynos_drm_fb.h       | 2 +-
+ drivers/gpu/drm/gma500/framebuffer.c         | 6 +++---
+ drivers/gpu/drm/i915/intel_display.c         | 2 +-
+ drivers/gpu/drm/mgag200/mgag200_drv.h        | 2 +-
+ drivers/gpu/drm/mgag200/mgag200_fb.c         | 2 +-
+ drivers/gpu/drm/mgag200/mgag200_main.c       | 4 ++--
+ drivers/gpu/drm/msm/msm_drv.h                | 4 ++--
+ drivers/gpu/drm/msm/msm_fb.c                 | 4 ++--
+ drivers/gpu/drm/nouveau/nouveau_display.c    | 4 ++--
+ drivers/gpu/drm/nouveau/nouveau_display.h    | 2 +-
+ drivers/gpu/drm/omapdrm/omap_drv.h           | 6 +++---
+ drivers/gpu/drm/omapdrm/omap_fb.c            | 4 ++--
+ drivers/gpu/drm/qxl/qxl_display.c            | 4 ++--
+ drivers/gpu/drm/qxl/qxl_drv.h                | 2 +-
+ drivers/gpu/drm/qxl/qxl_fb.c                 | 2 +-
+ drivers/gpu/drm/radeon/radeon_display.c      | 4 ++--
+ drivers/gpu/drm/radeon/radeon_mode.h         | 2 +-
+ drivers/gpu/drm/rcar-du/rcar_du_kms.c        | 2 +-
+ drivers/gpu/drm/rockchip/rockchip_drm_fb.c   | 6 +++---
+ drivers/gpu/drm/rockchip/rockchip_drm_fb.h   | 2 +-
+ drivers/gpu/drm/shmobile/shmob_drm_kms.c     | 2 +-
+ drivers/gpu/drm/tegra/drm.h                  | 2 +-
+ drivers/gpu/drm/tegra/fb.c                   | 4 ++--
+ drivers/gpu/drm/tilcdc/tilcdc_drv.c          | 2 +-
+ drivers/gpu/drm/udl/udl_drv.h                | 2 +-
+ drivers/gpu/drm/udl/udl_fb.c                 | 4 ++--
+ drivers/gpu/drm/virtio/virtgpu_display.c     | 4 ++--
+ drivers/gpu/drm/virtio/virtgpu_drv.h         | 2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_kms.c          | 2 +-
+ include/drm/drm_crtc.h                       | 2 +-
+ include/drm/drm_crtc_helper.h                | 2 +-
+ include/drm/drm_fb_cma_helper.h              | 2 +-
+ 50 files changed, 77 insertions(+), 75 deletions(-)
+
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_display.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_display.c
+index 5ff941b..ef0ddad 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_display.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_display.c
+@@ -531,7 +531,7 @@ static const struct drm_framebuffer_funcs amdgpu_fb_funcs = {
+ int
+ amdgpu_framebuffer_init(struct drm_device *dev,
+ 			struct amdgpu_framebuffer *rfb,
+-			struct drm_mode_fb_cmd2 *mode_cmd,
++			const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -548,7 +548,7 @@ amdgpu_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ amdgpu_user_framebuffer_create(struct drm_device *dev,
+ 			       struct drm_file *file_priv,
+-			       struct drm_mode_fb_cmd2 *mode_cmd)
++			       const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj;
+ 	struct amdgpu_framebuffer *amdgpu_fb;
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h b/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
+index 89df787..cfb48e3 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
+@@ -556,7 +556,7 @@ int amdgpu_get_crtc_scanoutpos(struct drm_device *dev, unsigned int pipe,
+ 
+ int amdgpu_framebuffer_init(struct drm_device *dev,
+ 			     struct amdgpu_framebuffer *rfb,
+-			     struct drm_mode_fb_cmd2 *mode_cmd,
++			     const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			     struct drm_gem_object *obj);
+ 
+ int amdgpufb_remove(struct drm_device *dev, struct drm_framebuffer *fb);
+diff --git a/drivers/gpu/drm/armada/armada_fb.c b/drivers/gpu/drm/armada/armada_fb.c
+index 1c90969..5fa4bf2 100644
+--- a/drivers/gpu/drm/armada/armada_fb.c
++++ b/drivers/gpu/drm/armada/armada_fb.c
+@@ -35,7 +35,7 @@ static const struct drm_framebuffer_funcs armada_fb_funcs = {
+ };
+ 
+ struct armada_framebuffer *armada_framebuffer_create(struct drm_device *dev,
+-	struct drm_mode_fb_cmd2 *mode, struct armada_gem_object *obj)
++	const struct drm_mode_fb_cmd2 *mode, struct armada_gem_object *obj)
+ {
+ 	struct armada_framebuffer *dfb;
+ 	uint8_t format, config;
+@@ -101,7 +101,7 @@ struct armada_framebuffer *armada_framebuffer_create(struct drm_device *dev,
+ }
+ 
+ static struct drm_framebuffer *armada_fb_create(struct drm_device *dev,
+-	struct drm_file *dfile, struct drm_mode_fb_cmd2 *mode)
++	struct drm_file *dfile, const struct drm_mode_fb_cmd2 *mode)
+ {
+ 	struct armada_gem_object *obj;
+ 	struct armada_framebuffer *dfb;
+diff --git a/drivers/gpu/drm/armada/armada_fb.h b/drivers/gpu/drm/armada/armada_fb.h
+index ce3f12e..48073c4 100644
+--- a/drivers/gpu/drm/armada/armada_fb.h
++++ b/drivers/gpu/drm/armada/armada_fb.h
+@@ -19,6 +19,6 @@ struct armada_framebuffer {
+ #define drm_fb_obj(fb) drm_fb_to_armada_fb(fb)->obj
+ 
+ struct armada_framebuffer *armada_framebuffer_create(struct drm_device *,
+-	struct drm_mode_fb_cmd2 *, struct armada_gem_object *);
++	const struct drm_mode_fb_cmd2 *, struct armada_gem_object *);
+ 
+ #endif
+diff --git a/drivers/gpu/drm/ast/ast_drv.h b/drivers/gpu/drm/ast/ast_drv.h
+index b5c64ed..31b35911 100644
+--- a/drivers/gpu/drm/ast/ast_drv.h
++++ b/drivers/gpu/drm/ast/ast_drv.h
+@@ -314,7 +314,7 @@ extern void ast_mode_fini(struct drm_device *dev);
+ 
+ int ast_framebuffer_init(struct drm_device *dev,
+ 			 struct ast_framebuffer *ast_fb,
+-			 struct drm_mode_fb_cmd2 *mode_cmd,
++			 const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			 struct drm_gem_object *obj);
+ 
+ int ast_fbdev_init(struct drm_device *dev);
+diff --git a/drivers/gpu/drm/ast/ast_fb.c b/drivers/gpu/drm/ast/ast_fb.c
+index a37e7ea..5320f8c 100644
+--- a/drivers/gpu/drm/ast/ast_fb.c
++++ b/drivers/gpu/drm/ast/ast_fb.c
+@@ -163,7 +163,7 @@ static struct fb_ops astfb_ops = {
+ };
+ 
+ static int astfb_create_object(struct ast_fbdev *afbdev,
+-			       struct drm_mode_fb_cmd2 *mode_cmd,
++			       const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			       struct drm_gem_object **gobj_p)
+ {
+ 	struct drm_device *dev = afbdev->helper.dev;
+diff --git a/drivers/gpu/drm/ast/ast_main.c b/drivers/gpu/drm/ast/ast_main.c
+index 1acebd6..fdfbbb7 100644
+--- a/drivers/gpu/drm/ast/ast_main.c
++++ b/drivers/gpu/drm/ast/ast_main.c
+@@ -377,7 +377,7 @@ static const struct drm_framebuffer_funcs ast_fb_funcs = {
+ 
+ int ast_framebuffer_init(struct drm_device *dev,
+ 			 struct ast_framebuffer *ast_fb,
+-			 struct drm_mode_fb_cmd2 *mode_cmd,
++			 const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			 struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -395,7 +395,7 @@ int ast_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ ast_user_framebuffer_create(struct drm_device *dev,
+ 	       struct drm_file *filp,
+-	       struct drm_mode_fb_cmd2 *mode_cmd)
++	       const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj;
+ 	struct ast_framebuffer *ast_fb;
+diff --git a/drivers/gpu/drm/atmel-hlcdc/atmel_hlcdc_dc.c b/drivers/gpu/drm/atmel-hlcdc/atmel_hlcdc_dc.c
+index 244df0a..597d039 100644
+--- a/drivers/gpu/drm/atmel-hlcdc/atmel_hlcdc_dc.c
++++ b/drivers/gpu/drm/atmel-hlcdc/atmel_hlcdc_dc.c
+@@ -402,7 +402,8 @@ static irqreturn_t atmel_hlcdc_dc_irq_handler(int irq, void *data)
+ }
+ 
+ static struct drm_framebuffer *atmel_hlcdc_fb_create(struct drm_device *dev,
+-		struct drm_file *file_priv, struct drm_mode_fb_cmd2 *mode_cmd)
++				struct drm_file *file_priv,
++				const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	return drm_fb_cma_create(dev, file_priv, mode_cmd);
+ }
+diff --git a/drivers/gpu/drm/bochs/bochs.h b/drivers/gpu/drm/bochs/bochs.h
+index 71f2687..19b5ada 100644
+--- a/drivers/gpu/drm/bochs/bochs.h
++++ b/drivers/gpu/drm/bochs/bochs.h
+@@ -149,7 +149,7 @@ int bochs_dumb_mmap_offset(struct drm_file *file, struct drm_device *dev,
+ 
+ int bochs_framebuffer_init(struct drm_device *dev,
+ 			   struct bochs_framebuffer *gfb,
+-			   struct drm_mode_fb_cmd2 *mode_cmd,
++			   const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			   struct drm_gem_object *obj);
+ int bochs_bo_pin(struct bochs_bo *bo, u32 pl_flag, u64 *gpu_addr);
+ int bochs_bo_unpin(struct bochs_bo *bo);
+diff --git a/drivers/gpu/drm/bochs/bochs_fbdev.c b/drivers/gpu/drm/bochs/bochs_fbdev.c
+index 09a0637..7520bf8 100644
+--- a/drivers/gpu/drm/bochs/bochs_fbdev.c
++++ b/drivers/gpu/drm/bochs/bochs_fbdev.c
+@@ -34,7 +34,7 @@ static struct fb_ops bochsfb_ops = {
+ };
+ 
+ static int bochsfb_create_object(struct bochs_device *bochs,
+-				 struct drm_mode_fb_cmd2 *mode_cmd,
++				 const struct drm_mode_fb_cmd2 *mode_cmd,
+ 				 struct drm_gem_object **gobj_p)
+ {
+ 	struct drm_device *dev = bochs->dev;
+diff --git a/drivers/gpu/drm/bochs/bochs_mm.c b/drivers/gpu/drm/bochs/bochs_mm.c
+index f69e6bf..d812ad0 100644
+--- a/drivers/gpu/drm/bochs/bochs_mm.c
++++ b/drivers/gpu/drm/bochs/bochs_mm.c
+@@ -484,7 +484,7 @@ static const struct drm_framebuffer_funcs bochs_fb_funcs = {
+ 
+ int bochs_framebuffer_init(struct drm_device *dev,
+ 			   struct bochs_framebuffer *gfb,
+-			   struct drm_mode_fb_cmd2 *mode_cmd,
++			   const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			   struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -502,7 +502,7 @@ int bochs_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ bochs_user_framebuffer_create(struct drm_device *dev,
+ 			      struct drm_file *filp,
+-			      struct drm_mode_fb_cmd2 *mode_cmd)
++			      const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj;
+ 	struct bochs_framebuffer *bochs_fb;
+diff --git a/drivers/gpu/drm/cirrus/cirrus_drv.h b/drivers/gpu/drm/cirrus/cirrus_drv.h
+index 7050615..1370a51 100644
+--- a/drivers/gpu/drm/cirrus/cirrus_drv.h
++++ b/drivers/gpu/drm/cirrus/cirrus_drv.h
+@@ -207,7 +207,7 @@ int cirrus_dumb_create(struct drm_file *file,
+ 
+ int cirrus_framebuffer_init(struct drm_device *dev,
+ 			   struct cirrus_framebuffer *gfb,
+-			    struct drm_mode_fb_cmd2 *mode_cmd,
++			    const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			    struct drm_gem_object *obj);
+ 
+ bool cirrus_check_framebuffer(struct cirrus_device *cdev, int width, int height,
+diff --git a/drivers/gpu/drm/cirrus/cirrus_fbdev.c b/drivers/gpu/drm/cirrus/cirrus_fbdev.c
+index 589103b..3b5be72 100644
+--- a/drivers/gpu/drm/cirrus/cirrus_fbdev.c
++++ b/drivers/gpu/drm/cirrus/cirrus_fbdev.c
+@@ -135,7 +135,7 @@ static struct fb_ops cirrusfb_ops = {
+ };
+ 
+ static int cirrusfb_create_object(struct cirrus_fbdev *afbdev,
+-			       struct drm_mode_fb_cmd2 *mode_cmd,
++			       const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			       struct drm_gem_object **gobj_p)
+ {
+ 	struct drm_device *dev = afbdev->helper.dev;
+diff --git a/drivers/gpu/drm/cirrus/cirrus_main.c b/drivers/gpu/drm/cirrus/cirrus_main.c
+index 055fd86..0907715 100644
+--- a/drivers/gpu/drm/cirrus/cirrus_main.c
++++ b/drivers/gpu/drm/cirrus/cirrus_main.c
+@@ -29,7 +29,7 @@ static const struct drm_framebuffer_funcs cirrus_fb_funcs = {
+ 
+ int cirrus_framebuffer_init(struct drm_device *dev,
+ 			    struct cirrus_framebuffer *gfb,
+-			    struct drm_mode_fb_cmd2 *mode_cmd,
++			    const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			    struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -47,7 +47,7 @@ int cirrus_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ cirrus_user_framebuffer_create(struct drm_device *dev,
+ 			       struct drm_file *filp,
+-			       struct drm_mode_fb_cmd2 *mode_cmd)
++			       const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct cirrus_device *cdev = dev->dev_private;
+ 	struct drm_gem_object *obj;
+diff --git a/drivers/gpu/drm/drm_crtc.c b/drivers/gpu/drm/drm_crtc.c
+index 3453844..164552eb 100644
+--- a/drivers/gpu/drm/drm_crtc.c
++++ b/drivers/gpu/drm/drm_crtc.c
+@@ -45,7 +45,7 @@
+ 
+ static struct drm_framebuffer *
+ internal_framebuffer_create(struct drm_device *dev,
+-			    struct drm_mode_fb_cmd2 *r,
++			    const struct drm_mode_fb_cmd2 *r,
+ 			    struct drm_file *file_priv);
+ 
+ /* Avoid boilerplate.  I'm tired of typing. */
+@@ -3235,7 +3235,7 @@ static int framebuffer_check(const struct drm_mode_fb_cmd2 *r)
+ 
+ static struct drm_framebuffer *
+ internal_framebuffer_create(struct drm_device *dev,
+-			    struct drm_mode_fb_cmd2 *r,
++			    const struct drm_mode_fb_cmd2 *r,
+ 			    struct drm_file *file_priv)
+ {
+ 	struct drm_mode_config *config = &dev->mode_config;
+diff --git a/drivers/gpu/drm/drm_crtc_helper.c b/drivers/gpu/drm/drm_crtc_helper.c
+index ef53475..6b4cf25 100644
+--- a/drivers/gpu/drm/drm_crtc_helper.c
++++ b/drivers/gpu/drm/drm_crtc_helper.c
+@@ -818,7 +818,7 @@ EXPORT_SYMBOL(drm_helper_connector_dpms);
+  * metadata fields.
+  */
+ void drm_helper_mode_fill_fb_struct(struct drm_framebuffer *fb,
+-				    struct drm_mode_fb_cmd2 *mode_cmd)
++				    const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	int i;
+ 
+diff --git a/drivers/gpu/drm/drm_fb_cma_helper.c b/drivers/gpu/drm/drm_fb_cma_helper.c
+index c19a625..6211ad6 100644
+--- a/drivers/gpu/drm/drm_fb_cma_helper.c
++++ b/drivers/gpu/drm/drm_fb_cma_helper.c
+@@ -74,8 +74,9 @@ static struct drm_framebuffer_funcs drm_fb_cma_funcs = {
+ };
+ 
+ static struct drm_fb_cma *drm_fb_cma_alloc(struct drm_device *dev,
+-	struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_cma_object **obj,
+-	unsigned int num_planes)
++				const struct drm_mode_fb_cmd2 *mode_cmd,
++				struct drm_gem_cma_object **obj,
++				unsigned int num_planes)
+ {
+ 	struct drm_fb_cma *fb_cma;
+ 	int ret;
+@@ -107,7 +108,7 @@ static struct drm_fb_cma *drm_fb_cma_alloc(struct drm_device *dev,
+  * checked before calling this function.
+  */
+ struct drm_framebuffer *drm_fb_cma_create(struct drm_device *dev,
+-	struct drm_file *file_priv, struct drm_mode_fb_cmd2 *mode_cmd)
++	struct drm_file *file_priv, const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_fb_cma *fb_cma;
+ 	struct drm_gem_cma_object *objs[4];
+diff --git a/drivers/gpu/drm/exynos/exynos_drm_fb.c b/drivers/gpu/drm/exynos/exynos_drm_fb.c
+index fcea28b..49b9bc3 100644
+--- a/drivers/gpu/drm/exynos/exynos_drm_fb.c
++++ b/drivers/gpu/drm/exynos/exynos_drm_fb.c
+@@ -117,7 +117,7 @@ static struct drm_framebuffer_funcs exynos_drm_fb_funcs = {
+ 
+ struct drm_framebuffer *
+ exynos_drm_framebuffer_init(struct drm_device *dev,
+-			    struct drm_mode_fb_cmd2 *mode_cmd,
++			    const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			    struct exynos_drm_gem **exynos_gem,
+ 			    int count)
+ {
+@@ -154,7 +154,7 @@ err:
+ 
+ static struct drm_framebuffer *
+ exynos_user_fb_create(struct drm_device *dev, struct drm_file *file_priv,
+-		      struct drm_mode_fb_cmd2 *mode_cmd)
++		      const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct exynos_drm_gem *exynos_gem[MAX_FB_BUFFER];
+ 	struct drm_gem_object *obj;
+diff --git a/drivers/gpu/drm/exynos/exynos_drm_fb.h b/drivers/gpu/drm/exynos/exynos_drm_fb.h
+index 726a2d4..a8a75ac 100644
+--- a/drivers/gpu/drm/exynos/exynos_drm_fb.h
++++ b/drivers/gpu/drm/exynos/exynos_drm_fb.h
+@@ -18,7 +18,7 @@
+ 
+ struct drm_framebuffer *
+ exynos_drm_framebuffer_init(struct drm_device *dev,
+-			    struct drm_mode_fb_cmd2 *mode_cmd,
++			    const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			    struct exynos_drm_gem **exynos_gem,
+ 			    int count);
+ 
+diff --git a/drivers/gpu/drm/gma500/framebuffer.c b/drivers/gpu/drm/gma500/framebuffer.c
+index ef60bb1..8b975fe 100644
+--- a/drivers/gpu/drm/gma500/framebuffer.c
++++ b/drivers/gpu/drm/gma500/framebuffer.c
+@@ -241,7 +241,7 @@ static struct fb_ops psbfb_unaccel_ops = {
+  */
+ static int psb_framebuffer_init(struct drm_device *dev,
+ 					struct psb_framebuffer *fb,
+-					struct drm_mode_fb_cmd2 *mode_cmd,
++					const struct drm_mode_fb_cmd2 *mode_cmd,
+ 					struct gtt_range *gt)
+ {
+ 	u32 bpp, depth;
+@@ -284,7 +284,7 @@ static int psb_framebuffer_init(struct drm_device *dev,
+ 
+ static struct drm_framebuffer *psb_framebuffer_create
+ 			(struct drm_device *dev,
+-			 struct drm_mode_fb_cmd2 *mode_cmd,
++			 const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			 struct gtt_range *gt)
+ {
+ 	struct psb_framebuffer *fb;
+@@ -488,7 +488,7 @@ out_err1:
+  */
+ static struct drm_framebuffer *psb_user_framebuffer_create
+ 			(struct drm_device *dev, struct drm_file *filp,
+-			 struct drm_mode_fb_cmd2 *cmd)
++			 const struct drm_mode_fb_cmd2 *cmd)
+ {
+ 	struct gtt_range *r;
+ 	struct drm_gem_object *obj;
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index a9166ff..6fdb85d 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -14500,7 +14500,7 @@ static int intel_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ intel_user_framebuffer_create(struct drm_device *dev,
+ 			      struct drm_file *filp,
+-			      struct drm_mode_fb_cmd2 *user_mode_cmd)
++			      const struct drm_mode_fb_cmd2 *user_mode_cmd)
+ {
+ 	struct drm_i915_gem_object *obj;
+ 	struct drm_mode_fb_cmd2 mode_cmd = *user_mode_cmd;
+diff --git a/drivers/gpu/drm/mgag200/mgag200_drv.h b/drivers/gpu/drm/mgag200/mgag200_drv.h
+index 912151c..205b280 100644
+--- a/drivers/gpu/drm/mgag200/mgag200_drv.h
++++ b/drivers/gpu/drm/mgag200/mgag200_drv.h
+@@ -252,7 +252,7 @@ void mgag200_fbdev_fini(struct mga_device *mdev);
+ 				/* mgag200_main.c */
+ int mgag200_framebuffer_init(struct drm_device *dev,
+ 			     struct mga_framebuffer *mfb,
+-			     struct drm_mode_fb_cmd2 *mode_cmd,
++			     const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			     struct drm_gem_object *obj);
+ 
+ 
+diff --git a/drivers/gpu/drm/mgag200/mgag200_fb.c b/drivers/gpu/drm/mgag200/mgag200_fb.c
+index b35b5b2..d9b04b0 100644
+--- a/drivers/gpu/drm/mgag200/mgag200_fb.c
++++ b/drivers/gpu/drm/mgag200/mgag200_fb.c
+@@ -138,7 +138,7 @@ static struct fb_ops mgag200fb_ops = {
+ };
+ 
+ static int mgag200fb_create_object(struct mga_fbdev *afbdev,
+-				   struct drm_mode_fb_cmd2 *mode_cmd,
++				   const struct drm_mode_fb_cmd2 *mode_cmd,
+ 				   struct drm_gem_object **gobj_p)
+ {
+ 	struct drm_device *dev = afbdev->helper.dev;
+diff --git a/drivers/gpu/drm/mgag200/mgag200_main.c b/drivers/gpu/drm/mgag200/mgag200_main.c
+index 44df959..8b62925 100644
+--- a/drivers/gpu/drm/mgag200/mgag200_main.c
++++ b/drivers/gpu/drm/mgag200/mgag200_main.c
+@@ -29,7 +29,7 @@ static const struct drm_framebuffer_funcs mga_fb_funcs = {
+ 
+ int mgag200_framebuffer_init(struct drm_device *dev,
+ 			     struct mga_framebuffer *gfb,
+-			     struct drm_mode_fb_cmd2 *mode_cmd,
++			     const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			     struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -47,7 +47,7 @@ int mgag200_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ mgag200_user_framebuffer_create(struct drm_device *dev,
+ 				struct drm_file *filp,
+-				struct drm_mode_fb_cmd2 *mode_cmd)
++				const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj;
+ 	struct mga_framebuffer *mga_fb;
+diff --git a/drivers/gpu/drm/msm/msm_drv.h b/drivers/gpu/drm/msm/msm_drv.h
+index 026e156..2806b06 100644
+--- a/drivers/gpu/drm/msm/msm_drv.h
++++ b/drivers/gpu/drm/msm/msm_drv.h
+@@ -241,9 +241,9 @@ uint32_t msm_framebuffer_iova(struct drm_framebuffer *fb, int id, int plane);
+ struct drm_gem_object *msm_framebuffer_bo(struct drm_framebuffer *fb, int plane);
+ const struct msm_format *msm_framebuffer_format(struct drm_framebuffer *fb);
+ struct drm_framebuffer *msm_framebuffer_init(struct drm_device *dev,
+-		struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos);
++		const struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos);
+ struct drm_framebuffer *msm_framebuffer_create(struct drm_device *dev,
+-		struct drm_file *file, struct drm_mode_fb_cmd2 *mode_cmd);
++		struct drm_file *file, const struct drm_mode_fb_cmd2 *mode_cmd);
+ 
+ struct drm_fb_helper *msm_fbdev_init(struct drm_device *dev);
+ 
+diff --git a/drivers/gpu/drm/msm/msm_fb.c b/drivers/gpu/drm/msm/msm_fb.c
+index 12171328..a474d6c 100644
+--- a/drivers/gpu/drm/msm/msm_fb.c
++++ b/drivers/gpu/drm/msm/msm_fb.c
+@@ -138,7 +138,7 @@ const struct msm_format *msm_framebuffer_format(struct drm_framebuffer *fb)
+ }
+ 
+ struct drm_framebuffer *msm_framebuffer_create(struct drm_device *dev,
+-		struct drm_file *file, struct drm_mode_fb_cmd2 *mode_cmd)
++		struct drm_file *file, const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *bos[4] = {0};
+ 	struct drm_framebuffer *fb;
+@@ -168,7 +168,7 @@ out_unref:
+ }
+ 
+ struct drm_framebuffer *msm_framebuffer_init(struct drm_device *dev,
+-		struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos)
++		const struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos)
+ {
+ 	struct msm_drm_private *priv = dev->dev_private;
+ 	struct msm_kms *kms = priv->kms;
+diff --git a/drivers/gpu/drm/nouveau/nouveau_display.c b/drivers/gpu/drm/nouveau/nouveau_display.c
+index 9dfc247..68c55b6 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_display.c
++++ b/drivers/gpu/drm/nouveau/nouveau_display.c
+@@ -246,7 +246,7 @@ static const struct drm_framebuffer_funcs nouveau_framebuffer_funcs = {
+ int
+ nouveau_framebuffer_init(struct drm_device *dev,
+ 			 struct nouveau_framebuffer *nv_fb,
+-			 struct drm_mode_fb_cmd2 *mode_cmd,
++			 const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			 struct nouveau_bo *nvbo)
+ {
+ 	struct nouveau_display *disp = nouveau_display(dev);
+@@ -272,7 +272,7 @@ nouveau_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ nouveau_user_framebuffer_create(struct drm_device *dev,
+ 				struct drm_file *file_priv,
+-				struct drm_mode_fb_cmd2 *mode_cmd)
++				const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct nouveau_framebuffer *nouveau_fb;
+ 	struct drm_gem_object *gem;
+diff --git a/drivers/gpu/drm/nouveau/nouveau_display.h b/drivers/gpu/drm/nouveau/nouveau_display.h
+index 856abe0..5a57d8b 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_display.h
++++ b/drivers/gpu/drm/nouveau/nouveau_display.h
+@@ -23,7 +23,7 @@ nouveau_framebuffer(struct drm_framebuffer *fb)
+ }
+ 
+ int nouveau_framebuffer_init(struct drm_device *, struct nouveau_framebuffer *,
+-			     struct drm_mode_fb_cmd2 *, struct nouveau_bo *);
++			     const struct drm_mode_fb_cmd2 *, struct nouveau_bo *);
+ 
+ struct nouveau_page_flip_state {
+ 	struct list_head head;
+diff --git a/drivers/gpu/drm/omapdrm/omap_drv.h b/drivers/gpu/drm/omapdrm/omap_drv.h
+index 5c367aa..130fca7 100644
+--- a/drivers/gpu/drm/omapdrm/omap_drv.h
++++ b/drivers/gpu/drm/omapdrm/omap_drv.h
+@@ -172,9 +172,9 @@ void copy_timings_drm_to_omap(struct omap_video_timings *timings,
+ uint32_t omap_framebuffer_get_formats(uint32_t *pixel_formats,
+ 		uint32_t max_formats, enum omap_color_mode supported_modes);
+ struct drm_framebuffer *omap_framebuffer_create(struct drm_device *dev,
+-		struct drm_file *file, struct drm_mode_fb_cmd2 *mode_cmd);
++		struct drm_file *file, const struct drm_mode_fb_cmd2 *mode_cmd);
+ struct drm_framebuffer *omap_framebuffer_init(struct drm_device *dev,
+-		struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos);
++		const struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos);
+ struct drm_gem_object *omap_framebuffer_bo(struct drm_framebuffer *fb, int p);
+ int omap_framebuffer_pin(struct drm_framebuffer *fb);
+ void omap_framebuffer_unpin(struct drm_framebuffer *fb);
+@@ -248,7 +248,7 @@ struct omap_dss_device *omap_encoder_get_dssdev(struct drm_encoder *encoder);
+ 
+ static inline int objects_lookup(struct drm_device *dev,
+ 		struct drm_file *filp, uint32_t pixel_format,
+-		struct drm_gem_object **bos, uint32_t *handles)
++		struct drm_gem_object **bos, const uint32_t *handles)
+ {
+ 	int i, n = drm_format_num_planes(pixel_format);
+ 
+diff --git a/drivers/gpu/drm/omapdrm/omap_fb.c b/drivers/gpu/drm/omapdrm/omap_fb.c
+index 636a1f9..ad202df 100644
+--- a/drivers/gpu/drm/omapdrm/omap_fb.c
++++ b/drivers/gpu/drm/omapdrm/omap_fb.c
+@@ -364,7 +364,7 @@ void omap_framebuffer_describe(struct drm_framebuffer *fb, struct seq_file *m)
+ #endif
+ 
+ struct drm_framebuffer *omap_framebuffer_create(struct drm_device *dev,
+-		struct drm_file *file, struct drm_mode_fb_cmd2 *mode_cmd)
++		struct drm_file *file, const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *bos[4];
+ 	struct drm_framebuffer *fb;
+@@ -386,7 +386,7 @@ struct drm_framebuffer *omap_framebuffer_create(struct drm_device *dev,
+ }
+ 
+ struct drm_framebuffer *omap_framebuffer_init(struct drm_device *dev,
+-		struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos)
++		const struct drm_mode_fb_cmd2 *mode_cmd, struct drm_gem_object **bos)
+ {
+ 	struct omap_framebuffer *omap_fb = NULL;
+ 	struct drm_framebuffer *fb = NULL;
+diff --git a/drivers/gpu/drm/qxl/qxl_display.c b/drivers/gpu/drm/qxl/qxl_display.c
+index 0d6cc39..d4a2dec 100644
+--- a/drivers/gpu/drm/qxl/qxl_display.c
++++ b/drivers/gpu/drm/qxl/qxl_display.c
+@@ -526,7 +526,7 @@ static const struct drm_framebuffer_funcs qxl_fb_funcs = {
+ int
+ qxl_framebuffer_init(struct drm_device *dev,
+ 		     struct qxl_framebuffer *qfb,
+-		     struct drm_mode_fb_cmd2 *mode_cmd,
++		     const struct drm_mode_fb_cmd2 *mode_cmd,
+ 		     struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -1008,7 +1008,7 @@ static int qdev_output_init(struct drm_device *dev, int num_output)
+ static struct drm_framebuffer *
+ qxl_user_framebuffer_create(struct drm_device *dev,
+ 			    struct drm_file *file_priv,
+-			    struct drm_mode_fb_cmd2 *mode_cmd)
++			    const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj;
+ 	struct qxl_framebuffer *qxl_fb;
+diff --git a/drivers/gpu/drm/qxl/qxl_drv.h b/drivers/gpu/drm/qxl/qxl_drv.h
+index 3ab9017..3f3897e 100644
+--- a/drivers/gpu/drm/qxl/qxl_drv.h
++++ b/drivers/gpu/drm/qxl/qxl_drv.h
+@@ -392,7 +392,7 @@ void qxl_fbdev_set_suspend(struct qxl_device *qdev, int state);
+ int
+ qxl_framebuffer_init(struct drm_device *dev,
+ 		     struct qxl_framebuffer *rfb,
+-		     struct drm_mode_fb_cmd2 *mode_cmd,
++		     const struct drm_mode_fb_cmd2 *mode_cmd,
+ 		     struct drm_gem_object *obj);
+ void qxl_display_read_client_monitors_config(struct qxl_device *qdev);
+ void qxl_send_monitors_config(struct qxl_device *qdev);
+diff --git a/drivers/gpu/drm/qxl/qxl_fb.c b/drivers/gpu/drm/qxl/qxl_fb.c
+index 3ff7689..805a349 100644
+--- a/drivers/gpu/drm/qxl/qxl_fb.c
++++ b/drivers/gpu/drm/qxl/qxl_fb.c
+@@ -283,7 +283,7 @@ int qxl_get_handle_for_primary_fb(struct qxl_device *qdev,
+ }
+ 
+ static int qxlfb_create_pinned_object(struct qxl_fbdev *qfbdev,
+-				      struct drm_mode_fb_cmd2 *mode_cmd,
++				      const struct drm_mode_fb_cmd2 *mode_cmd,
+ 				      struct drm_gem_object **gobj_p)
+ {
+ 	struct qxl_device *qdev = qfbdev->qdev;
+diff --git a/drivers/gpu/drm/radeon/radeon_display.c b/drivers/gpu/drm/radeon/radeon_display.c
+index 17c73b8..8f94fc9 100644
+--- a/drivers/gpu/drm/radeon/radeon_display.c
++++ b/drivers/gpu/drm/radeon/radeon_display.c
+@@ -1348,7 +1348,7 @@ static const struct drm_framebuffer_funcs radeon_fb_funcs = {
+ int
+ radeon_framebuffer_init(struct drm_device *dev,
+ 			struct radeon_framebuffer *rfb,
+-			struct drm_mode_fb_cmd2 *mode_cmd,
++			const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -1365,7 +1365,7 @@ radeon_framebuffer_init(struct drm_device *dev,
+ static struct drm_framebuffer *
+ radeon_user_framebuffer_create(struct drm_device *dev,
+ 			       struct drm_file *file_priv,
+-			       struct drm_mode_fb_cmd2 *mode_cmd)
++			       const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj;
+ 	struct radeon_framebuffer *radeon_fb;
+diff --git a/drivers/gpu/drm/radeon/radeon_mode.h b/drivers/gpu/drm/radeon/radeon_mode.h
+index d8f8be6..f1da484 100644
+--- a/drivers/gpu/drm/radeon/radeon_mode.h
++++ b/drivers/gpu/drm/radeon/radeon_mode.h
+@@ -937,7 +937,7 @@ extern void radeon_crtc_fb_gamma_get(struct drm_crtc *crtc, u16 *red, u16 *green
+ 				     u16 *blue, int regno);
+ int radeon_framebuffer_init(struct drm_device *dev,
+ 			     struct radeon_framebuffer *rfb,
+-			     struct drm_mode_fb_cmd2 *mode_cmd,
++			     const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			     struct drm_gem_object *obj);
+ 
+ int radeonfb_remove(struct drm_device *dev, struct drm_framebuffer *fb);
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_kms.c b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+index 2b75a48..817e2f4 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_kms.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_kms.c
+@@ -136,7 +136,7 @@ int rcar_du_dumb_create(struct drm_file *file, struct drm_device *dev,
+ 
+ static struct drm_framebuffer *
+ rcar_du_fb_create(struct drm_device *dev, struct drm_file *file_priv,
+-		  struct drm_mode_fb_cmd2 *mode_cmd)
++		  const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct rcar_du_device *rcdu = dev->dev_private;
+ 	const struct rcar_du_format_info *format;
+diff --git a/drivers/gpu/drm/rockchip/rockchip_drm_fb.c b/drivers/gpu/drm/rockchip/rockchip_drm_fb.c
+index 002645b..b8ac5911 100644
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_fb.c
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_fb.c
+@@ -72,7 +72,7 @@ static struct drm_framebuffer_funcs rockchip_drm_fb_funcs = {
+ };
+ 
+ static struct rockchip_drm_fb *
+-rockchip_fb_alloc(struct drm_device *dev, struct drm_mode_fb_cmd2 *mode_cmd,
++rockchip_fb_alloc(struct drm_device *dev, const struct drm_mode_fb_cmd2 *mode_cmd,
+ 		  struct drm_gem_object **obj, unsigned int num_planes)
+ {
+ 	struct rockchip_drm_fb *rockchip_fb;
+@@ -102,7 +102,7 @@ rockchip_fb_alloc(struct drm_device *dev, struct drm_mode_fb_cmd2 *mode_cmd,
+ 
+ static struct drm_framebuffer *
+ rockchip_user_fb_create(struct drm_device *dev, struct drm_file *file_priv,
+-			struct drm_mode_fb_cmd2 *mode_cmd)
++			const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct rockchip_drm_fb *rockchip_fb;
+ 	struct drm_gem_object *objs[ROCKCHIP_MAX_FB_BUFFER];
+@@ -173,7 +173,7 @@ static const struct drm_mode_config_funcs rockchip_drm_mode_config_funcs = {
+ 
+ struct drm_framebuffer *
+ rockchip_drm_framebuffer_init(struct drm_device *dev,
+-			      struct drm_mode_fb_cmd2 *mode_cmd,
++			      const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			      struct drm_gem_object *obj)
+ {
+ 	struct rockchip_drm_fb *rockchip_fb;
+diff --git a/drivers/gpu/drm/rockchip/rockchip_drm_fb.h b/drivers/gpu/drm/rockchip/rockchip_drm_fb.h
+index 09574d4..2fe47f1 100644
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_fb.h
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_fb.h
+@@ -17,7 +17,7 @@
+ 
+ struct drm_framebuffer *
+ rockchip_drm_framebuffer_init(struct drm_device *dev,
+-			      struct drm_mode_fb_cmd2 *mode_cmd,
++			      const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			      struct drm_gem_object *obj);
+ void rockchip_drm_framebuffer_fini(struct drm_framebuffer *fb);
+ 
+diff --git a/drivers/gpu/drm/shmobile/shmob_drm_kms.c b/drivers/gpu/drm/shmobile/shmob_drm_kms.c
+index aaf98ac..388a0fc 100644
+--- a/drivers/gpu/drm/shmobile/shmob_drm_kms.c
++++ b/drivers/gpu/drm/shmobile/shmob_drm_kms.c
+@@ -104,7 +104,7 @@ const struct shmob_drm_format_info *shmob_drm_format_info(u32 fourcc)
+ 
+ static struct drm_framebuffer *
+ shmob_drm_fb_create(struct drm_device *dev, struct drm_file *file_priv,
+-		    struct drm_mode_fb_cmd2 *mode_cmd)
++		    const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	const struct shmob_drm_format_info *format;
+ 
+diff --git a/drivers/gpu/drm/tegra/drm.h b/drivers/gpu/drm/tegra/drm.h
+index ec49275..5ff5af3 100644
+--- a/drivers/gpu/drm/tegra/drm.h
++++ b/drivers/gpu/drm/tegra/drm.h
+@@ -268,7 +268,7 @@ int tegra_fb_get_tiling(struct drm_framebuffer *framebuffer,
+ 			struct tegra_bo_tiling *tiling);
+ struct drm_framebuffer *tegra_fb_create(struct drm_device *drm,
+ 					struct drm_file *file,
+-					struct drm_mode_fb_cmd2 *cmd);
++					const struct drm_mode_fb_cmd2 *cmd);
+ int tegra_drm_fb_prepare(struct drm_device *drm);
+ void tegra_drm_fb_free(struct drm_device *drm);
+ int tegra_drm_fb_init(struct drm_device *drm);
+diff --git a/drivers/gpu/drm/tegra/fb.c b/drivers/gpu/drm/tegra/fb.c
+index 1004075..bf81dab 100644
+--- a/drivers/gpu/drm/tegra/fb.c
++++ b/drivers/gpu/drm/tegra/fb.c
+@@ -92,7 +92,7 @@ static struct drm_framebuffer_funcs tegra_fb_funcs = {
+ };
+ 
+ static struct tegra_fb *tegra_fb_alloc(struct drm_device *drm,
+-				       struct drm_mode_fb_cmd2 *mode_cmd,
++				       const struct drm_mode_fb_cmd2 *mode_cmd,
+ 				       struct tegra_bo **planes,
+ 				       unsigned int num_planes)
+ {
+@@ -131,7 +131,7 @@ static struct tegra_fb *tegra_fb_alloc(struct drm_device *drm,
+ 
+ struct drm_framebuffer *tegra_fb_create(struct drm_device *drm,
+ 					struct drm_file *file,
+-					struct drm_mode_fb_cmd2 *cmd)
++					const struct drm_mode_fb_cmd2 *cmd)
+ {
+ 	unsigned int hsub, vsub, i;
+ 	struct tegra_bo *planes[4];
+diff --git a/drivers/gpu/drm/tilcdc/tilcdc_drv.c b/drivers/gpu/drm/tilcdc/tilcdc_drv.c
+index 876cad5..4ddb21e 100644
+--- a/drivers/gpu/drm/tilcdc/tilcdc_drv.c
++++ b/drivers/gpu/drm/tilcdc/tilcdc_drv.c
+@@ -46,7 +46,7 @@ void tilcdc_module_cleanup(struct tilcdc_module *mod)
+ static struct of_device_id tilcdc_of_match[];
+ 
+ static struct drm_framebuffer *tilcdc_fb_create(struct drm_device *dev,
+-		struct drm_file *file_priv, struct drm_mode_fb_cmd2 *mode_cmd)
++		struct drm_file *file_priv, const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	return drm_fb_cma_create(dev, file_priv, mode_cmd);
+ }
+diff --git a/drivers/gpu/drm/udl/udl_drv.h b/drivers/gpu/drm/udl/udl_drv.h
+index 80adbac..4a064ef 100644
+--- a/drivers/gpu/drm/udl/udl_drv.h
++++ b/drivers/gpu/drm/udl/udl_drv.h
+@@ -108,7 +108,7 @@ void udl_fbdev_unplug(struct drm_device *dev);
+ struct drm_framebuffer *
+ udl_fb_user_fb_create(struct drm_device *dev,
+ 		      struct drm_file *file,
+-		      struct drm_mode_fb_cmd2 *mode_cmd);
++		      const struct drm_mode_fb_cmd2 *mode_cmd);
+ 
+ int udl_render_hline(struct drm_device *dev, int bpp, struct urb **urb_ptr,
+ 		     const char *front, char **urb_buf_ptr,
+diff --git a/drivers/gpu/drm/udl/udl_fb.c b/drivers/gpu/drm/udl/udl_fb.c
+index 0c648ef..39a5bb9 100644
+--- a/drivers/gpu/drm/udl/udl_fb.c
++++ b/drivers/gpu/drm/udl/udl_fb.c
+@@ -461,7 +461,7 @@ static const struct drm_framebuffer_funcs udlfb_funcs = {
+ static int
+ udl_framebuffer_init(struct drm_device *dev,
+ 		     struct udl_framebuffer *ufb,
+-		     struct drm_mode_fb_cmd2 *mode_cmd,
++		     const struct drm_mode_fb_cmd2 *mode_cmd,
+ 		     struct udl_gem_object *obj)
+ {
+ 	int ret;
+@@ -629,7 +629,7 @@ void udl_fbdev_unplug(struct drm_device *dev)
+ struct drm_framebuffer *
+ udl_fb_user_fb_create(struct drm_device *dev,
+ 		   struct drm_file *file,
+-		   struct drm_mode_fb_cmd2 *mode_cmd)
++		   const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj;
+ 	struct udl_framebuffer *ufb;
+diff --git a/drivers/gpu/drm/virtio/virtgpu_display.c b/drivers/gpu/drm/virtio/virtgpu_display.c
+index 578fe0a..8e6044d 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_display.c
++++ b/drivers/gpu/drm/virtio/virtgpu_display.c
+@@ -215,7 +215,7 @@ static const struct drm_framebuffer_funcs virtio_gpu_fb_funcs = {
+ int
+ virtio_gpu_framebuffer_init(struct drm_device *dev,
+ 			    struct virtio_gpu_framebuffer *vgfb,
+-			    struct drm_mode_fb_cmd2 *mode_cmd,
++			    const struct drm_mode_fb_cmd2 *mode_cmd,
+ 			    struct drm_gem_object *obj)
+ {
+ 	int ret;
+@@ -465,7 +465,7 @@ static int vgdev_output_init(struct virtio_gpu_device *vgdev, int index)
+ static struct drm_framebuffer *
+ virtio_gpu_user_framebuffer_create(struct drm_device *dev,
+ 				   struct drm_file *file_priv,
+-				   struct drm_mode_fb_cmd2 *mode_cmd)
++				   const struct drm_mode_fb_cmd2 *mode_cmd)
+ {
+ 	struct drm_gem_object *obj = NULL;
+ 	struct virtio_gpu_framebuffer *virtio_gpu_fb;
+diff --git a/drivers/gpu/drm/virtio/virtgpu_drv.h b/drivers/gpu/drm/virtio/virtgpu_drv.h
+index 79f0abe..8f486f4 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_drv.h
++++ b/drivers/gpu/drm/virtio/virtgpu_drv.h
+@@ -328,7 +328,7 @@ void virtio_gpu_dequeue_fence_func(struct work_struct *work);
+ /* virtio_gpu_display.c */
+ int virtio_gpu_framebuffer_init(struct drm_device *dev,
+ 				struct virtio_gpu_framebuffer *vgfb,
+-				struct drm_mode_fb_cmd2 *mode_cmd,
++				const struct drm_mode_fb_cmd2 *mode_cmd,
+ 				struct drm_gem_object *obj);
+ int virtio_gpu_modeset_init(struct virtio_gpu_device *vgdev);
+ void virtio_gpu_modeset_fini(struct virtio_gpu_device *vgdev);
+diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c b/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c
+index 0b7427d..6761221 100644
+--- a/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c
++++ b/drivers/gpu/drm/vmwgfx/vmwgfx_kms.c
+@@ -971,7 +971,7 @@ vmw_kms_new_framebuffer(struct vmw_private *dev_priv,
+ 
+ static struct drm_framebuffer *vmw_kms_fb_create(struct drm_device *dev,
+ 						 struct drm_file *file_priv,
+-						 struct drm_mode_fb_cmd2 *mode_cmd2)
++						 const struct drm_mode_fb_cmd2 *mode_cmd2)
+ {
+ 	struct vmw_private *dev_priv = vmw_priv(dev);
+ 	struct ttm_object_file *tfile = vmw_fpriv(file_priv)->tfile;
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 3f0c690..bd27364 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -992,7 +992,7 @@ struct drm_mode_set {
+ struct drm_mode_config_funcs {
+ 	struct drm_framebuffer *(*fb_create)(struct drm_device *dev,
+ 					     struct drm_file *file_priv,
+-					     struct drm_mode_fb_cmd2 *mode_cmd);
++					     const struct drm_mode_fb_cmd2 *mode_cmd);
+ 	void (*output_poll_changed)(struct drm_device *dev);
+ 
+ 	int (*atomic_check)(struct drm_device *dev,
+diff --git a/include/drm/drm_crtc_helper.h b/include/drm/drm_crtc_helper.h
+index d842bec..04f30ff 100644
+--- a/include/drm/drm_crtc_helper.h
++++ b/include/drm/drm_crtc_helper.h
+@@ -197,7 +197,7 @@ extern int drm_helper_connector_dpms(struct drm_connector *connector, int mode);
+ extern void drm_helper_move_panel_connectors_to_head(struct drm_device *);
+ 
+ extern void drm_helper_mode_fill_fb_struct(struct drm_framebuffer *fb,
+-					   struct drm_mode_fb_cmd2 *mode_cmd);
++					   const struct drm_mode_fb_cmd2 *mode_cmd);
+ 
+ static inline void drm_crtc_helper_add(struct drm_crtc *crtc,
+ 				       const struct drm_crtc_helper_funcs *funcs)
+diff --git a/include/drm/drm_fb_cma_helper.h b/include/drm/drm_fb_cma_helper.h
+index c54cf3d..be62bd3 100644
+--- a/include/drm/drm_fb_cma_helper.h
++++ b/include/drm/drm_fb_cma_helper.h
+@@ -18,7 +18,7 @@ void drm_fbdev_cma_restore_mode(struct drm_fbdev_cma *fbdev_cma);
+ void drm_fbdev_cma_hotplug_event(struct drm_fbdev_cma *fbdev_cma);
+ 
+ struct drm_framebuffer *drm_fb_cma_create(struct drm_device *dev,
+-	struct drm_file *file_priv, struct drm_mode_fb_cmd2 *mode_cmd);
++	struct drm_file *file_priv, const struct drm_mode_fb_cmd2 *mode_cmd);
+ 
+ struct drm_gem_cma_object *drm_fb_cma_get_gem_obj(struct drm_framebuffer *fb,
+ 	unsigned int plane);
+-- 
+2.7.4
+

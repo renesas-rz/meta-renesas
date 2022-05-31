@@ -1,0 +1,27 @@
+From 339254eb2261c5b436a146bd8ba702ce5f9ae3b1 Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+Date: Tue, 10 Apr 2018 08:41:55 +0700
+Subject: [PATCH 274/433] pwm: pwm-rcar: Add support for R8A77470
+
+Add support for the Renesas R8A77470 (RZ/G1C) SoC.
+
+Signed-off-by: Quynh Nguyen <quynh.nguyen.xb@renesas.com>
+---
+ drivers/pwm/pwm-rcar.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pwm/pwm-rcar.c b/drivers/pwm/pwm-rcar.c
+index 3b363f3..ca2874e 100644
+--- a/drivers/pwm/pwm-rcar.c
++++ b/drivers/pwm/pwm-rcar.c
+@@ -254,6 +254,7 @@ static int rcar_pwm_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id rcar_pwm_of_table[] = {
+ 	{ .compatible = "renesas,pwm-rcar", },
++	{ .compatible = "renesas,pwm-r8a77470", },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, rcar_pwm_of_table);
+-- 
+2.7.4
+

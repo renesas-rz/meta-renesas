@@ -1,0 +1,46 @@
+From afc1ccbc15e272bcd45760f68cae6c8e5e790399 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Date: Tue, 17 Apr 2018 09:56:36 +0700
+Subject: [PATCH 087/433] ARM: dts: r8a7742-iwg21d-q7: Support UHS-I SDR50 mode
+ for sdhi2
+
+This patch adds UHS-I pin state with power-source 1.8V to enable UHS-I
+(SDH50) for SDHI2.
+
+Signed-off-by: hienhuynh <hien.huynh.px@rvc.renenas.com>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742-iwg21d-q7.dts | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+index e876ba63..3bbb152 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21d-q7.dts
+@@ -313,6 +313,12 @@
+ 		power-source = <3300>;
+ 	};
+ 
++	sdhi2_pins_uhs: sd2_uhs {
++		groups = "sdhi2_data4", "sdhi2_ctrl";
++		function = "sdhi2";
++		power-source = <1800>;
++	};
++
+ 	sound_pins: sound {
+ 		groups = "ssi34_ctrl", "ssi3_data", "ssi4_data";
+ 		function = "ssi";
+@@ -359,7 +365,8 @@
+ 
+ &sdhi2 {
+ 	pinctrl-0 = <&sdhi2_pins>;
+-	pinctrl-names = "default";
++	pinctrl-1 = <&sdhi2_pins_uhs>;
++	pinctrl-names = "default", "state_uhs";
+ 
+ 	vmmc-supply = <&vcc_sdhi2>;
+ 	vqmmc-supply = <&vccq_sdhi2>;
+-- 
+2.7.4
+

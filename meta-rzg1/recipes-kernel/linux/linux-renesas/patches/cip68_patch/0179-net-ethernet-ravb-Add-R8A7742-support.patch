@@ -1,0 +1,27 @@
+From 4467c73d86f41d8b2c6c42b909e442fe719f6bd8 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Wed, 14 Oct 2020 11:17:44 +0700
+Subject: [PATCH 179/433] net: ethernet: ravb: Add R8A7742 support
+
+Add support for R8A7742 (RZ/G1H) SoC.
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ drivers/net/ethernet/renesas/ravb_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index 44d283b..74db34b 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -1719,6 +1719,7 @@ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,etheravb-rcar-gen2", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7795", .data = (void *)RCAR_GEN3 },
+ 	{ .compatible = "renesas,etheravb-rcar-gen3", .data = (void *)RCAR_GEN3 },
++	{ .compatible = "renesas,etheravb-r8a7742", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7743", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7744", .data = (void *)RCAR_GEN2 },
+ 	{ .compatible = "renesas,etheravb-r8a7745", .data = (void *)RCAR_GEN2 },
+-- 
+2.7.4
+

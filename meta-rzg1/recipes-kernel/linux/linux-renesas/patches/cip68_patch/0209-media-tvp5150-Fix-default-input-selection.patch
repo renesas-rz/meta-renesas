@@ -1,0 +1,27 @@
+From 1b0f45db0ed86aac386664d68ced112c163461b8 Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Linh [FGA.BU13]" <LinhNV25@fsoft.com.vn>
+Date: Tue, 26 Dec 2017 02:10:04 -0500
+Subject: [PATCH 209/433] media: tvp5150: Fix default input selection
+
+Signed-off-by: Nguyen Van Linh [FGA.BU13] <LinhNV25@fsoft.com.vn>
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drivers/media/i2c/tvp5150.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/tvp5150.c b/drivers/media/i2c/tvp5150.c
+index 442c4d4..6fed486 100644
+--- a/drivers/media/i2c/tvp5150.c
++++ b/drivers/media/i2c/tvp5150.c
+@@ -1208,7 +1208,7 @@ static int tvp5150_probe(struct i2c_client *c,
+ 	}
+ 
+ 	core->norm = V4L2_STD_ALL;	/* Default is autodetect */
+-	core->input = TVP5150_COMPOSITE1;
++	core->input = TVP5150_COMPOSITE0;
+ 	core->enable = 1;
+ 
+ 	v4l2_ctrl_handler_init(&core->hdl, 5);
+-- 
+2.7.4
+

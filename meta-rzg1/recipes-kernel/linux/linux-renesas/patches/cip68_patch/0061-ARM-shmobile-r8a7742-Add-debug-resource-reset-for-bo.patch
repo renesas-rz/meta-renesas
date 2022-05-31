@@ -1,0 +1,59 @@
+From 6e68f123d4a96035637c1da4062e6eb04c6262b4 Mon Sep 17 00:00:00 2001
+From: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+Date: Wed, 7 Oct 2020 13:26:36 +0700
+Subject: [PATCH 061/433] ARM: shmobile: r8a7742: Add debug resource reset for
+ booting secondary
+
+When the Coresight Debug mode is on, the secondary CPU may not be
+booted. So enable the reset requests by CA7/CA15 debug resource
+control register before secondary CPU boot.
+
+Signed-off-by: Hisashi Nakamura <hisashi.nakamura.ak@renesas.com>
+Reported-by: Shinji Hirai <shinji.hirai.zn@renesas.com>
+Signed-off-by: Binh Nguyen <binh.nguyen.uw@rvc.renesas.com>
+Signed-off-by: Quynh Nguyen <quynhnguyen.xb@renesas.com>
+---
+ arch/arm/mach-shmobile/smp-r8a7790.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm/mach-shmobile/smp-r8a7790.c b/arch/arm/mach-shmobile/smp-r8a7790.c
+index 7ca4bbb..7636022 100644
+--- a/arch/arm/mach-shmobile/smp-r8a7790.c
++++ b/arch/arm/mach-shmobile/smp-r8a7790.c
+@@ -31,6 +31,9 @@
+ #define CCI_SLAVE4	0x5000
+ #define CCI_SNOOP	0x0000
+ #define CCI_STATUS	0x000c
++#define APMU           0xe6151000
++#define CA7DBGRCR      0x0180
++#define CA15DBGRCR     0x1180
+ 
+ static const struct rcar_sysc_ch r8a7790_ca15_scu = {
+ 	.chan_offs = 0x180, /* PWRSR5 .. PWRER5 */
+@@ -56,12 +59,23 @@ static struct rcar_apmu_config r8a7790_apmu_config[] = {
+ static void __init r8a7790_smp_prepare_cpus(unsigned int max_cpus)
+ {
+ 	void __iomem *p;
++	u32 val;
+ 
+ 	/* let APMU code install data related to shmobile_boot_vector */
+ 	shmobile_smp_apmu_prepare_cpus(max_cpus,
+ 				       r8a7790_apmu_config,
+ 				       ARRAY_SIZE(r8a7790_apmu_config));
+ 
++	/* setup for debug mode */
++	{
++		p = ioremap_nocache(APMU, 0x2000);
++		val = readl_relaxed(p + CA15DBGRCR);
++		writel_relaxed((val | 0x01f80000), p + CA15DBGRCR);
++		val = readl_relaxed(p + CA7DBGRCR);
++		writel_relaxed((val | 0x01f83330), p + CA7DBGRCR);
++		iounmap(p);
++	}
++
+ 	/* turn on power to SCU */
+ 	rcar_gen2_pm_init();
+ 	rcar_sysc_power_up(&r8a7790_ca15_scu);
+-- 
+2.7.4
+

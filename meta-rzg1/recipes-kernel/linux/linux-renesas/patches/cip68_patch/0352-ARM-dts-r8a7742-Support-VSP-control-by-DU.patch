@@ -1,0 +1,81 @@
+From 49d309e6bdd53ba7a8a8a1772b2d5fecabae23f6 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Fri, 31 Jul 2020 17:56:37 +0700
+Subject: [PATCH 352/433] ARM: dts: r8a7742: Support VSP control by DU
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 37 ++++++++++++++-----------------------
+ 1 file changed, 14 insertions(+), 23 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index 7d76b13..7f3b8c8 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -2002,34 +2002,23 @@
+ 			status = "disabled";
+ 		};
+ 
+-		vsp@fe920000 {
+-			compatible = "renesas,vsp1";
++		vspm@fe920000 {
++			compatible = "renesas,vspm-vspr", "renesas-vspm";
+ 			reg = <0 0xfe920000 0 0x8000>;
+-			interrupts = <GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&mstp1_clks R8A7742_CLK_VSP1_R>;
+-			power-domains = <&cpg_clocks>;
+-
+-			renesas,has-sru;
+-			renesas,#rpf = <5>;
+-			renesas,#uds = <1>;
+-			renesas,#wpf = <4>;
++			interrupts = <0 266 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7742_CLK_VSP1_S>;
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		};
+ 
+-		vsp@fe928000 {
+-			compatible = "renesas,vsp1";
+-			reg = <0 0xfe928000 0 0x8000>;
+-			interrupts = <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
++		vspm@fe928000 {
++			compatible = "renesas,vspm-vsps", "renesas-vspm";
++			reg = <0 0xfe928000 0 0x7404>;
++			interrupts = <0 267 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&mstp1_clks R8A7742_CLK_VSP1_S>;
+-			power-domains = <&cpg_clocks>;
+-
+-			renesas,has-lut;
+-			renesas,has-sru;
+-			renesas,#rpf = <5>;
+-			renesas,#uds = <3>;
+-			renesas,#wpf = <4>;
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
+ 		};
+ 
+-		vsp@fe930000 {
++		vspd0: vspd0@fe930000 {
+ 			compatible = "renesas,vsp1";
+ 			reg = <0 0xfe930000 0 0x8000>;
+ 			interrupts = <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+@@ -2043,7 +2032,7 @@
+ 			renesas,#wpf = <4>;
+ 		};
+ 
+-		vsp@fe938000 {
++		vspd1: vspd1@fe938000 {
+ 			compatible = "renesas,vsp1";
+ 			reg = <0 0xfe938000 0 0x8000>;
+ 			interrupts = <GIC_SPI 247 IRQ_TYPE_LEVEL_HIGH>;
+@@ -2074,6 +2063,8 @@
+ 			clock-names = "du.0", "du.1", "du.2", "lvds.0", "lvds.1";
+ 			status = "disabled";
+ 
++			vsps = <&vspd0 &vspd1>;
++
+ 			ports {
+ 				#address-cells = <1>;
+ 				#size-cells = <0>;
+-- 
+2.7.4
+

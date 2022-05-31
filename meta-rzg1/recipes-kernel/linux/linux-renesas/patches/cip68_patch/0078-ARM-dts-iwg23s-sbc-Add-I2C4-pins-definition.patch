@@ -1,0 +1,29 @@
+From 7624b80d54f14875eb9b8c1db342ff0ab2908fc2 Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Wed, 22 Jul 2020 10:25:01 +0700
+Subject: [PATCH 078/433] ARM: dts: iwg23s-sbc: Add I2C4 pins definition
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index a0f694b..43fd91f 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -133,6 +133,11 @@
+ 		function = "i2c3";
+ 	};
+ 
++	i2c4_pins: i2c4 {
++		groups = "i2c4_e";
++		function = "i2c4";
++	};
++
+ 	mmc_pins_uhs: mmc_uhs {
+ 		groups = "mmc_data8", "mmc_ctrl";
+ 		function = "mmc";
+-- 
+2.7.4
+

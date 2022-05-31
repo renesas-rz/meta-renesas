@@ -1,0 +1,83 @@
+From dfecddc88f3bac619efe5acda27f960a9b49556b Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Wed, 14 Oct 2020 15:36:03 +0700
+Subject: [PATCH 136/433] watchdog: renesas-wdt: Register a restart handler for
+ R8A7743
+
+Different SoC may have different implementation for restart handler
+basing on its ARM cores. This commit adds a restart handler for RZ/G1M
+but it also apply to other RZ/G1 SoC which have Cortex-A15 cores.
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ drivers/watchdog/renesas_wdt.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/drivers/watchdog/renesas_wdt.c b/drivers/watchdog/renesas_wdt.c
+index f22e2b9..e46fec3 100644
+--- a/drivers/watchdog/renesas_wdt.c
++++ b/drivers/watchdog/renesas_wdt.c
+@@ -19,6 +19,8 @@
+ #include <linux/watchdog.h>
+ #include <linux/notifier.h>
+ #include <linux/reboot.h>
++#define WDTRSTCR        0xE6160054	/*Watchdog Timer Reset Control Register*/
++#define CA15BAR         0xE6160020	/*Cortex A15 Boot Address Register*/
+ 
+ #define RWTCNT		0
+ #define RWTCSRA		4
+@@ -135,6 +137,30 @@ static const struct watchdog_info rwdt_ident = {
+ 	.identity = "Renesas WDT Watchdog",
+ };
+ 
++static int rwdt_restart_handler_ca15(struct notifier_block *nb, unsigned long mode, void *cmd)
++{
++	struct rwdt_priv *priv = container_of(nb, struct rwdt_priv, restart_handler);
++	void __iomem *wdtrstcr = ioremap_nocache(WDTRSTCR, 4);
++	void __iomem *ca15bar  = ioremap_nocache(CA15BAR, 4);
++
++	BUG_ON(!ca15bar);
++	BUG_ON(!wdtrstcr);
++
++	/* Enabling RWDT Reset request */
++	iowrite32(0xA55A0002, wdtrstcr);
++	/* setting ROM Address as SYS Boot Address */
++	iowrite32(0x00000002, ca15bar);
++	iowrite32(0x00000012, ca15bar);
++
++	rwdt_start(&priv->wdev);
++	rwdt_write(priv, 0xffff, RWTCNT);
++
++	iounmap(wdtrstcr);
++	iounmap(ca15bar);
++
++	return NOTIFY_DONE;
++}
++
+ static const struct watchdog_ops rwdt_ops = {
+ 	.owner = THIS_MODULE,
+ 	.start = rwdt_start,
+@@ -220,6 +246,20 @@ static int rwdt_probe(struct platform_device *pdev)
+ 		priv->restart_handler.notifier_call = NULL;
+ 	}
+ 
++	/*
++	 * register restart handler base on machine here
++	 * same ARM core architecture (e.g ARM cortex A15) can use same handler
++	 */
++	if (of_machine_is_compatible("renesas,r8a7743")) {
++		priv->restart_handler.notifier_call = rwdt_restart_handler_ca15;
++		/* 255: Highest priority restart handler */
++		priv->restart_handler.priority = 255;
++		ret = register_restart_handler(&priv->restart_handler);
++		if (ret)
++			dev_err(&pdev->dev,
++				"Failed to register restart handler (err = %d)\n", ret);
++	}
++
+ 	return 0;
+ 
+  out_pm_disable:
+-- 
+2.7.4
+

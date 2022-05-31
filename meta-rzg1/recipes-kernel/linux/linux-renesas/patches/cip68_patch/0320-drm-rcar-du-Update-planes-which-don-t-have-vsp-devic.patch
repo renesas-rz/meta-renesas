@@ -1,0 +1,64 @@
+From c55156e13c7753533fc10c2f1140339eec33885b Mon Sep 17 00:00:00 2001
+From: "Nguyen Van Tu [FGA.AIS]" <TuNV16@fsoft.com.vn>
+Date: Wed, 14 Nov 2018 12:00:06 +0700
+Subject: [PATCH 320/433] drm: rcar-du: Update planes which don't have vsp
+ device
+
+Signed-off-by: Nguyen Van Tu [FGA.AIS] <TuNV16@fsoft.com.vn>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c |  9 +++++++++
+ drivers/gpu/drm/rcar-du/rcar_du_vsp.c  | 17 +++++++++++++++++
+ 2 files changed, 26 insertions(+)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 9187d68..d264f38 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -258,6 +258,15 @@ static void rcar_du_crtc_update_planes(struct rcar_du_crtc *rcrtc)
+ 			if (rcrtc->vsp->vsp) {
+ 				dspr = (rcrtc->index % 2) + 1;
+ 				hwplanes = 1 << (rcrtc->index % 2);
++			} else {
++				for (i = 0; i < rcrtc->vsp->num_planes; ++i) {
++					struct rcar_du_vsp_plane *plane = &rcrtc->vsp->planes[i];
++
++					if (plane->plane.state->crtc != &rcrtc->crtc)
++						continue;
++					dspr |= (plane->index + 5) << 4*i;
++					hwplanes |= 1 << (plane->index + 4);
++				}
+ 			}
+ 		} else {
+ 			dspr = (rcrtc->index % 2) ? 3 : 1;
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+index 7c1bfb6..dc4efe7 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_vsp.c
+@@ -218,6 +218,23 @@ static void rcar_du_vsp_plane_atomic_update(struct drm_plane *plane,
+ 			rcar_du_vsp_plane_setup(rplane);
+ 		else
+ 			vsp1_du_atomic_update(rplane->vsp->vsp, rplane->index, 0, 0, 0, NULL, NULL);
++	} else {
++		struct rcar_du_plane_state state = {
++			.format = rcar_du_format_info(DRM_FORMAT_ARGB8888),
++			.source = RCAR_DU_PLANE_MEMORY,
++			.alpha = 255,
++			.colorkey = 0,
++			.zpos = 0,
++		};
++
++		state.state = *(plane->state);
++
++		if (!plane->state->crtc)
++			return;
++
++		state.hwindex = (rplane->index + 4 % 8);
++
++		__rcar_du_plane_setup(rplane->vsp->group, &state);
+ 	}
+ }
+ 
+-- 
+2.7.4
+

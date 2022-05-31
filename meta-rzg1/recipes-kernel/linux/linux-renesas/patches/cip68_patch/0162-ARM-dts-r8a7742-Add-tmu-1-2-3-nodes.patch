@@ -1,0 +1,64 @@
+From 20dbb8294f5901108d56d5483457330309184cde Mon Sep 17 00:00:00 2001
+From: thanhbui <thanh.bui.fz@renesas.com>
+Date: Mon, 19 Oct 2020 14:30:51 +0700
+Subject: [PATCH 162/433] ARM: dts: r8a7742: Add tmu{1,2,3} nodes
+
+Signed-off-by: thanhbui <thanh.bui.fz@renesas.com>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index e7866c3..c232e19 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -2095,6 +2095,46 @@
+ 
+ 			status = "disabled";
+ 		};
++
++		tmu1: timer@fff60000 {
++			compatible = "renesas,tmu-r8a7742", "renesas,tmu";
++			reg = <0 0xfff60000 0 0x30>;
++			interrupts = <0 128 IRQ_TYPE_LEVEL_HIGH>,
++					<0 129 IRQ_TYPE_LEVEL_HIGH>,
++					<0 130 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7742_CLK_TMU1>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++			#renesas,channels = <3>;
++			status = "disabled";
++		};
++
++		tmu2: timer@fff70000 {
++			compatible = "renesas,tmu-r8a7742", "renesas,tmu";
++			reg = <0 0xfff70000 0 0x30>;
++			interrupts = <0 303 IRQ_TYPE_LEVEL_HIGH>,
++					<0 304 IRQ_TYPE_LEVEL_HIGH>,
++					<0 305 IRQ_TYPE_LEVEL_HIGH>,
++					<0 306 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7742_CLK_TMU2>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++			#renesas,channels = <3>;
++			status = "disabled";
++		};
++
++		tmu3: timer@fff80000 {
++			compatible = "renesas,tmu-r8a7742", "renesas,tmu";
++			reg = <0 0xfff80000 0 0x30>;
++			interrupts = <0 131 IRQ_TYPE_LEVEL_HIGH>,
++					<0 132 IRQ_TYPE_LEVEL_HIGH>,
++					<0 133 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&mstp1_clks R8A7742_CLK_TMU3>;
++			clock-names = "fck";
++			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
++			#renesas,channels = <3>;
++			status = "disabled";
++		};
+ 	};
+ 
+ 	thermal-zones {
+-- 
+2.7.4
+
