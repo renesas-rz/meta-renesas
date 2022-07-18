@@ -24,16 +24,16 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
     branch: dunfell
-    revision: bba323389749ec3e306509f8fb12649f031be152
-    (tag: dunfell-23.0.14)
+    revision: 1e298a42223dd2628288b372caf66c52506a8081
+    (tag: dunfell-23.0.17)
     (Need to cherry-pick a commit: git cherry-pick 9e444)
 
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python, meta-multimedia
     branch: dunfell
-    revision: ec978232732edbdd875ac367b5a9c04b881f2e19
+    revision: deee226017877d51188e0a46f9e6b93c10ffbb34
     
-    URI: http://git.yoctoproject.org/cgit.cgi/meta-gplv2/
+    URI: https://git.yoctoproject.org/meta-gplv2
     layers: meta-gplv2
     branch: dunfell
     revision: 60b251c25ba87e946a0ca4cdc8d17b1cb09292ac
@@ -47,7 +47,7 @@ This layer depends on:
     URI: https://git.yoctoproject.org/git/meta-virtualization
     layers: meta-virtualization
     branch: dunfell
-    revision: c5f61e547b90aa8058cf816f00902afed9c96f72
+    revision: a63a54df3170fed387f810f23cdc2f483ad587df
 
 ## Build Instructions
 
@@ -74,13 +74,13 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
 ```bash
     $ git clone https://git.yoctoproject.org/git/poky
     $ cd poky
-    $ git checkout dunfell-23.0.14
+    $ git checkout dunfell-23.0.17
     $ git cherry-pick 9e444
     $ cd ..
     $     
     $ git clone https://github.com/openembedded/meta-openembedded
     $ cd meta-openembedded
-    $ git checkout ec978232732edbdd875ac367b5a9c04b881f2e19
+    $ git checkout deee226017877d51188e0a46f9e6b93c10ffbb34
     $ cd ..
     $    
     $ git clone https://git.yoctoproject.org/git/meta-gplv2
@@ -100,7 +100,7 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $
     $ git clone  https://git.yoctoproject.org/git/meta-virtualization -b dunfell
     $ cd meta-virtualization
-    $ git checkout c5f61e547b90aa8058cf816f00902afed9c96f72
+    $ git checkout a63a54df3170fed387f810f23cdc2f483ad587df
     $ cd ..
 ```
 \<tag\> can be selected in any tags of meta-renesas.
@@ -146,15 +146,6 @@ Use bitbake -c populate_sdk for generating the toolchain SDK:
 For 64-bit target SDK (aarch64):
 ```bash
     $ bitbake core-image-weston -c populate_sdk
-```
-When below error occurs during building sdk:
-```bash
-    The basehash value changed. The meta data is not deterministic and this needs to be fixed.
-```
-Please change directory to poky, cherry-pick following commit then rebuild the sdk:
-```bash
-    $ cd poky
-    $ git cherry-pick cfd897e213debb2e32589378b2f5d390a265eb7f
 ```
 The SDK can be found in the output directory _'tmp/deploy/sdk'_
 
