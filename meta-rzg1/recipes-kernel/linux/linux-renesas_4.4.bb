@@ -8,12 +8,12 @@ COMPATIBLE_MACHINE = "iwg20m-g1m|iwg20m-g1n|iwg21m|iwg22m|iwg23s"
 
 DEPENDS_append = " util-linux-native openssl-native"
 KERNEL_URL=" \
-	git://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git"
-BRANCH = "linux-4.4.y-cip"
-SRCREV = "ea2b25643aed790866a050f9605bbe7b845b8f31"
+	git://github.com/renesas-rz/rz_linux-cip.git"
+BRANCH = "rzg1-cip69"
+SRCREV = "74075a0636728ae6f786a9fa65b043039043c5ae"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
-LINUX_VERSION ?= "4.4.302-cip68"
+LINUX_VERSION ?= "4.4.302-cip69"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
@@ -22,7 +22,6 @@ S = "${WORKDIR}/git"
 SRC_URI_append = " \
 	file://defconfig \
 	file://common.cfg \
-	file://patches.scc \
 "
 
 SRC_URI_append_iwg20m-g1m = " \
