@@ -1,12 +1,3 @@
-require docker-control.inc
-
-# Additional tools for supporting Docker
-DOCKER_PKGS = " docker ca-certificates ntpdate kernel-module-nf-conntrack-netlink "
-
-IMAGE_INSTALL_append = "\
-  ${@oe.utils.conditional("USE_DOCKER", "1", " ${DOCKER_PKGS} ", "", d)} \
-"
-
 # Basic packages
 IMAGE_INSTALL_append = " \
     bash \
@@ -14,8 +5,6 @@ IMAGE_INSTALL_append = " \
     v4l2-init \
     i2c-tools \
     coreutils \
-    packagegroup-multimedia-libs \
-    packagegroup-multimedia-kernel-modules \
 "
 
 update_issue() {
