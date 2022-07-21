@@ -92,7 +92,7 @@ IMAGE_INSTALL_append = " \
 
 # Qos user packages only supports 64bit.
 QOS_USER_PKGS = ""
-QOS_USER_PKGS_aarch64-poky-linux = " \
+QOS_USER_PKGS_aarch64 = " \
     qosif-user-module \
     qosif-tp-user-module \
 "
