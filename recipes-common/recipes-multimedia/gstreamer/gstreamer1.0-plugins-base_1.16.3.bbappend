@@ -8,6 +8,9 @@ SRC_URI_append = " \
 
 do_install_append() {
     install -Dm 644 ${WORKDIR}/gstpbfilter.conf ${D}/etc/gstpbfilter.conf
+    if [ "${USE_OMX_COMMON}" = "1" ]; then
+        sed -i "s/videoconvert/vspmfilter/g" ${D}/etc/gstpbfilter.conf
+    fi
 }
 
 FILES_${PN}_append = " \
