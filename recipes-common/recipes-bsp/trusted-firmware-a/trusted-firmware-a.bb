@@ -3,7 +3,7 @@ DESCRIPTION = "Trusted Firmware-A for RZ/G2H/M/N/E"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = " \
 	file://${WORKDIR}/git/docs/license.rst;md5=b2c740efedc159745b9b31f88ff03dde \
-	file://${WORKDIR}/mbedtls/LICENSE;md5=302d50a6369f5f22efdb674db908167a \
+	file://${WORKDIR}/mbedtls/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57 \
 "
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -12,18 +12,18 @@ inherit deploy
 
 S = "${WORKDIR}/git"
 
-BRANCH = "v2.6/rz"
-BRANCH_mbedtls = "mbedtls-2.16"
+BRANCH = "v2.7/rz"
+BRANCH_mbedtls = "mbedtls-2.28"
 
 SRC_URI = " \
 	git://github.com/renesas-rz/rzg_trusted-firmware-a.git;branch=${BRANCH};protocol=https \
 	git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
 
-SRCREV = "7e8696ff46bef1094f3efee46dc830589e6d0f0e"
-SRCREV_mbedtls = "04a049bda1ceca48060b57bc4bcf5203ce591421"
+SRCREV = "1c9f6598a730f8957ce1ac19f75dd419e538da94"
+SRCREV_mbedtls = "7e163d796c7a8d3dd1a48884fb48ee4398da3137"
 
-PV = "v2.6+git"
+PV = "v2.7+git"
 
 COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2m|hihope-rzg2n|hihope-rzg2h)"
 COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
