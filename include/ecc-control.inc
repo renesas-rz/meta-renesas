@@ -1,6 +1,6 @@
 def check_ecc_mode(d):
   soc = d.getVar("SOC_FAMILY")
-  soc = soc.replace("rzg2h:","")
+  soc = soc.replace("rzg2:","")
   mode = d.getVar("ECC_MODE")
   if d.getVar("USE_ECC") == '1':
     if mode == 'Full' :
