@@ -1,6 +1,6 @@
 LIC_FILES_CHKSUM = "file://LICENSE.md;md5=1fb5dca04b27614d6d04abca6f103d8d"
 LICENSE="BSD-3-Clause"
-PV = "0.89+git${SRCPV}"
+PV = "1.06+git${SRCPV}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -8,7 +8,7 @@ FLASH_WRITER_URL = "git://github.com/renesas-rz/rzg2_flash_writer"
 BRANCH = "rz_g2l"
 
 SRC_URI = "${FLASH_WRITER_URL};branch=${BRANCH}"
-SRCREV = "4168466783f06fa7f2aa5782c597803a6882ed2f"
+SRCREV = "ff167b676547f3997906c82c9be504eb5cff8ef0"
 
 inherit deploy
 #require include/provisioning.inc
