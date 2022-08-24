@@ -27,11 +27,11 @@ IMAGE_INSTALL_append = " \
     libdrm-tests \
     yavta \
     kernel-module-uvcvideo \
+    watchdog \
 "
 
 # Installation for Wifi/Bluetooth packages
 IMAGE_INSTALL_append_rzg2h = " \
-    watchdog \
     linux-firmware-ti-connectivity-license \
     linux-firmware-wl18xx \
     init-ifupdown \
