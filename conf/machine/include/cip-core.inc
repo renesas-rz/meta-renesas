@@ -20,7 +20,7 @@ PREFERRED_VERSION_nativesdk-binutils_debian = "${BINUVERSION}"
 
 PREFERRED_VERSION_gdb_debian = "8.1"
 
-PREFERRED_VERSION_busybox_debian = "1.31.%"
+PREFERRED_VERSION_busybox_debian = "1.30.%"
 
 RDEPENDS_xz_append_debian = "bash"
 RDEPENDS_gzip_append_debian = "bash"
