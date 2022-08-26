@@ -14,7 +14,7 @@ SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "b245c91abb46ae675582c296b81
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
-LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.131-cip13-rt3", "5.10.131-cip13",d)}"
+LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.131-cip13-rt5", "5.10.131-cip13",d)}"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
