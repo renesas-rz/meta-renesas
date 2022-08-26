@@ -3,6 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI_append = " \
 	file://gstpbfilter.conf \
 	file://0001-playback-Add-source-for-getting-video-filter-from-fi.patch \
+	file://0002-gst-plugins-base-Down-rank-of-glimagesink.patch \
 "
 
 

@@ -1,0 +1,26 @@
+From 391c3e462f727188592dc2f2007a8fad4f18cb60 Mon Sep 17 00:00:00 2001
+From: Nam Cao <nam.cao.xv@renesas.com>
+Date: Thu, 11 Aug 2022 10:41:28 +0700
+Subject: [PATCH] recipes-multimedia: gst-plugins-base: Down rank of
+ glimagesink
+
+---
+ ext/gl/gstopengl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/gl/gstopengl.c b/ext/gl/gstopengl.c
+index 463be9c..27f2733 100644
+--- a/ext/gl/gstopengl.c
++++ b/ext/gl/gstopengl.c
+@@ -127,7 +127,7 @@ plugin_init (GstPlugin * plugin)
+ #endif
+ 
+   if (!gst_element_register (plugin, "glimagesink",
+-          GST_RANK_MARGINAL, gst_gl_image_sink_bin_get_type ())) {
++          (GST_RANK_MARGINAL - 1), gst_gl_image_sink_bin_get_type ())) {
+     return FALSE;
+   }
+ 
+-- 
+2.25.1
+
