@@ -8,64 +8,69 @@ DEPENDS_append = " \
 SRC_URI_append += " \
 	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", "file://0001-flash-writer-supports-secure-boot.patch", "",d)} \
 "
+BUILD_TBB_DIR = "${S}/build_tbb"
+PMIC_BUILD_TBB_DIR = "${S}/build_pmic_tbb"
 
 do_compile_append() {
 	if [ "${TRUSTED_BOARD_BOOT}" = "1" ]; then
-		oe_runmake BOARD=${BOARD} TRUSTED_BOARD_BOOT=ENABLE
+		oe_runmake OUTPUT_DIR=${BUILD_TBB_DIR} clean
+		oe_runmake BOARD=${BOARD} OUTPUT_DIR=${BUILD_TBB_DIR} TRUSTED_BOARD_BOOT=ENABLE
 
-		mkdir -p ${S}/AArch64_output/tbb
-		FILE_NAME=$(find "${S}/AArch64_output" -name "*_TBB.bin" -maxdepth 1 -printf "%f\n" )
+		mkdir -p ${BUILD_TBB_DIR}/tbb
+		FILE_NAME=$(find "${BUILD_TBB_DIR}" -name "*_TBB.bin" -maxdepth 1 -printf "%f\n" )
 
 		python3 ${MANIFEST_GENERATION_KCERT} -info ${DIRPATH_MANIFEST_GENTOOL}/info/bl2_${IMG_AUTH_MODE}_info.xml \
-			-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -certout ${S}/AArch64_output/tbb/flash_writer-kcert.bin
+			-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -certout ${BUILD_TBB_DIR}/tbb/flash_writer-kcert.bin
 
 		python3 ${MANIFEST_GENERATION_CCERT} -info ${DIRPATH_MANIFEST_GENTOOL}/info/bl2_${IMG_AUTH_MODE}_info.xml \
-			-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -imgin ${S}/AArch64_output/${FILE_NAME} \
-			-certout ${S}/AArch64_output/tbb/flash_writer-ccert.bin -imgout ${S}/AArch64_output/tbb/flash_writer-sign.bin
+			-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -imgin ${BUILD_TBB_DIR}/${FILE_NAME} \
+			-certout ${BUILD_TBB_DIR}/tbb/flash_writer-ccert.bin -imgout ${BUILD_TBB_DIR}/tbb/flash_writer-sign.bin
 
-		objcopy -I binary --adjust-vma=0x00012000 --pad-to=0x12400 ${S}/AArch64_output/tbb/flash_writer-kcert.bin
-		objcopy -I binary --adjust-vma=0x00012400 --pad-to=0x13000 ${S}/AArch64_output/tbb/flash_writer-ccert.bin
+		objcopy -I binary --adjust-vma=0x00012000 --pad-to=0x12400 ${BUILD_TBB_DIR}/tbb/flash_writer-kcert.bin
+		objcopy -I binary --adjust-vma=0x00012400 --pad-to=0x13000 ${BUILD_TBB_DIR}/tbb/flash_writer-ccert.bin
 
-		cat ${S}/AArch64_output/tbb/flash_writer-kcert.bin ${S}/AArch64_output/tbb/flash_writer-ccert.bin ${S}/AArch64_output/tbb/flash_writer-sign.bin > ${S}/AArch64_output/tbb/flash_writer-image.bin
+		cat ${BUILD_TBB_DIR}/tbb/flash_writer-kcert.bin ${BUILD_TBB_DIR}/tbb/flash_writer-ccert.bin \
+			${BUILD_TBB_DIR}/tbb/flash_writer-sign.bin > ${BUILD_TBB_DIR}/tbb/flash_writer-image.bin
 
-		bootparameter ${S}/AArch64_output/tbb/flash_writer-image.bin ${S}/AArch64_output/tbb/${FILE_NAME}
-		cat ${S}/AArch64_output/tbb/flash_writer-image.bin >> ${S}/AArch64_output/tbb/${FILE_NAME}
+		bootparameter ${BUILD_TBB_DIR}/tbb/flash_writer-image.bin ${BUILD_TBB_DIR}/tbb/${FILE_NAME}
+		cat ${BUILD_TBB_DIR}/tbb/flash_writer-image.bin >> ${BUILD_TBB_DIR}/tbb/${FILE_NAME}
 
-		objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${S}/AArch64_output/tbb/${FILE_NAME} \
-			${S}/AArch64_output/tbb/${FILE_NAME%.*}.mot
+		objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${BUILD_TBB_DIR}/tbb/${FILE_NAME} \
+			${BUILD_TBB_DIR}/tbb/${FILE_NAME%.*}.mot
 
 		if [ "${PMIC_SUPPORT}" = "1" ]; then
-			oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_DIR} TRUSTED_BOARD_BOOT=ENABLE
+			oe_runmake OUTPUT_DIR=${PMIC_BUILD_TBB_DIR} clean
+			oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_TBB_DIR} TRUSTED_BOARD_BOOT=ENABLE
 
-			mkdir -p ${PMIC_BUILD_DIR}/tbb
-			FILE_NAME=$(find "${PMIC_BUILD_DIR}" -name "*_TBB.bin" -maxdepth 1 -printf "%f\n" )
+			mkdir -p ${PMIC_BUILD_TBB_DIR}/tbb
+			FILE_NAME=$(find "${PMIC_BUILD_TBB_DIR}" -name "*_TBB.bin" -maxdepth 1 -printf "%f\n" )
 
 			python3 ${MANIFEST_GENERATION_KCERT} -info ${DIRPATH_MANIFEST_GENTOOL}/info/bl2_${IMG_AUTH_MODE}_info.xml \
-				-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -certout ${PMIC_BUILD_DIR}/tbb/flash_writer-kcert_pmic.bin
+				-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -certout ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-kcert_pmic.bin
 
 			python3 ${MANIFEST_GENERATION_CCERT} -info ${DIRPATH_MANIFEST_GENTOOL}/info/bl2_${IMG_AUTH_MODE}_info.xml \
-				-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -imgin ${PMIC_BUILD_DIR}/${FILE_NAME} \
-				-certout ${PMIC_BUILD_DIR}/tbb/flash_writer-ccert_pmic.bin -imgout ${PMIC_BUILD_DIR}/tbb/flash_writer-sign_pmic.bin
+				-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -imgin ${PMIC_BUILD_TBB_DIR}/${FILE_NAME} \
+				-certout ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-ccert_pmic.bin -imgout ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-sign_pmic.bin
 
-			objcopy -I binary --adjust-vma=0x00012000 --pad-to=0x12400 ${PMIC_BUILD_DIR}/tbb/flash_writer-kcert_pmic.bin
-			objcopy -I binary --adjust-vma=0x00012400 --pad-to=0x13000 ${PMIC_BUILD_DIR}/tbb/flash_writer-ccert_pmic.bin
+			objcopy -I binary --adjust-vma=0x00012000 --pad-to=0x12400 ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-kcert_pmic.bin
+			objcopy -I binary --adjust-vma=0x00012400 --pad-to=0x13000 ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-ccert_pmic.bin
 
-			cat ${PMIC_BUILD_DIR}/tbb/flash_writer-kcert_pmic.bin ${PMIC_BUILD_DIR}/tbb/flash_writer-ccert_pmic.bin ${PMIC_BUILD_DIR}/tbb/flash_writer-sign_pmic.bin > ${PMIC_BUILD_DIR}/tbb/flash_writer-image_pmic.bin
+			cat ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-kcert_pmic.bin ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-ccert_pmic.bin ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-sign_pmic.bin > ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-image_pmic.bin
 
-			bootparameter ${PMIC_BUILD_DIR}/tbb/flash_writer-image_pmic.bin ${PMIC_BUILD_DIR}/tbb/${FILE_NAME}
-			cat ${PMIC_BUILD_DIR}/tbb/flash_writer-image_pmic.bin >> ${PMIC_BUILD_DIR}/tbb/${FILE_NAME}
+			bootparameter ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-image_pmic.bin ${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME}
+			cat ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-image_pmic.bin >> ${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME}
 
-			objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${PMIC_BUILD_DIR}/tbb/${FILE_NAME} \
-				${PMIC_BUILD_DIR}/tbb/${FILE_NAME%.*}.mot
+			objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME} \
+				${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME%.*}.mot
 		fi
 	fi
 }
 
 do_deploy_append() {
 	if [ "${TRUSTED_BOARD_BOOT}" = "1" ]; then
-		install -m 644 ${S}/AArch64_output/tbb/*.mot ${DEPLOYDIR}
+		install -m 644 ${BUILD_TBB_DIR}/tbb/*.mot ${DEPLOYDIR}
 		if [ "${PMIC_SUPPORT}" = "1" ]; then
-				install -m 644 ${PMIC_BUILD_DIR}/tbb/*.mot ${DEPLOYDIR}
+				install -m 644 ${PMIC_BUILD_TBB_DIR}/tbb/*.mot ${DEPLOYDIR}
 		fi
 	fi
 }
