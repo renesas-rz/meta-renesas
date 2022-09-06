@@ -10,25 +10,26 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 require include/rzg2l-security-config.inc
 inherit deploy python3native
 
-PV = "3.14.0+git${SRCPV}"
-BRANCH = "3.14.0/rzg2l"
-#TAG: 3.14.0
-SRCREV = "800c771a1c9e4de38d48ab5a3e854ad1aaff6433"
+PV = "3.17.0+git${SRCPV}"
+BRANCH = "3.17.0/rz"
+#TAG: 3.17.0
+SRCREV = "c6c0c5d713b6083cc71c1d48633e97d79ecb9f21"
 
 SRC_URI = " \
 	git://github.com/renesas-rz/rzg_optee-os.git;branch=${BRANCH} \
 "
 
-COMPATIBLE_MACHINE = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzv2l|rzv2l-dev)"
+COMPATIBLE_MACHINE = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
 
 PLATFORM = "rz"
 PLATFORM_FLAVOR_smarc-rzg2l = "g2l_smarc_2"
-PLATFORM_FLAVOR_smarc-rzg2lc = "g2l_smarc_1"
+PLATFORM_FLAVOR_smarc-rzg2lc = "g2lc_smarc_1"
+PLATFORM_FLAVOR_smarc-rzg2ul = "g2ul_smarc"
 PLATFORM_FLAVOR_smarc-rzv2l = "g2l_smarc_4"
 PLATFORM_FLAVOR_rzv2l-dev = "g2l_dev15_4"
 
 DEPENDS = " \
-	python3-pyelftools-native python3-pycryptodome-native python3-pycryptodomex-native secprv-native \
+	python3-pyelftools-native python3-cryptography-native python3-idna-native secprv-native \
 "
 
 # Let the Makefile handle setting up the flags as it is a standalone application
@@ -45,7 +46,7 @@ CFLAGS_prepend = "--sysroot=${STAGING_DIR_HOST}"
 EXTRA_OEMAKE = " \
 	PLATFORM=${PLATFORM} PLATFORM_FLAVOR=${PLATFORM_FLAVOR} \
 	CFG_ARM64_core=y CFG_REE_FS=y CFG_RPMB_FS=n CFG_CRYPTO_WITH_CE=n \
-	CFG_RZ_SCE=y CFG_RZ_SCE_LIB_DIR=${SYMLINK_NATIVE_SEC_LIB_DIR} \
+	CFG_RZ_SCE=n CFG_RZ_SCE_LIB_DIR=${SYMLINK_NATIVE_SEC_LIB_DIR} \
 	CROSS_COMPILE64=${TARGET_PREFIX} \
 "
 
