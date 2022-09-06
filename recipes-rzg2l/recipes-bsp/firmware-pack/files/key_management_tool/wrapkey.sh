@@ -16,22 +16,20 @@ func_encrypt_key ()
 {
 	local hex_tag_key="$(cat)"
 
-	local hex_enc_key="${1}"
-	local hex_mac_key="${2}"
-	local hex_enc_iv0="${3}"
+	local hex_ekey="${1}"; local hex_mkey="${2}"; local hex_eiv0="${3}"
 
 	local len_tag_key="$(expr ${#hex_tag_key} / 2)"
 	local len_zero_pad=$(( ((len_tag_key + 15) & (~15)) - len_tag_key ))
 
 	hex_tag_key="${hex_tag_key}$(func_zeropad "${len_zero_pad}")"
 
-	func_hex_to_bin "${hex_tag_key}" | openssl enc -aes-128-cbc -e -nosalt -nopad -K "${hex_enc_key}" -iv "${hex_enc_iv0}" > "${TMP_FILE}"
+	func_hex_to_bin "${hex_tag_key}" | openssl enc -aes-128-cbc -e -nosalt -nopad -K "${hex_ekey}" -iv "${hex_eiv0}" > "${TMP_FILE}"
 	if [ 0 != $? ] || [ ! -s "${TMP_FILE}" ]; then
 		errlog "[error] ${SCRIPT_NAME}: Failed to encrypt Key"
 		return 1
 	fi
 
-	func_hex_to_bin "${hex_tag_key}" | openssl dgst -mac cmac -macopt cipher:aes-128-cbc -macopt hexkey:"${hex_mac_key}" -binary >> "${TMP_FILE}"
+	func_hex_to_bin "${hex_tag_key}" | openssl dgst -mac cmac -macopt cipher:aes-128-cbc -macopt hexkey:"${hex_mkey}" -binary >> "${TMP_FILE}"
 	if [ 0 != $? ] || [ ! -s "${TMP_FILE}" ]; then
 		errlog "[error] ${SCRIPT_NAME}: Failed to generate MAC."
 		return 1
@@ -53,22 +51,7 @@ func_wrap_cmnkey ()
 {
 	local len_tag_key="${1}"
 
-	local hex_ufp_key=""; local hex_enc_key=""; local hex_mac_key=""; local hex_enc_iv0=""; local hex_cmn_key=""
-
-	hex_ufp_key="$(func_load_cmnkey "${USER_FACTORY_PROG_KEY_SIZE}" < "${FILEPATH_USER_FACTORY_PROG_KEY}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load User Factory Programming Key."
-		return 1
-	fi
-
-	hex_enc_key="$(echo "${hex_ufp_key}" | cut -c 1-32)"
-	hex_mac_key="$(echo "${hex_ufp_key}" | cut -c 33-64)"
-
-	hex_enc_iv0="$(func_load_cmnkey "${USER_FACTORY_PROG_IV0_SIZE}" < "${FILEPATH_UFPK_ENCRYPT_IV0}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load the initialization vector file."
-		return 1
-	fi
+	hex_cmn_key=""
 
 	if [ "true" != "${FLAG_HEX_COMMON}" ]; then
 		hex_cmn_key="$(func_load_cmnkey "${len_tag_key}" < "${TMP_FILE}")"
@@ -83,7 +66,7 @@ func_wrap_cmnkey ()
 		return 1
 	fi
 
-	echo "${hex_cmn_key}" | func_encrypt_key "${hex_enc_key}" "${hex_mac_key}" "${hex_enc_iv0}"
+	echo "${hex_cmn_key}" | func_encrypt_key "${HEX_ENC_KEY}" "${HEX_MAC_KEY}" "${HEX_ENC_IV0}"
 	if [ 0 != $? ];then
 		errlog "[error] ${SCRIPT_NAME}: Failed to wrap Common Key."
 		return 1
@@ -103,22 +86,7 @@ func_wrap_rsa_pub ()
 {
 	local len_tag_key="${1}"
 
-	local hex_ufp_key=""; local hex_enc_key=""; local hex_mac_key=""; local hex_enc_iv0=""; local hex_pub_key=""
-
-	hex_ufp_key="$(func_load_cmnkey "${USER_FACTORY_PROG_KEY_SIZE}" < "${FILEPATH_USER_FACTORY_PROG_KEY}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load User Factory Programming Key."
-		return 1
-	fi
-
-	hex_enc_key="$(echo "${hex_ufp_key}" | cut -c 1-32)"
-	hex_mac_key="$(echo "${hex_ufp_key}" | cut -c 33-64)"
-
-	hex_enc_iv0="$(func_load_cmnkey "${USER_FACTORY_PROG_IV0_SIZE}" < "${FILEPATH_UFPK_ENCRYPT_IV0}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load the initialization vector file."
-		return 1
-	fi
+	local hex_pub_key=""
 
 	hex_pub_key="$(func_load_rsa_pub "${len_tag_key}" < "${TMP_FILE}")"
 	if [ 0 != $? ]; then
@@ -126,7 +94,7 @@ func_wrap_rsa_pub ()
 		return 1
 	fi
 
-	echo "${hex_pub_key}" | func_encrypt_key "${hex_enc_key}" "${hex_mac_key}" "${hex_enc_iv0}"
+	echo "${hex_pub_key}" | func_encrypt_key "${HEX_ENC_KEY}" "${HEX_MAC_KEY}" "${HEX_ENC_IV0}"
 	if [ 0 != $? ];then
 		errlog "[error] ${SCRIPT_NAME}: Failed to wrap RSA Public Key."
 		return 1
@@ -144,24 +112,9 @@ func_wrap_rsa_pub ()
 #*******************************************************************************
 func_wrap_rsa_pri ()
 {
-	local len_tag_key="${1}"
+	local len_tag_key="${1}";
 
-	local hex_ufp_key=""; local hex_enc_key=""; local hex_mac_key=""; local hex_enc_iv0=""; local hex_pri_key=""
-
-	hex_ufp_key="$(func_load_cmnkey "${USER_FACTORY_PROG_KEY_SIZE}" < "${FILEPATH_USER_FACTORY_PROG_KEY}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load User Factory Programming Key."
-		return 1
-	fi
-
-	hex_enc_key="$(echo "${hex_ufp_key}" | cut -c 1-32)"
-	hex_mac_key="$(echo "${hex_ufp_key}" | cut -c 33-64)"
-
-	hex_enc_iv0="$(func_load_cmnkey "${USER_FACTORY_PROG_IV0_SIZE}" < "${FILEPATH_UFPK_ENCRYPT_IV0}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load the initialization vector file."
-		return 1
-	fi
+	local hex_pri_key=""
 
 	hex_pri_key="$(func_load_rsa_pri "${len_tag_key}" < "${TMP_FILE}")"
 	if [ 0 != $? ]; then
@@ -169,7 +122,7 @@ func_wrap_rsa_pri ()
 		return 1
 	fi
 
-	echo "${hex_pri_key}" | func_encrypt_key "${hex_enc_key}" "${hex_mac_key}" "${hex_enc_iv0}"
+	echo "${hex_pri_key}" | func_encrypt_key "${HEX_ENC_KEY}" "${HEX_MAC_KEY}" "${HEX_ENC_IV0}"
 	if [ 0 != $? ];then
 		errlog "[error] ${SCRIPT_NAME}: Failed to wrap RSA Private Key."
 		return 1
@@ -179,42 +132,43 @@ func_wrap_rsa_pri ()
 }
 
 #*******************************************************************************
-# Function Name: func_wrap_ecdsa_pri
-# Description  : Wrap the ecdsa private key.
+# Function Name: func_wrap_ecc_pub
+# Description  : Wrap the ecc public key.
 # Arguments    : ${1} - key length
-#              : stdout - encrypted ecdsa private key in binary
+#              : stdout - encrypted ecc public key in binary
 # Return Value : 0 or 1
 #*******************************************************************************
-func_wrap_ecdsa_pri ()
+func_wrap_ecc_pub ()
 {
-	local len_tag_key="${1}"
+	local len_tag_key="${1}"; local len_txt_prm=""; local len_key_prm=""; 
+	local len_zero_pad=""; 
+	
+	local hex_pub_key=""; local hex_key_qx=""; local hex_key_qy="";
 
-	local hex_ufp_key=""; local hex_enc_key=""; local hex_mac_key=""; local hex_enc_iv0=""; local hex_pri_key=""
-
-	hex_ufp_key="$(func_load_cmnkey "${USER_FACTORY_PROG_KEY_SIZE}" < "${FILEPATH_USER_FACTORY_PROG_KEY}")"
+	hex_pub_key="$(func_load_ecc_pub "${len_tag_key}" < "${TMP_FILE}")"
 	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load User Factory Programming Key."
+		errlog "[error] ${SCRIPT_NAME}: Failed to load ECC Public Key."
 		return 1
 	fi
 
-	hex_enc_key="$(echo "${hex_ufp_key}" | cut -c 1-32)"
-	hex_mac_key="$(echo "${hex_ufp_key}" | cut -c 33-64)"
+	len_txt_prm="$(expr ${#hex_pub_key} / 2)"
+	len_key_prm="$(expr ${len_tag_key} / 2)"
+	len_zero_pad=$(( ((len_key_prm + 15) & (~15)) - len_key_prm ))
 
-	hex_enc_iv0="$(func_load_cmnkey "${USER_FACTORY_PROG_IV0_SIZE}" < "${FILEPATH_UFPK_ENCRYPT_IV0}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load the initialization vector file."
-		return 1
-	fi
+	errlog "${hex_pub_key}"
 
-	hex_pri_key="$(func_load_ecdsa_pri "${len_tag_key}" < "${TMP_FILE}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load ECDSA Private Key."
-		return 1
-	fi
+	hex_key_qx="$(echo "${hex_pub_key}" | cut -c -${len_txt_prm})"
+	hex_key_qy="$(echo "${hex_pub_key}" | rev | cut -c -${len_txt_prm} | rev)"
 
-	echo "${hex_pri_key}" | func_encrypt_key "${hex_enc_key}" "${hex_mac_key}" "${hex_enc_iv0}"
+	hex_key_qx="$(func_zeropad "${len_zero_pad}")${hex_key_qx}"
+	hex_key_qy="$(func_zeropad "${len_zero_pad}")${hex_key_qy}"
+
+	hex_pub_key="${hex_key_qx}${hex_key_qy}"
+	
+	errlog "${hex_pub_key}"
+	echo "${hex_pub_key}" | func_encrypt_key "${HEX_ENC_KEY}" "${HEX_MAC_KEY}" "${HEX_ENC_IV0}"
 	if [ 0 != $? ];then
-		errlog "[error] ${SCRIPT_NAME}: Failed to wrap ECDSA Private Key."
+		errlog "[error] ${SCRIPT_NAME}: Failed to wrap ECC Public Key."
 		return 1
 	fi
 
@@ -222,42 +176,32 @@ func_wrap_ecdsa_pri ()
 }
 
 #*******************************************************************************
-# Function Name: func_wrap_ecdsa_pub
-# Description  : Wrap the ecdsa public key.
+# Function Name: func_wrap_ecc_pri
+# Description  : Wrap the ecc private key.
 # Arguments    : ${1} - key length
-#              : stdout - encrypted ecdsa public key in binary
+#              : stdout - encrypted ecc private key in binary
 # Return Value : 0 or 1
 #*******************************************************************************
-func_wrap_ecdsa_pub ()
+func_wrap_ecc_pri ()
 {
-	local len_tag_key="${1}"
+	local len_tag_key="${1}"; local len_key_prm=""; local len_zero_pad="";
 
-	local hex_ufp_key=""; local hex_enc_key=""; local hex_mac_key=""; local hex_enc_iv0=""; local hex_pub_key=""
+	local hex_pri_key=""
 
-	hex_ufp_key="$(func_load_cmnkey "${USER_FACTORY_PROG_KEY_SIZE}" < "${FILEPATH_USER_FACTORY_PROG_KEY}")"
+	hex_pri_key="$(func_load_ecc_pri "${len_tag_key}" < "${TMP_FILE}")"
 	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load User Factory Programming Key."
+		errlog "[error] ${SCRIPT_NAME}: Failed to load ECC Private Key."
 		return 1
 	fi
 
-	hex_enc_key="$(echo "${hex_ufp_key}" | cut -c 1-32)"
-	hex_mac_key="$(echo "${hex_ufp_key}" | cut -c 33-64)"
+	len_key_prm="$(expr ${#hex_pri_key} / 2)"
+	len_zero_pad=$(( ((len_key_prm + 15) & (~15)) - len_key_prm ))
 
-	hex_enc_iv0="$(func_load_cmnkey "${USER_FACTORY_PROG_IV0_SIZE}" < "${FILEPATH_UFPK_ENCRYPT_IV0}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load the initialization vector file."
-		return 1
-	fi
+	hex_pri_key="$(func_zeropad "${len_zero_pad}")${hex_pri_key}"
 
-	hex_pub_key="$(func_load_ecdsa_pub "${len_tag_key}" < "${TMP_FILE}")"
-	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to load ECDSA Public Key."
-		return 1
-	fi
-
-	echo "${hex_pub_key}" | func_encrypt_key "${hex_enc_key}" "${hex_mac_key}" "${hex_enc_iv0}"
+	echo "${hex_pri_key}" | func_encrypt_key "${HEX_ENC_KEY}" "${HEX_MAC_KEY}" "${HEX_ENC_IV0}"
 	if [ 0 != $? ];then
-		errlog "[error] ${SCRIPT_NAME}: Failed to wrap ECDSA Public Key."
+		errlog "[error] ${SCRIPT_NAME}: Failed to wrap ECC Private Key."
 		return 1
 	fi
 
@@ -273,30 +217,91 @@ func_wrap_ecdsa_pub ()
 #*******************************************************************************
 func_exists_keys ()
 {
-	if [ ! -s "${FILEPATH_USER_FACTORY_PROG_KEY}" ]; then
+	if [ ! -s "${FILEPATH_KEY_ENCRYPTION_KEY}" ]; then
 
-		mkdir -p "$(dirname "${FILEPATH_USER_FACTORY_PROG_KEY}")"
+		mkdir -p "$(dirname "${FILEPATH_KEY_ENCRYPTION_KEY}")"
 
-		./genkey.sh -t "${AES_128_KEY_TYPE}" > "${FILEPATH_USER_FACTORY_PROG_KEY}"
+		./genkey.sh -t "${AES_128_KEY_TYPE}" > "${FILEPATH_KEY_ENCRYPTION_KEY}"
 		if [ 0 != $? ]; then
-			errlog "[error] ${SCRIPT_NAME}: Failed to generate ${FILEPATH_USER_FACTORY_PROG_KEY}"
+			errlog "[error] ${SCRIPT_NAME}: Failed to generate ${FILEPATH_KEY_ENCRYPTION_KEY}"
 			return 1
 		fi
 
-		./genkey.sh -t "${AES_128_KEY_TYPE}" >> "${FILEPATH_USER_FACTORY_PROG_KEY}"
+		./genkey.sh -t "${AES_128_KEY_TYPE}" >> "${FILEPATH_KEY_ENCRYPTION_KEY}"
 		if [ 0 != $? ]; then
-			errlog "[error] ${SCRIPT_NAME}: Failed to generate ${FILEPATH_USER_FACTORY_PROG_KEY}"
+			errlog "[error] ${SCRIPT_NAME}: Failed to generate ${FILEPATH_KEY_ENCRYPTION_KEY}"
 			return 1
 		fi
 	fi
 
-	if [ ! -s "${FILEPATH_UFPK_ENCRYPT_IV0}" ]; then
+	if [ ! -s "${FILEPATH_KEY_ENCRYPTION_IV0}" ]; then
 
-		mkdir -p "$(dirname "${FILEPATH_UFPK_ENCRYPT_IV0}")"
+		mkdir -p "$(dirname "${FILEPATH_KEY_ENCRYPTION_IV0}")"
 
-		./genkey.sh -t "${AES_128_KEY_TYPE}" > "${FILEPATH_UFPK_ENCRYPT_IV0}"
+		./genkey.sh -t "${AES_128_KEY_TYPE}" > "${FILEPATH_KEY_ENCRYPTION_IV0}"
 		if [ 0 != $? ]; then
-			errlog "[error] ${SCRIPT_NAME}: Failed to generate ${FILEPATH_UFPK_ENCRYPT_IV0}"
+			errlog "[error] ${SCRIPT_NAME}: Failed to generate ${FILEPATH_KEY_ENCRYPTION_IV0}"
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
+#*******************************************************************************
+# Function Name: func_load_enc_key
+# Description  : 
+# Arguments    : none
+# Return Value : 0 or 1
+#*******************************************************************************
+func_load_enc_key ()
+{
+	local hex_key_enc_key=""; local txt_key_enc_key="";
+
+	if [ "true" != "${FLAG_KEY_UPDATE}" ]; then
+	
+		func_exists_keys
+		if [ 0 != $? ]; then
+			return 1
+		fi
+		
+		hex_key_enc_key="$(func_load_cmnkey "${USER_FACTORY_PROG_KEY_SIZE}" < "${FILEPATH_KEY_ENCRYPTION_KEY}")"
+		if [ 0 != $? ]; then
+			errlog "[error] ${SCRIPT_NAME}: Failed to load User Factory Programming Key."
+			return 1
+		fi
+
+		HEX_ENC_KEY="$(echo "${hex_key_enc_key}" | cut -c 1-32)"
+		HEX_MAC_KEY="$(echo "${hex_key_enc_key}" | cut -c 33-64)"
+
+		HEX_ENC_IV0="$(func_load_cmnkey "${USER_FACTORY_PROG_IV0_SIZE}" < "${FILEPATH_KEY_ENCRYPTION_IV0}")"
+		if [ 0 != $? ]; then
+			errlog "[error] ${SCRIPT_NAME}: Failed to load the initialization vector file."
+			return 1
+		fi
+	else
+
+		if [ ! -s "${FILEPATH_KEY_ENCRYPTION_KEY}" ] || [ ! -s "${FILEPATH_KEY_ENCRYPTION_IV0}" ]; then
+			errlog "[error] ${SCRIPT_NAME}: Failed to load ${FILEPATH_KEY_ENCRYPTION_KEY} or ${FILEPATH_KEY_ENCRYPTION_IV0}."
+			return 1
+		fi
+		
+		txt_key_enc_key="$(cat "${FILEPATH_KEY_ENCRYPTION_KEY}")"
+		hex_key_enc_key="$(func_hex_to_bin "${txt_key_enc_key}" | func_load_cmnkey "${KEY_UPDATE_KEY_SIZE}")"
+
+		if [ 0 != $? ]; then
+			errlog "[error] ${SCRIPT_NAME}: Failed to load Key Update Key file."
+			return 1
+		fi
+
+		HEX_ENC_KEY="$(echo "${hex_key_enc_key}" | cut -c 1-32)"
+		HEX_MAC_KEY="$(echo "${hex_key_enc_key}" | cut -c 33-64)"
+
+		txt_key_enc_key="$(cat "${FILEPATH_KEY_ENCRYPTION_IV0}")"
+		HEX_ENC_IV0="$(func_hex_to_bin "${txt_key_enc_key}" | func_load_cmnkey "${KEY_UPDATE_IV0_SIZE}")"
+
+		if [ 0 != $? ]; then
+			errlog "[error] ${SCRIPT_NAME}: Failed to load the Key Update IV file."
 			return 1
 		fi
 	fi
@@ -317,16 +322,10 @@ func_usage_exit()
 	errlog "Version ${TOOL_VERSION}"
 	errlog
 	errlog "Usage:"
-	errlog "    ${SCRIPT_NAME} -t <type>"
+	errlog "    ${SCRIPT_NAME} -t <type> [-p <path> | -u <path>]"
 	errlog
 	errlog "Read the key from standard input or pipe and write the wrapped key to"
 	errlog "standard output."
-	errlog
-	errlog "  -p <path>"
-	errlog "     Path to the directory that contains the temporary encryption key for"
-	errlog "     the provisioning."
-	errlog "     If the key does not exist, it will be generated by this script."
-	errlog "     The key for provisioning is ${FILE_USER_FACTORY_PROG_KEY}."
 	errlog
 	errlog "  -t <type>"
 	errlog "     Type of user key to be wrapped."
@@ -339,8 +338,21 @@ func_usage_exit()
 	errlog "         ${RSA_1024_KEY_TYPE_PUB}"
 	errlog "         ${RSA_2048_KEY_TYPE_PRI}"
 	errlog "         ${RSA_2048_KEY_TYPE_PUB}"
-	errlog "         ${ECDSA_P256_KEY_TYPE_PRI}"
-	errlog "         ${ECDSA_P256_KEY_TYPE_PUB}"
+	errlog "         ${RSA_4096_KEY_TYPE_PRI}"
+	errlog "         ${RSA_4096_KEY_TYPE_PUB}"
+	errlog "         ${ECC_P256_KEY_TYPE_PRI}"
+	errlog "         ${ECC_P256_KEY_TYPE_PUB}"
+	errlog
+	errlog "  -p <path>"
+	errlog "     Path to the directory that contains the temporary encryption key for"
+	errlog "     the provisioning."
+	errlog "     If the key does not exist, it will be generated by this script."
+	errlog "     The key for provisioning is ${FILE_USER_FACTORY_PROG_KEY}."
+	errlog
+	errlog "  -u <path>"
+	errlog "     Path to the directory that contains the key update key."
+	errlog "     The key update key is ${FILE_KEY_UPDATE_KEY}."
+	errlog
 
 	exit 1
 }
@@ -353,7 +365,7 @@ func_usage_exit()
 #*******************************************************************************
 func_main ()
 {
-	func_exists_keys
+	func_load_enc_key
 	if [ 0 != $? ]; then
 		exit $?
 	fi
@@ -384,12 +396,39 @@ func_main ()
 		"${RSA_2048_KEY_TYPE_PUB}")
 			func_wrap_rsa_pub "${RSA_2048_KEY_SIZE}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PRI}")
-			func_wrap_ecdsa_pri "${ECDSA_P256_KEY_SIZE_PRI}"
+		"${RSA_4096_KEY_TYPE_PRI}")
+			func_wrap_rsa_pri "${RSA_4096_KEY_SIZE}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PUB}")
-			func_wrap_ecdsa_pub "${ECDSA_P256_KEY_SIZE_PUB}"
+		"${RSA_4096_KEY_TYPE_PUB}")
+			func_wrap_rsa_pub "${RSA_4096_KEY_SIZE}"
 			;;
+		"${ECC_P192_KEY_TYPE_PRI}")
+			func_wrap_ecc_pri "${ECC_P192_KEY_SIZE_PRI}"
+			;;
+		"${ECC_P192_KEY_TYPE_PUB}")
+			func_wrap_ecc_pub "${ECC_P192_KEY_SIZE_PUB}"
+			;;
+		"${ECC_P224_KEY_TYPE_PRI}")
+			func_wrap_ecc_pri "${ECC_P224_KEY_SIZE_PRI}"
+			;;
+		"${ECC_P224_KEY_TYPE_PUB}")
+			func_wrap_ecc_pub "${ECC_P224_KEY_SIZE_PUB}"
+			;;
+		"${ECC_P256_KEY_TYPE_PRI}")
+			func_wrap_ecc_pri "${ECC_P256_KEY_SIZE_PRI}"
+			;;
+		"${ECC_P256_KEY_TYPE_PUB}")
+			func_wrap_ecc_pub "${ECC_P256_KEY_SIZE_PUB}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PRI}")
+			func_wrap_ecc_pri "${ECC_BSI_P512_KEY_SIZE_PRI}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PUB}")
+			func_wrap_ecc_pub "${ECC_BSI_P512_KEY_SIZE_PUB}"
+			;;
+		"${KEY_UPDATE_KEY_TYPE}")
+			func_wrap_cmnkey "${KEY_UPDATE_KEY_SIZE}"
+			;;		
 		*)  errlog "[error] ${SCRIPT_NAME}: Unsupported key type \"${TYPE_TARGET_KEY}\"."
 			func_usage_exit
 			;;
@@ -411,12 +450,16 @@ if [ -f /dev/stdin ] || [ -p /dev/stdin ]; then
 	cat "/dev/stdin" > "${TMP_FILE}"
 fi
 
-while getopts :t:p:x OPT
+while getopts :t:p:u:x OPT
 do
 	case "${OPT}" in
 		t) typ_tag_key="${OPTARG}"
 			;;
-		p) dirpath_prv="${OPTARG}"
+		p) flg_key_upd="false"
+		   dirpath_prv="${OPTARG}"
+			;;
+		u) flg_key_upd="true"
+		   dirpath_prv="${OPTARG}"
 			;;
 		x) flg_hex_cmn="true"
 			;;
@@ -431,10 +474,20 @@ fi
 
 TYPE_TARGET_KEY="$(echo "${typ_tag_key}" | tr '[:upper:]' '[:lower:]')"
 
-FILEPATH_USER_FACTORY_PROG_KEY="${dirpath_prv%/}/${FILE_USER_FACTORY_PROG_KEY}.bin"
-FILEPATH_UFPK_ENCRYPT_IV0="${dirpath_prv%/}/${FILE_USER_FACTORY_PROG_IV0}.bin"
-
 FLAG_HEX_COMMON="${flg_hex_cmn}"
+FLAG_KEY_UPDATE="${flg_key_upd}"
+
+if [ "true" != "${FLAG_KEY_UPDATE}" ]; then
+	FILEPATH_KEY_ENCRYPTION_KEY="${dirpath_prv%/}/${FILE_USER_FACTORY_PROG_KEY}.bin"
+	FILEPATH_KEY_ENCRYPTION_IV0="${dirpath_prv%/}/${FILE_USER_FACTORY_PROG_IV0}.bin"
+else
+	FILEPATH_KEY_ENCRYPTION_KEY="${dirpath_prv%/}/${FILE_KEY_UPDATE_KEY}.txt"
+	FILEPATH_KEY_ENCRYPTION_IV0="${dirpath_prv%/}/${FILE_KEY_UPDATE_IV0}.txt"
+fi
+
+HEX_ENC_KEY=
+HEX_MAC_KEY=
+HEX_ENC_IV0=
 
 # Call func_main
 func_main

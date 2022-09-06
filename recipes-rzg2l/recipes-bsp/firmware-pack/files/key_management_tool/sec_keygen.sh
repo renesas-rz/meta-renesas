@@ -240,11 +240,41 @@ func_get_key_filepath ()
 		"${RSA_2048_KEY_TYPE_PUB}")
 			fpath_gen_key="${fpath_gen_key}_pub.pem"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PRI}")
+		"${RSA_4096_KEY_TYPE_PRI}")
 			fpath_gen_key="${fpath_gen_key}.pem"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PUB}")
+		"${RSA_4096_KEY_TYPE_PUB}")
 			fpath_gen_key="${fpath_gen_key}_pub.pem"
+			;;
+		"${ECC_P192_KEY_TYPE_PRI}")
+			fpath_gen_key="${fpath_gen_key}.pem"
+			;;
+		"${ECC_P192_KEY_TYPE_PUB}")
+			fpath_gen_key="${fpath_gen_key}_pub.pem"
+			;;
+		"${ECC_P224_KEY_TYPE_PRI}")
+			fpath_gen_key="${fpath_gen_key}.pem"
+			;;
+		"${ECC_P224_KEY_TYPE_PUB}")
+			fpath_gen_key="${fpath_gen_key}_pub.pem"
+			;;
+		"${ECC_P256_KEY_TYPE_PRI}")
+			fpath_gen_key="${fpath_gen_key}.pem"
+			;;
+		"${ECC_P256_KEY_TYPE_PUB}")
+			fpath_gen_key="${fpath_gen_key}_pub.pem"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PRI}")
+			fpath_gen_key="${fpath_gen_key}.pem"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PUB}")
+			fpath_gen_key="${fpath_gen_key}_pub.pem"
+			;;
+		"${KEY_UPDATE_KEY_TYPE}")
+			fpath_gen_key="${fpath_gen_key}.txt"
+			;;
+		"${KEY_UPDATE_IV0_TYPE}")
+			fpath_gen_key="${fpath_gen_key}.txt"
 			;;
 		*)
 			errlog "[error] ${SCRIPT_NAME}: Unsupported key type \"${key_type}\"."
@@ -306,13 +336,48 @@ func_generate_keyfile ()
 			fpath_pri_key="$(func_get_key_filepath "${RSA_2048_KEY_TYPE_PRI}" "${key_name}" "${dirpath}" "${key_num}")"
 			./genkey.sh -t "${RSA_2048_KEY_TYPE_PUB}" < "${fpath_pri_key}" > "${fpath_gen_key}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PRI}")
-			./genkey.sh -t "${ECDSA_P256_KEY_TYPE_PRI}" > "${fpath_gen_key}"
+		"${RSA_4096_KEY_TYPE_PRI}")
+			./genkey.sh -t "${RSA_4096_KEY_TYPE_PRI}" > "${fpath_gen_key}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PUB}")
-			fpath_pri_key="$(func_get_key_filepath "${ECDSA_P256_KEY_TYPE_PRI}" "${key_name}" "${dirpath}" "${key_num}")"
-			./genkey.sh -t "${ECDSA_P256_KEY_TYPE_PUB}" < "${fpath_pri_key}" > "${fpath_gen_key}"
+		"${RSA_4096_KEY_TYPE_PUB}")
+			fpath_pri_key="$(func_get_key_filepath "${RSA_4096_KEY_TYPE_PRI}" "${key_name}" "${dirpath}" "${key_num}")"
+			./genkey.sh -t "${RSA_4096_KEY_TYPE_PUB}" < "${fpath_pri_key}" > "${fpath_gen_key}"
 			;;
+		"${ECC_P192_KEY_TYPE_PRI}")
+			./genkey.sh -t "${ECC_P192_KEY_TYPE_PRI}" > "${fpath_gen_key}"
+			;;
+		"${ECC_P192_KEY_TYPE_PUB}")
+			fpath_pri_key="$(func_get_key_filepath "${ECC_P192_KEY_TYPE_PRI}" "${key_name}" "${dirpath}" "${key_num}")"
+			./genkey.sh -t "${ECC_P192_KEY_TYPE_PUB}" < "${fpath_pri_key}" > "${fpath_gen_key}"
+			;;
+		"${ECC_P224_KEY_TYPE_PRI}")
+			./genkey.sh -t "${ECC_P224_KEY_TYPE_PRI}" > "${fpath_gen_key}"
+			;;
+		"${ECC_P224_KEY_TYPE_PUB}")
+			fpath_pri_key="$(func_get_key_filepath "${ECC_P224_KEY_TYPE_PRI}" "${key_name}" "${dirpath}" "${key_num}")"
+			./genkey.sh -t "${ECC_P224_KEY_TYPE_PUB}" < "${fpath_pri_key}" > "${fpath_gen_key}"
+			;;
+		"${ECC_P256_KEY_TYPE_PRI}")
+			./genkey.sh -t "${ECC_P256_KEY_TYPE_PRI}" > "${fpath_gen_key}"
+			;;
+		"${ECC_P256_KEY_TYPE_PUB}")
+			fpath_pri_key="$(func_get_key_filepath "${ECC_P256_KEY_TYPE_PRI}" "${key_name}" "${dirpath}" "${key_num}")"
+			./genkey.sh -t "${ECC_P256_KEY_TYPE_PUB}" < "${fpath_pri_key}" > "${fpath_gen_key}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PRI}")
+			./genkey.sh -t "${ECC_BSI_P512_KEY_TYPE_PRI}" > "${fpath_gen_key}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PUB}")
+			fpath_pri_key="$(func_get_key_filepath "${ECC_BSI_P512_KEY_TYPE_PRI}" "${key_name}" "${dirpath}" "${key_num}")"
+			./genkey.sh -t "${ECC_BSI_P512_KEY_TYPE_PUB}" < "${fpath_pri_key}" > "${fpath_gen_key}"
+			;;
+		"${KEY_UPDATE_KEY_TYPE}")
+			./genkey.sh -t "${AES_128_KEY_TYPE}" -x > "${fpath_gen_key}"  
+			./genkey.sh -t "${AES_128_KEY_TYPE}" -x >> "${fpath_gen_key}"  
+			;;
+		"${KEY_UPDATE_IV0_TYPE}")
+			./genkey.sh -t "${AES_128_KEY_TYPE}" -x > "${fpath_gen_key}"  
+			;;			
 		*)
 			errlog "[error] ${SCRIPT_NAME}: Unsupported key type \"${key_type}\"."
 			return 1
@@ -341,7 +406,7 @@ func_encrypt_keyfile ()
 {
 	local fname_gen_key=""; local fpath_enc_key=""
 	
-	local key_type="${1}"; local fpath_gen_key="${2}"; local dirpath_refkey="${3}"
+	local key_type="${1}"; local fpath_gen_key="${2}"; local dirpath_refkey="${3}";
 
 	fname_gen_key="${fpath_gen_key##*/}"
 	fpath_enc_key="${fpath_gen_key%/*}/encrypted-${fname_gen_key%.*}.bin"
@@ -372,11 +437,126 @@ func_encrypt_keyfile ()
 		"${RSA_2048_KEY_TYPE_PUB}")
 			./wrapkey.sh -t "${RSA_2048_KEY_TYPE_PUB}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PRI}")
-			./wrapkey.sh -t "${ECDSA_P256_KEY_TYPE_PRI}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+		"${RSA_4096_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${RSA_4096_KEY_TYPE_PRI}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PUB}")
-			./wrapkey.sh -t "${ECDSA_P256_KEY_TYPE_PUB}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+		"${RSA_4096_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${RSA_4096_KEY_TYPE_PUB}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P192_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_P192_KEY_TYPE_PRI}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P192_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_P192_KEY_TYPE_PUB}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P224_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_P224_KEY_TYPE_PRI}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P224_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_P224_KEY_TYPE_PUB}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P256_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_P256_KEY_TYPE_PRI}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P256_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_P256_KEY_TYPE_PUB}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_BSI_P512_KEY_TYPE_PRI}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_BSI_P512_KEY_TYPE_PUB}" -p "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${KEY_UPDATE_KEY_TYPE}")
+			./wrapkey.sh -t "${AES_256_KEY_TYPE}" -p "${dirpath_refkey}" -x < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		*)
+			errlog "[error] ${SCRIPT_NAME}: Unsupported key type \"${key_type}\"."
+			return 1
+			;;
+	esac
+
+	if [ 0 != $? ]; then
+		return 1
+	else
+		echo "${fpath_enc_key}"
+		return 0
+	fi
+}
+
+#*******************************************************************************
+# Function Name: func_update_keyfile
+# Description  : Encrypt a key and return the path of the encrypted key file.
+# Arguments    : ${1} - key type
+#              : ${2} - path of the encrypted key file
+#              : ${3} - path to the directory where the wrapping key is stored
+#              : stdout - encrypted key path
+# Return Value : 0 or 1
+#*******************************************************************************
+func_update_keyfile ()
+{
+	local fname_gen_key=""; local fpath_enc_key=""
+	
+	local key_type="${1}"; local fpath_gen_key="${2}"; local dirpath_refkey="${3}";
+
+	fname_gen_key="${fpath_gen_key##*/}"
+	fpath_enc_key="${fpath_gen_key%/*}/encrypted-${fname_gen_key%.*}.bin"
+
+	case "${key_type}" in
+
+		"${AES_128_KEY_TYPE}")
+			./wrapkey.sh -t "${AES_128_KEY_TYPE}" -u "${dirpath_refkey}" -x < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${AES_256_KEY_TYPE}")
+			./wrapkey.sh -t "${AES_256_KEY_TYPE}" -u "${dirpath_refkey}" -x < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${HMAC_SHA1_KEY_TYPE}")
+			./wrapkey.sh -t "${HMAC_SHA1_KEY_TYPE}" -u "${dirpath_refkey}" -x < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${HMAC_SHA256_KEY_TYPE}")
+			./wrapkey.sh -t "${HMAC_SHA256_KEY_TYPE}" -u "${dirpath_refkey}" -x < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${RSA_1024_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${RSA_1024_KEY_TYPE_PRI}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${RSA_1024_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${RSA_1024_KEY_TYPE_PUB}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${RSA_2048_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${RSA_2048_KEY_TYPE_PRI}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${RSA_2048_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${RSA_2048_KEY_TYPE_PUB}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${RSA_4096_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${RSA_4096_KEY_TYPE_PRI}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${RSA_4096_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${RSA_4096_KEY_TYPE_PUB}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P192_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_P192_KEY_TYPE_PRI}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P192_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_P192_KEY_TYPE_PUB}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P224_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_P224_KEY_TYPE_PRI}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P224_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_P224_KEY_TYPE_PUB}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P256_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_P256_KEY_TYPE_PRI}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_P256_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_P256_KEY_TYPE_PUB}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PRI}")
+			./wrapkey.sh -t "${ECC_BSI_P512_KEY_TYPE_PRI}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PUB}")
+			./wrapkey.sh -t "${ECC_BSI_P512_KEY_TYPE_PUB}" -u "${dirpath_refkey}" < "${fpath_gen_key}" > "${fpath_enc_key}"
 			;;
 		*)
 			errlog "[error] ${SCRIPT_NAME}: Unsupported key type \"${key_type}\"."
@@ -450,6 +630,24 @@ func_create_bootkey ()
 
 	done
 
+	filepath_gen_enckey="$(func_generate_keyfile "${KEY_UPDATE_KEY_TYPE}" "${FILE_KEY_UPDATE_KEY}" "${dirpath_bootkey}")"
+	if [ 0 != $? ] || [ ! -s "${filepath_gen_enckey}" ]; then
+		errlog "[error] ${SCRIPT_NAME}: Failed to generate the ${FILE_KEY_UPDATE_KEY}."
+		return 1
+	fi
+
+	filepath_enc_cmnkey="$(func_encrypt_keyfile "${KEY_UPDATE_KEY_TYPE}" "${filepath_gen_enckey}" "${DIRPATH_USER_FACTORY_PROG_KEY}")"
+	if [ 0 != $? ] || [ ! -s "${filepath_enc_cmnkey}" ]; then
+		errlog "[error] ${SCRIPT_NAME}: Failed to wrap the \"${filepath_gen_enckey}\"."
+		return 1
+	fi
+
+	filepath_gen_enckey="$(func_generate_keyfile "${KEY_UPDATE_IV0_TYPE}" "${FILE_KEY_UPDATE_IV0}" "${dirpath_bootkey}")"
+	if [ 0 != $? ] || [ ! -s "${filepath_gen_enckey}" ]; then
+		errlog "[error] ${SCRIPT_NAME}: Failed to generate the ${FILE_KEY_UPDATE_IV0}."
+		return 1
+	fi
+
 	echo "${dirpath_bootkey}"
 
 	return 0
@@ -488,7 +686,8 @@ func_create_userkey ()
 		return 1
 	fi
 
-	dirpath_userkey="${dirpath_bootkey%/}/${DIR_USER_KEY}"
+	symlink_userkey="${dirpath_bootkey%/}/${DIR_USER_KEY}"
+	dirpath_userkey="${dirpath_bootkey%/}/${DIR_USER_KEY}"_"$(date '+%Y%m%d-%H%M%S')"
 	
 	num_key_typ="$(echo "${LIST_GENERATION_USERKEY}" | wc -l)"
 
@@ -524,6 +723,85 @@ func_create_userkey ()
 		done
 	done
 
+	ln -nfs "${dirpath_userkey}" "${symlink_userkey}"
+	
+	echo "${dirpath_userkey}"
+
+	return 0
+}
+
+#*******************************************************************************
+# Function Name: func_update_userkey
+# Description  : Update the user keys for Basic cryptographic features
+# Arguments    : ${1} - directory name where the boot key is stored
+#              : stdout - directory path where the use keys were generated
+# Return Value : 0 or 1
+#*******************************************************************************
+func_update_userkey ()
+{
+	local dirname_bootkey=""; local dirpath_bootkey=""; local dirpath_userkey="";
+	
+	local filepath_gen_key=""; local filepath_enc_key=""
+	
+	local dirname_pttrn="${1}"; local pttrn_dirname=""; local num_key_typ=""
+
+	pttrn_dirname="$(func_get_pttrn_newest_dirname "${DIRPATH_KEYGEN_ROOT}" "${dirname_pttrn}")"
+	if [ 0 != $? ] || [ -z "${pttrn_dirname}" ]; then
+		errlog "[error] ${SCRIPT_NAME}: Unable to find the latest directory."
+		return 1
+	fi
+
+	dirname_bootkey="$(func_from_pttrn_to_dirname ${pttrn_dirname})"
+	if [ 0 != $? ] || [ -z "${dirname_bootkey}" ]; then
+		errlog "[error] ${SCRIPT_NAME}: Failed to create the directory name from the pattern \"${pttrn_dirname}\"."
+		return 1
+	fi
+
+	dirpath_bootkey="${DIRPATH_KEYGEN_ROOT%/}/${dirname_bootkey}"
+	if [ ! -d "${dirpath_bootkey}" ]; then
+		errlog "[error] ${SCRIPT_NAME}: Unable to find the directory \"${dirpath_bootkey}\"."
+		return 1
+	fi
+
+	symlink_userkey="${dirpath_bootkey%/}/${DIR_USER_KEY}"
+	dirpath_userkey="${dirpath_bootkey%/}/${DIR_USER_KEY}"_"$(date '+%Y%m%d-%H%M%S')"
+	
+	num_key_typ="$(echo "${LIST_GENERATION_USERKEY}" | wc -l)"
+
+	for i in ${LIST_GENERATION_USERKEY}; do
+
+		set -- $(echo "${i}" | sed -e "s/,/ /g");
+
+		local typ_gen_key="${1}"; local name_gen_key="${2}"; local num_gen_key="${3:-"0"}"
+
+		for j in $(awk "BEGIN{for(x=1; x<=${num_gen_key}; ++x) print x}"); do
+
+			if [ ! -d "${dirpath_userkey}" ]; then
+				mkdir -p "${dirpath_userkey}"
+				if [ 0 != $? ]; then
+					errlog "[error] ${SCRIPT_NAME}: Failed to create the directory \"${dirpath_userkey}\"."
+					return 1
+				fi
+			fi
+			
+			filepath_gen_key="$(func_generate_keyfile "${typ_gen_key}" "${name_gen_key}" "${dirpath_userkey}" ${j})"
+
+			if [ 0 != $? ] || [ ! -s "${filepath_gen_key}" ]; then
+				errlog "[error] ${SCRIPT_NAME}: Failed to generate the ${name_gen_key}."
+				return 1
+			fi
+
+			filepath_enc_key="$(func_update_keyfile ${typ_gen_key} "${filepath_gen_key}" "${dirpath_bootkey}")";
+
+			if [ 0 != $? ] || [ ! -s "${filepath_enc_key}" ]; then
+				errlog "[error] ${SCRIPT_NAME}: Failed to wrap the \"${filepath_gen_key}\"."
+				return 1
+			fi
+		done
+	done
+
+	ln -nfs "${dirpath_userkey}" "${symlink_userkey}"
+	
 	echo "${dirpath_userkey}"
 
 	return 0
@@ -570,12 +848,11 @@ func_main ()
 		if [ 0 != $? ]; then
 			exit 1
 		fi
-		dirname="$(basename "${dirpath}")"
-	fi
-	
-	dirpath="$(func_create_userkey "${dirname}")"
-	if [ 0 != $? ]; then
-		exit 1
+	elif [ 'update' = "${FLAG_SEC_KEYGEN}" ]; then
+		dirpath="$(func_update_userkey "${dirname}")"
+		if [ 0 != $? ]; then
+			exit 1
+		fi
 	fi
 	
 	echo "${dirpath}"
@@ -594,12 +871,14 @@ SCRIPT_NAME="$(basename ${0})"
 
 FLAG_SEC_KEYGEN='create'
 
-while getopts :t:d: OPT
+while getopts :t:d:u OPT
 do
 	case "${OPT}" in
 		t) dirpath_keygen="${OPTARG}"
 			;;
 		d) dirname_pttrn="${OPTARG}"
+			;;
+		u) FLAG_SEC_KEYGEN='update'
 			;;
 		:|\?) func_usage_exit
 			;;

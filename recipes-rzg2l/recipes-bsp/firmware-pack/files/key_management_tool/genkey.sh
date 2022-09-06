@@ -69,17 +69,18 @@ func_gen_rsa_pub ()
 }
 
 #*******************************************************************************
-# Function Name: func_gen_ecdsa_p256
-# Description  : Generate the ecdsa p256 private key.
-# Arguments    : stdout - ecdsa private key in PEM format
+# Function Name: func_gen_p256
+# Description  : Generate the ecc private key.
+# Arguments    : ${1} - key generation option
+#              : stdout - ecc private key in PEM format
 # Return Value : 0 or 1
 #*******************************************************************************
-func_gen_ecdsa_p256_pri ()
+func_gen_ecc_pri ()
 {
-	openssl ecparam -genkey -name prime256v1 -noout 2>/dev/null
+	openssl ecparam -genkey -name ${1} -noout 2>/dev/null
 
 	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to generate ECDSA Private Key."
+		errlog "[error] ${SCRIPT_NAME}: Failed to generate ECC Private Key."
 		return 1
 	fi
 
@@ -87,18 +88,18 @@ func_gen_ecdsa_p256_pri ()
 }
 
 #*******************************************************************************
-# Function Name: func_gen_ecdsa_pub
-# Description  : Generate the ecdsa p256 public key.
-# Arguments    : stdin - ecdsa private key in PEM format
-#              : stdout - ecdsa public key in PEM format
+# Function Name: func_gen_ecc_pub
+# Description  : Generate the ecc p256 public key.
+# Arguments    : stdin - ecc private key in PEM format
+#              : stdout - ecc public key in PEM format
 # Return Value : 0 or 1
 #*******************************************************************************
-func_gen_ecdsa_pub ()
+func_gen_ecc_pub ()
 {
 	openssl ec -pubout 2>/dev/null
 
 	if [ 0 != $? ]; then
-		errlog "[error] ${SCRIPT_NAME}: Failed to generate ECDSA Public Key."
+		errlog "[error] ${SCRIPT_NAME}: Failed to generate ECC Public Key."
 		return 1
 	fi
 
@@ -134,8 +135,16 @@ func_usage_exit ()
 	errlog "         ${RSA_1024_KEY_TYPE_PUB}"
 	errlog "         ${RSA_2048_KEY_TYPE_PRI}"
 	errlog "         ${RSA_2048_KEY_TYPE_PUB}"
-	errlog "         ${ECDSA_P256_KEY_TYPE_PRI}"
-	errlog "         ${ECDSA_P256_KEY_TYPE_PUB}"
+	errlog "         ${RSA_4096_KEY_TYPE_PRI}"
+	errlog "         ${RSA_4096_KEY_TYPE_PUB}"
+	errlog "         ${ECC_P192_KEY_TYPE_PRI}"
+	errlog "         ${ECC_P192_KEY_TYPE_PUB}"
+	errlog "         ${ECC_P224_KEY_TYPE_PRI}"
+	errlog "         ${ECC_P224_KEY_TYPE_PUB}"
+	errlog "         ${ECC_P256_KEY_TYPE_PRI}"
+	errlog "         ${ECC_P256_KEY_TYPE_PUB}"
+	errlog "         ${ECC_BSI_P512_KEY_TYPE_PRI}"
+	errlog "         ${ECC_BSI_P512_KEY_TYPE_PUB}"
 	errlog
 	errlog "  -x"
 	errlog "     Output common key in hex text."
@@ -183,11 +192,35 @@ func_main ()
 		"${RSA_2048_KEY_TYPE_PUB}")
 			func_gen_rsa_pub  < "${TMP_FILE}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PRI}")
-			func_gen_ecdsa_p256_pri
+		"${RSA_4096_KEY_TYPE_PRI}")
+			func_gen_rsa_pri "${RSA_4096_KEY_SIZE}"
 			;;
-		"${ECDSA_P256_KEY_TYPE_PUB}")
-			func_gen_ecdsa_pub  < "${TMP_FILE}"
+		"${RSA_4096_KEY_TYPE_PUB}")
+			func_gen_rsa_pub  < "${TMP_FILE}"
+			;;
+		"${ECC_P192_KEY_TYPE_PRI}")
+			func_gen_ecc_pri prime192v1
+			;;
+		"${ECC_P192_KEY_TYPE_PUB}")
+			func_gen_ecc_pub  < "${TMP_FILE}"
+			;;
+		"${ECC_P224_KEY_TYPE_PRI}")
+			func_gen_ecc_pri secp224r1
+			;;
+		"${ECC_P224_KEY_TYPE_PUB}")
+			func_gen_ecc_pub  < "${TMP_FILE}"
+			;;
+		"${ECC_P256_KEY_TYPE_PRI}")
+			func_gen_ecc_pri prime256v1
+			;;
+		"${ECC_P256_KEY_TYPE_PUB}")
+			func_gen_ecc_pub  < "${TMP_FILE}"
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PRI}")
+			func_gen_ecc_pri brainpoolP512r1
+			;;
+		"${ECC_BSI_P512_KEY_TYPE_PUB}")
+			func_gen_ecc_pub  < "${TMP_FILE}"
 			;;
 		*)  errlog "[error] ${SCRIPT_NAME}: Unsupported key type \"${TYPE_TARGET_KEY}\"."
 			func_usage_exit

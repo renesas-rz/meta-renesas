@@ -152,86 +152,62 @@ func_load_rsa_pri ()
 		return 1
 	fi
 
-	local hex_exponent1="$(echo "${pem_rsa_key}" | func_extract_rsaprm "exponent1")"
+	local hex_privateExponent="$(echo "${pem_rsa_key}" | func_extract_rsaprm "privateExponent")"
 	if [ 0 != $? ]; then
-		errlog "[error] utility.sh: The exponent1 parameter cannot be found."
+		errlog "[error] utility.sh: The privateExponent parameter cannot be found."
 		return 1
 	fi
 
-	local hex_exponent2="$(echo "${pem_rsa_key}" | func_extract_rsaprm "exponent2")"
-	if [ 0 != $? ]; then
-		errlog "[error] utility.sh: The exponent2 parameter cannot be found."
-		return 1
-	fi
-
-	local hex_prime1="$(echo "${pem_rsa_key}" | func_extract_rsaprm "prime1")"
-	if [ 0 != $? ]; then
-		errlog "[error] utility.sh: The prime1 parameter cannot be found."
-		return 1
-	fi
-
-	local hex_prime2="$(echo "${pem_rsa_key}" | func_extract_rsaprm "prime2")"
-	if [ 0 != $? ]; then
-		errlog "[error] utility.sh: The prime2 parameter cannot be found."
-		return 1
-	fi
-
-	local hex_coefficient="$(echo "${pem_rsa_key}" | func_extract_rsaprm "coefficient")"
-	if [ 0 != $? ]; then
-		errlog "[error] utility.sh: The coefficient parameter cannot be found."
-		return 1
-	fi
-
-	echo -n "${hex_exponent2}${hex_prime2}${hex_exponent1}${hex_prime1}${hex_coefficient}"
+	echo -n "${hex_modulus}${hex_privateExponent}"
 
 	return 0
 }
 
 #*******************************************************************************
-# Function Name: func_extract_ecdsaprm
-# Description  : Extract parameters from PEM format ECDSA key.
-# Arguments    : ${1} - ecdsa parameters
-#              : stdin - ecdsa key in PEM format
-#              : stdout - hexadecimal string of the ecdsa key parameter
+# Function Name: func_extract_eccprm
+# Description  : Extract parameters from PEM format ECC key.
+# Arguments    : ${1} - ecc parameters
+#              : stdin - ecc key in PEM format
+#              : stdout - hexadecimal string of the ecc key parameter
 # Return Value : 0 or 1
 #*******************************************************************************
-func_extract_ecdsaprm ()
+func_extract_eccprm ()
 {
-	local txt_ecdsa_prms="${1}"
+	local txt_ecc_prms="${1}"
 
-	local pem_ecdsa_key="$(cat)"
+	local pem_ecc_key="$(cat)"
 
-	local txt_ecdsa_key=""
+	local txt_ecc_key=""
 
-	echo "${pem_ecdsa_key}" | grep -i "PRIVATE KEY" >/dev/null
+	echo "${pem_ecc_key}" | grep -i "PRIVATE KEY" >/dev/null
 	if [ 0 = $? ]; then
-		txt_ecdsa_key="$(echo "${pem_ecdsa_key}" | openssl ec -text -noout 2>/dev/null)"
+		txt_ecc_key="$(echo "${pem_ecc_key}" | openssl ec -text -noout 2>/dev/null)"
 	else
-		txt_ecdsa_key="$(echo "${pem_ecdsa_key}" | openssl ec -text -noout -pubin -conv_form uncompressed 2>/dev/null)"
+		txt_ecc_key="$(echo "${pem_ecc_key}" | openssl ec -text -noout -pubin -conv_form uncompressed 2>/dev/null)"
 	fi
 
-	if [ $? != 0 ] || [ -z "${txt_ecdsa_key}" ]; then
-		errlog "[error] utility.sh: Unable to load ECDSA key from PEM file."
+	if [ $? != 0 ] || [ -z "${txt_ecc_key}" ]; then
+		errlog "[error] utility.sh: Unable to load ECC key from PEM file."
 		return 1
 	fi
 
 	local line_num_prm=""
 
-	for txt_ecdsa_prm in ${txt_ecdsa_prms}; do
-		line_num_prm="$(echo "${txt_ecdsa_key}" | grep -i "${txt_ecdsa_prm}:" -n | sed -e 's/:.*//g')"
+	for txt_ecc_prm in ${txt_ecc_prms}; do
+		line_num_prm="$(echo "${txt_ecc_key}" | grep -i "${txt_ecc_prm}:" -n | sed -e 's/:.*//g')"
 		if [ 0 = $? ] && [ ! -z "${line_num_prm}" ]; then
 			break;
 		fi
 	done
 
 	if [ -z "${line_num_prm}" ]; then
-		errlog "[error] utility.sh: ECDSA parameter cannot be found \"${txt_ecdsa_prms}\"."
+		errlog "[error] utility.sh: ECC parameter cannot be found \"${txt_ecc_prms}\"."
 		return 1
 	fi
 
-	txt_ecdsa_key="$(echo "${txt_ecdsa_key}" | tail -n +"${line_num_prm}")"
+	txt_ecc_key="$(echo "${txt_ecc_key}" | tail -n +"${line_num_prm}")"
 
-	echo "${txt_ecdsa_key}" | while read txt_line || [ -n "${txt_line}" ];
+	echo "${txt_ecc_key}" | while read txt_line || [ -n "${txt_line}" ];
 	do
 		local txt_key_line="$(echo "${txt_line}" | sed "s/^\s*\(.*\)\s*$/\1/g")"
 		echo -n "${txt_key_line}"
@@ -240,22 +216,22 @@ func_extract_ecdsaprm ()
 		if [ ":" != "${txt_end_code}" ]; then
 			break
 		fi
-	done | sed -e "s/${txt_ecdsa_prm}:[ \t]*\([^ \t]*\).*/\1/i" | sed -e "s/://g"
+	done | sed -e "s/${txt_ecc_prm}:[ \t]*\([^ \t]*\).*/\1/i" | sed -e "s/://g"
 
 	return $?
 }
 
 #*******************************************************************************
-# Function Name: func_load_ecdsa_pub
-# Description  : Load the ecdsa public key parameter as a hexadecimal string
-# Arguments    : ${1} - ecdsa key length in bytes
-#              : stdin - ecdsa key in PEM format
-#              : stdout - hexadecimal string of the ecdsa public key parameter
+# Function Name: func_load_ecc_pub
+# Description  : Load the ecc public key parameter as a hexadecimal string
+# Arguments    : ${1} - ecc key length in bytes
+#              : stdin - ecc key in PEM format
+#              : stdout - hexadecimal string of the ecc public key parameter
 # Return Value : 0 or 1
 #*******************************************************************************
-func_load_ecdsa_pub ()
+func_load_ecc_pub ()
 {
-	local pem_ecdsa_key="$(cat)"
+	local pem_ecc_key="$(cat)"
 
 	local len_tag_key="$(expr ${1} \* 2)"
 
@@ -264,7 +240,7 @@ func_load_ecdsa_pub ()
 		return 1
 	fi
 
-	local hex_pub="$(echo "${pem_ecdsa_key}" | func_extract_ecdsaprm "pub")"
+	local hex_pub="$(echo "${pem_ecc_key}" | func_extract_eccprm "pub")"
 	if [ 0 != $? ]; then
 		errlog "[error] utility.sh: The public parameter cannot be found."
 		return 1
@@ -278,16 +254,16 @@ func_load_ecdsa_pub ()
 }
 
 #*******************************************************************************
-# Function Name: func_load_ecdsa_pri
-# Description  : Load the ecdsa private key parameter as a hexadecimal string
-# Arguments    : ${1} - ecdsa key length in bytes
-#              : stdin - ecdsa private key in PEM format
-#              : stdout - hexadecimal string of the ecdsa private key parameter
+# Function Name: func_load_ecc_pri
+# Description  : Load the ecc private key parameter as a hexadecimal string
+# Arguments    : ${1} - ecc key length in bytes
+#              : stdin - ecc private key in PEM format
+#              : stdout - hexadecimal string of the ecc private key parameter
 # Return Value : 0 or 1
 #*******************************************************************************
-func_load_ecdsa_pri ()
+func_load_ecc_pri ()
 {
-	local pem_ecdsa_key="$(cat)"
+	local pem_ecc_key="$(cat)"
 
 	local len_tag_key="$(expr ${1} \* 2)"
 
@@ -296,7 +272,7 @@ func_load_ecdsa_pri ()
 		return 1
 	fi
 
-	local hex_priv="$(echo "${pem_ecdsa_key}" | func_extract_ecdsaprm "priv")"
+	local hex_priv="$(echo "${pem_ecc_key}" | func_extract_eccprm "priv")"
 	if [ 0 != $? ]; then
 		errlog "[error] utility.sh: The priv parameter cannot be found."
 		return 1

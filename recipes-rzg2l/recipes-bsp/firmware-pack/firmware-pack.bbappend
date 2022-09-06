@@ -1,7 +1,7 @@
 require include/rzg2l-security-config.inc
 
 DEPENDS_append = " \
-	${@oe.utils.conditional("ENABLE_SPD_OPTEE", "1", " optee-os", "",d)} \
+	${@oe.utils.conditional("ENABLE_SPD_OPTEE", "1", " optee-os secprv-native", "",d)} \
 	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", " secprv-native", "",d)} \
 "
 
@@ -75,15 +75,32 @@ do_deploy_append () {
 			install -m 0644 ${S}/fip_pmic_tbb.bin     ${DEPLOYDIR}/fip-${MACHINE}_pmic_tbb.bin
 			install -m 0644 ${S}/fip_pmic_tbb.srec    ${DEPLOYDIR}/fip-${MACHINE}_pmic_tbb.srec
 		fi
+	fi
 
+	if [ -d "${SYMLINK_NATIVE_BOOT_KEY_DIR}" ]; then
 		# Copy install keys
 		install -d ${S}/user_factory_prog
 		install -m 0644 ${SYMLINK_NATIVE_BOOT_KEY_DIR}/encrypted-*.bin     ${S}/user_factory_prog
+		install -m 0644 ${SYMLINK_NATIVE_BOOT_KEY_DIR}/kuk_init_vec.txt    ${S}/user_factory_prog
 		install -m 0644 ${SYMLINK_NATIVE_PROV_KEY_DIR}/ufpk_init_vec.bin   ${S}/user_factory_prog
+
+		if [ "${TRUSTED_BOARD_BOOT}" = "1" ]; then
 		install -m 0644 ${STAGING_DIR_HOST}/boot/root_of_trust_key_pk.hash ${S}/user_factory_prog
+		fi
 
 		cd ${S}/user_factory_prog
 		tar zcvf ${S}/user_factory_prog-${MACHINE}.tar.gz *
 		install -m 0644 ${S}/user_factory_prog-${MACHINE}.tar.gz ${DEPLOYDIR}/
+	fi
+
+	if [ -d "${SYMLINK_NATIVE_BOOT_KEY_DIR}/user_keys" ]; then
+		install -d ${S}/sce_enc_oem_key
+		install -m 0644 ${SYMLINK_NATIVE_BOOT_KEY_DIR}/user_keys/encrypted-*.bin ${S}/sce_enc_oem_key
+		
+		if [ -n "$(ls ${S}/sce_enc_oem_key)" ]; then
+			cd ${S}
+			tar zcvf sce_enc_oem_key_${MACHINE}.tar.gz sce_enc_oem_key
+			install -m 0644 ${S}/sce_enc_oem_key_${MACHINE}.tar.gz ${DEPLOYDIR}/
+		fi
 	fi
 }
