@@ -1,0 +1,35 @@
+From 12d3ff214a5aca024c25cf355dda926b4e5a2c9f Mon Sep 17 00:00:00 2001
+From: hayashif <futoshi.hayashi.pd@renesas.com>
+Date: Fri, 8 Jul 2022 18:09:14 +0900
+Subject: [PATCH] Added code to explicitly initialize the divider of PLL1
+
+---
+ plat/renesas/rz/common/drivers/cpg.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/plat/renesas/rz/common/drivers/cpg.c b/plat/renesas/rz/common/drivers/cpg.c
+index b5fe78e59..1820c52b9 100644
+--- a/plat/renesas/rz/common/drivers/cpg.c
++++ b/plat/renesas/rz/common/drivers/cpg.c
+@@ -882,8 +882,18 @@ void cpg_reset_ddr_mc(void)
+ 	udelay(1);
+ }
+ 
++static void cpu_cpg_setup(void)
++{
++	while ((mmio_read_32(CPG_CLKSTATUS) & CLKSTATUS_DIVPL1_STS) != 0x00000000)
++		;
++	mmio_write_32(CPG_PL1_DDIV, PL1_DDIV_DIVPL1_SET_WEN | PL1_DDIV_DIVPL1_SET_1_1);
++	while ((mmio_read_32(CPG_CLKSTATUS) & CLKSTATUS_DIVPL1_STS) != 0x00000000)
++		;
++}
++
+ void cpg_early_setup(void)
+ {
++	cpu_cpg_setup();
+ 	cpg_ctrl_clkrst(&early_setup_tbl[0], ARRAY_SIZE(early_setup_tbl));
+ }
+ 
+-- 
+2.34.1.windows.1
+
