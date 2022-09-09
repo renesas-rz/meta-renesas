@@ -5,10 +5,12 @@ DEPENDS_append = " \
 	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", "python3-pycryptodome-native python3-pycryptodomex-native secprv-native", "",d)} \
 "
 
-EXTRA_OEMAKE_append = " \
+SEC_FLAGS = " \
 	${@oe.utils.conditional("ENABLE_SPD_OPTEE", "1", " SPD=opteed", "",d)} \
 	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", " TRUSTED_BOARD_BOOT=1 COT=tbbr", "",d)} \
 "
+EXTRA_FLAGS_append += "${SEC_FLAGS}"
+PMIC_EXTRA_FLAGS_append += "${SEC_FLAGS}"
 
 do_compile_append() {
 
