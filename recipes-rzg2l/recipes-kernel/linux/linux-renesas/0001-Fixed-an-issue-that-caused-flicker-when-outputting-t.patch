@@ -1,26 +1,25 @@
-From 1fbe97ec036062779dc1d15040cdb4d7b7aa6d34 Mon Sep 17 00:00:00 2001
-From: Hien Huynh <hien.huynh.px@renesas.com>
-Date: Sun, 6 Mar 2022 00:18:41 +0700
+From 66c1c9126f4a39199f283a2e239ef52920ec11a3 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 8 Sep 2022 13:13:50 +0700
 Subject: [PATCH] Fixed an issue that caused flicker when outputting the screen
 
 This commit is created to fix flickerring issue.
 
-Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
 ---
- drivers/gpu/drm/bridge/adv7511/adv7533.c |   6 +
- drivers/gpu/drm/rcar-du/rcar_du_crtc.c   | 302 +++++++++++++++--------
+ drivers/gpu/drm/bridge/adv7511/adv7533.c |   5 ++
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c   | 103 ++++++++++++++++++-----
  drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c |   5 +-
- 3 files changed, 214 insertions(+), 99 deletions(-)
+ 3 files changed, 92 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/gpu/drm/bridge/adv7511/adv7533.c b/drivers/gpu/drm/bridge/adv7511/adv7533.c
-index aa19d5a40e31..eb39b4f5eeba 100644
+index aa19d5a40e31..a42348e2150c 100644
 --- a/drivers/gpu/drm/bridge/adv7511/adv7533.c
 +++ b/drivers/gpu/drm/bridge/adv7511/adv7533.c
-@@ -105,6 +105,12 @@ void adv7533_mode_set(struct adv7511 *adv, const struct drm_display_mode *mode)
+@@ -105,6 +105,11 @@ void adv7533_mode_set(struct adv7511 *adv, const struct drm_display_mode *mode)
  	struct mipi_dsi_device *dsi = adv->dsi;
  	int lanes, ret;
  
-+
 +	if (adv->type == ADV7535)
 +	{
 +		return;
@@ -30,15 +29,11 @@ index aa19d5a40e31..eb39b4f5eeba 100644
  		return;
  
 diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
-index 8913bdea4b96..c52583a7d445 100644
+index 3870041c93e1..196667b40366 100644
 --- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
 +++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
-@@ -224,153 +224,209 @@ struct cpg_param {
- 	u32	dsi_div_b;
- };
- 
--#define	TABLE_MAX		11
-+#define	TABLE_MAX		14
+@@ -227,7 +227,24 @@ struct cpg_param {
+ #define	TABLE_MAX		14
  #define	TABLE_PARALLEL_MAX	11
  #define reg_write(x, a)		iowrite32(a, x)
 +#define	reg_read(x)		ioread32(x)
@@ -60,271 +55,9 @@ index 8913bdea4b96..c52583a7d445 100644
 +#define	PLL5_MON_PLL5_LOCK	(1 << 4)
 +#define	DIVDSILPCLK_STS		(1 << 7)
  
- struct cpg_param resolution_param[TABLE_MAX] = {
- 	{
- 		/* VGA 25.175MHz	*/
- 		/* frequency		*/	25175,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	16,
--		/* pl5_fracin		*/	13141593,
--		/* pl5_postdiv1		*/	1,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	125,
-+		/* pl5_fracin		*/	14680064,
-+		/* pl5_postdiv1		*/	5,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* VGA 25.200MHz	*/
- 		/* frequency		*/	25200,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	16,
--		/* pl5_fracin		*/	13421773,
--		/* pl5_postdiv1		*/	1,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	75,
-+		/* pl5_fracin		*/	10066329,
-+		/* pl5_postdiv1		*/	3,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
--		/* 480p 27.000MHz	*/
-+		/* 480p/576p 27.000MHz	*/
- 		/* frequency		*/	27000,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	18,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	81,
- 		/* pl5_fracin		*/	0,
--		/* pl5_postdiv1		*/	1,
-+		/* pl5_postdiv1		*/	3,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* 480p 27.027MHz	*/
- 		/* frequency		*/	27027,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	18,
--		/* pl5_fracin		*/	301990,
--		/* pl5_postdiv1		*/	1,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	81,
-+		/* pl5_fracin		*/	1358954,
-+		/* pl5_postdiv1		*/	3,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* WVGA 29.605MHz	*/
- 		/* frequency		*/	29605,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	19,
--		/* pl5_fracin		*/	12359216,
--		/* pl5_postdiv1		*/	1,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	88,
-+		/* pl5_fracin		*/	13673431,
-+		/* pl5_postdiv1		*/	3,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* SVGA 40.00MHz	*/
- 		/* frequency		*/	40000,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	43,
--		/* pl5_fracin		*/	11184810,
--		/* pl5_postdiv1		*/	1,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	80,
-+		/* pl5_fracin		*/	0,
-+		/* pl5_postdiv1		*/	2,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* XGA	65.00MHz	*/
- 		/* frequency		*/	65000,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	43,
--		/* pl5_fracin		*/	5592405,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	130,
-+		/* pl5_fracin		*/	0,
-+		/* pl5_postdiv1		*/	2,
-+		/* pl5_postdiv2		*/	1,
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
-+	},
-+	{
-+		/* WXGA 1280x800 71.0MHz	*/
-+		/* frequency		*/	71000,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	71,
-+		/* pl5_fracin		*/	0,
- 		/* pl5_postdiv1		*/	1,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* 720p 74.176MHz	*/
- 		/* frequency		*/	74176,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	49,
--		/* pl5_fracin		*/	7560932,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	74,
-+		/* pl5_fracin		*/	2952790,
- 		/* pl5_postdiv1		*/	1,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* 720p 74.25MHz	*/
- 		/* frequency		*/	74250,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	49,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	74,
-+		/* pl5_fracin		*/	4194304,
-+		/* pl5_postdiv1		*/	1,
-+		/* pl5_postdiv2		*/	1,
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
-+	},
-+	{
-+		/* FWXGA 1360x768 85.5MHz	*/
-+		/* frequency		*/	85500,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	85,
- 		/* pl5_fracin		*/	8388608,
- 		/* pl5_postdiv1		*/	1,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
--		/* dsi_div_b		*/	3,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
--		/* SXGA 108MHz		*/
-+		/* WXGA+ 1440x900 88.75MHz		*/
-+		/* frequency		*/	88750,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	88,
-+		/* pl5_fracin		*/	12582912,
-+		/* pl5_postdiv1		*/	1,
-+		/* pl5_postdiv2		*/	1,
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
-+		/* dsi_div_b		*/	2,	// 1/3
-+	},
-+	{
-+		/* SXGA 108.0MHz		*/
- 		/* frequency		*/	108000,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	54,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	108,
- 		/* pl5_fracin		*/	0,
- 		/* pl5_postdiv1		*/	1,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
- 		/* dsi_div_b		*/	2,	// 1/3
- 	},
- 	{
- 		/* 1080p 148.5MHz	*/
- 		/* frequency		*/	148500,
--		/* pl5_refdiv		*/	1,
--		/* pl5_intin		*/	74,
--		/* pl5_fracin		*/	4194304,
-+		/* pl5_refdiv		*/	2,
-+		/* pl5_intin		*/	148,
-+		/* pl5_fracin		*/	8388608,
- 		/* pl5_postdiv1		*/	1,
- 		/* pl5_postdiv2		*/	1,
--		/* pl5_divval		*/	6,
--		/* pl5_spread		*/	5,
--		/* dsi_div_a		*/	2,	// 1/4
-+		/* pl5_divval		*/	0,
-+		/* pl5_spread		*/	0x16,
-+		/* dsi_div_a		*/	1,	// 1/2
- 		/* dsi_div_b		*/	2,	// 1/3
- 	},
- };
-@@ -536,6 +592,7 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ struct cpg_param resolution_2_lanes_param[TABLE_MAX - 1] = {
+ 	{ 25175, 2,  50,  5872025, 1, 1, 0, 0x16, 1, 5}, /* VGA 25.175MHz */
+@@ -309,6 +326,7 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
  		u32 parallelOut;
  		u32 tableMax;
  		struct cpg_param *paramPtr;
@@ -332,7 +65,17 @@ index 8913bdea4b96..c52583a7d445 100644
  
  		if (of_machine_is_compatible("renesas,r9a07g043")) {
  			parallelOut = 1;
-@@ -567,30 +624,79 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+@@ -338,9 +356,6 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 			default:
+ 				return;
+ 			}
+-
+-			/* CPG_OTHERFUNC1_REG: SEL_PLL5_3 clock */
+-			reg_write(cpg_base + 0xbe8, 0x10001);
+ 		}
+ 
+ 		for (i = 0; i < tableMax; i++) {
+@@ -363,31 +378,79 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
  		if (i == tableMax)
  			index = tableMax - 1;
  
@@ -389,9 +132,9 @@ index 8913bdea4b96..c52583a7d445 100644
 +		/* SPREAD */
 +		reg_write(cpg_base + CPG_SIPLL5_CLK5,
  			 (paramPtr[index].pl5_spread << 0));
+ 
 -		/* CPG_PLL5_STBY: RESETB=1 */
 -		reg_write(cpg_base + 0x0140, 0x00150001);
-+
 +		if (parallelOut == 0) {
 +			do {
 +				val = reg_read(cpg_base + CPG_CPG_CLKSTATUS);
@@ -430,10 +173,10 @@ index 8913bdea4b96..c52583a7d445 100644
  		iounmap(cpg_base);
  
 diff --git a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
-index f3a6a64ff514..141ffbfeb792 100644
+index 9432ba8e39b7..3ed44a9b1472 100644
 --- a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
 +++ b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
-@@ -181,7 +181,10 @@ static int rzg2l_mipi_dsi_startup(struct rzg2l_mipi_dsi *mipi_dsi)
+@@ -183,7 +183,10 @@ static int rzg2l_mipi_dsi_startup(struct rzg2l_mipi_dsi *mipi_dsi)
  		timings.ths_settle = 9;
  		timings.ths_exit = 13;
  		timings.ths_trail = 17;
@@ -446,5 +189,5 @@ index f3a6a64ff514..141ffbfeb792 100644
  
  	dphytim0 = DSIDPHYTIM0_TCLK_MISS(timings.tclk_miss) |
 -- 
-2.17.1
+2.25.1
 
