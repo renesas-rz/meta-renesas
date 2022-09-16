@@ -9,9 +9,9 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE.md;md5=daa2bcccc666345ab8940aab1315a4fa"
 #TAG: 3.15.0
 PV_rzg2h = "3.15.0+git${SRCPV}"
 SRCREV_rzg2h = "f88f69eb27beda52998de09cd89a7ee422da00d9"
-#TAG: 3.14.0
-PV_rzg2l = "3.14.0+git${SRCPV}"
-SRCREV_rzg2l = "f2eb88affbb7f028561b4fd5cbd049d5d704f741"
+#TAG: 3.17.0
+PV_rzg2l = "3.17.0+git${SRCPV}"
+SRCREV_rzg2l = "44a31d02379bd8e50762caa5e1592ad81e3339af"
 
 BRANCH = "master"
 
