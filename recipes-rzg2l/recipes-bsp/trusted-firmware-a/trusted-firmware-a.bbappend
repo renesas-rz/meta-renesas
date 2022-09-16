@@ -68,9 +68,3 @@ do_install_append () {
 		install -m 0644 ${S}/build/${PLATFORM}/release/root_of_trust_key_pk.hash ${D}/boot/root_of_trust_key_pk.hash
 	fi
 }
-
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI_append = " \
-	file://0001-Added-code-to-explicitly-initialize-the-divider-of-P.patch \
-	file://0002-USB-2.0-Phy-workaround-for-RZ-G2L-LC.patch \
-"
