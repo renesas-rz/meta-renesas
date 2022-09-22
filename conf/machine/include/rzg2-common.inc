@@ -14,7 +14,7 @@ IMAGE_FSTYPES_append = " tar.bz2 ext4"
 SERIAL_CONSOLES = "115200;ttySC0"
 
 # Configuration for ARM Trusted Firmware
-EXTRA_IMAGEDEPENDS += " trusted-firmware-a"
+#EXTRA_IMAGEDEPENDS += " trusted-firmware-a"
 
 # Add variable to Build Configuration in build log
 BUILDCFG_VARS_append = " SOC_FAMILY"

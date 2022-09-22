@@ -18,6 +18,14 @@ SRC_URI_append_rzg2h = " \
 	file://v4l2-init-rzg2hmne.sh \
 "
 
+SRC_URI_append_rzv2m = " \
+	file://v4l2-init-rzg2hmne.sh \
+"
+
+SRC_URI_append_rzv2ma = " \
+	file://v4l2-init-rzg2hmne.sh \
+"
+
 S = "${WORKDIR}"
 
 FILES_${PN} += " \

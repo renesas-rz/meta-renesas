@@ -1,0 +1,26 @@
+From d2a1d9fe9dabdc0145d5d02a1518b6cfc56e43c2 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 18 Feb 2022 13:26:31 +0700
+Subject: [PATCH] ptrace-rzv2m
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ arch/arm64/include/asm/ptrace.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/include/asm/ptrace.h b/arch/arm64/include/asm/ptrace.h
+index 28c85b8..7478e60 100644
+--- a/arch/arm64/include/asm/ptrace.h
++++ b/arch/arm64/include/asm/ptrace.h
+@@ -15,7 +15,7 @@
+ /* Current Exception Level values, as contained in CurrentEL */
+ #define CurrentEL_EL1		(1 << 2)
+ #define CurrentEL_EL2		(2 << 2)
+-
++#define CurrentEL_EL3           (3 << 2)
+ /*
+  * PMR values used to mask/unmask interrupts.
+  *
+-- 
+2.7.4
+

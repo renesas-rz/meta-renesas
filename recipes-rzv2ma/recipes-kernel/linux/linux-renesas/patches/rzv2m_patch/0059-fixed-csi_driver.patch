@@ -1,0 +1,269 @@
+From ddb500736aabba23cdc930c25e2778d8cdd78d7e Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 7 Mar 2022 16:21:16 +0700
+Subject: [PATCH] fixed-csi_driver
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/spi/rzv2m_csi.c | 183 ++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 137 insertions(+), 46 deletions(-)
+
+diff --git a/drivers/spi/rzv2m_csi.c b/drivers/spi/rzv2m_csi.c
+index d447daa93..b557790 100644
+--- a/drivers/spi/rzv2m_csi.c
++++ b/drivers/spi/rzv2m_csi.c
+@@ -71,6 +71,10 @@ struct rzv2m_csi_priv {
+        bool slave_aborted;
+        bool transmission_completed;
+        uint32_t time_wait;
++
++       bool overflow_error_flag;
++       bool underrun_error_flag;
++       bool transmit_recept_flag;
+ };
+ 
+ 
+@@ -156,10 +160,11 @@ static void reg_clear_irq(struct rzv2m_csi_priv *p, int irq_msk){
+ static void rzv2m_csi_filltxfifo(struct rzv2m_csi_priv *p, int size)
+ {
+        int i = 0;
+-       if (p->bytes_to_transfer <= 0){
+-               return; //fixme. Check byte transfer remain.
++       if ((p->bytes_to_transfer <= 0) || \
++               (reg_read(p, CSI_OFIFOL) == MAX_BYTE_FIFO_SIZE)){
++               return; //fixme. Check remain byte transfer.
+        }
+-       while(size + reg_read(p, CSI_OFIFOL) > MAX_BYTE_FIFO_SIZE){}
++       size = min_t(int, MAX_BYTE_FIFO_SIZE - reg_read(p, CSI_OFIFOL), size);
+ 
+        if(is_16bit_data_leng(p)){
+                u16 *buf = (u16 *)p->txbuf;
+@@ -201,44 +206,104 @@ static irqreturn_t rzv2m_csi_irq_handler(int irq, void *data){
+        spin_lock_irqsave(&lock_irq, flag);
+        p->time_wait = 0; //reset timeout wait
+ 
+-       if(reg_read_bit(p, CSI_INT, CSI_INT_R_TRGR) == 1){
+-               get_data_in_ififo(p);
+-               reg_clear_irq(p, CSI_INT_R_TRGR);
+-
+-               //fixme. w/a for stopping transfer data in reception-only mode
+-               if(p->bytes_to_receive >= p->bytes_to_transfer){
+-                       rzv2m_csi_stop_operation(p);
+-               }
+-
+-       }
+-
+-       if((reg_read_bit(p, CSI_INT, CSI_INT_TREND) == 1)  || \
+-           (reg_read_bit(p, CSI_INT, CSI_INT_T_TRGR) == 1)){
+-               if(p->rxbuf != NULL){
+-                       get_data_in_ififo(p);
++       if (!spi_controller_is_slave(p->master)){
++               if(is_recv_only_mode(p)){
++                       //handle MASTER RECV only mode
++                       if(reg_read_bit(p, CSI_INT, CSI_INT_R_TRGR) == 1){
++                               get_data_in_ififo(p);
++                               reg_clear_irq(p, CSI_INT_R_TRGR);
++                               //fixme. w/a for stopping transfer data in reception-only mode
++                               if(p->bytes_to_receive >= p->bytes_to_transfer){
++                                       rzv2m_csi_stop_operation(p);
++                               }
++                       } else {
++                               rzv2m_csi_clear_all_irq(p);
++                       }
++               } else {
++                       //handle MASTER SEND/RECV mode
++                       if(reg_read_bit(p, CSI_INT, CSI_INT_OVERF) == 1){
++                               get_data_in_ififo(p);
++                               reg_clear_irq(p, CSI_INT_OVERF);
++                               dev_err(&p->pdev->dev, "Overflow error \n");
++                               p->overflow_error_flag = true;
++                       } else {
++                               if(reg_read_bit(p, CSI_INT, CSI_INT_TREND) == 1){
++                                       p->transmit_recept_flag = true;
++
++                                       if(p->rxbuf != NULL)
++                                               get_data_in_ififo(p);
++
++                                       rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++                                       reg_clear_irq(p, CSI_INT_TREND);
++                               } else {
++                                       if(reg_read_bit(p, CSI_INT, CSI_INT_T_TRGR) == 1){
++                                               p->transmit_recept_flag = true;
++
++                                               if(p->rxbuf != NULL)
++                                                       get_data_in_ififo(p);
++
++                                               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++                                               reg_clear_irq(p, CSI_INT_T_TRGR);
++                                       } else {
++                                               rzv2m_csi_clear_all_irq(p);
++                                       }
++                               }
++                       }
++       	}
++       } else {
++               if(is_recv_only_mode(p)){
++                       //handle SLAVE RECV only mode
++                       if(reg_read_bit(p, CSI_INT, CSI_INT_OVERF) == 1){
++                               get_data_in_ififo(p);
++                               reg_clear_irq(p, CSI_INT_OVERF);
++                               dev_err(&p->pdev->dev, "Overflow error \n");
++                               p->overflow_error_flag = true;
++                       } else {
++                               if(reg_read_bit(p, CSI_INT, CSI_INT_R_TRGR) == 1){
++                                       get_data_in_ififo(p);
++                                       reg_clear_irq(p, CSI_INT_R_TRGR);
++                               } else {
++                                       rzv2m_csi_clear_all_irq(p);
++                               }
++                       }
++               } else {
++                       //handle SLAVE SEND/RECV mode
++                       if(reg_read_bit(p, CSI_INT, CSI_INT_OVERF) == 1){
++                               get_data_in_ififo(p);
++                               reg_clear_irq(p, CSI_INT_OVERF);
++                               dev_err(&p->pdev->dev, "Overflow error \n");
++                               p->overflow_error_flag = true;
++                       } else if(reg_read_bit(p, CSI_INT, CSI_INT_UNDER) == 1){
++                               reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x1);
++                               reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x0);
++                               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++                               rzv2m_csi_start_operation(p);
++                               dev_err(&p->pdev->dev, "Underrun error \n");
++                               p->underrun_error_flag = true;
++                       } else {
++                               if(reg_read_bit(p, CSI_INT, CSI_INT_TREND) == 1){
++                                       p->transmit_recept_flag = true;
++                                       if(p->rxbuf != NULL)
++                                               get_data_in_ififo(p);
++
++                                       rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++                                       reg_clear_irq(p, CSI_INT_TREND);
++                               } else {
++                                       if(reg_read_bit(p, CSI_INT, CSI_INT_T_TRGR) == 1){
++                                               p->transmit_recept_flag = true;
++
++                                               if(p->rxbuf != NULL)
++                                                       get_data_in_ififo(p);
++
++                                               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++                                               reg_clear_irq(p, CSI_INT_T_TRGR);
++                                       } else {
++                                               rzv2m_csi_clear_all_irq(p);
++                                       }
++                               }
++                       }
+                }
+-               reg_clear_irq(p, CSI_INT_TREND);
+-               reg_clear_irq(p, CSI_INT_T_TRGR);
+-               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
+-       }
+-
+-       if(reg_read_bit(p, CSI_INT, CSI_INT_OVERF) == 1){
+-               get_data_in_ififo(p);
+-               reg_clear_irq(p, CSI_INT_OVERF);
+-               dev_err(&p->pdev->dev, "Overflow error \n");
+-       } else if(reg_read_bit(p, CSI_INT, CSI_INT_UNDER) == 1){
+-        reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x1);
+-        reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x0);
+-
+-               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
+-
+-        rzv2m_csi_start_operation(p);
+-
+-               dev_err(&p->pdev->dev, "Underrun error \n");
+-    }
+ 
+-       if(reg_read_bit(p, CSI_INT, CSI_INT_CSIEND) == 1){
+-               reg_clear_irq(p, CSI_INT_CSIEND);
+        }
+ 
+        spin_unlock_irqrestore(&lock_irq, flag);
+@@ -252,19 +317,19 @@ static void rzv2m_csi_spi_set_clk_regs(struct rzv2m_csi_priv *p,
+        u32 cks;
+ 
+        if (!spi_hz || !parent_rate) {
+-               WARN(1, "Invalid clock rate parameters %lu and %u\n",
++	       dev_err(&p->pdev->dev, "Invalid clock rate parameters %lu and %u\n",
+                     parent_rate, spi_hz);
+                return;
+        }
+        cks = parent_rate/(spi_hz*2);
+ 
+        if (cks > 0x3FFF) {
+-               dev_err(&p->pdev->dev,
+-                       "Requested SPI transfer rate %d is too low\n", spi_hz);
++               dev_warn(&p->pdev->dev,
++                       "Requested SPI transfer rate %d is too low. Transfer rate was set %ld\n", spi_hz, parent_rate/0x3FFF);
+                cks = 0x3FFF;
+        } else if(cks < 0x1) {
+-               dev_err(&p->pdev->dev,
+-                       "Requested SPI transfer rate %d is too large\n", spi_hz);
++               dev_warn(&p->pdev->dev,
++                       "Requested SPI transfer rate %d is too large. Transfer rate was set %ld\n", spi_hz, parent_rate/2);
+                cks = 0x1;
+        }
+        reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_CKS, cks);
+@@ -546,6 +611,17 @@ static void get_data_in_ififo(struct rzv2m_csi_priv *p){
+        return;
+ }
+ 
++static void overflow_error_handler(struct rzv2m_csi_priv *p){
++       p->overflow_error_flag = false;
++       return;
++}
++
++static void underrun_error_handler(struct rzv2m_csi_priv *p){
++       p->underrun_error_flag = false;
++       return;
++}
++
++
+ static int rzv2m_csi_start_transfer(struct spi_master *master,
+                                      struct spi_device *qspi,
+                                      struct spi_transfer *transfer)
+@@ -612,6 +688,9 @@ static int rzv2m_csi_start_transfer(struct spi_master *master,
+        p->bytes_to_transfer = transfer->len;
+        p->bytes_to_receive = 0;
+        p->time_wait = 0;
++       p->overflow_error_flag = false;
++       p->underrun_error_flag = false;
++       p->transmit_recept_flag = false;
+ 
+        //clear receive buffer
+        if(p->rxbuf != NULL){
+@@ -637,7 +716,17 @@ static int rzv2m_csi_start_transfer(struct spi_master *master,
+            }
+                if(p->rxbuf != NULL){
+                        while(p->bytes_to_receive < transfer->len){
+-                               get_data_in_ififo(p);
++
++                               if(p->overflow_error_flag == true)
++                                       overflow_error_handler(p);
++
++                               if(p->underrun_error_flag == true)
++                                       underrun_error_handler(p);
++
++                               if(p->transmit_recept_flag == true) {
++                                       get_data_in_ififo(p);
++                                       p->transmit_recept_flag = false;
++                               }
+ 
+                                if(p->time_wait++ > CSI_WAIT_TIME){
+                                        break;
+@@ -650,9 +739,11 @@ static int rzv2m_csi_start_transfer(struct spi_master *master,
+                        }
+                }
+ 
++               //get remain data
++               get_data_in_ififo(p);
+ 
+                if(p->bytes_to_receive < transfer->len){
+-               dev_err(dev, "Fail. Receive/Total = %d/%d byte\n", p->bytes_to_receive, transfer->len);
++	       dev_err(dev, "Receive/Total = %d/%d byte\n", p->bytes_to_receive, transfer->len);
+                }
+         rzv2m_csi_stop_operation(p);
+        }
+-- 
+2.7.4
+

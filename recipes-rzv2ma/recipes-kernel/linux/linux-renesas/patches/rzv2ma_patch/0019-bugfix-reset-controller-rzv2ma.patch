@@ -1,0 +1,1637 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+index 49a6285..4ef2ddb 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+@@ -98,6 +98,7 @@
+               reg = <0 0xa4050000 0 0x80>;
+               clocks = <&cpg CPG_MOD 1112>, <&cpg CPG_MOD 1113>;
+               interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;
++              resets = <&cpg 612>;
+               status = "disabled";
+        };
+        wdt1: watchdog@a4050080 {
+@@ -105,12 +106,14 @@
+               reg = <0 0xa4050080 0 0x80>;
+               clocks = <&cpg CPG_MOD 1114>, <&cpg CPG_MOD 1115>;
+               interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
++              resets = <&cpg 613>;
+               status = "disabled";
+        };
+ 
+        pfc: pin-controller@B6250000 {
+             compatible = "renesas,pfc-r8arzv2m";
+             reg = <0 0xB6250000 0 0x1000>;
++            resets = <&cpg 102>;
+             #interrupt-cells = <2>;
+             interrupt-controller;
+             interrupts =
+@@ -261,6 +264,7 @@
+             reg = <0x00 0xa4020000 0x0 0x80>;
+             interrupts = <GIC_SPI 226 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1508>;
++            resets = <&cpg 606>;
+             #address-cells = <1>;
+             #size-cells = <0>;
+             status = "disabled";
+@@ -273,6 +277,7 @@
+             reg = <0x00 0xa4020080 0x0 0x80>;
+             interrupts = <GIC_SPI 227 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1509>;
++            resets = <&cpg 606>;
+             #address-cells = <1>;
+             #size-cells = <0>;
+             status = "disabled";
+@@ -285,6 +290,7 @@
+             reg = <0x00 0xa4020100 0x0 0x80>;
+             interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1510>;
++            resets = <&cpg 606>;
+             #address-cells = <1>;
+             #size-cells = <0>;
+             status = "disabled";
+@@ -297,6 +303,7 @@
+             reg = <0x00 0xa4020180 0x0 0x80>;
+             interrupts = <GIC_SPI 229 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1511>;
++            resets = <&cpg 606>;
+             #address-cells = <1>;
+             #size-cells = <0>;
+             status = "disabled";
+@@ -309,6 +316,7 @@
+             reg = <0x00 0xa4020200 0x0 0x80>;
+             interrupts = <GIC_SPI 230 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1512>;
++            resets = <&cpg 607>;
+             #address-cells = <1>;
+             #size-cells = <0>;
+             status = "disabled";
+@@ -321,6 +329,7 @@
+             reg = <0x00 0xa4020280 0x0 0x80>;
+             interrupts = <GIC_SPI 231 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1513>;
++            resets = <&cpg 607>;
+             #address-cells = <1>;
+             #size-cells = <0>;
+             status = "disabled";
+@@ -352,6 +361,7 @@
+             reg = <0 0xa4030000 0 0x80>;
+             interrupts = <GIC_SPI 232 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 236 IRQ_TYPE_EDGE_RISING>;
+             clocks = <&cpg CPG_MOD 912>;
++            resets = <&cpg 608>;
+             i2c-scl-internal-delay-ns = <110>;
+             i2c-scl-falling-time-ns = <200>;
+             i2c-scl-rising-time-ns = <200>;
+@@ -365,6 +375,7 @@
+             reg = <0 0xa4030080 0 0x80>;
+             interrupts = <GIC_SPI 233 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 237 IRQ_TYPE_EDGE_RISING>;
+             clocks = <&cpg CPG_MOD 912>;
++            resets = <&cpg 608>;
+             i2c-scl-internal-delay-ns = <110>;
+             i2c-scl-falling-time-ns = <200>;
+             i2c-scl-rising-time-ns = <200>;
+@@ -378,6 +389,7 @@
+             reg = <0 0xa4030100 0 0x80>;
+             interrupts = <GIC_SPI 234 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 238 IRQ_TYPE_EDGE_RISING>;
+             clocks = <&cpg CPG_MOD 1012>;
++            resets = <&cpg 609>;
+             i2c-scl-internal-delay-ns = <110>;
+             i2c-scl-falling-time-ns = <200>;
+             i2c-scl-rising-time-ns = <200>;
+@@ -391,6 +403,7 @@
+             reg = <0 0xa4030180 0 0x80>;
+             interrupts = <GIC_SPI 235 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 239 IRQ_TYPE_EDGE_RISING>;
+             clocks = <&cpg CPG_MOD 1012>;
++            resets = <&cpg 609>;
+             i2c-scl-internal-delay-ns = <110>;
+             i2c-scl-falling-time-ns = <200>;
+             i2c-scl-rising-time-ns = <200>;
+@@ -403,6 +416,7 @@
+             reg = <0 0x85060000 0 0x2000>;
+             interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
+             clocks =  <&cpg CPG_MOD 405>;
++            resets = <&cpg 307>,<&cpg 308>,<&cpg 309>,<&cpg 310>;
+             status = "disabled";
+         };
+ 
+@@ -413,6 +427,7 @@
+                                 <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+             interrupt-names = "drd_int", "axi_int_all_p";
+             clocks =  <&cpg CPG_MOD 405>;
++            resets = <&cpg 307>,<&cpg 308>,<&cpg 309>,<&cpg 310>;
+             status = "disabled";
+         };
+ 
+@@ -421,6 +436,7 @@
+             reg = <0 0x85000000 0 0x2000>;
+             interrupts = <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 357 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 301>;
++            resets = <&cpg 300>;
+             max-frequency = <200000000>;
+             vmmc-supply = <&vcc_sdhi0>;
+             cd-gpios = <&gpio8 07 GPIO_ACTIVE_LOW>;
+@@ -435,6 +451,7 @@
+             reg = <0 0x85020000 0 0x2000>;
+             interrupts = <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 355 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 309>;
++            resets = <&cpg 302>;
+             max-frequency = <200000000>;
+             vmmc-supply = <&reg_3p3v>;
+             vqmmc-supply = <&reg_1p8v>;
+@@ -457,7 +474,7 @@
+                     (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
+             clock-names = "clk";
+             power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;
+-            resets = <&cpg 408>;
++            resets = <&cpg 104>;
+         };
+ 
+         uart0: serial@a4040000 {
+@@ -465,6 +482,7 @@
+             reg = <0x00 0xA4040000 0x00 0x80>;
+             interrupts = <GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>;
+             clock-frequency = <48000000>;
++            resets = <&cpg 610>;
+             reg-shift = <2>;
+             reg-io-width = <4>;
+             status = "disabled";
+@@ -475,6 +493,7 @@
+             reg = <0x00 0xA4040080 0x00 0x80>;
+             interrupts = <GIC_SPI 241 IRQ_TYPE_LEVEL_HIGH>;
+             clock-frequency = <48000000>;
++            resets = <&cpg 610>;
+             reg-shift = <2>;
+             reg-io-width = <4>;
+             status = "disabled";
+@@ -521,6 +540,7 @@
+                       "ch20", "ch21", "ch22", "ch23",
+                       "ch24";
+             clocks = <&cpg CPG_MOD 408>;
++            resets = <&cpg 311>;
+             renesas,no-ether-link;
+             phy-handle = <&phy0>;
+             phy-mode = "rgmii";
+@@ -540,6 +560,7 @@
+             interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 904>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -549,6 +570,7 @@
+             interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 905>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -558,6 +580,7 @@
+             interrupts = <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 906>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -567,6 +590,7 @@
+             interrupts = <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 907>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -576,6 +600,7 @@
+             interrupts = <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 908>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -585,6 +610,7 @@
+             interrupts = <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 909>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -594,6 +620,7 @@
+             interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 910>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -603,6 +630,7 @@
+             interrupts = <GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 911>;
+             clock-names = "timclk";
++            resets = <&cpg 600>;
+             status = "disabled";
+         };
+ 
+@@ -612,6 +640,7 @@
+             interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1004>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+ 
+@@ -621,6 +650,7 @@
+             interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1005>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+ 
+@@ -630,6 +660,7 @@
+             interrupts = <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1006>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+ 
+@@ -639,6 +670,7 @@
+             interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1007>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+ 
+@@ -648,6 +680,7 @@
+             interrupts = <GIC_SPI 119 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1008>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+ 
+@@ -657,6 +690,7 @@
+             interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1009>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+ 
+@@ -666,6 +700,7 @@
+             interrupts = <GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1010>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+ 
+@@ -675,6 +710,7 @@
+             interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1011>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+         tim16: timer@a4000800 {
+@@ -683,6 +719,7 @@
+             interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1104>;
+             clock-names = "timclk";
++            resets = <&cpg 601>;
+             status = "disabled";
+         };
+         tim17: timer@a4000880 {
+@@ -691,6 +728,7 @@
+             interrupts = <GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1105>;
+             clock-names = "timclk";
++            resets = <&cpg 602>;
+             status = "disabled";
+         };
+ 
+@@ -700,6 +738,7 @@
+             interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1106>;
+             clock-names = "timclk";
++            resets = <&cpg 602>;
+             status = "disabled";
+         };
+ 
+@@ -709,6 +748,7 @@
+             interrupts = <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1107>;
+             clock-names = "timclk";
++            resets = <&cpg 602>;
+             status = "disabled";
+         };
+ 
+@@ -718,6 +758,7 @@
+             interrupts = <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1108>;
+             clock-names = "timclk";
++            resets = <&cpg 602>;
+             status = "disabled";
+         };
+ 
+@@ -727,6 +768,7 @@
+             interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1109>;
+             clock-names = "timclk";
++            resets = <&cpg 602>;
+             status = "disabled";
+         };
+ 
+@@ -736,6 +778,7 @@
+             interrupts = <GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1110>;
+             clock-names = "timclk";
++            resets = <&cpg 602>;
+             status = "disabled";
+         };
+         tim23: timer@a4000b80 {
+@@ -744,6 +787,7 @@
+             interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1111>;
+             clock-names = "timclk";
++            resets = <&cpg 602>;
+             status = "disabled";
+         };
+         tim24: timer@a4000c00 {
+@@ -752,6 +796,7 @@
+             interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1204>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+         tim25: timer@a4000c80 {
+@@ -760,6 +805,7 @@
+             interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1205>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+ 
+@@ -769,6 +815,7 @@
+             interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1206>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+ 
+@@ -778,6 +825,7 @@
+             interrupts = <GIC_SPI 134 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1207>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+ 
+@@ -787,6 +835,7 @@
+             interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1208>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+ 
+@@ -796,6 +845,7 @@
+             interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1209>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+ 
+@@ -806,6 +856,7 @@
+             interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1210>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+ 
+@@ -815,6 +866,7 @@
+             interrupts = <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1211>;
+             clock-names = "timclk";
++            resets = <&cpg 603>;
+             status = "disabled";
+         };
+ 
+@@ -824,6 +876,7 @@
+             interrupts = <GIC_SPI 368 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1304>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -834,6 +887,7 @@
+             interrupts = <GIC_SPI 369 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1305>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -844,6 +898,7 @@
+             interrupts = <GIC_SPI 370 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1306>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -854,6 +909,7 @@
+             interrupts = <GIC_SPI 371 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1307>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -864,6 +920,7 @@
+             interrupts = <GIC_SPI 372 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1308>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -874,6 +931,7 @@
+             interrupts = <GIC_SPI 373 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1309>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -884,6 +942,7 @@
+             interrupts = <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1310>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -894,6 +953,7 @@
+             interrupts = <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1311>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 604>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -904,6 +964,7 @@
+             interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1404>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -914,6 +975,7 @@
+             interrupts = <GIC_SPI 377 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1405>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -924,6 +986,7 @@
+             interrupts = <GIC_SPI 378 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1406>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -934,6 +997,7 @@
+             interrupts = <GIC_SPI 379 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1407>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -944,6 +1008,7 @@
+             interrupts = <GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1408>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -954,6 +1019,7 @@
+             interrupts = <GIC_SPI 381 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1409>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -964,6 +1030,7 @@
+             interrupts = <GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1410>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+@@ -974,6 +1041,7 @@
+             interrupts = <GIC_SPI 383 IRQ_TYPE_LEVEL_HIGH>;
+             clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1411>;
+             clock-names = "sys", "pwm";
++            resets = <&cpg 605>;
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
+diff --git a/drivers/clk/clk.c b/drivers/clk/clk.c
+index 61c7871..11f834f 100755
+--- a/drivers/clk/clk.c
++++ b/drivers/clk/clk.c
+@@ -1296,7 +1296,9 @@ static int __init clk_disable_unused(void)
+ 
+ 	return 0;
+ }
++#ifndef CONFIG_CLK_R9A09G055MA3GBG
+ late_initcall_sync(clk_disable_unused);
++#endif
+ 
+ static int clk_core_determine_round_nolock(struct clk_core *core,
+ 					   struct clk_rate_request *req)
+diff --git b/drivers/clk/renesas/r9a09g011gbg-cpg-cocr.c b/drivers/clk/renesas/r9a09g011gbg-cpg-cocr.c
+new file mode 100755
+index 0000000..d773aff
+--- /dev/null
++++ b/drivers/clk/renesas/r9a09g011gbg-cpg-cocr.c
+@@ -0,0 +1,285 @@
++/*
++ * Driver for the Renesas Clock ON/OFF Control Register(COCR)
++ *
++ * Copyright (C) 2022 Renesas Electronics Corporation
++ *
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <linux/init.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++
++#include <dt-bindings/clock/r9a09g011gbg-cpg-cocr.h>
++#include "renesas-cpg-cocr.h"
++
++
++
++
++enum clk_ids {
++       /* Core Clock Outputs exported to DT */
++       LAST_DT_CORE_CLK = 0,
++       /* External Input Clocks */
++//       CLK_EXTAL,
++
++       /* Internal Core Clocks */
++       CLK_MAIN,
++       CLK_MAIN_2,
++       CLK_MAIN_24,
++//     CLK_PLL1,
++       CLK_PLL2,
++       CLK_PLL2_2,
++       CLK_PLL2_8,
++       CLK_PLL2_16,
++       CLK_PLL6,
++//     CLK_DIV_A,
++       CLK_DIV_B,
++       CLK_DIV_D,
++       CLK_DIV_E,
++       CLK_DIV_I,
++       CLK_SEL_B,
++       CLK_SEL_D,
++       CLK_SEL_E,
++       CLK_SEL_I,
++       CLK_SEL_CSI0,
++       CLK_SEL_CSI1,
++       CLK_SEL_CSI2,
++       CLK_SEL_CSI3,
++       CLK_SEL_CSI4,
++       CLK_SEL_CSI5,
++       CLK_SEL_W0,
++       CLK_SEL_W1,
++       CLK_SEL_SDI0,
++
++
++       /* Module Clocks */
++       MOD_CLK_BASE
++};
++
++static const struct cpg_core_clk r9a09g011gbg_core_clks[] __initconst = {
++
++       /* Internal Core Clocks */
++	DEF_RATE(".main",      CLK_MAIN,        CLK_EXTAL_48MHZ),
++	DEF_RATE(".main2",     CLK_MAIN_2,      CLK_EXTAL_48MHZ/2),
++	DEF_RATE(".main24",    CLK_MAIN_24,     CLK_EXTAL_48MHZ/24),
++	DEF_RATE(".pll2",      CLK_PLL2,        CLK_PLL2_1600MHZ),
++	DEF_RATE(".pll2_2",    CLK_PLL2_2,      CLK_PLL2_1600MHZ/2),
++	DEF_RATE(".pll2_8",    CLK_PLL2_8,      CLK_PLL2_1600MHZ/8),
++	DEF_RATE(".pll2_16",   CLK_PLL2_16,     CLK_PLL2_1600MHZ/16),
++	DEF_RATE(".pll6",      CLK_PLL6,        CLK_PLL6_1260MHZ),
++
++       DEF_DIV(".divb",     CLK_DIV_B,          CLK_PLL2,         4,
++               CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
++               CPG_CLKSTATUS_DIVB|CPG_CLKSTATUS_DIVD|CPG_CLKSTATUS_DIVE, 0),
++       DEF_DIV(".divd",     CLK_DIV_D,          CLK_PLL2,         8,
++               CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
++               CPG_CLKSTATUS_DIVB|CPG_CLKSTATUS_DIVD|CPG_CLKSTATUS_DIVE, 0),
++       DEF_DIV(".dive",     CLK_DIV_E,          CLK_PLL2,         16,
++               CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
++               CPG_CLKSTATUS_DIVB|CPG_CLKSTATUS_DIVD|CPG_CLKSTATUS_DIVE, 0),
++       DEF_DIV(".divi",     CLK_DIV_I,          CLK_PLL2,         4,
++               CPG_SDIV_DISP2, CPG_ISP_DDIV2_WEN_DIVI,
++               CPG_CLKSTATUS_DIVI, 0),
++       DEF_DIV(".selb",     CLK_SEL_B,          CLK_DIV_B,  1,
++               CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELB, 0,     CPG_CLK48_DSEL_SELB),
++       DEF_DIV(".seld",     CLK_SEL_D,          CLK_DIV_D,  1,
++               CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELD, 0,     CPG_CLK48_DSEL_SELD),
++       DEF_DIV(".sele",     CLK_SEL_E,          CLK_DIV_E,  1,
++               CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELE, 0,     CPG_CLK48_DSEL_SELE),
++       DEF_DIV(".seli",     CLK_SEL_I,          CLK_DIV_I,  1,
++               CPG_ISP_DSEL, CPG_ISP_DSEL_WEN_SELI, 0,     CPG_ISP_DSEL_SELI),
++
++	DEF_STATIC(".selcsi0",     CLK_SEL_CSI0,          CLK_MAIN,       2,
++               CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI0,       CPG_CSI_RCLK_SSEL_SELCSI0),
++	DEF_STATIC(".selcsi1",     CLK_SEL_CSI1,          CLK_MAIN,       2,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI1,       CPG_CSI_RCLK_SSEL_SELCSI1),
++	DEF_STATIC(".selcsi2",     CLK_SEL_CSI2,          CLK_MAIN,       2,
++               CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI2,       CPG_CSI_RCLK_SSEL_SELCSI2),
++	DEF_STATIC(".selcsi3",     CLK_SEL_CSI3,          CLK_MAIN,       2,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI3,       CPG_CSI_RCLK_SSEL_SELCSI3),
++	DEF_STATIC(".selcsi4",     CLK_SEL_CSI4,          CLK_MAIN,       2,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI4,       CPG_CSI_RCLK_SSEL_SELCSI4),
++	DEF_STATIC(".selcsi5",     CLK_SEL_CSI5,          CLK_MAIN,       2,
++	    CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI5,       CPG_CSI_RCLK_SSEL_SELCSI5),
++	DEF_STATIC(".selw",     CLK_SEL_W0,               DIV_W_48MHZ,    1,
++		CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW0,         CPG_URT_RCLK_SSEL_SELW0),
++	DEF_STATIC(".selw1",    CLK_SEL_W1,               DIV_W_48MHZ,    1,
++		CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW1,         CPG_URT_RCLK_SSEL_SELW1),
++       DEF_STATIC(".selsdi0",     CLK_SEL_SDI0,          CLK_PLL2,       2,
++               CPG_SDIEMM_SSEL,   CPG_SDIEMM_SSEL_WEN_SELSDI,          CPG_SDIEMM_SSEL_SELSDI),
++};
++
++static const struct cocr_mod_clk r9a09g011gbg_mod_clks[] __initconst = {
++        DEF_MOD("dmaa_aclk",            111,    CLK_SEL_D  ),
++        DEF_MOD("sdi0_aclk",            300,    CLK_SEL_D   ),
++        DEF_MOD("sdi0_imclk",           301,    CLK_SEL_SDI0),
++        DEF_MOD("sdi0_imclk2",          302,    CLK_SEL_SDI0),
++        DEF_MOD("sdi0_clk_hs",          303,    CLK_PLL2_2  ),
++        DEF_MOD("sdi1_aclk",            304,    CLK_SEL_D   ),
++        DEF_MOD("sdi1_imclk",           305,    CLK_SEL_SDI0),
++        DEF_MOD("sdi1_imclk2",          306,    CLK_SEL_SDI0),
++        DEF_MOD("sdi1_clk_hs",          307,    CLK_PLL2_2  ),
++        DEF_MOD("emm_aclk",             308,    CLK_SEL_D   ),
++        DEF_MOD("emm_imclk",            309,    CLK_SEL_SDI0),
++        DEF_MOD("emm_imclk2",           310,    CLK_SEL_SDI0),
++        DEF_MOD("emm_clk_hs",           311,    CLK_PLL2_2  ),
++        DEF_MOD("pci_aclk",             400,    CLK_SEL_D   ),
++        DEF_MOD("pci_clk_pmu",          401,    CLK_SEL_D   ),
++        DEF_MOD("pci_apb_clk",          402,    CLK_SEL_E   ),
++        DEF_MOD("usb_aclk_h",           404,    CLK_SEL_D   ),
++        DEF_MOD("usb_aclk_p",           405,    CLK_SEL_D   ),
++        DEF_MOD("usb_pclk",             406,    CLK_SEL_E   ),
++        DEF_MOD("eth0_clk_axi",         408,    CLK_PLL2_8, ),
++//      DEF_MOD("eth0_clk_chi",         408,    CLK_PLL2_16,),
++        DEF_MOD("eth0_clk_gptp_extern", 409,    CLK_PLL2_16 ),
++        DEF_MOD("iic_pclk_0",           912,    CLK_SEL_E   ),
++        DEF_MOD("cperi_grpb_pclk",      1000,   CLK_SEL_E   ),
++        DEF_MOD("tim_clk_8",            1004,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_9",            1005,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_10",           1006,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_11",           1007,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_12",           1008,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_13",           1009,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_14",           1010,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_15",           1011,   CLK_MAIN_24 ),
++        DEF_MOD("iic_pclk_1",           1012,   CLK_SEL_E   ),
++        DEF_MOD("cperi_grpc_pclk",      1100,   CLK_SEL_E   ),
++        DEF_MOD("tim_clk_16",           1104,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_17",           1105,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_18",           1106,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_19",           1107,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_20",           1108,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_21",           1109,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_22",           1110,   CLK_MAIN_24 ),
++        DEF_MOD("tim_clk_23",           1111,   CLK_MAIN_24 ),
++        DEF_MOD("cperi_grpf_pclk",      1400,   CLK_SEL_E   ),
++        DEF_MOD("pwm_clk_8",             1404,   CLK_MAIN    ),
++        DEF_MOD("pwm_clk_9",             1405,   CLK_MAIN    ),
++        DEF_MOD("pwm_clk_10",           1406,   CLK_MAIN    ),
++        DEF_MOD("pwm_clk_11",           1407,   CLK_MAIN    ),
++        DEF_MOD("pwm_clk_12",           1408,   CLK_MAIN    ),
++        DEF_MOD("pwm_clk_13",           1409,   CLK_MAIN    ),
++        DEF_MOD("pwm_clk_14",           1410,   CLK_MAIN    ),
++        DEF_MOD("cperi_grph_pclk",      1501,   CLK_SEL_E   ),
++        DEF_MOD("urt_pclk",             1504,   CLK_SEL_E   ),
++        DEF_MOD("urt_clk_0",             1505,   CLK_SEL_W0  ),
++        DEF_MOD("csi_clk_4",             1512,   CLK_SEL_CSI0),
++        DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B   ),
++        DEF_MOD("drpa_dclk",            2001,   CLK_PLL6    ),
++        DEF_MOD("drpa_initclk",         2002,   CLK_MAIN    ),
++	    DEF_MOD("vcd_aclk",             2605,   CLK_SEL_I   ),
++	    DEF_MOD("wdt_pclk_0",           1112,   CLK_SEL_E   ),
++	    DEF_MOD("wdt_clk_0",            1113,   CLK_MAIN    ),
++};
++
++static const unsigned int r9a09g011gbg_crit_mod_clks[] __initconst = {
++       MOD_CLK_ID(404),        /* usb_aclk_h */
++       MOD_CLK_ID(405),        /* usb_aclk_p */
++       MOD_CLK_ID(406),        /* usb_pclk */
++       MOD_CLK_ID(408),        /* eth0_clk_axi */
++       MOD_CLK_ID(409),        /* eth0_clk_gptp_extern */
++};
++
++static const struct rcr_reset r9a09g011gbg_resets[] __initconst = {
++	/*           Name                ID      Rst-type   msk(bit)  
++	        clk-num     clk-id[clk-num]                 */
++	"dmaa_aresetn",     107,    RST_TYPEB,  4,  
++		1,  {111,    0,      0,      0,      0,      0,      0,      0,      0},
++	"tsu0_resetn",      112,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {114,    0,      0,      0,      0,      0,      0,      0,      0},
++	"tsu1_resetn",      113,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {115,    0,      0,      0,      0,      0,      0,      0,      0},
++	"sdi0_ixrst",       300,    RST_TYPEB,  6,  
++		1,  {302,    0,      0,      0,      0,      0,      0,      0,      0},
++	"sdi1_ixrst",       301,    RST_TYPEB,  7,  
++		1,  {306,    0,      0,      0,      0,      0,      0,      0,      0},
++	"emm_ixrst",        302,    RST_TYPEB,  8,  
++		1,  {310,    0,      0,      0,      0,      0,      0,      0,      0},
++	"usb_preset_n",     307,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {406,    0,      0,      0,      0,      0,      0,      0,      0},
++	"usb_drd_reset",    308,    RST_TYPEA,  RST_MON_UNUSED, 
++		2,  {404,    405,    0,      0,      0,      0,      0,      0,      0},
++	"usb_aresetn_p",    309,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {405,    0,      0,      0,      0,      0,      0,      0,      0},
++	"usb_aresetn_h",    310,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {404,    0,      0,      0,      0,      0,      0,      0,      0},
++	"eth0_rst_hw_n",    311,    RST_TYPEB,  11, 
++		1,  {408,    0,    0,      0,      0,      0,      0,      0,      0},
++	"pci_aresetn",      312,    RST_TYPEA,  RST_MON_UNUSED, 
++		2,  {400,    401,    0,      0,      0,      0,      0,      0,      0},
++	"tim_gpa_presetn",  600,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {900,    904,    905,    906,    907,    908,    909,    910,    911},
++	"tim_gpb_presetn",  601,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1000,   1004,   1005,   1006,   1007,   1008,   1009,   1010,   1011},
++	"tim_gpc_presetn",  602,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1100,   1104,   1105,   1106,   1107,   1108,   1109,   1110,   1111},
++	"tim_gpd_presetn",  603,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1200,   1204,   1205,   1206,   1207,   1208,   1209,   1210,   1211},
++	"pwm_gpe_presetn",  604,    RST_TYPEB,  22, 
++		9,  {1300,   1304,   1305,   1306,   1307,   1308,   1309,   1310,   1311},
++	"pwm_gpf_presetn",  605,    RST_TYPEB,  23, 
++		9,  {1400,   1404,   1405,   1406,   1407,   1408,   1409,   1410,   1411},
++	"csi_gpg_presetn",  606,    RST_TYPEB,  24, 
++		1,  {1500,   0,      0,      0,      0,      0,      0,      0,      0},
++	"csi_gph_presetn",  607,    RST_TYPEB,  25, 
++		1,  {1501,   0,      0,      0,      0,      0,      0,      0,      0},
++	"iic_gpa_presetn",  608,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {912,    0,      0,      0,      0,      0,      0,      0,      0},
++	"iic_gpb_presetn",  609,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {1012,   0,      0,      0,      0,      0,      0,      0,      0},
++	"urt_presetn",      610,    RST_TYPEB,  26, 
++		3,  {1505,   1506,   1504,   0,      0,      0,      0,      0,      0},
++	"wdt_presetn[0]",   612,    RST_TYPEB,  19, 
++		2,  {1113,   1112,   0,      0,      0,      0,      0,      0,      0},
++	"wdt_presetn[1]",   613,    RST_TYPEB,  20, 
++		2,  {1115,   1114,   0,      0,      0,      0,      0,      0,      0},
++	"wdt_presetn[2]",   614,    RST_TYPEB,  21, 
++		2,  {1213,   1212,   0,      0,      0,      0,      0,      0,      0},
++	"drpa_aresetn",     900,    RST_TYPEB,  14, 
++		1,  {2002,   0,      0,      0,      0,      0,      0,      0,      0},
++	"drpb_aresetn",     1000,   RST_TYPEB,  15, 
++		1,  {2102,   0,      0,      0,      0,      0,      0,      0,      0},
++	"vcd_resetn",       1407,   RST_TYPEB,  18, 
++		2,  {2605,   2605,   0,      0,      0,      0,      0,      0,      0},
++};
++
++static int __init r9a09g011gbg_cpg_cocr_init(struct device *dev)
++{
++       return 0;
++}
++
++
++const struct cpg_cocr_info r9a09g011gbg_cpg_cocr_info __initconst = {
++       /* Core Clocks */
++       .core_clks = r9a09g011gbg_core_clks,
++       .num_core_clks = ARRAY_SIZE(r9a09g011gbg_core_clks),
++       .last_dt_core_clk = LAST_DT_CORE_CLK,
++       .num_total_core_clks = MOD_CLK_BASE,
++
++       /* Module Clocks */
++       .mod_clks = r9a09g011gbg_mod_clks,
++       .num_mod_clks = ARRAY_SIZE(r9a09g011gbg_mod_clks),
++	.num_hw_mod_clks = 27 * 32,/*20 Registers * 32bits */
++
++       /* Critical Module Clocks */
++       .crit_mod_clks = r9a09g011gbg_crit_mod_clks,
++       .num_crit_mod_clks = ARRAY_SIZE(r9a09g011gbg_crit_mod_clks),
++
++       /*Resets*/
++       .resets = r9a09g011gbg_resets,
++       .num_resets = ARRAY_SIZE(r9a09g011gbg_resets),
++	   .num_hw_resets = 15 * 32, /*15 Register * 32bit */
++
++       /* Callbacks */
++       .init = r9a09g011gbg_cpg_cocr_init,
++};
+diff --git a/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c b/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
+index 34fe749..418aba2 100755
+--- a/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
++++ b/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
+@@ -43,6 +43,7 @@ enum clk_ids {
+ 	CLK_DIV_B,
+ 	CLK_DIV_D,
+ 	CLK_DIV_E,
++	CLK_DIV_I,
+ 	CLK_SEL_B,
+ 	CLK_SEL_D,
+ 	CLK_SEL_E,
+@@ -63,14 +64,14 @@ enum clk_ids {
+ static const struct cpg_core_clk r9a09g055ma3gbg_core_clks[] __initconst = {
+ 
+ 	/* Internal Core Clocks */
+-	DEF_RATE(".main",      CLK_MAIN,        48*1000*1000),
+-	DEF_RATE(".main2",     CLK_MAIN_2,      24*1000*1000),
+-	DEF_RATE(".main24",    CLK_MAIN_24,     2*1000*1000),
+-	DEF_RATE(".pll2",      CLK_PLL2,        1600*1000*1000),
+-	DEF_RATE(".pll2_2",    CLK_PLL2_2,      800*1000*1000),
+-	DEF_RATE(".pll2_8",    CLK_PLL2_8,      200*1000*1000),
+-	DEF_RATE(".pll2_16",   CLK_PLL2_16,     100*1000*1000),
+-	DEF_RATE(".pll6",      CLK_PLL6,        1260*1000*1000),
++	DEF_RATE(".main",      CLK_MAIN,        CLK_EXTAL_48MHZ),
++	DEF_RATE(".main2",     CLK_MAIN_2,      CLK_EXTAL_48MHZ/2),
++	DEF_RATE(".main24",    CLK_MAIN_24,     CLK_EXTAL_48MHZ/24),
++	DEF_RATE(".pll2",      CLK_PLL2,        CLK_PLL2_1600MHZ),
++	DEF_RATE(".pll2_2",    CLK_PLL2_2,      CLK_PLL2_1600MHZ/2),
++	DEF_RATE(".pll2_8",    CLK_PLL2_8,      CLK_PLL2_1600MHZ/8),
++	DEF_RATE(".pll2_16",   CLK_PLL2_16,     CLK_PLL2_1600MHZ/16),
++	DEF_RATE(".pll6",      CLK_PLL6,        CLK_PLL6_1260MHZ),
+ 
+ 	DEF_DIV(".divb",     CLK_DIV_B,          CLK_PLL2,         4,
+ 		CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
+@@ -81,35 +82,33 @@ static const struct cpg_core_clk r9a09g055ma3gbg_core_clks[] __initconst = {
+ 	DEF_DIV(".dive",     CLK_DIV_E,          CLK_PLL2,         16,
+ 		CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
+ 		CPG_CLKSTATUS_DIVB|CPG_CLKSTATUS_DIVD|CPG_CLKSTATUS_DIVE, 0),
++	DEF_DIV(".divi",     CLK_DIV_I,          CLK_PLL2,         4,
++		CPG_ISP_DDIV2, CPG_ISP_DDIV2_WEN_DIVI,
++		CPG_CLKSTATUS_DIVI, 0),
+ 	DEF_DIV(".selb",     CLK_SEL_B,          CLK_DIV_B,  1,
+ 		CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELB, 0,     CPG_CLK48_DSEL_SELB),
+ 	DEF_DIV(".seld",     CLK_SEL_D,          CLK_DIV_D,  1,
+ 		CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELD, 0,     CPG_CLK48_DSEL_SELD),
+ 	DEF_DIV(".sele",     CLK_SEL_E,          CLK_DIV_E,  1,
+ 		CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELE, 0,     CPG_CLK48_DSEL_SELE),
+-#if 0 //static defined is disabled
+-	DEF_STATIC(".selcsi0",     CLK_SEL_CSI0,          CLK_MAIN,       1,
++	DEF_STATIC(".selcsi0",     CLK_SEL_CSI0,          CLK_MAIN,       2,
+ 		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI0,       CPG_CSI_RCLK_SSEL_SELCSI0),
+-	DEF_STATIC(".selcsi2",     CLK_SEL_CSI2,          CLK_MAIN,       1,
++	DEF_STATIC(".selcsi1",     CLK_SEL_CSI1,          CLK_MAIN,       2,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI1,       CPG_CSI_RCLK_SSEL_SELCSI1),
++	DEF_STATIC(".selcsi2",     CLK_SEL_CSI2,          CLK_MAIN,       2,
+ 		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI2,       CPG_CSI_RCLK_SSEL_SELCSI2),
+-	DEF_STATIC(".selw",     CLK_SEL_W0,               CLK_MAIN,       1,
+-		CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW0,         0),
+-	DEF_STATIC(".selsdi0",     CLK_SEL_SDI0,          CLK_PLL2,       2,
++	DEF_STATIC(".selcsi3",     CLK_SEL_CSI3,          CLK_MAIN,       2,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI3,       CPG_CSI_RCLK_SSEL_SELCSI3),
++	DEF_STATIC(".selcsi4",     CLK_SEL_CSI4,          CLK_MAIN,       2,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI4,       CPG_CSI_RCLK_SSEL_SELCSI4),
++	DEF_STATIC(".selcsi5",     CLK_SEL_CSI5,          CLK_MAIN,       2,
++	    CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI5,       CPG_CSI_RCLK_SSEL_SELCSI5),
++	DEF_STATIC(".selw",     CLK_SEL_W0,               CLK_MAIN,    1,
++		CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW0,         CPG_URT_RCLK_SSEL_SELW0),
++	DEF_STATIC(".selw1",    CLK_SEL_W1,               CLK_MAIN,    1,
++		CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW1,         CPG_URT_RCLK_SSEL_SELW1),
++	DEF_STATIC(".selsdi0",     CLK_SEL_SDI0,          CLK_PLL2,       8,
+ 		CPG_SDIEMM_SSEL,   CPG_SDIEMM_SSEL_WEN_SELSDI,          CPG_SDIEMM_SSEL_SELSDI),
+-#else
+-	DEF_RATE(".selcsi0",     CLK_SEL_CSI0,  24*1000*1000),
+-	DEF_RATE(".selcsi1",     CLK_SEL_CSI1,  24*1000*1000),
+-	DEF_RATE(".selcsi2",     CLK_SEL_CSI2,  24*1000*1000),
+-	DEF_RATE(".selcsi3",     CLK_SEL_CSI3,  24*1000*1000),
+-	DEF_RATE(".selcsi4",     CLK_SEL_CSI4,  24*1000*1000),
+-	DEF_RATE(".selcsi5",     CLK_SEL_CSI5,  24*1000*1000),
+-	DEF_RATE(".selw",        CLK_SEL_W0,    48*1000*1000),
+-	DEF_RATE(".selw1",        CLK_SEL_W1,    48*1000*1000),
+-	DEF_RATE(".selsdi0",     CLK_SEL_SDI0,  200*1000*1000),
+-
+-#endif
+-
+-
+ };
+ 
+ static const struct cocr_mod_clk r9a09g055ma3gbg_mod_clks[] __initconst = {
+@@ -192,7 +191,7 @@ static const struct cocr_mod_clk r9a09g055ma3gbg_mod_clks[] __initconst = {
+ 	DEF_MOD("csi_clk_1",            1509,   CLK_SEL_CSI1),
+ 	DEF_MOD("csi_clk_2",            1510,   CLK_SEL_CSI2),
+ 	DEF_MOD("csi_clk_3",            1511,   CLK_SEL_CSI3),
+-	DEF_MOD("csi_clk_4",            1512,   CLK_SEL_CSI0),
++	DEF_MOD("csi_clk_4",            1512,   CLK_SEL_CSI4),
+ 	DEF_MOD("csi_clk_5",            1513,   CLK_SEL_CSI5),
+ 	DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B   ),
+ 	DEF_MOD("drpa_dclk",            2001,   CLK_PLL6    ),
+@@ -214,6 +213,7 @@ static const struct cocr_mod_clk r9a09g055ma3gbg_mod_clks[] __initconst = {
+ 	DEF_MOD("drpb_aclk",            2100,   CLK_SEL_B   ),
+ 	DEF_MOD("drpb_dclk",            2101,   CLK_PLL6    ),
+ 	DEF_MOD("drpb_initclk",         2102,   CLK_MAIN    ),
++	DEF_MOD("vcd_aclk",             2605,   CLK_DIV_I   ),
+ };
+ 
+ 
+@@ -226,63 +226,66 @@ static const unsigned int r9a09g011gbg_crit_mod_clks[] __initconst = {
+ };
+ 
+ static const struct rcr_reset r9a09g055ma3gbg_resets[] __initconst = {
+-	/*           Name                ID      Rst-type   msk(bit)  clk-num clk-id                 */
+-	DEF_RESET(   "dmaa_aresetn",     107,    RST_TYPEB,  4,  
+-		1,  {111,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "tsu0_resetn",      112,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {114,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "tsu1_resetn",      113,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {115,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "sdi0_ixrst",       300,    RST_TYPEB,  6,  
+-		1,  {302,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "sdi1_ixrst",       301,    RST_TYPEB,  7,  
+-		1,  {306,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "emm_ixrst",        302,    RST_TYPEB,  8,  
+-		1,  {310,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "usb_preset_n",     307,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {406,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "usb_drd_reset",    308,    RST_TYPEA,  RST_MON_UNUSED, 
+-		2,  {404,    405,    0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "usb_aresetn_p",    309,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {405,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "usb_aresetn_h",    310,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {404,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "eth0_rst_hw_n",    311,    RST_TYPEB,  11, 
+-		2,  {408,    408,    0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "tim_gpa_presetn",  600,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {900,    904,    905,    906,    907,    908,    909,    910,    911}),
+-	DEF_RESET(   "tim_gpb_presetn",  601,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {1000,   1004,   1005,   1006,   1007,   1008,   1009,   1010,   1011}),
+-	DEF_RESET(   "tim_gpc_presetn",  602,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {1100,   1104,   1105,   1106,   1107,   1108,   1109,   1110,   1111}),
+-	DEF_RESET(   "tim_gpd_presetn",  603,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {1200,   1204,   1205,   1206,   1207,   1208,   1209,   1210,   1211}),
+-	DEF_RESET(   "pwm_gpe_presetn",  604,    RST_TYPEB,  22, 
+-		9,  {1300,   1304,   1305,   1306,   1307,   1308,   1309,   1310,   1311}),
+-	DEF_RESET(   "pwm_gpf_presetn",  605,    RST_TYPEB,  23, 
+-		9,  {1400,   1404,   1405,   1406,   1407,   1408,   1409,   1410,   1411}),
+-	DEF_RESET(   "csi_gpg_presetn",  606,    RST_TYPEB,  24, 
+-		1,  {1500,   0,      0,      0,      0,      0,      0,      0,      0)},
+-	DEF_RESET(   "csi_gph_presetn",  607,    RST_TYPEB,  25, 
+-		1,  {1501,   0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "iic_gpa_presetn",  608,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {912,    0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "iic_gpb_presetn",  609,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {1012,   0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "urt_presetn",      610,    RST_TYPEB,  26, 
+-		3,  {1505,   1506,   1504,   0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "wdt_presetn[0]",   612,    RST_TYPEB,  19, 
+-		2,  {1113,   1112,   0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "wdt_presetn[1]",   613,    RST_TYPEB,  20, 
+-		2,  {1115,   1114,   0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "wdt_presetn[2]",   614,    RST_TYPEB,  21, 
+-		2,  {1213,   1212,   0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "drpa_aresetn",     900,    RST_TYPEB,  14, 
+-		1,  {2002,   0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "drpb_aresetn",     1000,   RST_TYPEB,  15, 
+-		1,  {2102,   0,      0,      0,      0,      0,      0,      0,      0}),
+-	DEF_RESET(   "vcd_resetn",       1407,   RST_TYPEB,  18, 
+-		2,  {2605,   2605,   0,      0,      0,      0,      0,      0,      0}),
++	/*           Name                ID      Rst-type   msk(bit)  
++	        clk-num     clk-id[clk-num]                 */
++	"dmaa_aresetn",     107,    RST_TYPEB,  4,  
++		1,  {111,    0,      0,      0,      0,      0,      0,      0,      0},
++	"tsu0_resetn",      112,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {114,    0,      0,      0,      0,      0,      0,      0,      0},
++	"tsu1_resetn",      113,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {115,    0,      0,      0,      0,      0,      0,      0,      0},
++	"sdi0_ixrst",       300,    RST_TYPEB,  6,  
++		1,  {302,    0,      0,      0,      0,      0,      0,      0,      0},
++	"sdi1_ixrst",       301,    RST_TYPEB,  7,  
++		1,  {306,    0,      0,      0,      0,      0,      0,      0,      0},
++	"emm_ixrst",        302,    RST_TYPEB,  8,  
++		1,  {310,    0,      0,      0,      0,      0,      0,      0,      0},
++	"usb_preset_n",     307,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {406,    0,      0,      0,      0,      0,      0,      0,      0},
++	"usb_drd_reset",    308,    RST_TYPEA,  RST_MON_UNUSED, 
++		2,  {404,    405,    0,      0,      0,      0,      0,      0,      0},
++	"usb_aresetn_p",    309,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {405,    0,      0,      0,      0,      0,      0,      0,      0},
++	"usb_aresetn_h",    310,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {404,    0,      0,      0,      0,      0,      0,      0,      0},
++	"eth0_rst_hw_n",    311,    RST_TYPEB,  11, 
++		1,  {408,    0,      0,      0,      0,      0,      0,      0,      0},
++	"pci_aresetn",      312,    RST_TYPEA,  RST_MON_UNUSED, 
++		2,  {400,    401,    0,      0,      0,      0,      0,      0,      0},
++	"tim_gpa_presetn",  600,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {900,    904,    905,    906,    907,    908,    909,    910,    911},
++	"tim_gpb_presetn",  601,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1000,   1004,   1005,   1006,   1007,   1008,   1009,   1010,   1011},
++	"tim_gpc_presetn",  602,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1100,   1104,   1105,   1106,   1107,   1108,   1109,   1110,   1111},
++	"tim_gpd_presetn",  603,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1200,   1204,   1205,   1206,   1207,   1208,   1209,   1210,   1211},
++	"pwm_gpe_presetn",  604,    RST_TYPEB,  22, 
++		9,  {1300,   1304,   1305,   1306,   1307,   1308,   1309,   1310,   1311},
++	"pwm_gpf_presetn",  605,    RST_TYPEB,  23, 
++		9,  {1400,   1404,   1405,   1406,   1407,   1408,   1409,   1410,   1411},
++	"csi_gpg_presetn",  606,    RST_TYPEB,  24, 
++		1,  {1500,   0,      0,      0,      0,      0,      0,      0,      0},
++	"csi_gph_presetn",  607,    RST_TYPEB,  25, 
++		1,  {1501,   0,      0,      0,      0,      0,      0,      0,      0},
++	"iic_gpa_presetn",  608,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {912,    0,      0,      0,      0,      0,      0,      0,      0},
++	"iic_gpb_presetn",  609,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {1012,   0,      0,      0,      0,      0,      0,      0,      0},
++	"urt_presetn",      610,    RST_TYPEB,  26, 
++		3,  {1505,   1506,   1504,   0,      0,      0,      0,      0,      0},
++	"wdt_presetn[0]",   612,    RST_TYPEB,  19, 
++		2,  {1113,   1112,   0,      0,      0,      0,      0,      0,      0},
++	"wdt_presetn[1]",   613,    RST_TYPEB,  20, 
++		2,  {1115,   1114,   0,      0,      0,      0,      0,      0,      0},
++	"wdt_presetn[2]",   614,    RST_TYPEB,  21, 
++		2,  {1213,   1212,   0,      0,      0,      0,      0,      0,      0},
++	"drpa_aresetn",     900,    RST_TYPEB,  14, 
++		1,  {2002,   0,      0,      0,      0,      0,      0,      0,      0},
++	"drpb_aresetn",     1000,   RST_TYPEB,  15, 
++		1,  {2102,   0,      0,      0,      0,      0,      0,      0,      0},
++	"vcd_resetn",       1407,   RST_TYPEB,  18, 
++		1,  {2605,   0,   0,      0,      0,      0,      0,      0,      0},
+ };
+ 
+ static int __init r9a09g011gbg_cpg_cocr_init(struct device *dev)
+diff --git a/drivers/clk/renesas/renesas-cpg-cocr.c b/drivers/clk/renesas/renesas-cpg-cocr.c
+index 9fa862f..7330c5f 100755
+--- a/drivers/clk/renesas/renesas-cpg-cocr.c
++++ b/drivers/clk/renesas/renesas-cpg-cocr.c
+@@ -27,6 +27,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/reset-controller.h>
+ #include <linux/slab.h>
++#include <linux/bits.h>
+ 
+ #include <dt-bindings/clock/r9a09g011gbg-cpg-cocr.h>
+ 
+@@ -90,19 +91,40 @@ struct cocr_clock {
+ 
+ #define to_cocr_clock(_hw) container_of(_hw, struct cocr_clock, hw)
+ 
++static void cpg_reg_write(struct cpg_cocr_priv *priv, u32 offset, u32 val)
++{
++	unsigned long flags;
++	
++	dev_dbg(priv->dev, "  %s offset: 0x%04x val: 0x%04x\n",__func__, offset, val);
++	
++	spin_lock_irqsave(&priv->rmw_lock, flags);
++	writel(val, priv->base + offset);
++	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++	
++}
++
++static u32 cpg_reg_read(struct cpg_cocr_priv *priv, u32 offset)
++{
++	unsigned long flags;
++	u32 val;
++	
++	spin_lock_irqsave(&priv->rmw_lock, flags);
++	val = readl(priv->base + offset);
++	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++	
++	return val;
++}
++
+ static void cpg_clkonoff_ctrl(struct cpg_cocr_priv *priv, unsigned char reg_num, 
+ 				unsigned short target, unsigned short set_value)
+ {
+ 	u32 offset, value;
+-	unsigned long flags;
+ 
+ 	offset = CPG_CLK_ON1 + ((reg_num - 1) * sizeof(u32));
+-	value = ((u32)target << CPG_REG_WEN_SHIFT)
+-			| (set_value & CPG_SET_DATA_MASK);
++	value = ((u32)target << CPG_REG_WEN_SHIFT) | (set_value & CPG_SET_DATA_MASK);
+ 
+-	spin_lock_irqsave(&priv->rmw_lock, flags);
+-	writel(value,priv->base + offset);
+-	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++	cpg_reg_write(priv, offset,value);
++	udelay(10);
+ }
+ 
+ static int is_cpg_clk_on_sts(struct cpg_cocr_priv *priv, unsigned char reg_num,
+@@ -112,16 +134,19 @@ static int is_cpg_clk_on_sts(struct cpg_cocr_priv *priv, unsigned char reg_num,
+ 	int clk_onoff_sts;
+ 
+ 	offset = CPG_CLK_ON1 + ((reg_num - 1) * sizeof(u32));
+-	clk_onoff_sts = ((readl(priv->base + offset) & target) >> target);
++	clk_onoff_sts = ((cpg_reg_read(priv,offset) & BIT(target)) >> target);
+ 	return clk_onoff_sts;
+ }
+ 
+ static int __cpg_cocr_clock_is_enabled(struct cpg_cocr_priv *priv, unsigned index)
+ {
+-       unsigned int no = index / 32;
+-       unsigned int bit =index % 32;
++	int status;
++	unsigned int no = index / 32;
++	unsigned int bit =index % 32;
+ 
+-       return is_cpg_clk_on_sts(priv,no,BIT(bit));
++	status = is_cpg_clk_on_sts(priv,no,bit);
++	dev_dbg(priv->dev, "  clock status[%d%02d] is [%d]\n",no, bit, status);
++	return status;
+ }
+ 
+ static int cpg_cocr_clock_is_enabled(struct clk_hw *hw)
+@@ -143,14 +168,16 @@ static int __cpg_cocr_clock_endisable(struct cpg_cocr_priv *priv, unsigned index
+ 	clk_status = __cpg_cocr_clock_is_enabled(priv,index);
+ 
+ 	/* If the current status and the request match, skip the process */
+-	if (clk_status == (int)enable)
+-		return 0;
+-	
+-	/* Set the clock on/off control register */
+-	if (enable)
+-		cpg_clkonoff_ctrl(priv,no,BIT(bit),BIT(bit));
++	if (clk_status != (int)enable) {
++		/* Set the clock on/off control register */
++		if (enable)
++			cpg_clkonoff_ctrl(priv,no,BIT(bit),BIT(bit));
++		else
++			cpg_clkonoff_ctrl(priv,no,BIT(bit),0);
++	}
+ 	else
+-		cpg_clkonoff_ctrl(priv,no,BIT(bit),0);
++		dev_dbg(priv->dev, "    Current status is skipped due to expected status[%d]\n", (int)enable);
++
+ 
+ 	return 0;
+ }
+@@ -167,11 +194,19 @@ static int cpg_cocr_clock_endisable(struct clk_hw *hw, bool enable)
+ 
+ static int cpg_cocr_clock_enable(struct clk_hw *hw)
+ {
++	struct cocr_clock *clock = to_cocr_clock(hw);
++	struct cpg_cocr_priv *priv = clock->priv;
++	
++	dev_dbg(priv->dev, "Request clock_enable\n");
+ 	return cpg_cocr_clock_endisable(hw, true);
+ }
+ 
+ static void cpg_cocr_clock_disable(struct clk_hw *hw)
+ {
++	struct cocr_clock *clock = to_cocr_clock(hw);
++	struct cpg_cocr_priv *priv = clock->priv;
++	
++	dev_dbg(priv->dev, "Request clock_disable\n");
+ 	(void)cpg_cocr_clock_endisable(hw, false);
+ }
+ 
+@@ -190,11 +225,12 @@ static struct clk *cpg_cocr_clk_src_twocell_get(
+ 	const char *type;
+ 	struct clk *clk;
+ 
++	dev_dbg(priv->dev, "Request clock frequency\n");
+ 	switch (clkspec->args[0]) {
+ 	case CPG_CORE:
+ 		type = "core";
+ 		if (clkidx > priv->last_dt_core_clk) {
+-			dev_err(dev, "Invalid %s clock index %u\n", 
++			dev_err(dev, "  Invalid %s clock index %u\n", 
+ 				type, clkidx);
+ 			return ERR_PTR(-EINVAL);
+ 		}
+@@ -206,14 +242,14 @@ static struct clk *cpg_cocr_clk_src_twocell_get(
+ 		break;
+ 
+ 	default:
+-		dev_err(dev, "Invalid CPG clock type %u\n", clkspec->args[0]);
++		dev_err(dev, "  Invalid CPG clock type %u\n", clkspec->args[0]);
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+ 	if (IS_ERR(clk))
+-		dev_err(dev, "Cannot get %s clock %u: %ld", type, clkidx,PTR_ERR(clk));
++		dev_err(dev, "  Cannot get %s clock %u: %ld", type, clkidx,PTR_ERR(clk));
+ 	else
+-		dev_dbg(dev, "clock (%u, %u) is %pC at %lu Hz\n",
++		dev_dbg(dev, "  clock (%u, %u) is %pC at %lu Hz\n",
+ 			clkspec->args[0], clkspec->args[1], clk,
+ 			clk_get_rate(clk));
+ 	
+@@ -258,7 +294,7 @@ static void __init cpg_cocr_register_core_clk(const struct cpg_core_clk *core,
+ 					if (core->id == info->mod_clks[i].parent) {
+ 						//children Clock off
+ 						cpg_clkonoff_ctrl(priv,
+-						(info->mod_clks[i].id/32) ,(BIT(info->mod_clks[i].id%32)),0);
++						(info->mod_clks[i].id/32) ,BIT(info->mod_clks[i].id%32),0);
+ 					}
+ 				}
+ 			}
+@@ -266,18 +302,18 @@ static void __init cpg_cocr_register_core_clk(const struct cpg_core_clk *core,
+ 			if (core->type == CLK_TYPE_DIV) {
+ 				t = 0;
+ 				while (10000000 > t++) {
+-					if (0 == (readl(priv->base + CPG_CLKSTATUS) & core->status)) 
++					if (0 == (cpg_reg_read(priv, CPG_CLKSTATUS) & core->status)) 
+ 						break;
+ 					udelay(1);
+ 				}
+ 			}
+ 			
+-			writel(core->msk | core->val, priv->base + core->offset);
++			cpg_reg_write(priv, core->offset, (core->msk | core->val));
+ 
+ 			if(core->type == CLK_TYPE_DIV){
+ 				t = 0;
+ 				while (10000000 > t++) {
+-					if (0 == (readl(priv->base + CPG_CLKSTATUS) & core->status))
++					if (0 == (cpg_reg_read(priv, CPG_CLKSTATUS) & core->status))
+ 						break;
+ 					udelay(1);
+ 				}
+@@ -364,10 +400,7 @@ static void __init cpg_cocr_register_mod_clk(const struct cocr_mod_clk *mod,
+ 	if (IS_ERR(clk))
+ 		goto fail;
+ 
+-	dev_dbg(dev, "Module clock %pC[%ld] at %lu Hz\n", clk, clock->index, clk_get_rate(clk));
+-
+-	clk_prepare(clk);
+-	clk_enable(clk);
++	dev_dbg(dev, "Module clock %pC[%d] at %lu Hz\n", clk, clock->index, clk_get_rate(clk));
+ 
+ 	priv->clks[id] = clk;
+ 	return;
+@@ -386,34 +419,41 @@ static void cpg_reset_ctrl(struct reset_controller_dev *rcdev,
+ {
+ 	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
+ 	u32 offset, value;
+-	unsigned long flags;
+ 
+ 	offset = CPG_RST1 + ((reg_num - 1) * sizeof(u32));
+ 	value = ((u32)target << CPG_REG_WEN_SHIFT) | (set_value & CPG_SET_DATA_MASK);
+ 	
+-	dev_dbg(priv->dev, "%s: reg offset:0x%08x write value:0x%08x\n",
+-		__func__, offset, value);
+-	spin_lock_irqsave(&priv->rmw_lock, flags);
+-	writel(value, (priv->base+ offset));
+-	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++	cpg_reg_write(priv, offset, value);
++	udelay(10);
+ }
+ 
+ static int cpg_get_reset_status(struct reset_controller_dev *rcdev,
+-			unsigned char reg_num, unsigned short target)
++			unsigned long id)
+ {
+ 	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
+-	u32 offset, value;
+-	unsigned long flags;
+-
+-	offset = CPG_RST1 + ((reg_num - 1) * sizeof(u32));
+-	
+-	spin_lock_irqsave(&priv->rmw_lock, flags);
+-	value = readl(priv->base + offset) & target;
+-	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++	u32 offset, value, mask;
++	int ret;
++	unsigned int reg = id / 32;
++	unsigned int bit = id % 32;
+ 
+-	dev_dbg(priv->dev, "%s: reg offset:0x%08x read value:0x%08x status:0x%08x\n",
+-		__func__, offset, value, !value);
+-	return !value;
++	if (priv->resets[id].type == RST_TYPEA){
++		offset = CPG_RST1 + ((reg - 1) * sizeof(u32));
++		value = cpg_reg_read(priv, offset);
++		ret = !(value& BIT(bit));
++		dev_dbg(priv->dev, "  %s: [type-A]reg offset:0x%08x read value:0x%08x status:0x%08x\n",
++			__func__, offset, value, ret);
++		dev_dbg(priv->dev, "  %s: [type-A]name:%s ID:d'%d mask:0x%x\n",
++			__func__, priv->resets[id].name, priv->resets[id].id, priv->resets[id].reset_msk);
++	} else { //for RST_TYPEB
++		mask = priv->resets[id].reset_msk;
++		value = cpg_reg_read(priv, CPG_RST_MON);
++		ret = (value& BIT(mask)) >> mask;
++		dev_dbg(priv->dev, "  %s: [type-B]reg offset:0x%08x read value:0x%08x status:0x%08x\n",
++			__func__, CPG_RST_MON, value, ret);
++		dev_dbg(priv->dev, "  %s: [type-B]name:%s ID:d'%d mask:0x%x\n",
++			__func__, priv->resets[id].name, priv->resets[id].id, priv->resets[id].reset_msk);
++	}
++	return ret;
+ }
+ 
+ static int cpg_wait_reset_monitor(struct reset_controller_dev *rcdev,
+@@ -424,7 +464,7 @@ static int cpg_wait_reset_monitor(struct reset_controller_dev *rcdev,
+ 
+ 	while (true)
+ 	{
+-		if (status == ((readl(priv->base + CPG_RST_MON) & msk) >> msk) ) {
++		if (status == ((cpg_reg_read(priv, CPG_RST_MON) & BIT(msk) ) >> msk ) ) {
+ 			break;
+ 		}
+ 		if (0 < count) {
+@@ -437,16 +477,24 @@ static int cpg_wait_reset_monitor(struct reset_controller_dev *rcdev,
+ 	return 0;
+ }
+ 
+-
++static void cpg_cocr_reset_to_clk_endisable(struct cpg_cocr_priv *priv, 
++	unsigned long id, bool enable)
++{
++	int i;
++	unsigned int cpg_clk_id;
++	
++	for (i = 0;i < priv->resets[id].clk_num; i++){
++		cpg_clk_id = MOD_CLK_PACK(priv->resets[id].clk_id[i]);
++		__cpg_cocr_clock_endisable(priv, cpg_clk_id ,enable);
++	}
++}
+ static int cpg_cocr_assert(struct reset_controller_dev *rcdev, unsigned long id)
+ {
+ 	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
+ 	unsigned int reg = id / 32;
+ 	unsigned int bit = id % 32;
+-	int i;
+-	int clk_state[9] = {0};
+ 
+-	if ( id <= CPG_MIN_CLKID ) {
++	if ( id <= CPG_MIN_RESETID ) {
+ 		dev_err(priv->dev, "Invalid reset id %ld\n", id);
+ 		return -EINVAL;
+ 	}
+@@ -455,32 +503,13 @@ static int cpg_cocr_assert(struct reset_controller_dev *rcdev, unsigned long id)
+ 		return -EINVAL;
+ 	}
+ 	
+-	if (priv->resets[id].type == RST_TYPEA){
+-		/*Reset assert*/
+-		cpg_reset_ctrl(rcdev,reg,BIT(bit),0);
+-	} else {
+-		/*Type B*/
+-		for (i = 0;i < priv->resets[id].clk_num; i++){
+-			clk_state[i] = __cpg_cocr_clock_is_enabled(priv,priv->resets[id].clk_id[i]);
+-			if(0 == clk_state[i]){
+-				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],true);
+-				udelay(10);
+-			}
+-		}
+-
+-		/* Reset assert */
+-		cpg_reset_ctrl(rcdev,reg,BIT(bit),0);
++	dev_dbg(priv->dev, "%s(%lld) \n",__func__, id);
++	cpg_reset_ctrl(rcdev,reg,BIT(bit),0);
+ 
++	if (priv->resets[id].type == RST_TYPEB) {
+ 		/* Check the monitor */
+-		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, BIT(priv->resets[id].reset_msk), RST_MON_ASSERT) ){
+-			dev_err(priv->dev, "Reset assert was time out:id %d\n", priv->resets[id].clk_id[i]);
+-		}
+-		
+-		for (i=0; i < priv->resets[id].clk_num; i++){
+-			if (0 == clk_state[i]){
+-				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],false);
+-			}
+-			udelay(10);
++		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, priv->resets[id].reset_msk, RST_MON_ASSERT) ){
++			dev_err(priv->dev, "Reset assert was time out:id %d\n", BIT(priv->resets[id].reset_msk));
+ 		}
+ 	}
+ 	return 0;
+@@ -492,10 +521,8 @@ static int cpg_cocr_deassert(struct reset_controller_dev *rcdev,
+ 	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
+ 	unsigned int reg = id / 32;
+ 	unsigned int bit = id % 32;
+-	int i;
+-	int clk_state[9] = {0};
+ 
+-	if ( id <= CPG_MIN_CLKID ) {
++	if ( id <= CPG_MIN_RESETID ) {
+ 		dev_err(priv->dev, "Invalid reset id %ld\n", id);
+ 		return -EINVAL;
+ 	}
+@@ -504,50 +531,27 @@ static int cpg_cocr_deassert(struct reset_controller_dev *rcdev,
+ 		return -EINVAL;
+ 	}
+ 	
++	dev_dbg(priv->dev, "%s(%lld) \n",__func__, id);
++	
++	/*The reset control of the TypeB is optional for the clock On/OFF control.
++	Therefore, the clock On/OFF control is not performed.*/
+ 	if (priv->resets[id].type == RST_TYPEA){
+-		/*Reset deassert*/
+-		for (i = 0;i < priv->resets[id].clk_num; i++){
+-			clk_state[i] = __cpg_cocr_clock_is_enabled(priv,priv->resets[id].clk_id[i]);
+-			if(0 != clk_state[i]){
+-				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],false);
+-				udelay(10);
+-			}
+-		}
+-
+-		cpg_reset_ctrl(rcdev,reg,BIT(bit),BIT(bit));
+-		udelay(10);
+-
+-		for (i=0; i < priv->resets[id].clk_num; i++){
+-			if (0 != clk_state[i]){
+-				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],true);
+-				udelay(10);
+-			}
+-		}
+-	} else {
+-		/*Type B*/
+-		for (i = 0;i < priv->resets[id].clk_num; i++){
+-			clk_state[i] = __cpg_cocr_clock_is_enabled(priv,priv->resets[id].clk_id[i]);
+-			if (0 == clk_state[i]){
+-				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],true);
+-				udelay(10);
+-			}
+-		}
++		cpg_cocr_reset_to_clk_endisable(priv, id, false);
++	}
+ 	
+-		/*Reset deassert*/
+-		cpg_reset_ctrl(rcdev,reg,BIT(bit),BIT(bit));
++	/* Reset release */
++	cpg_reset_ctrl(rcdev,reg,BIT(bit),BIT(bit));
+ 
++	if (priv->resets[id].type == RST_TYPEB){
+ 		/* Check the monitor */
+-		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, BIT(priv->resets[id].reset_msk), RST_MON_DEASSERT) ){
+-			dev_err(priv->dev, "Reset deassert was time out:id %d\n", priv->resets[id].clk_id[i]);
+-		}
+-
+-		for (i=0; i < priv->resets[id].clk_num; i++){
+-			if (0 == clk_state[i]){
+-				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],false);
+-				udelay(10);
+-			}
++		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, priv->resets[id].reset_msk, RST_MON_DEASSERT) ){
++			dev_err(priv->dev, "Reset deassert was time out:id %d\n", BIT(priv->resets[id].reset_msk));
+ 		}
+ 	}
++	
++	/* The clock supply is guaranteed after the reset is released in both types. */
++	cpg_cocr_reset_to_clk_endisable(priv, id, true);
++	
+ 	return 0;
+ }
+ 
+@@ -567,7 +571,7 @@ static int cpg_cocr_status(struct reset_controller_dev *rcdev,
+ 	unsigned int bit = id % 32;
+ 	int status;
+ 	
+-	if ( id <= CPG_MIN_CLKID ) {
++	if ( id <= CPG_MIN_RESETID ) {
+ 		dev_err(priv->dev, "Invalid reset id %ld\n", id);
+ 		return -EINVAL;
+ 	}
+@@ -576,8 +580,8 @@ static int cpg_cocr_status(struct reset_controller_dev *rcdev,
+ 		return -EINVAL;
+ 	}
+ 	
+-	status = cpg_get_reset_status(priv->base,reg,BIT(bit));
+-	dev_dbg(priv->dev, "status is %d\n", status);
++	status = cpg_get_reset_status(rcdev, id);
++	dev_dbg(priv->dev, "  reset status is [%d]\n", status);
+ 	
+ 	return status;
+ }
+@@ -625,16 +629,18 @@ static inline int cpg_cocr_reset_controller_register(struct cpg_cocr_priv *priv)
+ 
+ 
+ static const struct of_device_id cpg_cocr_match[] = {
+-#if 0 //[TODO]
++#ifdef CONFIG_CLK_R9A09G011GBG
+ 	{
+ 		.compatible = "renesas,r9a09g011gbg-cpg-cocr",
+ 		.data = &r9a09g011gbg_cpg_cocr_info,
+ 	},
+ #endif
++#ifdef CONFIG_CLK_R9A09G055MA3GBG
+ 	{
+ 		.compatible = "renesas,r9a09g055ma3gbg-cpg-cocr",
+ 		.data = &r9a09g055ma3gbg_cpg_cocr_info,
+ 	},
++#endif
+ 	{ /* sentinel */ }
+ };
+ 
+diff --git a/drivers/clk/renesas/renesas-cpg-cocr.h b/drivers/clk/renesas/renesas-cpg-cocr.h
+index 188d9ec..090d608 100755
+--- a/drivers/clk/renesas/renesas-cpg-cocr.h
++++ b/drivers/clk/renesas/renesas-cpg-cocr.h
+@@ -100,18 +100,13 @@ struct rcr_reset {
+ 
+ #define DEF_MOD(_name, _mod, _parent...)     \
+ 	{ .name = _name, .id = MOD_CLK_ID(_mod), .parent = _parent}
+-	
+-#define DEF_RESET(_name, _id,  _type, _reset_msk, _clk_num, clk0, clk1, clk2, clk3, clk4, clk5, clk6, clk7, clk8)     \
+-	{ .name = _name, .id = _id, .type=_type, .reset_msk = _reset_msk,  .clk_num= _clk_num, \
+-          .clk_id = { clk0, clk1, clk2 , clk3, clk4, clk5, clk6, clk7, clk8 } \
+-	}
+ 
+ #define RST_MON_UNUSED		0xFFFFFFFF
+ #define RST_MON_TIMEOUT		100
+ #define RST_MON_DEASSERT	0
+ #define RST_MON_ASSERT		1
+ 
+-#define CPG_MIN_CLKID		100
++#define CPG_MIN_RESETID		31
+ #define CPG_REG_WEN_SHIFT	(16)
+ #define CPG_SET_DATA_MASK	(0xFFFF)
+ 
+@@ -172,8 +167,13 @@ struct cpg_cocr_info {
+ extern const struct cpg_cocr_info r9a09g011gbg_cpg_cocr_info;
+ extern const struct cpg_cocr_info r9a09g055ma3gbg_cpg_cocr_info;
+ 
++/* Fixed Clock Signal Definition */
++#define CLK_EXTAL_48MHZ         (48000000U)
++#define CLK_PLL2_1600MHZ        (1600000000U)
++#define CLK_PLL6_1260MHZ        (1260000000U)
++#define DIV_W_48MHZ             (48000000U)
+ 
+-/** CPG Registor Offset */
++/* CPG Register Offset */
+ #define CPG_PLL1_STBY           (0x0000)
+ #define CPG_PLL1_CLK1           (0x0004)
+ #define CPG_PLL1_CLK2           (0x0008)
+@@ -210,6 +210,7 @@ extern const struct cpg_cocr_info r9a09g055ma3gbg_cpg_cocr_info;
+ #define CPG_SYS_DDIV            (0x0204)
+ #define CPG_MMCDDI_DDIV         (0x0210)
+ #define CPG_CLK48_DSEL          (0x0214)
++#define CPG_ISP_DDIV2           (0x021C)
+ #define CPG_CLKSTATUS           (0x0224)
+ 
+ #define CPG_SDIEMM_SSEL         (0x0300)
+@@ -297,6 +298,12 @@ extern const struct cpg_cocr_info r9a09g055ma3gbg_cpg_cocr_info;
+ #define CPG_MMCDDI_DDIV_DIVX_SET_MIN        (0)
+ #define CPG_MMCDDI_DDIV_WEN_DIVX            (0x00010000)
+ 
++#define CPG_ISP_DDIV2_DIVI_SET_MSK          (0x00000003)
++#define CPG_ISP_DDIV2_DIVI_SET_SHIFT        (0)
++#define CPG_ISP_DDIV2_DIVI_SET_MAX          (3)
++#define CPG_ISP_DDIV2_DIVI_SET_MIN          (0)
++#define CPG_ISP_DDIV2_WEN_DIVI              (0x00010000)
++
+ #define CPG_CLK48_DSEL_SELB                 (0x00000001)
+ #define CPG_CLK48_DSEL_SELD                 (0x00000002)
+ #define CPG_CLK48_DSEL_SELE                 (0x00000004)
+@@ -304,11 +311,27 @@ extern const struct cpg_cocr_info r9a09g055ma3gbg_cpg_cocr_info;
+ #define CPG_CLK48_DSEL_WEN_SELD             (0x00020000)
+ #define CPG_CLK48_DSEL_WEN_SELE             (0x00040000)
+ 
++#define CPG_CSI_RCLK_SSEL_SELCSI0           (0x00000000)
++#define CPG_CSI_RCLK_SSEL_SELCSI1           (0x00000000)
++#define CPG_CSI_RCLK_SSEL_SELCSI2           (0x00000000)
++#define CPG_CSI_RCLK_SSEL_SELCSI3           (0x00000000)
++#define CPG_CSI_RCLK_SSEL_SELCSI4           (0x00000000)
++#define CPG_CSI_RCLK_SSEL_SELCSI5           (0x00000000)
++#define CPG_CSI_RCLK_SSEL_WEN_SELCSI0       (0x00010000)
++#define CPG_CSI_RCLK_SSEL_WEN_SELCSI1       (0x00020000)
++#define CPG_CSI_RCLK_SSEL_WEN_SELCSI2       (0x00040000)
++#define CPG_CSI_RCLK_SSEL_WEN_SELCSI3       (0x00080000)
++#define CPG_CSI_RCLK_SSEL_WEN_SELCSI4       (0x00100000)
++#define CPG_CSI_RCLK_SSEL_WEN_SELCSI5       (0x00200000)
++
++#define CPG_URT_RCLK_SSEL_SELW0             (0x00000000)
++#define CPG_URT_RCLK_SSEL_SELW1             (0x00000000)
++#define CPG_URT_RCLK_SSEL_WEN_SELW0         (0x00010000)
++#define CPG_URT_RCLK_SSEL_WEN_SELW1         (0x00100000)
++
+ #define CPG_SDIEMM_SSEL_SELSDI              (0x00000001)
+ #define CPG_SDIEMM_SSEL_WEN_SELSDI          (0x00010000)
+ 
+-#define CPG_URT_RCLK_SSEL_WEN_SELW0         (0x00010000)
+-
+ #define CPG_CLKSTATUS_DIVA                  (0x00000001)
+ #define CPG_CLKSTATUS_DIVB                  (0x00000002)
+ #define CPG_CLKSTATUS_DIVD                  (0x00000004)

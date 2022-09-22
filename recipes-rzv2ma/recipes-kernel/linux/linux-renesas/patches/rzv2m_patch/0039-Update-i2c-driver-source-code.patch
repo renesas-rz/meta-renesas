@@ -1,0 +1,40 @@
+From ca0d48bc2e8412b95cc7c2dc7e3570b6f4cc3eed Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 1 Mar 2022 08:48:47 +0700
+Subject: [PATCH] Update-i2c-driver-source-code
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/i2c/busses/i2c-rzv2m.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-rzv2m.c b/drivers/i2c/busses/i2c-rzv2m.c
+index eea2752..b9c1f85 100644
+--- a/drivers/i2c/busses/i2c-rzv2m.c
++++ b/drivers/i2c/busses/i2c-rzv2m.c
+@@ -491,9 +491,13 @@ static int rzv2m_i2c_master_xfer(struct i2c_adapter *adap,
+ /* Return i2c function which is susported by RZ/V2M */
+ static u32 rzv2m_i2c_func(struct i2c_adapter *adap)
+ {
+-       return I2C_FUNC_I2C | I2C_FUNC_SMBUS_EMUL | I2C_FUNC_10BIT_ADDR;
++       return I2C_FUNC_I2C | (I2C_FUNC_SMBUS_EMUL & ~I2C_FUNC_SMBUS_QUICK) | I2C_FUNC_10BIT_ADDR;
+ }
+ 
++static const struct i2c_adapter_quirks rzv2m_i2c_quirks = {
++        .flags = I2C_AQ_NO_ZERO_LEN,
++};
++
+ /* I2c algorithm struct */
+ static struct i2c_algorithm rzv2m_i2c_algo = {
+        .master_xfer = rzv2m_i2c_master_xfer,
+@@ -531,6 +535,7 @@ static int rzv2m_i2c_probe(struct platform_device *pdev)
+        adap = &priv->adap;
+        adap->nr = pdev->id;
+        adap->algo = &rzv2m_i2c_algo;
++       adap->quirks = &rzv2m_i2c_quirks;
+        adap->class = I2C_CLASS_DEPRECATED;
+        adap->dev.parent = dev;
+        adap->dev.of_node = dev->of_node;
+-- 
+2.7.4
+

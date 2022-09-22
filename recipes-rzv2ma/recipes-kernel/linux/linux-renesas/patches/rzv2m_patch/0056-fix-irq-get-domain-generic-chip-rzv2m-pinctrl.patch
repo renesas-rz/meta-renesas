@@ -1,0 +1,24 @@
+From ef17605bf825c4e8520c363b9055b8d922e5a9e0 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 7 Mar 2022 15:32:46 +0700
+Subject: [PATCH] fix-irq-get-domain-generic-chip-rzv2m-pinctrl
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/pinctrl/rzv2m/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pinctrl/rzv2m/Kconfig b/drivers/pinctrl/rzv2m/Kconfig
+index 8be09dd..8f11247 100644
+--- a/drivers/pinctrl/rzv2m/Kconfig
++++ b/drivers/pinctrl/rzv2m/Kconfig
+@@ -1,5 +1,6 @@
+ config PINCTRL_RZV2M
+ 	tristate "PFC for RZV2M"
+ 	select GPIOLIB
++	select GENERIC_IRQ_CHIP
+ 	help
+ 		Enable pin controller for RZ/V2M
+-- 
+2.7.4
+

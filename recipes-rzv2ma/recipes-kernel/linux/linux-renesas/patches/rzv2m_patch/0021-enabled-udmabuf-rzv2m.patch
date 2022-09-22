@@ -1,0 +1,75 @@
+From 98f58ef65e33ac3f790a28f3f020778bfa204670 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 28 Feb 2022 09:13:02 +0700
+Subject: [PATCH] enabled-udmabuf-rzv2m
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ .../dts/renesas/r9a09g011gbg-evaluation-board.dts  |   17 +
+ drivers/Kconfig                                    |    2 +
+ drivers/Makefile                                   |    1 +
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index fbc620e..052f8f1 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -48,6 +48,13 @@
+ 		       reg = <0x00000000 0x28000000 0x0 0x08000000>;
+                };
+ 
++               v4l2_reserved: v4l2-DRP_buf@0 {
++                       compatible = "shared-dma-pool";
++                       reusable;
++                       reg = <0x0 0x30000000 0x0 0x08000000>; //128MiB
++                       label = "image_buf0";
++               };
++
+ #if 0
+                /* device specific region for contiguous allocations */
+                mmp_reserved: linux,multimedia {
+@@ -57,6 +64,16 @@
+               };
+ #endif
+ 	};
++
++       udmabuf@0 {
++               compatible = "ikwzm,udmabuf-0.10.a";
++               device-name = "udmabuf0";
++               minor-number = <0>;
++               size = <0x08000000>; // 128MiB
++               dma-coherent;
++               memory-region = <&v4l2_reserved>;
++       };
++
+        mmngr {
+                compatible = "renesas,mmngr";
+ /*             memory-region = <&mmp_reserved>; */
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index dcecc9f..3bad7d6 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -230,6 +230,8 @@ source "drivers/siox/Kconfig"
+ 
+ source "drivers/slimbus/Kconfig"
+ 
++source "drivers/udmabuf/Kconfig"
++
+ source "drivers/interconnect/Kconfig"
+ 
+ source "drivers/counter/Kconfig"
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 5762280..fc0275c 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -186,6 +186,7 @@ obj-$(CONFIG_MULTIPLEXER)	+= mux/
+ obj-$(CONFIG_UNISYS_VISORBUS)	+= visorbus/
+ obj-$(CONFIG_SIOX)		+= siox/
+ obj-$(CONFIG_GNSS)		+= gnss/
++obj-$(CONFIG_U_DMA_BUF)        += udmabuf/
+ obj-$(CONFIG_INTERCONNECT)	+= interconnect/
+ obj-$(CONFIG_COUNTER)		+= counter/
+ obj-$(CONFIG_MOST)		+= most/
+diff --git a/drivers/udmabuf/Kconfig b/drivers/udmabuf/Kconfig
+-- 
+2.7.4
+

@@ -1,0 +1,25 @@
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index e6c9e88..5ace470 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -230,8 +230,6 @@ source "drivers/siox/Kconfig"
+ 
+ source "drivers/slimbus/Kconfig"
+ 
+-source "drivers/udmabuf/Kconfig"
+-
+ source "drivers/hw_tim/Kconfig"
+ 
+ source "drivers/interconnect/Kconfig"
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 6708b57..5bebf41 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -186,7 +186,6 @@ obj-$(CONFIG_MULTIPLEXER)	+= mux/
+ obj-$(CONFIG_UNISYS_VISORBUS)	+= visorbus/
+ obj-$(CONFIG_SIOX)		+= siox/
+ obj-$(CONFIG_GNSS)		+= gnss/
+-obj-$(CONFIG_U_DMA_BUF)        += udmabuf/
+ obj-$(CONFIG_TIM_RZV2M)        += hw_tim/
+ obj-$(CONFIG_INTERCONNECT)	+= interconnect/
+ obj-$(CONFIG_COUNTER)		+= counter/

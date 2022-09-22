@@ -1,0 +1,63 @@
+From 7d30284c899a9b568f8a2346538187d120991c85 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Fri, 15 Apr 2022 10:47:07 +0700
+Subject: [PATCH] add-switching-voltage-emmc
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi |  1 +
+ drivers/mmc/host/renesas_sdhi_core.c          | 14 +++++++-------
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index d412f04e5bb6..fa76e6e34cfd 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -239,6 +239,7 @@ eMM: sd@85020000 {
+             vqmmc-supply = <&reg_1p8v>;
+             bus-width = <8>;
+             non-removable;
++	    mmc-hs200-1_8v;
+             status = "disable";
+         };
+ 
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index 7ab249c7bbcd..59a973386129 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -60,6 +60,7 @@
+ enum switching_voltage_mode{
+        psc_mode,
+        pfc_mode,
++       none,
+ };
+ 
+ static const struct soc_device_attribute soc_whitelist[] = {
+@@ -1031,18 +1032,17 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ 
+        if (soc){
+                priv->switching_volt_type = psc_mode;
+-
+-               if(of_property_read_u32(pdev->dev.of_node, "psc-pins", &psc_pins))
+-                       priv->switching_volt_type = pfc_mode;
+-
+-               else
+-               {
++	       if(of_property_read_u32(pdev->dev.of_node, "psc-pins", &psc_pins)){
+                        priv->psc_pins = psc_pins;
+ 
+-                       if(   32 <= priv->psc_pins ){
++                       if(   16 <= priv->psc_pins ){
+                                return -EINVAL;
+                        }
+                }
++	       else
++	       {
++		       priv->switching_volt_type = none;
++	       }
+        }
+        else
+                priv->switching_volt_type = pfc_mode;
+-- 
+2.25.1
+

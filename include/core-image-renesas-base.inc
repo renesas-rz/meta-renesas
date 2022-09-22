@@ -1,3 +1,12 @@
+require docker-control.inc
+
+# Additional tools for supporting Docker
+DOCKER_PKGS = " docker ca-certificates ntpdate kernel-module-nf-conntrack-netlink "
+
+IMAGE_INSTALL_append = "\
+  ${@oe.utils.conditional("USE_DOCKER", "1", " ${DOCKER_PKGS} ", "", d)} \
+"
+
 # Basic packages
 IMAGE_INSTALL_append = " \
     bash \
@@ -5,11 +14,16 @@ IMAGE_INSTALL_append = " \
     v4l2-init \
     i2c-tools \
     coreutils \
+    packagegroup-multimedia-libs \
+    packagegroup-multimedia-kernel-modules \
 "
+
+IMAGE_FEATURES_remove = " ssh-server-dropbear"
+IMAGE_FEATURES_append = " ssh-server-openssh"
 
 update_issue() {
     # Set BSP version
-    BSP_VERSION="3.0.1-rc"
+    #BSP_VERSION="0.8.0"
 
     # Set SoC and Board info
     case "${MACHINE}" in
@@ -24,14 +38,6 @@ update_issue() {
     smarc-rzg2ul)
       BSP_SOC="RZG2UL"
       BSP_BOARD="RZG2UL-SMARC-EVK"
-      ;;
-    smarc-rzv2l)
-      BSP_SOC="RZV2L"
-      BSP_BOARD="RZV2L-SMARC-EVK"
-      ;;
-    rzv2l-dev)
-      BSP_SOC="RZV2L"
-      BSP_BOARD="RZV2L-DEV"
       ;;
     hihope-rzg2h)
       BSP_SOC="RZG2H"
@@ -48,6 +54,18 @@ update_issue() {
     ek874)
       BSP_SOC="RZG2E"
       BSP_BOARD="EK874"
+      ;;
+    rzv2m)
+      # Set BSP version
+      BSP_VERSION="1.2.0"
+      BSP_SOC="RZV2M"
+      BSP_BOARD="Evaluation Board Kit"
+      ;;
+    rzv2ma)
+      # Set BSP version
+      BSP_VERSION="1.0.0"
+      BSP_SOC="RZV2MA"
+      BSP_BOARD="Evaluation Board Kit"
       ;;
 
     esac
@@ -66,13 +84,13 @@ BASIC_32BIT_PKGS = " \
 "
 
 # Support secure environment
-IMAGE_INSTALL_append = " \
-    optee-client \
-"
+#IMAGE_INSTALL_append = " \
+#    optee-client \
+#"
 
-BASIC_32BIT_PKGS_append_rzg2h = " \
-    lib32-optee-client \
-"
+#BASIC_32BIT_PKGS_append_rzg2h = " \
+#    lib32-optee-client \
+#"
 
 # Installation for 32bit packages
 IMAGE_INSTALL_append = " \
@@ -81,7 +99,7 @@ IMAGE_INSTALL_append = " \
 
 # Qos user packages only supports 64bit.
 QOS_USER_PKGS = ""
-QOS_USER_PKGS_aarch64 = " \
+QOS_USER_PKGS_aarch64-poky-linux = " \
     qosif-user-module \
     qosif-tp-user-module \
 "

@@ -1,0 +1,30 @@
+From 3acece60edda857dc439483911dcfec622112234 Mon Sep 17 00:00:00 2001
+From: khainguyen <khai.nguyen.wx@renesas.com>
+Date: Fri, 25 Feb 2022 10:57:18 +0700
+Subject: [PATCH] include-asm-generic-serial-renesas-rzv2m
+
+Signed-off-by: khainguyen <khai.nguyen.wx@renesas.com>
+---
+ include/asm-generic/serial.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/include/asm-generic/serial.h b/include/asm-generic/serial.h
+index ca9f7b6..f07c292 100644
+--- a/include/asm-generic/serial.h
++++ b/include/asm-generic/serial.h
+@@ -8,7 +8,10 @@
+  * Traditionally, it just describes i8250 and related serial ports
+  * that have this clock rate.
+  */
+-
+-#define BASE_BAUD (1843200 / 16)
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++	#define BASE_BAUD (48000000 / 16)
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	#define BASE_BAUD (1843200 / 16)
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
+ 
+ #endif /* __ASM_GENERIC_SERIAL_H */
+-- 
+2.7.4
+

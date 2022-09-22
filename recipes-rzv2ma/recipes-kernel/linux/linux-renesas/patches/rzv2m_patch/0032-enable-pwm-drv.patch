@@ -1,0 +1,741 @@
+From 073f44ac85cf7e366a022ab8f28a45eee57444b0 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 28 Feb 2022 11:03:02 +0700
+Subject: [PATCH] enable-pwm-drv
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ .../dts/renesas/r9a09g011gbg-evaluation-board.dts  |  33 ++
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi      | 187 +++++++++
+ arch/arm64/configs/defconfig                       |   1 +
+ drivers/pwm/Kconfig                                |  13 +
+ drivers/pwm/Makefile                               |   1 +
+ drivers/pwm/pwm-v2m.c                              | 425 +++++++++++++++++++++
+ 6 files changed, 660 insertions(+)
+ create mode 100644 drivers/pwm/pwm-v2m.c
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 5ab346e..71f54c2 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -195,3 +195,36 @@
+        };
+ };
+ #endif
++
++&pwm0 {
++       status = "okay";
++};
++
++&pwm1 {
++       status = "okay";
++};
++
++&pwm2 {
++       status = "okay";
++};
++
++&pwm3 {
++       status = "okay";
++};
++
++&pwm4 {
++       status = "okay";
++};
++
++&pwm5 {
++       status = "okay";
++};
++
++&pwm6 {
++       status = "okay";
++};
++
++&pwm7 {
++       status = "okay";
++};
++
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 11fd5e7..8a3a262 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -155,6 +155,21 @@
+                compatible = "fixed-clock";
+                clock-frequency = <200000000>;
+        };
++       sys: sys@100M {
++               #clock-cells = <0>;
++               compatible = "fixed-clock";
++               clock-frequency = <100000000>;
++       };
++       pwm: pwm@48M {
++               #clock-cells = <0>;
++               compatible = "fixed-clock";
++               clock-frequency = <48000000>;
++       };
++       csi_clk: wdt_clk: pclk48: clk@48M {
++               #clock-cells = <0>;
++               compatible = "fixed-clock";
++               clock-frequency = <48000000>;
++       };
+ 
+ #endif
+ 
+@@ -399,6 +414,178 @@
+ 			       /*interrupts = <21 IRQ_TYPE_LEVEL_LOW>;*/
+                        };
+                };
++               pwm0: pwm@a4010000 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010000 0 0x80>;
++                       interrupts = <GIC_SPI 368 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm1: pwm@a4010080 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010080 0 0x80>;
++                       interrupts = <GIC_SPI 369 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm2: pwm@a4010100 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010100 0 0x80>;
++                       interrupts = <GIC_SPI 370 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm3: pwm@a4010180 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010180 0 0x80>;
++                       interrupts = <GIC_SPI 371 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++               pwm4: pwm@a4010200 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010200 0 0x80>;
++                       interrupts = <GIC_SPI 372 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm5: pwm@a4010280 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010280 0 0x80>;
++                       interrupts = <GIC_SPI 373 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm6: pwm@a4010300 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010300 0 0x80>;
++                       interrupts = <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++               pwm7: pwm@a4010380 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010380 0 0x80>;
++                       interrupts = <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm8: pwm@a4010400 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010400 0 0x80>;
++                       interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm9: pwm@a4010480 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010480 0 0x80>;
++                       interrupts = <GIC_SPI 377 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm10: pwm@a4010500 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010500 0 0x80>;
++                       interrupts = <GIC_SPI 378 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm11: pwm@a4010580 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010580 0 0x80>;
++                       interrupts = <GIC_SPI 379 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm12: pwm@a4010600 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010600 0 0x80>;
++                       interrupts = <GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++              pwm13: pwm@a4010680 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010680 0 0x80>;
++                       interrupts = <GIC_SPI 381 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm14: pwm@a4010700 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010700 0 0x80>;
++                       interrupts = <GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
++
++               pwm15: pwm@a4010780 {
++                       compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++                       reg = <0 0xa4010780 0 0x80>;
++                       interrupts = <GIC_SPI 383 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&sys>, <&pwm>;
++                       clock-names = "sys", "pwm";
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       #pwm-cells = <2>;
++                       status = "disabled";
++               };
+ 
+ #endif
+        };
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 566deea..882f035 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -381,6 +381,7 @@ CONFIG_DEVFREQ_GOV_PASSIVE=y
+ CONFIG_RENESAS_MFIS_ECC=y
+ #CONFIG_PHYLIB=y
+ #CONFIG_MDIO_DEVICE=y
++CONFIG_PWM_RZV2M=y
+ CONFIG_E1000E=y
+ CONFIG_SERIAL_8250=y
+ CONFIG_SERIAL_8250_DEPRECATED_OPTIONS=y
+diff --git a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
+index 63be536..55983d0 100644
+--- a/drivers/pwm/Kconfig
++++ b/drivers/pwm/Kconfig
+@@ -401,6 +401,19 @@ config PWM_RENESAS_TPU
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called pwm-renesas-tpu.
+ 
++config PWM_RZV2M
++       tristate "Renesas RZV2M PWM support"
++       depends on ARCH_RENESAS || COMPILE_TEST
++       depends on HAS_IOMEM
++       help
++         This driver exposes the PWM controller found in Renesas
++         RZV2M chips through the PWM API.
++
++         To compile this driver as a module, choose M here: the module
++         will be called pwm-v2m.
++
++
++
+ config PWM_ROCKCHIP
+ 	tristate "Rockchip PWM support"
+ 	depends on ARCH_ROCKCHIP || COMPILE_TEST
+diff --git a/drivers/pwm/Makefile b/drivers/pwm/Makefile
+index cbdcd55..3a2155e 100644
+--- a/drivers/pwm/Makefile
++++ b/drivers/pwm/Makefile
+@@ -55,3 +55,4 @@ obj-$(CONFIG_PWM_TWL)		+= pwm-twl.o
+ obj-$(CONFIG_PWM_TWL_LED)	+= pwm-twl-led.o
+ obj-$(CONFIG_PWM_VT8500)	+= pwm-vt8500.o
+ obj-$(CONFIG_PWM_ZX)		+= pwm-zx.o
++obj-$(CONFIG_PWM_RZV2M)         += pwm-v2m.o
+diff --git a/drivers/pwm/pwm-v2m.c b/drivers/pwm/pwm-v2m.c
+new file mode 100644
+index 0000000..b5e0c76
+--- /dev/null
++++ b/drivers/pwm/pwm-v2m.c
+@@ -0,0 +1,425 @@
++/*
++ * V2M PWM Timer driver
++ *
++ * Copyright (C) 2020 Renesas Electronics Corporation
++ *
++ * This is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/clk.h>
++#include <linux/err.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/pwm.h>
++#include <linux/slab.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++
++#define V2M_PWMCTR                                     0x00                    //PWM control register
++#define V2M_PWMCTR_PWMPS_MASK          0x00030000              //bit mask of PWMPS bit
++#define V2M_PWMCTR_PWMPS_SHIFT         16                              //bit shift of PWMPS bit
++#define V2M_PWMCTR_PWMHL                       BIT(3)                  //PWM signal output level setting
++#define V2M_PWMCTR_PWMTM                       BIT(2)
++#define V2M_PWMCTR_PWME                                BIT(1)
++#define V2M_PWMCTR_PWMS                                BIT(0)
++
++#define V2M_PWMCYC                                     0x04                    //PWM cycle setting register
++#define V2M_PWMCYC_MASK                                0x00ffffff
++#define V2M_PWMCYC_SHIFT                       0
++
++#define V2M_PWMLOW                                     0x08                    //PWM low width setting register
++#define V2M_PWMLOW_MASK                                0x00ffffff
++#define V2M_PWMLOW_SHIFT                       0
++
++#define V2M_PWMCNT                                     0x0C                    //PWM counter register
++#define V2M_PWMCNT_MASK                                0x00ffffff
++#define V2M_PWMCNT_SHIFT                       0
++
++#define V2M_PWMIEN                                     0x10                    //PWM interrupt enable register
++#define V2M_PWMIEN_PWMER                       BIT(2)                  //Enable interrupt output at PWM rising edge
++#define V2M_PWMIEN_PWMEF                       BIT(1)                  //Enable interrupt output at PWM falling edge
++#define V2M_PWMIEN_PWMEC                       BIT(0)                  //Enable interrupt by clear counter
++
++#define V2M_PWMINT                                     0x14                    //PWM interrupt register
++#define V2M_PWMINT_PWMIR                       BIT(2)                  //The interrupt generated at the rising edge of PWM can be monitored
++#define V2M_PWMINT_PWMIF                       BIT(1)                  //The interrupt generated at the falling edge of PWM can be monitored
++#define V2M_PWMINT_PWMIC                       BIT(0)                  //The interrupt generated by clear counter of PWM can be monitored, this interrupt use for choose PWM running mode (single cycle or continuous)
++
++#define MAX_PWMCYS                               16777215 /* Max value of 24 bits register is ffffff */
++
++int division[4] = {1, 16, 256, 2048};
++
++struct v2m_pwm_chip {
++       struct pwm_chip chip;
++       void __iomem *base;
++       struct clk *sys_clk;
++       struct clk *pwm_clk;
++};
++
++static void wait_time(struct v2m_pwm_chip *rp, int num_sys_clk, int num_pwm_clk)
++{
++       unsigned long pwm_clk_rate = clk_get_rate(rp->pwm_clk);
++       unsigned long sys_clk_rate = clk_get_rate(rp->sys_clk);
++
++       unsigned long long pwm_one_cycle, sys_one_cycle;        /* nanoseconds */
++
++       pwm_one_cycle = (unsigned long long)NSEC_PER_SEC;
++       do_div(pwm_one_cycle, pwm_clk_rate);
++       sys_one_cycle = (unsigned long long)NSEC_PER_SEC;
++       do_div(sys_one_cycle, sys_clk_rate);
++
++       ndelay(num_sys_clk * sys_one_cycle + num_pwm_clk * pwm_one_cycle);
++}
++
++static inline struct v2m_pwm_chip *to_v2m_pwm_chip(struct pwm_chip *chip)
++{
++       return container_of(chip, struct v2m_pwm_chip, chip);
++}
++
++static void v2m_pwm_write(struct v2m_pwm_chip *rp, u32 data,
++                               unsigned int offset)
++{
++       writel(data, rp->base + offset);
++}
++
++static u32 v2m_pwm_read(struct v2m_pwm_chip *rp, unsigned int offset)
++{
++       return readl(rp->base + offset);
++}
++
++
++static void v2m_pwm_update(struct v2m_pwm_chip *rp, u32 mask, u32 data,
++                               unsigned int offset)
++{
++       u32 value;
++
++       value = v2m_pwm_read(rp, offset);
++       value &= ~mask;
++       value |= data & mask;
++       v2m_pwm_write(rp, value, offset);
++}
++
++static int v2m_pwm_get_clock_division(struct v2m_pwm_chip *rp, int period_ns)
++{
++       unsigned long pwm_clk_rate = clk_get_rate(rp->pwm_clk); /* Hz */
++       unsigned int i, div;
++       u32 set_div,set_div_data;
++       unsigned long long one_cycle;   /* nanoseconds */
++
++       if (pwm_clk_rate == 0)
++               return -EINVAL;
++
++       one_cycle = (unsigned long long)NSEC_PER_SEC;
++       do_div(one_cycle, pwm_clk_rate);
++
++       for (i = 0; i < 4; i++) {
++               div = division[i];
++               if (div >= period_ns/((MAX_PWMCYS+1) * one_cycle))
++                       break;
++               else if (i == 3)
++                       return -EINVAL;
++       }
++
++       switch (i)
++       {
++               case 0:
++                       set_div = 0x0;
++                       break;
++               case 1:
++                       set_div = 0x1;
++                       break;
++               case 2:
++                       set_div = 0x2;
++                       break;
++               case 3:
++                       set_div = 0x3;
++                       break;
++               default:
++                       set_div = 0x0;
++                       break;
++       }
++
++       set_div_data = set_div << V2M_PWMCTR_PWMPS_SHIFT;
++
++       v2m_pwm_update(rp, V2M_PWMCTR_PWMPS_MASK, set_div_data, V2M_PWMCTR);
++       wait_time(rp, 6, 9); //leave a write interval of 6 * PCLK + 9 * PWM_CLK
++
++       return div;
++}
++
++static int v2m_pwm_set_counter(struct v2m_pwm_chip *rp, int div, int duty_ns,
++                               int period_ns)
++{
++       unsigned long long one_cycle, tmp, tmp2, tmp3;  /* picoseconds */
++       unsigned long pwm_clk_rate = clk_get_rate(rp->pwm_clk);
++       u32 cyc, low;
++
++       one_cycle = (unsigned long long)NSEC_PER_SEC * 1000ULL;
++       do_div(one_cycle, pwm_clk_rate);
++
++       tmp = period_ns * 1000ULL;
++       do_div(tmp, one_cycle);
++       do_div(tmp, div);
++       tmp -= 1;
++       cyc = (tmp << V2M_PWMCYC_SHIFT) & V2M_PWMCYC_MASK;
++
++       tmp3 = duty_ns * tmp;
++       do_div(tmp3, period_ns);
++       if (tmp < tmp3)
++               tmp2 = 0;
++       else
++               tmp2 = tmp - tmp3;
++
++       low = (tmp2 << V2M_PWMLOW_SHIFT) & V2M_PWMLOW_MASK;
++
++       /* Avoid prohibited setting */
++       if (cyc == 0)
++               return -EINVAL;
++
++       v2m_pwm_write(rp, cyc, V2M_PWMCYC);
++       v2m_pwm_write(rp, low, V2M_PWMLOW);
++       wait_time(rp, 6, 9); //leave a write interval of 6 * PCLK + 9 * PWM_CLK
++
++       return 0;
++}
++
++static int v2m_pwm_request(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++       return pm_runtime_get_sync(chip->dev);
++}
++
++static void v2m_pwm_free(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++       pm_runtime_put(chip->dev);
++}
++
++static int v2m_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
++                          int duty_ns, int period_ns)
++{
++       struct v2m_pwm_chip *rp = to_v2m_pwm_chip(chip);
++       int div, ret;
++
++       if (pwm_is_enabled(pwm)) {
++               dev_warn(chip->dev, "pwm is already enabled \n");
++               return 0;
++       }
++       dev_info(NULL, "%s Cycle setting function is entered.\n",__func__);
++       div = v2m_pwm_get_clock_division(rp, period_ns);
++       if (div < 0)
++               return div;
++
++       v2m_pwm_update(rp, V2M_PWMCTR_PWMTM, 0, V2M_PWMCTR);
++       ret = v2m_pwm_set_counter(rp, div, duty_ns, period_ns);
++
++       return ret;
++}
++
++static int v2m_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++       struct v2m_pwm_chip *rp = to_v2m_pwm_chip(chip);
++       u32 value;
++
++       dev_info(NULL, "%s Interrupt enable function is entered.\n",__func__);
++
++       /* Don't enable the PWM device if V2M_PWMCYC is 0 */
++       value = v2m_pwm_read(rp, V2M_PWMCYC);
++       if ((value & V2M_PWMCYC_MASK) == 0)
++               return -EINVAL;
++
++       //set Interrupt enable at PWM clear counter edge
++       v2m_pwm_update(rp, V2M_PWMIEN_PWMEC, V2M_PWMIEN_PWMEC, V2M_PWMIEN);
++       v2m_pwm_update(rp, V2M_PWMCTR_PWME, V2M_PWMCTR_PWME, V2M_PWMCTR);
++       wait_time(rp, 6, 9); //leave a write interval of 6 * PCLK + 9 * PWM_CLK
++
++       return 0;
++}
++
++static void v2m_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
++{
++       struct v2m_pwm_chip *rp = to_v2m_pwm_chip(chip);
++
++       dev_info(NULL, "%s Interrupt disable function is entered.\n",__func__);
++
++       v2m_pwm_update(rp, V2M_PWMCTR_PWME, 0, V2M_PWMCTR);
++       v2m_pwm_update(rp, V2M_PWMIEN_PWMEC, 0, V2M_PWMIEN);
++       wait_time(rp, 6, 9); //leave a write interval of 6 * PCLK + 9 * PWM_CLK
++}
++
++static int v2m_pwm_set_polarity(struct pwm_chip *chip, struct pwm_device *pwm, enum pwm_polarity polarity)
++{
++       struct v2m_pwm_chip *rp = to_v2m_pwm_chip(chip);
++
++       dev_info(NULL, "%s polarity function is entered.\n",__func__);
++
++       if (polarity == PWM_POLARITY_NORMAL)
++       {
++               v2m_pwm_update(rp, V2M_PWMCTR_PWMHL, 0, V2M_PWMCTR);
++       }
++       else
++       {
++               v2m_pwm_update(rp, V2M_PWMCTR_PWMHL, V2M_PWMCTR_PWMHL, V2M_PWMCTR);
++       }
++       wait_time(rp, 6, 9); //leave a write interval of 6 * PCLK + 9 * PWM_CLK
++
++       return 0;
++}
++
++static const struct pwm_ops v2m_pwm_ops = {
++       .request = v2m_pwm_request,
++       .free = v2m_pwm_free,
++       .config = v2m_pwm_config,
++       .enable = v2m_pwm_enable,
++       .disable = v2m_pwm_disable,
++       .set_polarity = v2m_pwm_set_polarity,
++       .owner = THIS_MODULE,
++};
++
++static irqreturn_t v2m_pwm_interrupt(int irq, void *data)
++{
++       struct v2m_pwm_chip *rp = data;
++       u32 value;
++
++       value = v2m_pwm_read(rp, V2M_PWMINT);
++       if (value & V2M_PWMINT_PWMIC) {
++               v2m_pwm_update(rp, V2M_PWMINT_PWMIC, V2M_PWMINT_PWMIC, V2M_PWMINT);
++               wait_time(rp, 5, 5); //leave a write interval of 5 * PCLK + 5 * PWM_CLK
++       }
++
++       return IRQ_HANDLED;
++}
++
++static int v2m_pwm_probe(struct platform_device *pdev)
++{
++       struct v2m_pwm_chip *v2m_pwm;
++       struct resource *res;
++       int ret, irq;
++
++       v2m_pwm = devm_kzalloc(&pdev->dev, sizeof(*v2m_pwm), GFP_KERNEL);
++       if (v2m_pwm == NULL)
++               return -ENOMEM;
++
++       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++       v2m_pwm->base = devm_ioremap_resource(&pdev->dev, res);
++       if (IS_ERR(v2m_pwm->base))
++               return PTR_ERR(v2m_pwm->base);
++
++       v2m_pwm->sys_clk = devm_clk_get(&pdev->dev, "sys");
++       if (IS_ERR(v2m_pwm->sys_clk)) {
++               dev_err(&pdev->dev, "failed to get system clock\n");
++               return PTR_ERR(v2m_pwm->sys_clk);
++       }
++
++       v2m_pwm->pwm_clk = devm_clk_get(&pdev->dev, "pwm");
++       if (IS_ERR(v2m_pwm->pwm_clk)) {
++               dev_err(&pdev->dev, "failed to get pwm clock\n");
++               return PTR_ERR(v2m_pwm->pwm_clk);
++       }
++
++       irq = platform_get_irq(pdev, 0);
++       if (irq < 0) {
++               dev_err(&pdev->dev, "Failed to obtain IRQ\n");
++               return irq;
++       }
++
++       ret = devm_request_irq(&pdev->dev, irq, v2m_pwm_interrupt, 0, pdev->name, v2m_pwm);
++       if (ret < 0) {
++               dev_err(&pdev->dev, "Failed to request IRQ\n");
++               return ret;
++       }
++
++       platform_set_drvdata(pdev, v2m_pwm);
++
++       v2m_pwm->chip.dev = &pdev->dev;
++       v2m_pwm->chip.ops = &v2m_pwm_ops;
++       v2m_pwm->chip.base = -1;
++       v2m_pwm->chip.npwm = 1;
++
++       ret = pwmchip_add(&v2m_pwm->chip);
++       if (ret < 0) {
++               dev_err(&pdev->dev, "failed to register PWM chip: %d\n", ret);
++               return ret;
++       }
++
++       pm_runtime_enable(&pdev->dev);
++
++       return 0;
++}
++
++static int v2m_pwm_remove(struct platform_device *pdev)
++{
++       struct v2m_pwm_chip *v2m_pwm = platform_get_drvdata(pdev);
++
++       pm_runtime_disable(&pdev->dev);
++
++       return pwmchip_remove(&v2m_pwm->chip);
++}
++
++static const struct of_device_id v2m_pwm_of_table[] = {
++       { .compatible = "renesas,pwm-v2m", },
++       { },
++};
++MODULE_DEVICE_TABLE(of, v2m_pwm_of_table);
++
++#ifdef CONFIG_PM_SLEEP
++static struct pwm_device *v2m_pwm_dev_to_pwm_dev(struct device *dev)
++{
++       struct v2m_pwm_chip *v2m_pwm = dev_get_drvdata(dev);
++       struct pwm_chip *chip = &v2m_pwm->chip;
++
++       return &chip->pwms[0];
++}
++
++static int v2m_pwm_suspend(struct device *dev)
++{
++       struct pwm_device *pwm = v2m_pwm_dev_to_pwm_dev(dev);
++
++       if (!test_bit(PWMF_REQUESTED, &pwm->flags))
++               return 0;
++
++       pm_runtime_put(dev);
++
++       return 0;
++}
++
++static int v2m_pwm_resume(struct device *dev)
++{
++       struct pwm_device *pwm = v2m_pwm_dev_to_pwm_dev(dev);
++       int ret;
++       if (!test_bit(PWMF_REQUESTED, &pwm->flags))
++               return 0;
++
++       pm_runtime_get_sync(dev);
++
++       ret = v2m_pwm_config(pwm->chip, pwm, pwm->state.duty_cycle,     pwm->state.period);
++       if (ret < 0)
++               return ret;
++
++       if (pwm_is_enabled(pwm))
++               ret = v2m_pwm_enable(pwm->chip, pwm);
++
++       return ret;
++}
++#endif /* CONFIG_PM_SLEEP */
++static SIMPLE_DEV_PM_OPS(v2m_pwm_pm_ops, v2m_pwm_suspend, v2m_pwm_resume);
++
++static struct platform_driver v2m_pwm_driver = {
++       .probe = v2m_pwm_probe,
++       .remove = v2m_pwm_remove,
++       .driver = {
++               .name = "pwm-v2m",
++               .pm     = &v2m_pwm_pm_ops,
++               .of_match_table = of_match_ptr(v2m_pwm_of_table),
++       }
++};
++module_platform_driver(v2m_pwm_driver);
++
++MODULE_AUTHOR("HoaPhan <hoa.phan.df@renesas.com>");
++MODULE_DESCRIPTION("Renesas PWM Timer Driver");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:pwm-v2m");
++
+-- 
+2.7.4
+

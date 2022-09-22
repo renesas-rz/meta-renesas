@@ -1,0 +1,25 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index bebfedc..1b2b596 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -117,6 +117,7 @@
+ 	timeout-sec = <60>;
+ };
+ 
++
+ &xhci0 {
+        memory-region = <&global_cma>;
+        status = "okay";
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 04cd77e..4bb1643 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -449,7 +449,7 @@
+ 	    compatible = "renesas,rzv2m-sdhi";
+             reg = <0 0x85020000 0 0x2000>;
+             interrupts = <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 355 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&cpg CPG_MOD 301>;
++            clocks = <&cpg CPG_MOD 309>;
+             max-frequency = <200000000>;
+             vmmc-supply = <&reg_3p3v>;
+             vqmmc-supply = <&reg_1p8v>;

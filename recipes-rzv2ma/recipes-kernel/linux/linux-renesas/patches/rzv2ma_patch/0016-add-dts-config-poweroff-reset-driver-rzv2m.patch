@@ -1,0 +1,26 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+index 7ccee68..8a09f24 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+@@ -977,6 +977,12 @@
+             #pwm-cells = <2>;
+             status = "disabled";
+         };
++        
++        rst: poweroff-reset@a3700000 {
++            compatible = "renesas,psc-rzv2m";
++            reg = <0 0xa3700000 0 0x800>;
++            status = "okay";
++        };
+     };
+ 
+ 
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 15ac7c5..6389b33 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -441,3 +441,4 @@ CONFIG_RENESAS_TIMER_MTU3=y
+ CONFIG_RENESAS_POE3=y
+ CONFIG_GPT_RZG2L=y
+ CONFIG_POEG_RZG2L=y
++CONFIG_POWER_RESET_RENESAS_RZV2M=y

@@ -1,0 +1,553 @@
+diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.platforms
+index 1bbe31a..3759c37 100755
+--- a/arch/arm64/Kconfig.platforms
++++ b/arch/arm64/Kconfig.platforms
+@@ -7,6 +7,12 @@ config ARCH_R9A09G011GBG
+        help
+          This enables support for the Renesas RZ/V2M SoC.
+ 
++config ARCH_R9A09G055MA3GBG
++       bool "Renesas RZ/V2MA SoC Platform"
++       depends on ARCH_RENESAS
++       help
++         This enables support for the Renesas RZ/V2MA SoC.
++
+ config ARCH_ACTIONS
+ 	bool "Actions Semi Platforms"
+ 	select OWL_TIMER
+diff --git a/arch/arm64/boot/dts/renesas/Makefile b/arch/arm64/boot/dts/renesas/Makefile
+index f000667..f3526b5 100755
+--- a/arch/arm64/boot/dts/renesas/Makefile
++++ b/arch/arm64/boot/dts/renesas/Makefile
+@@ -46,6 +46,7 @@ dtb-$(CONFIG_ARCH_R8A774C0) += r8a774c0-es10-ek874-mipi-2.4.dtb
+ 
+ dtb-$(CONFIG_ARCH_R8A774E1) += r8a774e1-hihope-rzg2h.dtb
+ dtb-$(CONFIG_ARCH_R9A09G011GBG) += r9a09g011gbg-evaluation-board.dtb
++dtb-$(CONFIG_ARCH_R9A09G055MA3GBG) += r9a09g055ma3gbg-evaluation-board.dtb
+ dtb-$(CONFIG_ARCH_R8A774E1) += r8a774e1-hihope-rzg2h-ex.dtb
+ dtb-$(CONFIG_ARCH_R8A774E1) += r8a774e1-hihope-rzg2h-ex-idk-1110wr.dtb
+ dtb-$(CONFIG_ARCH_R8A774E1) += r8a774e1-hihope-rzg2h-ex-mipi-2.1.dtb
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 7f1900f..15ac7c5 100755
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -37,9 +37,10 @@ CONFIG_ARCH_R8A774A1=n
+ CONFIG_ARCH_R8A774A3=n
+ CONFIG_ARCH_R8A774C0=n
+ CONFIG_ARCH_R8A774E1=n
+-CONFIG_ARCH_R9A09G011GBG=y 
+-CONFIG_ARCH_R9A07G044=y
+-CONFIG_ARCH_R9A07G043=y
++CONFIG_ARCH_R9A09G011GBG=n
++CONFIG_ARCH_R9A09G055MA3GBG=y
++CONFIG_ARCH_R9A07G044=n
++CONFIG_ARCH_R9A07G043=n
+ CONFIG_PCI=y
+ CONFIG_PCIEPORTBUS=y
+ CONFIG_HOTPLUG_PCI_PCIE=y
+diff --git a/drivers/clk/renesas/Kconfig b/drivers/clk/renesas/Kconfig
+index b1c87b6..e76ebf2 100755
+--- a/drivers/clk/renesas/Kconfig
++++ b/drivers/clk/renesas/Kconfig
+@@ -18,6 +18,7 @@ config CLK_RENESAS
+ 	select CLK_R8A774C0 if ARCH_R8A774C0
+ 	select CLK_R8A774E1 if ARCH_R8A774E1
+ 	select CLK_R9A09G011GBG if ARCH_R9A09G011GBG
++	select CLK_R9A09G055MA3GBG if ARCH_R9A09G055MA3GBG
+ 	select CLK_R8A7778 if ARCH_R8A7778
+ 	select CLK_R8A7779 if ARCH_R8A7779
+ 	select CLK_R8A7790 if ARCH_R8A7790
+@@ -102,6 +103,10 @@ config CLK_R9A09G011GBG
+        bool "RZ/V2M clock support" if COMPILE_TEST
+        select CLK_RENESAS_CPG_CLKON
+ 
++config CLK_R9A09G055MA3GBG
++       bool "RZ/V2MA clock support" if COMPILE_TEST
++       select CLK_RENESAS_CPG_CLKON
++
+ config CLK_R8A7778
+ 	bool "R-Car M1A clock support" if COMPILE_TEST
+ 	select CLK_RENESAS_CPG_MSTP
+diff --git a/drivers/clk/renesas/Makefile b/drivers/clk/renesas/Makefile
+index e40cd88..ecdb3f7 100755
+--- a/drivers/clk/renesas/Makefile
++++ b/drivers/clk/renesas/Makefile
+@@ -15,6 +15,7 @@ obj-$(CONFIG_CLK_R8A774B1)		+= r8a774b1-cpg-mssr.o
+ obj-$(CONFIG_CLK_R8A774C0)		+= r8a774c0-cpg-mssr.o
+ obj-$(CONFIG_CLK_R8A774E1)		+= r8a774e1-cpg-mssr.o
+ obj-$(CONFIG_CLK_R9A09G011GBG)          += r9a09g011gbg-cpg-mssr.o
++obj-$(CONFIG_CLK_R9A09G055MA3GBG)       += r9a09g011gbg-cpg-mssr.o
+ obj-$(CONFIG_CLK_R8A7778)		+= clk-r8a7778.o
+ obj-$(CONFIG_CLK_R8A7779)		+= clk-r8a7779.o
+ obj-$(CONFIG_CLK_R8A7790)		+= r8a7790-cpg-mssr.o
+diff --git a/drivers/clk/renesas/renesas-cpg-clkon.c b/drivers/clk/renesas/renesas-cpg-clkon.c
+index 1b0b263..c312d9a 100755
+--- a/drivers/clk/renesas/renesas-cpg-clkon.c
++++ b/drivers/clk/renesas/renesas-cpg-clkon.c
+@@ -711,6 +711,12 @@ static const struct of_device_id cpg_mssr_match[] = {
+                .compatible = "renesas,r8arzv2m-cpg-mssr",
+                .data = &r8arzv2m_cpg_mssr_info,
+        },
++#endif
++#ifdef CONFIG_CLK_R9A09G055MA3GBG
++       {
++               .compatible = "renesas,r8arzv2m-cpg-mssr",
++               .data = &r8arzv2m_cpg_mssr_info,
++       },
+ #endif
+        { /* sentinel */ }
+ };
+diff --git a/drivers/soc/renesas/Kconfig b/drivers/soc/renesas/Kconfig
+index 16c18ca..0bc8dae 100755
+--- a/drivers/soc/renesas/Kconfig
++++ b/drivers/soc/renesas/Kconfig
+@@ -28,9 +28,9 @@ config ARCH_RCAR_GEN2
+ 	select PM
+ 	select PM_GENERIC_DOMAINS
+ 	select RENESAS_IRQC
+-	select RST_RCAR if ARCH_R9A09G011GBG
++	select RST_RCAR if ARCH_R9A09G011GBG || ARCH_R9A09G055MA3GBG
+ 	select SYS_SUPPORTS_SH_CMT
+-	select SYSC_R9A09G011GBG if ARCH_R9A09G011GBG
++	select SYSC_R9A09G011GBG if ARCH_R9A09G011GBG || ARCH_R9A09G055MA3GBG
+ 
+ config ARCH_RCAR_GEN3
+ 	bool
+diff --git a/drivers/soc/renesas/renesas-soc.c b/drivers/soc/renesas/renesas-soc.c
+index 7d247aa..b6a9af2 100755
+--- a/drivers/soc/renesas/renesas-soc.c
++++ b/drivers/soc/renesas/renesas-soc.c
+@@ -57,7 +57,7 @@ static const struct renesas_family fam_rzg2 __initconst __maybe_unused = {
+ 	.reg	= 0xfff00044,		/* PRR (Product Register) */
+ };
+ 
+-static const struct renesas_family fam_rzv2 __initconst __maybe_unused = {
++static const struct renesas_family fam_rzv2m __initconst __maybe_unused = {
+        .name   = "RZ/V2M",
+        .reg    = 0xA3F03104,           /* SYS (Version Register) */
+ };
+@@ -152,7 +152,7 @@ static const struct renesas_soc soc_rz_g2h __initconst __maybe_unused = {
+ };
+ 
+ static const struct renesas_soc soc_rz_v2m __initconst __maybe_unused = {
+-       .family = &fam_rzv2,
++       .family = &fam_rzv2m,
+        .id     = 0x10,
+ };
+ 
+@@ -295,11 +295,10 @@ static const struct of_device_id renesas_socs[] __initconst = {
+ 	{ .compatible = "renesas,r8a774e1",	.data = &soc_rz_g2h },
+ #endif
+ #ifdef CONFIG_ARCH_R9A09G011GBG
+-#if 0 /* TODO Add V2MA config*/
+-       { .compatible = "renesas,r9a09g011gbg", .data = &soc_rz_v2m },
++	{ .compatible = "renesas,r9a09g011gbg", .data = &soc_rz_v2m },
+ #endif
+-/*#ifdef CONFIG_ARCH_R9A09G055MA3GBG*/ /* TODO Add V2MA config*/
+-       { .compatible = "renesas,r9a09g011gbg", .data = &soc_rz_v2ma },
++#ifdef CONFIG_ARCH_R9A09G055MA3GBG
++	{ .compatible = "renesas,r9a09g055ma3gbg", .data = &soc_rz_v2ma },
+ #endif
+ #ifdef CONFIG_ARCH_R8A7778
+ 	{ .compatible = "renesas,r8a7778",	.data = &soc_rcar_m1a },
+diff --git a/drivers/tty/serial/8250/8250_dma.c b/drivers/tty/serial/8250/8250_dma.c
+index 22162e9..004dada 100755
+--- a/drivers/tty/serial/8250/8250_dma.c
++++ b/drivers/tty/serial/8250/8250_dma.c
+@@ -8,9 +8,9 @@
+ #include <linux/tty_flip.h>
+ #include <linux/serial_reg.h>
+ #include <linux/dma-mapping.h>
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ #include <linux/console.h>
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ #include "8250.h"
+ 
+ static void __dma_tx_complete(void *param)
+@@ -50,10 +50,10 @@ static void __dma_rx_complete(void *param)
+ 	struct dma_tx_state	state;
+ 	int			count;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	if (!dma->rx_running)
+ 		return 
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG)  || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	dma->rx_running = 0;
+ 	dmaengine_tx_status(dma->rxchan, dma->rx_cookie, &state);
+ 
+diff --git a/drivers/tty/serial/8250/8250_early.c b/drivers/tty/serial/8250/8250_early.c
+index c3be6e1..85be159 100755
+--- a/drivers/tty/serial/8250/8250_early.c
++++ b/drivers/tty/serial/8250/8250_early.c
+@@ -160,7 +160,7 @@ int __init early_serial8250_setup(struct earlycon_device *device,
+ 	if (!(device->port.membase || device->port.iobase))
+ 		return -ENODEV;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+        {
+                struct uart_port *up = &device->port;
+                unsigned int ier, fcr, lcr, mcr, hcr0;
+@@ -183,7 +183,7 @@ int __init early_serial8250_setup(struct earlycon_device *device,
+                serial8250_early_out(up, UART_MCR, mcr);
+                serial8250_early_out(up, UART_HCR0, hcr0);
+        }
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ 	if (!device->baud) {
+ 		struct uart_port *port = &device->port;
+diff --git a/drivers/tty/serial/8250/8250_of.c b/drivers/tty/serial/8250/8250_of.c
+index 862336c..8f69e59 100755
+--- a/drivers/tty/serial/8250/8250_of.c
++++ b/drivers/tty/serial/8250/8250_of.c
+@@ -225,13 +225,13 @@ static int of_platform_serial_probe(struct platform_device *ofdev)
+ 			&port8250.overrun_backoff_time_ms) != 0)
+ 		port8250.overrun_backoff_time_ms = 0;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	if (of_find_property(ofdev->dev.of_node, "dmas", NULL)
+ 		&& of_find_property(ofdev->dev.of_node,
+ 						"dma-names", NULL))
+ 		port8250.dma = devm_kzalloc(&ofdev->dev,
+ 			sizeof(struct uart_8250_dma), GFP_KERNEL);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ 	ret = serial8250_register_8250_port(&port8250);
+ 	if (ret < 0)
+diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
+index 687e780..7d5e6f2 100755
+--- a/drivers/tty/serial/8250/8250_port.c
++++ b/drivers/tty/serial/8250/8250_port.c
+@@ -104,7 +104,7 @@ static const struct serial8250_config uart_config[] = {
+ 		.rxtrig_bytes	= {8, 16, 24, 28},
+ 		.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
+ 	},
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	[PORT_16750] = {
+ 		.name           = "R8ARZV2M16750",
+ 		.fifo_size      = 64,
+@@ -114,7 +114,7 @@ static const struct serial8250_config uart_config[] = {
+ 		.rxtrig_bytes   = {1, 16, 32, 56},
+ 		.flags          = UART_CAP_FIFO | UART_CAP_AFE,
+ 	},
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	[PORT_16750] = {
+ 		.name		= "TI16750",
+ 		.fifo_size	= 64,
+@@ -124,7 +124,7 @@ static const struct serial8250_config uart_config[] = {
+ 		.rxtrig_bytes	= {1, 16, 32, 56},
+ 		.flags		= UART_CAP_FIFO | UART_CAP_SLEEP | UART_CAP_AFE,
+ 	},
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	[PORT_STARTECH] = {
+ 		.name		= "Startech",
+ 		.fifo_size	= 1,
+@@ -471,9 +471,9 @@ static void io_serial_out(struct uart_port *p, int offset, int value)
+ }
+ 
+ static int serial8250_default_handle_irq(struct uart_port *port);
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ static int fcr_get_rxtrig_bytes(struct uart_8250_port *up);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ static void set_io_from_upio(struct uart_port *p)
+ {
+ 	struct uart_8250_port *up = up_to_u8250p(p);
+@@ -543,9 +543,9 @@ serial_port_out_sync(struct uart_port *p, int offset, int value)
+ 	}
+ }
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ /*
+- * For the RZV2M
++ * For the RZV2M series
+  */
+ static void serial8250_clear_internal_macro(struct uart_8250_port *up)
+ {
+@@ -568,7 +568,7 @@ static void serial8250_clear_internal_macro(struct uart_8250_port *up)
+        serial_out(up, UART_MCR, mcr);
+        serial_out(up, UART_HCR0, hcr0);
+ }
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ /*
+  * For the 16C950
+@@ -1080,13 +1080,11 @@ static void autoconfig_16550a(struct uart_8250_port *up)
+ 	unsigned char status1, status2;
+ 	unsigned int iersave;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
+-	if (IS_ENABLED(CONFIG_ARCH_R9A09G011GBG)) {
+-		up->port.type = PORT_16750;
+-		up->capabilities |= UART_CAP_FIFO | UART_CAP_AFE;
+-		return;
+-	}
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
++	up->port.type = PORT_16750;
++	up->capabilities |= UART_CAP_FIFO | UART_CAP_AFE;
++	return;
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ 	up->port.type = PORT_16550A;
+ 	up->capabilities |= UART_CAP_FIFO;
+@@ -1783,9 +1781,9 @@ void serial8250_read_char(struct uart_8250_port *up, unsigned char lsr)
+ 
+ 	port->icount.rx++;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG) 
++#if defined(CONFIG_ARCH_R9A09G011GBG)  || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	lsr |= (serial_in(up, UART_LSR) & 0x9C);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */ 
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */ 
+ 
+ 	lsr |= up->lsr_saved_flags;
+ 	up->lsr_saved_flags = 0;
+@@ -2089,9 +2087,9 @@ void serial8250_do_set_mctrl(struct uart_port *port, unsigned int mctrl)
+ 			mctrl &= ~TIOCM_RTS;
+ 	}
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 		serial8250_clear_internal_macro(up);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ 	mcr = serial8250_TIOCM_to_MCR(mctrl);
+ 
+@@ -2227,9 +2225,9 @@ int serial8250_do_startup(struct uart_port *port)
+ 	unsigned char lsr, iir;
+ 	int retval;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	serial8250_clear_internal_macro(up);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ 	if (!port->fifosize)
+ 		port->fifosize = uart_config[port->type].fifo_size;
+@@ -2470,12 +2468,12 @@ dont_test_tx_en:
+ 	if (up->dma) {
+ 		const char *msg = NULL;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 		serial_port_out(port, UART_HCR0,
+ 			serial_port_in(port, UART_HCR0) | UART_HCR0_RTDRD |
+ 				UART_HCR0_RDE | UART_HCR0_TDE);
+ 			up->dma->rx_size = fcr_get_rxtrig_bytes(up);
+- #endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++ #endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 		if (uart_console(port))
+ 			msg = "forbid DMA for kernel console";
+ 		else if (serial8250_request_dma(up))
+@@ -2549,13 +2547,13 @@ void serial8250_do_shutdown(struct uart_port *port)
+ 	/*
+ 	 * Disable break condition and FIFOs
+ 	 */
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	serial8250_clear_internal_macro(up);
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */ 
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */ 
+ 	serial_port_out(port, UART_LCR,
+ 			serial_port_in(port, UART_LCR) & ~UART_LCR_SBC);
+ 	serial8250_clear_fifos(up);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */ 
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */ 
+ 
+ #ifdef CONFIG_SERIAL_8250_RSA
+ 	/*
+@@ -2803,9 +2801,9 @@ serial8250_do_set_termios(struct uart_port *port, struct ktermios *termios,
+ 	unsigned long flags;
+ 	unsigned int baud, quot, frac = 0;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	serial8250_clear_internal_macro(up);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ 	if (up->capabilities & UART_CAP_MINI) {
+ 		termios->c_cflag &= ~(CSTOPB | PARENB | PARODD | CMSPAR);
+@@ -2844,11 +2842,11 @@ serial8250_do_set_termios(struct uart_port *port, struct ktermios *termios,
+ 		up->mcr &= ~UART_MCR_AFE;
+ 		if (termios->c_cflag & CRTSCTS)
+ 			up->mcr |= UART_MCR_AFE;
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 			serial_port_out(port, UART_HCR0,
+ 				serial_port_in(port, UART_HCR0) |
+ 				UART_HCR0_RM);
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	}
+ 	/*
+ 	 * Update the per-port timeout.
+@@ -3493,9 +3491,9 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
+ 	if (!port->iobase && !port->membase)
+ 		return -ENODEV;
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	serial8250_clear_internal_macro(up_to_u8250p(port));
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ 	if (options)
+ 		uart_parse_options(options, &baud, &parity, &bits, &flow);
+diff --git a/include/asm-generic/serial.h b/include/asm-generic/serial.h
+index f07c292..a552c3d 100755
+--- a/include/asm-generic/serial.h
++++ b/include/asm-generic/serial.h
+@@ -8,10 +8,10 @@
+  * Traditionally, it just describes i8250 and related serial ports
+  * that have this clock rate.
+  */
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	#define BASE_BAUD (48000000 / 16)
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	#define BASE_BAUD (1843200 / 16)
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ #endif /* __ASM_GENERIC_SERIAL_H */
+diff --git a/include/uapi/linux/serial_reg.h b/include/uapi/linux/serial_reg.h
+index 75adac0..51d1e7d 100755
+--- a/include/uapi/linux/serial_reg.h
++++ b/include/uapi/linux/serial_reg.h
+@@ -44,11 +44,11 @@
+ #define UART_IIR_RX_TIMEOUT	0x0c /* OMAP RX Timeout interrupt */
+ #define UART_IIR_XOFF		0x10 /* OMAP XOFF/Special Character */
+ #define UART_IIR_CTS_RTS_DSR	0x20 /* OMAP CTS/RTS/DSR Change */
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	#define UART_FCR        (0x03)  /* Out: FIFO Control Register */
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	#define UART_FCR	2	/* Out: FIFO Control Register */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ #define UART_FCR_ENABLE_FIFO	0x01 /* Enable the FIFO */
+ #define UART_FCR_CLEAR_RCVR	0x02 /* Clear the RCVR FIFO */
+ #define UART_FCR_CLEAR_XMIT	0x04 /* Clear the XMIT FIFO */
+@@ -98,11 +98,11 @@
+ #define UART_FCR_R_TRIG_BITS(x)		\
+ 	(((x) & UART_FCR_TRIGGER_MASK) >> UART_FCR_R_TRIG_SHIFT)
+ #define UART_FCR_R_TRIG_MAX_STATE	4
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	#define UART_LCR        (0x04)  /* Out: Line Control Register */
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	#define UART_LCR	3	/* Out: Line Control Register */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ /*
+  * Note: if the word length is 5 bits (UART_LCR_WLEN5), then setting 
+  * UART_LCR_STOP will select 1.5 stop bits, not 2 stop bits.
+@@ -124,11 +124,11 @@
+  */
+ #define UART_LCR_CONF_MODE_A	UART_LCR_DLAB	/* Configutation mode A */
+ #define UART_LCR_CONF_MODE_B	0xBF		/* Configutation mode B */
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	#define UART_MCR        (0x05)  /* Out: Modem Control Register */
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	#define UART_MCR	4	/* Out: Modem Control Register */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ #define UART_MCR_CLKSEL		0x80 /* Divide clock by 4 (TI16C752, EFR[4]=1) */
+ #define UART_MCR_TCRTLR		0x40 /* Access TCR/TLR (TI16C752, EFR[4]=1) */
+ #define UART_MCR_XONANY		0x20 /* Enable Xon Any (TI16C752, EFR[4]=1) */
+@@ -138,11 +138,11 @@
+ #define UART_MCR_OUT1		0x04 /* Out1 complement */
+ #define UART_MCR_RTS		0x02 /* RTS complement */
+ #define UART_MCR_DTR		0x01 /* DTR complement */
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	#define UART_LSR        (0x06)  /* In:  Line Status Register */
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	#define UART_LSR	5	/* In:  Line Status Register */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ #define UART_LSR_FIFOE		0x80 /* Fifo error */
+ #define UART_LSR_TEMT		0x40 /* Transmitter empty */
+ #define UART_LSR_THRE		0x20 /* Transmit-hold-register empty */
+@@ -152,11 +152,11 @@
+ #define UART_LSR_OE		0x02 /* Overrun error indicator */
+ #define UART_LSR_DR		0x01 /* Receiver data ready */
+ #define UART_LSR_BRK_ERROR_BITS	0x1E /* BI, FE, PE, OE bits */
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	#define UART_MSR        (0x07)  /* In:  Modem Status Register */
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	#define UART_MSR	6	/* In:  Modem Status Register */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ #define UART_MSR_DCD		0x80 /* Data Carrier Detect */
+ #define UART_MSR_RI		0x40 /* Ring Indicator */
+ #define UART_MSR_DSR		0x20 /* Data Set Ready */
+@@ -166,35 +166,35 @@
+ #define UART_MSR_DDSR		0x02 /* Delta DSR */
+ #define UART_MSR_DCTS		0x01 /* Delta CTS */
+ #define UART_MSR_ANY_DELTA	0x0F /* Any of the delta bits! */
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	#define UART_SCR        (0x08)  /* I/O: Scratch Register */
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	#define UART_SCR	7	/* I/O: Scratch Register */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+        /*
+         * DLAB=1
+         */
+        #define UART_DLL        (0x09)  /* Out: Divisor Latch Low */
+        #define UART_DLM        (0x0A)  /* Out: Divisor Latch High */
+-#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 	/*
+  	* DLAB=1
+  	*/
+ 	#define UART_DLL	0	/* Out: Divisor Latch Low */
+ 	#define UART_DLM	1	/* Out: Divisor Latch High */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ #define UART_DIV_MAX	0xFFFF	/* Max divisor value */
+ 
+-#if defined(CONFIG_ARCH_R9A09G011GBG)
++#if defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG)
+        #define UART_HCR0       (0x0B)  /* HW Control Register 0 */
+        #define UART_HCR0_SWRST (0x80)  /* SW Reset */
+        #define UART_HCR0_RM    (0x40)  /* RTS Mode */
+        #define UART_HCR0_RTDRD (0x10)  /* Receiver time-out DMA REQ Disable */
+        #define UART_HCR0_RDE   (0x02)  /* Receiver DMA Enable */
+        #define UART_HCR0_TDE   (0x01)  /* Transmitter DMA Enable */
+-#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) || defined(CONFIG_ARCH_R9A09G055MA3GBG) */
+ 
+ /*
+  * LCR=0xBF (or DLAB=1 for 16C660)

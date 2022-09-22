@@ -1,0 +1,58 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+index b4f8bd7..07ea738 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+@@ -297,8 +297,6 @@
+             interval_time = <0x2>;
+             tx_trigger_lvl = <0x4>;
+             rx_trigger_lvl = <0x4>;
+-            dmas = <&dmac 0>, <&dmac 1>;
+-            dma-names = "tx" , "rx";
+         };
+         csi3: csi@a4020180 {
+             compatible = "renesas,rzv2m-csi";
+@@ -312,8 +310,6 @@
+             interval_time = <0x2>;
+             tx_trigger_lvl = <0x4>;
+             rx_trigger_lvl = <0x4>;
+-            dmas = <&dmac 2>, <&dmac 3>;
+-            dma-names = "tx" , "rx";
+         };
+         csi4: csi@a4020200 {
+             compatible = "renesas,rzv2m-csi";
+@@ -327,8 +323,6 @@
+             interval_time = <0x2>;
+             tx_trigger_lvl = <0x4>;
+             rx_trigger_lvl = <0x4>;
+-            dmas = <&dmac 4>, <&dmac 5>;
+-            dma-names = "tx" , "rx";
+         };
+         csi5: csi@a4020280 {
+             compatible = "renesas,rzv2m-csi";
+@@ -342,8 +336,6 @@
+             interval_time = <0x2>;
+             tx_trigger_lvl = <0x4>;
+             rx_trigger_lvl = <0x4>;
+-            dmas = <&dmac 6>, <&dmac 7>;
+-            dma-names = "tx" , "rx";
+         };
+ 
+         cpg: clock-controller@A3500000 {
+@@ -527,8 +519,6 @@
+             resets = <&cpg 610>;
+             reg-shift = <2>;
+             reg-io-width = <4>;
+-            dmas = <&dmac 8>, <&dmac 9>;
+-            dma-names = "tx" , "rx";
+             status = "disabled";
+         };
+ 
+@@ -540,8 +530,6 @@
+             resets = <&cpg 610>;
+             reg-shift = <2>;
+             reg-io-width = <4>;
+-            dmas = <&dmac 10>, <&dmac 11>;
+-            dma-names = "tx" , "rx";
+             status = "disabled";
+         };
+ 

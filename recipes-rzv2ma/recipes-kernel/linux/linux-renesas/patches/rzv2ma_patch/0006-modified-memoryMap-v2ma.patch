@@ -1,0 +1,80 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index bebfedc..c2e5155 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -11,7 +11,7 @@
+ 
+ / {
+ 
+-    model = "RZ/V2M";
++    model = "RZ/V2MA";
+     compatible = "renesas,r9a09g011gbg";
+ 
+     aliases {
+@@ -23,6 +23,11 @@
+         stdout-path = "serial0:115200n8";
+     };
+ 
++    memory@00000000 {
++        device_type = "memory";
++        reg = <0x0 0x00000000 0x0 0x80000000>;
++    };
++
+     memory@180000000 {
+         device_type = "memory";
+         reg = <0x1 0x80000000 0x0 0x80000000>;
+@@ -34,23 +39,37 @@
+         ranges;
+ 
+         /* global autoconfigured region for contiguous allocations */
+-	global_cma: linux,cma@1B8000000 {
++        global_cma: linux,cma@28000000 {
+             compatible = "shared-dma-pool";
+             reusable;
+-	    reg = <0x1 0xB8000000 0x0 0x8000000>;
++            reg = <0x0 0x28000000 0x0 0x8000000>;
+             linux,cma-default;
+         };
+ 
++        /* device specific region for contiguous allocations */
++        mmp_reserved: linux,multimedia {
++            compatible = "shared-dma-pool";
++            reusable;
++            reg = <0x0 0x30000000 0x0 0x10000000>;
++        };
++
+         /* device specific region for contiguous allocations */
+         drp_reserved: linux,CMAtoDRP {
+             reusable;
+-	    reg = <0x1 0xC0000000 0x0 0x20000000>;
++            reg = <0x0 0x40000000 0x0 0x20000000>;
++        };
++        
++        open_cv: open_cv {
++            compatible = "shared-dma-pool";
++            reusable;
++            reg = <0x0 0x77000000 0x0 0x8000000>;
++            label = "image_buf0";
+         };
+ 
+-	image_buf0: image_buf@0 {
++        image_buf0: image_buf@0 {
+             compatible = "shared-dma-pool";
+             reusable;
+-	    reg = <0x1 0xFFC00000 0x0 0x400000>; //4MiB
++            reg = <0x0 0x7F000000 0x0 0x1000000>; //16MiB
+             label = "image_buf0";
+         };
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 3a567ce..2f88a28 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -89,7 +89,6 @@
+         #address-cells = <2>;
+         #size-cells = <2>;
+         ranges;
+-        dma-ranges =<0x1 0x80000000 0x1 0x80000000 0x0 0x80000000>;
+ 
+        /* used watch dog timer */
+        wdt0: watchdog@a4050000 {

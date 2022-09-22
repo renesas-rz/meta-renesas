@@ -1,0 +1,15 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
+index d1f11b0..a03ec92 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
+@@ -114,6 +114,10 @@
+     };
+ };
+ 
++&cpg {
++    cpg-non-set-div;
++};
++
+ /* used cpg(clock pulse generator) */
+ &extal_clk {
+     clock-frequency = <48000000>;

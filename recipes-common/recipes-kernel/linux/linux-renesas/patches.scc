@@ -1,0 +1,5 @@
+patch patches/v1.0.2_patch/0003-clk-renesas-rcar-gen3-Add-ZG-clock-divider-support.patch
+patch patches/v1.0.2_patch/0010-clk-renesas-rcar-gen3-Add-support-Z2-clock-divider-f.patch
+patch patches/v1.0.2_patch/0011-clk-renesas-rcar-gen3-Add-support-ZG-clock-divider-f.patch
+patch patches/v1.0.2_patch/0012-clk-renesas-r8a774c0-Add-Z2-clock.patch
+

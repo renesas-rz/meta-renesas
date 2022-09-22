@@ -1,0 +1,401 @@
+From c39c93a00a5ca6fa11f29ce8797342637fa883c0 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Fri, 15 Apr 2022 15:52:26 +0700
+Subject: [PATCH] chg_cpg_clock_table
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi | 63 ++++++++---------
+ drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c   | 70 +++++++++++--------
+ 2 files changed, 70 insertions(+), 63 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 8d6b15ffd1cb..4ea22300944b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -153,8 +153,7 @@ i2c0: i2c@a4030000 {
+             compatible = "renesas,rzv2m-i2c";
+             reg = <0 0xa4030000 0 0x80>;
+             interrupts = <GIC_SPI 232 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 236 IRQ_TYPE_EDGE_RISING>;
+-            /*clocks = <&pclk>;*/
+-	    clocks = <&pclk>;
++	    clocks = <&cpg CPG_MOD 912>;
+             i2c-scl-internal-delay-ns = <110>;
+             status = "disabled";
+         };
+@@ -165,7 +164,7 @@ i2c1: i2c@a4030080 {
+             compatible = "renesas,rzv2m-i2c";
+             reg = <0 0xa4030080 0 0x80>;
+             interrupts = <GIC_SPI 233 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 237 IRQ_TYPE_EDGE_RISING>;
+-	    clocks = <&pclk>;
++	    clocks = <&cpg CPG_MOD 1012>; 
+             i2c-scl-internal-delay-ns = <110>;
+             status = "disabled";
+         };
+@@ -197,7 +196,7 @@ xhci0: usb@85060000 {
+                      "renesas,rzv2m-xhci";
+             reg = <0 0x85060000 0 0x20000>;
+             interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks =  <&usbclk>;
++            clocks =  <&cpg CPG_MOD 405>;
+             status = "disabled";
+         };
+ 
+@@ -209,7 +208,7 @@ usb3_peri0: usb@85070000 {
+                      <GIC_SPI 243 IRQ_TYPE_LEVEL_HIGH>,
+                      <GIC_SPI 244 IRQ_TYPE_LEVEL_HIGH>,
+                      <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks =  <&usbclk>;
++            clocks =  <&cpg CPG_MOD 405>; 
+             status = "disabled";
+         };
+ 
+@@ -218,7 +217,7 @@ sdhi0: sd@85000000 {    /* used sh card boot */
+                      "renesas,rcar-gen3-sdhi";
+             reg = <0 0x85000000 0 0x2000>;
+             interrupts = <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 357 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&imclk>;
++            clocks = <&cpg CPG_MOD 301>;
+             max-frequency = <200000000>;
+             vmmc-supply = <&vcc_sdhi0>;
+             bus-width = <4>;
+@@ -232,7 +231,7 @@ eMM: sd@85020000 {
+                     "renesas,rcar-gen3-sdhi";
+             reg = <0 0x85020000 0 0x2000>;
+             interrupts = <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 355 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&imclk>;
++            clocks = <&cpg CPG_MOD 301>;
+             max-frequency = <200000000>;
+             vmmc-supply = <&reg_3p3v>;
+             vqmmc-supply = <&reg_1p8v>;
+@@ -317,7 +316,7 @@ GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>,
+                       "ch16", "ch17", "ch18", "ch19",
+                       "ch20", "ch21", "ch22", "ch23",
+                       "ch24";
+-            clocks = <&ethclk>;
++            clocks = <&cpg CPG_MOD 408>;
+             renesas,no-ether-link;
+             phy-handle = <&phy0>;
+             phy-mode = "rgmii";
+@@ -407,7 +406,7 @@ tim8: timer@a4000400 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000400 0 0x80>;
+             interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1005>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -416,7 +415,7 @@ tim9: timer@a4000480 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000480 0 0x80>;
+             interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1006>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -425,7 +424,7 @@ tim10: timer@a4000500 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000500 0 0x80>;
+             interrupts = <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1006>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -434,7 +433,7 @@ tim11: timer@a4000580 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000580 0 0x80>;
+             interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1007>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -443,7 +442,7 @@ tim12: timer@a4000600 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000600 0 0x80>;
+             interrupts = <GIC_SPI 119 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1008>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -452,7 +451,7 @@ tim13: timer@a4000680 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000680 0 0x80>;
+             interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1009>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -461,7 +460,7 @@ tim14: timer@a4000700 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000700 0 0x80>;
+             interrupts = <GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1010>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -470,7 +469,7 @@ tim15: timer@a4000780 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000780 0 0x80>;
+             interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1011>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -478,7 +477,7 @@ tim16: timer@a4000800 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000800 0 0x80>;
+             interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1104>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -486,7 +485,7 @@ tim17: timer@a4000880 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000880 0 0x80>;
+             interrupts = <GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1105>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -495,7 +494,7 @@ tim18: timer@a4000900 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000900 0 0x80>;
+             interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1106>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -504,7 +503,7 @@ tim19: timer@a4000980 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000980 0 0x80>;
+             interrupts = <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1107>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -513,7 +512,7 @@ tim20: timer@a4000a00 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000a00 0 0x80>;
+             interrupts = <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1108>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -522,7 +521,7 @@ tim21: timer@a4000a80 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000a80 0 0x80>;
+             interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1109>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -531,7 +530,7 @@ tim22: timer@a4000b00 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000b00 0 0x80>;
+             interrupts = <GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1110>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -539,7 +538,7 @@ tim23: timer@a4000b80 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000b80 0 0x80>;
+             interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&timclk>;
++            clocks = <&cpg CPG_MOD 1111>;
+             clock-names = "timclk";
+             status = "disabled";
+         };
+@@ -699,7 +698,7 @@ pwm8: pwm@a4010400 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010400 0 0x80>;
+             interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1404>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+@@ -709,7 +708,7 @@ pwm9: pwm@a4010480 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010480 0 0x80>;
+             interrupts = <GIC_SPI 377 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1405>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+@@ -719,7 +718,7 @@ pwm10: pwm@a4010500 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010500 0 0x80>;
+             interrupts = <GIC_SPI 378 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1406>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+@@ -729,7 +728,7 @@ pwm11: pwm@a4010580 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010580 0 0x80>;
+             interrupts = <GIC_SPI 379 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1407>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+@@ -739,7 +738,7 @@ pwm12: pwm@a4010600 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010600 0 0x80>;
+             interrupts = <GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1408>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+@@ -749,7 +748,7 @@ pwm13: pwm@a4010680 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010680 0 0x80>;
+             interrupts = <GIC_SPI 381 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1409>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+@@ -759,7 +758,7 @@ pwm14: pwm@a4010700 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010700 0 0x80>;
+             interrupts = <GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1410>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+@@ -769,7 +768,7 @@ pwm15: pwm@a4010780 {
+             compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
+             reg = <0 0xa4010780 0 0x80>;
+             interrupts = <GIC_SPI 383 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&sys>, <&pwm>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1411>;
+             clock-names = "sys", "pwm";
+             #pwm-cells = <2>;
+             status = "disabled";
+diff --git a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+index eb0b38193584..64fca4f41b1d 100644
+--- a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
++++ b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+@@ -51,7 +51,7 @@ enum clk_ids {
+        CLK_SEL_D,
+        CLK_SEL_E,
+        CLK_SEL_CSI0,
+-       CLK_SEL_CSI2,
++       CLK_SEL_CSI4,
+        CLK_SEL_W0,
+        CLK_SEL_SDI0,
+ 
+@@ -98,7 +98,7 @@ static const struct cpg_core_clk r8arzv2m_core_clks[] __initconst = {
+                CPG_SDIEMM_SSEL,   CPG_SDIEMM_SSEL_WEN_SELSDI,          CPG_SDIEMM_SSEL_SELSDI),
+ #else
+        DEF_RATE(".selcsi0",     CLK_SEL_CSI0,  24*1000*1000),
+-       DEF_RATE(".selcsi2",     CLK_SEL_CSI2,  24*1000*1000),
++       DEF_RATE(".selcsi4",     CLK_SEL_CSI4,  24*1000*1000),
+        DEF_RATE(".selw",        CLK_SEL_W0,    48*1000*1000),
+        DEF_RATE(".selsdi0",     CLK_SEL_SDI0,  200*1000*1000),
+ 
+@@ -114,6 +114,10 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("sdi0_imclk",           301,    CLK_SEL_SDI0,   RST_NON,        0,      0,      0),
+        DEF_MOD("sdi0_imclk2",          302,    CLK_SEL_SDI0,   RST_TYPEB,      3,      0,      6),
+        DEF_MOD("sdi0_clk_hs",          303,    CLK_PLL2_2,             RST_NON,        0,      0,      0),
++       DEF_MOD("sdi1_aclk",            304,    CLK_SEL_D,              RST_NON,        0,      0,      0),
++       DEF_MOD("sdi1_imclk",           305,    CLK_SEL_SDI0,   RST_NON,        0,      0,      0),
++       DEF_MOD("sdi1_imclk2",          306,    CLK_SEL_SDI0,   RST_TYPEB,      3,      1,      7),
++       DEF_MOD("sdi1_clk_hs",          307,    CLK_PLL2_2,             RST_NON,        0,      0,      0),
+        DEF_MOD("emm_aclk",                     308,    CLK_SEL_D,              RST_NON,        0,      0,      0),
+        DEF_MOD("emm_imclk",            309,    CLK_SEL_SDI0,   RST_NON,        0,      0,      0),
+        DEF_MOD("emm_imclk2",           310,    CLK_SEL_SDI0,   RST_TYPEB,      3,      2,      7),
+@@ -127,36 +131,40 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("usb_pclk",                     406,    CLK_SEL_E,              RST_TYPEA,      3,      7,      0),
+        DEF_MOD("eth0_clk_axi",         408,    CLK_PLL2_8,             RST_TYPEB,      3,      11,     11),
+ //     DEF_MOD("eth0_clk_chi",         408,    CLK_PLL2_16,    RST_TYPEB,      3,      11,     11),
+-       DEF_MOD("eth0_clk_gptp_extern",409,             CLK_PLL2_16,RST_NON,    0,      0,      0,),
+-       DEF_MOD("iic_pclk0",            912,    CLK_SEL_E,              RST_TYPEA,      6,      8,      0),
+-       DEF_MOD("iic_pclk1",            1012,   CLK_SEL_E,              RST_TYPEA,      6,      9,      0),
+-       DEF_MOD("tim_clk16",            1104,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk17",            1105,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk18",            1106,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk19",            1107,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk20",            1108,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk21",            1109,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk22",            1110,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk23",            1111,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0,),
+-       DEF_MOD("tim_clk24",            1204,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("tim_clk25",            1205,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("tim_clk26",            1206,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("tim_clk27",            1207,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("tim_clk28",            1208,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("tim_clk29",            1209,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("tim_clk30",            1210,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("tim_clk31",            1211,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("pwm_clk8",                     1404,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk9",                     1405,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk10",            1406,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk11",            1407,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk12",            1408,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk13",            1409,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk14",            1410,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk15",            1411,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("eth0_clk_gptp_extern",409,     CLK_PLL2_16,RST_NON,    0,      0,      0),
++       DEF_MOD("iic_pclk_0",           912,    CLK_SEL_E,              RST_TYPEA,      6,      8,      0),
++       DEF_MOD("cperi_grpb_pclk",1000, CLK_SEL_E,              RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_8",            1004,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_9",            1005,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_10",           1006,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_11",           1007,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_12",           1008,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_13",           1009,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_14",           1010,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("tim_clk_15",           1011,   CLK_MAIN_24,    RST_TYPEA,      6,      1,      0),
++       DEF_MOD("iic_pclk_1",           1012,   CLK_SEL_E,              RST_TYPEA,      6,      9,      0),
++       DEF_MOD("cperi_grpc_pclk",1100, CLK_SEL_E,              RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_16",           1104,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_17",           1105,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_18",           1106,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_19",           1107,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_20",           1108,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_21",           1109,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_22",           1110,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("tim_clk_23",           1111,   CLK_MAIN_24,    RST_TYPEA,      6,      2,      0),
++       DEF_MOD("cperi_grpf_pclk",1400, CLK_SEL_E,              RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_8",            1404,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_9",            1405,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_10",           1406,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_11",           1407,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_12",           1408,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_13",           1409,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_14",           1410,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("pwm_clk_15",           1411,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
++       DEF_MOD("cperi_grph_pclk",1501, CLK_SEL_E,              RST_TYPEB,      6,      7,      25),
+        DEF_MOD("urt_pclk",                     1504,   CLK_SEL_E,              RST_TYPEB,      6,      10,     26),
+-       DEF_MOD("urt_clk0",                     1505,   CLK_SEL_W0,             RST_TYPEB,      6,      10,     26),
+-       DEF_MOD("csi_clk2",                     1510,   CLK_SEL_CSI2,   RST_NON,        0,      0,      0),
++       DEF_MOD("urt_clk_0",            1505,   CLK_SEL_W0,             RST_TYPEB,      6,      10,     26),
++       DEF_MOD("csi_clk_4",            1512,   CLK_SEL_CSI0,   RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B,              RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_dclk",            2001,   CLK_PLL6,               RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_initclk",         2002,   CLK_MAIN,               RST_TYPEB,      9,      0,      0),
+-- 
+2.25.1
+

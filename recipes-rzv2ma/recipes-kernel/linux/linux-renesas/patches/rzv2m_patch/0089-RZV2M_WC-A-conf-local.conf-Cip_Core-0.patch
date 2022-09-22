@@ -1,0 +1,51 @@
+From e09348185c3a15350017ab30929633bf9996e763 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 1 Aug 2022 10:13:25 +0700
+Subject: [PATCH] RZV2M_WC-A:conf/local.conf/Cip_Core="0"
+
+When CIP_CORE="0", gcc and libgcc version are changed from
+8.3.0 to 9.3.0. When compile source code driver with gcc and libgcc version
+(9.3.0) that detects some errors of source code driver that leads to FAIL
+when building Yocto with CIP_CORE="0". This patch is created to resolve the
+problem above.
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/hw_tim/tim_rzv2m.c         | 3 ++-
+ drivers/usb/host/xhci-rzv2m.c      | 5 +----
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/hw_tim/tim_rzv2m.c b/drivers/hw_tim/tim_rzv2m.c
+index 3e40737..0eff436 100644
+--- a/drivers/hw_tim/tim_rzv2m.c
++++ b/drivers/hw_tim/tim_rzv2m.c
+@@ -450,7 +450,8 @@ End of function tim_device_init
+ ******************************************************************************/
+ static void tim_device_exit(void)
+ {
+-    return 0;
++	if (g_tim_dev)
++		unregister_chrdev_region(g_tim_dev, minor_num);
+ }
+ /******************************************************************************
+ End of function tim_device_exit
+diff --git a/drivers/usb/host/xhci-rzv2m.c b/drivers/usb/host/xhci-rzv2m.c
+index 978595b..e8ef837 100644
+--- a/drivers/usb/host/xhci-rzv2m.c
++++ b/drivers/usb/host/xhci-rzv2m.c
+@@ -124,11 +124,8 @@ void xhci_rzv2m_start(struct usb_hcd *hcd)
+                temp |= RZV2M_USB3_INT_ENA_VAL;
+                writel(temp, hcd->regs + RZV2M_USB3_INTEN);
+        }
+-       else{
+-               return -EFAULT;
+-       }
+ 
+-       return 0;
++       return;
+ 
+ }
+ 
+-- 
+2.7.4
+

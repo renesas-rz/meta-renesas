@@ -21,7 +21,6 @@ SRC_URI_append = " \
     file://0009-mmngr_drv-mmngr-Add-IPMMU-support-for-RZ-G2M-v3.0.patch \
     file://0010-mmngr_drv-mmngr-Update-PA-VA-mapping-table-for-HiHop.patch \
     file://0011-mmngr-change-address-setting-for-H3N-Swap-mode.patch \
-    file://0012-Add-RZ-V2L-into-rzg2l_match-to-not-parse-and-init-lo.patch \
 "
 
 SRC_URI_append_rzg2l = " \

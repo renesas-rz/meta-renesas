@@ -1,0 +1,1545 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+index 533047e..4f61c43 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+@@ -5,7 +5,7 @@
+  * Copyright (C) 2022 Renesas Electronics Corp.
+  */
+ 
+-#include <dt-bindings/clock/r9a09g011gbg-cpg-mssr.h>
++#include <dt-bindings/clock/r9a09g011gbg-cpg-cocr.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+ #include <dt-bindings/power/r9a09g011gbg-sysc.h>
+ #include <dt-bindings/gpio/gpio.h>
+@@ -330,7 +330,7 @@
+         };
+ 
+         cpg: clock-controller@A3500000 {
+-            compatible = "renesas,r8arzv2m-cpg-mssr";
++            compatible = "renesas,r9a09g055ma3gbg-cpg-cocr";
+             reg = <0 0xA3500000 0 0x1000>;
+             clocks = <&extal_clk>;
+             clock-names = "extal";
+diff --git a/drivers/clk/renesas/Kconfig b/drivers/clk/renesas/Kconfig
+index e76ebf2..38991b1 100755
+--- a/drivers/clk/renesas/Kconfig
++++ b/drivers/clk/renesas/Kconfig
+@@ -186,7 +186,8 @@ config CLK_SH73A0
+ 	select CLK_RENESAS_DIV6
+ 
+ config CLK_RENESAS_CPG_CLKON
+-	bool "CPG/CLK_ON clock support" if COMPILE_TEST
++	bool "Renesas RZ/V2M family clock support" if COMPILE_TEST
++	select RESET_CONTROLLER
+ 
+ # Family
+ config CLK_RCAR_GEN2_CPG
+diff --git a/drivers/clk/renesas/Makefile b/drivers/clk/renesas/Makefile
+index ecdb3f7..e349974 100755
+--- a/drivers/clk/renesas/Makefile
++++ b/drivers/clk/renesas/Makefile
+@@ -14,8 +14,8 @@ obj-$(CONFIG_CLK_R8A774A3)		+= r8a774a1-cpg-mssr.o
+ obj-$(CONFIG_CLK_R8A774B1)		+= r8a774b1-cpg-mssr.o
+ obj-$(CONFIG_CLK_R8A774C0)		+= r8a774c0-cpg-mssr.o
+ obj-$(CONFIG_CLK_R8A774E1)		+= r8a774e1-cpg-mssr.o
+-obj-$(CONFIG_CLK_R9A09G011GBG)          += r9a09g011gbg-cpg-mssr.o
+-obj-$(CONFIG_CLK_R9A09G055MA3GBG)       += r9a09g011gbg-cpg-mssr.o
++obj-$(CONFIG_CLK_R9A09G011GBG)          += r9a09g011gbg-cpg-cocr.o
++obj-$(CONFIG_CLK_R9A09G055MA3GBG)       += r9a09g055ma3gbg-cpg-cocr.o
+ obj-$(CONFIG_CLK_R8A7778)		+= clk-r8a7778.o
+ obj-$(CONFIG_CLK_R8A7779)		+= clk-r8a7779.o
+ obj-$(CONFIG_CLK_R8A7790)		+= r8a7790-cpg-mssr.o
+@@ -46,4 +46,4 @@ obj-$(CONFIG_CLK_RZG2L)			+= rzg2l-cpg.o
+ obj-$(CONFIG_CLK_RENESAS_CPG_MSSR)	+= renesas-cpg-mssr.o
+ obj-$(CONFIG_CLK_RENESAS_CPG_MSTP)	+= clk-mstp.o
+ obj-$(CONFIG_CLK_RENESAS_DIV6)		+= clk-div6.o
+-obj-$(CONFIG_CLK_RENESAS_CPG_CLKON)     += renesas-cpg-clkon.o
++obj-y     += renesas-cpg-cocr.o
+diff --git b/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c b/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
+new file mode 100755
+index 0000000..34fe749
+--- /dev/null
++++ b/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
+@@ -0,0 +1,317 @@
++/*
++ * Driver for the Renesas Clock ON/OFF Control Register(COCR)
++ *
++ * Copyright (C) 2022 Renesas Electronics Corporation
++ *
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <linux/init.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++
++#include <dt-bindings/clock/r9a09g011gbg-cpg-cocr.h>
++#include "renesas-cpg-cocr.h"
++
++enum clk_ids {
++	/* Core Clock Outputs exported to DT */
++	LAST_DT_CORE_CLK = 0,
++	/* External Input Clocks */
++//	CLK_EXTAL,
++
++	/* Internal Core Clocks */
++	CLK_MAIN,
++	CLK_MAIN_2,
++	CLK_MAIN_24,
++//	CLK_PLL1,
++	CLK_PLL2,
++	CLK_PLL2_2,
++	CLK_PLL2_8,
++	CLK_PLL2_16,
++	CLK_PLL6,
++//	CLK_DIV_A,
++	CLK_DIV_B,
++	CLK_DIV_D,
++	CLK_DIV_E,
++	CLK_SEL_B,
++	CLK_SEL_D,
++	CLK_SEL_E,
++	CLK_SEL_CSI0,
++	CLK_SEL_CSI1,
++	CLK_SEL_CSI2,
++	CLK_SEL_CSI3,
++	CLK_SEL_CSI4,
++	CLK_SEL_CSI5,
++	CLK_SEL_W0,
++	CLK_SEL_W1,
++	CLK_SEL_SDI0,
++
++	/* Module Clocks */
++	MOD_CLK_BASE
++};
++
++static const struct cpg_core_clk r9a09g055ma3gbg_core_clks[] __initconst = {
++
++	/* Internal Core Clocks */
++	DEF_RATE(".main",      CLK_MAIN,        48*1000*1000),
++	DEF_RATE(".main2",     CLK_MAIN_2,      24*1000*1000),
++	DEF_RATE(".main24",    CLK_MAIN_24,     2*1000*1000),
++	DEF_RATE(".pll2",      CLK_PLL2,        1600*1000*1000),
++	DEF_RATE(".pll2_2",    CLK_PLL2_2,      800*1000*1000),
++	DEF_RATE(".pll2_8",    CLK_PLL2_8,      200*1000*1000),
++	DEF_RATE(".pll2_16",   CLK_PLL2_16,     100*1000*1000),
++	DEF_RATE(".pll6",      CLK_PLL6,        1260*1000*1000),
++
++	DEF_DIV(".divb",     CLK_DIV_B,          CLK_PLL2,         4,
++		CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
++		CPG_CLKSTATUS_DIVB|CPG_CLKSTATUS_DIVD|CPG_CLKSTATUS_DIVE, 0),
++	DEF_DIV(".divd",     CLK_DIV_D,          CLK_PLL2,         8,
++		CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
++		CPG_CLKSTATUS_DIVB|CPG_CLKSTATUS_DIVD|CPG_CLKSTATUS_DIVE, 0),
++	DEF_DIV(".dive",     CLK_DIV_E,          CLK_PLL2,         16,
++		CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
++		CPG_CLKSTATUS_DIVB|CPG_CLKSTATUS_DIVD|CPG_CLKSTATUS_DIVE, 0),
++	DEF_DIV(".selb",     CLK_SEL_B,          CLK_DIV_B,  1,
++		CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELB, 0,     CPG_CLK48_DSEL_SELB),
++	DEF_DIV(".seld",     CLK_SEL_D,          CLK_DIV_D,  1,
++		CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELD, 0,     CPG_CLK48_DSEL_SELD),
++	DEF_DIV(".sele",     CLK_SEL_E,          CLK_DIV_E,  1,
++		CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELE, 0,     CPG_CLK48_DSEL_SELE),
++#if 0 //static defined is disabled
++	DEF_STATIC(".selcsi0",     CLK_SEL_CSI0,          CLK_MAIN,       1,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI0,       CPG_CSI_RCLK_SSEL_SELCSI0),
++	DEF_STATIC(".selcsi2",     CLK_SEL_CSI2,          CLK_MAIN,       1,
++		CPG_CSI_RCLK_SSEL, CPG_CSI_RCLK_SSEL_WEN_SELCSI2,       CPG_CSI_RCLK_SSEL_SELCSI2),
++	DEF_STATIC(".selw",     CLK_SEL_W0,               CLK_MAIN,       1,
++		CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW0,         0),
++	DEF_STATIC(".selsdi0",     CLK_SEL_SDI0,          CLK_PLL2,       2,
++		CPG_SDIEMM_SSEL,   CPG_SDIEMM_SSEL_WEN_SELSDI,          CPG_SDIEMM_SSEL_SELSDI),
++#else
++	DEF_RATE(".selcsi0",     CLK_SEL_CSI0,  24*1000*1000),
++	DEF_RATE(".selcsi1",     CLK_SEL_CSI1,  24*1000*1000),
++	DEF_RATE(".selcsi2",     CLK_SEL_CSI2,  24*1000*1000),
++	DEF_RATE(".selcsi3",     CLK_SEL_CSI3,  24*1000*1000),
++	DEF_RATE(".selcsi4",     CLK_SEL_CSI4,  24*1000*1000),
++	DEF_RATE(".selcsi5",     CLK_SEL_CSI5,  24*1000*1000),
++	DEF_RATE(".selw",        CLK_SEL_W0,    48*1000*1000),
++	DEF_RATE(".selw1",        CLK_SEL_W1,    48*1000*1000),
++	DEF_RATE(".selsdi0",     CLK_SEL_SDI0,  200*1000*1000),
++
++#endif
++
++
++};
++
++static const struct cocr_mod_clk r9a09g055ma3gbg_mod_clks[] __initconst = {
++	DEF_MOD("dmaa_aclk",            111,    CLK_SEL_D   ),
++	DEF_MOD("sdi0_aclk",            300,    CLK_SEL_D   ),
++	DEF_MOD("sdi0_imclk",           301,    CLK_SEL_SDI0),
++	DEF_MOD("sdi0_imclk2",          302,    CLK_SEL_SDI0),
++	DEF_MOD("sdi0_clk_hs",          303,    CLK_PLL2_2  ),
++	DEF_MOD("sdi1_aclk",            304,    CLK_SEL_D   ),
++	DEF_MOD("sdi1_imclk",           305,    CLK_SEL_SDI0),
++	DEF_MOD("sdi1_imclk2",          306,    CLK_SEL_SDI0),
++	DEF_MOD("sdi1_clk_hs",          307,    CLK_PLL2_2  ),
++	DEF_MOD("emm_aclk",             308,    CLK_SEL_D   ),
++	DEF_MOD("emm_imclk",            309,    CLK_SEL_SDI0),
++	DEF_MOD("emm_imclk2",           310,    CLK_SEL_SDI0),
++	DEF_MOD("emm_clk_hs",           311,    CLK_PLL2_2  ),
++	DEF_MOD("pci_aclk",             400,    CLK_SEL_D   ),
++	DEF_MOD("pci_clk_pmu",          401,    CLK_SEL_D   ),
++	DEF_MOD("pci_apb_clk",          402,    CLK_SEL_E   ),
++	DEF_MOD("usb_aclk_h",           404,    CLK_SEL_D   ),
++	DEF_MOD("usb_aclk_p",           405,    CLK_SEL_D   ),
++	DEF_MOD("usb_pclk",             406,    CLK_SEL_E   ),
++	DEF_MOD("eth0_clk_axi",         408,    CLK_PLL2_8, ),
++//	DEF_MOD("eth0_clk_chi",         408,    CLK_PLL2_16,),
++	DEF_MOD("eth0_clk_gptp_extern", 409,    CLK_PLL2_16 ),
++	DEF_MOD("iic_pclk_0",           912,    CLK_SEL_E   ),
++	DEF_MOD("tim_clk_0",            904,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_1",            905,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_2",            906,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_3",            907,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_4",            908,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_5",            909,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_6",            910,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_7",            911,    CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_8",            1004,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_9",            1005,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_10",           1006,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_11",           1007,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_12",           1008,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_13",           1009,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_14",           1010,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_15",           1011,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_16",           1104,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_17",           1105,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_18",           1106,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_19",           1107,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_20",           1108,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_21",           1109,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_22",           1110,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_23",           1111,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_24",           1204,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_25",           1205,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_26",           1206,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_27",           1207,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_28",           1208,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_29",           1209,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_30",           1210,   CLK_MAIN_24 ),
++	DEF_MOD("tim_clk_31",           1211,   CLK_MAIN_24 ),
++	DEF_MOD("iic_pclk_1",           1012,   CLK_SEL_E   ),
++	DEF_MOD("pwm_clk_0",            1304,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_1",            1305,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_2",            1306,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_3",            1307,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_4",            1308,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_5",            1309,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_6",            1310,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_7",            1311,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_8",            1404,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_9",            1405,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_10",           1406,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_11",           1407,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_12",           1408,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_13",           1409,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_14",           1410,   CLK_MAIN    ),
++	DEF_MOD("pwm_clk_15",           1411,   CLK_MAIN    ),
++	DEF_MOD("urt_pclk",             1504,   CLK_SEL_E   ),
++	DEF_MOD("urt_clk_0",            1505,   CLK_SEL_W0  ),
++	DEF_MOD("urt_clk_1",            1506,   CLK_SEL_W1  ),
++	DEF_MOD("csi_clk_0",            1508,   CLK_SEL_CSI0),
++	DEF_MOD("csi_clk_1",            1509,   CLK_SEL_CSI1),
++	DEF_MOD("csi_clk_2",            1510,   CLK_SEL_CSI2),
++	DEF_MOD("csi_clk_3",            1511,   CLK_SEL_CSI3),
++	DEF_MOD("csi_clk_4",            1512,   CLK_SEL_CSI0),
++	DEF_MOD("csi_clk_5",            1513,   CLK_SEL_CSI5),
++	DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B   ),
++	DEF_MOD("drpa_dclk",            2001,   CLK_PLL6    ),
++	DEF_MOD("drpa_initclk",         2002,   CLK_MAIN    ),
++	DEF_MOD("cperi_grpa_pclk",      900,    CLK_SEL_E   ),
++	DEF_MOD("cperi_grpb_pclk",      1000,   CLK_SEL_E   ),
++	DEF_MOD("cperi_grpc_pclk",      1100,   CLK_SEL_E   ),
++	DEF_MOD("cperi_grpd_pclk",      1200,   CLK_SEL_E   ),
++	DEF_MOD("cperi_grpe_pclk",      1300,   CLK_SEL_E   ),
++	DEF_MOD("cperi_grpf_pclk",      1400,   CLK_SEL_E   ),
++	DEF_MOD("cperi_grpg_pclk",      1500,   CLK_SEL_E   ),
++	DEF_MOD("cperi_grph_pclk",      1501,   CLK_SEL_E   ),
++	DEF_MOD("wdt_pclk_0",           1112,   CLK_SEL_E   ),
++	DEF_MOD("wdt_clk_0",            1113,   CLK_MAIN    ),
++	DEF_MOD("wdt_pclk_1",           1114,   CLK_SEL_E   ),
++	DEF_MOD("wdt_clk_1",            1115,   CLK_MAIN    ),
++	DEF_MOD("tsu0_plk",             114,    CLK_MAIN    ),
++	DEF_MOD("tsu1_plk",             115,    CLK_MAIN    ),
++	DEF_MOD("drpb_aclk",            2100,   CLK_SEL_B   ),
++	DEF_MOD("drpb_dclk",            2101,   CLK_PLL6    ),
++	DEF_MOD("drpb_initclk",         2102,   CLK_MAIN    ),
++};
++
++
++static const unsigned int r9a09g011gbg_crit_mod_clks[] __initconst = {
++	MOD_CLK_ID(404),	/* usb_aclk_h */
++	MOD_CLK_ID(405),	/* usb_aclk_p */
++	MOD_CLK_ID(406),	/* usb_pclk */
++	MOD_CLK_ID(408),	/* eth0_clk_axi */
++	MOD_CLK_ID(409),	/* eth0_clk_gptp_extern */
++};
++
++static const struct rcr_reset r9a09g055ma3gbg_resets[] __initconst = {
++	/*           Name                ID      Rst-type   msk(bit)  clk-num clk-id                 */
++	DEF_RESET(   "dmaa_aresetn",     107,    RST_TYPEB,  4,  
++		1,  {111,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "tsu0_resetn",      112,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {114,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "tsu1_resetn",      113,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {115,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "sdi0_ixrst",       300,    RST_TYPEB,  6,  
++		1,  {302,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "sdi1_ixrst",       301,    RST_TYPEB,  7,  
++		1,  {306,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "emm_ixrst",        302,    RST_TYPEB,  8,  
++		1,  {310,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "usb_preset_n",     307,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {406,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "usb_drd_reset",    308,    RST_TYPEA,  RST_MON_UNUSED, 
++		2,  {404,    405,    0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "usb_aresetn_p",    309,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {405,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "usb_aresetn_h",    310,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {404,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "eth0_rst_hw_n",    311,    RST_TYPEB,  11, 
++		2,  {408,    408,    0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "tim_gpa_presetn",  600,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {900,    904,    905,    906,    907,    908,    909,    910,    911}),
++	DEF_RESET(   "tim_gpb_presetn",  601,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1000,   1004,   1005,   1006,   1007,   1008,   1009,   1010,   1011}),
++	DEF_RESET(   "tim_gpc_presetn",  602,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1100,   1104,   1105,   1106,   1107,   1108,   1109,   1110,   1111}),
++	DEF_RESET(   "tim_gpd_presetn",  603,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1200,   1204,   1205,   1206,   1207,   1208,   1209,   1210,   1211}),
++	DEF_RESET(   "pwm_gpe_presetn",  604,    RST_TYPEB,  22, 
++		9,  {1300,   1304,   1305,   1306,   1307,   1308,   1309,   1310,   1311}),
++	DEF_RESET(   "pwm_gpf_presetn",  605,    RST_TYPEB,  23, 
++		9,  {1400,   1404,   1405,   1406,   1407,   1408,   1409,   1410,   1411}),
++	DEF_RESET(   "csi_gpg_presetn",  606,    RST_TYPEB,  24, 
++		1,  {1500,   0,      0,      0,      0,      0,      0,      0,      0)},
++	DEF_RESET(   "csi_gph_presetn",  607,    RST_TYPEB,  25, 
++		1,  {1501,   0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "iic_gpa_presetn",  608,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {912,    0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "iic_gpb_presetn",  609,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {1012,   0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "urt_presetn",      610,    RST_TYPEB,  26, 
++		3,  {1505,   1506,   1504,   0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "wdt_presetn[0]",   612,    RST_TYPEB,  19, 
++		2,  {1113,   1112,   0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "wdt_presetn[1]",   613,    RST_TYPEB,  20, 
++		2,  {1115,   1114,   0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "wdt_presetn[2]",   614,    RST_TYPEB,  21, 
++		2,  {1213,   1212,   0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "drpa_aresetn",     900,    RST_TYPEB,  14, 
++		1,  {2002,   0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "drpb_aresetn",     1000,   RST_TYPEB,  15, 
++		1,  {2102,   0,      0,      0,      0,      0,      0,      0,      0}),
++	DEF_RESET(   "vcd_resetn",       1407,   RST_TYPEB,  18, 
++		2,  {2605,   2605,   0,      0,      0,      0,      0,      0,      0}),
++};
++
++static int __init r9a09g011gbg_cpg_cocr_init(struct device *dev)
++{
++	return 0;
++}
++
++const struct cpg_cocr_info r9a09g055ma3gbg_cpg_cocr_info __initconst = {
++	/* Core Clocks */
++	.core_clks = r9a09g055ma3gbg_core_clks,
++	.num_core_clks = ARRAY_SIZE(r9a09g055ma3gbg_core_clks),
++	.last_dt_core_clk = LAST_DT_CORE_CLK,
++	.num_total_core_clks = MOD_CLK_BASE,
++
++	/* Module Clocks */
++	.mod_clks = r9a09g055ma3gbg_mod_clks,
++	.num_mod_clks = ARRAY_SIZE(r9a09g055ma3gbg_mod_clks),
++	.num_hw_mod_clks = 27 * 32,/*20 Registers * 32bits */
++
++	/* Critical Module Clocks */
++	.crit_mod_clks = r9a09g011gbg_crit_mod_clks,
++	.num_crit_mod_clks = ARRAY_SIZE(r9a09g011gbg_crit_mod_clks),
++
++	/*Resets*/
++	.resets = r9a09g055ma3gbg_resets,
++	.num_resets = ARRAY_SIZE(r9a09g055ma3gbg_resets),
++	.num_hw_resets = 15 * 32, /*15 Registers * 32bits */ //[TODO]
++
++       /* Callbacks */
++	.init = r9a09g011gbg_cpg_cocr_init,
++};
++
+diff --git b/drivers/clk/renesas/renesas-cpg-cocr.c b/drivers/clk/renesas/renesas-cpg-cocr.c
+new file mode 100755
+index 0000000..9fa862f
+--- /dev/null
++++ b/drivers/clk/renesas/renesas-cpg-cocr.c
+@@ -0,0 +1,742 @@
++/*
++ * Driver for the Renesas Clock ON/OFF Control Register(COCR)
++ *
++ * Copyright (C) 2022 Renesas Electronics Corporation
++ *
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/clk.h>
++#include <linux/clk-provider.h>
++#include <linux/clk/renesas.h>
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <linux/init.h>
++#include <linux/mod_devicetable.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/reset-controller.h>
++#include <linux/slab.h>
++
++#include <dt-bindings/clock/r9a09g011gbg-cpg-cocr.h>
++
++#include "renesas-cpg-cocr.h"
++
++#ifdef DEBUG
++#define WARN_DEBUG(x)  WARN_ON(x)
++#else
++#define WARN_DEBUG(x)  do { } while (0)
++#endif
++
++
++/**
++ * Clock Pulse Generator Private Data
++ *
++ * @rcdev: Optional reset controller entity
++ * @dev: CPG device
++ * @base: CPG register block base address
++ * @rmw_lock: protects RMW register accesses
++ * @clks: Array containing all Core and Module Clocks
++ * @num_core_clks: Number of Core Clocks in clks[]
++ * @num_mod_clks: Number of Module Clocks in clks[]
++ * @last_dt_core_clk: ID of the last Core Clock exported to DT
++ * @notifiers: Notifier chain to save/restore clock state for system resume
++ */
++struct cpg_cocr_priv {
++#ifdef CONFIG_RESET_CONTROLLER
++	struct reset_controller_dev rcdev;
++#endif
++	struct device *dev;
++	void __iomem *base;
++	spinlock_t rmw_lock;
++
++	struct clk **clks;
++	unsigned int num_core_clks;
++	unsigned int num_mod_clks;
++	unsigned int last_dt_core_clk;
++
++	struct rcr_reset *resets;
++	unsigned int num_resets;
++	unsigned int num_hw_resets;
++
++	struct raw_notifier_head notifiers;
++	struct cocr_mod_clk *mod_clk;
++	struct cpg_core_clk *core_clk;
++	bool no_hw_clk_rate;
++};
++
++
++/**
++ * struct cocr_clock - COCR gating clock
++ * @hw: handle between common and hardware-specific interfaces
++ * @index: COCR clock number
++ * @priv: CPG private data
++ */
++struct cocr_clock {
++	struct clk_hw hw;
++	u32 index;
++	struct cpg_cocr_priv *priv;
++};
++
++#define to_cocr_clock(_hw) container_of(_hw, struct cocr_clock, hw)
++
++static void cpg_clkonoff_ctrl(struct cpg_cocr_priv *priv, unsigned char reg_num, 
++				unsigned short target, unsigned short set_value)
++{
++	u32 offset, value;
++	unsigned long flags;
++
++	offset = CPG_CLK_ON1 + ((reg_num - 1) * sizeof(u32));
++	value = ((u32)target << CPG_REG_WEN_SHIFT)
++			| (set_value & CPG_SET_DATA_MASK);
++
++	spin_lock_irqsave(&priv->rmw_lock, flags);
++	writel(value,priv->base + offset);
++	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++}
++
++static int is_cpg_clk_on_sts(struct cpg_cocr_priv *priv, unsigned char reg_num,
++				unsigned short target)
++{
++	u32 offset;
++	int clk_onoff_sts;
++
++	offset = CPG_CLK_ON1 + ((reg_num - 1) * sizeof(u32));
++	clk_onoff_sts = ((readl(priv->base + offset) & target) >> target);
++	return clk_onoff_sts;
++}
++
++static int __cpg_cocr_clock_is_enabled(struct cpg_cocr_priv *priv, unsigned index)
++{
++       unsigned int no = index / 32;
++       unsigned int bit =index % 32;
++
++       return is_cpg_clk_on_sts(priv,no,BIT(bit));
++}
++
++static int cpg_cocr_clock_is_enabled(struct clk_hw *hw)
++{
++	struct cocr_clock *clock = to_cocr_clock(hw);
++	struct cpg_cocr_priv *priv = clock->priv;
++
++	return __cpg_cocr_clock_is_enabled(priv,clock->index);
++
++}
++
++static int __cpg_cocr_clock_endisable(struct cpg_cocr_priv *priv, unsigned index,bool enable)
++{
++	unsigned int no = index / 32;
++	unsigned int bit = index % 32;
++	int clk_status;
++
++	/* Check the CLK ON/OFF status with corresponding the clock id */
++	clk_status = __cpg_cocr_clock_is_enabled(priv,index);
++
++	/* If the current status and the request match, skip the process */
++	if (clk_status == (int)enable)
++		return 0;
++	
++	/* Set the clock on/off control register */
++	if (enable)
++		cpg_clkonoff_ctrl(priv,no,BIT(bit),BIT(bit));
++	else
++		cpg_clkonoff_ctrl(priv,no,BIT(bit),0);
++
++	return 0;
++}
++
++static int cpg_cocr_clock_endisable(struct clk_hw *hw, bool enable)
++{
++	struct cocr_clock *clock = to_cocr_clock(hw);
++	struct cpg_cocr_priv *priv = clock->priv;
++
++	__cpg_cocr_clock_endisable(priv,clock->index, enable);
++
++	return 0;
++}
++
++static int cpg_cocr_clock_enable(struct clk_hw *hw)
++{
++	return cpg_cocr_clock_endisable(hw, true);
++}
++
++static void cpg_cocr_clock_disable(struct clk_hw *hw)
++{
++	(void)cpg_cocr_clock_endisable(hw, false);
++}
++
++static const struct clk_ops cpg_cocr_clock_ops = {
++	.enable		= cpg_cocr_clock_enable,
++	.disable	= cpg_cocr_clock_disable,
++	.is_enabled	= cpg_cocr_clock_is_enabled,
++};
++
++static struct clk *cpg_cocr_clk_src_twocell_get(
++		struct of_phandle_args *clkspec, void *data)
++{
++	unsigned int clkidx = clkspec->args[1];
++	struct cpg_cocr_priv *priv = data;
++	struct device *dev = priv->dev;
++	const char *type;
++	struct clk *clk;
++
++	switch (clkspec->args[0]) {
++	case CPG_CORE:
++		type = "core";
++		if (clkidx > priv->last_dt_core_clk) {
++			dev_err(dev, "Invalid %s clock index %u\n", 
++				type, clkidx);
++			return ERR_PTR(-EINVAL);
++		}
++		clk = priv->clks[clkidx];
++		break;
++	case CPG_MOD:
++		type = "module";
++		clk = priv->clks[priv->num_core_clks + MOD_CLK_PACK(clkidx)];
++		break;
++
++	default:
++		dev_err(dev, "Invalid CPG clock type %u\n", clkspec->args[0]);
++		return ERR_PTR(-EINVAL);
++	}
++
++	if (IS_ERR(clk))
++		dev_err(dev, "Cannot get %s clock %u: %ld", type, clkidx,PTR_ERR(clk));
++	else
++		dev_dbg(dev, "clock (%u, %u) is %pC at %lu Hz\n",
++			clkspec->args[0], clkspec->args[1], clk,
++			clk_get_rate(clk));
++	
++	return clk;
++}
++
++static void __init cpg_cocr_register_core_clk(const struct cpg_core_clk *core,
++						const struct cpg_cocr_info *info,
++						struct cpg_cocr_priv *priv)
++{
++	struct clk *clk = ERR_PTR(-ENOTSUPP), *parent;
++	struct device *dev = priv->dev;
++	unsigned int id = core->id, div = core->div;
++	const char *parent_name;
++	unsigned long t;
++	unsigned int i;
++
++	WARN_DEBUG(id >= priv->num_core_clks);
++	WARN_DEBUG(PTR_ERR(priv->clks[id]) != -ENOENT);
++
++	if (!core->name) {
++		/* Skip NULLified clock */
++		return;
++	}
++
++	switch (core->type) {
++	case CLK_TYPE_FR:
++		clk = clk_register_fixed_rate(NULL, core->name, NULL, 0,
++						core->val);
++		break;
++
++	default:
++		parent = priv->clks[core->parent];
++		if (IS_ERR(parent)) {
++			clk = parent;
++			goto fail;
++		}
++
++		if (!priv->no_hw_clk_rate) {
++			if (core->type == CLK_TYP_STATIC) {
++				for (i = 0; i < info->num_mod_clks; i++) {
++					if (core->id == info->mod_clks[i].parent) {
++						//children Clock off
++						cpg_clkonoff_ctrl(priv,
++						(info->mod_clks[i].id/32) ,(BIT(info->mod_clks[i].id%32)),0);
++					}
++				}
++			}
++
++			if (core->type == CLK_TYPE_DIV) {
++				t = 0;
++				while (10000000 > t++) {
++					if (0 == (readl(priv->base + CPG_CLKSTATUS) & core->status)) 
++						break;
++					udelay(1);
++				}
++			}
++			
++			writel(core->msk | core->val, priv->base + core->offset);
++
++			if(core->type == CLK_TYPE_DIV){
++				t = 0;
++				while (10000000 > t++) {
++					if (0 == (readl(priv->base + CPG_CLKSTATUS) & core->status))
++						break;
++					udelay(1);
++				}
++			}
++		}
++
++		parent_name = __clk_get_name(parent);
++
++		clk = clk_register_fixed_factor(NULL, core->name,
++						parent_name, 0, 1, div);
++
++		break;
++	}
++
++	if (IS_ERR_OR_NULL(clk))
++		goto fail;
++
++	dev_dbg(dev, "Core clock %pC at %lu Hz\n", clk, clk_get_rate(clk));
++	priv->clks[id] = clk;
++	return;
++
++fail:
++	dev_err(dev, "Failed to register %s clock %s: %ld\n", "core",
++		core->name, PTR_ERR(clk));
++}
++
++
++static void __init cpg_cocr_register_mod_clk(const struct cocr_mod_clk *mod,
++						const struct cpg_cocr_info *info,
++						struct cpg_cocr_priv *priv)
++{
++	struct cocr_clock *clock = NULL;
++	struct device *dev = priv->dev;
++	unsigned int id = mod->id;
++	struct clk_init_data init;
++	struct clk *parent, *clk;
++	const char *parent_name;
++	unsigned int i;
++
++	WARN_DEBUG(id < priv->num_core_clks);
++	WARN_DEBUG(id >= priv->num_core_clks + priv->num_mod_clks);
++	WARN_DEBUG(mod->parent >= priv->num_core_clks + priv->num_mod_clks);
++	WARN_DEBUG(PTR_ERR(priv->clks[id]) != -ENOENT);
++
++	if (!mod->name) {
++		/* Skip NULLified clock */
++		return;
++	}
++
++	parent = priv->clks[mod->parent];
++	if (IS_ERR(parent)) {
++		clk = parent;
++		goto fail;
++	}
++
++	clock = kzalloc(sizeof(*clock), GFP_KERNEL);
++	if (!clock) {
++		clk = ERR_PTR(-ENOMEM);
++		goto fail;
++	}
++	
++	init.name = mod->name;
++	init.ops = &cpg_cocr_clock_ops;
++	
++	//init.flags = CLK_IS_BASIC | CLK_SET_RATE_PARENT;
++	init.flags = CLK_SET_RATE_PARENT;
++	for (i = 0; i < info->num_crit_mod_clks; i++) {
++		if (id == info->crit_mod_clks[i]) {
++			dev_dbg(dev, "COCR %s setting CLK_IS_CRITICAL\n",mod->name);
++			init.flags |= CLK_IS_CRITICAL;
++			break;
++		}
++	}
++
++	parent_name = __clk_get_name(parent);
++	init.parent_names = &parent_name;
++	init.num_parents = 1;
++
++	clock->index = id - priv->num_core_clks;
++	clock->priv = priv;
++	clock->hw.init = &init;
++
++	clk = clk_register(NULL, &clock->hw);
++	if (IS_ERR(clk))
++		goto fail;
++
++	dev_dbg(dev, "Module clock %pC[%ld] at %lu Hz\n", clk, clock->index, clk_get_rate(clk));
++
++	clk_prepare(clk);
++	clk_enable(clk);
++
++	priv->clks[id] = clk;
++	return;
++
++fail:
++	dev_err(dev, "Failed to register %s clock %s: %ld\n", "module",mod->name, PTR_ERR(clk));
++	kfree(clock);
++}
++
++#ifdef CONFIG_RESET_CONTROLLER
++
++#define rcdev_to_priv(x)       container_of(x, struct cpg_cocr_priv, rcdev)
++
++static void cpg_reset_ctrl(struct reset_controller_dev *rcdev, 
++			unsigned char reg_num, unsigned short target, unsigned short set_value)
++{
++	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
++	u32 offset, value;
++	unsigned long flags;
++
++	offset = CPG_RST1 + ((reg_num - 1) * sizeof(u32));
++	value = ((u32)target << CPG_REG_WEN_SHIFT) | (set_value & CPG_SET_DATA_MASK);
++	
++	dev_dbg(priv->dev, "%s: reg offset:0x%08x write value:0x%08x\n",
++		__func__, offset, value);
++	spin_lock_irqsave(&priv->rmw_lock, flags);
++	writel(value, (priv->base+ offset));
++	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++}
++
++static int cpg_get_reset_status(struct reset_controller_dev *rcdev,
++			unsigned char reg_num, unsigned short target)
++{
++	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
++	u32 offset, value;
++	unsigned long flags;
++
++	offset = CPG_RST1 + ((reg_num - 1) * sizeof(u32));
++	
++	spin_lock_irqsave(&priv->rmw_lock, flags);
++	value = readl(priv->base + offset) & target;
++	spin_unlock_irqrestore(&priv->rmw_lock, flags);
++
++	dev_dbg(priv->dev, "%s: reg offset:0x%08x read value:0x%08x status:0x%08x\n",
++		__func__, offset, value, !value);
++	return !value;
++}
++
++static int cpg_wait_reset_monitor(struct reset_controller_dev *rcdev,
++			u32 timeout, u32 msk, u32 status)
++{
++	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
++	u32 count = timeout;
++
++	while (true)
++	{
++		if (status == ((readl(priv->base + CPG_RST_MON) & msk) >> msk) ) {
++			break;
++		}
++		if (0 < count) {
++			udelay(1);
++			count--;
++		}
++		else
++			return -ETIMEDOUT;
++	}
++	return 0;
++}
++
++
++static int cpg_cocr_assert(struct reset_controller_dev *rcdev, unsigned long id)
++{
++	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
++	unsigned int reg = id / 32;
++	unsigned int bit = id % 32;
++	int i;
++	int clk_state[9] = {0};
++
++	if ( id <= CPG_MIN_CLKID ) {
++		dev_err(priv->dev, "Invalid reset id %ld\n", id);
++		return -EINVAL;
++	}
++	if ( (reg < CPG_RST_REG_MIN || CPG_RST_REG_MAX < reg) || (bit > 15) ) {
++		dev_err(priv->dev, "Invalid CPG register info %u:%u\n", reg, bit);
++		return -EINVAL;
++	}
++	
++	if (priv->resets[id].type == RST_TYPEA){
++		/*Reset assert*/
++		cpg_reset_ctrl(rcdev,reg,BIT(bit),0);
++	} else {
++		/*Type B*/
++		for (i = 0;i < priv->resets[id].clk_num; i++){
++			clk_state[i] = __cpg_cocr_clock_is_enabled(priv,priv->resets[id].clk_id[i]);
++			if(0 == clk_state[i]){
++				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],true);
++				udelay(10);
++			}
++		}
++
++		/* Reset assert */
++		cpg_reset_ctrl(rcdev,reg,BIT(bit),0);
++
++		/* Check the monitor */
++		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, BIT(priv->resets[id].reset_msk), RST_MON_ASSERT) ){
++			dev_err(priv->dev, "Reset assert was time out:id %d\n", priv->resets[id].clk_id[i]);
++		}
++		
++		for (i=0; i < priv->resets[id].clk_num; i++){
++			if (0 == clk_state[i]){
++				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],false);
++			}
++			udelay(10);
++		}
++	}
++	return 0;
++}
++
++static int cpg_cocr_deassert(struct reset_controller_dev *rcdev,
++                            unsigned long id)
++{
++	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
++	unsigned int reg = id / 32;
++	unsigned int bit = id % 32;
++	int i;
++	int clk_state[9] = {0};
++
++	if ( id <= CPG_MIN_CLKID ) {
++		dev_err(priv->dev, "Invalid reset id %ld\n", id);
++		return -EINVAL;
++	}
++	if ( (reg < CPG_RST_REG_MIN || CPG_RST_REG_MAX < reg) || (bit > 15) ) {
++		dev_err(priv->dev, "Invalid CPG register info %u:%u\n", reg, bit);
++		return -EINVAL;
++	}
++	
++	if (priv->resets[id].type == RST_TYPEA){
++		/*Reset deassert*/
++		for (i = 0;i < priv->resets[id].clk_num; i++){
++			clk_state[i] = __cpg_cocr_clock_is_enabled(priv,priv->resets[id].clk_id[i]);
++			if(0 != clk_state[i]){
++				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],false);
++				udelay(10);
++			}
++		}
++
++		cpg_reset_ctrl(rcdev,reg,BIT(bit),BIT(bit));
++		udelay(10);
++
++		for (i=0; i < priv->resets[id].clk_num; i++){
++			if (0 != clk_state[i]){
++				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],true);
++				udelay(10);
++			}
++		}
++	} else {
++		/*Type B*/
++		for (i = 0;i < priv->resets[id].clk_num; i++){
++			clk_state[i] = __cpg_cocr_clock_is_enabled(priv,priv->resets[id].clk_id[i]);
++			if (0 == clk_state[i]){
++				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],true);
++				udelay(10);
++			}
++		}
++	
++		/*Reset deassert*/
++		cpg_reset_ctrl(rcdev,reg,BIT(bit),BIT(bit));
++
++		/* Check the monitor */
++		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, BIT(priv->resets[id].reset_msk), RST_MON_DEASSERT) ){
++			dev_err(priv->dev, "Reset deassert was time out:id %d\n", priv->resets[id].clk_id[i]);
++		}
++
++		for (i=0; i < priv->resets[id].clk_num; i++){
++			if (0 == clk_state[i]){
++				__cpg_cocr_clock_endisable(priv,priv->resets[id].clk_id[i],false);
++				udelay(10);
++			}
++		}
++	}
++	return 0;
++}
++
++static int cpg_cocr_reset(struct reset_controller_dev *rcdev,
++                            unsigned long id)
++{
++	cpg_cocr_assert(rcdev,id);
++	cpg_cocr_deassert(rcdev,id);
++	return 0;
++}
++
++static int cpg_cocr_status(struct reset_controller_dev *rcdev,
++                          unsigned long id)
++{
++	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
++	unsigned int reg = id / 32;
++	unsigned int bit = id % 32;
++	int status;
++	
++	if ( id <= CPG_MIN_CLKID ) {
++		dev_err(priv->dev, "Invalid reset id %ld\n", id);
++		return -EINVAL;
++	}
++	if ( (reg < CPG_RST_REG_MIN || CPG_RST_REG_MAX < reg) || (bit > 15) ) {
++		dev_err(priv->dev, "Invalid CPG register info %d:%d\n", reg, bit);
++		return -EINVAL;
++	}
++	
++	status = cpg_get_reset_status(priv->base,reg,BIT(bit));
++	dev_dbg(priv->dev, "status is %d\n", status);
++	
++	return status;
++}
++
++static const struct reset_control_ops cpg_cocr_reset_ops = {
++	.reset = cpg_cocr_reset,
++	.assert = cpg_cocr_assert,
++	.deassert = cpg_cocr_deassert,
++	.status = cpg_cocr_status,
++};
++
++static int cpg_cocr_reset_xlate(struct reset_controller_dev *rcdev,
++				const struct of_phandle_args *reset_spec)
++{
++	struct cpg_cocr_priv *priv = rcdev_to_priv(rcdev);
++	unsigned int unpacked = reset_spec->args[0];
++	unsigned int idx = MOD_CLK_PACK(unpacked);
++
++	dev_dbg(priv->dev, "reset unpacked%u index %u\n", unpacked,idx);
++
++	if (unpacked % 100 > 31 || idx >= rcdev->nr_resets) {
++		dev_err(priv->dev, "Invalid reset index %u\n", unpacked);
++		return -EINVAL;
++	}
++
++	return idx;
++}
++
++static int cpg_cocr_reset_controller_register(struct cpg_cocr_priv *priv)
++{
++	priv->rcdev.ops = &cpg_cocr_reset_ops;
++	priv->rcdev.of_node = priv->dev->of_node;
++	priv->rcdev.of_reset_n_cells = 1;
++	priv->rcdev.of_xlate = cpg_cocr_reset_xlate;
++	priv->rcdev.nr_resets = priv->num_resets;
++	return devm_reset_controller_register(priv->dev, &priv->rcdev);
++}
++
++#else /* !CONFIG_RESET_CONTROLLER */
++static inline int cpg_cocr_reset_controller_register(struct cpg_cocr_priv *priv)
++{
++	return 0;
++}
++#endif /* !CONFIG_RESET_CONTROLLER */
++
++
++static const struct of_device_id cpg_cocr_match[] = {
++#if 0 //[TODO]
++	{
++		.compatible = "renesas,r9a09g011gbg-cpg-cocr",
++		.data = &r9a09g011gbg_cpg_cocr_info,
++	},
++#endif
++	{
++		.compatible = "renesas,r9a09g055ma3gbg-cpg-cocr",
++		.data = &r9a09g055ma3gbg_cpg_cocr_info,
++	},
++	{ /* sentinel */ }
++};
++
++static void cpg_cocr_del_clk_provider(void *data)
++{
++	of_clk_del_provider(data);
++}
++
++static int __init cpg_cocr_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	const struct cpg_cocr_info *info;
++	struct cpg_cocr_priv *priv;
++	unsigned int nclks, i;
++	struct resource *res;
++	struct clk **clks;
++	struct rcr_reset *resets;
++	int error;
++
++	info = of_device_get_match_data(dev);
++	if (info->init) {
++		error = info->init(dev);
++		if (error)
++			return error;
++	}
++
++	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	priv->dev = dev;
++	spin_lock_init(&priv->rmw_lock);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	priv->base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(priv->base))
++		return PTR_ERR(priv->base);
++
++	nclks = info->num_total_core_clks + info->num_hw_mod_clks;
++	clks = devm_kmalloc_array(dev, nclks, sizeof(*clks), GFP_KERNEL);
++	if (!clks)
++		return -ENOMEM;
++
++	resets = devm_kmalloc_array(dev, info->num_hw_resets, sizeof(*resets), GFP_KERNEL);
++	if (!resets)
++		return -ENOMEM;
++
++	dev_set_drvdata(dev, priv);
++	priv->clks = clks;
++	priv->num_core_clks = info->num_total_core_clks;
++	priv->num_mod_clks = info->num_hw_mod_clks;
++	priv->last_dt_core_clk = info->last_dt_core_clk;
++	priv->mod_clk = info->mod_clks;
++	priv->core_clk = info->core_clks;
++	priv->no_hw_clk_rate = device_property_read_bool(dev, "cpg-non-set-div");
++	RAW_INIT_NOTIFIER_HEAD(&priv->notifiers);
++
++	priv->resets = resets;
++	priv->num_resets = info->num_hw_resets;
++
++	for (i = 0; i < nclks; i++)
++		clks[i] = ERR_PTR(-ENOENT);
++
++	for (i = 0; i < info->num_core_clks; i++)
++		cpg_cocr_register_core_clk(&info->core_clks[i], info, priv);
++
++	for (i = 0; i < info->num_mod_clks; i++)
++		cpg_cocr_register_mod_clk(&info->mod_clks[i], info, priv);
++
++	for (i = 0; i < info->num_resets; i++){
++		memcpy(&priv->resets[MOD_CLK_PACK(info->resets[i].id)],&info->resets[i],sizeof(struct rcr_reset));
++	}
++	error = of_clk_add_provider(np, cpg_cocr_clk_src_twocell_get, priv);
++	if (error)
++		return error;
++
++	error = devm_add_action_or_reset(dev,cpg_cocr_del_clk_provider,np);
++	if (error)
++		return error;
++
++	error = cpg_cocr_reset_controller_register(priv);
++	if (error)
++		return error;
++
++	return 0;
++}
++
++static struct platform_driver cpg_cocr_driver = {
++	.driver = {
++		.name   = "renesas-cpg-cocr",
++		.of_match_table = cpg_cocr_match,
++	},
++};
++
++static int __init cpg_cocr_init(void)
++{
++	return platform_driver_probe(&cpg_cocr_driver, cpg_cocr_probe);
++}
++
++subsys_initcall(cpg_cocr_init);
++
++MODULE_DESCRIPTION("Renesas CPG COCR Driver");
++MODULE_LICENSE("GPL v2");
++
+diff --git b/drivers/clk/renesas/renesas-cpg-cocr.h b/drivers/clk/renesas/renesas-cpg-cocr.h
+new file mode 100755
+index 0000000..188d9ec
+--- /dev/null
++++ b/drivers/clk/renesas/renesas-cpg-cocr.h
+@@ -0,0 +1,344 @@
++/*
++ * Driver for the Renesas Clock ON/OFF Control Register(COCR)
++ *
++ * Copyright (C) 2022 Renesas Electronics Corporation
++ *
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#ifndef __CLK_RENESAS_CPG_COCR_H__
++#define __CLK_RENESAS_CPG_COCR_H__
++
++/*
++* Definitions of CPG Core Clocks
++*
++* These include:
++*   - Clock outputs exported to DT
++*   - External input clocks
++*   - Internal CPG clocks
++*/
++
++struct cpg_core_clk {
++	/* Common */
++	const char *name;
++	unsigned int id;
++	unsigned int parent;
++	unsigned int offset;
++	unsigned int div;
++	unsigned int msk;
++	unsigned long val;
++	unsigned int status;
++	unsigned int type;
++};
++
++enum clk_types {
++	/* Generic */
++	CLK_TYPE_IN,            /* External Clock Input */
++	CLK_TYPE_FF,            /* Fixed Factor Clock */
++	CLK_TYPE_FR,            /* Fixed Rate Clock */
++
++	/* Custom definitions start here */
++	CLK_TYP_STATIC,
++	CLK_TYPE_DIV,           /* Fixed Rate Clock */
++	CLK_TYPE_CUSTOM,
++};
++
++enum rst_types {
++	RST_NON,
++	RST_TYPEA,
++	RST_TYPEB,
++};
++
++#define DEF_TYPE(_name, _id, _type...) \
++		{ .name = _name, .id = _id, .type = _type }
++#define DEF_BASE(_name, _id, _type, _parent...)        \
++		DEF_TYPE(_name, _id, _type, .parent = _parent)
++#define DEF_INPUT(_name, _id) \
++		DEF_TYPE(_name, _id, CLK_TYPE_IN)
++#define DEF_FIXED(_name, _id, _parent, _div, _mult)    \
++		DEF_BASE(_name, _id, CLK_TYPE_FF, _parent, .div = _div, .val = _mult)
++#define DEF_STATIC(_name, _id, _parent, _div, _offset, _msk, _mult)    \
++		DEF_BASE(_name, _id, CLK_TYP_STATIC, _parent,.div = _div, .offset=_offset, .msk=_msk, .val = _mult)
++#define DEF_DIV(_name, _id, _parent, _div, _offset, _msk, _status, _mult)      \
++		DEF_BASE(_name, _id, CLK_TYPE_DIV, _parent, .div = _div, .offset=_offset, .msk=_msk, .status=_status, .val = _mult)
++#define DEF_DIV6P1(_name, _id, _parent, _offset)       \
++		DEF_BASE(_name, _id, CLK_TYPE_DIV6P1, _parent, .offset = _offset)
++#define DEF_DIV6_RO(_name, _id, _parent, _offset, _div)        \
++		DEF_BASE(_name, _id, CLK_TYPE_DIV6_RO, _parent, .offset = _offset, .div = _div, .mult = 1)
++#define DEF_RATE(_name, _id, _rate)    \
++		DEF_TYPE(_name, _id, CLK_TYPE_FR, .val=_rate)
++
++/*
++* Definitions of Module Clocks
++*/
++struct cocr_mod_clk {
++       const char *name;
++       unsigned int id;
++       unsigned int parent;    /* Add MOD_CLK_BASE for Module Clocks */
++};
++
++struct rcr_reset {
++       const char *name;
++       unsigned int id;
++       unsigned int type;
++       unsigned int reset_msk;
++       unsigned int clk_num;
++       unsigned int clk_id[9];
++};
++
++/* Convert from sparse base-100 to packed index space */
++#define MOD_CLK_PACK(x)		((x) - ((x) / 100) * (100 - 32))
++#define MOD_CLK_ID(x)  (MOD_CLK_BASE + MOD_CLK_PACK(x))
++
++#define DEF_MOD(_name, _mod, _parent...)     \
++	{ .name = _name, .id = MOD_CLK_ID(_mod), .parent = _parent}
++	
++#define DEF_RESET(_name, _id,  _type, _reset_msk, _clk_num, clk0, clk1, clk2, clk3, clk4, clk5, clk6, clk7, clk8)     \
++	{ .name = _name, .id = _id, .type=_type, .reset_msk = _reset_msk,  .clk_num= _clk_num, \
++          .clk_id = { clk0, clk1, clk2 , clk3, clk4, clk5, clk6, clk7, clk8 } \
++	}
++
++#define RST_MON_UNUSED		0xFFFFFFFF
++#define RST_MON_TIMEOUT		100
++#define RST_MON_DEASSERT	0
++#define RST_MON_ASSERT		1
++
++#define CPG_MIN_CLKID		100
++#define CPG_REG_WEN_SHIFT	(16)
++#define CPG_SET_DATA_MASK	(0xFFFF)
++
++#define CPG_CLK_ON_STATUS	1
++#define CPG_CLK_OFF_STATUS	0
++
++struct device_node;
++
++/**
++* SoC-specific CPG Description
++*
++* @core_clks: Array of Core Clock definitions
++* @num_core_clks: Number of entries in core_clks[]
++* @last_dt_core_clk: ID of the last Core Clock exported to DT
++* @num_total_core_clks: Total number of Core Clocks (exported + internal)
++*
++* @mod_clks: Array of Module Clock definitions
++* @num_mod_clks: Number of entries in mod_clks[]
++* @num_hw_mod_clks: Number of Module Clocks supported by the hardware
++*
++* @crit_mod_clks: Array with Module Clock IDs of critical clocks that
++*                 should not be disabled without a knowledgeable driver
++* @num_crit_mod_clks: Number of entries in crit_mod_clks[]
++*
++* @init: Optional callback to perform SoC-specific initialization
++* @cpg_clk_register: Optional callback to handle special Core Clock types
++*/
++struct cpg_cocr_info {
++	/* Core Clocks */
++	const struct cpg_core_clk *core_clks;
++	unsigned int num_core_clks;
++	unsigned int last_dt_core_clk;
++	unsigned int num_total_core_clks;
++
++	/* Module Clocks */
++	const struct cocr_mod_clk *mod_clks;
++	unsigned int num_mod_clks;
++	unsigned int num_hw_mod_clks;
++
++	/* Critical Module Clocks that should not be disabled */
++	const unsigned int *crit_mod_clks;
++	unsigned int num_crit_mod_clks;
++
++	/*Resets*/
++	const struct rcr_reset *resets;
++	unsigned int num_resets;
++	unsigned int num_hw_resets;
++
++	/* Callbacks */
++	int (*init)(struct device *dev);
++	struct clk *(*cpg_clk_register)(struct device *dev,
++				const struct cpg_core_clk *core,
++				const struct cpg_cocr_info *info,
++				struct clk **clks, void __iomem *base,
++				struct raw_notifier_head *notifiers);
++};
++
++extern const struct cpg_cocr_info r9a09g011gbg_cpg_cocr_info;
++extern const struct cpg_cocr_info r9a09g055ma3gbg_cpg_cocr_info;
++
++
++/** CPG Registor Offset */
++#define CPG_PLL1_STBY           (0x0000)
++#define CPG_PLL1_CLK1           (0x0004)
++#define CPG_PLL1_CLK2           (0x0008)
++#define CPG_PLL1_MON            (0x000C)
++#define CPG_PLL2_STBY           (0x0010)
++#define CPG_PLL2_CLK1           (0x0014)
++#define CPG_PLL2_CLK2           (0x0018)
++#define CPG_PLL2_MON            (0x001C)
++#define CPG_PLL3_STBY           (0x0020)
++#define CPG_PLL3_CLK1           (0x0024)
++#define CPG_PLL3_CLK2           (0x0028)
++#define CPG_PLL3_MON            (0x002C)
++#define CPG_PLL6_STBY           (0x0030)
++#define CPG_PLL6_CLK1           (0x0034)
++#define CPG_PLL6_CLK2           (0x0038)
++#define CPG_PLL6_MON            (0x003C)
++#define CPG_PLL7_STBY           (0x0040)
++#define CPG_PLL7_CLK1           (0x0044)
++#define CPG_PLL7_CLK2           (0x0048)
++#define CPG_PLL7_MON            (0x004C)
++
++#define CPG_PLL4_STBY           (0x0100)
++#define CPG_PLL4_CLK1           (0x0104)
++#define CPG_PLL4_CLK2           (0x0108)
++#define CPG_PLL4_MON            (0x010C)
++
++#define CPG_PLL1_CCTRL_RST      (0x0180)
++#define CPG_PLL2_CCTRL_RST      (0x0184)
++#define CPG_PLL3_CCTRL_RST      (0x0188)
++#define CPG_PLL4_CCTRL_RST      (0x018C)
++#define CPG_PLL7_CCTRL_RST      (0x0198)
++
++#define CPG_CA53_DDIV           (0x0200)
++#define CPG_SYS_DDIV            (0x0204)
++#define CPG_MMCDDI_DDIV         (0x0210)
++#define CPG_CLK48_DSEL          (0x0214)
++#define CPG_CLKSTATUS           (0x0224)
++
++#define CPG_SDIEMM_SSEL         (0x0300)
++#define CPG_GMCLK_SDIV          (0x031C)
++#define CPG_GMCLK_SSEL          (0x0320)
++#define CPG_URT_RCLK_SDIV       (0x0328)
++#define CPG_URT_RCLK_SSEL       (0x032C)
++#define CPG_CSI_RCLK_SSEL       (0x0330)
++
++#define CPG_CLK_ON1             (0x0400)
++#define CPG_CLK_ON2             (0x0404)
++#define CPG_CLK_ON3             (0x0408)
++#define CPG_CLK_ON4             (0x040C)
++#define CPG_CLK_ON5             (0x0410)
++#define CPG_CLK_ON6             (0x0414)
++#define CPG_CLK_ON7             (0x0418)
++#define CPG_CLK_ON8             (0x041C)
++#define CPG_CLK_ON9             (0x0420)
++#define CPG_CLK_ON10            (0x0424)
++#define CPG_CLK_ON11            (0x0428)
++#define CPG_CLK_ON12            (0x042C)
++#define CPG_CLK_ON13            (0x0430)
++#define CPG_CLK_ON14            (0x0434)
++#define CPG_CLK_ON15            (0x0438)
++#define CPG_CLK_ON16            (0x043C)
++#define CPG_CLK_ON17            (0x0440)
++#define CPG_CLK_ON18            (0x0444)
++#define CPG_CLK_ON19            (0x0448)
++#define CPG_CLK_ON20            (0x044C)
++#define CPG_CLK_ON21            (0x0450)
++#define CPG_CLK_ON22            (0x0454)
++#define CPG_CLK_ON23            (0x0458)
++#define CPG_CLK_ON24            (0x045C)
++#define CPG_CLK_ON25            (0x0460)
++#define CPG_CLK_ON26            (0x0464)
++#define CPG_CLK_ON27            (0x0468)
++
++#define CPG_RST_MSK             (0x0504)
++
++#define CPG_RST1                (0x0600)
++#define CPG_RST2                (0x0604)
++#define CPG_RST3                (0x0608)
++#define CPG_RST4                (0x060C)
++#define CPG_RST5                (0x0610)
++#define CPG_RST6                (0x0614)
++#define CPG_RST7                (0x0618)
++#define CPG_RST8                (0x061C)
++#define CPG_RST9                (0x0620)
++#define CPG_RST10               (0x0624)
++#define CPG_RST11               (0x0628)
++#define CPG_RST12               (0x062C)
++#define CPG_RST13               (0x0630)
++#define CPG_RST14               (0x0634)
++#define CPG_RST15               (0x0638)
++
++#define CPG_RST_MON             (0x0680)
++#define CPG_PD_RST              (0x0800)
++
++/** Bit assign */
++#define CPG_PLL_STBY_RESETB                 (0x00000001)
++#define CPG_PLL_STBY_WEN_RESETB             (0x00010000)
++#define CPG_PLL_STBY_WEN_SSE_EN             (0x00040000)
++#define CPG_PLL_STBY_WEN_SSC_MODE           (0x00100000)
++
++#define CPG_PLL_MON_RESETB                  (0x00000001)
++#define CPG_PLL_MON_PLL_LOCK                (0x00000010)
++
++#define CPG_PLL1_CCTRL_RST_P1_0_RST         (0x00000001)
++#define CPG_PLL1_CCTRL_WEN_RST_P1_0_RST     (0x00010000)
++
++#define CPG_CA53_DDIV_DIVA_SET_MIN          (0)
++#define CPG_CA53_DDIV_WEN_DIVA              (0x00010000)
++
++#define CPG_SYS_DDIV_DIVD_SET_SHIFT         (4)
++#define CPG_SYS_DDIV_DIVD_SET_MIN           (0)
++#define CPG_SYS_DDIV_DIVE_SET_SHIFT         (8)
++#define CPG_SYS_DDIV_DIVE_SET_MIN           (0)
++#define CPG_SYS_DDIV_WEN_DIVB               (0x00010000)
++#define CPG_SYS_DDIV_WEN_DIVD               (0x00100000)
++#define CPG_SYS_DDIV_WEN_DIVE               (0x01000000)
++
++#define CPG_MMCDDI_DDIV_DIVX_SET_MSK        (0x00000003)
++#define CPG_MMCDDI_DDIV_DIVX_SET_SHIFT      (0)
++#define CPG_MMCDDI_DDIV_DIVX_SET_MAX        (2)
++#define CPG_MMCDDI_DDIV_DIVX_SET_MIN        (0)
++#define CPG_MMCDDI_DDIV_WEN_DIVX            (0x00010000)
++
++#define CPG_CLK48_DSEL_SELB                 (0x00000001)
++#define CPG_CLK48_DSEL_SELD                 (0x00000002)
++#define CPG_CLK48_DSEL_SELE                 (0x00000004)
++#define CPG_CLK48_DSEL_WEN_SELB             (0x00010000)
++#define CPG_CLK48_DSEL_WEN_SELD             (0x00020000)
++#define CPG_CLK48_DSEL_WEN_SELE             (0x00040000)
++
++#define CPG_SDIEMM_SSEL_SELSDI              (0x00000001)
++#define CPG_SDIEMM_SSEL_WEN_SELSDI          (0x00010000)
++
++#define CPG_URT_RCLK_SSEL_WEN_SELW0         (0x00010000)
++
++#define CPG_CLKSTATUS_DIVA                  (0x00000001)
++#define CPG_CLKSTATUS_DIVB                  (0x00000002)
++#define CPG_CLKSTATUS_DIVD                  (0x00000004)
++#define CPG_CLKSTATUS_DIVE                  (0x00000008)
++#define CPG_CLKSTATUS_DIVF                  (0x00000010)
++#define CPG_CLKSTATUS_DIVG                  (0x00000020)
++#define CPG_CLKSTATUS_DIVNFI                (0x00000040)
++#define CPG_CLKSTATUS_DIVX                  (0x00000080)
++#define CPG_CLKSTATUS_DIVH                  (0x00000100)
++#define CPG_CLKSTATUS_DIVI                  (0x00000200)
++#define CPG_CLKSTATUS_DIVJ                  (0x00000400)
++#define CPG_CLKSTATUS_DIVM                  (0x00000800)
++#define CPG_CLKSTATUS_DIVH2                 (0x00001000)
++
++#define CPG_PD_RST_MEM_RSTB                 (0x00000001)
++#define CPG_PD_RST_WEN_MEM_RSTB             (0x00010000)
++
++#define CPG_RST_MON_EMM                     (0x00000100)
++#define CPG_RST_MON_URT                     (0x04000000)
++#define CPG_PD_RST_RFX_RSTB                 (0x00000010)
++#define CPG_PD_RST_WEN_RFX_RSTB             (0x00100000)
++
++#define CPG_PLL_MIN                         (1)
++#define CPG_PLL_MAX                         (7)
++
++#define CPG_CLK_ON_REG_MIN                  (1)
++#define CPG_CLK_ON_REG_MAX                  (27)
++
++#define CPG_RST_REG_MIN                     (1)
++#define CPG_RST_REG_MAX                     (15)
++
++
++#endif
+diff --git b/include/dt-bindings/clock/r9a09g011gbg-cpg-cocr.h b/include/dt-bindings/clock/r9a09g011gbg-cpg-cocr.h
+new file mode 100755
+index 0000000..b6093ff
+--- /dev/null
++++ b/include/dt-bindings/clock/r9a09g011gbg-cpg-cocr.h
+@@ -0,0 +1,61 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2018 Renesas Electronics Corp.
++ */
++#ifndef __DT_BINDINGS_CLOCK_R9A09G011GBG_CPG_MSSR_H__
++#define __DT_BINDINGS_CLOCK_R9A09G011GBG_CPG_MSSR_H__
++
++#include <dt-bindings/clock/renesas-cpg-mssr.h>
++
++/* r8a774c0 CPG Core Clocks */
++#define R8A774C0_CLK_Z2                        0
++#define R8A774C0_CLK_ZG                        1
++#define R8A774C0_CLK_ZTR               2
++#define R8A774C0_CLK_ZT                        3
++#define R8A774C0_CLK_ZX                        4
++#define R8A774C0_CLK_S0D1              5
++#define R8A774C0_CLK_S0D3              6
++#define R8A774C0_CLK_S0D6              7
++#define R8A774C0_CLK_S0D12             8
++#define R8A774C0_CLK_S0D24             9
++#define R8A774C0_CLK_S1D1              10
++#define R8A774C0_CLK_S1D2              11
++#define R8A774C0_CLK_S1D4              12
++#define R8A774C0_CLK_S2D1              13
++#define R8A774C0_CLK_S2D2              14
++#define R8A774C0_CLK_S2D4              15
++#define R8A774C0_CLK_S3D1              16
++#define R8A774C0_CLK_S3D2              17
++#define R8A774C0_CLK_S3D4              18
++#define R8A774C0_CLK_S0D6C             19
++#define R8A774C0_CLK_S3D1C             20
++#define R8A774C0_CLK_S3D2C             21
++#define R8A774C0_CLK_S3D4C             22
++#define R8A774C0_CLK_LB                        23
++#define R8A774C0_CLK_CL                        24
++#define R8A774C0_CLK_ZB3               25
++#define R8A774C0_CLK_ZB3D2             26
++#define R8A774C0_CLK_CR                        27
++#define R8A774C0_CLK_CRD2              28
++#define R8A774C0_CLK_SD0H              29
++#define R8A774C0_CLK_SD0               30
++#define R8A774C0_CLK_SD1H              31
++#define R8A774C0_CLK_SD1               32
++#define R8A774C0_CLK_SD3H              33
++#define R8A774C0_CLK_SD3               34
++#define R8A774C0_CLK_RPC               35
++#define R8A774C0_CLK_RPCD2             36
++#define R8A774C0_CLK_ZA2               37
++#define R8A774C0_CLK_ZA8               38
++#define R8A774C0_CLK_Z2D               39
++#define R8A774C0_CLK_MSO               40
++#define R8A774C0_CLK_R                 41
++#define R8A774C0_CLK_OSC               42
++#define R8A774C0_CLK_LV0               43
++#define R8A774C0_CLK_LV1               44
++#define R8A774C0_CLK_CSI0              45
++#define R8A774C0_CLK_CP                        46
++#define R8A774C0_CLK_CPEX              47
++#define R8A774C0_CLK_CANFD             48
++
++#endif /* __DT_BINDINGS_CLOCK_R9A09G011GBG_CPG_MSSR_H__ */

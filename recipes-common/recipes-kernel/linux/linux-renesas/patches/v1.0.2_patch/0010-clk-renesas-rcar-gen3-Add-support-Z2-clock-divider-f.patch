@@ -1,0 +1,65 @@
+From ae401cd961bc909a3a3f9768b85a88ddc56cd90c Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Mon, 21 Feb 2022 10:30:28 +0700
+Subject: [PATCH] clk-renesas-rcar-gen3-Add-support-Z2-clock-divider-f
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/clk/renesas/rcar-gen3-cpg.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/rcar-gen3-cpg.c b/drivers/clk/renesas/rcar-gen3-cpg.c
+index 4885a9c..9b74c0c 100644
+--- a/drivers/clk/renesas/rcar-gen3-cpg.c
++++ b/drivers/clk/renesas/rcar-gen3-cpg.c
+@@ -30,6 +30,7 @@
+ #define CPG_PLL4CR		0x01f4
+ 
+ #define CPG_RCKCR_CKSEL	BIT(15)	/* RCLK Clock Source Select */
++#define Z2FC_BIT_MASK_SFT_8    BIT(2)  /* Use Z2FC bit mask range to [12:8] */
+ 
+ static spinlock_t cpg_lock;
+ 
+@@ -89,6 +90,9 @@ static void cpg_simple_notifier_register(struct raw_notifier_head *notifiers,
+ #define CPG_FRQCRB			0x00000004
+ #define CPG_FRQCRB_KICK			BIT(31)
+ #define CPG_FRQCRC			0x000000e0
++#define CPG_FRQCRC_Z2FC_SFT_8_MASK     GENMASK(12, 8)
++#define CPG_FRQCRC_Z2FC_MASK           GENMASK(4, 0)
++#define CPG_FRQCRC_ZFC_MASK            GENMASK(12, 8)
+ 
+ struct cpg_z_clk {
+ 	struct clk_hw hw;
+@@ -578,6 +582,10 @@ static const struct soc_device_attribute cpg_quirks_match[] __initconst = {
+ 		.soc_id = "r8a7796", .revision = "ES1.1",
+ 		.data = (void *)SD_SKIP_FIRST,
+ 	},
++	{
++		.soc_id = "r8a774c0",
++		.data = (void *)Z2FC_BIT_MASK_SFT_8,
++	},
+ 	{ /* sentinel */ }
+ };
+ 
+@@ -702,7 +710,17 @@ struct clk * __init rcar_gen3_cpg_clk_register(struct device *dev,
+ 
+ 	case CLK_TYPE_GEN3_Z:
+ 		return cpg_z_clk_register(core->name, __clk_get_name(parent),
+-					  base, core->div, core->offset);
++					  base, CPG_FRQCRC_ZFC_MASK, core->div);
++	
++	case CLK_TYPE_GEN3_Z2:
++		if (cpg_quirks & Z2FC_BIT_MASK_SFT_8)
++			return cpg_z_clk_register(core->name,
++							__clk_get_name(parent), base,
++							CPG_FRQCRC_Z2FC_SFT_8_MASK,
++							core->div);
++		return cpg_z_clk_register(core->name, __clk_get_name(parent),
++						base, CPG_FRQCRC_Z2FC_MASK,
++						core->div);
+ 
+ 	case CLK_TYPE_GEN3_OSC:
+ 		/*
+-- 
+2.7.4
+

@@ -1,0 +1,70 @@
+From f6d3c556ff67dc184e8ac27662b3a4fff9e06171 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 8 Mar 2022 10:50:54 +0700
+Subject: [PATCH] chg-gic-init
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/irqchip/irq-gic-common.c | 11 -----------
+ drivers/irqchip/irq-gic.c        | 16 ++++------------
+ 2 files changed, 4 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/irqchip/irq-gic-common.c b/drivers/irqchip/irq-gic-common.c
+index f47b41d..c7e2ea5 100644
+--- a/drivers/irqchip/irq-gic-common.c
++++ b/drivers/irqchip/irq-gic-common.c
+@@ -115,17 +115,6 @@ void gic_dist_config(void __iomem *base, int gic_irqs,
+ 	for (i = 32; i < gic_irqs; i += 4)
+ 		writel_relaxed(GICD_INT_DEF_PRI_X4, base + GIC_DIST_PRI + i);
+ 
+-	/*
+-	 * Deactivate and disable all SPIs. Leave the PPI and SGIs
+-	 * alone as they are in the redistributor registers on GICv3.
+-	 */
+-	for (i = 32; i < gic_irqs; i += 32) {
+-		writel_relaxed(GICD_INT_EN_CLR_X32,
+-			       base + GIC_DIST_ACTIVE_CLEAR + i / 8);
+-		writel_relaxed(GICD_INT_EN_CLR_X32,
+-			       base + GIC_DIST_ENABLE_CLEAR + i / 8);
+-	}
+-
+ 	if (sync_access)
+ 		sync_access();
+ }
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 841cf4b..e4bec60 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -475,17 +475,6 @@ static void gic_dist_init(struct gic_chip_data *gic)
+ 	unsigned int gic_irqs = gic->gic_irqs;
+ 	void __iomem *base = gic_data_dist_base(gic);
+ 
+-	writel_relaxed(GICD_DISABLE, base + GIC_DIST_CTRL);
+-
+-	/*
+-	 * Set all global interrupts to this CPU only.
+-	 */
+-	cpumask = gic_get_cpumask(gic);
+-	cpumask |= cpumask << 8;
+-	cpumask |= cpumask << 16;
+-	for (i = 32; i < gic_irqs; i += 4)
+-		writel_relaxed(cpumask, base + GIC_DIST_TARGET + i * 4 / 4);
+-
+        /*
+         * Set all global interrupts to CPU #0 and #1 for RZ/V2M.
+         */
+@@ -498,7 +487,10 @@ static void gic_dist_init(struct gic_chip_data *gic)
+ 
+ 	gic_dist_config(base, gic_irqs, NULL);
+ 
+-	writel_relaxed(GICD_ENABLE, base + GIC_DIST_CTRL);
++       if (0 == (readl_relaxed(base + GIC_DIST_CTRL)&GICD_ENABLE)) {
++               writel_relaxed(GICD_ENABLE, base + GIC_DIST_CTRL);
++       }
++
+ }
+ 
+ static int gic_cpu_init(struct gic_chip_data *gic)
+-- 
+2.7.4
+

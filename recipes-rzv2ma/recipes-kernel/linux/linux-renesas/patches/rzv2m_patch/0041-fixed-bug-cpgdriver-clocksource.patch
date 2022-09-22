@@ -1,0 +1,26 @@
+From 318c32447ea5c2e385b19306e5e96fb725a69079 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 1 Mar 2022 09:03:30 +0700
+Subject: [PATCH] fixed-bug-cpgdriver-clocksource
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+index da2608a..58cfcef 100644
+--- a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
++++ b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+@@ -84,7 +84,7 @@ static const struct cpg_core_clk r8arzv2m_core_clks[] __initconst = {
+                CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELB, 0,     CPG_CLK48_DSEL_SELB),
+        DEF_DIV(".seld",     CLK_SEL_D,          CLK_DIV_D,  1,
+                CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELD, 0,     CPG_CLK48_DSEL_SELD),
+-       DEF_DIV(".sele",     CLK_SEL_E,          CLK_DIV_D,  1,
++       DEF_DIV(".sele",     CLK_SEL_E,          CLK_DIV_E,  1,
+                CPG_CLK48_DSEL, CPG_CLK48_DSEL_WEN_SELE, 0,     CPG_CLK48_DSEL_SELE),
+ #if 0 //static defined is disabled
+        DEF_STATIC(".selcsi0",     CLK_SEL_CSI0,          CLK_MAIN,       1,
+-- 
+2.7.4
+

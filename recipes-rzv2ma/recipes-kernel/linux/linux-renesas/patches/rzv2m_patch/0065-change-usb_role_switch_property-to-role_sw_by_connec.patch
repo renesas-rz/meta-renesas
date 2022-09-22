@@ -1,0 +1,26 @@
+From 0f16b258b1ef3d8b34ea730dba5809c41fa03cb5 Mon Sep 17 00:00:00 2001
+From: CanhDao <canh.dao.ct@renesas.com>
+Date: Wed, 9 Mar 2022 13:49:38 +0700
+Subject: [PATCH] change-usb_role_switch_property-to-role_sw_by_connect
+
+Signed-off-by: CanhDao <canh.dao.ct@renesas.com>
+---
+ drivers/usb/gadget/udc/renesas_usb3_rzv2m.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c b/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
+index 9630ec3..dd21e21 100644
+--- a/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
++++ b/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
+@@ -739,7 +739,7 @@ static void usb3_check_id(struct renesas_usb3 *usb3)
+         else{
+                 usb3->connection_state = USB_ROLE_DEVICE;
+         }
+-        if ((!usb3->usb_role_switch_property &&	
++	if ((!usb3->role_sw_by_connector && 	
+ 	     usb3->extcon_host && !usb3->forced_b_device) ||
+ 	     usb3->connection_state == USB_ROLE_HOST)
+ 		usb3_mode_config(usb3, true, true);
+-- 
+2.7.4
+

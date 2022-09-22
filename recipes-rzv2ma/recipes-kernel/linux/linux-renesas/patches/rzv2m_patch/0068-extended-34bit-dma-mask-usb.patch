@@ -1,0 +1,80 @@
+From 1d38166711ac55556bf92d4c2974a051fe2423ec Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 8 Mar 2022 13:44:20 +0700
+Subject: [PATCH] extended-34bit-dma-mask-usb
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/usb/gadget/udc/renesas_usb3_rzv2m.c | 2 ++
+ drivers/usb/host/xhci-ring.c                | 7 +++++++
+ drivers/usb/host/xhci.c                     | 2 ++
+ 3 files changed, 11 insertions(+)
+
+diff --git a/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c b/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
+index 7838f26..d6bdaec 100644
+--- a/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
++++ b/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
+@@ -2773,6 +2773,8 @@ static int renesas_usb3_probe(struct platform_device *pdev)
+ 	if (!usb3)
+ 		return -ENOMEM;
+ 
++	dma_set_mask_and_coherent(&pdev->dev,DMA_BIT_MASK(34)); //34bit extension for rzv2m
++
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	usb3->reg = devm_ioremap_resource(&pdev->dev, res);
+ 	if (IS_ERR(usb3->reg))
+diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
+index 167dae1..ba1d6d0 100644
+--- a/drivers/usb/host/xhci-ring.c
++++ b/drivers/usb/host/xhci-ring.c
+@@ -569,6 +569,8 @@ void xhci_find_new_dequeue_state(struct xhci_hcd *xhci,
+ 			"Finding endpoint context");
+ 
+ 	hw_dequeue = xhci_get_hw_deq(xhci, dev, ep_index, stream_id);
++	hw_dequeue |= BIT(32);  //34bit extension for rzv2m(add bank address with bit32 )
++
+ 	new_seg = ep_ring->deq_seg;
+ 	new_deq = ep_ring->dequeue;
+ 	state->new_cycle_state = hw_dequeue & 0x1;
+@@ -791,6 +793,7 @@ static void xhci_handle_cmd_stop_ep(struct xhci_hcd *xhci, int slot_id,
+ 		 */
+ 		hw_deq = xhci_get_hw_deq(xhci, vdev, ep_index,
+ 					 cur_td->urb->stream_id);
++		hw_deq |= BIT(32);  //34bit extension for rzv2m(add bank address with bit32 )
+ 		hw_deq &= ~0xf;
+ 
+ 		if (trb_in_td(xhci, cur_td->start_seg, cur_td->first_trb,
+@@ -1407,6 +1410,8 @@ static void handle_cmd_completion(struct xhci_hcd *xhci,
+ 	u32 cmd_type;
+ 
+ 	cmd_dma = le64_to_cpu(event->cmd_trb);
++	cmd_dma |= BIT(32);  //34bit extension for rzv2m(add bank address with bit32 )
++
+ 	cmd_trb = xhci->cmd_ring->dequeue;
+ 
+ 	trace_xhci_handle_command(xhci->cmd_ring, &cmd_trb->generic);
+@@ -2358,6 +2363,8 @@ static int handle_tx_event(struct xhci_hcd *xhci,
+ 	trb_comp_code = GET_COMP_CODE(le32_to_cpu(event->transfer_len));
+ 	ep_trb_dma = le64_to_cpu(event->buffer);
+ 
++	ep_trb_dma |= BIT(32);  //34bit extension for rzv2m(add bank address with bit32 )
++
+ 	xdev = xhci->devs[slot_id];
+ 	if (!xdev) {
+ 		xhci_err(xhci, "ERROR Transfer event pointed to bad slot %u\n",
+diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+index 73f1373..c24a2d1 100644
+--- a/drivers/usb/host/xhci.c
++++ b/drivers/usb/host/xhci.c
+@@ -5252,6 +5252,8 @@ int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
+ 	if (xhci->quirks & XHCI_NO_64BIT_SUPPORT)
+ 		xhci->hcc_params &= ~BIT(0);
+ 
++	xhci->hcc_params |= BIT(0);  //34bit extension for rzv2m
++
+ 	/* Set dma_mask and coherent_dma_mask to 64-bits,
+ 	 * if xHC supports 64-bit addressing */
+ 	if (HCC_64BIT_ADDR(xhci->hcc_params) &&
+-- 
+2.7.4
+

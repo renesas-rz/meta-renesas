@@ -1,0 +1,58 @@
+From b506c731f00389bab621036a3576167f8746c0a8 Mon Sep 17 00:00:00 2001
+From: CanhDao <canh.dao.ct@renesas.com>
+Date: Wed, 9 Mar 2022 13:53:43 +0700
+Subject: [PATCH] change_adress_map
+
+Signed-off-by: CanhDao <canh.dao.ct@renesas.com>
+---
+ .../boot/dts/renesas/r9a09g011gbg-evaluation-board.dts     | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index c3faf29..8bd1c4e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -23,12 +23,6 @@
+         stdout-path = "serial0:115200n8";
+     };
+ 
+-    memory@58000000 {
+-        device_type = "memory";
+-        /* first 256MB is reserved for secure area. */
+-        reg = <0x00000000 0x58000000 0x0 0x28000000>;
+-    };
+-
+     memory@180000000 {
+         device_type = "memory";
+         reg = <0x1 0x80000000 0x0 0x80000000>;
+@@ -40,23 +34,23 @@
+         ranges;
+ 
+         /* global autoconfigured region for contiguous allocations */
+-        linux,cma@67800000 {
++	linux,cma@1E7800000 {
+             compatible = "shared-dma-pool";
+             reusable;
+-            reg = <0x0 0x67800000 0x0 0x8000000>;
++	    reg = <0x1 0xE7800000 0x0 0x8000000>;
+             linux,cma-default;
+         };
+ 
+         /* device specific region for contiguous allocations */
+         drp_reserved: linux,CMAtoDRP {
+             reusable;
+-            reg = <0x0 0x6F800000 0x0 0x10000000>;
++	    reg = <0x1 0xEF800000 0x0 0x10000000>;
+         };
+ 
+         v4l2_reserved: v4l2-DRP_buf@0 {
+             compatible = "shared-dma-pool";
+             reusable;
+-            reg = <0x0 0x7F800000 0x0 0x400000>; //4MiB
++	    reg = <0x1 0xFF800000 0x0 0x400000>; //4MiB
+             label = "image_buf0";
+         };
+ 
+-- 
+2.7.4
+

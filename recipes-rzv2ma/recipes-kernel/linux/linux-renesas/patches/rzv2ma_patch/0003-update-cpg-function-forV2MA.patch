@@ -1,0 +1,144 @@
+diff --git a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+index d3f559f..e70444b 100644
+--- a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
++++ b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+@@ -51,8 +51,13 @@ enum clk_ids {
+        CLK_SEL_D,
+        CLK_SEL_E,
+        CLK_SEL_CSI0,
++       CLK_SEL_CSI1,
++       CLK_SEL_CSI2,
++       CLK_SEL_CSI3,
+        CLK_SEL_CSI4,
++       CLK_SEL_CSI5,
+        CLK_SEL_W0,
++       CLK_SEL_W1,
+        CLK_SEL_SDI0,
+ 
+ 
+@@ -98,8 +103,13 @@ static const struct cpg_core_clk r8arzv2m_core_clks[] __initconst = {
+                CPG_SDIEMM_SSEL,   CPG_SDIEMM_SSEL_WEN_SELSDI,          CPG_SDIEMM_SSEL_SELSDI),
+ #else
+        DEF_RATE(".selcsi0",     CLK_SEL_CSI0,  24*1000*1000),
++       DEF_RATE(".selcsi1",     CLK_SEL_CSI1,  24*1000*1000),
++       DEF_RATE(".selcsi2",     CLK_SEL_CSI2,  24*1000*1000),
++       DEF_RATE(".selcsi3",     CLK_SEL_CSI3,  24*1000*1000),
+        DEF_RATE(".selcsi4",     CLK_SEL_CSI4,  24*1000*1000),
++       DEF_RATE(".selcsi5",     CLK_SEL_CSI5,  24*1000*1000),
+        DEF_RATE(".selw",        CLK_SEL_W0,    48*1000*1000),
++       DEF_RATE(".selw1",        CLK_SEL_W1,    48*1000*1000),
+        DEF_RATE(".selsdi0",     CLK_SEL_SDI0,  200*1000*1000),
+ 
+ #endif
+@@ -158,7 +168,6 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("pwm_clk_12",           1408,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("pwm_clk_13",           1409,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("pwm_clk_14",           1410,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-       DEF_MOD("pwm_clk_15",           1411,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("cperi_grph_pclk",1501, CLK_SEL_E,              RST_TYPEB,      6,      7,      25),
+        DEF_MOD("urt_pclk",                     1504,   CLK_SEL_E,              RST_TYPEB,      6,      10,     26),
+        DEF_MOD("urt_clk_0",            1505,   CLK_SEL_W0,             RST_TYPEB,      6,      10,     26),
+@@ -166,15 +175,61 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B,              RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_dclk",            2001,   CLK_PLL6,               RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_initclk",         2002,   CLK_MAIN,               RST_TYPEB,      9,      0,      14),
+-	
++	   //Add RZ/V2MA settings
++       DEF_MOD("dmaa_aclk",             111,  CLK_SEL_D,     RST_TYPEB,     1,      7,      4) ,
++       DEF_MOD("cperi_grpa_pclk",             900,  CLK_SEL_E,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("cperi_grpd_pclk",             1200,  CLK_SEL_E,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("cperi_grpe_pclk",             1300,  CLK_SEL_E,     RST_TYPEB,     6,      4,      23) ,
++       DEF_MOD("cperi_grpg_pclk",             1500,  CLK_SEL_E,     RST_TYPEB,     6,      6,      24) ,
++       DEF_MOD("tim_clk_0",             904,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_1",             905,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_2",             906,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_3",             907,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_4",             908,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_5",             909,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_6",             910,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_7",             911,  CLK_MAIN_24,     RST_TYPEA,     6,      0,      0) ,
++       DEF_MOD("tim_clk_24",             1204,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("tim_clk_25",             1205,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("tim_clk_26",             1206,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("tim_clk_27",             1207,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("tim_clk_28",             1208,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("tim_clk_29",             1209,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("tim_clk_30",             1210,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("tim_clk_31",             1211,  CLK_MAIN_24,     RST_TYPEA,     6,      3,      0) ,
++       DEF_MOD("pwm_clk_0",             1304,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_1",             1305,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_2",             1306,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_3",             1307,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_4",             1308,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_5",             1309,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_6",             1310,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_7",             1311,  CLK_MAIN,     RST_TYPEB,     6,      4,      22) ,
++       DEF_MOD("pwm_clk_15",             1411,  CLK_MAIN,     RST_TYPEB,     6,      5,      23) ,
++       DEF_MOD("csi_clk_0",             1508,  CLK_SEL_CSI0,     RST_NON,     0,      0,      0) ,
++       DEF_MOD("csi_clk_1",             1509,  CLK_SEL_CSI1,     RST_NON,     0,      0,      0) ,
++       DEF_MOD("csi_clk_2",             1510,  CLK_SEL_CSI2,     RST_NON,     0,      0,      0) ,
++       DEF_MOD("csi_clk_3",             1511,  CLK_SEL_CSI3,     RST_NON,     0,      0,      0) ,
++       DEF_MOD("csi_clk_5",             1513,  CLK_SEL_CSI5,     RST_NON,     0,      0,      0) ,
++       DEF_MOD("urt_clk_1",             1506,  CLK_SEL_W1,     RST_TYPEB,     6,      10,      26) ,
++       DEF_MOD("wdt_pclk_0",             1112,  CLK_SEL_E,     RST_TYPEB,     6,      12,      19) ,
++       DEF_MOD("wdt_pclk_1",             1114,  CLK_SEL_E,     RST_TYPEB,     6,      13,      20) ,
++       DEF_MOD("wdt_clk_0",             1113,  CLK_MAIN,     RST_TYPEB,     6,      12,      19) ,
++       DEF_MOD("wdt_clk_1",             1115,  CLK_MAIN,     RST_TYPEB,     6,      13,      20) ,
++       DEF_MOD("tsu0_plk",             114,  CLK_MAIN,     RST_TYPEA,     1,      12,      0) ,
++       DEF_MOD("tsu1_plk",             115,  CLK_MAIN,     RST_TYPEA,     1,      13,      0) ,
++       DEF_MOD("drpb_aclk",             2100,  CLK_SEL_B,     RST_NON,     0,      0,      0) ,
++       DEF_MOD("drpb_dclk",             2101,  CLK_PLL6,     RST_NON,     0,      0,      0) ,
++       DEF_MOD("drpb_initclk",             2102,  CLK_MAIN,     RST_TYPEB,     10,      0,      0) ,
+ };
+ 
++
+ static const unsigned int r8arzv2m_crit_mod_clks[] __initconst = {
+-	MOD_CLK_ID(404),        /* usb_aclk_h */
+-	MOD_CLK_ID(405),        /* usb_aclk_p */
+-	MOD_CLK_ID(406),        /* usb_pclk */
+-	MOD_CLK_ID(408),        /* eth0_clk_axi */
+-	MOD_CLK_ID(409),        /* eth0_clk_gptp_extern */
++       MOD_CLK_ID(404),        /* usb_aclk_h */
++       MOD_CLK_ID(405),        /* usb_aclk_p */
++       MOD_CLK_ID(406),        /* usb_pclk */
++       MOD_CLK_ID(408),        /* eth0_clk_axi */
++       MOD_CLK_ID(409),        /* eth0_clk_gptp_extern */
+ };
+ 
+ /*
+@@ -200,17 +255,17 @@ int32_t r8arzv2m_cpg_setClockCtrl(void __iomem *base, uint8_t reg_num, uint16_t
+     void __iomem *offset = base + CPG_CLK_ON1;
+     uint32_t value;
+ 
+-	if (reg_num < CPG_CLK_ON_REG_MIN || CPG_CLK_ON_REG_MAX < reg_num)
+-	{
+-		return -EINVAL;
+-	}
+-	offset += ((reg_num - 1) * sizeof(uint32_t));
+-        value = ((uint32_t)target << CPG_REG_WEN_SHIFT)
+-	       | (set_value & CPG_SET_DATA_MASK);
++    if (reg_num < CPG_CLK_ON_REG_MIN || CPG_CLK_ON_REG_MAX < reg_num)
++       {
++        return -EINVAL;
++    }
++    offset += ((reg_num - 1) * sizeof(uint32_t));
++    value = ((uint32_t)target << CPG_REG_WEN_SHIFT)
++            | (set_value & CPG_SET_DATA_MASK);
+ 
+-       writel(value,offset);
++    writel(value,offset);
+ 
+-       return 0;
++    return 0;
+ }
+ 
+ int32_t r8arzv2m_cpg_getClockCtrl(void __iomem *base, uint8_t reg_num, uint16_t target)
+@@ -228,7 +283,7 @@ int32_t r8arzv2m_cpg_getClockCtrl(void __iomem *base, uint8_t reg_num, uint16_t
+        value = value & target;
+        return value;
+ }
+-int32_t CPG_SetResetCtrl(void __iomem *base, uint8_t reg_num, uint16_t target, uint16_t set_value)    
++int32_t CPG_SetResetCtrl(void __iomem *base, uint8_t reg_num, uint16_t target, uint16_t set_value)
+ {
+     void __iomem *offset = base + CPG_RST1;
+     uint32_t value;

@@ -1,0 +1,14 @@
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 4912b75..bcecffa 100755
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -183,9 +183,6 @@ CONFIG_THERMAL=y
+ CONFIG_THERMAL_GOV_POWER_ALLOCATOR=y
+ CONFIG_CPU_THERMAL=y
+ CONFIG_THERMAL_EMULATION=y
+-CONFIG_RCAR_THERMAL=y
+-CONFIG_RCAR_GEN3_THERMAL=y
+-CONFIG_RCAR_THERMAL_EMS_ENABLED=y
+ CONFIG_WATCHDOG=y
+ CONFIG_RENESAS_WDT=y
+ CONFIG_RENESAS_RZV2M_WDT=y

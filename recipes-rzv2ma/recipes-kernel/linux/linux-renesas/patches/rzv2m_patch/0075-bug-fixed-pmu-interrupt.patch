@@ -1,0 +1,26 @@
+From c39ca4322cc5c5ff4da8d20cb38b27bab09e725e Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Thu, 10 Mar 2022 15:07:42 +0700
+Subject: [PATCH] bug-fixed-pmu-interrupt
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 846a8db..6415f43 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -58,7 +58,7 @@
+ 
+     pmu_a53 { /* Support only for core0 not core1 */
+         compatible = "arm,cortex-a53-pmu";
+-        interrupts-extended = <&gic GIC_SPI 38 IRQ_TYPE_LEVEL_HIGH>;
++	interrupts-extended = <&gic GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>;
+         interrupt-affinity = <&a53_0>;
+     };
+ 
+-- 
+2.7.4
+

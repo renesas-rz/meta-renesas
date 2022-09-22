@@ -1,0 +1,74 @@
+diff --git a/drivers/soc/renesas/renesas-soc.c b/drivers/soc/renesas/renesas-soc.c
+index 475d047..7d247aa 100755
+--- a/drivers/soc/renesas/renesas-soc.c
++++ b/drivers/soc/renesas/renesas-soc.c
+@@ -62,6 +62,11 @@ static const struct renesas_family fam_rzv2 __initconst __maybe_unused = {
+        .reg    = 0xA3F03104,           /* SYS (Version Register) */
+ };
+ 
++static const struct renesas_family fam_rzv2ma __initconst __maybe_unused = {
++       .name   = "RZ/V2MA",
++       .reg    = 0xA3F03104,           /* SYS (Version Register) */
++};
++
+ static const struct renesas_family fam_rzg2l __initconst __maybe_unused = {
+ 	.name	= "RZ/G2L",
+ };
+@@ -147,8 +152,13 @@ static const struct renesas_soc soc_rz_g2h __initconst __maybe_unused = {
+ };
+ 
+ static const struct renesas_soc soc_rz_v2m __initconst __maybe_unused = {
+-	.family = &fam_rzv2,
+-	.id     = 0x10,
++       .family = &fam_rzv2,
++       .id     = 0x10,
++};
++
++static const struct renesas_soc soc_rz_v2ma __initconst __maybe_unused = {
++       .family = &fam_rzv2ma,
++       .id     = 0x11,
+ };
+ 
+ static const struct renesas_soc soc_rz_g2l __initconst __maybe_unused = {
+@@ -285,7 +295,11 @@ static const struct of_device_id renesas_socs[] __initconst = {
+ 	{ .compatible = "renesas,r8a774e1",	.data = &soc_rz_g2h },
+ #endif
+ #ifdef CONFIG_ARCH_R9A09G011GBG
+-	{ .compatible = "renesas,r9a09g011gbg", .data = &soc_rz_v2m },
++#if 0 /* TODO Add V2MA config*/
++       { .compatible = "renesas,r9a09g011gbg", .data = &soc_rz_v2m },
++#endif
++/*#ifdef CONFIG_ARCH_R9A09G055MA3GBG*/ /* TODO Add V2MA config*/
++       { .compatible = "renesas,r9a09g011gbg", .data = &soc_rz_v2ma },
+ #endif
+ #ifdef CONFIG_ARCH_R8A7778
+ 	{ .compatible = "renesas,r8a7778",	.data = &soc_rcar_m1a },
+@@ -417,7 +431,7 @@ static int __init renesas_soc_init(void)
+ 	} else if (soc->id && family->reg) {
+ 		chipid = ioremap(family->reg, 4);
+ 	}
+-#ifndef CONFIG_ARCH_R9A09G011GBG 
++#if !defined(CONFIG_ARCH_R9A09G011GBG) && !defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	if (chipid) {
+ 		product = readl(chipid);
+ 		iounmap(chipid);
+@@ -448,14 +462,15 @@ done:
+ 	soc_dev_attr->family = kstrdup_const(family->name, GFP_KERNEL);
+ 	soc_dev_attr->soc_id = kstrdup_const(strchr(match->compatible, ',') + 1,
+ 					     GFP_KERNEL);
+-#ifndef CONFIG_ARCH_R9A09G011GBG
++#if !defined(CONFIG_ARCH_R9A09G011GBG) && !defined(CONFIG_ARCH_R9A09G055MA3GBG)
+ 	if (eshi)
+ 		soc_dev_attr->revision = kasprintf(GFP_KERNEL, "ES%u.%u", eshi,
+ 						   eslo);
+ #else
+-       product = 0x0;
+-       soc_dev_attr->revision = kasprintf(GFP_KERNEL, "ES%u.%u", eshi,
+-                                                 eslo);
++	   product = 0x0;
++	   soc_dev_attr->revision = kasprintf(GFP_KERNEL, "ES%u.%u",
++										  ((product >> 4) & 0x0f) + 1,
++										  product & 0xf);
+ #endif
+ 
+ 	/*FIXME: current RZG2UL family do not support product revision*/

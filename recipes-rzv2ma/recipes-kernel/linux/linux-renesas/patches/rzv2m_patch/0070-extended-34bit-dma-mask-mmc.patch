@@ -1,0 +1,35 @@
+From adebaee65ea00dfe4b43bca03664f336c9b9257c Mon Sep 17 00:00:00 2001
+From: CanhDao <canh.dao.ct@renesas.com>
+Date: Wed, 9 Mar 2022 13:58:07 +0700
+Subject: [PATCH] extended-34bit-dma-mask-mmc
+
+Signed-off-by: CanhDao <canh.dao.ct@renesas.com>
+---
+ drivers/mmc/host/renesas_sdhi_core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index 083ba45..c665763 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -33,6 +33,7 @@
+ #include <linux/delay.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/sys_soc.h>
++#include <linux/dma-mapping.h>
+ 
+ #include "renesas_sdhi.h"
+ #include "tmio_mmc.h"
+@@ -966,7 +967,8 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ 			    GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
+-
++	
++	dma_set_mask_and_coherent(&pdev->dev,DMA_BIT_MASK(34));  //34bit extension for rzv2m
+ 	priv->quirks = quirks;
+ 	mmc_data = &priv->mmc_data;
+ 	dma_priv = &priv->dma_priv;
+-- 
+2.7.4
+

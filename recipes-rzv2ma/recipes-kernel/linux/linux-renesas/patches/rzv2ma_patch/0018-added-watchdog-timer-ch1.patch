@@ -1,0 +1,36 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
+index a03ec92..7b3b17d 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
+@@ -129,6 +129,10 @@
+ 	timeout-sec = <60>;
+ };
+ 
++&wdt1 {
++	status = "okay";
++	timeout-sec = <60>;
++};
+ 
+ &xhci0 {
+        memory-region = <&global_cma>;
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+index 8a09f24..49a6285 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+@@ -97,14 +97,14 @@
+               compatible = "renesas,rzv2m-wdt";
+               reg = <0 0xa4050000 0 0x80>;
+               clocks = <&cpg CPG_MOD 1112>, <&cpg CPG_MOD 1113>;
+-              interrupts = <GIC_SPI 043 IRQ_TYPE_LEVEL_HIGH>;
++              interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;
+               status = "disabled";
+        };
+        wdt1: watchdog@a4050080 {
+               compatible = "renesas,rzv2m-wdt";
+               reg = <0 0xa4050080 0 0x80>;
+               clocks = <&cpg CPG_MOD 1114>, <&cpg CPG_MOD 1115>;
+-              interrupts = <GIC_SPI 044 IRQ_TYPE_LEVEL_HIGH>;
++              interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
+               status = "disabled";
+        };
+ 

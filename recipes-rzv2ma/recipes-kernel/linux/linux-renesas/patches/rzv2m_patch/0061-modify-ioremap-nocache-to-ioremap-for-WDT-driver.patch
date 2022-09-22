@@ -1,0 +1,44 @@
+From c73cf58862cfa5f7ce5ed137804a200119e5b751 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 8 Mar 2022 09:38:40 +0700
+Subject: [PATCH] modify ioremap nocache to ioremap for WDT driver
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/watchdog/wdt-rzv2m.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/watchdog/wdt-rzv2m.c b/drivers/watchdog/wdt-rzv2m.c
+index 8163db4..d91fa94 100644
+--- a/drivers/watchdog/wdt-rzv2m.c
++++ b/drivers/watchdog/wdt-rzv2m.c
+@@ -107,7 +107,7 @@ static int rzv2m_wdt_start(struct watchdog_device *wdev)
+ {
+ 	/*Enable clock for reset status*/
+ 	{
+-		void __iomem *cpg_base = ioremap_nocache(0xA3500000, 0x1000);
++		void __iomem *cpg_base = ioremap(0xA3500000, 0x1000);
+ 
+ 		iowrite32(0x70007000, cpg_base + 0x614);        //CPG_RST6
+ 		iowrite32(0xF000F000, cpg_base + 0x428);        //CPG_CLK_ON11
+@@ -146,7 +146,7 @@ static int rzv2m_wdt_stop(struct watchdog_device *wdev)
+                 * another way. CPG_RST6 register is belong to CPG used
+                 * to mask/unmask WDT overflow system reset
+                 */
+-                void __iomem *cpg_base = ioremap_nocache(0xA3500000, 0x1000);
++                void __iomem *cpg_base = ioremap(0xA3500000, 0x1000);
+ 
+                 iowrite32(0x70000000, cpg_base + 0x614);        //CPG_RST6
+                 iowrite32(0xF0000000, cpg_base + 0x428);        //CPG_CLK_ON11
+@@ -229,7 +229,7 @@ static int rzv2m_wdt_probe(struct platform_device *pdev)
+ 		* another way. CPG_RST6 register is belong to CPG used
+ 		* to mask/unmask WDT overflow system reset
+ 		*/
+-		void __iomem *cpg_base = ioremap_nocache(0xA3500000, 0x1000);
++		void __iomem *cpg_base = ioremap(0xA3500000, 0x1000);
+ 		
+ 		iowrite32(0x000F000F, cpg_base + 0x504);	//CPG_RST_MSK
+ 		iowrite32(0x70007000, cpg_base + 0x614);	//CPG_RST6
+-- 
+2.7.4
+

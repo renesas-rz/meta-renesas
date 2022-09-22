@@ -1,0 +1,54 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index d5c92c2..a94aa64 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -8,6 +8,7 @@
+ #include <dt-bindings/clock/r9a09g011gbg-cpg-mssr.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+ #include <dt-bindings/power/r9a09g011gbg-sysc.h>
++/memreserve/ 0x1B7FFF000 0x00001000; /* spin-table address */
+ 
+ / {
+     compatible = "renesas,r9a09g011gbg";
+@@ -25,7 +26,8 @@
+             device_type = "cpu";
+             #power-domains = <&sysc R8A774C0_PD_CA53_CPU0>;
+             next-level-cache = <&L2_CA53>;
+-            enable-method = "psci";
++            enable-method = "spin-table";
++            cpu-release-addr = <0x1 0xB7FFF000>;
+             #cooling-cells = <2>;
+             dynamic-power-coefficient = <277>;
+             cooling-min-level = <0>;
+@@ -33,6 +35,16 @@
+             clocks = <&cpg CPG_CORE R8A774C0_CLK_Z2>;
+         };
+ 
++        a53_1: cpu@1 {
++            compatible = "arm,cortex-a53", "arm,armv8";
++            reg = <1>;
++            device_type = "cpu";
++            next-level-cache = <&L2_CA53>;
++            enable-method = "spin-table";
++            cpu-release-addr = <0x1 0xB7FFF000>;
++            clocks = <&cpg CPG_CORE R8A774C0_CLK_Z2>;
++        };
++        
+         L2_CA53: cache-controller-0 {
+             compatible = "cache";
+             power-domains = <&sysc R8A774C0_PD_CA53_SCU>;
+@@ -41,10 +53,10 @@
+         };
+
+     };
+ 
+-    pmu_a53 { /* Support only for core0 not core1 */
++    pmu_a53 {
+         compatible = "arm,cortex-a53-pmu";
+-	interrupts-extended = <&gic GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>;
+-        interrupt-affinity = <&a53_0>;
++        interrupts-extended = <&gic GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>,<&gic GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
++        interrupt-affinity = <&a53_0>,<&a53_1>;
+     };
+ 
+     /* used cpg(clock pulse generator) */

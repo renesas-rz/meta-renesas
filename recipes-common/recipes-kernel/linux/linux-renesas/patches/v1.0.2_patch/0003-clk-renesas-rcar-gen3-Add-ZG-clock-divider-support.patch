@@ -1,0 +1,25 @@
+From ae663b32b2fedb0c32fca3f45ce4e5f73aa134f8 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Mon, 21 Feb 2022 10:33:19 +0700
+Subject: [PATCH] clk-renesas-rcar-gen3-Add-ZG-clock-divider-support
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/clk/renesas/rcar-gen3-cpg.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/renesas/rcar-gen3-cpg.h b/drivers/clk/renesas/rcar-gen3-cpg.h
+index 2f59996..c392414 100644
+--- a/drivers/clk/renesas/rcar-gen3-cpg.h
++++ b/drivers/clk/renesas/rcar-gen3-cpg.h
+@@ -21,6 +21,7 @@ enum rcar_gen3_clk_types {
+ 	CLK_TYPE_GEN3_R,
+ 	CLK_TYPE_GEN3_MDSEL,	/* Select parent/divider using mode pin */
+ 	CLK_TYPE_GEN3_Z,
++	CLK_TYPE_GEN3_Z2,
+ 	CLK_TYPE_GEN3_ZG,
+ 	CLK_TYPE_GEN3_OSC,	/* OSC EXTAL predivider and fixed divider */
+ 	CLK_TYPE_GEN3_RCKSEL,	/* Select parent/divider using RCKCR.CKSEL */
+-- 
+2.7.4
+

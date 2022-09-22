@@ -1,0 +1,1528 @@
+diff --git b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
+new file mode 100755
+index 0000000..0ecfdbd
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg-evaluation-board.dts
+@@ -0,0 +1,536 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Device Tree Source for the RZ/V2MA evaluation-board platform
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r9a09g055ma3gbg.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++
++/ {
++
++    model = "Renesas EVK based on r9a09g055ma3gbg";
++    compatible = "renesas,r9a09g055ma3gbg";
++
++    aliases {
++        serial0 = &uart0;
++    };
++
++    chosen {
++        bootargs = "earlycon=uart,mmio32,0xA4040000,115200n8 console=ttyS0,115200n8 loglevel=8 vmalloc=384M root=/dev/mmcblk0p2 rootwait rootfstype=ext3 rw; rodata=off ip=dhcp";
++        stdout-path = "serial0:115200n8";
++    };
++
++    memory@00000000 {
++        device_type = "memory";
++        reg = <0x0 0x00000000 0x0 0x80000000>;
++    };
++
++    memory@180000000 {
++        device_type = "memory";
++        reg = <0x1 0x80000000 0x0 0x80000000>;
++    };
++
++    reserved-memory {
++        #address-cells = <2>;
++        #size-cells = <2>;
++        ranges;
++
++        /* global autoconfigured region for contiguous allocations */
++        global_cma: linux,cma@28000000 {
++            compatible = "shared-dma-pool";
++            reusable;
++            reg = <0x0 0x28000000 0x0 0x8000000>;
++            linux,cma-default;
++        };
++
++        /* device specific region for contiguous allocations */
++        mmp_reserved: linux,multimedia {
++            compatible = "shared-dma-pool";
++            reusable;
++            reg = <0x0 0x30000000 0x0 0x10000000>;
++        };
++
++        /* device specific region for contiguous allocations */
++        drp_reserved: linux,CMAtoDRP {
++            reusable;
++            reg = <0x0 0x40000000 0x0 0x20000000>;
++        };
++        
++        open_cv: open_cv {
++            compatible = "shared-dma-pool";
++            reusable;
++            reg = <0x0 0x77000000 0x0 0x8000000>;
++            label = "image_buf0";
++        };
++
++        image_buf0: image_buf@0 {
++            compatible = "shared-dma-pool";
++            reusable;
++            reg = <0x0 0x7F000000 0x0 0x1000000>; //16MiB
++            label = "image_buf0";
++        };
++
++    };
++
++    vcc_sdhi0: regulator-vcc-sdhi0 {
++        compatible = "regulator-fixed";
++
++        regulator-name = "SDHI0 Vcc";
++        regulator-min-microvolt = <3300000>;
++        regulator-max-microvolt = <3300000>;
++        regulator-always-on;
++        regulator-boot-on;
++    };
++
++    vccq_sdhi0: regulator-vccq-sdhi0 {
++        compatible = "regulator-gpio";
++
++        regulator-name = "SDHI0 VccQ";
++        regulator-min-microvolt = <1800000>;
++        regulator-max-microvolt = <3300000>;
++
++        gpios-states = <1>;
++        states = <3300000 1
++              1800000 0>;
++    };
++
++        reg_1p8v: regulator0 {
++        compatible = "regulator-fixed";
++        regulator-name = "fixed-1.8V";
++        regulator-min-microvolt = <1800000>;
++        regulator-max-microvolt = <1800000>;
++        regulator-boot-on;
++        regulator-always-on;
++    };
++
++    reg_3p3v: regulator1 {
++        compatible = "regulator-fixed";
++        regulator-name = "fixed-3.3V";
++        regulator-min-microvolt = <3300000>;
++        regulator-max-microvolt = <3300000>;
++        regulator-boot-on;
++        regulator-always-on;
++    };
++};
++
++/* used cpg(clock pulse generator) */
++&extal_clk {
++    clock-frequency = <48000000>;
++};
++
++/* used watch dog timer */
++&wdt0 {
++	status = "okay";
++	timeout-sec = <60>;
++};
++
++
++&xhci0 {
++       memory-region = <&global_cma>;
++       status = "okay";
++};
++
++&usb3_peri0 {
++    companion = <&xhci0>;
++    status = "okay";
++    renesas,usb-role-switch;
++
++};
++
++&pfc {
++    status = "okay";
++    pinctrl-names = "default";
++    pwm0_pins: pwm@0 {
++        groups = "pwm0";
++        function = "pwm";
++    };
++
++    pwm1_pins: pwm@1 {
++        groups = "pwm1";
++        function = "pwm";
++    };
++
++    pwm2_pins: pwm@2 {
++        groups = "pwm2";
++        function = "pwm";
++    };
++
++    pwm3_pins: pwm@3 {
++        groups = "pwm3";
++        function = "pwm";
++    };
++
++    pwm4_pins: pwm4@ {
++        groups = "pwm4";
++        function = "pwm";
++    };
++
++    pwm5_pins: pwm@5 {
++        groups = "pwm5";
++        function = "pwm";
++    };
++
++    pwm6_pins: pwm@6 {
++        groups = "pwm6";
++        function = "pwm";
++    };
++
++    pwm7_pins: pwm@7 {
++        groups = "pwm7";
++        function = "pwm";
++    };
++
++    pwm8_pins: pwm@8 {
++        groups = "pwm8";
++        function = "pwm";
++    };
++
++    pwm9_pins: pwm@9 {
++        groups = "pwm9";
++        function = "pwm";
++    };
++
++    pwm10_pins: pwm@10 {
++        groups = "pwm10";
++        function = "pwm";
++    };
++
++    pwm11_pins: pwm@11 {
++        groups = "pwm11";
++        function = "pwm";
++    };
++
++    pwm12_pins: pwm@12 {
++        groups = "pwm12";
++        function = "pwm";
++    };
++
++    pwm13_pins: pwm@13 {
++        groups = "pwm13";
++        function = "pwm";
++    };
++
++    pwm14_pins: pwm@14 {
++        groups = "pwm14";
++        function = "pwm";
++    };
++
++    pwm15_pins: pwm@15 {
++        groups = "pwm15";
++        function = "pwm";
++    };
++
++    uart1_data_pins: uart_data@1 {
++        groups = "uart1_data";
++        function = "uart";
++    };
++
++    uart1_ctl_pins: uart_ctl@1 {
++        groups = "uart1_ctl";
++        function = "uart";
++    };
++
++    csi2_pins: csi@2 {
++        groups = "csi2rw";
++        function = "csi";
++    };
++
++    csi3_pins: csi@3 {
++        groups = "csi3rw";
++        function = "csi";
++    };
++
++    csi4_pins: csi@4 {
++        groups = "csi4rw";
++        function = "csi";
++    };
++
++    csi5_pins: csi@5 {
++        groups = "csi5rw";
++        function = "csi";
++    };
++
++    i2c0_pins: i2c@0 {
++        groups = "i2c0";
++        function = "i2c";
++    };
++
++    i2c1_pins: i2c@1 {
++        groups = "i2c1";
++        function = "i2c";
++    };
++};
++
++&csi2{
++    status = "okay";
++    slavedev {
++        compatible = "rzv2m,slavedev";
++        reg = <0>;
++        spi-max-frequency = <25000000>;
++        spi-cpha;
++        spi-cpol;
++    };
++};
++
++&csi3{
++    status = "okay";
++    slavedev {
++        compatible = "rzv2m,slavedev";
++        reg = <0>;
++        spi-max-frequency = <25000000>;
++        spi-cpha;
++        spi-cpol;
++    };
++};
++
++&csi4{
++    status = "okay";
++    slavedev {
++        compatible = "rzv2m,slavedev";
++        reg = <0>;
++        spi-max-frequency = <25000000>;
++        spi-cpha;
++        spi-cpol;
++    };
++};
++
++&csi5{
++    status = "okay";
++    slavedev {
++        compatible = "rzv2m,slavedev";
++        reg = <0>;
++        spi-max-frequency = <25000000>;
++        spi-cpha;
++        spi-cpol;
++    };
++};
++
++&i2c0 {
++    clock-frequency = <100000>;
++    status = "okay";
++    clock-generator@68 {
++       compatible = "idt,9fgv0241";
++       reg = <0x68>;
++    };
++};
++
++&i2c1 {
++    clock-frequency = <100000>;
++    status = "okay";
++    clock-generator@68 {
++       compatible = "idt,9fgv0241";
++       reg = <0x68>;
++    };
++};
++
++&uart0 {
++    status = "okay";
++};
++
++&uart1 {
++    status = "okay";
++};
++
++&sdhi0 {
++    psc-pins = <0>;
++    status = "okay";
++};
++
++&eMM {
++    status = "okay";
++};
++
++&avb {
++    status = "okay";
++};
++
++&pwm0 {
++    status = "okay";
++};
++
++&pwm1 {
++    status = "okay";
++};
++
++&pwm2 {
++    status = "okay";
++};
++
++&pwm3 {
++    status = "okay";
++};
++
++&pwm4 {
++    status = "okay";
++};
++
++&pwm5 {
++    status = "okay";
++};
++
++&pwm6 {
++    status = "okay";
++};
++
++&pwm7 {
++    status = "okay";
++};
++
++
++&pwm8 {
++    status = "okay";
++};
++
++&pwm9 {
++    status = "okay";
++};
++
++&pwm10 {
++    status = "okay";
++};
++
++&pwm11 {
++    status = "okay";
++};
++
++&pwm12 {
++    status = "okay";
++};
++
++&pwm13 {
++    status = "okay";
++};
++
++&pwm14 {
++    status = "okay";
++};
++
++&pwm15 {
++    status = "okay";
++};
++
++&tim0 {
++    status = "okay";
++};
++
++&tim1 {
++    status = "okay";
++};
++
++&tim2 {
++    status = "okay";
++};
++
++&tim3 {
++    status = "okay";
++};
++&tim4 {
++    status = "okay";
++};
++&tim5 {
++    status = "okay";
++};
++&tim6 {
++    status = "okay";
++};
++&tim7 {
++    status = "okay";
++};
++
++&tim8 {
++    status = "okay";
++};
++
++&tim9 {
++    status = "okay";
++};
++
++&tim10 {
++    status = "okay";
++};
++
++&tim11 {
++    status = "okay";
++};
++
++&tim12 {
++    status = "okay";
++};
++
++&tim13 {
++    status = "okay";
++};
++
++&tim14 {
++    status = "okay";
++};
++
++&tim15 {
++    status = "okay";
++};
++&tim16 {
++    status = "okay";
++};
++
++&tim17 {
++    status = "okay";
++};
++
++&tim18 {
++    status = "okay";
++};
++
++&tim19 {
++    status = "okay";
++};
++
++&tim20 {
++    status = "okay";
++};
++
++&tim21 {
++    status = "okay";
++};
++
++&tim22 {
++    status = "okay";
++};
++
++&tim24 {
++    status = "okay";
++};
++
++&tim25 {
++    status = "okay";
++};
++
++&tim26 {
++    status = "okay";
++};
++
++&tim27 {
++    status = "okay";
++};
++
++&tim28 {
++    status = "okay";
++};
++
++&tim29 {
++    status = "okay";
++};
++
++&tim30 {
++    status = "okay";
++};
++
++&tim31 {
++    status = "okay";
++};
++
++&tim23 {
++    status = "okay";
++};
+diff --git b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+new file mode 100755
+index 0000000..054b1ae
+--- /dev/null
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+@@ -0,0 +1,980 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Device Tree Source for the RZ/V2MA evaluation-board platform
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/clock/r9a09g011gbg-cpg-mssr.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/power/r9a09g011gbg-sysc.h>
++/memreserve/ 0x1B7FFF000 0x00001000; /* spin-table address */
++
++/ {
++    compatible = "renesas,r9a09g055ma3gbg";
++    #address-cells = <2>;
++    #size-cells = <2>;
++
++
++    cpus {
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        a53_0: cpu@0 {
++            compatible = "arm,cortex-a53", "arm,armv8";
++            reg = <0>;
++            device_type = "cpu";
++            #power-domains = <&sysc R8A774C0_PD_CA53_CPU0>;
++            next-level-cache = <&L2_CA53>;
++            enable-method = "spin-table";
++            cpu-release-addr = <0x1 0xB7FFF000>;
++            #cooling-cells = <2>;
++            dynamic-power-coefficient = <277>;
++            cooling-min-level = <0>;
++            cooling-max-level = <2>;
++            clocks = <&cpg CPG_CORE R8A774C0_CLK_Z2>;
++        };
++
++        a53_1: cpu@1 {
++            compatible = "arm,cortex-a53", "arm,armv8";
++            reg = <1>;
++            device_type = "cpu";
++            next-level-cache = <&L2_CA53>;
++            enable-method = "spin-table";
++            cpu-release-addr = <0x1 0xB7FFF000>;
++            clocks = <&cpg CPG_CORE R8A774C0_CLK_Z2>;
++        };
++        
++        L2_CA53: cache-controller-0 {
++            compatible = "cache";
++            power-domains = <&sysc R8A774C0_PD_CA53_SCU>;
++            cache-unified;
++            cache-level = <2>;
++        };
++
++    };
++
++    pmu_a53 {
++        compatible = "arm,cortex-a53-pmu";
++        interrupts-extended = <&gic GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>,<&gic GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
++        interrupt-affinity = <&a53_0>,<&a53_1>;
++    };
++
++    /* used cpg(clock pulse generator) */
++    extal_clk: extal {
++        compatible = "fixed-clock";
++        #clock-cells = <0>;
++        /* This value must be overridden by the board */
++        clock-frequency = <0>;
++    };
++
++    timer {
++        compatible = "arm,armv8-timer";
++        interrupts-extended = <&gic GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++                      <&gic GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++                      <&gic GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++                      <&gic GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
++        clock-frequency = <24000000>;
++    };
++    aliases {
++        i2c0 = &i2c0;
++        i2c1 = &i2c1;
++        i2c2 = &i2c2;
++        i2c3 = &i2c3;
++    };
++
++    soc: soc {
++        compatible = "simple-bus";
++        interrupt-parent = <&gic>;
++        #address-cells = <2>;
++        #size-cells = <2>;
++        ranges;
++
++       /* used watch dog timer */
++       wdt0: watchdog@a4050000 {
++              compatible = "renesas,rzv2m-wdt";
++              reg = <0 0xa4050000 0 0x80>;
++              clocks = <&cpg CPG_MOD 1112>, <&cpg CPG_MOD 1113>;
++              interrupts = <GIC_SPI 043 IRQ_TYPE_LEVEL_HIGH>;
++              status = "disabled";
++       };
++       wdt1: watchdog@a4050080 {
++              compatible = "renesas,rzv2m-wdt";
++              reg = <0 0xa4050080 0 0x80>;
++              clocks = <&cpg CPG_MOD 1114>, <&cpg CPG_MOD 1115>;
++              interrupts = <GIC_SPI 044 IRQ_TYPE_LEVEL_HIGH>;
++              status = "disabled";
++       };
++
++       pfc: pin-controller@B6250000 {
++            compatible = "renesas,pfc-r8arzv2m";
++            reg = <0 0xB6250000 0 0x1000>;
++            #interrupt-cells = <2>;
++            interrupt-controller;
++            interrupts =
++                <GIC_SPI 68 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 69 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 74 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 76 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 77 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 80 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 81 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 82 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 83 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 86 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 87 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 88 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 97 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>,
++                <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>;
++                gpio0: gpio0 {
++                        #gpio-cells = <2>;
++                        gpio-controller;
++                        gpio-ranges = <&pfc 0 0 14>;
++                };
++                gpio1: gpio1 {
++                        #gpio-cells = <2>;
++                        gpio-controller;
++                        gpio-ranges = <&pfc 0 16 16>;
++                };
++                gpio2: gpio2 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x20 8>;
++                };
++                gpio3: gpio3 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x30 16>;
++                };
++                gpio4: gpio4 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x40 8>;
++                };
++                gpio5: gpio5 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x50 4>;
++                };
++                gpio6: gpio6 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x60 12>;
++                };
++                gpio7: gpio7 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x70 6>;
++                };
++                gpio8: gpio8 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x80 8>;
++                };
++                gpio9: gpio9 {
++                        gpio-controller;
++                        #gpio-cells = <2>;
++                        gpio-ranges =   <&pfc 0 0x90 8>;
++                };
++                gpio10: gpio10 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0xA0 9>;
++                };
++                gpio11: gpio11 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0xB0 9>;
++                };
++                gpio12: gpio12 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0xC0 4>;
++                };
++                gpio13: gpio13 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0xD0 12>;
++                };
++                gpio14: gpio14 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0xE0 8>;
++                };
++                gpio15: gpio15 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0xF0 16>;
++                };
++                gpio16: gpio16 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0x100 14>;
++                };
++                gpio17: gpio17 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0x110 1>;
++                };
++                gpio20: gpio20 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0x140 3>;
++                };
++                gpio21: gpio21 {
++                    gpio-controller;
++                    #gpio-cells = <2>;
++                    gpio-ranges =   <&pfc 0 0x150 1>;
++                };
++       };
++
++
++       csi0: csi@a4020000 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020000 0x0 0x80>;
++            interrupts = <GIC_SPI 226 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1508>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi1: csi@a4020080 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020080 0x0 0x80>;
++            interrupts = <GIC_SPI 227 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1509>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi2: csi@a4020100 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020100 0x0 0x80>;
++            interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1510>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi3: csi@a4020180 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020180 0x0 0x80>;
++            interrupts = <GIC_SPI 229 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1511>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi4: csi@a4020200 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020200 0x0 0x80>;
++            interrupts = <GIC_SPI 230 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1512>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi5: csi@a4020280 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020280 0x0 0x80>;
++            interrupts = <GIC_SPI 231 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1513>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++
++        cpg: clock-controller@A3500000 {
++            compatible = "renesas,r8arzv2m-cpg-mssr";
++            reg = <0 0xA3500000 0 0x1000>;
++            clocks = <&extal_clk>;
++            clock-names = "extal";
++            #clock-cells = <2>;
++            #power-domain-cells = <0>;
++            #reset-cells = <1>;
++        };
++
++        sysc: system-controller@A3F03000 {
++            compatible = "renesas,r8arzv2m-sysc";
++            reg = <0 0xA3F03000 0 0x01>;
++            #power-domain-cells = <1>;
++        };
++
++        i2c0: i2c@a4030000 {
++            #address-cells = <1>;
++            #size-cells = <0>;
++            compatible = "renesas,rzv2m-i2c";
++            reg = <0 0xa4030000 0 0x80>;
++            interrupts = <GIC_SPI 232 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 236 IRQ_TYPE_EDGE_RISING>;
++            clocks = <&cpg CPG_MOD 912>;
++            i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
++            status = "disabled";
++        };
++
++        i2c1: i2c@a4030080 {
++            #address-cells = <1>;
++            #size-cells = <0>;
++            compatible = "renesas,rzv2m-i2c";
++            reg = <0 0xa4030080 0 0x80>;
++            interrupts = <GIC_SPI 233 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 237 IRQ_TYPE_EDGE_RISING>;
++            clocks = <&cpg CPG_MOD 912>;
++            i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
++            status = "disabled";
++        };
++
++        i2c2: i2c@a4030100 {
++            #address-cells = <1>;
++            #size-cells = <0>;
++            compatible = "renesas,rzv2m-i2c";
++            reg = <0 0xa4030100 0 0x80>;
++            interrupts = <GIC_SPI 234 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 238 IRQ_TYPE_EDGE_RISING>;
++            clocks = <&cpg CPG_MOD 1012>;
++            i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
++            status = "disabled";
++        };
++
++        i2c3: i2c@a4030180 {
++            #address-cells = <1>;
++            #size-cells = <0>;
++            compatible = "renesas,rzv2m-i2c";
++            reg = <0 0xa4030180 0 0x80>;
++            interrupts = <GIC_SPI 235 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 239 IRQ_TYPE_EDGE_RISING>;
++            clocks = <&cpg CPG_MOD 1012>;
++            i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
++            status = "disabled";
++        };
++
++        xhci0: usb@85060000 {
++            compatible = "renesas,xhci-r8a774c0",
++                     "renesas,rzv2m-xhci";
++            reg = <0 0x85060000 0 0x2000>;
++            interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
++            clocks =  <&cpg CPG_MOD 405>;
++            status = "disabled";
++        };
++
++        usb3_peri0: usb@85070000 {
++            compatible = "renesas,rzv2m-usb3-peri";
++            reg = <0 0x85070000 0 0x1000>;
++            interrupts = <GIC_SPI 242 IRQ_TYPE_LEVEL_HIGH>,
++                                <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "drd_int", "axi_int_all_p";
++            clocks =  <&cpg CPG_MOD 405>;
++            status = "disabled";
++        };
++
++        sdhi0: sd@85000000 {    /* used sh card boot */
++            compatible = "renesas,rzv2m-sdhi";
++            reg = <0 0x85000000 0 0x2000>;
++            interrupts = <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 357 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 301>;
++            max-frequency = <200000000>;
++            vmmc-supply = <&vcc_sdhi0>;
++            bus-width = <4>;
++            sd-uhs-sdr50;
++            sd-uhs-sdr104;
++            status = "disable";
++        };
++
++        eMM: sd@85020000 {
++            compatible = "renesas,rzv2m-sdhi";
++            reg = <0 0x85020000 0 0x2000>;
++            interrupts = <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 355 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 309>;
++            max-frequency = <200000000>;
++            vmmc-supply = <&reg_3p3v>;
++            vqmmc-supply = <&reg_1p8v>;
++            bus-width = <8>;
++            non-removable;
++            mmc-hs200-1_8v;
++            status = "disable";
++        };
++
++        gic: interrupt-controller@82000000 {
++            compatible = "arm,gic-400";
++            #interrupt-cells = <3>;
++            #address-cells = <0>;
++            interrupt-controller;
++            reg = <0x0 0x82010000 0 0x1000>,
++                  <0x0 0x82020000 0 0x20000>,
++                  <0x0 0x82040000 0 0x20000>,
++                  <0x0 0x82060000 0 0x20000>;
++            interrupts = <GIC_PPI 9
++                    (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
++            clock-names = "clk";
++            power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;
++            resets = <&cpg 408>;
++        };
++
++        uart0: serial@a4040000 {
++            compatible = "renesas,rzv2m-16750", "ns16750";
++            reg = <0x00 0xA4040000 0x00 0x80>;
++            interrupts = <GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>;
++            clock-frequency = <48000000>;
++            reg-shift = <2>;
++            reg-io-width = <4>;
++            status = "disabled";
++        };
++
++        uart1: serial@a4040080 {
++            compatible = "renesas,rzv2m-16750", "ns16750";
++            reg = <0x00 0xA4040080 0x00 0x80>;
++            interrupts = <GIC_SPI 241 IRQ_TYPE_LEVEL_HIGH>;
++            clock-frequency = <48000000>;
++            reg-shift = <2>;
++            reg-io-width = <4>;
++            status = "disabled";
++        };
++
++        avb: ethernet@a3300000 {
++            compatible = "renesas,etheravb-r8arzv2m",
++                     "renesas,etheravb-rcar-gen3";
++            reg = <0 0xa3300000 0 0x800>;
++            interrupts = <GIC_SPI 251 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 252 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 253 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 254 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 255 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 256 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 257 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 258 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 259 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 260 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 261 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 262 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 263 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 268 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 269 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 270 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 271 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 272 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 273 IRQ_TYPE_LEVEL_HIGH
++                     GIC_SPI 275 IRQ_TYPE_LEVEL_HIGH
++                     GIC_SPI 277 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 274 IRQ_TYPE_LEVEL_HIGH
++                     GIC_SPI 276 IRQ_TYPE_LEVEL_HIGH
++                     GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 279 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "ch0", "ch1", "ch2", "ch3",
++                      "ch4", "ch5", "ch6", "ch7",
++                      "ch8", "ch9", "ch10", "ch11",
++                      "ch12", "ch13", "ch14", "ch15",
++                      "ch16", "ch17", "ch18", "ch19",
++                      "ch20", "ch21", "ch22", "ch23",
++                      "ch24";
++            clocks = <&cpg CPG_MOD 408>;
++            renesas,no-ether-link;
++            phy-handle = <&phy0>;
++            phy-mode = "rgmii";
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disable";
++
++            phy0: ethernet-phy@0 {
++                rxc-skew-ps = <1500>;
++                reg = <0>;
++            };
++        };
++
++        tim0: timer@a4000000 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000000 0 0x80>;
++            interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 904>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim1: timer@a4000080 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000080 0 0x80>;
++            interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 905>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim2: timer@a4000100 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000100 0 0x80>;
++            interrupts = <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 906>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim3: timer@a4000180 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000180 0 0x80>;
++            interrupts = <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 907>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim4: timer@a4000200 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000200 0 0x80>;
++            interrupts = <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 908>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim5: timer@a4000280 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000280 0 0x80>;
++            interrupts = <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 909>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim6: timer@a4000300 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000300 0 0x80>;
++            interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 910>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim7: timer@a4000380 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000380 0 0x80>;
++            interrupts = <GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 911>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim8: timer@a4000400 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000400 0 0x80>;
++            interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1004>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim9: timer@a4000480 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000480 0 0x80>;
++            interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1005>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim10: timer@a4000500 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000500 0 0x80>;
++            interrupts = <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1006>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim11: timer@a4000580 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000580 0 0x80>;
++            interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1007>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim12: timer@a4000600 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000600 0 0x80>;
++            interrupts = <GIC_SPI 119 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1008>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim13: timer@a4000680 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000680 0 0x80>;
++            interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1009>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim14: timer@a4000700 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000700 0 0x80>;
++            interrupts = <GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1010>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim15: timer@a4000780 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000780 0 0x80>;
++            interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1011>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++        tim16: timer@a4000800 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000800 0 0x80>;
++            interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1104>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++        tim17: timer@a4000880 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000880 0 0x80>;
++            interrupts = <GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1105>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim18: timer@a4000900 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000900 0 0x80>;
++            interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1106>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim19: timer@a4000980 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000980 0 0x80>;
++            interrupts = <GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1107>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim20: timer@a4000a00 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000a00 0 0x80>;
++            interrupts = <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1108>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim21: timer@a4000a80 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000a80 0 0x80>;
++            interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1109>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim22: timer@a4000b00 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000b00 0 0x80>;
++            interrupts = <GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1110>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++        tim23: timer@a4000b80 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000b80 0 0x80>;
++            interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1111>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++        tim24: timer@a4000c00 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000c00 0 0x80>;
++            interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1204>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++        tim25: timer@a4000c80 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000c80 0 0x80>;
++            interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1205>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim26: timer@a4000d00 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000d00 0 0x80>;
++            interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1206>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim27: timer@a4000d80 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000d80 0 0x80>;
++            interrupts = <GIC_SPI 134 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1207>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim28: timer@a4000e00 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000e00 0 0x80>;
++            interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1208>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim29: timer@a4000e80 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000e80 0 0x80>;
++            interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1209>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++
++        tim30: timer@a4000f00 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000f00 0 0x80>;
++            interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1210>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        tim31: timer@a4000f80 {
++            compatible =  "renesas,tim-rzv2m";
++            reg = <0 0xa4000f80 0 0x80>;
++            interrupts = <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1211>;
++            clock-names = "timclk";
++            status = "disabled";
++        };
++
++        pwm0: pwm@a4010000 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010000 0 0x80>;
++            interrupts = <GIC_SPI 368 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1304>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm1: pwm@a4010080 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010080 0 0x80>;
++            interrupts = <GIC_SPI 369 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1305>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm2: pwm@a4010100 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010100 0 0x80>;
++            interrupts = <GIC_SPI 370 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1306>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm3: pwm@a4010180 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010180 0 0x80>;
++            interrupts = <GIC_SPI 371 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1307>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm4: pwm@a4010200 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010200 0 0x80>;
++            interrupts = <GIC_SPI 372 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1308>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm5: pwm@a4010280 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010280 0 0x80>;
++            interrupts = <GIC_SPI 373 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1309>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm6: pwm@a4010300 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010300 0 0x80>;
++            interrupts = <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1310>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm7: pwm@a4010380 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010380 0 0x80>;
++            interrupts = <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1300>, <&cpg CPG_MOD 1311>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm8: pwm@a4010400 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010400 0 0x80>;
++            interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1404>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm9: pwm@a4010480 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010480 0 0x80>;
++            interrupts = <GIC_SPI 377 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1405>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm10: pwm@a4010500 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010500 0 0x80>;
++            interrupts = <GIC_SPI 378 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1406>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm11: pwm@a4010580 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010580 0 0x80>;
++            interrupts = <GIC_SPI 379 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1407>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm12: pwm@a4010600 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010600 0 0x80>;
++            interrupts = <GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1408>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm13: pwm@a4010680 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010680 0 0x80>;
++            interrupts = <GIC_SPI 381 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1409>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm14: pwm@a4010700 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010700 0 0x80>;
++            interrupts = <GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1410>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++
++        pwm15: pwm@a4010780 {
++            compatible = "renesas,pwm-r8arzv2m-rzv2m", "renesas,pwm-v2m";
++            reg = <0 0xa4010780 0 0x80>;
++            interrupts = <GIC_SPI 383 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1400>, <&cpg CPG_MOD 1411>;
++            clock-names = "sys", "pwm";
++            #pwm-cells = <2>;
++            status = "disabled";
++        };
++    };
++
++
++};

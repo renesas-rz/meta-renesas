@@ -1,0 +1,35 @@
+From f9dfb081d00826ae825222eb911a1e4fd8efb923 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 8 Mar 2022 10:35:26 +0700
+Subject: [PATCH] fixed-bug-csi
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/spi/rzv2m_csi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/spi/rzv2m_csi.c b/drivers/spi/rzv2m_csi.c
+index b557790..193b6f9 100644
+--- a/drivers/spi/rzv2m_csi.c
++++ b/drivers/spi/rzv2m_csi.c
+@@ -541,7 +541,7 @@ static int rzv2m_csi_set_fifo_trg(struct spi_master *master, struct spi_transfer
+        const void *tx_buf = t->tx_buf;
+        void *rx_buf = t->rx_buf;
+ 
+-       if(!tx_buf){
++       if(tx_buf != NULL){
+                if(is_16bit_data_leng(p)){ //16 bit mode
+                        if((info->transmit_trigger_level > 4)){
+                                ret = -EINVAL;
+@@ -559,7 +559,7 @@ static int rzv2m_csi_set_fifo_trg(struct spi_master *master, struct spi_transfer
+                }
+        }
+ 
+-       if(!rx_buf){
++       if(rx_buf != NULL){
+                //setting for receive trigger level
+                if(is_16bit_data_leng(p)){ //16 bit mode
+                        if((info->receive_trigger_level > 4)){
+-- 
+2.7.4
+

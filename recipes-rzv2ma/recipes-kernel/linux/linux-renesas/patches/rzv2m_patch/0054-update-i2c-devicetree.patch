@@ -1,0 +1,53 @@
+From b79cda8b244e1dfa5f134b784a1f5ddaafc9455e Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Wed, 2 Mar 2022 09:36:30 +0700
+Subject: [PATCH] update-i2c-devicetree
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 909b523..f8f9026 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -156,6 +156,8 @@
+ 	    /*clocks = <&pclk>;*/
+ 	    clocks = <&cpg CPG_MOD 912>;
+             i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
+             status = "disabled";
+         };
+ 
+@@ -167,6 +169,8 @@
+             interrupts = <GIC_SPI 233 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 237 IRQ_TYPE_EDGE_RISING>;
+ 	    clocks = <&cpg CPG_MOD 1012>;
+             i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
+             status = "disabled";
+         };
+ 
+@@ -178,6 +182,8 @@
+             interrupts = <GIC_SPI 234 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 238 IRQ_TYPE_EDGE_RISING>;
+             clocks = <&pclk>;
+             i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
+             status = "disabled";
+         };
+ 
+@@ -189,6 +195,8 @@
+             interrupts = <GIC_SPI 235 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 239 IRQ_TYPE_EDGE_RISING>;
+             clocks = <&pclk>;
+             i2c-scl-internal-delay-ns = <110>;
++            i2c-scl-falling-time-ns = <200>;
++            i2c-scl-rising-time-ns = <200>;
+             status = "disabled";
+         };
+ 
+-- 
+2.7.4
+

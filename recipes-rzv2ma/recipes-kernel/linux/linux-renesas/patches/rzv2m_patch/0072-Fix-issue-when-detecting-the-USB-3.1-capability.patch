@@ -1,0 +1,27 @@
+From 6f7a75d42feff0ca669077acee8f3ee8cf039e25 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Thu, 10 Mar 2022 14:46:40 +0700
+Subject: [PATCH] Fix issue when detecting the USB 3.1 capability
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/usb/host/xhci.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+index c24a2d1..6421833 100644
+--- a/drivers/usb/host/xhci.c
++++ b/drivers/usb/host/xhci.c
+@@ -5173,9 +5173,6 @@ int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
+ 		 * Some USB 3.1 capable hosts therefore have sbrn 0x30, and
+ 		 * minor revision set to 0x1 instead of 0x10.
+ 		 */
+-		if (xhci->usb3_rhub.min_rev == 0x1)
+-			minor_rev = 1;
+-		else
+ 			minor_rev = xhci->usb3_rhub.min_rev / 0x10;
+ 
+ 		switch (minor_rev) {
+-- 
+2.7.4
+

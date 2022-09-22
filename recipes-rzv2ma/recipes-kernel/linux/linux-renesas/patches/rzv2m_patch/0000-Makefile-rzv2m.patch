@@ -1,0 +1,41 @@
+From 589907b6a1dcc9f0b81279d6f76ed0d70f3e2588 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 18 Feb 2022 13:04:52 +0700
+Subject: [PATCH] Makefile-rzv2m
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ Makefile | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 4ee137b..99f4c0e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -418,8 +418,10 @@ export KBUILD_USERCFLAGS := -Wall -Wmissing-prototypes -Wstrict-prototypes \
+ 			      -O2 -fomit-frame-pointer -std=gnu89
+ export KBUILD_USERLDFLAGS :=
+ 
+-KBUILD_HOSTCFLAGS   := $(KBUILD_USERCFLAGS) $(HOST_LFS_CFLAGS) $(HOSTCFLAGS)
+-KBUILD_HOSTCXXFLAGS := -Wall -O2 $(HOST_LFS_CFLAGS) $(HOSTCXXFLAGS)
++KBUILD_HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O1 \
++		-fomit-frame-pointer -std=gnu89 $(HOST_LFS_CFLAGS) \
++		$(HOSTCFLAGS)
++KBUILD_HOSTCXXFLAGS := -O1 $(HOST_LFS_CFLAGS) $(HOSTCXXFLAGS)
+ KBUILD_HOSTLDFLAGS  := $(HOST_LFS_LDFLAGS) $(HOSTLDFLAGS)
+ KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
+ 
+@@ -737,7 +739,9 @@ KBUILD_CFLAGS += -O2
+ else ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3
+ KBUILD_CFLAGS += -O3
+ else ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
+-KBUILD_CFLAGS += -Os
++KBUILD_CFLAGS   += -O1
++else 
++KBUILD_CFLAGS   += -O1
+ endif
+ 
+ # Tell gcc to never replace conditional load with a non-conditional one
+-- 
+2.7.4
+

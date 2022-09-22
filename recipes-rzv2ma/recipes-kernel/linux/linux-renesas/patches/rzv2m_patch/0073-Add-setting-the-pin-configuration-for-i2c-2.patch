@@ -1,0 +1,56 @@
+From 8822474e807f0a15980f1b955c77a528b41fee83 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Thu, 10 Mar 2022 14:52:48 +0700
+Subject: [PATCH] Add-setting-the-pin-configuration-for-i2c-2
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 7 +++++++
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi                 | 6 ++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 8bd1c4e..b36e49b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -137,6 +137,11 @@
+         groups = "csi4rw";
+         function = "csi";
+     };
++
++    i2c2_pins: i2c@2 {
++        groups = "i2c2";
++        function = "i2c";
++    };
+ };
+ 
+ &csi4{
+@@ -160,6 +165,8 @@
+ };
+ 
+ &i2c2 {
++    pinctrl-0 = <&i2c2_pins>;
++    pinctrl-names = "default";
+     clock-frequency = <100000>;
+     status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 1cd58b1a..b4c9437 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -107,6 +107,12 @@
+                       <&gic GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
+ 	clock-frequency = <24000000>;
+     };
++    aliases {
++        i2c0 = &i2c0;
++        i2c1 = &i2c1;
++        i2c2 = &i2c2;
++        i2c3 = &i2c3;
++    };
+ 
+     soc: soc {
+         compatible = "simple-bus";
+-- 
+2.7.4
+

@@ -1,10 +1,10 @@
-DEBIAN_BASED = "${@bb.utils.contains('CIP_CORE', '1', 'debian', 'nondebian', d)}"
-#DEBIAN_BASED = "nondebian"
+DEBIAN_BASED = "${@bb.utils.contains('CIP_CORE', '1', 'debian', 'non_debian', d)}"
+#DEBIAN_BASED = "non_debian" 
 OVERRIDES .= ":${DEBIAN_BASED}"
 
-BBMASK_append_nondebian = " recipes-debian"
+BBMASK_non_debian += " recipes-debian"
 
-BBMASK_append_debian = " perl_debian"
+BBMASK_debian += " perl_debian"
 
 # Select gcc,gdb, python3 debian version
 GCCVERSION_debian = "8.3.0"
@@ -20,7 +20,7 @@ PREFERRED_VERSION_nativesdk-binutils_debian = "${BINUVERSION}"
 
 PREFERRED_VERSION_gdb_debian = "8.1"
 
-PREFERRED_VERSION_busybox_debian = "1.30.%"
+PREFERRED_VERSION_busybox_debian = "1.31.%"
 
 RDEPENDS_xz_append_debian = "bash"
 RDEPENDS_gzip_append_debian = "bash"

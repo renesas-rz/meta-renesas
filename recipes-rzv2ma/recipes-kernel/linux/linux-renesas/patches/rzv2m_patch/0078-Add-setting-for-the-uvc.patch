@@ -1,0 +1,47 @@
+From d1833cc7381a35402be655529e1863be1dbd702d Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 19 Apr 2022 15:54:37 +0700
+Subject: [PATCH] Add-setting-for-the-uvc
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 3 ++-
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi                 | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 888c7932cd15..bebfedc6a701 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -34,7 +34,7 @@ reserved-memory {
+         ranges;
+ 
+         /* global autoconfigured region for contiguous allocations */
+-	linux,cma@1B8000000 {
++	global_cma: linux,cma@1B8000000 {
+             compatible = "shared-dma-pool";
+             reusable;
+ 	    reg = <0x1 0xB8000000 0x0 0x8000000>;
+@@ -118,6 +118,7 @@ &wdt0 {
+ };
+ 
+ &xhci0 {
++       memory-region = <&global_cma>;
+        status = "okay";
+ };
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index e058f2944a38..04cd77e1893b 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -106,6 +106,7 @@ soc: soc {
+         #address-cells = <2>;
+         #size-cells = <2>;
+         ranges;
++	dma-ranges =<0x1 0x80000000 0x1 0x80000000 0x0 0x80000000>;
+ 	
+        /* used watch dog timer */
+        wdt0: watchdog@a4050000 {
+-- 
+2.25.1
+

@@ -1,0 +1,297 @@
+diff --git a/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c b/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c
+index 87129c3..5cd61ab 100644
+--- a/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c
++++ b/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c
+@@ -13,35 +13,35 @@
+ #include "core.h"
+ #include "pfc.h"
+ 
+-#define P0_PF0	FN(GPIO0_00)	FN(NADAT0)	FN(MMDAT0)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF1	FN(GPIO0_01)	FN(NADAT1)	FN(MMDAT1)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF2	FN(GPIO0_02)	FN(NADAT2)	FN(MMDAT2)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
+-#define P0_PF3	FN(GPIO0_03)	FN(NADAT3)	FN(MMDAT3)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
+-#define P0_PF4	FN(GPIO0_04)	FN(NADAT4)	FN(MMDAT4)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
+-#define P0_PF5	FN(GPIO0_05)	FN(NADAT5)	FN(MMDAT5)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
+-#define P0_PF6	FN(GPIO0_06)	FN(NADAT6)	FN(MMDAT6)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF7	FN(GPIO0_07)	FN(NADAT7)	FN(MMDAT7)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF8	FN(GPIO0_08)	FN(NACEN)	FN(MMDATCMD)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF9	FN(GPIO0_09)	FN(NAREN)	FN(MMDATCLK)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF10	FN(GPIO0_10)	FN(NAWEN)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF11	FN(GPIO0_11)	FN(NACLE)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF12	FN(GPIO0_12)	FN(NAALE)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+-#define P0_PF13	FN(GPIO0_13)	FN(NARBN)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF0	FN(GPIO0_00)	F_(0)	FN(MMDAT0)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF1	FN(GPIO0_01)	F_(0)	FN(MMDAT1)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF2	FN(GPIO0_02)	F_(0)	FN(MMDAT2)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
++#define P0_PF3	FN(GPIO0_03)	F_(0)	FN(MMDAT3)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
++#define P0_PF4	FN(GPIO0_04)	F_(0)	FN(MMDAT4)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
++#define P0_PF5	FN(GPIO0_05)	F_(0)	FN(MMDAT5)	F_(0)   	F_(0)   F_(0)		F_(0)		F_(0)
++#define P0_PF6	FN(GPIO0_06)	F_(0)	FN(MMDAT6)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF7	FN(GPIO0_07)	F_(0)	FN(MMDAT7)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF8	FN(GPIO0_08)	F_(0)	FN(MMDATCMD)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF9	FN(GPIO0_09)	F_(0)	FN(MMDATCLK)	F_(0)   	F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF10	FN(GPIO0_10)	F_(0)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF11	FN(GPIO0_11)	F_(0)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF12	FN(GPIO0_12)	F_(0)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
++#define P0_PF13	FN(GPIO0_13)	F_(0)	F_(0)		F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+ 
+ #define P1_PF0	FN(GPIO01_00)	FN(PWM0)	FN(INEXINT8)	F_(0)		F_(0)	FN(DRPAEXT0_01)	FN(DRPBEXT0_01)	FN(RESIG8_01)
+ #define P1_PF1	FN(GPIO01_01)	FN(PWM1)	FN(INEXINT9)	F_(0)		F_(0)	FN(DRPAEXT1_01)	FN(DRPBEXT1_01)	FN(RESIG9_01)
+ #define P1_PF2	FN(GPIO01_02)	FN(PWM2)	FN(INEXINT10)	F_(0)		F_(0)	FN(DRPAEXT2_01)	FN(DRPBEXT2_01)	FN(RESIG10_01)
+ #define P1_PF3	FN(GPIO01_03)	FN(PWM3)	FN(INEXINT11)	F_(0)		F_(0)	FN(DRPAEXT3_01)	FN(DRPBEXT3_01)	FN(RESIG11_01)
+-#define P1_PF4	FN(GPIO01_04)	FN(PWM4)	FN(INEXINT12)	F_(0)		F_(0)	F_(0)		F_(0)		FN(SDTCS1)
+-#define P1_PF5	FN(GPIO01_05)	FN(PWM5)	FN(INEXINT13)	FN(GFPLS0)	F_(0)	F_(0)		F_(0)		FN(SDTCS2)
+-#define P1_PF6	FN(GPIO01_06)	FN(PWM6)	FN(INEXINT14)	FN(GMCLK0_01_06)	F_(0)	F_(0)		F_(0)		FN(SDTCS3)
++#define P1_PF4	FN(GPIO01_04)	FN(PWM4)	FN(INEXINT12)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
++#define P1_PF5	FN(GPIO01_05)	FN(PWM5)	FN(INEXINT13)	F_(0)	F_(0)	F_(0)		F_(0)		F_(0)
++#define P1_PF6	FN(GPIO01_06)	FN(PWM6)	FN(INEXINT14)	FN(GMCLK0_01_06)	F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF7	FN(GPIO01_07)	FN(PWM7)	FN(INEXINT15)	FN(GMCLK1_01_07)	F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF8	FN(GPIO01_08)	FN(PWM8)	FN(INEXINT16)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF9	FN(GPIO01_09)	FN(PWM9)	FN(INEXINT17)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF10	FN(GPIO01_10)	FN(PWM10)	FN(INEXINT18)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF11	FN(GPIO01_11)	FN(PWM11)	FN(INEXINT19)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF12	FN(GPIO01_12)	FN(PWM12)	FN(INEXINT20)	F_(0)		F_(0)	F_(0)		F_(0)		F_(0)
+-#define P1_PF13	FN(GPIO01_13)	FN(PWM13)	FN(INEXINT21)	FN(GFPLS1)	F_(0)	F_(0)		F_(0)		F_(0)
++#define P1_PF13	FN(GPIO01_13)	FN(PWM13)	FN(INEXINT21)	F_(0)	F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF14	FN(GPIO01_14)	FN(PWM14)	FN(INEXINT22)	FN(GMCLK0_01_14)	F_(0)	F_(0)		F_(0)		F_(0)
+ #define P1_PF15	FN(GPIO01_15)	FN(PWM15)	FN(INEXINT23)	FN(GMCLK1_01_15)	F_(0)	F_(0)		F_(0)		F_(0)
+ 
+@@ -66,10 +66,10 @@
+ #define P3_PF9	FN(GPIO03_09)	FN(CSRXD2_03_09)	FN(I2SCL2)		F_(0)			FN(TRDAT12_03)	FN(DRPAEXT5_03)	FN(DRPBEXT5_03)	FN(RESIG13_03)
+ #define P3_PF10	FN(GPIO03_10)	FN(CSSCLK2)		FN(I2SDA3)		F_(0)			FN(TRDAT11_03)	FN(DRPAEXT6_03)	FN(DRPBEXT6_03)	FN(RESIG14_03)
+ #define P3_PF11	FN(GPIO03_11)	FN(CSCS2)		FN(I2SCL3)		F_(0)			FN(TRDAT10_03)	FN(DRPAEXT7_03)	FN(DRPBEXT7_03)	FN(RESIG15_03)
+-#define P3_PF12	FN(GPIO03_12)	FN(CSTXD3_03_12)	FN(CSRXD3_03_12)	F_(0)			FN(TRDAT9_03)	F_(0)		F_(0)		FN(SDTTXD)
+-#define P3_PF13	FN(GPIO03_13)	FN(CSRXD3_03_13)	F_(0)			F_(0)			FN(TRDAT8_03)	F_(0)		F_(0)		FN(SDTRXD)
+-#define P3_PF14	FN(GPIO03_14)	FN(CSSCLK3)		F_(0)			F_(0)			FN(TRDAT7_03)	F_(0)		F_(0)		FN(SDTSCLK)
+-#define P3_PF15	FN(GPIO03_15)	FN(CSCS3)		F_(0)			F_(0)			FN(TRDAT6_03)	F_(0)		F_(0)		FN(SDTCS0)
++#define P3_PF12	FN(GPIO03_12)	FN(CSTXD3_03_12)	FN(CSRXD3_03_12)	F_(0)			FN(TRDAT9_03)	F_(0)		F_(0)		F_(0)
++#define P3_PF13	FN(GPIO03_13)	FN(CSRXD3_03_13)	F_(0)			F_(0)			FN(TRDAT8_03)	F_(0)		F_(0)		F_(0)
++#define P3_PF14	FN(GPIO03_14)	FN(CSSCLK3)		F_(0)			F_(0)			FN(TRDAT7_03)	F_(0)		F_(0)		F_(0)
++#define P3_PF15	FN(GPIO03_15)	FN(CSCS3)		F_(0)			F_(0)			FN(TRDAT6_03)	F_(0)		F_(0)		F_(0)
+ 
+ #define P4_PF0	FN(GPIO04_00)	FN(CSTXD4_04_00)	FN(CSRXD4_04_00)	F_(0)	FN(TRDAT5_04)	F_(0)		F_(0)		F_(0)
+ #define P4_PF1	FN(GPIO04_01)	FN(CSRXD4_04_01)	F_(0)			F_(0)	FN(TRDAT4_04)	F_(0)		F_(0)		F_(0)
+@@ -98,12 +98,12 @@
+ #define P6_PF10	FN(GPIO06_10)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)					FN(RESIG10_06)
+ #define P6_PF11	FN(GPIO06_11)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)					FN(RESIG11_06)
+ 
+-#define P7_PF0	FN(GPIO07_00)	FN(AULRCK)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P7_PF1	FN(GPIO07_01)	FN(AUBICK)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P7_PF2	FN(GPIO07_02)	FN(AUDI)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P7_PF3	FN(GPIO07_03)	FN(AUDO)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P7_PF4	FN(GPIO07_04)	FN(AUMCLK)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P7_PF5	FN(GPIO07_05)	FN(AUPLLCLK)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P7_PF0	FN(GPIO07_00)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P7_PF1	FN(GPIO07_01)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P7_PF2	FN(GPIO07_02)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P7_PF3	FN(GPIO07_03)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P7_PF4	FN(GPIO07_04)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P7_PF5	FN(GPIO07_05)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+ 
+ #define P8_PF0	FN(GPIO08_00)	FN(SD0CMD)	FN(PCDEBUGP0)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+ #define P8_PF1	FN(GPIO08_01)	FN(SD0CLK)	FN(PCDEBUGP1)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+@@ -123,52 +123,52 @@
+ #define P9_PF6	FN(GPIO09_06)	FN(SD1WP)	FN(INEXINT24)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+ #define P9_PF7	FN(GPIO09_07)	FN(SD1CD)	FN(INEXINT25)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+ 
+-#define P10_PF0	FN(GPIO10_00)	FN(IM0VS)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF1	FN(GPIO10_01)	FN(IM0HS)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF2	FN(GPIO10_02)	FN(IM0CS)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF3	FN(GPIO10_03)	FN(IM0TXD)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF4	FN(GPIO10_04)	FN(IM0RXD)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF5	FN(GPIO10_05)	FN(IM0SCLK)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF6	FN(GPIO10_06)	FN(IM0SIG0)	FN(INEXINT26)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF7	FN(GPIO10_07)	FN(IM0SIG1)	FN(INEXINT27)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P10_PF8	FN(GPIO10_08)	FN(IM0SIG2)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-
+-#define P11_PF0	FN(GPIO11_00)	FN(IM1VS)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF1	FN(GPIO11_01)	FN(IM1HS)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF2	FN(GPIO11_02)	FN(IM1CS)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF3	FN(GPIO11_03)	FN(IM1TXD)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF4	FN(GPIO11_04)	FN(IM1RXD)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF5	FN(GPIO11_05)	FN(IM1SCLK)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF6	FN(GPIO11_06)	FN(IM1SIG0)	FN(INEXINT28)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF7	FN(GPIO11_07)	FN(IM1SIG1)	FN(INEXINT29)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P11_PF8	FN(GPIO11_08)	FN(IM1SIG2)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-
+-#define P12_PF0	FN(GPIO12_00)	FN(IMSHUT0)	FN(INEXINT30)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P12_PF1	FN(GPIO12_01)	FN(IMSHUT1)	FN(INEXINT31)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P12_PF2	FN(GPIO12_02)	FN(IMSTSIG0)	FN(INEXINT32)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P12_PF3	FN(GPIO12_03)	FN(IMSTSIG1)	FN(INEXINT33)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+-
+-#define P13_PF0 FN(GPIO13_00)	F_(0)	F_(0)		FN(MTDRV0)	FN(LVRXTMO_DAT0)	F_(0)	F_(0)	F_(0)
+-#define P13_PF1 FN(GPIO13_01)	F_(0)	F_(0)		FN(MTDRV1)	FN(LVRXTMO_DAT1)	F_(0)	F_(0)	F_(0)
+-#define P13_PF2 FN(GPIO13_02)	F_(0)	F_(0)		FN(MTDRV2)	FN(LVRXTMO_DAT2)	F_(0)	F_(0)	F_(0)
+-#define P13_PF3 FN(GPIO13_03)	F_(0)	F_(0)		FN(MTDRV3)	FN(LVRXTMO_DAT3)	F_(0)	F_(0)	F_(0)
+-#define P13_PF4 FN(GPIO13_04)	F_(0)	F_(0)		FN(MTDRV4)	FN(LVRXTMO_DAT4)	F_(0)	F_(0)	F_(0)
+-#define P13_PF5 FN(GPIO13_05)	F_(0)	F_(0)		FN(MTDRV5)	FN(LVRXTMO_DAT5)	F_(0)	F_(0)	F_(0)
+-#define P13_PF6 FN(GPIO13_06)	F_(0)	F_(0)		FN(MTDRV6)	FN(LVRXTMO_DAT6)	F_(0)	F_(0)	F_(0)
+-#define P13_PF7 FN(GPIO13_07)	F_(0)	F_(0)		FN(MTDRV7)	FN(LVRXTMO_DAT7)	F_(0)	F_(0)	F_(0)
+-#define P13_PF8 FN(GPIO13_08)	F_(0)	F_(0)		FN(MTDCPLS0)	FN(LVRXTMO_DAT8)	F_(0)	F_(0)	F_(0)
+-#define P13_PF9 FN(GPIO13_09)	F_(0)	FN(INEXINT34)	FN(MTDCPLS1)	FN(LVRXTMO_DAT9)	F_(0)	F_(0)	F_(0)
+-#define P13_PF10 FN(GPIO13_10)	F_(0)	FN(INEXINT35)	FN(MTDCPLS2)	FN(LVRXTMO_DAT10)	F_(0)	F_(0)	F_(0)
+-#define P13_PF11 FN(GPIO13_11)	F_(0)	FN(INEXINT36)	FN(MTDCPLS3)	FN(LVRXTMO_DAT11)	F_(0)	F_(0)	F_(0)
+-
+-#define P14_PF0	FN(GPIO14_00)	F_(0)	F_(0)		FN(MTCS0)	FN(LVRXTMO_DAT12)	F_(0)	F_(0)	F_(0)
+-#define P14_PF1	FN(GPIO14_01)	F_(0)	F_(0)		FN(MTTXD0)	FN(LVRXTMO_DAT13)	F_(0)	F_(0)	F_(0)
+-#define P14_PF2	FN(GPIO14_02)	F_(0)	FN(INEXINT37)	FN(MTRXD0)	FN(LVRXTMO_DAT14)	F_(0)	F_(0)	F_(0)
+-#define P14_PF3	FN(GPIO14_03)	F_(0)	F_(0)		FN(MTSCLK0)	FN(LVRXTMO_DAT15)	F_(0)	F_(0)	F_(0)
+-#define P14_PF4	FN(GPIO14_04)	F_(0)	F_(0)		FN(MTCS1)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P14_PF5	FN(GPIO14_05)	F_(0)	F_(0)		FN(MTTXD1)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P14_PF6	FN(GPIO14_06)	F_(0)	FN(INEXINT38)	FN(MTRXD1)	F_(0)	F_(0)	F_(0)	F_(0)
+-#define P14_PF7	FN(GPIO14_07)	F_(0)	F_(0)		FN(MTSCLK1)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF0	FN(GPIO10_00)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF1	FN(GPIO10_01)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF2	FN(GPIO10_02)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF3	FN(GPIO10_03)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF4	FN(GPIO10_04)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF5	FN(GPIO10_05)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF6	FN(GPIO10_06)	F_(0)	FN(INEXINT26)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF7	FN(GPIO10_07)	F_(0)	FN(INEXINT27)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P10_PF8	FN(GPIO10_08)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++
++#define P11_PF0	FN(GPIO11_00)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF1	FN(GPIO11_01)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF2	FN(GPIO11_02)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF3	FN(GPIO11_03)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF4	FN(GPIO11_04)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF5	FN(GPIO11_05)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF6	FN(GPIO11_06)	F_(0)	FN(INEXINT28)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF7	FN(GPIO11_07)	F_(0)	FN(INEXINT29)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P11_PF8	FN(GPIO11_08)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++
++#define P12_PF0	FN(GPIO12_00)	F_(0)	FN(INEXINT30)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P12_PF1	FN(GPIO12_01)	F_(0)	FN(INEXINT31)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P12_PF2	FN(GPIO12_02)	F_(0)	FN(INEXINT32)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P12_PF3	FN(GPIO12_03)	F_(0)	FN(INEXINT33)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++
++#define P13_PF0 FN(GPIO13_00)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF1 FN(GPIO13_01)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF2 FN(GPIO13_02)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF3 FN(GPIO13_03)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF4 FN(GPIO13_04)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF5 FN(GPIO13_05)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF6 FN(GPIO13_06)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF7 FN(GPIO13_07)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF8 FN(GPIO13_08)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF9 FN(GPIO13_09)	F_(0)	FN(INEXINT34)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF10 FN(GPIO13_10)	F_(0)	FN(INEXINT35)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P13_PF11 FN(GPIO13_11)	F_(0)	FN(INEXINT36)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++
++#define P14_PF0	FN(GPIO14_00)	F_(0)	F_(0)		F_(0)	FN(LVRXTMO_DAT12)	F_(0)	F_(0)	F_(0)
++#define P14_PF1	FN(GPIO14_01)	F_(0)	F_(0)		F_(0)	FN(LVRXTMO_DAT13)	F_(0)	F_(0)	F_(0)
++#define P14_PF2	FN(GPIO14_02)	F_(0)	FN(INEXINT37)	F_(0)	FN(LVRXTMO_DAT14)	F_(0)	F_(0)	F_(0)
++#define P14_PF3	FN(GPIO14_03)	F_(0)	F_(0)		F_(0)	FN(LVRXTMO_DAT15)	F_(0)	F_(0)	F_(0)
++#define P14_PF4	FN(GPIO14_04)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P14_PF5	FN(GPIO14_05)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P14_PF6	FN(GPIO14_06)	F_(0)	FN(INEXINT38)	F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
++#define P14_PF7	FN(GPIO14_07)	F_(0)	F_(0)		F_(0)	F_(0)	F_(0)	F_(0)	F_(0)
+ 
+ #define P15_PF0	FN(GPIO15_00)	FN(GETXC)	FN(LDDAT0)	F_(0)	FN(TRCLK_15)	FN(DRPAEXT1_15)		FN(DRPBEXT1_15)		FN(RESIG9_15)
+ #define P15_PF1	FN(GPIO15_01)	FN(GETXEN)	FN(LDDAT1)	F_(0)	FN(TRCTL_15)	FN(DRPAEXT2_15)		FN(DRPBEXT2_15)		FN(RESIG10_15)
+@@ -187,20 +187,20 @@
+ #define P15_PF14 FN(GPIO15_14)	FN(GERXD0)	FN(LDDAT14)	F_(0)	FN(TRDAT6_15)	FN(DRPAEXT15_15)	FN(DRPBEXT15_15)	F_(0)
+ #define P15_PF15 FN(GPIO15_15)	FN(GERXD1)	FN(LDDAT15)	F_(0)	FN(TRDAT7_15)	FN(DRPAEXT16_15)	FN(DRPBEXT16_15)	FN(RESIG16_15)
+ 
+-#define P16_PF0	FN(GPIO16_00)	FN(GERXD2)	FN(LDDAT16)	FN(MTDRV8)	FN(TRDAT8_16)	FN(DRPAEXT17_16)	FN(DRPBEXT17_16)	FN(RESIG17_16)
+-#define P16_PF1	FN(GPIO16_01)	FN(GERXD3)	FN(LDDAT17)	FN(MTDRV9)	FN(TRDAT9_16)	FN(DRPAEXT18_16)	FN(DRPBEXT18_16)	FN(RESIG18_16)
+-#define P16_PF2	FN(GPIO16_02)	FN(GERXD4)	FN(LDDAT18)	FN(MTDRV10)	FN(TRDAT10_16)	FN(DRPAEXT19_16)	FN(DRPBEXT19_16)	FN(RESIG19_16)
+-#define P16_PF3	FN(GPIO16_03)	FN(GERXD5)	FN(LDDAT19)	FN(MTDRV11)	FN(TRDAT11_16)	FN(DRPAEXT20_16)	FN(DRPBEXT20_16)	FN(RESIG20_16)
+-#define P16_PF4	FN(GPIO16_04)	FN(GERXD6)	FN(LDDAT20)	FN(MTDRV12)	FN(TRDAT12_16)	FN(DRPAEXT21_16)	FN(DRPBEXT21_16)	FN(RESIG21_16)
+-#define P16_PF5	FN(GPIO16_05)	FN(GERXD7)	FN(LDDAT21)	FN(MTDRV13)	FN(TRDAT13_16)	FN(DRPAEXT22_16)	FN(DRPBEXT22_16)	FN(RESIG22_16)
+-#define P16_PF6	FN(GPIO16_06)	FN(GECRS)	FN(LDDAT22)	FN(MTDRV14)	FN(TRDAT14_16)	FN(DRPAEXT23_16)	FN(DRPBEXT23_16)	FN(RESIG23_16)
+-#define P16_PF7	FN(GPIO16_07)	FN(GECOL)	FN(LDDAT23)	FN(MTDRV15)	FN(TRDAT15_16)	FN(DRPAEXT24_16)	FN(DRPBEXT24_16)	FN(RESIG24_16)
+-#define P16_PF8	FN(GPIO16_08)	FN(GEMDC)	FN(LDCLK)	F_(0)		F_(0)		FN(DRPAEXT25_16)	FN(DRPBEXT25_16)	FN(RESIG25_16)
+-#define P16_PF9	FN(GPIO16_09)	FN(GEMDIO)	FN(LDHS)	F_(0)		F_(0)		FN(DRPAEXT26_16)	FN(DRPBEXT26_16)	FN(RESIG26_16)
+-#define P16_PF10 FN(GPIO16_10)	FN(GEGTXCLK)	FN(LDCS)	F_(0)		F_(0)		FN(DRPAEXT27_16)	FN(DRPBEXT27_16)	FN(RESIG27_16)
+-#define P16_PF11 FN(GPIO16_11)	FN(GELINK)	FN(LDDE)	F_(0)		F_(0)		FN(DRPAEXT28_16)	FN(DRPBEXT28_16)	FN(RESIG28_16)
+-#define P16_PF12 FN(GPIO16_12)	FN(GEINT)	FN(LDVS)	F_(0)		F_(0)		FN(DRPAEXT29_16)	FN(DRPBEXT29_16)	FN(RESIG29_16)
+-#define P16_PF13 FN(GPIO16_13)	FN(GECLK)	FN(LDTXD)	F_(0)		F_(0)		FN(DRPAEXT30_16)	FN(DRPBEXT30_16)	FN(RESIG30_16)
++#define P16_PF0	FN(GPIO16_00)	FN(GERXD2)	FN(LDDAT16)	F_(0)	FN(TRDAT8_16)	FN(DRPAEXT17_16)	FN(DRPBEXT17_16)	FN(RESIG17_16)	
++#define P16_PF1	FN(GPIO16_01)	FN(GERXD3)	FN(LDDAT17)	F_(0)	FN(TRDAT9_16)	FN(DRPAEXT18_16)	FN(DRPBEXT18_16)	FN(RESIG18_16)	
++#define P16_PF2	FN(GPIO16_02)	FN(GERXD4)	FN(LDDAT18)	F_(0)	FN(TRDAT10_16)	FN(DRPAEXT19_16)	FN(DRPBEXT19_16)	FN(RESIG19_16)	
++#define P16_PF3	FN(GPIO16_03)	FN(GERXD5)	FN(LDDAT19)	F_(0)	FN(TRDAT11_16)	FN(DRPAEXT20_16)	FN(DRPBEXT20_16)	FN(RESIG20_16)	
++#define P16_PF4	FN(GPIO16_04)	FN(GERXD6)	FN(LDDAT20)	F_(0)	FN(TRDAT12_16)	FN(DRPAEXT21_16)	FN(DRPBEXT21_16)	FN(RESIG21_16)	
++#define P16_PF5	FN(GPIO16_05)	FN(GERXD7)	FN(LDDAT21)	F_(0)	FN(TRDAT13_16)	FN(DRPAEXT22_16)	FN(DRPBEXT22_16)	FN(RESIG22_16)	
++#define P16_PF6	FN(GPIO16_06)	FN(GECRS)	FN(LDDAT22)	F_(0)	FN(TRDAT14_16)	FN(DRPAEXT23_16)	FN(DRPBEXT23_16)	FN(RESIG23_16)	
++#define P16_PF7	FN(GPIO16_07)	FN(GECOL)	FN(LDDAT23)	F_(0)	FN(TRDAT15_16)	FN(DRPAEXT24_16)	FN(DRPBEXT24_16)	FN(RESIG24_16)	
++#define P16_PF8	FN(GPIO16_08)	FN(GEMDC)	FN(LDCLK)	F_(0)		F_(0)	FN(DRPAEXT25_16)	FN(DRPBEXT25_16)	FN(RESIG25_16)
++#define P16_PF9	FN(GPIO16_09)	FN(GEMDIO)	FN(LDHS)	F_(0)		F_(0)	FN(DRPAEXT26_16)	FN(DRPBEXT26_16)	FN(RESIG26_16)
++#define P16_PF10 FN(GPIO16_10)	FN(GEGTXCLK)	FN(LDCS)	F_(0)	F_(0)	FN(DRPAEXT27_16)	FN(DRPBEXT27_16)	FN(RESIG27_16)
++#define P16_PF11 FN(GPIO16_11)	FN(GELINK)	FN(LDDE)	F_(0)		F_(0)	FN(DRPAEXT28_16)	FN(DRPBEXT28_16)	FN(RESIG28_16)
++#define P16_PF12 FN(GPIO16_12)	FN(GEINT)	FN(LDVS)	F_(0)		F_(0)	FN(DRPAEXT29_16)	FN(DRPBEXT29_16)	FN(RESIG29_16)
++#define P16_PF13 FN(GPIO16_13)	FN(GECLK)	FN(LDTXD)	F_(0)		F_(0)	FN(DRPAEXT30_16)	FN(DRPBEXT30_16)	FN(RESIG30_16)
+ 
+ #define P17_PF0	FN(GPIO17_00)	FN(GEPPS)	FN(LDSCLK)	F_(0)		F_(0)		FN(DRPAEXT31_17)	FN(DRPBEXT31_17)	FN(RESIG31_17)
+ 
+@@ -634,37 +634,6 @@ static const struct rzv2m_pin_desc gpio21_desc[] = {
+ 	RZV2M_PFC_PIN(21, 0, GPIO21_00),
+ };
+ 
+-static const struct rzv2m_pin_desc nand_data1_desc[] = {
+-	RZV2M_PFC_PIN(0, 0, NADAT0),
+-};
+-
+-static const struct rzv2m_pin_desc nand_data4_desc[] = {
+-	RZV2M_PFC_PIN(0, 0, NADAT0),
+-	RZV2M_PFC_PIN(0, 1, NADAT1),
+-	RZV2M_PFC_PIN(0, 2, NADAT2),
+-	RZV2M_PFC_PIN(0, 3, NADAT3),
+-};
+-
+-static const struct rzv2m_pin_desc nand_data8_desc[] = {
+-	RZV2M_PFC_PIN(0, 0, NADAT0),
+-	RZV2M_PFC_PIN(0, 1, NADAT1),
+-	RZV2M_PFC_PIN(0, 2, NADAT2),
+-	RZV2M_PFC_PIN(0, 3, NADAT3),
+-	RZV2M_PFC_PIN(0, 4, NADAT4),
+-	RZV2M_PFC_PIN(0, 5, NADAT5),
+-	RZV2M_PFC_PIN(0, 6, NADAT6),
+-	RZV2M_PFC_PIN(0, 7, NADAT7),
+-};
+-
+-static const struct rzv2m_pin_desc nand_ctl_desc[] = {
+-	RZV2M_PFC_PIN(0, 8, NACEN),
+-	RZV2M_PFC_PIN(0, 9, NAWEN),
+-	RZV2M_PFC_PIN(0, 10, NAREN),
+-	RZV2M_PFC_PIN(0, 11, NACLE),
+-	RZV2M_PFC_PIN(0, 12, NAALE),
+-	RZV2M_PFC_PIN(0, 13, NARBN),
+-};
+-
+ static const struct rzv2m_pin_desc mmc_data1_desc[] = {
+ 	RZV2M_PFC_PIN(0, 0, MMDAT0),
+ };
+@@ -1467,10 +1436,6 @@ static const struct rzv2m_group_desc groups_mux[] = {
+ 	RZV2M_GROUP(gpio17),
+ 	RZV2M_GROUP(gpio20),
+ 	RZV2M_GROUP(gpio21),
+-	RZV2M_GROUP(nand_data1),
+-	RZV2M_GROUP(nand_data4),
+-	RZV2M_GROUP(nand_data8),
+-	RZV2M_GROUP(nand_ctl),
+ 	RZV2M_GROUP(mmc_data1),
+ 	RZV2M_GROUP(mmc_data4),
+ 	RZV2M_GROUP(mmc_data8),
+@@ -1695,13 +1660,6 @@ static const struct rzv2m_group_desc groups_mux[] = {
+     RZV2M_GROUP(pci_pcdebugp7),
+ };
+ 
+-static const char * const nand_groups[] = {
+-	"nand_data1",
+-	"nand_data4",
+-	"nand_data8",
+-	"nand_ctl",
+-};
+-
+ static const char * const mmc_groups[] = {
+ 	"mmc_data1",
+ 	"mmc_data4",
+@@ -1993,7 +1951,6 @@ static const char * const pci_groups[] = {
+ 
+ static const struct rzv2m_func_desc funcs_mux[] = {
+ 	RZV2M_FUNCTION(gpio),
+-	RZV2M_FUNCTION(nand),
+ 	RZV2M_FUNCTION(mmc),
+ 	RZV2M_FUNCTION(sd0),
+ 	RZV2M_FUNCTION(sd1),

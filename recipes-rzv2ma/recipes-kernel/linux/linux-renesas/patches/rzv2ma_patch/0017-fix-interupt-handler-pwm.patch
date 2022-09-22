@@ -1,0 +1,51 @@
+From a2b2ac5b8ead61cc636f093cc38d93f12d39ee35 Mon Sep 17 00:00:00 2001
+From: Canh Dao <canh.dao.ct@renesas.com>
+Date: Wed, 6 Jul 2022 17:23:45 +0700
+Subject: [PATCH] fix-interupt-handler-pwm
+
+Signed-off-by: Canh Dao <canh.dao.ct@renesas.com>
+---
+ drivers/pwm/pwm-v2m.c | 20 --------------------
+ 1 file changed, 20 deletions(-)
+
+diff --git a/drivers/pwm/pwm-v2m.c b/drivers/pwm/pwm-v2m.c
+index bd3a11d..22b632e 100644
+--- a/drivers/pwm/pwm-v2m.c
++++ b/drivers/pwm/pwm-v2m.c
+@@ -275,20 +275,6 @@ static const struct pwm_ops v2m_pwm_ops = {
+        .owner = THIS_MODULE,
+ };
+ 
+-static irqreturn_t v2m_pwm_interrupt(int irq, void *data)
+-{
+-       struct v2m_pwm_chip *rp = data;
+-       u32 value;
+-
+-       value = v2m_pwm_read(rp, V2M_PWMINT);
+-       if (value & V2M_PWMINT_PWMIC) {
+-               v2m_pwm_update(rp, V2M_PWMINT_PWMIC, V2M_PWMINT_PWMIC, V2M_PWMINT);
+-               wait_time(rp, 5, 5); //leave a write interval of 5 * PCLK + 5 * PWM_CLK
+-       }
+-
+-       return IRQ_HANDLED;
+-}
+-
+ static int v2m_pwm_probe(struct platform_device *pdev)
+ {
+        struct v2m_pwm_chip *v2m_pwm;
+@@ -322,12 +308,6 @@ static int v2m_pwm_probe(struct platform_device *pdev)
+                return irq;
+        }
+ 
+-       ret = devm_request_irq(&pdev->dev, irq, v2m_pwm_interrupt, 0, pdev->name, v2m_pwm);
+-       if (ret < 0) {
+-               dev_err(&pdev->dev, "Failed to request IRQ\n");
+-               return ret;
+-       }
+-
+        platform_set_drvdata(pdev, v2m_pwm);
+ 
+        v2m_pwm->chip.dev = &pdev->dev;
+-- 
+2.7.4
+

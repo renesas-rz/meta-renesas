@@ -1,0 +1,1866 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+index 07ea738..e75b4b6 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g055ma3gbg.dtsi
+@@ -258,7 +258,25 @@
+                 };
+        };
+ 
+-
++       pcie@85030000 {
++           compatible = "renesas,rzv2m-pcie";
++           device_type = "pci";
++           reg = <0x0 0x85030000 0x0 0x10000>, // PCI
++                 <0x0 0xA3F03000 0x0 0x400>,   // PCI SYS
++                 <0x0 0xA3F70000 0x0 0x800>;   // PCI PHY
++           #address-cells = <0x3>;
++           #size-cells = <0x2>;
++           bus-range = <0x0 0xff>;
++           linux,pci-domain = <0x0>;
++           interrupts = <GIC_SPI 324 IRQ_TYPE_LEVEL_HIGH>;
++           ranges = <0x03000000 0x0 0xc0000000 0x0 0xc0000000 0x0 0x00200000
++				    0x03000000 0x0 0xc0300000 0x0 0xc0300000 0x0 0x08000000>;
++           dma-ranges = <0x03000000 0x0 0x28000000 0x0 0x28000000 0x0 0x58000000>;
++           #interrupt-cells = <0x1>;
++           interrupt-map-mask = <0 0 0 0>;
++           interrupt-map = <0 0 0 0 &gic GIC_SPI 324 IRQ_TYPE_LEVEL_HIGH>;
++       };
++       
+        csi0: csi@a4020000 {
+             compatible = "renesas,rzv2m-csi";
+             reg = <0x00 0xa4020000 0x0 0x80>;
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 5ad4f4b..defddca 100755
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -444,3 +444,4 @@ CONFIG_GPT_RZG2L=y
+ CONFIG_POEG_RZG2L=y
+ CONFIG_POWER_RESET_RENESAS_RZV2M=y
+ CONFIG_DMATEST=m
++CONFIG_RZV2M_PCIE=y
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 64e2f5e..4b840d3 100755
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -81,6 +81,11 @@ config PCIE_RCAR_EP
+ 	  Say Y here if you want PCIe controller support on R-Car SoCs in
+ 	  endpoint mode.
+ 
++config RZV2M_PCIE
++	tristate "Renesas RZ/V2M Series PCIe controller"
++	help
++	  Say Y here if you want PCIe controller support on RZ/V2M Series SoCs.
++
+ config PCI_HOST_COMMON
+ 	tristate
+ 	select PCI_ECAM
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index 04c6edc..2e9a3c5 100755
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -9,6 +9,7 @@ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+ obj-$(CONFIG_PCIE_RCAR_HOST) += pcie-rcar.o pcie-rcar-host.o
+ obj-$(CONFIG_PCIE_RCAR_EP) += pcie-rcar.o pcie-rcar-ep.o
++obj-$(CONFIG_RZV2M_PCIE) += pcie-rzv2m-window.o pcie-rzv2m-host.o
+ obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
+ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+ obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+diff --git b/drivers/pci/controller/pcie-rzv2m-host.c b/drivers/pci/controller/pcie-rzv2m-host.c
+new file mode 100755
+index 0000000..1636a5e
+--- /dev/null
++++ b/drivers/pci/controller/pcie-rzv2m-host.c
+@@ -0,0 +1,1370 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PCIe driver for Renesas RZ/V2MA SoCs
++ *  Copyright (C) 2014-2020 Renesas Electronics Europe Ltd
++ *
++ * Based on:
++ *  arch/sh/drivers/pci/pcie-sh7786.c
++ *  arch/sh/drivers/pci/ops-sh7786.c
++ *  Copyright (C) 2009 - 2011  Paul Mundt
++ *
++ * Author: Phil Edworthy <phil.edworthy@renesas.com>
++ */
++
++#include <linux/bitops.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/msi.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/pci.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/slab.h>
++
++#include "pcie-rzv2m.h"
++
++struct rzv2m_msi {
++	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
++	struct irq_domain *domain;
++	struct msi_controller chip;
++	unsigned long pages;
++	unsigned long virt_pages;
++	struct mutex lock;
++	int irq;
++};
++
++static u32 r_configuration_space[] = {
++	0x00000004,
++	0x00000000,
++	0xfff0fff0,
++	0x48035001
++};
++
++static u32 r_msi_capability[] = {
++	0x01807005,
++	0x00000000,
++	0x00000000,
++	0x00000000,
++	0x00000000,
++	0x00000000
++};
++
++static u32 r_msi_and_msix_capability[] = {
++	0x00000000,
++	0x00000000,
++	0x00000000,
++	0x00000000,
++	0x00000000,
++	0x00000000
++};
++
++static u32 r_virtual_channel_enhanced_capability_header[] = {
++	0x00010002,
++	0x00000000,
++	0x00000000,
++	0x00000000,
++	0x00000000,
++	0x800000FF,
++	0x00020000,
++	0x00020000
++};
++
++static u32 r_device_serial_number_capability[] = {
++	0x00010003,
++	0x00000000,
++	0x00000000
++};
++
++
++static inline struct rzv2m_msi *to_rzv2m_msi(struct msi_controller *chip)
++{
++	return container_of(chip, struct rzv2m_msi, chip);
++}
++
++/* Structure representing the PCIe interface */
++struct rzv2m_pcie_host {
++	struct rzv2m_pcie	pcie;
++	struct device		*dev;
++	struct phy		*phy;
++	void __iomem		*base;
++	struct clk		*bus_clk;
++	struct			rzv2m_msi msi;
++	int			(*phy_init_fn)(struct rzv2m_pcie_host *host);
++	struct irq_domain	*intx_domain;
++};
++
++static unsigned long sys_base = 0;
++static unsigned long phy_base = 0;
++
++
++static int rzv2m_pcie_hw_init(struct rzv2m_pcie *pcie);
++
++static void rzv2m_sys_write_reg(unsigned long val,  unsigned long reg)
++{
++	iowrite32(val, sys_base + reg);
++}
++
++static void rzv2m_pciphy_write_reg(unsigned long val,  unsigned long reg)
++{
++	iowrite32(val, phy_base + reg);
++}
++
++static int rzv2m_pcie_request_issue(struct rzv2m_pcie *pcie, struct pci_bus *bus)
++{
++	int i;
++	u32 sts;
++
++	rzv2m_rmw(pcie, REQUEST_ISSUE_REG, REQ_ISSUE, REQ_ISSUE);
++	for (i = 0; i < STS_CHECK_LOOP; i++) {
++		sts = rzv2m_pci_read_reg(pcie, REQUEST_ISSUE_REG);
++		if( !(sts & REQ_ISSUE) ) break;
++		
++		udelay(5);
++	}
++	
++	if( sts & MOR_STATUS ) {
++		dev_dbg(&bus->dev, "rzv2m_pcie_conf_access: Request failed(%d)\n",((sts & MOR_STATUS)>>16) );
++	
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++	
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int rzv2m_pcie_read_config_access(struct rzv2m_pcie_host *host,
++		struct pci_bus *bus, unsigned int devfn, int where, u32 *data)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	unsigned int dev, func, reg, ret;
++
++	dev = PCI_SLOT(devfn);
++	func = PCI_FUNC(devfn);
++	reg = where & ~3;
++
++	/*
++	 * While each channel has its own memory-mapped extended config
++	 * space, it's generally only accessible when in endpoint mode.
++	 * When in root complex mode, the controller is unable to target
++	 * itself with either type 0 or type 1 accesses, and indeed, any
++	 * controller initiated target transfer to its own config space
++	 * result in a completer abort.
++	 *
++	 * Each channel effectively only supports a single device, but as
++	 * the same channel <-> device access works for any PCI_SLOT()
++	 * value, we cheat a bit here and bind the controller's config
++	 * space to devfn 0 in order to enable self-enumeration. In this
++	 * case the regular ECAR/ECDR path is sidelined and the mangled
++	 * config access itself is initiated as an internal bus transaction.
++	 */
++	if ( pci_is_root_bus(bus) && (devfn == 0) ) {
++		if (dev != 0)
++			return PCIBIOS_DEVICE_NOT_FOUND;
++
++		if (reg==0x10)
++		{
++			*data = r_configuration_space[0];
++		}
++		else if (reg==0x14)
++		{
++			*data = r_configuration_space[1];
++		}
++		else if (reg==0x20)
++		{
++			*data = r_configuration_space[2];
++		}
++		else if (reg==0x40)
++		{
++			*data = r_configuration_space[3];
++		}
++		else if ( (reg>=0x50) && (reg<=0x64) )
++		{
++			//MSI Capability register
++			*data = r_msi_capability[(reg-0x50)/4];
++		}
++		else if ( (reg>=0x70) && (reg<=0xA8) )
++		{
++			//PCI Express Capability register
++			*data = rzv2m_read_conf(pcie, reg-0x10);
++		}
++		else if ( (reg>=0xE0) && (reg<=0xFC) )
++		{
++			//MSI-X Capability register
++			*data = r_msi_and_msix_capability[(reg-0xE0)/4];
++		}
++		else if ( (reg>=0x100) && (reg<=0x118) )
++		{
++			*data = r_virtual_channel_enhanced_capability_header[(reg-0x100)/4];
++		}
++		else if ( (reg>=0x1B0) && (reg<=0x1B8) )
++		{
++			*data = r_device_serial_number_capability[(reg-0x1B0)/4];
++		}
++		else
++		{
++			*data = rzv2m_read_conf(pcie, reg);
++		}
++
++		return PCIBIOS_SUCCESSFUL;
++	}
++
++	reg &= 0x0FFC;
++
++	if (bus->number == 1) {
++		/* Type 0 */
++		rzv2m_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
++			PCIE_CONF_FUNC(func) | reg, REQUEST_ADDR_1_REG);
++		rzv2m_pci_write_reg(pcie, TR_TYPE_CFREAD_TP0, REQUEST_ISSUE_REG );
++	}
++	else {
++		/* Type 1 */
++		rzv2m_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
++			PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, REQUEST_ADDR_1_REG);
++		rzv2m_pci_write_reg(pcie, TR_TYPE_CFREAD_TP1, REQUEST_ISSUE_REG );
++	}
++
++	ret = rzv2m_pcie_request_issue(pcie, bus);
++	if(ret != PCIBIOS_SUCCESSFUL)
++		return ret;
++
++	*data = rzv2m_pci_read_reg(pcie, REQUEST_RCV_DATA_REG);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int rzv2m_pcie_write_config_access(struct rzv2m_pcie_host *host,
++		struct pci_bus *bus, unsigned int devfn, int where, u32 data)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	unsigned int dev, func, reg;
++
++	dev = PCI_SLOT(devfn);
++	func = PCI_FUNC(devfn);
++	reg = where & ~3;
++
++	/*
++	 * While each channel has its own memory-mapped extended config
++	 * space, it's generally only accessible when in endpoint mode.
++	 * When in root complex mode, the controller is unable to target
++	 * itself with either type 0 or type 1 accesses, and indeed, any
++	 * controller initiated target transfer to its own config space
++	 * result in a completer abort.
++	 *
++	 * Each channel effectively only supports a single device, but as
++	 * the same channel <-> device access works for any PCI_SLOT()
++	 * value, we cheat a bit here and bind the controller's config
++	 * space to devfn 0 in order to enable self-enumeration. In this
++	 * case the regular ECAR/ECDR path is sidelined and the mangled
++	 * config access itself is initiated as an internal bus transaction.
++	 */
++	if ( pci_is_root_bus(bus) && (devfn == 0) ) {
++		if (dev != 0)
++			return PCIBIOS_DEVICE_NOT_FOUND;
++
++		if (reg==0x10)
++		{
++			r_configuration_space[0] = data;
++		}
++		else if (reg==0x14)
++		{
++			r_configuration_space[1] = data;
++		}
++		else if (reg==0x20)
++		{
++			r_configuration_space[2] = data;
++		}
++		else if (reg==0x40)
++		{
++			r_configuration_space[3] = data;
++		}
++		else if ( (reg>=0x50) && (reg<=0x64) )
++		{
++			//MSI capability register
++			r_msi_capability[(reg-0x50)/4] = data;
++		}
++		else if ( (reg>=0x70) && (reg<=0xA8) )
++		{
++			//PCI Express Capability register
++			rzv2m_write_conf(pcie, data, reg-0x10);
++		}
++		else if ( (reg>=0xE0) && (reg<=0xFC) )
++		{
++			//MSI-X capability register
++			r_msi_and_msix_capability[(reg-0xE0)/4] = data;
++		}
++		else if ( (reg>=0x100) && (reg<=0x118) )
++		{
++			r_virtual_channel_enhanced_capability_header[(reg-0x100)/4] = data;
++		}
++		else if ( (reg>=0x1B0) && (reg<=0x1B8) )
++		{
++			r_device_serial_number_capability[(reg-0x1B0)/4] = data;
++		}
++		else
++		{
++			rzv2m_write_conf(pcie, data, reg);
++		}
++
++		return PCIBIOS_SUCCESSFUL;
++	}
++
++	reg &= 0x0FFC;
++
++	rzv2m_pci_write_reg(pcie, 0, REQUEST_DATA_REG(0) );
++	rzv2m_pci_write_reg(pcie, 0, REQUEST_DATA_REG(1) );
++#if 1 //RAMA
++	if (reg == 0x54)
++		rzv2m_pci_write_reg(pcie, RAMA_ADDRESS, REQUEST_DATA_REG(2) );
++	else
++		rzv2m_pci_write_reg(pcie, data, REQUEST_DATA_REG(2) );
++#else
++	rzv2m_pci_write_reg(pcie, data, REQUEST_DATA_REG(2) );
++#endif
++
++	if (bus->number == 1) {
++		/* Type 0 */
++		rzv2m_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
++			PCIE_CONF_FUNC(func) | reg, REQUEST_ADDR_1_REG);
++		rzv2m_pci_write_reg(pcie, TR_TYPE_CFWRITE_TP0, REQUEST_ISSUE_REG );
++	}
++	else {
++		/* Type 1 */
++		rzv2m_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
++			PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, REQUEST_ADDR_1_REG);
++		rzv2m_pci_write_reg(pcie, TR_TYPE_CFWRITE_TP1, REQUEST_ISSUE_REG );
++	}
++
++	return rzv2m_pcie_request_issue(pcie, bus);
++}
++
++static int rzv2m_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 *val)
++{
++	struct rzv2m_pcie_host *host = bus->sysdata;
++	int ret;
++
++#if 1 //Renesas
++	if ( (bus->number == 0) && (devfn >= 0x08) && (where == 0x0) )
++		return PCIBIOS_DEVICE_NOT_FOUND;
++#endif
++
++	ret = rzv2m_pcie_read_config_access(host, bus, devfn, where, val);
++	if (ret != PCIBIOS_SUCCESSFUL) {
++		*val = 0xffffffff;
++		return ret;
++	}
++
++	if (size == 1)
++		*val = (*val >> (BITS_PER_BYTE * (where & 3))) & 0xff;
++	else if (size == 2)
++		*val = (*val >> (BITS_PER_BYTE * (where & 2))) & 0xffff;
++
++	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08x\n",
++		bus->number, devfn, where, size, *val);
++
++	return ret;
++}
++
++static int rzv2m_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 val)
++{
++	struct rzv2m_pcie_host *host = bus->sysdata;
++	unsigned int shift;
++	u32 data;
++	int ret;
++
++	ret = rzv2m_pcie_read_config_access(host, bus, devfn, where, &data);
++	if (ret != PCIBIOS_SUCCESSFUL)
++		return ret;
++
++	dev_dbg(&bus->dev, "pcie-config-write: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08x\n",
++		bus->number, devfn, where, size, val);
++
++	if (size == 1) {
++		shift = BITS_PER_BYTE * (where & 3);
++		data &= ~(0xff << shift);
++		data |= ((val & 0xff) << shift);
++	} else if (size == 2) {
++		shift = BITS_PER_BYTE * (where & 2);
++		data &= ~(0xffff << shift);
++		data |= ((val & 0xffff) << shift);
++	} else
++		data = val;
++
++	ret = rzv2m_pcie_write_config_access(host, bus, devfn, where, data);
++
++	return ret;
++}
++
++static struct pci_ops rzv2m_pcie_ops = {
++	.read	= rzv2m_pcie_read_conf,
++	.write	= rzv2m_pcie_write_conf,
++};
++
++static void rzv2m_pcie_hw_enable(struct rzv2m_pcie_host *host)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++	struct resource_entry *win;
++	LIST_HEAD(res);
++	int i = 0;
++
++	/* Setup PCI resources */
++	resource_list_for_each_entry(win, &bridge->windows) {
++		struct resource *res = win->res;
++
++		if (!res->flags)
++			continue;
++
++		switch (resource_type(res)) {
++		case IORESOURCE_IO:
++		case IORESOURCE_MEM:
++			rzv2m_pcie_set_outbound(pcie, i, win);
++			i++;
++			break;
++		}
++	}
++}
++
++static int rzv2m_pcie_enable(struct rzv2m_pcie_host *host)
++{
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++
++	rzv2m_pcie_hw_enable(host);
++
++	pci_add_flags(PCI_REASSIGN_ALL_BUS);
++
++	bridge->sysdata = host;
++	bridge->ops = &rzv2m_pcie_ops;
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		bridge->msi = &host->msi.chip;
++
++	return pci_host_probe(bridge);
++}
++
++static void rzv2m_pcie_setting_config(struct rzv2m_pcie *pcie)
++{
++   rzv2m_pci_write_reg(pcie, RESET_CONFIG_DEASSERT, PCI_RC_RESET_REG);
++
++	// Configuration space(Root complex) setting
++   // Vendor and Device ID      : PCI Express Configuration Registers Adr 6000h
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_DEVICE_ID << 16) | 
++			  (PCIE_CONF_VENDOR_ID) ),
++			PCI_RC_VID_ADR);
++
++   // Revision ID and Class Code : PCI Express Configuration Registers Adr 6008h
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_BASE_CLASS   << 24) |
++			  (PCIE_CONF_SUB_CLASS    << 16) |
++			  (PCIE_CONF_PROGRAMING_IF << 8) |
++			  (PCIE_CONF_REVISION_ID) ),
++			PCI_RC_RID_CC_ADR);
++
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_SUBORDINATE_BUS << 16) |
++			  (PCIE_CONF_SECOUNDARY_BUS  <<  8) |
++			  (PCIE_CONF_PRIMARY_BUS) ),
++			PCI_PRIMARY_BUS);
++
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_MEMORY_LIMIT << 16) | 
++			  (PCIE_CONF_MEMORY_BASE) ),
++			PCI_MEMORY_BASE);
++
++	rzv2m_write_conf(pcie, PCIE_CONF_BAR0_MASK_LO, PCIE_CONF_OFFSET_BAR0_MASK_LO);
++	rzv2m_write_conf(pcie, PCIE_CONF_BAR0_MASK_UP, PCIE_CONF_OFFSET_BAR0_MASK_UP);
++}
++
++static int PCIE_phyInitialize_L0(struct rzv2m_pcie *pcie)
++{
++    rzv2m_sys_write_reg(SET_LANE0, SYS_PCI_LANE_SEL_REG);  // Set Lane0 reg
++
++    /* PHY Initialize setting for Setting of PMA Register */
++    rzv2m_pciphy_write_reg(0x0032, PCI_PHYA_PLLPMSSDIV_REG);			/* PCI_PHYA 0D8h */
++    rzv2m_pciphy_write_reg(0x0001, PCI_PHYA_RXCDRREFDIVSELPLL_REG);	/* PCI_PHYA 480h */
++    rzv2m_pciphy_write_reg(0x0000, PCI_PHYA_RXCDRREFDIVSELDATA_REG);	/* PCI_PHYA 488h */
++    rzv2m_pciphy_write_reg(0x0004, PCI_PHYA_TXDDESKEW_REG);			/* PCI_PHYA 6ECh */
++    rzv2m_pciphy_write_reg(0x0004, PCI_PHYA_TXMISC_REG);				/* PCI_PHYA 73Ch */
++
++    /* PHY parameters for TX : Reference value for signal adjustment */
++    rzv2m_pciphy_write_reg(0x0011, PCI_PHYA_PLLALPFRSELFINE_REG);		/* PCI_PHYA 080h */
++    rzv2m_pciphy_write_reg(0x003F, PCI_PHYA_TXDRVLVCTLG1_REG);		/* PCI_PHYA 404h */
++    rzv2m_pciphy_write_reg(0x001D, PCI_PHYA_TXDRVLVLCTLG2_REG);		/* PCI_PHYA 408h */
++    rzv2m_pciphy_write_reg(0x002B, PCI_PHYA_TXDRVPOSTLVCTLG1_REG);	/* PCI_PHYA 414h */
++    rzv2m_pciphy_write_reg(0x000A, PCI_PHYA_TXDRVPOSTLVCTLG2_REG);	/* PCI_PHYA 418h */
++    rzv2m_pciphy_write_reg(0x0007, PCI_PHYA_TXDRVIDRVEN_REG);			/* PCI_PHYA 42Ch */
++    rzv2m_pciphy_write_reg(0x00B7, PCI_PHYA_ATXDRVIDRVCTL_REG);		/* PCI_PHYA 430h */
++    rzv2m_pciphy_write_reg(0x00FF, PCI_PHYA_TXJEQEVENCTL_REG);		/* PCI_PHYA 44Ch */
++    rzv2m_pciphy_write_reg(0x0000, PCI_PHYA_TXJEQODDCTL_REG);			/* PCI_PHYA 454h */
++    rzv2m_pciphy_write_reg(0x0057, PCI_PHYA_ATXDRVACCDRV_REG);		/* PCI_PHYA 7F0h */
++
++    /* PHY parameters for RX : Reference value for signal adjustment */
++    rzv2m_pciphy_write_reg(0x0073, PCI_PHYA_RXCTLEEN_REG);			/* PCI_PHYA 4B8h */
++    rzv2m_pciphy_write_reg(0x006F, PCI_PHYA_RXCTLEITAILCTLG1_REG);	/* PCI_PHYA 4C0h */
++    rzv2m_pciphy_write_reg(0x006C, PCI_PHYA_RXCTLEITAILCTLG2_REG);	/* PCI_PHYA 4C4h */
++    rzv2m_pciphy_write_reg(0x0013, PCI_PHYA_RXCTLERX1CTLG1_REG);		/* PCI_PHYA 4ECh */
++    rzv2m_pciphy_write_reg(0x00F2, PCI_PHYA_RXCTLERS1CTLG2_REG);		/* PCI_PHYA 4F0h */
++    rzv2m_pciphy_write_reg(0x0007, PCI_PHYA_ARXCTLEIBLEEDCTL_REG);	/* PCI_PHYA 514h */
++    rzv2m_pciphy_write_reg(0x00FF, PCI_PHYA_RXRTERM_REG);				/* PCI_PHYA 5A0h */
++    rzv2m_pciphy_write_reg(0x00F8, PCI_PHYA_RXRTERMVCMEN_REG);		/* PCI_PHYA 5ACh */
++    rzv2m_pciphy_write_reg(0x0065, PCI_PHYA_RXCDRFBBCTL_REG);			/* PCI_PHYA 678h */
++
++  return 0;
++
++} /* End of function PCIE_phyInitialize_L0() */
++
++
++static int PCIE_phyInitialize_L1(struct rzv2m_pcie *pcie)
++{
++    rzv2m_sys_write_reg(SET_LANE1, SYS_PCI_LANE_SEL_REG);    // Set Lane1 reg
++
++    /* PHY Initialize setting for Setting of PMA Register */
++    rzv2m_pciphy_write_reg(0x0032, PCI_PHYA_PLLPMSSDIV_REG);			/* PCI_PHYA 0D8h */
++    rzv2m_pciphy_write_reg(0x0001, PCI_PHYA_RXCDRREFDIVSELPLL_REG);	/* PCI_PHYA 480h */
++    rzv2m_pciphy_write_reg(0x0000, PCI_PHYA_RXCDRREFDIVSELDATA_REG);	/* PCI_PHYA 488h */
++    rzv2m_pciphy_write_reg(0x0004, PCI_PHYA_TXDDESKEW_REG);			/* PCI_PHYA 6ECh */
++    rzv2m_pciphy_write_reg(0x0004, PCI_PHYA_TXMISC_REG);				/* PCI_PHYA 73Ch */
++
++    /* PHY parameters for TX : Reference value for signal adjustment */
++    rzv2m_pciphy_write_reg(0x0011, PCI_PHYA_PLLALPFRSELFINE_REG);		/* PCI_PHYA 080h */
++    rzv2m_pciphy_write_reg(0x003F, PCI_PHYA_TXDRVLVCTLG1_REG);			/* PCI_PHYA 404h */
++    rzv2m_pciphy_write_reg(0x001D, PCI_PHYA_TXDRVLVLCTLG2_REG);		/* PCI_PHYA 408h */
++    rzv2m_pciphy_write_reg(0x002B, PCI_PHYA_TXDRVPOSTLVCTLG1_REG);		/* PCI_PHYA 414h */
++    rzv2m_pciphy_write_reg(0x000A, PCI_PHYA_TXDRVPOSTLVCTLG2_REG);		/* PCI_PHYA 418h */
++    rzv2m_pciphy_write_reg(0x0007, PCI_PHYA_TXDRVIDRVEN_REG);			/* PCI_PHYA 42Ch */
++    rzv2m_pciphy_write_reg(0x00B7, PCI_PHYA_ATXDRVIDRVCTL_REG);		/* PCI_PHYA 430h */
++    rzv2m_pciphy_write_reg(0x00FF, PCI_PHYA_TXJEQEVENCTL_REG);			/* PCI_PHYA 44Ch */
++    rzv2m_pciphy_write_reg(0x0000, PCI_PHYA_TXJEQODDCTL_REG);			/* PCI_PHYA 454h */
++    rzv2m_pciphy_write_reg(0x0057, PCI_PHYA_ATXDRVACCDRV_REG);			/* PCI_PHYA 7F0h */
++
++    /* PHY parameters for RX : Reference value for signal adjustment */
++    rzv2m_pciphy_write_reg(0x0073, PCI_PHYA_RXCTLEEN_REG);				/* PCI_PHYA 4B8h */
++    rzv2m_pciphy_write_reg(0x006F, PCI_PHYA_RXCTLEITAILCTLG1_REG);		/* PCI_PHYA 4C0h */
++    rzv2m_pciphy_write_reg(0x006C, PCI_PHYA_RXCTLEITAILCTLG2_REG);		/* PCI_PHYA 4C4h */
++    rzv2m_pciphy_write_reg(0x0013, PCI_PHYA_RXCTLERX1CTLG1_REG);		/* PCI_PHYA 4ECh */
++    rzv2m_pciphy_write_reg(0x00F2, PCI_PHYA_RXCTLERS1CTLG2_REG);		/* PCI_PHYA 4F0h */
++    rzv2m_pciphy_write_reg(0x0007, PCI_PHYA_ARXCTLEIBLEEDCTL_REG);		/* PCI_PHYA 514h */
++    rzv2m_pciphy_write_reg(0x00FF, PCI_PHYA_RXRTERM_REG);				/* PCI_PHYA 5A0h */
++    rzv2m_pciphy_write_reg(0x00F8, PCI_PHYA_RXRTERMVCMEN_REG);			/* PCI_PHYA 5ACh */
++    rzv2m_pciphy_write_reg(0x0065, PCI_PHYA_RXCDRFBBCTL_REG);			/* PCI_PHYA 678h */
++
++  return 0;
++
++} /* End of function PCIE_phyInitialize_L1() */
++
++static int PCIE_CFG_Initialize(struct rzv2m_pcie *pcie)
++{
++   // Vendor and Device ID      : PCI Express Configuration Registers Adr 6000h
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_DEVICE_ID << 16) | 
++			  (PCIE_CONF_VENDOR_ID) ),
++			PCI_RC_VID_ADR);
++
++   // Revision ID and Class Code : PCI Express Configuration Registers Adr 6008h
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_BASE_CLASS   << 24) |
++			  (PCIE_CONF_SUB_CLASS    << 16) |
++			  (PCIE_CONF_PROGRAMING_IF << 8) |
++			  (PCIE_CONF_REVISION_ID) ),
++			PCI_RC_RID_CC_ADR);
++
++   // Base Address Register Mask00 (Lower) (Function #1) : PCI Express Configuration Registers Adr 60A0h
++	rzv2m_write_conf(pcie, BASEADR_MKL_ALLM, PCI_RC_BARMSK00L_ADR);
++
++   // Base Address Register Mask00 (upper) (Function #1) : PCI Express Configuration Registers Adr 60A4h
++	rzv2m_write_conf(pcie, BASEADR_MKU_ALLM, PCI_RC_BARMSK00U_ADR);
++
++   // Base Size 00/01 : PCI Express Configuration Registers Adr 60C8h
++	rzv2m_write_conf(pcie, BASESZ_INIT, PCI_RC_BSIZE00_01_ADR);
++
++   // Bus Number : PCI Express Configuration Registers Adr 6018h
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_SUBORDINATE_BUS << 16) |
++			  (PCIE_CONF_SECOUNDARY_BUS  <<  8) |
++			  (PCIE_CONF_PRIMARY_BUS) ),
++			PCI_PRIMARY_BUS);
++
++	rzv2m_write_conf(pcie,
++			( (PCIE_CONF_MEMORY_LIMIT << 16) | 
++			  (PCIE_CONF_MEMORY_BASE) ),
++			PCI_MEMORY_BASE);
++
++	rzv2m_write_conf(pcie, PM_CAPABILITIES_INIT, PCI_PM_CAPABILITIES);
++
++  return 0;
++}
++
++static int PCIE_INT_Initialize(struct rzv2m_pcie *pcie)
++{
++	/* Clear Event Interrupt Status 0 */
++	rzv2m_pci_write_reg(pcie, INT_ST0_CLR, PCI_RC_PEIS0_REG);       /* Set PCI_RC 0204h */
++
++	/* Set Event Interrupt Enable 0 */
++	rzv2m_pci_write_reg(pcie, INT_EN0_SET, PCI_RC_PEIE0_REG);       /* Set PCI_RC 0200h */
++
++	/* Clear  Event Interrupt Status 1 */
++	rzv2m_pci_write_reg(pcie, INT_ST1_CLR, PCI_RC_PEIS1_REG);       /* Set PCI_RC 020ch */
++
++	/* Set Event Interrupt Enable 1 */
++	rzv2m_pci_write_reg(pcie, INT_EN1_SET, PCI_RC_PEIE1_REG);       /* Set PCI_RC 0208h */
++
++	/* Clear AXI Master Error Interrupt Status */
++	rzv2m_pci_write_reg(pcie, INT_ST_AXIM_CLR, PCI_RC_AMEIS_REG);   /* Set PCI_RC 0214h */
++
++	/* Set AXI Master Error Interrupt Enable */
++	rzv2m_pci_write_reg(pcie, INT_EN_AXIM_SET, PCI_RC_AMEIE_REG);   /* Set PCI_RC 0210h */
++
++	/* Clear AXI Slave Error Interrupt Status */
++	rzv2m_pci_write_reg(pcie, INT_ST_AXIS_CLR, PCI_RC_ASEIS1_REG);  /* Set PCI_RC 0224h */
++
++	/* Set AXI Slave Error Interrupt Enable */
++	rzv2m_pci_write_reg(pcie, INT_EN_AXIS_SET, PCI_RC_ASEIE1_REG);  /* Set PCI_RC 0220h */
++
++	/* Clear Message Receive Interrupt Status */
++	rzv2m_pci_write_reg(pcie, INT_MR_CLR, PCI_RC_MSGRCVIS_REG);     /* Set PCI_RC 0124h */
++
++	/* Set Message Receive Interrupt Enable */
++	rzv2m_pci_write_reg(pcie, INT_MR_SET, PCI_RC_MSGRCVIE_REG);     /* Set PCI_RC 0120h */
++
++  return 0;
++}
++
++static int rzv2m_pcie_hw_init(struct rzv2m_pcie *pcie)
++{
++	unsigned int timeout = 50;
++
++	/* Set to the PCIe reset state   : step6 */
++	rzv2m_pci_write_reg(pcie, RESET_ALL_ASSERT, PCI_RC_RESET_REG); /* Set PCI_RC 310h */
++
++	/* Set PMA and Phy Register for Lane0 : step7, 9 */
++	PCIE_phyInitialize_L0(pcie);
++
++	/* Set PMA and Phy Register for Lane1 : step8, 9 */
++	PCIE_phyInitialize_L1(pcie);
++
++	/* Release the PCIe reset : step10 : RST_LOAD_B, RST_CFG_B)*/
++	rzv2m_pci_write_reg(pcie, RESET_LOAD_CFG_RELEASE, PCI_RC_RESET_REG); /* Set PCI_RC 310h */
++
++	/* Setting of HWINT related registers : step11 */
++	PCIE_CFG_Initialize(pcie);
++
++	/* Set L1 state                       : step12  */
++	rzv2m_sys_write_reg(SET_ASPM_L1_ST, SYS_PCI_ALLOW_ENTER_L1_REG);  /* Set SYS 064h */
++
++	/* Set Interrupt settings             : step13  */
++	PCIE_INT_Initialize(pcie);
++
++	/* Release the PCIe reset : step14 : RST_PS_B, RST_GP_B, RST_B */
++	rzv2m_pci_write_reg(pcie, RESET_PS_GP_RELEASE, PCI_RC_RESET_REG);     /* Set PCI_RC 310h */
++
++   /* Wait 500us over : step 15*/
++	msleep(1);
++
++   /* Release the PCIe reset : step16 : RST_OUT_B, RST_RSM_B) */
++	rzv2m_pci_write_reg(pcie, RESET_ALL_DEASSERT,  PCI_RC_RESET_REG);     /* Set PCI_RC 310h */
++
++
++	rzv2m_pci_write_reg(pcie, 0x3ff2,  MODE_SET_1_REG);     /* Set PCI_RC 318h */
++
++	/* This will timeout if we don't have a link. */
++	while (timeout--) {
++		if (!(rzv2m_pci_read_reg(pcie, PCIE_CORE_STATUS_1_REG) & DL_DOWN_STATUS))
++			return 0;
++
++		msleep(5);
++	}
++
++	return -ETIMEDOUT;
++}
++
++/* INTx Functions */
++
++/**
++ * rzv2m_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
++ * @domain: IRQ domain
++ * @irq: Virtual IRQ number
++ * @hwirq: HW interrupt number
++ *
++ * Return: Always returns 0.
++ */
++
++static int rzv2m_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
++			      irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++
++	return 0;
++}
++
++/* INTx IRQ Domain operations */
++static const struct irq_domain_ops intx_domain_ops = {
++	.map = rzv2m_pcie_intx_map,
++};
++
++static int rzv2m_msi_alloc(struct rzv2m_msi *chip)
++{
++	int msi;
++
++	mutex_lock(&chip->lock);
++
++	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
++	if (msi < INT_PCI_MSI_NR)
++		set_bit(msi, chip->used);
++	else
++		msi = -ENOSPC;
++
++	mutex_unlock(&chip->lock);
++
++	return msi;
++}
++
++static int rzv2m_msi_alloc_region(struct rzv2m_msi *chip, int no_irqs)
++{
++	int msi;
++
++	mutex_lock(&chip->lock);
++	msi = bitmap_find_free_region(chip->used, INT_PCI_MSI_NR,
++				      order_base_2(no_irqs));
++	mutex_unlock(&chip->lock);
++
++	return msi;
++}
++
++static void rzv2m_msi_free(struct rzv2m_msi *chip, unsigned long irq)
++{
++	mutex_lock(&chip->lock);
++	clear_bit(irq, chip->used);
++	mutex_unlock(&chip->lock);
++}
++
++static irqreturn_t rzv2m_pcie_msi_irq(int irq, void *data)
++{
++	struct rzv2m_pcie_host *host = data;
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct rzv2m_msi *msi = &host->msi;
++	struct device *dev = pcie->dev;
++	unsigned long reg;
++	unsigned int index;
++	unsigned int irq_v;
++
++	reg = rzv2m_pci_read_reg(pcie, PCI_INTX_RCV_INTERRUPT_STATUS_REG);
++	/* clear the interrupt */
++	rzv2m_pci_write_reg(pcie, ALL_RECEIVE_INTERRUPT_STATUS, PCI_INTX_RCV_INTERRUPT_STATUS_REG);
++
++	// MSI
++	if( reg & MSI_RECEIVE_INTERRUPT_STATUS ) {
++		index = *(unsigned int *)msi->pages;
++	}
++	else {
++		//MSI Only
++		return IRQ_NONE;
++	}
++
++	/* MSI & INTx share an interrupt */
++	irq_v = irq_find_mapping(msi->domain, index);
++	if (irq_v) {
++		if (test_bit(index, msi->used))
++			generic_handle_irq(irq_v);
++		else {
++			dev_info(pcie->dev, "unhandled MSI\n");
++		}
++	} else {
++		/* Unknown MSI, just clear it */
++		dev_dbg(pcie->dev, "unexpected MSI\n");
++		return IRQ_NONE;
++	}
++
++	return IRQ_HANDLED;
++}
++
++static int rzv2m_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
++			      struct msi_desc *desc)
++{
++	struct rzv2m_msi *msi = to_rzv2m_msi(chip);
++	struct rzv2m_pcie_host *host = container_of(chip, struct rzv2m_pcie_host,
++						   msi.chip);
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct msi_msg msg;
++	unsigned int irq;
++	int hwirq;
++
++	hwirq = rzv2m_msi_alloc(msi);
++	if (hwirq < 0)
++		return hwirq;
++
++	irq = irq_find_mapping(msi->domain, hwirq);
++	if (!irq) {
++		rzv2m_msi_free(msi, hwirq);
++		return -EINVAL;
++	}
++
++	irq_set_msi_desc(irq, desc);
++
++	msg.address_lo = rzv2m_pci_read_reg(pcie, MSI_RCV_WINDOW_ADDR_REG) & ~MSI_RCV_WINDOW_ENABLE;
++	msg.address_hi = 0x00;
++	msg.data = hwirq;
++
++	pci_write_msi_msg(irq, &msg);
++
++	return 0;
++}
++
++static int rzv2m_msi_setup_irqs(struct msi_controller *chip,
++			       struct pci_dev *pdev, int nvec, int type)
++{
++	struct rzv2m_msi *msi = to_rzv2m_msi(chip);
++	struct rzv2m_pcie_host *host = container_of(chip, struct rzv2m_pcie_host,
++						   msi.chip);
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct msi_desc *desc;
++	struct msi_msg msg;
++	unsigned int irq;
++	int hwirq;
++	int i;
++
++	/* MSI-X interrupts are not supported */
++	if (type == PCI_CAP_ID_MSIX)
++		return -EINVAL;
++
++	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
++	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
++
++	hwirq = rzv2m_msi_alloc_region(msi, nvec);
++	if (hwirq < 0)
++		return -ENOSPC;
++
++	irq = irq_find_mapping(msi->domain, hwirq);
++	if (!irq)
++		return -ENOSPC;
++
++	for (i = 0; i < nvec; i++) {
++		/*
++		 * irq_create_mapping() called from rzv2m_pcie_probe() pre-
++		 * allocates descs,  so there is no need to allocate descs here.
++		 * We can therefore assume that if irq_find_mapping() above
++		 * returns non-zero, then the descs are also successfully
++		 * allocated.
++		 */
++		if (irq_set_msi_desc_off(irq, i, desc)) {
++			/* TODO: clear */
++			return -EINVAL;
++		}
++	}
++
++	desc->nvec_used = nvec;
++	desc->msi_attrib.multiple = order_base_2(nvec);
++
++	msg.address_lo = rzv2m_pci_read_reg(pcie, MSI_RCV_WINDOW_ADDR_REG) & ~MSI_RCV_WINDOW_ENABLE;
++	msg.address_hi = 0x00;
++	msg.data = hwirq;
++
++	pci_write_msi_msg(irq, &msg);
++
++	return 0;
++}
++
++static void rzv2m_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
++{
++	struct rzv2m_msi *msi = to_rzv2m_msi(chip);
++	struct irq_data *d = irq_get_irq_data(irq);
++
++	rzv2m_msi_free(msi, d->hwirq);
++}
++
++static struct irq_chip rzv2m_msi_irq_chip = {
++	.name = "RZV2MA PCIe MSI",
++	.irq_enable = pci_msi_unmask_irq,
++	.irq_disable = pci_msi_mask_irq,
++	.irq_mask = pci_msi_mask_irq,
++	.irq_unmask = pci_msi_unmask_irq,
++};
++
++static int rzv2m_msi_map(struct irq_domain *domain, unsigned int irq,
++			irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &rzv2m_msi_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++
++	return 0;
++}
++
++static const struct irq_domain_ops msi_domain_ops = {
++	.map = rzv2m_msi_map,
++};
++
++static void rzv2m_pcie_unmap_msi(struct rzv2m_pcie_host *host)
++{
++	struct rzv2m_msi *msi = &host->msi;
++	int i, irq;
++
++	for (i = 0; i < INT_PCI_MSI_NR; i++) {
++		irq = irq_find_mapping(msi->domain, i);
++		if (irq > 0)
++			irq_dispose_mapping(irq);
++	}
++
++	irq_domain_remove(msi->domain);
++}
++
++static void rzv2m_pcie_hw_enable_msi(struct rzv2m_pcie_host *host)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct device *dev = pcie->dev;
++	struct rzv2m_msi *msi = &host->msi;
++	unsigned long base;
++	unsigned long pci_base;
++	unsigned long msi_base;
++	unsigned long msi_base_mask;
++	int err, i, idx;
++
++	msi->pages = __get_free_pages(GFP_KERNEL | GFP_DMA32, 0);
++	base = dma_map_single(pcie->dev, (void *)msi->pages, (MSI_RCV_WINDOW_MASK_MIN+1), DMA_BIDIRECTIONAL);
++
++	msi_base = 0;
++	for(idx=0; idx < RZV2M_PCI_MAX_RESOURCES; idx++) {
++		if( !(rzv2m_pci_read_reg(pcie, AXI_WINDOW_BASE_REG(idx)) & AXI_WINDOW_ENABLE) ) {
++			continue;
++		}
++		pci_base = rzv2m_pci_read_reg(pcie, AXI_DESTINATION_REG(idx));
++		msi_base_mask = rzv2m_pci_read_reg(pcie, AXI_WINDOW_MASK_REG(idx));
++		if( (pci_base <= base) && 
++			(pci_base + msi_base_mask >= base) ) {
++			
++			msi_base  = base & msi_base_mask;
++			msi_base |= rzv2m_pci_read_reg(pcie, AXI_WINDOW_BASE_REG(idx));
++			msi->virt_pages = msi_base & ~AXI_WINDOW_ENABLE;
++			msi_base |= MSI_RCV_WINDOW_ENABLE;
++			break;
++		}
++	}
++	if (!msi_base) {
++		dev_err(dev,"MSI Address setting failed (Address:0x%lx)\n",base);
++		err = -ENOMEM;
++		goto err;
++	}
++
++	rzv2m_pci_write_reg(pcie, msi_base, MSI_RCV_WINDOW_ADDR_REG);
++	rzv2m_pci_write_reg(pcie, MSI_RCV_WINDOW_MASK_MIN, MSI_RCV_WINDOW_MASK_REG);
++#if 1 //RAMA
++	rzv2m_pci_write_reg(pcie, RAMA_ADDRESS, MSI_RCV_WINDOW_ADDR_REG);
++	msi->pages = ioremap(RAMA_ADDRESS, 0x32000);
++	msi->virt_pages = RAMA_ADDRESS;
++#endif
++	rzv2m_rmw(pcie, MSI_RCV_WINDOW_ADDR_REG, MSI_RCV_WINDOW_ENABLE, MSI_RCV_WINDOW_ENABLE);
++
++	/* enable all MSI interrupts */
++	rzv2m_rmw(pcie, PCI_INTX_RCV_INTERRUPT_ENABLE_REG,
++					 MSI_RECEIVE_INTERRUPT_ENABLE,
++					 MSI_RECEIVE_INTERRUPT_ENABLE );
++
++	return 0;
++
++err:
++	rzv2m_pcie_unmap_msi(host);
++	return err;
++}
++
++static int rzv2m_pcie_enable_msi(struct rzv2m_pcie_host *host)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct device *dev = pcie->dev;
++	struct rzv2m_msi *msi = &host->msi;
++	int err, i;
++
++	mutex_init(&msi->lock);
++
++	host->intx_domain = irq_domain_add_linear(dev->of_node, PCI_NUM_INTX,
++						  &intx_domain_ops,
++						  pcie);
++
++	if (!host->intx_domain) {
++		dev_err(dev, "failed to create INTx IRQ domain\n");
++	}
++
++	for (i = 0; i < PCI_NUM_INTX; i++)
++		irq_create_mapping(host->intx_domain, i);
++
++	msi->chip.dev = dev;
++	msi->chip.setup_irq = rzv2m_msi_setup_irq;
++	msi->chip.setup_irqs = rzv2m_msi_setup_irqs;
++	msi->chip.teardown_irq = rzv2m_msi_teardown_irq;
++
++	msi->domain = irq_domain_add_linear(dev->of_node, INT_PCI_MSI_NR,
++					    &msi_domain_ops, &msi->chip);
++	if (!msi->domain) {
++		dev_err(dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	for (i = 0; i < INT_PCI_MSI_NR; i++)
++		irq_create_mapping(msi->domain, i);
++
++	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
++	err = devm_request_irq(dev, msi->irq, rzv2m_pcie_msi_irq,
++			       IRQF_SHARED | IRQF_NO_THREAD | IRQF_ONESHOT,
++			       rzv2m_msi_irq_chip.name, host);
++	if (err < 0) {
++		dev_err(dev, "failed to request IRQ: %d\n", err);
++		goto err;
++	}
++
++	/* setup MSI data target */
++	rzv2m_pcie_hw_enable_msi(host);
++
++	return 0;
++
++err:
++	rzv2m_pcie_unmap_msi(host);
++	return err;
++}
++
++static int rzv2m_pcie_get_resources(struct rzv2m_pcie_host *host)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct device *dev = pcie->dev;
++	struct resource res;
++	int err, i;
++
++	host->phy = devm_phy_optional_get(dev, "pcie");
++	if (IS_ERR(host->phy))
++		return PTR_ERR(host->phy);
++
++	err = of_address_to_resource(dev->of_node, 0, &res);
++	if (err)
++		return err;
++
++	pcie->base = devm_ioremap_resource(dev, &res);
++	if (IS_ERR(pcie->base))
++		return PTR_ERR(pcie->base);
++
++	i = irq_of_parse_and_map(dev->of_node, 0);
++	if (!i) {
++		dev_err(dev, "cannot get platform resources for msi interrupt\n");
++		err = -ENOENT;
++		goto err_irq;
++	}
++	host->msi.irq = i;
++
++err_irq:
++	return err;
++}
++
++static int rzv2m_pcie_sys_get_resources(struct rzv2m_pcie_host *host)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct device *dev = pcie->dev;
++	struct resource res;
++	int err, i;
++
++	err = of_address_to_resource(dev->of_node, 1, &res);
++	if (err)
++		return err;
++
++	sys_base = devm_ioremap_resource(dev, &res);
++
++	if (IS_ERR(sys_base)) {
++		err = PTR_ERR(sys_base);
++		return err;
++	}
++
++	return 0;
++}
++
++static int rzv2m_pcie_phy_get_resources(struct rzv2m_pcie_host *host)
++{
++	struct rzv2m_pcie *pcie = &host->pcie;
++	struct device *dev = pcie->dev;
++	struct resource res;
++	int err, i;
++
++	err = of_address_to_resource(dev->of_node, 2, &res);
++	if (err)
++		return err;
++
++	phy_base = devm_ioremap_resource(dev, &res);
++
++	if (IS_ERR(phy_base)) {
++		err = PTR_ERR(phy_base);
++		return err;
++	}
++
++	return 0;
++}
++
++static int rzv2m_pcie_inbound_ranges(struct rzv2m_pcie *pcie,
++				    struct resource_entry *entry,
++				    int *index)
++{
++	u64 restype = entry->res->flags;
++	u64 cpu_addr = entry->res->start;
++	u64 cpu_end = entry->res->end;
++	u64 pci_addr = entry->res->start - entry->offset;
++	u32 flags = LAM_64BIT | LAR_ENABLE;
++	u64 mask;
++	u64 size = resource_size(entry->res);
++	int idx = *index;
++
++	if (restype & IORESOURCE_PREFETCH)
++		flags |= LAM_PREFETCH;
++
++	while (cpu_addr < cpu_end) {
++		if (idx >= MAX_NR_INBOUND_MAPS - 1) {
++			dev_err(pcie->dev, "Failed to map inbound regions!\n");
++			return -EINVAL;
++		}
++		/*
++		 * If the size of the range is larger than the alignment of
++		 * the start address, we have to use multiple entries to
++		 * perform the mapping.
++		 */
++		/* Hardware supports max 4GiB inbound region */
++		size = min(size, 1ULL << 32);
++
++		mask = size - 1;
++		mask &= ~0xf;
++
++		rzv2m_pcie_set_inbound(pcie, cpu_addr, pci_addr,
++				      lower_32_bits(mask) | flags, idx, true);
++
++		pci_addr += size;
++		cpu_addr += size;
++		idx += 2;
++	}
++	*index = idx;
++
++	return 0;
++}
++
++static int rzv2m_pcie_parse_map_dma_ranges(struct rzv2m_pcie_host *host)
++{
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++	struct resource_entry *entry;
++	int index = 0, err = 0;
++
++	resource_list_for_each_entry(entry, &bridge->dma_ranges) {
++		err = rzv2m_pcie_inbound_ranges(&host->pcie, entry, &index);
++		if (err)
++			break;
++	}
++
++	return err;
++}
++
++static const struct of_device_id rzv2m_pcie_of_match[] = {
++	{ .compatible = "renesas,rzv2m-pcie", },
++	{},
++};
++
++static int rzv2m_pcie_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct rzv2m_pcie_host *host;
++	struct rzv2m_pcie *pcie;
++	u32 data;
++	int err;
++	struct pci_host_bridge *bridge;
++
++	dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
++
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*host));
++	if (!bridge)
++		return -ENOMEM;
++
++	host = pci_host_bridge_priv(bridge);
++	pcie = &host->pcie;
++	pcie->dev = dev;
++	platform_set_drvdata(pdev, host);
++
++	pm_runtime_enable(pcie->dev);
++	err = pm_runtime_get_sync(pcie->dev);
++	if (err < 0) {
++		dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
++		return err;
++	}
++
++	err = rzv2m_pcie_get_resources(host);
++	if (err < 0) {
++		dev_err(dev, "failed to request resources: %d\n", err);
++		return err;
++	}
++
++	err = rzv2m_pcie_sys_get_resources(host);
++	if (err < 0) {
++		dev_err(dev, "failed to request pci sys resources: %d\n", err);
++		return err;
++	}
++
++	err = rzv2m_pcie_phy_get_resources(host);
++	if (err < 0) {
++		dev_err(dev, "failed to request pci phy resources: %d\n", err);
++		return err;
++	}
++
++	err = rzv2m_pcie_parse_map_dma_ranges(host);
++	if (err)
++		return err;
++
++	rzv2m_pcie_setting_config(pcie);
++
++	err = rzv2m_pcie_hw_init(pcie);
++	if (err) {
++		dev_info(&pdev->dev, "PCIe link down\n");
++		return 0;
++	}
++
++	data = rzv2m_pci_read_reg(pcie, PCIE_CORE_STATUS_2_REG);
++	dev_info(&pdev->dev, "PCIe Linx status [0x%lx]n", data);
++
++    switch((data >> 8) & 0xFF)
++	{
++		case 0x01:
++		case 0x02:
++				/*- Detect Lane 0 or Lane 1 -*/
++				data = 0x01;
++				break;
++
++		case 0x03:
++				/*- Detect Lane 0 and Lane 1 -*/
++				data = 0x02;
++				break;
++
++		default:
++				/*- unknown -*/
++				data = 0xff;
++				break;
++	}
++	dev_info(&pdev->dev, "PCIe x%d: link up Lane number\n",data);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		err = rzv2m_pcie_enable_msi(host);
++		if (err < 0) {
++			dev_err(dev,
++				"failed to enable MSI support: %d\n",
++				err);
++			return err;
++		}
++	}
++
++	return rzv2m_pcie_enable(host);
++}
++
++static int rzv2m_pcie_suspend(struct device *dev)
++{
++	struct rzv2m_pcie_host *host = dev_get_drvdata(dev);
++	struct rzv2m_pcie *pcie = &host->pcie;
++	int idx;
++
++	for(idx=0; idx < RZV2M_PCI_MAX_RESOURCES; idx++) {
++		/* Save AXI window setting	*/
++		pcie->save_reg.axi_window.base[idx] = rzv2m_pci_read_reg(pcie, AXI_WINDOW_BASE_REG(idx));
++		pcie->save_reg.axi_window.mask[idx] = rzv2m_pci_read_reg(pcie, AXI_WINDOW_MASK_REG(idx));
++		pcie->save_reg.axi_window.dest[idx] = rzv2m_pci_read_reg(pcie, AXI_DESTINATION_REG(idx));
++
++		/* Save PCIe window setting	*/
++		pcie->save_reg.pci_window.base[idx]   = rzv2m_pci_read_reg(pcie, PCIE_WINDOW_BASE_REG(idx));
++		pcie->save_reg.pci_window.mask[idx]   = rzv2m_pci_read_reg(pcie, PCIE_WINDOW_MASK_REG(idx));
++		pcie->save_reg.pci_window.dest_u[idx] = rzv2m_pci_read_reg(pcie, PCIE_DESTINATION_HI_REG(idx));
++		pcie->save_reg.pci_window.dest_l[idx] = rzv2m_pci_read_reg(pcie, PCIE_DESTINATION_LO_REG(idx));
++	}
++	/* Save MSI setting*/
++	pcie->save_reg.interrupt.msi_win_addr	= rzv2m_pci_read_reg(pcie, MSI_RCV_WINDOW_ADDR_REG);
++	pcie->save_reg.interrupt.msi_win_mask	= rzv2m_pci_read_reg(pcie, MSI_RCV_WINDOW_MASK_REG);
++	pcie->save_reg.interrupt.intx_ena	= rzv2m_pci_read_reg(pcie, PCI_INTX_RCV_INTERRUPT_ENABLE_REG);
++	pcie->save_reg.interrupt.msi_ena	= rzv2m_pci_read_reg(pcie, MSG_RCV_INTERRUPT_ENABLE_REG);
++
++	return 0;
++}
++
++static int rzv2m_pcie_resume(struct device *dev)
++{
++	struct rzv2m_pcie_host *host = dev_get_drvdata(dev);
++	struct rzv2m_pcie *pcie = &host->pcie;
++	int idx, err;
++
++	rzv2m_pcie_setting_config(pcie);
++
++	if( rzv2m_pci_read_reg(pcie, AXI_WINDOW_BASE_REG(0)) != 
++		pcie->save_reg.axi_window.base[0] ) {
++
++		err = rzv2m_pcie_hw_init(pcie);
++		if (err) {
++			dev_info(pcie->dev, "resume PCIe link down\n");
++			return err;
++		}
++		
++		for(idx=0; idx < RZV2M_PCI_MAX_RESOURCES; idx++) {
++			/* Restores AXI window setting	*/
++			rzv2m_pci_write_reg(pcie, pcie->save_reg.axi_window.mask[idx], AXI_WINDOW_MASK_REG(idx));
++			rzv2m_pci_write_reg(pcie, pcie->save_reg.axi_window.dest[idx], AXI_DESTINATION_REG(idx));
++			rzv2m_pci_write_reg(pcie, pcie->save_reg.axi_window.base[idx], AXI_WINDOW_BASE_REG(idx));
++
++			/* Restores PCIe window setting	*/
++			rzv2m_pci_write_reg(pcie, pcie->save_reg.pci_window.mask[idx], PCIE_WINDOW_MASK_REG(idx));
++			rzv2m_pci_write_reg(pcie, pcie->save_reg.pci_window.dest_u[idx], PCIE_DESTINATION_HI_REG(idx));
++			rzv2m_pci_write_reg(pcie, pcie->save_reg.pci_window.dest_l[idx], PCIE_DESTINATION_LO_REG(idx));
++			rzv2m_pci_write_reg(pcie, pcie->save_reg.pci_window.base[idx], PCIE_WINDOW_BASE_REG(idx));
++
++		}
++		/* Restores MSI setting*/
++		rzv2m_pci_write_reg(pcie, pcie->save_reg.interrupt.msi_win_mask, MSI_RCV_WINDOW_MASK_REG);
++		rzv2m_pci_write_reg(pcie, pcie->save_reg.interrupt.msi_win_addr, MSI_RCV_WINDOW_ADDR_REG);
++		rzv2m_pci_write_reg(pcie, pcie->save_reg.interrupt.intx_ena, PCI_INTX_RCV_INTERRUPT_ENABLE_REG);
++		rzv2m_pci_write_reg(pcie, pcie->save_reg.interrupt.msi_ena, MSG_RCV_INTERRUPT_ENABLE_REG);
++	}
++
++	return 0;
++}
++
++static struct dev_pm_ops rzv2m_pcie_pm_ops = {
++	.suspend_noirq =	rzv2m_pcie_suspend,
++	.resume_noirq =		rzv2m_pcie_resume,
++};
++
++static struct platform_driver rzv2m_pcie_driver = {
++	.driver = {
++		.name = "rzv2m-pcie",
++		.of_match_table = rzv2m_pcie_of_match,
++		.pm = &rzv2m_pcie_pm_ops,
++		.suppress_bind_attrs = true,
++	},
++	.probe = rzv2m_pcie_probe,
++};
++builtin_platform_driver(rzv2m_pcie_driver);
++
++static int rzv2m_pcie_pci_notifier(struct notifier_block *nb,
++				  unsigned long action, void *data)
++{
++	struct device *dev = data;
++
++	switch (action) {
++	case BUS_NOTIFY_BOUND_DRIVER:
++		/* Force the DMA mask to lower 32-bits */
++		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block device_nb = {
++	.notifier_call = rzv2m_pcie_pci_notifier,
++};
++
++static int __init register_rzv2m_pcie_pci_notifier(void)
++{
++	return bus_register_notifier(&pci_bus_type, &device_nb);
++}
++
++arch_initcall(register_rzv2m_pcie_pci_notifier);
+diff --git b/drivers/pci/controller/pcie-rzv2m-window.c b/drivers/pci/controller/pcie-rzv2m-window.c
+new file mode 100755
+index 0000000..d06e6f0
+--- /dev/null
++++ b/drivers/pci/controller/pcie-rzv2m-window.c
+@@ -0,0 +1,98 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PCIe driver for Renesas RZ/V2MA SoCs
++ *  Copyright (C) 2022 Renesas Electronics Europe Ltd
++ */
++
++#include <linux/delay.h>
++#include <linux/pci.h>
++
++#include "pcie-rzv2m.h"
++
++void rzv2m_pci_write_reg(struct rzv2m_pcie *pcie, u32 val, unsigned long reg)
++{
++	writel(val, pcie->base + reg);
++}
++
++u32 rzv2m_pci_read_reg(struct rzv2m_pcie *pcie, unsigned long reg)
++{
++	return readl(pcie->base + reg);
++}
++
++void rzv2m_rmw(struct rzv2m_pcie *pcie, int where, u32 mask, u32 data)
++{
++	u32 val = rzv2m_pci_read_reg(pcie, where);
++
++	val &= ~(mask);
++	val |= (data);
++	rzv2m_pci_write_reg(pcie, val, where);
++}
++
++u32 rzv2m_read_conf(struct rzv2m_pcie *pcie, int where)
++{
++	int shift = 8 * (where & 3);
++	u32 val = rzv2m_pci_read_reg(pcie, PCIE_CONFIGURATION_REG + (where & ~3) );
++
++	return val >> shift;
++}
++
++void rzv2m_write_conf(struct rzv2m_pcie *pcie, u32 data, int where)
++{
++	rzv2m_pci_write_reg(pcie, CFG_HWINIT_EN, PERMISSION_REG );
++	rzv2m_pci_write_reg(pcie, data, PCIE_CONFIGURATION_REG + where );
++	rzv2m_pci_write_reg(pcie, 0, PERMISSION_REG );
++}
++
++void rzv2m_pcie_set_outbound(struct rzv2m_pcie *pcie, int win,
++			    struct resource_entry *window)
++{
++	/* Setup PCIe address space mappings for each resource */
++	struct resource *res = window->res;
++	resource_size_t res_start;
++	resource_size_t size;
++	u32 mask;
++
++	/*
++	 * The PAMR mask is calculated in units of 128Bytes, which
++	 * keeps things pretty simple.
++	 */
++	size = resource_size(res);
++
++	if (size > 128)
++		mask = (roundup_pow_of_two(size) / SZ_128) - 1;
++	else
++		mask = 0x0;
++
++	if (res->flags & IORESOURCE_IO)
++		res_start = pci_pio_to_address(res->start) - window->offset;
++	else
++		res_start = res->start - window->offset;
++
++	rzv2m_pci_write_reg(pcie, res_start, PCIE_WINDOW_BASE_REG(win));
++	rzv2m_pci_write_reg(pcie, upper_32_bits(res_start), PCIE_DESTINATION_HI_REG(win));
++	rzv2m_pci_write_reg(pcie, lower_32_bits(res_start), PCIE_DESTINATION_LO_REG(win));
++
++	rzv2m_pci_write_reg(pcie, mask, PCIE_WINDOW_MASK_REG(win));
++
++	rzv2m_rmw(pcie, PCIE_WINDOW_BASE_REG(win), PCIE_WINDOW_ENABLE, PCIE_WINDOW_ENABLE);
++}
++
++void rzv2m_pcie_set_inbound(struct rzv2m_pcie *pcie, u64 cpu_addr,
++			   u64 pci_addr, u64 flags, int idx, bool host)
++{
++	/*
++	 * Set up 64-bit inbound regions as the range parser doesn't
++	 * distinguish between 32 and 64-bit types.
++	 */
++	rzv2m_pci_write_reg(pcie, pci_addr, AXI_WINDOW_BASE_REG(idx));
++	rzv2m_pci_write_reg(pcie, cpu_addr, AXI_DESTINATION_REG(idx));
++	rzv2m_pci_write_reg(pcie, flags,    AXI_WINDOW_MASK_REG(idx));
++	rzv2m_rmw(pcie, AXI_WINDOW_BASE_REG(idx), AXI_WINDOW_ENABLE, AXI_WINDOW_ENABLE);
++
++#if 1 //RAMA
++	rzv2m_pci_write_reg(pcie, RAMA_ADDRESS, AXI_WINDOW_BASE_REG(1));
++	rzv2m_pci_write_reg(pcie, RAMA_ADDRESS, AXI_DESTINATION_REG(1));
++	rzv2m_pci_write_reg(pcie, 0x31fff,    AXI_WINDOW_MASK_REG(1));
++	rzv2m_rmw(pcie, AXI_WINDOW_BASE_REG(1), AXI_WINDOW_ENABLE, AXI_WINDOW_ENABLE);
++#endif
++}
+diff --git b/drivers/pci/controller/pcie-rzv2m.h b/drivers/pci/controller/pcie-rzv2m.h
+new file mode 100755
+index 0000000..ab1f5a6
+--- /dev/null
++++ b/drivers/pci/controller/pcie-rzv2m.h
+@@ -0,0 +1,312 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * PCIe driver for Renesas rzv2ma SoCs
++ *  Copyright (C) 2022 Renesas Electronics Europe Ltd
++ *
++ */
++
++#ifndef _PCIE_RZV2M_H
++#define _PCIE_RZV2M_H
++
++/* PCI Express to AXI Access */
++#define AXI_WINDOW_BASE_REG(x)					(0x1000 + ((x) * 0x10))
++	#define AXI_WINDOW_ENABLE					(0x00000001)
++#define AXI_WINDOW_MASK_REG(x)					(0x1004 + ((x) * 0x10))
++#define AXI_DESTINATION_REG(x)					(0x1008 + ((x) * 0x10))
++
++/* AXI to PCI Express Access */
++#define PCIE_WINDOW_BASE_REG(x)				(0x1100 + ((x) * 0x10))
++	#define PCIE_WINDOW_ENABLE					(0x00000001)
++#define PCIE_WINDOW_MASK_REG(x)				(0x1104 + ((x) * 0x10))
++#define PCIE_DESTINATION_LO_REG(x)				(0x1108 + ((x) * 0x10))
++#define PCIE_DESTINATION_HI_REG(x)				(0x110C + ((x) * 0x10))
++
++/* Request Issuing */
++#define REQUEST_DATA_REG(x)					(0x0080 + ((x) * 0x04))
++#define REQUEST_RCV_DATA_REG					0x008C
++#define REQUEST_ADDR_1_REG						0x0090
++#define REQUEST_ADDR_2_REG						0x0094
++#define REQUEST_BYTE_ENABLE_REG				0x0098
++#define REQUEST_ISSUE_REG						0x009C
++	#define MOR_STATUS							0x00070000
++	#define TR_TYPE_CFREAD_TP0					0x00000400
++	#define TR_TYPE_CFWRITE_TP0					0x00000500
++	#define TR_TYPE_CFREAD_TP1					0x00000600
++	#define TR_TYPE_CFWRITE_TP1					0x00000700
++	#define REQ_ISSUE							0x00000001
++
++
++/* Interruption */
++#define MSI_RCV_WINDOW_ADDR_REG				0x0100
++		#define MSI_RCV_WINDOW_ENABLE			0x00000001
++#define MSI_RCV_WINDOW_MASK_REG				0x0108
++	#define MSI_RCV_WINDOW_MASK_MIN				0x00000003
++//	#define MSI_RCV_WINDOW_MASK_MIN				0x00000007
++#define PCI_INTX_RCV_INTERRUPT_ENABLE_REG		0x0110
++	#define MSI_RECEIVE_INTERRUPT_ENABLE		0x00000010
++	#define INTX_RECEIVE_INTERRUPT_ENABLE		0x0000000F
++#define PCI_INTX_RCV_INTERRUPT_STATUS_REG		0x0114
++	#define MSI_RECEIVE_INTERRUPT_STATUS		0x00000010
++	#define INTX_RECEIVE_INTERRUPT_STATUS		0x0000000F
++	#define ALL_RECEIVE_INTERRUPT_STATUS		0x00000001F
++#define PCI_INTX_OUT_STATUS_REG				0x0118
++
++/* Message */
++#define MSG_RCV_INTERRUPT_ENABLE_REG			0x0120
++	#define	MESSAGE_ENABLE						0x01000000
++#define MSG_RCV_INTERRUPT_STATUS_REG			0x0124
++#define MSG_CODE_REG							0x0130
++#define MSG_DATA_REG							0x0134
++#define MSG_HEADER_3RDDW_REG					0x0138
++#define MSG_HEADER_4THDW_REG					0x013C
++
++/* Interrupt Table */
++#define INTERRUPT_TABLE_REG					0x0140
++
++/* Error Event */
++#define PCIE_EVENT_INTERRUPT_EANBLE_0_REG		0x0200
++#define PCIE_EVENT_INTERRUPT_STATUS_0_REG		0x0204
++#define AXI_MASTER_ERR_INTERRUPT_EANBLE_REG	0x0210
++#define AXI_MASTER_ERR_INTERRUPT_STATUS_REG	0x0214
++#define AXI_SLAVE_ERR_INTERRUPT_EANBLE_1_REG	0x0210
++#define AXI_SLAVE_ERR_INTERRUPT_STATUS_1_REG	0x0214
++
++/* Macro Control */
++#define PERMISSION_REG							0x0300
++	#define CFG_HWINIT_EN						0x00000004
++#define PCI_RC_RESET_REG						0x0310
++	#define RESET_ALL_DEASSERT					0x0000007F
++	#define RESET_CONFIG_DEASSERT				0x0000001C
++	#define RESET_ALL_ASSERT				    0x00000000
++   #define RESET_LOAD_CFG_RELEASE  		    0x00000018
++   #define RESET_PS_GP_RELEASE  		        0x0000003B
++#define MODE_SET_0_REG							0x0314
++#define MODE_SET_1_REG							0x0318
++#define GENERAL_PURPOSE_OUTPUT_REG(x)			(0x0380 + ((x) * 0x04))
++#define GENERAL_PURPOSE_INPUT_REG(x)			(0x0390 + ((x) * 0x04))
++#define PCIE_CORE_MODE_SET_1_REG				0x0400
++#define PCIE_CORE_CONTROL_1_REG				0x0404
++#define PCIE_CORE_STATUS_1_REG					0x0408
++	#define DL_DOWN_STATUS						0x00000001
++#define PCIE_LOOPBACK_TEST_REG					0x040C
++#define PCIE_CORE_CONTROL_2_REG				0x0410
++#define PCIE_CORE_STATUS_2_REG					0x0414
++
++/* MODE & Lane Control */
++#define SYS_BASE_ADD                           0xA3F03000
++#define SYS_PCI_ALLOW_ENTER_L1_REG             0x064
++	#define SET_ASPM_L1_ST                      0x0001
++#define SYS_PCI_MODE_REG                       0x090
++	#define SET_RC                              0x0001
++#define SYS_PCI_MODE_EN_B_REG                  0x094
++	#define CNT_MOE                             0x0000
++#define SYS_PCI_LANE_SEL_REG                   0x0A0
++	#define SET_LANE0                           0x0000
++	#define SET_LANE1                           0x0002
++
++
++/* PCIe Phy Control */
++#define PCI_PHY_BASE_ADD                       0xA3F70000
++#define PCI_PHYA_PLLALPFRSELFINE_REG           0x0080
++#define PCI_PHYA_PLLPMSSDIV_REG                0x00D8
++#define PCI_PHYA_TXDRVLVCTLG1_REG              0x0404
++#define PCI_PHYA_TXDRVLVLCTLG2_REG             0x0408
++#define PCI_PHYA_TXDRVPOSTLVCTLG1_REG          0x0414
++#define PCI_PHYA_TXDRVPOSTLVCTLG2_REG          0x0418
++#define PCI_PHYA_TXDRVIDRVEN_REG               0x042C
++#define PCI_PHYA_ATXDRVIDRVCTL_REG             0x0430
++#define PCI_PHYA_TXJEQEVENCTL_REG              0x044C
++#define PCI_PHYA_TXJEQODDCTL_REG               0x0454
++#define PCI_PHYA_RXCDRREFDIVSELPLL_REG         0x0480
++#define PCI_PHYA_RXCDRREFDIVSELDATA_REG        0x0488
++#define PCI_PHYA_RXCTLEEN_REG                  0x04B8
++#define PCI_PHYA_RXCTLEITAILCTLG1_REG          0x04C0
++#define PCI_PHYA_RXCTLEITAILCTLG2_REG          0x04C4
++#define PCI_PHYA_RXCTLERX1CTLG1_REG            0x04EC
++#define PCI_PHYA_RXCTLERS1CTLG2_REG            0x04F0
++#define PCI_PHYA_ARXCTLEIBLEEDCTL_REG          0x0514
++#define PCI_PHYA_RXRTERM_REG                   0x05A0
++#define PCI_PHYA_RXRTERMVCMEN_REG              0x05AC
++#define PCI_PHYA_RXCDRFBBCTL_REG               0x0678
++#define PCI_PHYA_TXDDESKEW_REG                 0x06EC
++#define PCI_PHYA_TXMISC_REG                    0x073C
++#define PCI_PHYA_ATXDRVACCDRV_REG              0x07F0
++
++/* PCIe RC Control */
++#define PCI_RC_BASE_ADD                        0x85030000
++#define PCI_RC_MSGRCVIE_REG                    0x0120
++   #define  INT_MR_SET                         0x01050000
++#define PCI_RC_MSGRCVIS_REG                    0x0124
++   #define  INT_MR_CLR                         0x010F0000
++#define PCI_RC_PEIE0_REG                       0x0200
++   #define INT_EN0_SET                         0x00000000
++#define PCI_RC_PEIS0_REG                       0x0204
++   #define INT_ST0_CLR                         0x00001200
++#define PCI_RC_PEIE1_REG                       0x0208
++   #define INT_EN1_SET                         0x00000000
++#define PCI_RC_PEIS1_REG                       0x020c
++   #define INT_ST1_CLR                         0x00030303
++#define PCI_RC_AMEIE_REG                       0x0210
++   #define INT_EN_AXIM_SET                     0x00000F0F
++#define PCI_RC_AMEIS_REG                       0x0214
++   #define INT_ST_AXIM_CLR                     0x00000F0F
++#define PCI_RC_ASEIE1_REG                      0x0220
++   #define INT_EN_AXIS_SET                     0x00000F03
++#define PCI_RC_ASEIS1_REG                      0x0224
++   #define INT_ST_AXIS_CLR                     0x00000F03
++#define PCI_RC_PERM_REG                        0x0300
++#define PCI_RC_VID_REG                         0x6000
++#define PCI_RC_RID_CC_REG                      0x6008
++   #define  REVID_CLSCODE_INIT                 0xFFFFFFDF
++#define PCI_RC_BARMSK00L_REG                   0x60A0
++   #define  BASEADR_MKL_ALLM                   0xFFFFFFFF
++#define PCI_RC_BARMSK00U_REG     		        0x60A4
++   #define  BASEADR_MKU_ALLM                   0xFFFFFFFF
++#define PCI_RC_BSIZE00_01_REG     		        0x60C8
++   #define  BASESZ_INIT                        0x00000000
++
++/* DMAC Common Control */
++#define DMA_CONTROL_REG						0x0800
++#define DMA_INTERRUPT_EANBLE_REG				0x0808
++#define DMA_INTERRUPT_STATUS_REG				0x080C
++
++/* DMAC Channel Control */
++#define DMA_CHANNEL_CONTROL_REG				0x0900
++#define QUE_ENTRY_LOWER_REG					0x0908
++#define QUE_ENTRY_UPPER_REG					0x090C
++
++/* DMAC DMA Setting */
++#define DMA_DESCRIPTOR_CONTROL_REG				0x0920
++#define DMA_SOURCE_ADDR_REG					0x0924
++#define DMA_DESTINATION_ADDR_REG				0x0928
++#define DMA_SIZE_REG							0x092C
++#define DMA_PCIE_UPPER_ADDR_REG				0x0930
++#define DMA_TRANSACTION_CONTROL_REG			0x0934
++#define DMA_DESCRIPTOR_LINK_POINTER_REG		0x093C
++
++/* DMAC DMA Status */
++#define DMA_REST_SIZE_REG						0x0950
++#define AXI_REQUEST_ADDR_REG					0x0954
++#define PCIE_REQUEST_ADDR_LOWER_REG			0x0958
++#define PCIE_REQUEST_ADDR_UPPER_REG			0x095C
++#define QUE_STATUS_REG							0x0960
++#define DMAC_ERROR_STATUS_REG					0x0968
++
++/* PCIe Configuration Register */
++#define PCIE_CONFIGURATION_REG					0x6000
++   #define PCI_RC_VID_ADR                      0x00
++   #define PCI_RC_RID_CC_ADR                   0x08
++   #define PCI_PM_CAPABILITIES                 0x40
++       #define PM_CAPABILITIES_INIT            0x4803E001
++   #define PCI_RC_BARMSK00L_ADR                0xA0
++   #define PCI_RC_BARMSK00U_ADR     		    0xA4
++   #define PCI_RC_BSIZE00_01_ADR     		    0xC8
++
++/* PCIe Configuration Special Register offset */
++#define PCIE_CONF_OFFSET_BAR0_MASK_LO			0x00A0
++#define PCIE_CONF_OFFSET_BAR0_MASK_UP			0x00A4
++
++/* PCI/AXI Window alignment */
++#define RZV2M_WINDOW_SIZE_MIN				0x00001000
++#define RZV2M_WINDOW_SIZE_MAX				0xFFFFFFFF
++#define RZV2M_PCI_WINDOW_SIZE_MAX			0x40000000
++
++#define INT_PCI_MSI_NR	32
++#define INT_PCI_INTX_NR	1
++
++#define RZV2M_PCI_MAX_RESOURCES 4
++#define MAX_NR_INBOUND_MAPS	6
++
++#define PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
++#define PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
++#define PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
++
++#define STS_CHECK_LOOP	500
++
++/* ----------------------------------------------------
++  PCIe Configuration setting value
++-------------------------------------------------------*/
++#define PCIE_CONF_VENDOR_ID						0x1912
++#define PCIE_CONF_DEVICE_ID						0x1135
++
++#define PCIE_CONF_REVISION_ID					0x00
++
++#define PCIE_CONF_BASE_CLASS					0x06
++#define PCIE_CONF_SUB_CLASS						0x04
++#define PCIE_CONF_PROGRAMING_IF					0x00
++
++#define PCIE_CONF_PRIMARY_BUS					0x00
++#define PCIE_CONF_SECOUNDARY_BUS				0x01
++#define PCIE_CONF_SUBORDINATE_BUS				0x01
++
++#define PCIE_CONF_MEMORY_BASE					0xFFFF
++#define PCIE_CONF_MEMORY_LIMIT					0xFFFF
++
++#define PCIE_CONF_BAR0_MASK_LO					0xFFFFFFFF
++#define PCIE_CONF_BAR0_MASK_UP					0xFFFFFFFF
++
++#define LINK_WIDTH_CHANGE_ENABLE 				0x01000000
++#define LINK_WIDTH_CHANGE_REQ_ON				0x00010000
++#define LINK_WIDTH_CHANGE_DONE					0x20000000
++#define LINK_WIDTH_CHANGE_REQ_OFF				0x00000000
++
++#define  LAM_PREFETCH	BIT(3)
++#define  LAM_64BIT		BIT(2)
++#define  LAR_ENABLE		BIT(1)
++#define  PAR_ENABLE		BIT(31)
++#define  IO_SPACE		BIT(8)
++
++/* ----------------------------------------------------
++  RAMA Area
++-------------------------------------------------------*/
++#define RAMA_ADDRESS			 				0x80100000
++
++struct rzv2m_axi_window_set {
++	u32	base[RZV2M_PCI_MAX_RESOURCES];
++	u32	mask[RZV2M_PCI_MAX_RESOURCES];
++	u32	dest[RZV2M_PCI_MAX_RESOURCES];
++};
++
++struct rzv2m_pci_window_set {
++	u32	base[RZV2M_PCI_MAX_RESOURCES];
++	u32	mask[RZV2M_PCI_MAX_RESOURCES];
++	u32	dest_u[RZV2M_PCI_MAX_RESOURCES];
++	u32	dest_l[RZV2M_PCI_MAX_RESOURCES];
++};
++
++struct rzv2m_interrupt_set {
++	u32	msi_win_addr;
++	u32	msi_win_mask;
++	u32	intx_ena;
++	u32	msi_ena;
++};
++
++struct rzv2m_save_reg {
++	struct rzv2m_axi_window_set	axi_window;
++	struct rzv2m_pci_window_set	pci_window;
++	struct rzv2m_interrupt_set		interrupt;
++};
++
++struct rzv2m_pcie {
++	struct device			*dev;
++	void __iomem			*base;
++	struct rzv2m_save_reg	save_reg;
++};
++
++
++struct rzv2m__pcie {
++	struct device		*dev;
++	void __iomem		*base;
++};
++
++void rzv2m_pci_write_reg(struct rzv2m_pcie *pcie, u32 val, unsigned long reg);
++u32 rzv2m_pci_read_reg(struct rzv2m_pcie *pcie, unsigned long reg);
++void rzv2m_rmw(struct rzv2m_pcie *pcie, int where, u32 mask, u32 data);
++u32 rzv2m_read_conf(struct rzv2m_pcie *pcie, int where);
++void rzv2m_write_conf(struct rzv2m_pcie *pcie, u32 data, int where);
++void rzv2m_pcie_set_outbound(struct rzv2m_pcie *pcie, int win,
++			    struct resource_entry *window);
++void rzv2m_pcie_set_inbound(struct rzv2m_pcie *pcie, u64 cpu_addr,
++			   u64 pci_addr, u64 flags, int idx, bool host);
++
++#endif

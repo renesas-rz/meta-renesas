@@ -1,0 +1,105 @@
+From e79e68ea766312821d7fefcecc865cbae01ec54c Mon Sep 17 00:00:00 2001
+From: CanhDao <canh.dao.ct@renesas.com>
+Date: Wed, 9 Mar 2022 13:44:57 +0700
+Subject: [PATCH] fixed-bug-usb-peripheral-driver
+
+Signed-off-by: CanhDao <canh.dao.ct@renesas.com>
+---
+ drivers/usb/gadget/udc/renesas_usb3_rzv2m.c | 39 ++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c b/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
+index 4b402e7..9630ec3 100644
+--- a/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
++++ b/drivers/usb/gadget/udc/renesas_usb3_rzv2m.c
+@@ -724,18 +724,6 @@ static void usb3_mode_config(struct renesas_usb3 *usb3, bool host, bool a_dev)
+ 	spin_unlock_irqrestore(&usb3->lock, flags);
+ }
+ 
+-static void rzv2m_check_drd_id(struct renesas_usb3 *usb3)
+-{
+-	u32 drd_id = usb3_read(usb3, USB3_USB_OTG_STA);
+-	
+-	if( drd_id == RZV2M_DRD_ID_HOST ){
+-		usb3->connection_state = USB_ROLE_HOST;
+-	}
+-	else{
+-		usb3->connection_state = USB_ROLE_DEVICE;
+-	}
+-}
+-
+ static bool usb3_is_a_device(struct renesas_usb3 *usb3)
+ {
+ 	return !(usb3_read(usb3, USB3_USB_OTG_STA) & USB_OTG_IDMON);
+@@ -744,10 +732,14 @@ static bool usb3_is_a_device(struct renesas_usb3 *usb3)
+ static void usb3_check_id(struct renesas_usb3 *usb3)
+ {
+ 	usb3->extcon_host = usb3_is_a_device(usb3);
+-	
+-	rzv2m_check_drd_id(usb3);
+-	
+-	if ((!usb3->role_sw_by_connector &&
++
++        if( usb3->extcon_host ){
++                usb3->connection_state = USB_ROLE_HOST;
++        }
++        else{
++                usb3->connection_state = USB_ROLE_DEVICE;
++        }
++        if ((!usb3->usb_role_switch_property &&	
+ 	     usb3->extcon_host && !usb3->forced_b_device) ||
+ 	     usb3->connection_state == USB_ROLE_HOST)
+ 		usb3_mode_config(usb3, true, true);
+@@ -764,8 +756,6 @@ static void renesas_usb3_init_controller(struct renesas_usb3 *usb3)
+ 	usb3_set_bit(usb3, USB_COM_CON_PN_WDATAIF_NL |
+ 		     USB_COM_CON_PN_RDATAIF_NL | USB_COM_CON_PN_LSTTR_PP,
+ 		     USB3_USB_COM_CON);
+-	usb3_write(usb3, USB_OTG_IDMON, USB3_USB_OTG_INT_STA);
+-	usb3_write(usb3, USB_OTG_IDMON, USB3_USB_OTG_INT_ENA);
+ 
+ 	usb3_check_id(usb3);
+ 	usb3_check_vbus(usb3);
+@@ -775,7 +765,6 @@ static void renesas_usb3_stop_controller(struct renesas_usb3 *usb3)
+ {
+ 	usb3_disconnect(usb3);
+ 	usb3_write(usb3, 0, USB3_P0_INT_ENA);
+-	usb3_write(usb3, 0, USB3_USB_OTG_INT_ENA);
+ 	usb3_write(usb3, 0, USB3_USB_INT_ENA_1);
+ 	usb3_write(usb3, 0, USB3_USB_INT_ENA_2);
+ 	usb3_write(usb3, 0, USB3_AXI_INT_ENA);
+@@ -2316,6 +2305,9 @@ static int renesas_usb3_start(struct usb_gadget *gadget,
+ 	/* hook up the driver */
+ 	usb3->driver = driver;
+ 
++        if(usb3_is_a_device(usb3))
++                return -EBUSY;
++
+ 	if (usb3->phy)
+ 		phy_init(usb3->phy);
+ 
+@@ -2333,7 +2325,10 @@ static int renesas_usb3_stop(struct usb_gadget *gadget)
+ 	usb3->softconnect = false;
+ 	usb3->gadget.speed = USB_SPEED_UNKNOWN;
+ 	usb3->driver = NULL;
+-	renesas_usb3_stop_controller(usb3);
++
++        if(!usb3_is_a_device(usb3)){
++                renesas_usb3_stop_controller(usb3);
++        }
+ 
+ 	if (usb3->phy)
+ 		phy_exit(usb3->phy);
+@@ -2872,6 +2867,10 @@ static int renesas_usb3_probe(struct platform_device *pdev)
+ 	usb3->workaround_for_vbus = priv->workaround_for_vbus;
+ 
+ 	renesas_usb3_debugfs_init(usb3, &pdev->dev);
++        usb3_check_id(usb3);
++
++        usb3_write(usb3, USB_OTG_IDMON, USB3_USB_OTG_INT_STA);
++        usb3_write(usb3, USB_OTG_IDMON, USB3_USB_OTG_INT_ENA);
+ 
+ 	dev_info(&pdev->dev, "probed%s\n", usb3->phy ? " with phy" : "");
+ 
+-- 
+2.7.4
+

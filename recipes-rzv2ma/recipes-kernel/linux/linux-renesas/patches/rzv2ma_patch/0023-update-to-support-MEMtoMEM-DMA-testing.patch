@@ -1,0 +1,38 @@
+From f0261844ff96c67e13a1ee31565115716786fae6 Mon Sep 17 00:00:00 2001
+From: Tai Huynh <tai.huynh.cp@renesas.com>
+Date: Tue, 16 Aug 2022 11:52:17 +0700
+Subject: [PATCH] update-to-support-MEMtoMEM-DMA-testing
+
+Signed-off-by: Tai Huynh <tai.huynh.cp@renesas.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ drivers/dma/dmaengine.c      | 4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 853a9f8..5ad4f4b 100755
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -443,3 +443,4 @@ CONFIG_RENESAS_POE3=y
+ CONFIG_GPT_RZG2L=y
+ CONFIG_POEG_RZG2L=y
+ CONFIG_POWER_RESET_RENESAS_RZV2M=y
++CONFIG_DMATEST=m
+diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
+index af3ee28..d0ff83a 100644
+--- a/drivers/dma/dmaengine.c
++++ b/drivers/dma/dmaengine.c
+@@ -528,6 +528,10 @@ enum dma_status dma_sync_wait(struct dma_chan *chan, dma_cookie_t cookie)
+ 			dev_err(chan->device->dev, "%s: timeout!\n", __func__);
+ 			return DMA_ERROR;
+ 		}
++		else
++		{
++			return 0;
++		}
+ 		if (status != DMA_IN_PROGRESS)
+ 			break;
+ 		cpu_relax();
+-- 
+2.7.4
+
