@@ -1,5 +1,12 @@
-DEBIAN_BASED = "${@bb.utils.contains('CIP_CORE', '1', 'debian', 'nondebian', d)}"
-#DEBIAN_BASED = "nondebian"
+def check_debian_mode(d):
+  debian = d.getVar("CIP_MODE")
+  if debian == 'Buster' or debian == 'Bullseye':
+     return 'debian'
+  else:
+     d.setVar("CIP_MODE", "None")
+     return 'nondebian'
+
+DEBIAN_BASED = "${@check_debian_mode(d)}"
 OVERRIDES .= ":${DEBIAN_BASED}"
 
 BBMASK_append_nondebian = " recipes-debian"
@@ -25,4 +32,3 @@ PREFERRED_VERSION_busybox_debian = "1.30.%"
 RDEPENDS_xz_append_debian = "bash"
 RDEPENDS_gzip_append_debian = "bash"
 RDEPENDS_adduser_append_debian = "perl"
-
