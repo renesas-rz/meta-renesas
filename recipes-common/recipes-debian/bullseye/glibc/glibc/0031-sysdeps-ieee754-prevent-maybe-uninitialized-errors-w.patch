@@ -1,0 +1,251 @@
+From 884e7d743d738be7ede3ac46b81f4c3e75ce4c96 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Fri, 30 Sep 2022 07:33:11 +0700
+Subject: [PATCH] sysdeps/ieee754: prevent maybe-uninitialized errors with -O
+
+With -O included in CFLAGS it fails to build with:
+
+../sysdeps/ieee754/ldbl-96/e_jnl.c: In function '__ieee754_jnl':
+../sysdeps/ieee754/ldbl-96/e_jnl.c:146:20: error: 'temp' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+      b = invsqrtpi * temp / sqrtl (x);
+          ~~~~~~~~~~^~~~~~
+../sysdeps/ieee754/ldbl-96/e_jnl.c: In function '__ieee754_ynl':
+../sysdeps/ieee754/ldbl-96/e_jnl.c:375:16: error: 'temp' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+  b = invsqrtpi * temp / sqrtl (x);
+      ~~~~~~~~~~^~~~~~
+../sysdeps/ieee754/dbl-64/e_jn.c: In function '__ieee754_jn':
+../sysdeps/ieee754/dbl-64/e_jn.c:113:20: error: 'temp' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+      b = invsqrtpi * temp / sqrt (x);
+          ~~~~~~~~~~^~~~~~
+../sysdeps/ieee754/dbl-64/e_jn.c: In function '__ieee754_yn':
+../sysdeps/ieee754/dbl-64/e_jn.c:320:16: error: 'temp' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+  b = invsqrtpi * temp / sqrt (x);
+      ~~~~~~~~~~^~~~~~
+
+Build tested with Yocto for ARM, AARCH64, X86, X86_64, PPC, MIPS, MIPS64
+with -O, -O1, -Os.
+For soft-fp ARM it needs one more fix for -O1:
+https://sourceware.org/ml/libc-alpha/2018-09/msg00300.html
+For AARCH64 it needs one more fix in locale for -Os.
+
+        [BZ #23716]
+        * sysdeps/ieee754/dbl-96/e_jnl.c: Fix build with -O
+        * sysdeps/ieee754/ldbl-96/e_jnl.c: Likewise.
+        * sysdeps/ieee754/ldbl-128/e_jnl.c: Likewise.
+        * sysdeps/ieee754/ldbl-128ibm/e_jnl.c: Likewise.
+
+Work around the issue instead of removing -O like we do with
+SELECTED_OPTIMIZATION
+
+Upstream-Status: Submitted [https://www.sourceware.org/ml/libc-alpha/2018-09/msg00299.html]
+
+Signed-off-by: Martin Jansa <Martin.Jansa@gmail.com>
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ sysdeps/ieee754/dbl-64/e_jn.c       | 21 +++++++++++++++++++++
+ sysdeps/ieee754/ldbl-128/e_jnl.c    | 25 +++++++++++++++++++++++--
+ sysdeps/ieee754/ldbl-128ibm/e_jnl.c | 25 +++++++++++++++++++++++--
+ sysdeps/ieee754/ldbl-96/e_jnl.c     | 25 +++++++++++++++++++++++--
+ 4 files changed, 90 insertions(+), 6 deletions(-)
+
+diff --git a/sysdeps/ieee754/dbl-64/e_jn.c b/sysdeps/ieee754/dbl-64/e_jn.c
+index f61d71fc..bfa76e36 100644
+--- a/sysdeps/ieee754/dbl-64/e_jn.c
++++ b/sysdeps/ieee754/dbl-64/e_jn.c
+@@ -44,6 +44,7 @@
+ #include <fenv_private.h>
+ #include <math-underflow.h>
+ #include <libm-alias-finite.h>
++#include <libc-diag.h>
+ 
+ static const double
+   invsqrtpi = 5.64189583547756279280e-01, /* 0x3FE20DD7, 0x50429B6D */
+@@ -112,7 +113,17 @@ __ieee754_jn (int n, double x)
+ 	      case 3: temp = c - s; break;
+ 	      default: __builtin_unreachable ();
+ 	      }
++            /* With GCC 8 (and older) when compiling with -O the compiler
++               warns that the variable 'temp', may be used uninitialized.
++               The switch above covers all possible values of n & 3
++               but GCC without VRP enabled isn't able to figure out the
++               range of possible values is [0,3] as explained in:
++               https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++               so it's false possitive with -O1 and lower. */
++            DIAG_PUSH_NEEDS_COMMENT;
++            DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
+ 	    b = invsqrtpi * temp / sqrt (x);
++            DIAG_POP_NEEDS_COMMENT;
+ 	  }
+ 	else
+ 	  {
+@@ -320,7 +331,17 @@ __ieee754_yn (int n, double x)
+ 	  case 3: temp = s + c; break;
+ 	  default: __builtin_unreachable ();
+ 	  }
++        /* With GCC 8 (and older) when compiling with -O the compiler
++           warns that the variable 'temp', may be used uninitialized.
++           The switch above covers all possible values of n & 3
++           but GCC without VRP enabled isn't able to figure out the
++           range of possible values is [0,3] as explained in:
++           https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++           so it's false possitive with -O1 and lower. */
++        DIAG_PUSH_NEEDS_COMMENT;
++        DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
+ 	b = invsqrtpi * temp / sqrt (x);
++        DIAG_POP_NEEDS_COMMENT;
+       }
+     else
+       {
+diff --git a/sysdeps/ieee754/ldbl-128/e_jnl.c b/sysdeps/ieee754/ldbl-128/e_jnl.c
+index 2abd32ad..16757410 100644
+--- a/sysdeps/ieee754/ldbl-128/e_jnl.c
++++ b/sysdeps/ieee754/ldbl-128/e_jnl.c
+@@ -63,6 +63,7 @@
+ #include <fenv_private.h>
+ #include <math-underflow.h>
+ #include <libm-alias-finite.h>
++#include <libc-diag.h>
+ 
+ static const _Float128
+   invsqrtpi = L(5.6418958354775628694807945156077258584405E-1),
+@@ -154,7 +155,17 @@ __ieee754_jnl (int n, _Float128 x)
+ 	      default:
+ 		__builtin_unreachable ();
+ 	      }
+-	    b = invsqrtpi * temp / sqrtl (x);
++            /* With GCC 8 (and older) when compiling with -O the compiler
++               warns that the variable 'temp', may be used uninitialized.
++               The switch above covers all possible values of n & 3
++               but GCC without VRP enabled isn't able to figure out the
++               range of possible values is [0,3] as explained in:
++               https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++               so it's false possitive with -O1 and lower. */
++            DIAG_PUSH_NEEDS_COMMENT;
++            DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
++            b = invsqrtpi * temp / sqrtl (x);
++            DIAG_POP_NEEDS_COMMENT;
+ 	  }
+ 	else
+ 	  {
+@@ -392,7 +403,17 @@ __ieee754_ynl (int n, _Float128 x)
+ 	  default:
+ 	    __builtin_unreachable ();
+ 	  }
+-	b = invsqrtpi * temp / sqrtl (x);
++        /* With GCC 8 (and older) when compiling with -O the compiler
++           warns that the variable 'temp', may be used uninitialized.
++           The switch above covers all possible values of n & 3
++           but GCC without VRP enabled isn't able to figure out the
++           range of possible values is [0,3] as explained in:
++           https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++           so it's false possitive with -O1 and lower. */
++        DIAG_PUSH_NEEDS_COMMENT;
++        DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
++        b = invsqrtpi * temp / sqrtl (x);
++        DIAG_POP_NEEDS_COMMENT;
+       }
+     else
+       {
+diff --git a/sysdeps/ieee754/ldbl-128ibm/e_jnl.c b/sysdeps/ieee754/ldbl-128ibm/e_jnl.c
+index 1ea48ff6..beda1ca0 100644
+--- a/sysdeps/ieee754/ldbl-128ibm/e_jnl.c
++++ b/sysdeps/ieee754/ldbl-128ibm/e_jnl.c
+@@ -63,6 +63,7 @@
+ #include <fenv_private.h>
+ #include <math-underflow.h>
+ #include <libm-alias-finite.h>
++#include <libc-diag.h>
+ 
+ static const long double
+   invsqrtpi = 5.6418958354775628694807945156077258584405E-1L,
+@@ -154,7 +155,17 @@ __ieee754_jnl (int n, long double x)
+ 	      default:
+ 		__builtin_unreachable ();
+ 	      }
+-	    b = invsqrtpi * temp / sqrtl (x);
++            /* With GCC 8 (and older) when compiling with -O the compiler
++               warns that the variable 'temp', may be used uninitialized.
++               The switch above covers all possible values of n & 3
++               but GCC without VRP enabled isn't able to figure out the
++               range of possible values is [0,3] as explained in:
++               https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++               so it's false possitive with -O1 and lower. */
++            DIAG_PUSH_NEEDS_COMMENT;
++            DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
++            b = invsqrtpi * temp / sqrtl (x);
++            DIAG_POP_NEEDS_COMMENT;
+ 	  }
+ 	else
+ 	  {
+@@ -392,7 +403,17 @@ __ieee754_ynl (int n, long double x)
+ 	  default:
+ 	    __builtin_unreachable ();
+ 	  }
+-	b = invsqrtpi * temp / sqrtl (x);
++        /* With GCC 8 (and older) when compiling with -O the compiler
++           warns that the variable 'temp', may be used uninitialized.
++           The switch above covers all possible values of n & 3
++           but GCC without VRP enabled isn't able to figure out the
++           range of possible values is [0,3] as explained in:
++           https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++           so it's false possitive with -O1 and lower. */
++        DIAG_PUSH_NEEDS_COMMENT;
++        DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
++        b = invsqrtpi * temp / sqrtl (x);
++        DIAG_POP_NEEDS_COMMENT;
+       }
+     else
+       {
+diff --git a/sysdeps/ieee754/ldbl-96/e_jnl.c b/sysdeps/ieee754/ldbl-96/e_jnl.c
+index ee0eff88..630b852f 100644
+--- a/sysdeps/ieee754/ldbl-96/e_jnl.c
++++ b/sysdeps/ieee754/ldbl-96/e_jnl.c
+@@ -63,6 +63,7 @@
+ #include <fenv_private.h>
+ #include <math-underflow.h>
+ #include <libm-alias-finite.h>
++#include <libc-diag.h>
+ 
+ static const long double
+   invsqrtpi = 5.64189583547756286948079e-1L, two = 2.0e0L, one = 1.0e0L;
+@@ -147,7 +148,17 @@ __ieee754_jnl (int n, long double x)
+ 	      default:
+ 		__builtin_unreachable ();
+ 	      }
+-	    b = invsqrtpi * temp / sqrtl (x);
++            /* With GCC 8 (and older) when compiling with -O the compiler
++               warns that the variable 'temp', may be used uninitialized.
++               The switch above covers all possible values of n & 3
++               but GCC without VRP enabled isn't able to figure out the
++               range of possible values is [0,3] as explained in:
++               https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++               so it's false possitive with -O1 and lower. */
++            DIAG_PUSH_NEEDS_COMMENT;
++            DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
++            b = invsqrtpi * temp / sqrtl (x);
++            DIAG_POP_NEEDS_COMMENT;
+ 	  }
+ 	else
+ 	  {
+@@ -378,7 +389,17 @@ __ieee754_ynl (int n, long double x)
+ 	  default:
+ 	    __builtin_unreachable ();
+ 	  }
+-	b = invsqrtpi * temp / sqrtl (x);
++        /* With GCC 8 (and older) when compiling with -O the compiler
++           warns that the variable 'temp', may be used uninitialized.
++           The switch above covers all possible values of n & 3
++           but GCC without VRP enabled isn't able to figure out the
++           range of possible values is [0,3] as explained in:
++           https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69230
++           so it's false possitive with -O1 and lower. */
++        DIAG_PUSH_NEEDS_COMMENT;
++        DIAG_IGNORE_NEEDS_COMMENT (8, "-Wmaybe-uninitialized");
++        b = invsqrtpi * temp / sqrtl (x);
++        DIAG_POP_NEEDS_COMMENT;
+       }
+     else
+       {
+-- 
+2.25.1
+

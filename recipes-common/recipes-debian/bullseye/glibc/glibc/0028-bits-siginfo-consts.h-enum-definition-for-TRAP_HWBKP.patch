@@ -1,0 +1,50 @@
+From 66db05ee3cc9c388487b4b42be43820701524ba8 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Fri, 30 Sep 2022 07:22:41 +0700
+Subject: [PATCH] bits/siginfo-consts.h: enum definition for TRAP_HWBKPT is
+ missing
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Compile following linux kernel test code with latest glibc:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/testing/selftests/breakpoints/breakpoint_test_arm64.c
+
+and we get following error:
+breakpoint_test_arm64.c: In function ‘run_test’:
+breakpoint_test_arm64.c:171:25: error: ‘TRAP_HWBKPT’ undeclared (first use in this function)
+  if (siginfo.si_code != TRAP_HWBKPT) {
+                         ^
+I can compile test code by modifying my local
+/usr/include/bits/siginfo.h and test works great. Therefore, this patch
+will be needed in upstream glibc so that issue is fixed there as well.
+
+Signed-off-by: Pratyush Anand <panand@redhat.com>
+Upstream-Status: Submitted [https://sourceware.org/bugzilla/show_bug.cgi?id=21286]
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ bits/siginfo-consts.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/bits/siginfo-consts.h b/bits/siginfo-consts.h
+index dbe1d18f..1e534d0b 100644
+--- a/bits/siginfo-consts.h
++++ b/bits/siginfo-consts.h
+@@ -106,8 +106,12 @@ enum
+ {
+   TRAP_BRKPT = 1,		/* Process breakpoint.  */
+ #  define TRAP_BRKPT	TRAP_BRKPT
+-  TRAP_TRACE			/* Process trace trap.  */
++  TRAP_TRACE,			/* Process trace trap.  */
+ #  define TRAP_TRACE	TRAP_TRACE
++  TRAP_BRANCH,                 /* Process branch trap. */
++# define TRAP_BRANCH   TRAP_BRANCH
++  TRAP_HWBKPT                  /* hardware breakpoint/watchpoint  */
++# define TRAP_HWBKPT   TRAP_HWBKPT
+ };
+ # endif
+ 
+-- 
+2.25.1
+

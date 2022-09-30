@@ -17,10 +17,10 @@ BBMASK_append_debian = " perl_debian"
 GCCVERSION_debian = "8.3.0"
 SDKGCCVERSION_debian = "${GCCVERSION}"
 
-GLIBCVERSION_debian = "2.28%"
+GLIBCVERSION_debian = "${@'2.28%' if 'Buster' in '${CIP_MODE}' else '2.31%'}"
 PREFERRED_VERSION_glibc_debian = "${GLIBCVERSION}"
 PREFERRED_VERSION_nativesdk-glibc_debian = "${GLIBCVERSION}"
-PREFERRED_VERSION_nativesdk-glibc-locale_debian = "${GLIBCVERSION}" 
+PREFERRED_VERSION_nativesdk-glibc-locale_debian = "${GLIBCVERSION}"
 
 BINUVERSION_debian = "2.31.%"
 PREFERRED_VERSION_nativesdk-binutils_debian = "${BINUVERSION}"
