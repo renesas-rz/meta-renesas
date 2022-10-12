@@ -1,6 +1,6 @@
 # meta-renesas
 
-This is a Yocto build layer(version:dunfell) that provides support for the RZ/G2 Group of 64bit Arm-based MPUs from Renesas Electronics.
+This is a Yocto build layer(version:dunfell) that provides support for the RZ/G2 Group of 64bit Arm-based MPUs and RZ/Five 64bit RISC-V based MPU from Renesas Electronics.
 Currently the following boards and MPUs are supported:
 
 - Board: EK874 / MPU: R8A774C0 (RZ/G2E)
@@ -12,6 +12,7 @@ Currently the following boards and MPUs are supported:
 - Board: RZG2UL SMARC Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
 - Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 - Board: RZV2L Development Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
+- Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
 
 ## Patches
 
@@ -122,6 +123,7 @@ Prepare default configuration files. :
 * RZ/G2LC: smarc-rzg2lc
 * RZ/G2UL: smarc-rzg2ul
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev
+* RZ/Five:  smarc-rzfive
 
 Build the target file system image using bitbake:
 ```bash
