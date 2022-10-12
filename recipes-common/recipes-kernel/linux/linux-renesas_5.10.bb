@@ -6,15 +6,16 @@ require include/docker-control.inc
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
 COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2n|hihope-rzg2m|hihope-rzg2h)"
+COMPATIBLE_MACHINE_rzfive = "(smarc-rzfive)"
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip13-rt5", "rz-5.10-cip13",d)}"
-SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "c8798f35184b8115f9aba9f972eb12ed3bb4e9e0", "61bbadb8a4b899371c83e1cbadd0a46ffd6ebb40",d)}"
+BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip17-rt7", "rz-5.10-cip17",d)}"
+SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "cad20140304dfd1ee91bf7603bb37a946c8b58e4", "01aa4841cf76a1805757e1caf514d9ff1fca5fce",d)}"
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
-LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.131-cip13-rt5", "5.10.131-cip13",d)}"
+LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.145-cip17-rt7", "5.10.145-cip17",d)}"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
@@ -25,6 +26,7 @@ SRC_URI_append = "\
 "
 
 KBUILD_DEFCONFIG = "defconfig"
+KBUILD_DEFCONFIG_rzfive = "renesas_defconfig"
 KCONFIG_MODE = "alldefconfig"
 
 do_kernel_metadata_af_patch() {
