@@ -23,6 +23,8 @@ S = "${WORKDIR}/git"
 SRC_URI_append = " \
     file://defconfig \
     file://common.cfg \
+    file://patches/0001-v4l2-core-remove-unhelpful-kernel-warning.patch \
+    file://patches/0002-rt-add-kernel-module-backfire-for-rt-tests.patch \
 "
 
 SRC_URI_append_iwg20m-g1m = " \
