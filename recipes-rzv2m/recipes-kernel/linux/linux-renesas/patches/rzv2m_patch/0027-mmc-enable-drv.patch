@@ -1,0 +1,67 @@
+From c29124ac6adda8f11c48c26f0be2a66c226fd9dd Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 28 Feb 2022 09:46:41 +0700
+Subject: [PATCH] mmc-enable-drv
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ .../boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 18 ++++++++++++++++++
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi          | 13 +++++++++++++
+ 2 files changed, 31 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index c5e6673..a114d05 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -97,6 +97,24 @@
+                states = <3300000 1
+                          1800000 0>;
+        };
++
++       reg_1p8v: regulator0 {
++               compatible = "regulator-fixed";
++               regulator-name = "fixed-1.8V";
++               regulator-min-microvolt = <1800000>;
++               regulator-max-microvolt = <1800000>;
++               regulator-boot-on;
++               regulator-always-on;
++       };
++
++       reg_3p3v: regulator1 {
++               compatible = "regulator-fixed";
++               regulator-name = "fixed-3.3V";
++               regulator-min-microvolt = <3300000>;
++               regulator-max-microvolt = <3300000>;
++               regulator-boot-on;
++               regulator-always-on;
++       };
+ };
+ 
+ #if 1 /* used cpg(clock pulse generator) */
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 49284aa..ea808a0 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -279,6 +279,19 @@
+                };
+ #endif
+ 
++               eMM: sd@85020000 {
++                       compatible = "renesas,sdhi-r8a774c0",
++                                       "renesas,rcar-gen3-sdhi";
++                       reg = <0 0x85020000 0 0x2000>;
++                       interrupts = <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 355 IRQ_TYPE_LEVEL_HIGH>;
++                       clocks = <&imclk>;                                                                                                                                                  +                       max-frequency = <200000000>;
++                       vmmc-supply = <&reg_3p3v>;
++                       vqmmc-supply = <&reg_1p8v>;
++                       bus-width = <8>;
++                       non-removable;
++                       status = "okay";
++               };
++
+ #if 1 /* used soc systems */
+                gic: interrupt-controller@82000000 {
+                        compatible = "arm,gic-400";
+-- 
+2.7.4
+

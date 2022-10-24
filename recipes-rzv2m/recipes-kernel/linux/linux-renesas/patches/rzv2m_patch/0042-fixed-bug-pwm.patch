@@ -1,0 +1,31 @@
+From ff97261ac200553f75027309e7429e830c7745ef Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 1 Mar 2022 09:05:12 +0700
+Subject: [PATCH] fixed-bug-pwm
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index cd689a5..a6e416e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -14,13 +14,6 @@
+     model = "RZ/V2M";
+     compatible = "rdk,rdk", "renesas,r8arzv2m";
+ 
+-    backlight {
+-        compatible = "pwm-backlight";
+-        pwms = <&pwm0 0 5000000>;
+-        brightness-levels = <0 4 8 16 32 64 128 255>;
+-        default-brightness-level = <6>;
+-    };
+-
+     aliases {
+         serial0 = &uart0;
+     };
+-- 
+2.7.4
+

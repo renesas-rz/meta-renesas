@@ -1,0 +1,26 @@
+From 28f1540f36a43ebe3d3c2b4c8c0784b4e2f73830 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 25 Feb 2022 17:17:22 +0700
+Subject: [PATCH] enabled_read-only_mappings
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 1ae03ae..fbc620e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -18,7 +18,7 @@
+        };
+ 
+        chosen {
+-		bootargs = "earlycon=uart,mmio32,0xA4040000,115200n8 console=ttyS0,115200n8 loglevel=8 vmalloc=384M root=/dev/mmcblk0p2 rootwait rootfstype=ext3 rw";
++		bootargs = "earlycon=uart,mmio32,0xA4040000,115200n8 console=ttyS0,115200n8 loglevel=8 vmalloc=384M root=/dev/mmcblk0p2 rootwait rootfstype=ext3 rw; rodata=off";
+ 		stdout-path = "serial0:115200n8";
+        };
+ 
+-- 
+2.7.4
+

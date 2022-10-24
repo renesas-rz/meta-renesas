@@ -1,0 +1,74 @@
+diff --git a/cmd/Makefile b/cmd/Makefile
+index 3ed68bf..020a41e 100755
+--- a/cmd/Makefile
++++ b/cmd/Makefile
+@@ -213,7 +213,6 @@ obj-$(CONFIG_$(SPL_)CMD_TLV_EEPROM) += tlv_eeprom.o
+ # core command
+ obj-y += nvedit.o
+ obj-y += ecc.o
+-obj-y += rdk.o
+ 
+ obj-$(CONFIG_CMD_BCM_EXT_UTILS) += broadcom/
+ 
+diff --git a/cmd/rdk.c a/cmd/rdk.c
+deleted file mode 100644
+index cb858e4..0000000
+--- a/cmd/rdk.c
++++ /dev/null
+@@ -1,56 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-#include <common.h>
+-#include <command.h>
+-
+-#define BASE_ADDR_PSC       0xA3700000
+-
+-extern void CMN_DelayInUSec(uint64_t us);
+-
+-static inline void psc_write32( uintptr_t addr, uint32_t val )
+-{
+-	*(volatile unsigned int*)(BASE_ADDR_PSC+addr) = val;
+-}
+-
+-
+-//static int do_rdk_shutdown(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+-static int do_rdk_shutdown(caddr_t *cmdtp, int flag, int argc, char * const argv[])
+-
+-{
+-    
+-    printf("Shutdown the rdk board...\n");
+-    psc_write32(0x00,0x1);
+-    psc_write32(0x04,0x1);
+-    psc_write32(0x50,0x1);
+-    CMN_DelayInUSec(1000*1000); //wait 1sec
+-    return 0;
+-}
+-
+-U_BOOT_CMD(
+-	rdk_shutdown, 1, 0,	do_rdk_shutdown,
+-	"Shutdown the RDK board.",
+-    "\n"
+-    "\t- Shutdown the RDK board on u-boot"
+-);
+-
+-

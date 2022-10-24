@@ -1,0 +1,27 @@
+From 3c45e63f2ad14dddd2461607c674777a42b80ca2 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 28 Feb 2022 17:01:12 +0700
+Subject: [PATCH] replace_devm_ioremap_nocache_to_devm_ioremap_in_timer
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/hw_tim/tim_rzv2m.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/hw_tim/tim_rzv2m.c b/drivers/hw_tim/tim_rzv2m.c
+index a6539c1..d75bd69 100644
+--- a/drivers/hw_tim/tim_rzv2m.c
++++ b/drivers/hw_tim/tim_rzv2m.c
+@@ -338,7 +338,8 @@ static int tim_dev_probe(struct platform_device *pdev)
+ 
+     //printk("%s:phy_addr[0x%x] \n",__func__,res->start);
+ 
+-    priv->base = devm_ioremap_nocache(&pdev->dev, res->start, resource_size(res));
++    //priv->base = devm_ioremap_nocache(&pdev->dev, res->start, resource_size(res));
++    priv->base = devm_ioremap(&pdev->dev, res->start, resource_size(res));
+     if (!priv->base) {
+         dev_err(&pdev->dev, "cannot ioremap\n");
+         return -EINVAL;
+-- 
+2.7.4
+

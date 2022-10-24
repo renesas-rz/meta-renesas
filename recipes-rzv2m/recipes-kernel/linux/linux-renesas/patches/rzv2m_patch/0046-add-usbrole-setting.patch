@@ -1,0 +1,54 @@
+From f7c16e32ffdd402fd400d434a3096be0cdb07759 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 1 Mar 2022 09:30:07 +0700
+Subject: [PATCH] add-usbrole-setting
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/usb/host/xhci-rzv2m.c | 23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/usb/host/xhci-rzv2m.c b/drivers/usb/host/xhci-rzv2m.c
+index 6a94a99..042e9af 100644
+--- a/drivers/usb/host/xhci-rzv2m.c
++++ b/drivers/usb/host/xhci-rzv2m.c
+@@ -59,19 +59,10 @@ int xhci_rzv2m_drd_init(struct usb_hcd *hcd)
+        u32 temp;
+ 
+        if (hcd->regs != NULL) {
+-               /* perecon hostcon reset */
+-               temp = readl(hcd->regs + RZV2M_DRD_HC_OFFSET +
+-                               RZV2M_DRD_DRDCON);
+-               temp |= (RZV2M_DRD_PERI_RST | RZV2M_DRD_HOST_RST);
+-               writel(temp, hcd->regs + RZV2M_DRD_HC_OFFSET +
+-                               RZV2M_DRD_DRDCON);
+-
+-               /* Host role setting */
+-               temp = readl(hcd->regs + RZV2M_DRD_HC_OFFSET +
+-                               RZV2M_DRD_DRDCON);
+-               temp &= ~(RZV2M_DRD_PERICON | RZV2M_DRD_HOST_RST);
+-               writel(temp, hcd->regs + RZV2M_DRD_HC_OFFSET +
+-                               RZV2M_DRD_DRDCON);
++               temp = readl(hcd->regs + RZV2M_DRD_HC_OFFSET);
++               if(temp != RZV2M_DRD_PERI_RST){
++                       return -EFAULT;
++               }
+        }
+        return 0;
+ }
+@@ -86,6 +77,12 @@ void xhci_rzv2m_start(struct usb_hcd *hcd)
+                temp |= RZV2M_USB3_INT_ENA_VAL;
+                writel(temp, hcd->regs + RZV2M_USB3_INTEN);
+        }
++       else{
++               return -EFAULT;
++       }
++
++       return 0;
++
+ }
+ 
+ 
+-- 
+2.7.4
+

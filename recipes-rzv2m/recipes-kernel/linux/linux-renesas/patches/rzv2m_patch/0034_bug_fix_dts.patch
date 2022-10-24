@@ -1,0 +1,59 @@
+From 28173ae460d2a9031c758694ae0f162ff2700ef8 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 28 Feb 2022 12:05:50 +0700
+Subject: [PATCH] bug_fix_dts
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 7 +------
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi                 | 2 +-
+ 2 files changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index a6e017e..644dcb1 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -12,7 +12,7 @@
+ / {
+ 
+     model = "RZ/V2M";
+-    compatible = "renesas,evaluation-board", "renesas,r9a09g011gbg";
++    compatible = "rdk,rdk", "renesas,r8arzv2m";
+ 
+     aliases {
+         serial0 = &uart0;
+@@ -83,7 +83,6 @@
+         regulator-min-microvolt = <1800000>;
+         regulator-max-microvolt = <3300000>;
+ 
+-/*      gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;   */
+         gpios-states = <1>;
+         states = <3300000 1
+               1800000 0>;
+@@ -114,10 +113,6 @@
+     clock-frequency = <48000000>;
+ };
+ 
+-&extal_clk {
+-    clock-frequency = <48000000>;
+-};
+-
+ &xhci0 {
+     status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index cbb5c89..cb6ffcc 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -72,7 +72,7 @@
+     imclk: imclk@200M {
+         #clock-cells = <0>;
+         compatible = "fixed-clock";
+-        clock-frequency = <0>;
++        clock-frequency = <200000000>;
+     };
+     pclk: pclk@100M {
+         #clock-cells = <0>;
+-- 
+2.7.4
+

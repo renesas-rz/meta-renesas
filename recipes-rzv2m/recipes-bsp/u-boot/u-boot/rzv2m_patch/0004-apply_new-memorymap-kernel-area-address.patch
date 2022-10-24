@@ -1,0 +1,28 @@
+From c45b82f6847e7f881492655bfdbd824b1777e4f4 Mon Sep 17 00:00:00 2001
+From: Tai Huynh <tai.huynh.cp@renesas.com>
+Date: Wed, 18 May 2022 10:18:00 +0700
+Subject: [PATCH] apply_new-memorymap-kernel-area-address
+
+Signed-off-by: Tai Huynh <tai.huynh.cp@renesas.com>
+---
+ include/configs/rzv2m.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/configs/rzv2m.h b/include/configs/rzv2m.h
+index c855827041..46c393236a 100644
+--- a/include/configs/rzv2m.h
++++ b/include/configs/rzv2m.h
+@@ -57,8 +57,8 @@
+ 	"serverip=192.168.1.10\0" \
+ 	"gatewayip=192.168.0.1\0" \
+ 	"netmask=255.255.255.0\0" \
+-	"loadaddr=0x58080000\0" \
+-	"fdt_addr=0x58000000\0" \
++	"loadaddr=0x180080000\0" \
++        "fdt_addr=0x180000000\0" \
+ 	"fdt_file=r9a09g011gbg-evaluation-board.dtb\0" \
+ 	"kernel=Image\0" \
+ 	"rtos=core1_uart.bin\0" \
+-- 
+2.25.1
+

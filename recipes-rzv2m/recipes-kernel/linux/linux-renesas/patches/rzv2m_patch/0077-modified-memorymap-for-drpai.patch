@@ -1,0 +1,55 @@
+From e563d9f12cb4c0849e9aa7fde2f1b56aafe952bb Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 14 Mar 2022 08:28:02 +0700
+Subject: [PATCH] modified-memorymap-for-drpai
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ .../arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index b36e49b..fceeb3e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -34,23 +34,23 @@
+         ranges;
+ 
+         /* global autoconfigured region for contiguous allocations */
+-	linux,cma@1E7800000 {
++	linux,cma@1B8000000 {
+             compatible = "shared-dma-pool";
+             reusable;
+-	    reg = <0x1 0xE7800000 0x0 0x8000000>;
++	    reg = <0x1 0xB8000000 0x0 0x8000000>;
+             linux,cma-default;
+         };
+ 
+         /* device specific region for contiguous allocations */
+         drp_reserved: linux,CMAtoDRP {
+             reusable;
+-	    reg = <0x1 0xEF800000 0x0 0x10000000>;
++	    reg = <0x1 0xC0000000 0x0 0x20000000>;
+         };
+ 
+-        v4l2_reserved: v4l2-DRP_buf@0 {
++	image_buf0: image_buf@0 {
+             compatible = "shared-dma-pool";
+             reusable;
+-	    reg = <0x1 0xFF800000 0x0 0x400000>; //4MiB
++	    reg = <0x1 0xFFC00000 0x0 0x400000>; //4MiB
+             label = "image_buf0";
+         };
+ 
+@@ -62,7 +62,7 @@
+         minor-number = <0>;
+         size = <0x400000>; // 4MiB
+         dma-coherent;
+-        memory-region = <&v4l2_reserved>;
++	memory-region = <&image_buf0>;
+     };
+ 
+     vcc_sdhi0: regulator-vcc-sdhi0 {
+-- 
+2.7.4
+

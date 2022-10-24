@@ -1,0 +1,39 @@
+From 64f9db7bee49c04ac1142e9e832aa755eb25102e Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Fri, 15 Apr 2022 14:05:07 +0700
+Subject: [PATCH] include sys_soc library and add comma for SD
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/mmc/host/renesas_sdhi_core.c          | 1 +
+ drivers/mmc/host/renesas_sdhi_internal_dmac.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index 85c8805a205d..e2abe58176f5 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -32,6 +32,7 @@
+ #include <linux/sh_dma.h>
+ #include <linux/delay.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/sys_soc.h>
+ 
+ #include "renesas_sdhi.h"
+ #include "tmio_mmc.h"
+diff --git a/drivers/mmc/host/renesas_sdhi_internal_dmac.c b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+index 9c88361dd428..1d482313af0c 100644
+--- a/drivers/mmc/host/renesas_sdhi_internal_dmac.c
++++ b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+@@ -122,7 +122,7 @@ static const struct of_device_id renesas_sdhi_internal_dmac_of_match[] = {
+ 	{ .compatible = "renesas,sdhi-r8a7795", .data = &of_rcar_gen3_compatible, },
+ 	{ .compatible = "renesas,sdhi-r8a7796", .data = &of_rcar_gen3_compatible, },
+ 	{ .compatible = "renesas,rcar-gen3-sdhi", .data = &of_rcar_gen3_compatible, },
+-	{ .compatible = "renesas,rzv2m-sdhi", .data = &of_rcar_gen3_compatible, }
++	{ .compatible = "renesas,rzv2m-sdhi", .data = &of_rcar_gen3_compatible, },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, renesas_sdhi_internal_dmac_of_match);
+-- 
+2.25.1
+

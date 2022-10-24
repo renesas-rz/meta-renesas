@@ -1,0 +1,35 @@
+From ee199fe246bb1ad320acf8e8ea33c96c2235e28a Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 28 Feb 2022 10:00:34 +0700
+Subject: [PATCH] enable-pmu-core0
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index ea808a0..e59a84d 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -114,13 +114,13 @@
+                };
+        };
+ 
+-       pmu_a53 {
++       pmu_a53 { /* Support only for core0 not core1 */
+                compatible = "arm,cortex-a53-pmu";
+-               interrupts-extended = <&gic GIC_SPI 38 IRQ_TYPE_LEVEL_HIGH>,
+-                                     <&gic GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
+-               interrupt-affinity = <&a53_0>, <&a53_1>;
++               interrupts-extended = <&gic GIC_SPI 38 IRQ_TYPE_LEVEL_HIGH>;
++               interrupt-affinity = <&a53_0>;	       
+        };
+ 
++#if 0
+        psci {
+                compatible = "arm,psci-1.0", "arm,psci-0.2";
+                method = "smc";
+-- 
+2.7.4
+

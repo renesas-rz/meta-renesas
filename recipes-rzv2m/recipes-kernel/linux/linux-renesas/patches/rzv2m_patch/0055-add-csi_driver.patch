@@ -1,0 +1,1429 @@
+From 63febd90ac901ff1eca0e5415b79997e86b818cf Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Wed, 2 Mar 2022 11:11:59 +0700
+Subject: [PATCH] add-csi_driver
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ .../dts/renesas/r9a09g011gbg-evaluation-board.dts  |  11 +
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi      |  86 +-
+ arch/arm64/configs/defconfig                       |   2 +
+ drivers/spi/Kconfig                                |   5 +
+ drivers/spi/Makefile                               |   1 +
+ drivers/spi/rzv2m_csi.c                            | 974 +++++++++++++++++++++
+ drivers/spi/spidev.c                               |   1 +
+ include/linux/spi/rzv2m_csi.h                      |  69 ++
+ include/linux/spi/rzv2m_csi_regif.h                | 166 ++++
+ 9 files changed, 1314 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/spi/rzv2m_csi.c
+ create mode 100644 include/linux/spi/rzv2m_csi.h
+ create mode 100644 include/linux/spi/rzv2m_csi_regif.h
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 81b2d30..9549a5f 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -134,6 +134,17 @@
+     };
+ };
+ 
++&csi4{
++    status = "okay";
++    slavedev {
++        compatible = "rzv2m,slavedev";
++        reg = <0>;
++        spi-max-frequency = <25000000>;
++        spi-cpha;
++        spi-cpol;
++    };
++};
++
+ &i2c0 {
+     clock-frequency = <100000>;
+     status = "okay";
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index f8f9026..288191c 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -100,11 +100,16 @@
+         compatible = "fixed-clock";
+         clock-frequency = <48000000>;
+     };
+-    csi_clk: wdt_clk: pclk48: clk@48M {
++    wdt_clk: pclk48: clk@48M {
+         #clock-cells = <0>;
+         compatible = "fixed-clock";
+         clock-frequency = <48000000>;
+     };
++    csi_clk: clk24@24M {
++        #clock-cells = <0>;
++        compatible = "fixed-clock";
++        clock-frequency = <24000000>;
++    };
+     timclk: timclk@2M {
+         #clock-cells = <0>;
+         compatible = "fixed-clock";
+@@ -131,6 +136,85 @@
+             reg = <0 0xB6250000 0 0x2>;
+         };
+ 
++       csi0: csi@a4020000 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020000 0x0 0x80>;
++            interrupts = <GIC_SPI 226 IRQ_TYPE_LEVEL_HIGH>;
++            /* clocks = <&cpg CPG_MOD 1508>; */
++            clocks = <&csi_clk>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi1: csi@a4020080 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020080 0x0 0x80>;
++            interrupts = <GIC_SPI 227 IRQ_TYPE_LEVEL_HIGH>;
++            /* clocks = <&cpg CPG_MOD 1509>; */
++            clocks = <&csi_clk>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi2: csi@a4020100 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020100 0x0 0x80>;
++            interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_HIGH>;
++            /* clocks = <&cpg CPG_MOD 1510>; */
++            clocks = <&csi_clk>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi3: csi@a4020180 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020180 0x0 0x80>;
++            interrupts = <GIC_SPI 229 IRQ_TYPE_LEVEL_HIGH>;
++            /* clocks = <&cpg CPG_MOD 1511>; */
++            clocks = <&csi_clk>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi4: csi@a4020200 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020200 0x0 0x80>;
++            interrupts = <GIC_SPI 230 IRQ_TYPE_LEVEL_HIGH>;
++            /* clocks = <&cpg CPG_MOD 1512>; */
++            clocks = <&csi_clk>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++        csi5: csi@a4020280 {
++            compatible = "renesas,rzv2m-csi";
++            reg = <0x00 0xa4020280 0x0 0x80>;
++            interrupts = <GIC_SPI 231 IRQ_TYPE_LEVEL_HIGH>;
++           /* clocks = <&cpg CPG_MOD 1513>; */
++            clocks = <&csi_clk>;
++            #address-cells = <1>;
++            #size-cells = <0>;
++            status = "disabled";
++            interval_time = <0x2>;
++            tx_trigger_lvl = <0x4>;
++            rx_trigger_lvl = <0x4>;
++        };
++
+         cpg: clock-controller@A3500000 {
+             compatible = "renesas,r8arzv2m-cpg-mssr";
+ 	    reg = <0 0xA3500000 0 0x1000>;
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 63fde32..9d5085a 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -300,6 +300,8 @@ CONFIG_TYPEC_HD3SS3220=n
+ CONFIG_USB_MASS_STORAGE=m
+ CONFIG_USB_G_SERIAL=m
+ CONFIG_USB_ETH=m
++CONFIG_CSI_RZV2M=y
++CONFIG_SPI_SLAVE=y
+ CONFIG_MMC=y
+ CONFIG_MMC_SDHI=y
+ CONFIG_NEW_LEDS=y
+diff --git a/drivers/spi/Kconfig b/drivers/spi/Kconfig
+index aadaea0..1869ab3 100644
+--- a/drivers/spi/Kconfig
++++ b/drivers/spi/Kconfig
+@@ -1049,4 +1049,9 @@ endif # SPI_SLAVE
+ config SPI_DYNAMIC
+ 	def_bool ACPI || OF_DYNAMIC || SPI_SLAVE
+ 
++config CSI_RZV2M
++        tristate "CSI for RZV2M"
++        help
++                Enable CSI for RZ/V2M
++
+ endif # SPI
+diff --git a/drivers/spi/Makefile b/drivers/spi/Makefile
+index 6fea582..91ed21b 100644
+--- a/drivers/spi/Makefile
++++ b/drivers/spi/Makefile
+@@ -135,3 +135,4 @@ obj-$(CONFIG_SPI_AMD)			+= spi-amd.o
+ # SPI slave protocol handlers
+ obj-$(CONFIG_SPI_SLAVE_TIME)		+= spi-slave-time.o
+ obj-$(CONFIG_SPI_SLAVE_SYSTEM_CONTROL)	+= spi-slave-system-control.o
++obj-$(CONFIG_CSI_RZV2M)                 += rzv2m_csi.o
+diff --git a/drivers/spi/rzv2m_csi.c b/drivers/spi/rzv2m_csi.c
+new file mode 100644
+index 0000000..d447daa93
+--- /dev/null
++++ b/drivers/spi/rzv2m_csi.c
+@@ -0,0 +1,974 @@
++#include <linux/bitmap.h>
++#include <linux/clk.h>
++#include <linux/completion.h>
++#include <linux/delay.h>
++#include <linux/dma-mapping.h>
++#include <linux/dmaengine.h>
++#include <linux/err.h>
++#include <linux/gpio.h>
++#include <linux/gpio/consumer.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/sh_dma.h>
++
++#include <linux/spi/spi.h>
++#include "linux/spi/rzv2m_csi.h"
++#include "linux/spi/rzv2m_csi_regif.h"
++
++#include <asm/unaligned.h>
++
++#define MAX_BYTE_FIFO_SIZE 32 //Maximum 32 byte was stored in FIFO
++#define CSI_WAIT_TIME 5000000 //5s
++#define U_TIME_DELAY 1 //1us
++
++enum {
++       CSI_SPI_MASTER,
++       CSI_SPI_SLAVE,
++};
++
++struct rzv2m_csi_info {
++       int mode;
++       unsigned int interval_time;
++       unsigned int transmit_trigger_level;
++       unsigned int receive_trigger_level;
++};
++
++struct rzv2m_csi_priv {
++       struct spi_master *master;
++       void __iomem *regs;
++       struct clk *clk;
++       struct clk *pclk;
++       int irq;
++       struct device *dev;
++       const void *txbuf;
++       void *rxbuf;
++       int bytes_to_transfer;
++       int bytes_to_receive;
++
++       struct rzv2m_csi_info *info;
++
++       struct platform_device *pdev;
++
++       unsigned int min_div_pow;
++       void *tx_dma_page;
++       void *rx_dma_page;
++       dma_addr_t tx_dma_addr;
++       dma_addr_t rx_dma_addr;
++       struct completion done;
++       struct completion rx_done;
++       struct completion done_txdma;
++
++       unsigned short unused_ss;
++       bool native_cs_inited;
++       bool native_cs_high;
++
++       bool slave_aborted;
++       bool transmission_completed;
++       uint32_t time_wait;
++};
++
++
++//-------------------prototype-------------------
++static u32 reg_read(struct rzv2m_csi_priv *p, int reg_offs);
++static void reg_write(struct rzv2m_csi_priv *p, int reg_offs, u32 value);
++static u32 reg_read_bit(struct rzv2m_csi_priv *p, int reg_offs, int bit_mask);
++static void reg_write_bit(struct rzv2m_csi_priv *p, int reg_offs, int bit_mask, u32 value);
++static void rzv2m_csi_filltxfifo(struct rzv2m_csi_priv *p, int size);
++static void rzv2m_csi_readrxfifo(struct rzv2m_csi_priv *p, u32 size);
++static irqreturn_t rzv2m_csi_irq_handler(int irq, void *data);
++static void rzv2m_csi_spi_set_clk_regs(struct rzv2m_csi_priv *p, unsigned long parent_rate, u32 spi_hz);
++static int rzv2m_csi_setup_operation_mode(struct spi_master *master, struct spi_transfer *t);
++static int rzv2m_csi_setup_clock_selection(struct spi_master *master, struct spi_device *spi);
++static int rzv2m_csi_clear_all_irq(struct rzv2m_csi_priv *p);
++static bool is_recv_only_mode(struct rzv2m_csi_priv *p);
++static int rzv2m_csi_set_irq(struct spi_master *master, struct spi_transfer *t);
++static int rzv2m_csi_clear_fifo_buffer(struct spi_master *master, struct spi_transfer *t);
++static int rzv2m_csi_start_operation(struct rzv2m_csi_priv *p);
++static int rzv2m_csi_stop_operation(struct rzv2m_csi_priv *p);
++static bool is_16bit_data_leng(struct rzv2m_csi_priv *p);
++static int rzv2m_csi_set_fifo_trg(struct spi_master *master, struct spi_transfer *t);
++static void get_data_in_ififo(struct rzv2m_csi_priv *p);
++static int rzv2m_csi_spi_setup(struct spi_device *spi);
++
++#if 0
++static struct dma_chan *rzv2m_csi_request_dma_chan(struct device *dev,\
++       enum dma_transfer_direction dir, unsigned int id, dma_addr_t port_addr);
++static void rzv2m_csi_release_dma(struct rzv2m_csi_priv *p);
++static int rzv2m_csi_request_dma(struct rzv2m_csi_priv *p
++);
++#endif
++
++static int rzv2m_csi_slave_abort(struct spi_master *master);
++static struct rzv2m_csi_info* rzv2m_csi_parse_dt(struct device *dev);
++//-------------------end prototype-------------------
++
++spinlock_t lock_irq;
++
++uint32_t salve_count = 0;
++
++static u32 reg_read(struct rzv2m_csi_priv *p, int reg_offs){
++       return ioread32(p->regs + reg_offs);
++}
++
++static void reg_write(struct rzv2m_csi_priv *p, int reg_offs, u32 value){
++       iowrite32(value, p->regs + reg_offs);
++}
++
++static u32 reg_read_bit(struct rzv2m_csi_priv *p, int reg_offs, int bit_mask){
++       u32 value;
++
++       value = reg_read(p, reg_offs) & bit_mask;
++
++       while((bit_mask%2) == 0){
++           value = value >> 1;
++           bit_mask = bit_mask >> 1;
++       }
++
++       return (u32) value;
++}
++
++static void reg_write_bit(struct rzv2m_csi_priv *p, int reg_offs, int bit_mask, u32 value){
++       volatile u32 tmp;
++
++       tmp = bit_mask;
++       while((tmp%2) == 0){
++           value = value << 1;
++           tmp = tmp >> 1;
++       }
++       tmp = (reg_read(p, reg_offs) & ~bit_mask) | value;
++       reg_write(p, reg_offs, tmp);
++}
++
++static void reg_clear_irq(struct rzv2m_csi_priv *p, int irq_msk){
++        volatile u32 tmp;
++
++        tmp = reg_read(p, CSI_INT);
++
++        reg_write(p, CSI_INT, tmp & irq_msk);
++}
++
++static void rzv2m_csi_filltxfifo(struct rzv2m_csi_priv *p, int size)
++{
++       int i = 0;
++       if (p->bytes_to_transfer <= 0){
++               return; //fixme. Check byte transfer remain.
++       }
++       while(size + reg_read(p, CSI_OFIFOL) > MAX_BYTE_FIFO_SIZE){}
++
++       if(is_16bit_data_leng(p)){
++               u16 *buf = (u16 *)p->txbuf;
++               for(i = 0; i < size/2;i++){
++                       reg_write(p, CSI_OFIFO, buf[i]);
++               }
++       } else {
++               u8 *buf = (u8 *)p->txbuf;
++               for(i = 0; i < size;i++){
++                       reg_write(p, CSI_OFIFO, buf[i]);
++               }
++       }
++       p->txbuf += size;
++       p->bytes_to_transfer -= size;
++}
++
++static void rzv2m_csi_readrxfifo(struct rzv2m_csi_priv *p, u32 size)
++{
++    int i = 0;
++       if(is_16bit_data_leng(p)){
++               u16 *buf = (u16 *)p->rxbuf;
++               for(i = 0; i < size/2;i++){
++                       buf[i] = (u16)reg_read(p, CSI_IFIFO);
++               }
++       } else {
++               u8 *buf = p->rxbuf;
++               for(i = 0; i < size;i++){
++                       buf[i] = (u8)reg_read(p, CSI_IFIFO);
++               }
++       }
++       p->rxbuf += size;
++       p->bytes_to_receive += size;
++}
++
++static irqreturn_t rzv2m_csi_irq_handler(int irq, void *data){
++       struct rzv2m_csi_priv *p = (struct rzv2m_csi_priv*)data;
++       unsigned long flag;
++
++       spin_lock_irqsave(&lock_irq, flag);
++       p->time_wait = 0; //reset timeout wait
++
++       if(reg_read_bit(p, CSI_INT, CSI_INT_R_TRGR) == 1){
++               get_data_in_ififo(p);
++               reg_clear_irq(p, CSI_INT_R_TRGR);
++
++               //fixme. w/a for stopping transfer data in reception-only mode
++               if(p->bytes_to_receive >= p->bytes_to_transfer){
++                       rzv2m_csi_stop_operation(p);
++               }
++
++       }
++
++       if((reg_read_bit(p, CSI_INT, CSI_INT_TREND) == 1)  || \
++           (reg_read_bit(p, CSI_INT, CSI_INT_T_TRGR) == 1)){
++               if(p->rxbuf != NULL){
++                       get_data_in_ififo(p);
++               }
++               reg_clear_irq(p, CSI_INT_TREND);
++               reg_clear_irq(p, CSI_INT_T_TRGR);
++               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++       }
++
++       if(reg_read_bit(p, CSI_INT, CSI_INT_OVERF) == 1){
++               get_data_in_ififo(p);
++               reg_clear_irq(p, CSI_INT_OVERF);
++               dev_err(&p->pdev->dev, "Overflow error \n");
++       } else if(reg_read_bit(p, CSI_INT, CSI_INT_UNDER) == 1){
++        reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x1);
++        reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x0);
++
++               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++
++        rzv2m_csi_start_operation(p);
++
++               dev_err(&p->pdev->dev, "Underrun error \n");
++    }
++
++       if(reg_read_bit(p, CSI_INT, CSI_INT_CSIEND) == 1){
++               reg_clear_irq(p, CSI_INT_CSIEND);
++       }
++
++       spin_unlock_irqrestore(&lock_irq, flag);
++
++       return IRQ_HANDLED;
++}
++
++static void rzv2m_csi_spi_set_clk_regs(struct rzv2m_csi_priv *p,
++                                     unsigned long parent_rate, u32 spi_hz)
++{
++       u32 cks;
++
++       if (!spi_hz || !parent_rate) {
++               WARN(1, "Invalid clock rate parameters %lu and %u\n",
++                    parent_rate, spi_hz);
++               return;
++       }
++       cks = parent_rate/(spi_hz*2);
++
++       if (cks > 0x3FFF) {
++               dev_err(&p->pdev->dev,
++                       "Requested SPI transfer rate %d is too low\n", spi_hz);
++               cks = 0x3FFF;
++       } else if(cks < 0x1) {
++               dev_err(&p->pdev->dev,
++                       "Requested SPI transfer rate %d is too large\n", spi_hz);
++               cks = 0x1;
++       }
++       reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_CKS, cks);
++}
++
++static int rzv2m_csi_setup_operation_mode(struct spi_master *master, struct spi_transfer *t){
++       int ret = 0;
++       struct rzv2m_csi_priv *p = spi_master_get_devdata(master);
++       const void *tx_buf = t->tx_buf;
++       void *rx_buf = t->rx_buf;
++       struct rzv2m_csi_info *info = p->info;
++
++       /* Configure pins before asserting CS */
++       if (!spi_controller_is_slave(p->master)){
++               reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_SLAVE, 0x0); //master
++               if((rx_buf != NULL) && (tx_buf == NULL)){
++                       //reception-only mode
++                       reg_write_bit(p, CSI_MODE, CSI_MODE_TRMD, 0x0);
++               } else {
++                       //send and receive
++               reg_write_bit(p, CSI_MODE, CSI_MODE_TRMD, 0x1);
++               }
++
++               if(info->interval_time < 16){
++                       reg_write_bit(p, CSI_MODE, CSI_MODE_DATWT, info->interval_time);
++               } else {
++                       ret = -EINVAL;
++               }
++       } else {
++               reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_SLAVE, 0x1); //slave
++               if((rx_buf != NULL) && (tx_buf == NULL)){
++                       //reception-only mode. fixme
++                       reg_write_bit(p, CSI_MODE, CSI_MODE_TRMD, 0x0);
++               } else {
++               //send and receive
++                       reg_write_bit(p, CSI_MODE, CSI_MODE_TRMD, 0x1);
++               }
++       }
++
++       //setup data length
++       if(t->bits_per_word == 16){
++           reg_write_bit(p, CSI_MODE, CSI_MODE_CCL, 0x1);
++       } else {
++        reg_write_bit(p, CSI_MODE, CSI_MODE_CCL, 0x0);
++       }
++
++       return ret;
++}
++
++static int rzv2m_csi_setup_clock_selection(struct spi_master *master, struct spi_device *spi){
++       struct rzv2m_csi_priv *p = spi_master_get_devdata(master);
++       u32 dap, ckp, lsb, ss_pol;
++
++       dap = !!(spi->mode & SPI_CPHA);
++       ckp = !!(spi->mode & SPI_CPOL);
++
++       lsb = !!(spi->mode & SPI_LSB_FIRST);
++
++       reg_write_bit(p, CSI_MODE, CSI_MODE_DIR, lsb);
++       reg_write_bit(p, CSI_MODE, CSI_MODE_DIR, lsb);
++       reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_CKP, ckp);
++       reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_DAP, dap);
++
++       if (spi_controller_is_slave(p->master)){
++               //The slave select signal is used to select the slave that
++               //communicates with the master in a system in
++               //which multiple slaves are connected to one master.
++
++               if(salve_count > 1){
++                       reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_SS_ENA, 0x1);
++               } else {
++                       reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_SS_ENA, 0x0);
++               }
++
++               ss_pol = !!(spi->mode & SPI_CS_HIGH);
++               reg_write_bit(p, CSI_CLKSEL, CSI_CLKSEL_SS_POL, ss_pol);
++       }
++
++       return 0;
++}
++
++static int rzv2m_csi_clear_all_irq(struct rzv2m_csi_priv *p){
++       int ret = 0;
++
++       reg_write(p, CSI_INT, 0x3311);
++
++       return ret;
++}
++
++static bool is_recv_only_mode(struct rzv2m_csi_priv *p){
++       bool ret = false;
++
++       u32 tmp = reg_read_bit(p, CSI_MODE, CSI_MODE_TRMD);
++       if(tmp != 0){
++               ret = false;
++       } else {
++               ret = true;
++       }
++
++       return ret;
++}
++
++static int rzv2m_csi_set_irq(struct spi_master *master, struct spi_transfer *t){
++       int ret = 0;
++       struct rzv2m_csi_priv *p = spi_master_get_devdata(master);
++       void *rx_buf = t->rx_buf;
++
++    if(!spi_controller_is_slave(master)){
++               if(is_recv_only_mode(p)){
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_CSIEND_E, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_R_TRGEN, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_R_TRGR_E, 0x1);
++               } else {
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_TREND_E, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_T_TRGEN, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_T_TRGR_E, 0x1);
++                       //fixme. conflict trans only - trans/recv
++                       if(rx_buf != NULL){
++                               reg_write_bit(p, CSI_CNT, CSI_CNT_OVERF_E, 0x1);
++                       }
++               }
++       } else {
++               if(is_recv_only_mode(p)){
++                       //reg_write_bit(p, CSI_CNT, CSI_CNT_TREND_E, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_CSIEND_E, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_R_TRGEN, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_R_TRGR_E, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_OVERF_E, 0x1);
++               } else {
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_TREND_E, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_T_TRGEN, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_T_TRGR_E, 0x1);
++                       reg_write_bit(p, CSI_CNT, CSI_CNT_UNDER_E, 0x1);
++
++                       //fixme. conflict trans only - trans/recv
++                       if(rx_buf != NULL){
++                               reg_write_bit(p, CSI_CNT, CSI_CNT_OVERF_E, 0x1);
++                       }
++               }
++       }
++
++       return ret;
++}
++
++static int rzv2m_csi_clear_fifo_buffer(struct spi_master *master, struct spi_transfer *t){
++       int ret = 0;
++       struct rzv2m_csi_priv *p = spi_master_get_devdata(master);
++
++       reg_write(p, CSI_IFIFOL, 0x0);
++       reg_write(p, CSI_OFIFOL, 0x0);
++
++       return ret;
++}
++
++static int rzv2m_csi_start_operation(struct rzv2m_csi_priv *p){
++       int ret = 0;
++       bool flag_end = false;
++       int count = 0;
++       int tmp;
++
++       do{
++               reg_write_bit(p, CSI_MODE, CSI_MODE_CSIE, 0x1);
++               tmp = reg_read_bit(p, CSI_MODE, CSI_MODE_CSOT);
++               if((tmp != 0) || (count > TRY_TIMES)){
++                       flag_end = true;
++               }
++               count++;
++       } while(!flag_end);
++
++       return ret;
++}
++
++static int rzv2m_csi_stop_operation(struct rzv2m_csi_priv *p){
++       int ret = 0;
++       bool flag_end = false;
++       int count = 0;
++       int tmp;
++
++       do{
++               reg_write_bit(p, CSI_MODE, CSI_MODE_CSIE, 0x0);
++               tmp = reg_read_bit(p, CSI_MODE, CSI_MODE_CSOT);
++               if((tmp == 0) || (count > TRY_TIMES)){
++                       flag_end = true;
++               }
++               count++;
++       } while(!flag_end);
++
++       return ret;
++}
++
++static bool is_16bit_data_leng(struct rzv2m_csi_priv *p){
++       u32 tmp;
++       bool ret;
++
++       tmp = reg_read_bit(p, CSI_MODE, CSI_MODE_CCL);
++       if(tmp != 0){
++               ret = true;
++       } else {
++               ret = false;
++       }
++       return ret;
++}
++
++
++static int rzv2m_csi_set_fifo_trg(struct spi_master *master, struct spi_transfer *t){
++       int ret = 0;
++       struct rzv2m_csi_priv *p = spi_master_get_devdata(master);
++       struct rzv2m_csi_info *info = p->info;
++       const void *tx_buf = t->tx_buf;
++       void *rx_buf = t->rx_buf;
++
++       if(!tx_buf){
++               if(is_16bit_data_leng(p)){ //16 bit mode
++                       if((info->transmit_trigger_level > 4)){
++                               ret = -EINVAL;
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_T_TRG, 4);
++                       } else {
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_T_TRG, info->transmit_trigger_level);
++                       }
++               } else {
++                       if((info->transmit_trigger_level > 5)){
++                               ret = -EINVAL;
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_T_TRG, 5);
++                       } else {
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_T_TRG, info->transmit_trigger_level);
++                       }
++               }
++       }
++
++       if(!rx_buf){
++               //setting for receive trigger level
++               if(is_16bit_data_leng(p)){ //16 bit mode
++                       if((info->receive_trigger_level > 4)){
++                               ret = -EINVAL;
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_R_TRG, 4);
++                       } else {
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_R_TRG, info->receive_trigger_level);
++                       }
++               } else {
++                       if((info->receive_trigger_level > 5)){
++                               ret = -EINVAL;
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_R_TRG, 5);
++                       } else {
++                               reg_write_bit(p, CSI_FIFOTRG, CSI_FIFOTRG_R_TRG, info->receive_trigger_level);
++                       }
++               }
++       }
++       return ret;
++}
++
++#if 0
++static int rzv2m_csi_wait_for_completion(struct rzv2m_csi_priv *p,
++                                       struct completion *x)
++{
++       if (spi_controller_is_slave(p->master)) {
++               if (wait_for_completion_interruptible(x) ||
++                   p->slave_aborted) {
++                       dev_dbg(&p->pdev->dev, "interrupted\n");
++                       return -EINTR;
++               }
++       } else {
++               if (!wait_for_completion_timeout(x, HZ)) {
++                       dev_err(&p->pdev->dev, "timeout\n");
++                       return -ETIMEDOUT;
++               }
++       }
++
++       return 0;
++}
++#endif
++
++static void get_data_in_ififo(struct rzv2m_csi_priv *p){
++       unsigned int tmp;
++
++       while((tmp = reg_read(p, CSI_IFIFOL)) != 0){
++               rzv2m_csi_readrxfifo(p, tmp);
++       }
++
++       return;
++}
++
++static int rzv2m_csi_start_transfer(struct spi_master *master,
++                                     struct spi_device *qspi,
++                                     struct spi_transfer *transfer)
++{
++       struct rzv2m_csi_priv *p = spi_master_get_devdata(master);
++       struct platform_device *pdev = p->pdev;
++       struct device *dev = &pdev->dev;
++       int ret;
++
++    p->txbuf = transfer->tx_buf;
++       p->rxbuf = transfer->rx_buf;
++    p->transmission_completed = false;
++
++       /* Release of CSI reset and selection of data transfer method */
++       reg_write(p, CSI_CNT, 0x0);
++
++       /* setup operation mode */
++       ret = rzv2m_csi_setup_operation_mode(master, transfer);
++       if (ret) {
++               dev_warn(dev, "rzv2m_csi_setup_operation_mode failed %d\n", ret);
++       }
++
++       ret = rzv2m_csi_setup_clock_selection(master, qspi);
++       if (ret) {
++               dev_warn(dev, "rzv2m_csi_setup_clock_selection failed %d\n", ret);
++       }
++
++       /* setup clocks frequent division */
++       if (!spi_controller_is_slave(p->master)){
++               rzv2m_csi_spi_set_clk_regs(p, clk_get_rate(p->clk), transfer->speed_hz);
++       }
++
++       /* Perform CSI reset and enable CSI_CLKSEL setting */
++       reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x1);
++       while(!(reg_read_bit(p, CSI_CNT, CSI_CNT_CSIRST) == 0x1)){
++               udelay(10);
++       }
++
++       /* Canceling CSI reset */
++       reg_write_bit(p, CSI_CNT, CSI_CNT_CSIRST, 0x0);
++
++       while(!(reg_read_bit(p, CSI_CNT, CSI_CNT_CSIRST) == 0)){
++               udelay(10);
++       }
++
++       //Clear all interrupt factor flags
++       ret = rzv2m_csi_clear_all_irq(p);
++       if (ret) {
++               dev_warn(dev, "rzv2m_csi_clear_all_irq failed %d\n", ret);
++       }
++
++       //Set the receive trigger level
++       ret = rzv2m_csi_set_fifo_trg(master, transfer);
++       if (ret) {
++               dev_warn(dev, "rzv2m_csi_clear_all_irq failed %d\n", ret);
++       }
++
++       //Enable interrupt
++       ret = rzv2m_csi_set_irq(master, transfer);
++       if (ret) {
++               dev_warn(dev, "rzv2m_csi_set_irq failed %d\n", ret);
++       }
++
++       p->bytes_to_transfer = transfer->len;
++       p->bytes_to_receive = 0;
++       p->time_wait = 0;
++
++       //clear receive buffer
++       if(p->rxbuf != NULL){
++               memset(p->rxbuf, 0, p->bytes_to_transfer);
++       }
++
++       //Clear the receive FIFO buffer
++       ret = rzv2m_csi_clear_fifo_buffer(master, transfer);
++       if (ret) {
++               dev_warn(dev, "rzv2m_csi_clear_fifo_buffer failed %d\n", ret);
++       }
++
++       if(is_recv_only_mode(p)){
++           ret = rzv2m_csi_start_operation(p);
++               //stop function will be handled in IRQ Handler
++       } else {
++               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++
++           //Start transmission / reception operation
++           ret = rzv2m_csi_start_operation(p);
++           if (ret) {
++               dev_err(dev, "rzv2m_csi_start_operation failed %d\n", ret);
++           }
++               if(p->rxbuf != NULL){
++                       while(p->bytes_to_receive < transfer->len){
++                               get_data_in_ififo(p);
++
++                               if(p->time_wait++ > CSI_WAIT_TIME){
++                                       break;
++                               }
++                               udelay(U_TIME_DELAY);
++                       }
++               } else {
++                       while(p->bytes_to_transfer > 0){
++                               rzv2m_csi_filltxfifo(p, min_t(int, p->bytes_to_transfer, MAX_BYTE_FIFO_SIZE));
++                       }
++               }
++
++
++               if(p->bytes_to_receive < transfer->len){
++               dev_err(dev, "Fail. Receive/Total = %d/%d byte\n", p->bytes_to_receive, transfer->len);
++               }
++        rzv2m_csi_stop_operation(p);
++       }
++
++       return ret;
++}
++
++static int rzv2m_csi_spi_setup(struct spi_device *spi){
++       int ret = 0;
++
++       return ret;
++}
++
++#if 0 //DMA hasn't supported for this version
++static struct dma_chan *rzv2m_csi_request_dma_chan(struct device *dev,
++       enum dma_transfer_direction dir, unsigned int id, dma_addr_t port_addr){
++       dma_cap_mask_t mask;
++       struct dma_chan *chan;
++       struct dma_slave_config cfg;
++       int ret;
++
++    dma_cap_zero(mask);
++       dma_cap_set(DMA_SLAVE, mask);
++
++       chan = dma_request_slave_channel_compat(mask, shdma_chan_filter,
++                               (void *)(unsigned long)id, dev,
++                               dir == DMA_MEM_TO_DEV ? "tx" : "rx");
++       if (!chan) {
++               dev_warn(dev, "dma_request_slave_channel_compat failed\n");
++               return NULL;
++       }
++       memset(&cfg, 0, sizeof(cfg));
++
++       cfg.direction = dir;
++
++       if (dir == DMA_MEM_TO_DEV) {
++               cfg.dst_addr = port_addr;
++               cfg.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
++       } else {
++               cfg.src_addr = port_addr;
++               cfg.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
++       }
++       ret = dmaengine_slave_config(chan, &cfg);
++       if (ret) {
++               dev_warn(dev, "dmaengine_slave_config failed %d\n", ret);
++               dma_release_channel(chan);
++               return NULL;
++       }
++
++       return chan;
++}
++
++static void rzv2m_csi_release_dma(struct rzv2m_csi_priv *p)
++{
++       struct spi_master *master = p->master;
++
++       if (!master->dma_tx)
++               return;
++
++       dma_unmap_single(master->dma_rx->device->dev, p->rx_dma_addr,
++                        PAGE_SIZE, DMA_FROM_DEVICE);
++       dma_unmap_single(master->dma_tx->device->dev, p->tx_dma_addr,
++                        PAGE_SIZE, DMA_TO_DEVICE);
++       free_page((unsigned long)p->rx_dma_page);
++       free_page((unsigned long)p->tx_dma_page);
++       dma_release_channel(master->dma_rx);
++       dma_release_channel(master->dma_tx);
++}
++static int rzv2m_csi_request_dma(struct rzv2m_csi_priv *p){
++       struct platform_device *pdev = p->pdev;
++       struct device *dev = &pdev->dev;
++       //const struct rzv2m_csi_info *info = dev_get_platdata(dev);
++       unsigned int dma_tx_id, dma_rx_id;
++       const struct resource *res;
++       struct spi_master *master;
++       struct device *tx_dev, *rx_dev;
++
++#if 0
++       if (dev->of_node) {
++               /* In the OF case we will get the slave IDs from the DT */
++               dma_tx_id = 0;
++               dma_rx_id = 0;
++       } else if (info && info->dma_tx_id && info->dma_rx_id) {
++               dma_tx_id = info->dma_tx_id;
++               dma_rx_id = info->dma_rx_id;
++       } else {
++               /* The driver assumes no error */
++               return 0;
++       }
++#else
++       dma_tx_id = 0;
++       dma_rx_id = 0;
++#endif
++       /* The DMA engine uses the second register set, if present */
++       res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++       if (!res)
++               res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++       master = p->master;
++       master->dma_tx = rzv2m_csi_request_dma_chan(dev, DMA_MEM_TO_DEV,
++                                                  dma_tx_id,
++                                                  res->start + CSI_OFIFO);
++       if (!master->dma_tx)
++               return -ENODEV;
++
++       master->dma_rx = rzv2m_csi_request_dma_chan(dev, DMA_DEV_TO_MEM,
++                                                  dma_rx_id,
++                                                  res->start + CSI_IFIFO);
++       if (!master->dma_rx)
++               goto free_tx_chan;
++
++       p->tx_dma_page = (void *)__get_free_page(GFP_KERNEL | GFP_DMA);
++       if (!p->tx_dma_page)
++               goto free_rx_chan;
++
++       p->rx_dma_page = (void *)__get_free_page(GFP_KERNEL | GFP_DMA);
++       if (!p->rx_dma_page)
++               goto free_tx_page;
++
++       tx_dev = master->dma_tx->device->dev;
++       p->tx_dma_addr = dma_map_single(tx_dev, p->tx_dma_page, PAGE_SIZE,
++                                       DMA_TO_DEVICE);
++       if (dma_mapping_error(tx_dev, p->tx_dma_addr))
++               goto free_rx_page;
++
++       rx_dev = master->dma_rx->device->dev;
++       p->rx_dma_addr = dma_map_single(rx_dev, p->rx_dma_page, PAGE_SIZE,
++                                       DMA_FROM_DEVICE);
++       if (dma_mapping_error(rx_dev, p->rx_dma_addr))
++               goto unmap_tx_page;
++
++       dev_info(dev, "DMA available");
++       return 0;
++
++unmap_tx_page:
++       dma_unmap_single(tx_dev, p->tx_dma_addr, PAGE_SIZE, DMA_TO_DEVICE);
++free_rx_page:
++       free_page((unsigned long)p->rx_dma_page);
++free_tx_page:
++       free_page((unsigned long)p->tx_dma_page);
++free_rx_chan:
++       dma_release_channel(master->dma_rx);
++free_tx_chan:
++       dma_release_channel(master->dma_tx);
++       master->dma_tx = NULL;
++       return -ENODEV;
++}
++#endif
++
++static int rzv2m_csi_slave_abort(struct spi_master *master)
++{
++       struct rzv2m_csi_priv *p = spi_master_get_devdata(master);
++
++       p->slave_aborted = true;
++       //complete(&p->done);
++
++#if 0 //DMA hasn't support yet
++       complete(&p->done_txdma);
++#endif
++       return 0;
++}
++
++static struct rzv2m_csi_info* rzv2m_csi_parse_dt(struct device *dev){
++       struct rzv2m_csi_info *info;
++       struct device_node *np = dev->of_node;
++
++       info = devm_kzalloc(dev, sizeof(struct rzv2m_csi_info), GFP_KERNEL);
++       if (!info)
++               return NULL;
++
++       info->mode = of_property_read_bool(np, "spi-slave") ? CSI_SPI_SLAVE : CSI_SPI_MASTER;
++
++       if(info->mode == CSI_SPI_SLAVE){
++               salve_count++;
++       }
++
++       of_property_read_u32(np, "interval_time", &info->interval_time);
++       of_property_read_u32(np, "tx_trigger_lvl", &info->transmit_trigger_level);
++       of_property_read_u32(np, "rx_trigger_lvl", &info->receive_trigger_level);
++
++       return info;
++}
++
++static int rzv2m_csi_probe(struct platform_device *pdev){
++       int ret = 0;
++       int irq = 0;
++       struct spi_master *master;
++       struct resource *res;
++       struct device *dev = &pdev->dev;
++       struct rzv2m_csi_priv *p;
++       struct rzv2m_csi_info *info;
++
++       info = rzv2m_csi_parse_dt(&pdev->dev);
++       if(!info){
++               dev_err(&pdev->dev, "failed to obtain device info\n");
++               return -ENXIO;
++       }
++
++       spin_lock_init(&lock_irq);
++
++       if (info->mode == CSI_SPI_SLAVE) {
++               master = spi_alloc_slave(&pdev->dev, sizeof(struct rzv2m_csi_priv));
++       } else {
++       master = spi_alloc_master(&pdev->dev, sizeof(struct rzv2m_csi_priv));
++       }
++
++       if (!master){
++               dev_err(&pdev->dev, "failed to alloc master\n");
++               return -ENOMEM;
++
++       }
++       p = spi_master_get_devdata(master);
++
++       platform_set_drvdata(pdev, p);
++       p->master = master;
++       p->info = info;
++       p->pdev = pdev;
++
++       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++       p->regs = devm_ioremap_resource(dev, res);
++       if (IS_ERR(p->regs)) {
++               ret = PTR_ERR(p->regs);
++               goto clk_dis_all;
++       }
++
++       p->clk = devm_clk_get(&pdev->dev, NULL);
++       if (IS_ERR(p->clk)) {
++               dev_err(&pdev->dev, "cannot get csi_clk\n");
++               ret = PTR_ERR(p->clk);
++               goto clk_dis_clk;
++       }
++
++       ret = clk_prepare_enable(p->clk);
++       if (ret) {
++               dev_err(dev, "Unable to enable device clock.\n");
++               goto clk_dis_clk;
++       }
++
++       irq = platform_get_irq(pdev, 0);
++       if (irq < 0) {
++               dev_err(&pdev->dev, "cannot get IRQ\n");
++               ret = irq;
++               goto clk_dis_all;
++       }
++       ret = devm_request_irq(&pdev->dev, irq, rzv2m_csi_irq_handler, 0,
++                              dev_name(&pdev->dev), p);
++
++       if(ret){
++        dev_err(&pdev->dev, "cannot request IRQ\n");
++        goto clk_dis_all;
++       }
++
++       /* init master code */
++       master->mode_bits = SPI_CPOL | SPI_CPHA | SPI_CS_HIGH; //initial setting
++       master->mode_bits |= SPI_LSB_FIRST | SPI_3WIRE;
++       master->dev.of_node = pdev->dev.of_node;
++       master->setup = rzv2m_csi_spi_setup;
++       master->slave_abort = rzv2m_csi_slave_abort;
++       master->bits_per_word_mask = SPI_BPW_RANGE_MASK(8, 16);
++       master->transfer_one = rzv2m_csi_start_transfer;
++
++#if 0 //DMA hasn't support yet
++       ret = rzv2m_csi_request_dma(p);
++       if (ret < 0)
++               dev_warn(&pdev->dev, "DMA not available\n");
++#endif
++
++       ret = devm_spi_register_master(&pdev->dev, master);
++       if (ret < 0) {
++               dev_err(&pdev->dev, "spi_register_master error.\n");
++               goto clk_dis_all;
++       }
++
++       dev_info(&pdev->dev, "probed\n");
++
++       return 0;
++
++clk_dis_all:
++#if 0 //DMA hasn't support yet
++       rzv2m_csi_release_dma(p);
++#endif
++       pm_runtime_set_suspended(&pdev->dev);
++       pm_runtime_disable(&pdev->dev);
++clk_dis_clk:
++       clk_disable_unprepare(p->clk);
++       spi_master_put(master);
++       return ret;
++}
++
++static int rzv2m_csi_remove(struct platform_device *pdev)
++{
++
++#if 0 //DMA hasn't support yet
++       rzv2m_csi_release_dma(p);
++#endif
++       pm_runtime_disable(&pdev->dev);
++       return 0;
++}
++
++static const struct of_device_id rzv2m_csi_match[] = {
++       { .compatible = "renesas,rzv2m-csi", },
++       { /* End of table */ }
++};
++MODULE_DEVICE_TABLE(of, rzv2m_csi_match);
++
++static struct platform_driver rzv2m_csi_drv = {
++       .probe          = rzv2m_csi_probe,
++       .remove         = rzv2m_csi_remove,
++       .driver         = {
++               .name           = "rzv2m_csi",
++               .of_match_table = of_match_ptr(rzv2m_csi_match),
++       },
++};
++
++module_platform_driver(rzv2m_csi_drv);
++
++MODULE_DESCRIPTION("Clock Serial Interface Driver");
++MODULE_AUTHOR("Renesas Electronics Corporation");
++MODULE_LICENSE("GPL v2");
++
+diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
+index 859910e..d74a0e0 100644
+--- a/drivers/spi/spidev.c
++++ b/drivers/spi/spidev.c
+@@ -679,6 +679,7 @@ static const struct of_device_id spidev_dt_ids[] = {
+ 	{ .compatible = "lineartechnology,ltc2488" },
+ 	{ .compatible = "ge,achc" },
+ 	{ .compatible = "semtech,sx1301" },
++	{ .compatible = "rzv2m,slavedev" },
+ 	{ .compatible = "lwn,bk4" },
+ 	{ .compatible = "dh,dhcom-board" },
+ 	{ .compatible = "menlo,m53cpld" },
+diff --git a/include/linux/spi/rzv2m_csi.h b/include/linux/spi/rzv2m_csi.h
+new file mode 100644
+index 0000000..216c618
+--- /dev/null
++++ b/include/linux/spi/rzv2m_csi.h
+@@ -0,0 +1,69 @@
++#ifndef __CSI_H__
++#define __CSI_H__
++
++
++#define AMBA_CSI_CHANNEL 6
++
++#define ON             1
++#define OFF    0
++
++#define CH_0   0
++#define CH_1   1
++#define CH_2   2
++#define CH_3   3
++#define CH_4   4
++#define CH_5   5
++
++#define CPG_CLK_ON15   0x438
++#define CPG_RST6               0x614
++#define CPG_RST_MON            0x680
++
++#define PCLKSEL        0x0
++#define CSICLKSEL      0x1
++
++#define FIFOSize       32
++
++#define Tx_FIFO_KIND 0
++#define Rx_FIFO_KIND 1
++
++#define FIFO_EMPTY  0
++#define FIFO_FULL      1
++
++#define        D_LENGTH_8BIT   0
++#define        D_LENGTH_16BIT  1
++
++#define        D_FORMAT_LSB    0
++#define        D_FORMAT_MSB    1
++
++#define MAX_FIFO_16BIT 16
++#define MAX_FIFO_8BIT  32
++
++#define OFIFO_MASK 0x0000FFFF
++#define IFIFO_MASK 0x0000FFFF
++
++#define TRY_TIMES 10
++
++enum eFIFOTriggerLevel{
++    emTriggerLevel       = 0
++    ,emNoneTriggerLevel  = 1
++    ,emUnderTriggerLevel = 2
++    ,emUpperTriggerLevel = 3
++    ,emTriggerRequestDMALevel = 4
++};
++
++enum interrupt_type{
++    R_TRGR_IRQ,
++    T_TRGR_IRQ,
++    CSIEND_IRQ,
++    TREND_IRQ,
++    OVERF_IRQ,
++    UNDER_IRQ
++};
++
++enum eTransMode{
++    emReceiveOnly       = 0
++    ,emTransmitReceive  = 1
++};
++
++
++#endif /*__CSI_H__*/
+diff --git a/include/linux/spi/rzv2m_csi_regif.h b/include/linux/spi/rzv2m_csi_regif.h
+new file mode 100644
+index 0000000..f316d38
+--- /dev/null
++++ b/include/linux/spi/rzv2m_csi_regif.h
+@@ -0,0 +1,166 @@
++//TBD
++
++//
++// %MODULE csi
++//     #              name     offset_size
++//     %%REG_INSTANCE reg_def  6
++//
++// %REG_CHANNEL reg_def
++//     %%TITLE    name         reg_name       size       length  offset    access   init       support  callback
++//     %%REG      CSI_MODE     CSI_MODE       32         32       0x00      R|W     0          TRUE     -
++//     %%REG      CSI_CLKSEL   CSI_CLKSEL     32         32       0x04      R|W     0x0000FFFE TRUE     -
++//     %%REG      CSI_CNT      CSI_CNT        32         32       0x08      R|W     0x10200000 TRUE     -
++//     %%REG      CSI_INT      CSI_INT        32         32       0x0C      R|W     0          TRUE     -
++//     %%REG      CSI_IFIFOL   CSI_IFIFOL     32         32       0x10      R|W     0          TRUE     -
++//     %%REG      CSI_OFIFOL   CSI_OFIFOL     32         32       0x14      R|W     0          TRUE     -
++//     %%REG      CSI_IFIFO    CSI_IFIFO      32         32       0x18      R       0          TRUE     -
++//     %%REG      CSI_OFIFO    CSI_OFIFO      32         32       0x1C      W       0          TRUE     -
++//     %%REG      CSI_FIFOTRG  CSI_FIFOTRG    32         32       0x20      R|W     0          TRUE     -
++//
++// %REG_NAME CSI_MODE
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    DATWT          19     16     0     R|W     TRUE     -
++//     %%BIT    CSIE           7      7      0     R|W     TRUE     W
++//     %%BIT    TRMD           6      6      0     R|W     TRUE     -
++//     %%BIT    CCL            5      5      0     R|W     TRUE     -
++//     %%BIT    DIR            4      4      0     R|W     TRUE     -
++//     %%BIT    CSOT           0      0      0     R       TRUE     -
++//
++// %REG_NAME CSI_CLKSEL
++//     %%TITLE  name           upper  lower  init      access  support  callback    value
++//     %%BIT    SS_ENA         19     19     0         R|W     TRUE     -              -
++//     %%BIT    SS_POL         18     18     0         R|W     TRUE     -              -
++//     %%BIT    CKP            17     17     0         R|W     TRUE     -              -
++//     %%BIT    DAP            16     16     0         R|W     TRUE     -              -
++//     %%BIT    SLAVE          15     15     1         R|W     TRUE     -              -
++//     %%BIT    CKS            14     1      16383     R|W     TRUE     W          "0x1, 0x2, 0x3, 0x4, 0x8, 0x10, 0x100, 0x1000, 0x3FFF"
++//
++// %REG_NAME CSI_CNT
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    CSIRST         28     28     1     R|W     TRUE     W
++//     %%BIT    T_TRGEN        27     27     0     R|W     TRUE     -
++//     %%BIT    T_FIFOF        26     26     0     R       TRUE     -
++//     %%BIT    T_DMAEN        24     24     0     R|W     TRUE     -
++//     %%BIT    SS_MON         21     21     1     R       TRUE     -
++//     %%BIT    R_TRGEN        19     19     0     R|W     TRUE     -
++//     %%BIT    R_FIFOF        18     18     0     R       TRUE     -
++//     %%BIT    R_DMAEN        16     16     0     R|W     TRUE     -
++//     %%BIT    UNDER_E        13     13     0     R|W     TRUE     -
++//     %%BIT    OVERF_E        12     12     0     R|W     TRUE     -
++//     %%BIT    TREND_E        9      9      0     R|W     TRUE     -
++//     %%BIT    CSIEND_E       8      8      0     R|W     TRUE     -
++//     %%BIT    T_TRGR_E       4      4      0     R|W     TRUE     -
++//     %%BIT    R_TRGR_E       0      0      0     R|W     TRUE     -
++//
++// %REG_NAME CSI_INT
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    UNDER          13     13     0     R|W     TRUE     W
++//     %%BIT    OVERF          12     12     0     R|W     TRUE     -
++//     %%BIT    TREND          9      9      0     R|W     TRUE     -
++//     %%BIT    CSIEND         8      8      0     R|W     TRUE     -
++//     %%BIT    T_TRGR         4      4      0     R|W     TRUE     -
++//     %%BIT    R_TRGR         0      0      0     R|W     TRUE     -
++//
++// %REG_NAME CSI_IFIFOL
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    RFL            5      0      0     R|W     TRUE     W
++//
++// %REG_NAME CSI_OFIFOL
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    TFL            5      0      0     R|W     TRUE     W
++//
++// %REG_NAME CSI_IFIFO
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    IFIFO          15     0      0     R       TRUE     R
++//
++// %REG_NAME CSI_OFIFO
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    OFIFO          15     0      0     W       TRUE     W
++//
++// %REG_NAME CSI_FIFOTRG
++//     %%TITLE  name           upper  lower  init  access  support  callback
++//     %%BIT    T_TRG          10     8      0     R|W     TRUE     W
++//     %%BIT    R_TRG          2      0      0     R|W     TRUE     -
++////////////////////////////////////////////////////////////////////////////////
++
++#ifndef __CSI_REGIF_H__
++#define __CSI_REGIF_H__
++#include <linux/bitops.h>
++
++/* CSI register */
++#define CSI_MODE                        0x00    /* CSI mode control                  */
++#define CSI_CLKSEL                      0x04    /* CSI clock select                  */
++#define CSI_CNT                         0x08    /* CSI control                       */
++#define CSI_INT                         0x0C    /* CSI interrupt status              */
++#define CSI_IFIFOL                      0x10    /* CSI receive FIFO level display    */
++#define CSI_OFIFOL                      0x14    /* CSI transmit FIFO level display   */
++#define CSI_IFIFO                       0x18    /* CSI receive window                */
++#define CSI_OFIFO                       0x1C    /* CSI transmit window               */
++#define CSI_FIFOTRG                     0x20    /* CSI FIFO trigger level            */
++
++/* Bit definition*/
++/* CSI_MODE */
++#define CSI_MODE_DATWT          0xF0000 //BITS(16, 19)
++#define CSI_MODE_CSIE           BIT(7)
++#define CSI_MODE_TRMD           BIT(6)
++#define CSI_MODE_CCL            BIT(5)
++#define CSI_MODE_DIR            BIT(4)
++#define CSI_MODE_CSOT           BIT(0)
++
++/* CSI_CLKSEL */
++#define CSI_CLKSEL_SS_ENA       BIT(19)
++#define CSI_CLKSEL_SS_POL       BIT(18)
++#define CSI_CLKSEL_CKP          BIT(17)
++#define CSI_CLKSEL_DAP          BIT(16)
++#define CSI_CLKSEL_SLAVE        BIT(15)
++#define CSI_CLKSEL_CKS          0x7FFE //BITS(1,14)
++
++
++/* CSI_CNT */
++#define CSI_CNT_CSIRST          BIT(28)
++#define CSI_CNT_T_TRGEN         BIT(27)
++#define CSI_CNT_T_FIFOF         BIT(26)
++#define CSI_CNT_T_DMAEN         BIT(24)
++#define CSI_CNT_SS_MON          BIT(21)
++#define CSI_CNT_R_TRGEN         BIT(19)
++#define CSI_CNT_R_FIFOF         BIT(18)
++#define CSI_CNT_R_DMAEN         BIT(16)
++#define CSI_CNT_UNDER_E         BIT(13)
++#define CSI_CNT_OVERF_E         BIT(12)
++#define CSI_CNT_TREND_E         BIT(9)
++#define CSI_CNT_CSIEND_E        BIT(8)
++#define CSI_CNT_T_TRGR_E        BIT(4)
++#define CSI_CNT_R_TRGR_E        BIT(0)
++
++/* CSI_INT */
++#define CSI_INT_UNDER           BIT(13)
++#define CSI_INT_OVERF       BIT(12)
++#define CSI_INT_TREND       BIT(9)
++#define CSI_INT_CSIEND      BIT(8)
++#define CSI_INT_T_TRGR      BIT(4)
++#define CSI_INT_R_TRGR      BIT(0)
++
++/* CSI_IFIFOL */
++#define CSI_IFIFOL_RFL          0x3F //BITS(0,5)
++
++/* CSI_OFIFOL */
++#define CSI_OFIFOL_TFL          0x3F //BITS(0,5)
++
++/* CSI_IFIFO */
++#define CSI_IFIFO_IFIFO         0xffff //BITS(0,15)
++
++/* CSI_OFIFO */
++#define CSI_OFIFO_OFIFO         0xffff //BITS(0,15)
++
++/* CSI_FIFO */
++#define CSI_FIFO_16BIT                  0xffff //BITS(0,15)
++#define CSI_FIFO_8BIT_MSB               0xff //BITS(0,15)
++#define CSI_FIFO_8BIT_LSB               0xff00 //BITS(0,15)
++
++
++/* CSI_FIFOTRG */
++#define CSI_FIFOTRG_T_TRG       0x700 //BITS(8,10)
++#define CSI_FIFOTRG_R_TRG       0x7 //BITS(0,2)
++
++#endif /* __CSI_REGIF_H__ */
++
+-- 
+2.7.4
+

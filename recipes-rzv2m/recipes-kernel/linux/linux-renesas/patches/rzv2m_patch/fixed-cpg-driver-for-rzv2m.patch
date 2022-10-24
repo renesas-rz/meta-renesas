@@ -1,0 +1,43 @@
+diff --git a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+index 64fca4f..d3f559f 100755
+--- a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
++++ b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+@@ -31,7 +31,7 @@ enum clk_ids {
+ //       LAST_DT_CORE_CLK = R8A774C0_CLK_CANFD,
+        LAST_DT_CORE_CLK = 0,
+        /* External Input Clocks */
+-       CLK_EXTAL,
++//       CLK_EXTAL,
+ 
+        /* Internal Core Clocks */
+        CLK_MAIN,
+@@ -108,8 +108,7 @@ static const struct cpg_core_clk r8arzv2m_core_clks[] __initconst = {
+ };
+ 
+ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+-       DEF_MOD("dmaa_aclk",            111,    CLK_SEL_D,              RST_TYPEB,      1,      7,      4),
+-#if 0
++//       DEF_MOD("dmaa_aclk",            111,    CLK_SEL_D,              RST_TYPEB,      1,      7,      4),
+        DEF_MOD("sdi0_aclk",            300,    CLK_SEL_D,              RST_NON,        0,      0,      0),
+        DEF_MOD("sdi0_imclk",           301,    CLK_SEL_SDI0,   RST_NON,        0,      0,      0),
+        DEF_MOD("sdi0_imclk2",          302,    CLK_SEL_SDI0,   RST_TYPEB,      3,      0,      6),
+@@ -120,9 +119,8 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("sdi1_clk_hs",          307,    CLK_PLL2_2,             RST_NON,        0,      0,      0),
+        DEF_MOD("emm_aclk",                     308,    CLK_SEL_D,              RST_NON,        0,      0,      0),
+        DEF_MOD("emm_imclk",            309,    CLK_SEL_SDI0,   RST_NON,        0,      0,      0),
+-       DEF_MOD("emm_imclk2",           310,    CLK_SEL_SDI0,   RST_TYPEB,      3,      2,      7),
++       DEF_MOD("emm_imclk2",           310,    CLK_SEL_SDI0,   RST_TYPEB,      3,      2,      8),
+        DEF_MOD("emm_clk_hs",           311,    CLK_PLL2_2,             RST_NON,        0,      0,      0),
+-#endif
+        DEF_MOD("pci_aclk",                     400,    CLK_SEL_D,              RST_TYPEA,      3,      8,      0),
+        DEF_MOD("pci_clk_pmu",          401,    CLK_SEL_D,              RST_TYPEA,      3,      8,      0),
+        DEF_MOD("pci_apb_clk",          402,    CLK_SEL_E,              RST_NON,        0,      0,      0),
+@@ -167,7 +165,7 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("csi_clk_4",            1512,   CLK_SEL_CSI0,   RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B,              RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_dclk",            2001,   CLK_PLL6,               RST_NON,        0,      0,      0),
+-       DEF_MOD("drpa_initclk",         2002,   CLK_MAIN,               RST_TYPEB,      9,      0,      0),
++       DEF_MOD("drpa_initclk",         2002,   CLK_MAIN,               RST_TYPEB,      9,      0,      14),
+ 	
+ };
+ 

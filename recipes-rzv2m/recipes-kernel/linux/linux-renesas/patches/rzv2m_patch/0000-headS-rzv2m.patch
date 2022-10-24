@@ -1,0 +1,79 @@
+From fbdcb2ffc39b5496022e873b06f86598e94828f7 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 18 Feb 2022 13:24:49 +0700
+Subject: [PATCH] headS-rzv2m
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ arch/arm64/kernel/head.S | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
+index d8d9caf..de94c8d 100644
+--- a/arch/arm64/kernel/head.S
++++ b/arch/arm64/kernel/head.S
+@@ -103,7 +103,10 @@ pe_header:
+ 	 *  x24        __primary_switch() .. relocate_kernel()  current RELR displacement
+ 	 */
+ SYM_CODE_START(primary_entry)
++	mov     x0, #0x0f000000
++//     mov     x4, #0x40007fc0
+ 	bl	preserve_boot_args
++	bl      el3_setup                       // Drop to EL2, w0=cpu_boot_mode
+ 	bl	el2_setup			// Drop to EL1, w0=cpu_boot_mode
+ 	adrp	x23, __PHYS_OFFSET
+ 	and	x23, x23, MIN_KIMG_ALIGN - 1	// KASLR offset, defaults to 0
+@@ -481,6 +484,50 @@ EXPORT_SYMBOL(kimage_vaddr)
+  */
+ 	.section ".idmap.text","awx"
+ 
++SYM_FUNC_START(el3_setup)
++       msr     SPsel, #1                       // We want to use SP_EL{1,2}
++       mrs     x0, CurrentEL
++       cmp     x0, #CurrentEL_EL3
++       b.eq    1f
++       mov_q   x0, (SCTLR_EL1_RES1 | ENDIAN_SET_EL1)
++       msr     sctlr_el1, x0
++       mov     w0, #BOOT_CPU_MODE_EL1          // This cpu booted in EL1
++       isb
++       ret
++
++// Initialize SCTLR_EL2 and HCR_EL2 to save values before entering EL2.
++1:     MSR     SCTLR_EL2, XZR
++       MSR     HCR_EL2, XZR
++// Determine the EL2 Execution state.
++       MRS     X0, SCR_EL3
++       ORR     X0, X0, #(1<<10) // RW EL2 Execution state is AArch64.
++       ORR     X0, X0, #(1<<0) // NS EL1 is Non-secure world.
++       MSR     SCR_EL3, x0
++       MOV     X0, #0b01001 // DAIF=0000
++       MSR     SPSR_EL3, X0 // M[4:0]=01001 EL2h must match SCR_EL3.RW
++// Determine EL2 entry.
++       ADR     X0, el2_entry // el2_entry points to the first instruction of
++       MSR     ELR_EL3, X0 // EL2 code.
++       ERET
++
++el2_entry:
++// Initialize the SCTLR_EL1 register before entering EL1.
++       MSR     SCTLR_EL1, XZR
++// Determine the EL1 Execution state.
++       MRS     X0, HCR_EL2
++       ORR     X0, X0, #(1<<31) // RW=1 EL1 Execution state is AArch64.
++       MSR     HCR_EL2, X0
++       MOV     X0, #0b00101 // DAIF=0000
++       MSR     SPSR_EL2, X0 // M[4:0]=00101 EL1h must match HCR_EL2.RW.
++       ADR     X0, el1_entry // el1_entry points to the first instruction of
++       MSR     ELR_EL2, X0 // EL1 code.
++       ERET
++
++el1_entry:
++       ret
++
++SYM_FUNC_END(el3_setup)
++
+ /*
+  * If we're fortunate enough to boot at EL2, ensure that the world is
+  * sane before dropping to EL1.
+-- 
+2.7.4
+

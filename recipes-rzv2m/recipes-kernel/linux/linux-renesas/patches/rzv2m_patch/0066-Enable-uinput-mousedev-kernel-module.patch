@@ -1,0 +1,46 @@
+From d165902738c03febe3295180737c5b58e47e00d2 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 19 Apr 2022 15:00:04 +0700
+Subject: [PATCH] Enable-uinput-mousedev-kernel-module
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/configs/defconfig | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 45a49a8c613a..9d4aca157bd1 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -151,8 +151,8 @@ CONFIG_INPUT_TOUCHSCREEN=y
+ CONFIG_TOUCHSCREEN_USB_COMPOSITE=y
+ CONFIG_INPUT_PM8941_PWRKEY=y
+ CONFIG_INPUT_HISI_POWERKEY=y
+-CONFIG_INPUT_UINPUT=m
+-CONFIG_INPUT_MOUSEDEV=m
++CONFIG_INPUT_UINPUT=y
++CONFIG_INPUT_MOUSEDEV=y
+ # CONFIG_MOUSE_PS2 is not set
+ CONFIG_INPUT_MISC=y
+ # CONFIG_SERIO is not set
+@@ -284,6 +284,7 @@ CONFIG_SND=y
+ # CONFIG_SND_USB is not set
+ CONFIG_SND_SOC=y
+ CONFIG_SND_SOC_RCAR=y
++CONFIG_SND_SOC_PCM3168A_I2C=y
+ CONFIG_SND_SOC_RZ=y
+ CONFIG_SND_SOC_WM8978=y
+ CONFIG_SND_SOC_PCM5102A=y
+@@ -314,9 +315,6 @@ CONFIG_USB_BDC_UDC=y
+ CONFIG_USB_XHCI_RZV2M=y
+ CONFIG_TYPEC=y
+ CONFIG_TYPEC_HD3SS3220=n
+-CONFIG_USB_MASS_STORAGE=m
+-CONFIG_USB_G_SERIAL=m
+-CONFIG_USB_ETH=m
+ CONFIG_CSI_RZV2M=y
+ CONFIG_SPI_SLAVE=y
+ CONFIG_PINCTRL_RZV2M=y
+-- 
+2.25.1
+

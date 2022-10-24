@@ -1,0 +1,26 @@
+From 3f100c2106217981cf64f46bda3794e2e96b249c Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 25 Feb 2022 09:47:43 +0700
+Subject: [PATCH] mmc-renesas-rzv2m
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/mmc/host/renesas_sdhi_internal_dmac.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_internal_dmac.c b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+index 536675d..82a0838 100644
+--- a/drivers/mmc/host/renesas_sdhi_internal_dmac.c
++++ b/drivers/mmc/host/renesas_sdhi_internal_dmac.c
+@@ -319,6 +319,8 @@ static const struct soc_device_attribute soc_dma_quirks[] = {
+ 	  .data = (void *)BIT(SDHI_INTERNAL_DMAC_ONE_RX_ONLY) },
+ 	{ .soc_id = "r8a7796", .revision = "ES1.0",
+ 	  .data = (void *)BIT(SDHI_INTERNAL_DMAC_ONE_RX_ONLY) },
++	/* generic ones */
++	{ .soc_id = "r9a09g011gbg" },
+ 	{ /* sentinel */ }
+ };
+ 
+-- 
+2.7.4
+

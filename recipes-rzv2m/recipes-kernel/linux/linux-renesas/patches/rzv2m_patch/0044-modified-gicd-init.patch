@@ -1,0 +1,170 @@
+From 6f8c2bd512c828b368edf1de5e35f8891b37c125 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 1 Mar 2022 09:18:13 +0700
+Subject: [PATCH] modified-gicd-init
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ drivers/irqchip/irq-gic-renesas-rzv2m.h | 120 ++++++++++++++++++++++++++++++++
+ drivers/irqchip/irq-gic.c               |  11 +++
+ 2 files changed, 131 insertions(+)
+ create mode 100644 drivers/irqchip/irq-gic-renesas-rzv2m.h
+
+diff --git a/drivers/irqchip/irq-gic-renesas-rzv2m.h b/drivers/irqchip/irq-gic-renesas-rzv2m.h
+new file mode 100644
+index 0000000..7c534fa
+--- /dev/null
++++ b/drivers/irqchip/irq-gic-renesas-rzv2m.h
+@@ -0,0 +1,120 @@
++/*
++ * Renesas RZ/V2M GICD hedaer file
++ *
++ * Copyright (C) 2020 Renesas Electronics Corporation
++ *
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++#ifndef __IRQ_GIC_RENESAS_RZV2M_H__
++#define __IRQ_GIC_RENESAS_RZV2M_H__
++const u32 gic_init_target[] =
++{
++    0x3030303,    //offset address : 0x820
++    0x3030303,    //offset address : 0x824
++    0x3030303,    //offset address : 0x828
++    0x3030303,    //offset address : 0x82C
++    0x3030303,    //offset address : 0x830
++    0x3030303,    //offset address : 0x834
++    0x3030303,    //offset address : 0x838
++    0x3030303,    //offset address : 0x83C
++    0x3030303,    //offset address : 0x840
++    0x3030303,    //offset address : 0x844
++    0x1010101,    //offset address : 0x848
++    0x2010002,    //offset address : 0x84C
++    0x1010201,    //offset address : 0x850
++    0x1010101,    //offset address : 0x854
++    0x2020101,    //offset address : 0x858
++    0x2020202,    //offset address : 0x85C
++    0x2020202,    //offset address : 0x860
++    0x2020202,    //offset address : 0x864
++    0x1010101,    //offset address : 0x868
++    0x2020202,    //offset address : 0x86C
++    0x2020202,    //offset address : 0x870
++    0x1010101,    //offset address : 0x874
++    0x2010101,    //offset address : 0x878
++    0x1010101,    //offset address : 0x87C
++    0x1010101,    //offset address : 0x880
++    0x1010101,    //offset address : 0x884
++    0x2010101,    //offset address : 0x888
++    0x2020202,    //offset address : 0x88C
++    0x1020202,    //offset address : 0x890
++    0x1010101,    //offset address : 0x894
++    0x1010101,    //offset address : 0x898
++    0x1010101,    //offset address : 0x89C
++    0x2010101,    //offset address : 0x8A0
++    0x2020202,    //offset address : 0x8A4
++    0x2020202,    //offset address : 0x8A8
++    0x2020202,    //offset address : 0x8AC
++    0x2020202,    //offset address : 0x8B0
++    0x2020202,    //offset address : 0x8B4
++    0x2020202,    //offset address : 0x8B8
++    0x2020202,    //offset address : 0x8BC
++    0x2020202,    //offset address : 0x8C0
++    0x2020000,    //offset address : 0x8C4
++    0x2020202,    //offset address : 0x8C8
++    0x2020202,    //offset address : 0x8CC
++    0x2020202,    //offset address : 0x8D0
++    0x2020202,    //offset address : 0x8D4
++    0x2020202,    //offset address : 0x8D8
++    0x2020202,    //offset address : 0x8DC
++    0x2020202,    //offset address : 0x8E0
++    0x2020202,    //offset address : 0x8E4
++    0x2020202,    //offset address : 0x8E8
++    0x2020202,    //offset address : 0x8EC
++    0x2020202,    //offset address : 0x8F0
++    0x2020202,    //offset address : 0x8F4
++    0x2020202,    //offset address : 0x8F8
++    0x2020202,    //offset address : 0x8FC
++    0x1010202,    //offset address : 0x900
++    0x2010201,    //offset address : 0x904
++    0x2010201,    //offset address : 0x908
++    0x2010201,    //offset address : 0x90C
++    0x1010201,    //offset address : 0x910
++    0x10101,    //offset address : 0x914
++    0x1000000,    //offset address : 0x918
++    0x1010101,    //offset address : 0x91C
++    0x1010101,    //offset address : 0x920
++    0x1010101,    //offset address : 0x924
++    0x1010101,    //offset address : 0x928
++    0x1010101,    //offset address : 0x92C
++    0x1010101,    //offset address : 0x930
++    0x1010101,    //offset address : 0x934
++    0x0,    //offset address : 0x938
++    0x0,    //offset address : 0x93C
++    0x0,    //offset address : 0x940
++    0x0,    //offset address : 0x944
++    0x0,    //offset address : 0x948
++    0x0,    //offset address : 0x94C
++    0x0,    //offset address : 0x950
++    0x1010100,    //offset address : 0x954
++    0x1010101,    //offset address : 0x958
++    0x1010101,    //offset address : 0x95C
++    0x1010101,    //offset address : 0x960
++    0x1010101,    //offset address : 0x964
++    0x2020101,    //offset address : 0x968
++    0x2020002,    //offset address : 0x96C
++    0x2020202,    //offset address : 0x970
++    0x2020202,    //offset address : 0x974
++    0x3030302,    //offset address : 0x978
++    0x2020203,    //offset address : 0x97C
++    0x1010102,    //offset address : 0x980
++    0x1010101,    //offset address : 0x984
++    0x1010101,    //offset address : 0x988
++    0x1010101,    //offset address : 0x98C
++    0x2020202,    //offset address : 0x990
++    0x2020202,    //offset address : 0x994
++    0x1010101,    //offset address : 0x998
++    0x1010101,    //offset address : 0x99C
++    0x1010202,    //offset address : 0x9A0
++    0x2020203,    //offset address : 0x9A4
++};
++#endif /* __IRQ_GIC_RENESAS_RZV2M_H__ */
++
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 6053245..16da6ff 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -46,6 +46,7 @@
+ #include <asm/virt.h>
+ 
+ #include "irq-gic-common.h"
++#include "irq-gic-renesas-rzv2m.h"
+ 
+ #ifdef CONFIG_ARM64
+ #include <asm/cpufeature.h>
+@@ -485,6 +486,16 @@ static void gic_dist_init(struct gic_chip_data *gic)
+ 	for (i = 32; i < gic_irqs; i += 4)
+ 		writel_relaxed(cpumask, base + GIC_DIST_TARGET + i * 4 / 4);
+ 
++       /*
++        * Set all global interrupts to CPU #0 and #1 for RZ/V2M.
++        */
++    {
++        unsigned int cnt, t_size;
++        t_size = sizeof(gic_init_target) / sizeof(u32);
++       for (cnt = 0; cnt < t_size; cnt++)
++            writel_relaxed(gic_init_target[cnt], base + GIC_DIST_TARGET + (0x20+(cnt*4)));
++    }
++
+ 	gic_dist_config(base, gic_irqs, NULL);
+ 
+ 	writel_relaxed(GICD_ENABLE, base + GIC_DIST_CTRL);
+-- 
+2.7.4
+

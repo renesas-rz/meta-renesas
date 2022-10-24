@@ -1,0 +1,65 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 0a92db1..b4265d7 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -1,8 +1,8 @@
+ // SPDX-License-Identifier: GPL-2.0
+ /*
+- * Device Tree Source for the RZ/V2M RDK platform
++ * Device Tree Source for the RZ/V2M evaluation-board platform
+  *
+- * Copyright (C) 2019 Renesas Electronics Corp.
++ * Copyright (C) 2022 Renesas Electronics Corp.
+  */
+ 
+ /dts-v1/;
+@@ -11,7 +11,7 @@
+ 
+ / {
+ 
+-    model = "RZ/V2M";
++    model = "Renesas EVK based on r9a09g011gbg";
+     compatible = "renesas,r9a09g011gbg";
+ 
+     aliases {
+@@ -34,35 +34,25 @@
+         ranges;
+ 
+         /* global autoconfigured region for contiguous allocations */
+-	global_cma: linux,cma@1B8000000 {
++        global_cma: linux,cma@1B8000000 {
+             compatible = "shared-dma-pool";
+             reusable;
+-	    reg = <0x1 0xB8000000 0x0 0x8000000>;
++            reg = <0x1 0xB8000000 0x0 0x8000000>;
+             linux,cma-default;
+         };
+ 
+         /* device specific region for contiguous allocations */
+         drp_reserved: linux,CMAtoDRP {
+             reusable;
+-	    reg = <0x1 0xC0000000 0x0 0x20000000>;
++            reg = <0x1 0xC0000000 0x0 0x20000000>;
+         };
+ 
+-	image_buf0: image_buf@0 {
++        image_buf0: image_buf@0 {
+             compatible = "shared-dma-pool";
+             reusable;
+-	    reg = <0x1 0xFFC00000 0x0 0x400000>; //4MiB
++            reg = <0x1 0xFFC00000 0x0 0x400000>; //4MiB
+             label = "image_buf0";
+         };
+-
+-    };
+-
+-    udmabuf@0 {
+-        compatible = "ikwzm,udmabuf-0.10.a";
+-        device-name = "udmabuf0";
+-        minor-number = <0>;
+-        size = <0x400000>; // 4MiB
+-        dma-coherent;
+-	memory-region = <&image_buf0>;
+     };
+ 
+     vcc_sdhi0: regulator-vcc-sdhi0 {

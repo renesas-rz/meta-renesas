@@ -1,0 +1,169 @@
+From a4752a7a899a1b7dd8d8b6eb6c6e02eeba2c829b Mon Sep 17 00:00:00 2001
+From: Canh Dao <canh.dao.ct@renesas.com>
+Date: Wed, 13 Apr 2022 16:53:04 +0700
+Subject: [PATCH] enabled_eth-rzv2m
+
+Signed-off-by: Canh Dao <canh.dao.ct@renesas.com>
+---
+ .../renesas/r9a09g011gbg-evaluation-board.dts |  2 +-
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi | 72 +++++++++++--------
+ arch/arm64/configs/defconfig                  |  4 +-
+ drivers/net/ethernet/renesas/ravb_main.c      |  1 +
+ 4 files changed, 47 insertions(+), 32 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index fe416d33eeba..3b997dcb0c04 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -18,7 +18,7 @@ aliases {
+        };
+ 
+        chosen {
+-		bootargs = "earlycon=uart,mmio32,0xA4040000,115200n8 console=ttyS0,115200n8 loglevel=8 vmalloc=384M root=/dev/mmcblk0p2 rootwait rootfstype=ext3 rw; rodata=off";
++		bootargs = "earlycon=uart,mmio32,0xA4040000,115200n8 console=ttyS0,115200n8 loglevel=8 vmalloc=384M root=/dev/mmcblk0p2 rootwait rootfstype=ext3 rw; rodata=off ip=dhcp";
+ 		stdout-path = "serial0:115200n8";
+        };
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 4030c53f12b0..371d3d960502 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -151,6 +151,13 @@ usbclk: usbclk@200M {
+                compatible = "fixed-clock";
+                clock-frequency = <200000000>;
+        };
++
++       ethclk: ethclk@200M {
++               #clock-cells = <0>;
++               compatible = "fixed-clock";
++               clock-frequency = <200000000>;
++       };
++
+ #endif
+ 
+        soc: soc {
+@@ -327,31 +334,35 @@ avb: ethernet@a3300000 {
+                        compatible = "renesas,etheravb-r8arzv2m",
+                                     "renesas,etheravb-rcar-gen3";
+                        reg = <0 0xa3300000 0 0x800>;
+-                       interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 45 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 47 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 48 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 53 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 55 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 58 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 59 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 61 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 62 IRQ_TYPE_LEVEL_HIGH>,
+-                                    <GIC_SPI 63 IRQ_TYPE_LEVEL_HIGH>;
++                       interrupts = <GIC_SPI 251 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 252 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 253 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 254 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 255 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 256 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 257 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 258 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 259 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 260 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 261 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 262 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 263 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 268 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 269 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 270 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 271 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 272 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 273 IRQ_TYPE_LEVEL_HIGH
++                                    GIC_SPI 275 IRQ_TYPE_LEVEL_HIGH
++                                    GIC_SPI 277 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 274 IRQ_TYPE_LEVEL_HIGH
++                                    GIC_SPI 276 IRQ_TYPE_LEVEL_HIGH
++                                    GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>,
++                                    <GIC_SPI 279 IRQ_TYPE_LEVEL_HIGH>;
+                        interrupt-names = "ch0", "ch1", "ch2", "ch3",
+                                          "ch4", "ch5", "ch6", "ch7",
+                                          "ch8", "ch9", "ch10", "ch11",
+@@ -359,12 +370,13 @@ avb: ethernet@a3300000 {
+                                          "ch16", "ch17", "ch18", "ch19",
+                                          "ch20", "ch21", "ch22", "ch23",
+                                          "ch24";
+-                       clocks = <&cpg CPG_MOD 812>;
+-                       power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;
+-                       resets = <&cpg 812>;
+                        renesas,no-ether-link;
++                       clocks = <&ethclk>;
++                       /*clocks = <&cpg CPG_MOD 812>;*/
++                       /*power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
++                       /*resets = <&cpg 812>;*/
+                        phy-handle = <&phy0>;
+-                       phy-mode = "gmii";
++		       phy-mode = "rgmii";
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+                        status = "okay";
+@@ -372,7 +384,7 @@ avb: ethernet@a3300000 {
+                        phy0: ethernet-phy@0 {
+                                rxc-skew-ps = <1500>;
+                                reg = <0>;
+-                               interrupts = <21 IRQ_TYPE_LEVEL_LOW>;
++                               /*interrupts = <21 IRQ_TYPE_LEVEL_LOW>;*/
+                        };
+                };
+ 
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index cca4046308fa..28a0f9208c50 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -139,7 +139,7 @@ CONFIG_VIRTIO_NET=y
+ # CONFIG_CAVIUM_PTP is not set
+ CONFIG_RAVB=y
+ CONFIG_MDIO_BUS_MUX_MMIOREG=y
+-CONFIG_MICREL_PHY=y
++#CONFIG_MICREL_PHY=y
+ CONFIG_REALTEK_PHY=y
+ # CONFIG_WLAN is not set
+ CONFIG_INPUT_MATRIXKMAP=y
+@@ -396,6 +396,8 @@ CONFIG_DEVFREQ_GOV_POWERSAVE=y
+ CONFIG_DEVFREQ_GOV_USERSPACE=y
+ CONFIG_DEVFREQ_GOV_PASSIVE=y
+ CONFIG_RENESAS_MFIS_ECC=y
++#CONFIG_PHYLIB=y
++#CONFIG_MDIO_DEVICE=y
+ CONFIG_E1000E=y
+ CONFIG_SERIAL_8250=y
+ CONFIG_SERIAL_8250_DEPRECATED_OPTIONS=y
+diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
+index ad8f940e7d36..5c15184e91ef 100644
+--- a/drivers/net/ethernet/renesas/ravb_main.c
++++ b/drivers/net/ethernet/renesas/ravb_main.c
+@@ -2454,6 +2454,7 @@ static const struct of_device_id ravb_match_table[] = {
+ 	{ .compatible = "renesas,etheravb-r8a7795", .data = &ravb_gen3_hw_info },
+ 	{ .compatible = "renesas,etheravb-rcar-gen3", .data = &ravb_gen3_hw_info },
+ 	{ .compatible = "renesas,rzg2l-gbeth", .data = &gbeth_hw_info },
++	{ .compatible = "renesas,renesas,etheravb-r8arzv2m", .data = &ravb_gen3_hw_info},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, ravb_match_table);
+-- 
+2.25.1
+

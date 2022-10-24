@@ -4,17 +4,16 @@ require recipes-kernel/linux/linux-yocto.inc
 require include/docker-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
-COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2n|hihope-rzg2m|hihope-rzg2h)"
+COMPATIBLE_MACHINE_rzv2m = "(rzv2m)"
+COMPATIBLE_MACHINE_rzv2ma="(rzv2ma)"
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip13-rt5", "rz-5.10-cip13",d)}"
-SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "c8798f35184b8115f9aba9f972eb12ed3bb4e9e0", "61bbadb8a4b899371c83e1cbadd0a46ffd6ebb40",d)}"
-
+BRANCH = "rz-5.10-cip1"
+SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "4394838d911d3f4894212375d47d946568c2cc46", "f223930be911a670018bf64156e3ebf1b4547fd0",d)}"
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
-LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.131-cip13-rt5", "5.10.131-cip13",d)}"
+LINUX_VERSION ?= "5.10.83-cip1"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
@@ -22,6 +21,7 @@ PR = "r1"
 SRC_URI_append = "\
   ${@oe.utils.conditional("USE_DOCKER", "1", " file://docker.cfg ", "", d)} \
   file://touch.cfg \
+  file://patches.scc \
 "
 
 KBUILD_DEFCONFIG = "defconfig"

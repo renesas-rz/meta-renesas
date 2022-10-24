@@ -1,0 +1,26 @@
+From 3a104a5b801ed8ad83e33526831d13f92e5b841a Mon Sep 17 00:00:00 2001
+From: CanhDao <canh.dao.ct@renesas.com>
+Date: Wed, 9 Mar 2022 14:00:45 +0700
+Subject: [PATCH] extended-34bit-dma-mask-udmabuf
+
+Signed-off-by: CanhDao <canh.dao.ct@renesas.com>
+---
+ drivers/udmabuf/udmabuf.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/udmabuf/udmabuf.c b/drivers/udmabuf/udmabuf.c
+index 76c072b0..4b1027c 100644
+--- a/drivers/udmabuf/udmabuf.c
++++ b/drivers/udmabuf/udmabuf.c
+@@ -956,6 +956,8 @@ static int udmabuf_device_setup(struct udmabuf_device_data* this)
+     /*
+      * set this->dma_dev->dma_mask
+      */
++    dma_set_mask_and_coherent(this->dma_dev,DMA_BIT_MASK(34));  //34bit extension for rzv2m
++
+     if (*this->dma_dev->dma_mask == 0) {
+         if (dma_set_mask(this->dma_dev, DMA_BIT_MASK(dma_mask_bit)) == 0) {
+            dma_set_coherent_mask(this->dma_dev, DMA_BIT_MASK(dma_mask_bit));
+-- 
+2.7.4
+

@@ -1,0 +1,132 @@
+From 3ead30a3bda57ee8031444c8f979bb9b0c3ab28f Mon Sep 17 00:00:00 2001
+From: khainguyen <khai.nguyen.wx@renesas.com>
+Date: Fri, 25 Feb 2022 11:12:44 +0700
+Subject: [PATCH] include-uapi-linux-serial-renesas-rzv2m
+
+Signed-off-by: khainguyen <khai.nguyen.wx@renesas.com>
+---
+ include/uapi/linux/serial_reg.h | 71 ++++++++++++++++++++++++++++++-----------
+ 1 file changed, 53 insertions(+), 18 deletions(-)
+
+diff --git a/include/uapi/linux/serial_reg.h b/include/uapi/linux/serial_reg.h
+index be07b54..cbdaa7c 100644
+--- a/include/uapi/linux/serial_reg.h
++++ b/include/uapi/linux/serial_reg.h
+@@ -44,8 +44,11 @@
+ #define UART_IIR_RX_TIMEOUT	0x0c /* OMAP RX Timeout interrupt */
+ #define UART_IIR_XOFF		0x10 /* OMAP XOFF/Special Character */
+ #define UART_IIR_CTS_RTS_DSR	0x20 /* OMAP CTS/RTS/DSR Change */
+-
+-#define UART_FCR	2	/* Out: FIFO Control Register */
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++	#define UART_FCR        (0x03)  /* Out: FIFO Control Register */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	#define UART_FCR	2	/* Out: FIFO Control Register */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
+ #define UART_FCR_ENABLE_FIFO	0x01 /* Enable the FIFO */
+ #define UART_FCR_CLEAR_RCVR	0x02 /* Clear the RCVR FIFO */
+ #define UART_FCR_CLEAR_XMIT	0x04 /* Clear the XMIT FIFO */
+@@ -94,8 +97,11 @@
+ #define UART_FCR_R_TRIG_BITS(x)		\
+ 	(((x) & UART_FCR_TRIGGER_MASK) >> UART_FCR_R_TRIG_SHIFT)
+ #define UART_FCR_R_TRIG_MAX_STATE	4
+-
+-#define UART_LCR	3	/* Out: Line Control Register */
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++	#define UART_LCR        (0x04)  /* Out: Line Control Register */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	#define UART_LCR	3	/* Out: Line Control Register */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
+ /*
+  * Note: if the word length is 5 bits (UART_LCR_WLEN5), then setting 
+  * UART_LCR_STOP will select 1.5 stop bits, not 2 stop bits.
+@@ -117,8 +123,11 @@
+  */
+ #define UART_LCR_CONF_MODE_A	UART_LCR_DLAB	/* Configutation mode A */
+ #define UART_LCR_CONF_MODE_B	0xBF		/* Configutation mode B */
+-
+-#define UART_MCR	4	/* Out: Modem Control Register */
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++	#define UART_MCR        (0x05)  /* Out: Modem Control Register */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	#define UART_MCR	4	/* Out: Modem Control Register */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
+ #define UART_MCR_CLKSEL		0x80 /* Divide clock by 4 (TI16C752, EFR[4]=1) */
+ #define UART_MCR_TCRTLR		0x40 /* Access TCR/TLR (TI16C752, EFR[4]=1) */
+ #define UART_MCR_XONANY		0x20 /* Enable Xon Any (TI16C752, EFR[4]=1) */
+@@ -128,8 +137,11 @@
+ #define UART_MCR_OUT1		0x04 /* Out1 complement */
+ #define UART_MCR_RTS		0x02 /* RTS complement */
+ #define UART_MCR_DTR		0x01 /* DTR complement */
+-
+-#define UART_LSR	5	/* In:  Line Status Register */
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++	#define UART_LSR        (0x06)  /* In:  Line Status Register */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	#define UART_LSR	5	/* In:  Line Status Register */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
+ #define UART_LSR_FIFOE		0x80 /* Fifo error */
+ #define UART_LSR_TEMT		0x40 /* Transmitter empty */
+ #define UART_LSR_THRE		0x20 /* Transmit-hold-register empty */
+@@ -139,8 +151,11 @@
+ #define UART_LSR_OE		0x02 /* Overrun error indicator */
+ #define UART_LSR_DR		0x01 /* Receiver data ready */
+ #define UART_LSR_BRK_ERROR_BITS	0x1E /* BI, FE, PE, OE bits */
+-
+-#define UART_MSR	6	/* In:  Modem Status Register */
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++	#define UART_MSR        (0x07)  /* In:  Modem Status Register */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	#define UART_MSR	6	/* In:  Modem Status Register */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
+ #define UART_MSR_DCD		0x80 /* Data Carrier Detect */
+ #define UART_MSR_RI		0x40 /* Ring Indicator */
+ #define UART_MSR_DSR		0x20 /* Data Set Ready */
+@@ -150,16 +165,36 @@
+ #define UART_MSR_DDSR		0x02 /* Delta DSR */
+ #define UART_MSR_DCTS		0x01 /* Delta CTS */
+ #define UART_MSR_ANY_DELTA	0x0F /* Any of the delta bits! */
+-
+-#define UART_SCR	7	/* I/O: Scratch Register */
+-
+-/*
+- * DLAB=1
+- */
+-#define UART_DLL	0	/* Out: Divisor Latch Low */
+-#define UART_DLM	1	/* Out: Divisor Latch High */
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++	#define UART_SCR        (0x08)  /* I/O: Scratch Register */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	#define UART_SCR	7	/* I/O: Scratch Register */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++       /*
++        * DLAB=1
++        */
++       #define UART_DLL        (0x09)  /* Out: Divisor Latch Low */
++       #define UART_DLM        (0x0A)  /* Out: Divisor Latch High */
++#else  /* defined(CONFIG_ARCH_R9A09G011GBG) */
++	/*
++ 	* DLAB=1
++ 	*/
++	#define UART_DLL	0	/* Out: Divisor Latch Low */
++	#define UART_DLM	1	/* Out: Divisor Latch High */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
+ #define UART_DIV_MAX	0xFFFF	/* Max divisor value */
+ 
++#if defined(CONFIG_ARCH_R9A09G011GBG)
++       #define UART_HCR0       (0x0B)  /* HW Control Register 0 */
++       #define UART_HCR0_SWRST (0x80)  /* SW Reset */
++       #define UART_HCR0_RM    (0x40)  /* RTS Mode */
++       #define UART_HCR0_RTDRD (0x10)  /* Receiver time-out DMA REQ Disable */
++       #define UART_HCR0_RDE   (0x02)  /* Receiver DMA Enable */
++       #define UART_HCR0_TDE   (0x01)  /* Transmitter DMA Enable */
++#endif /* defined(CONFIG_ARCH_R9A09G011GBG) */
++
+ /*
+  * LCR=0xBF (or DLAB=1 for 16C660)
+  */
+-- 
+2.7.4
+

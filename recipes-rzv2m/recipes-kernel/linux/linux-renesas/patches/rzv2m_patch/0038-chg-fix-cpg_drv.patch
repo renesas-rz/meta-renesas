@@ -1,0 +1,253 @@
+From 4422067890379e96c3b3de6f5e784b3e19cc84c1 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Thu, 14 Apr 2022 15:04:25 +0700
+Subject: [PATCH] chg-fix-cpg_drv
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi |  8 +--
+ drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c   | 35 +++++++-----
+ drivers/clk/renesas/renesas-cpg-clkon.c       | 57 ++++++++++++-------
+ 3 files changed, 60 insertions(+), 40 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 823f131f07d7..8d6b15ffd1cb 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -154,8 +154,7 @@ i2c0: i2c@a4030000 {
+             reg = <0 0xa4030000 0 0x80>;
+             interrupts = <GIC_SPI 232 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 236 IRQ_TYPE_EDGE_RISING>;
+             /*clocks = <&pclk>;*/
+-	    clocks = <&cpg CPG_MOD 912>;
+-	    reset = <&cpg 912>;
++	    clocks = <&pclk>;
+             i2c-scl-internal-delay-ns = <110>;
+             status = "disabled";
+         };
+@@ -166,7 +165,7 @@ i2c1: i2c@a4030080 {
+             compatible = "renesas,rzv2m-i2c";
+             reg = <0 0xa4030080 0 0x80>;
+             interrupts = <GIC_SPI 233 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 237 IRQ_TYPE_EDGE_RISING>;
+-            clocks = <&cpg CPG_MOD 1012>;
++	    clocks = <&pclk>;
+             i2c-scl-internal-delay-ns = <110>;
+             status = "disabled";
+         };
+@@ -336,9 +335,8 @@ tim0: timer@a4000000 {
+             compatible =  "renesas,tim-rzv2m";
+             reg = <0 0xa4000000 0 0x80>;
+             interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>;
++	    clocks = <&timclk>;
+             clock-names = "timclk";
+-	    reset = <&cpg 904>;
+-	    reset-names = "tim0";
+             status = "disabled";
+         };
+ 
+diff --git a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+index f05602e5c2be..6bcae2051eed 100644
+--- a/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
++++ b/drivers/clk/renesas/r9a09g011gbg-cpg-mssr.c
+@@ -42,6 +42,7 @@ enum clk_ids {
+        CLK_PLL2_2,
+        CLK_PLL2_8,
+        CLK_PLL2_16,
++       CLK_PLL6,
+ //     CLK_DIV_A,
+        CLK_DIV_B,
+        CLK_DIV_D,
+@@ -49,12 +50,11 @@ enum clk_ids {
+        CLK_SEL_B,
+        CLK_SEL_D,
+        CLK_SEL_E,
+-#if 0//static defined is disabled
+-       +       CLK_SEL_CSI0,
++       CLK_SEL_CSI0,
+        CLK_SEL_CSI2,
+        CLK_SEL_W0,
+        CLK_SEL_SDI0,
+-#endif
++
+ 
+        /* Module Clocks */
+        MOD_CLK_BASE
+@@ -70,6 +70,7 @@ static const struct cpg_core_clk r8arzv2m_core_clks[] __initconst = {
+        DEF_RATE(".pll2_2",    CLK_PLL2_2,      800*1000*1000),
+        DEF_RATE(".pll2_8",    CLK_PLL2_8,      200*1000*1000),
+        DEF_RATE(".pll2_16",   CLK_PLL2_16,     100*1000*1000),
++       DEF_RATE(".pll6",      CLK_PLL6,        1260*1000*1000),
+ 
+        DEF_DIV(".divb",     CLK_DIV_B,          CLK_PLL2,         4,
+                CPG_SYS_DDIV, CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD,
+@@ -95,6 +96,12 @@ static const struct cpg_core_clk r8arzv2m_core_clks[] __initconst = {
+                CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW0,         0),
+        DEF_STATIC(".selsdi0",     CLK_SEL_SDI0,          CLK_PLL2,       2,
+                CPG_SDIEMM_SSEL,   CPG_SDIEMM_SSEL_WEN_SELSDI,          CPG_SDIEMM_SSEL_SELSDI),
++#else
++       DEF_RATE(".selcsi0",     CLK_SEL_CSI0,  24*1000*1000),
++       DEF_RATE(".selcsi2",     CLK_SEL_CSI2,  24*1000*1000),
++       DEF_RATE(".selw",        CLK_SEL_W0,    48*1000*1000),
++       DEF_RATE(".selsdi0",     CLK_SEL_SDI0,  200*1000*1000),
++
+ #endif
+ 
+ 
+@@ -139,7 +146,7 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("tim_clk29",            1209,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+        DEF_MOD("tim_clk30",            1210,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+        DEF_MOD("tim_clk31",            1211,   CLK_MAIN_24,    RST_TYPEA,      6,      3,      0,),
+-       DEF_MOD("pwm_clk8",                     1404,   CLK_MAIN,               RST_TYPEB,      6,      5,      0,),
++       DEF_MOD("pwm_clk8",                     1404,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("pwm_clk9",                     1405,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("pwm_clk10",            1406,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("pwm_clk11",            1407,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+@@ -147,23 +154,21 @@ static const struct mssr_mod_clk r8arzv2m_mod_clks[] __initconst = {
+        DEF_MOD("pwm_clk13",            1409,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("pwm_clk14",            1410,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+        DEF_MOD("pwm_clk15",            1411,   CLK_MAIN,               RST_TYPEB,      6,      5,      23),
+-#if 0 //static defined is disabled
+        DEF_MOD("urt_pclk",                     1504,   CLK_SEL_E,              RST_TYPEB,      6,      10,     26),
+-       DEF_MOD("urt_clk0",                     1505,   CLK_SEL_W0,             RST_NON,        0,      0,      0),
+-       DEF_MOD("csi_clk0",                     1508,   CLK_SEL_CSI0,   RST_NON,        0,      0,      0),
++       DEF_MOD("urt_clk0",                     1505,   CLK_SEL_W0,             RST_TYPEB,      6,      10,     26),
+        DEF_MOD("csi_clk2",                     1510,   CLK_SEL_CSI2,   RST_NON,        0,      0,      0),
+-#endif
+-#if 0
+-       DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B,              RST_NON,        0,      0,      14),
++       DEF_MOD("drpa_aclk",            2000,   CLK_SEL_B,              RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_dclk",            2001,   CLK_PLL6,               RST_NON,        0,      0,      0),
+        DEF_MOD("drpa_initclk",         2002,   CLK_MAIN,               RST_TYPEB,      9,      0,      0),
+-#endif
+ 	
+ };
+ 
+ static const unsigned int r8arzv2m_crit_mod_clks[] __initconst = {
+-//    MOD_CLK_ID(408),        /*INTC-AP (GIC)*/ 
+-      000
++	MOD_CLK_ID(404),        /* usb_aclk_h */
++	MOD_CLK_ID(405),        /* usb_aclk_p */
++	MOD_CLK_ID(406),        /* usb_pclk */
++	MOD_CLK_ID(408),        /* eth0_clk_axi */
++	MOD_CLK_ID(409),        /* eth0_clk_gptp_extern */
+ };
+ 
+ /*
+@@ -206,7 +211,7 @@ int32_t r8arzv2m_cpg_getClockCtrl(void __iomem *base, uint8_t reg_num, uint16_t
+ {
+     void __iomem *offset = base + CPG_CLK_ON1;
+     uint32_t value;
+-    if (reg_num < CPG_RST_REG_MIN || CPG_RST_REG_MAX < reg_num)
++    if (reg_num < CPG_CLK_ON_REG_MIN || CPG_CLK_ON_REG_MAX < reg_num)
+     {
+         return 0xFFFFFFFF;
+     }
+@@ -215,7 +220,7 @@ int32_t r8arzv2m_cpg_getClockCtrl(void __iomem *base, uint8_t reg_num, uint16_t
+        value = readl(offset);
+ 
+        value = value & target;
+-    return value;
++       return value;
+ }
+ int32_t CPG_SetResetCtrl(void __iomem *base, uint8_t reg_num, uint16_t target, uint16_t set_value)    
+ {
+diff --git a/drivers/clk/renesas/renesas-cpg-clkon.c b/drivers/clk/renesas/renesas-cpg-clkon.c
+index 1a85e0c83a5e..1b0b263aeb07 100644
+--- a/drivers/clk/renesas/renesas-cpg-clkon.c
++++ b/drivers/clk/renesas/renesas-cpg-clkon.c
+@@ -102,6 +102,25 @@ struct mstp_clock {
+ 
+ #define to_mstp_clock(_hw) container_of(_hw, struct mstp_clock, hw)
+ 
++static int cpg_mstp_clock_is_enabled(struct clk_hw *hw)
++{
++       struct mstp_clock *clock = to_mstp_clock(hw);
++       struct cpg_mssr_priv *priv = clock->priv;
++       unsigned int no = clock->index / 100;
++       unsigned int bit = clock->index % 100;
++       u32 value;
++
++       value = r8arzv2m_cpg_getClockCtrl(priv->base,no,BIT(bit));
++
++       if(value == 0xFFFFFFFF){
++               return 0;
++       }
++
++       value = value >> bit;
++
++       return value;
++}
++
+ static int cpg_mstp_clock_endisable(struct clk_hw *hw, bool enable)
+ {
+        struct mstp_clock *clock = to_mstp_clock(hw);
+@@ -114,10 +133,19 @@ static int cpg_mstp_clock_endisable(struct clk_hw *hw, bool enable)
+        unsigned int i;
+        u32 value;
+ 
+-       dev_dbg(dev, "MSTP %u%02u/%pC %s\n", no, bit, hw->clk,
++       dev_dbg(dev, "CLOCKON %u%02u/%pC %s\n", no, bit, hw->clk,
+                enable ? "ON" : "OFF");
++       value = cpg_mstp_clock_is_enabled(hw);
++       if((0 != value) && enable){
++
++               dev_dbg(dev, "%s is enabled",hw->init->name);
++               return 0;
++       }
+        spin_lock_irqsave(&priv->rmw_lock, flags);
+ 
++       dev_info(dev, "CLOCK SET %u%02u/%pC %s\n", no, bit, hw->clk,
++		       enable ? "is enabled" : "is disabled");
++
+        if(clock->type == RST_TYPEA){
+                CPG_SetResetCtrl(priv->base,clock->reset_no,BIT(clock->reset_bit),0);
+                r8arzv2m_cpg_setClockCtrl(priv->base,no,BIT(bit),0);
+@@ -160,25 +188,6 @@ static void cpg_mstp_clock_disable(struct clk_hw *hw)
+        cpg_mstp_clock_endisable(hw, false);
+ }
+ 
+-static int cpg_mstp_clock_is_enabled(struct clk_hw *hw)
+-{
+-       struct mstp_clock *clock = to_mstp_clock(hw);
+-       struct cpg_mssr_priv *priv = clock->priv;
+-       unsigned int no = clock->index / 100;
+-       unsigned int bit = clock->index % 100;
+-       u32 value;
+-
+-       value = r8arzv2m_cpg_getClockCtrl(priv->base,no,BIT(bit));
+-
+-       if(value == 0xFFFFFFFF){
+-               return 0;
+-       }
+-
+-       value = value >> bit;
+-
+-       return 0;//[TODO]return value;
+-}
+-
+ static const struct clk_ops cpg_mstp_clock_ops = {
+        .enable = cpg_mstp_clock_enable,
+        .disable = cpg_mstp_clock_disable,
+@@ -372,12 +381,20 @@ static void __init cpg_mssr_register_mod_clk(const struct mssr_mod_clk *mod,
+        clock->index = id - priv->num_core_clks;
+        clock->priv = priv;
+        clock->hw.init = &init;
++       clock->type = mod->type;
++       clock->reset_no = mod->reset_no;
++       clock->reset_bit = mod->reset_bit;
++       clock->reset_msk = mod->reset_msk;
+ 
+        clk = clk_register(NULL, &clock->hw);
+        if (IS_ERR(clk))
+                goto fail;
+ 
+        dev_dbg(dev, "Module clock %pC at %lu Hz\n", clk, clk_get_rate(clk));
++
++       clk_prepare(clk);
++       clk_enable(clk);
++
+        priv->clks[id] = clk;
+        priv->smstpcr_saved[clock->index / 100].mask |= BIT(clock->index % 100); //[TODO:saved module stop manage]
+        return;
+-- 
+2.25.1
+

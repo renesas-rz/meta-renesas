@@ -1,0 +1,27 @@
+From 34472b912768ef139c911de3c9f47f1b96334a5d Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 4 Nov 2019 14:53:16 +0700
+Subject: [PATCH 003/358] clk: renesas: r8a774c0: Add ZG clock
+
+This patch adds ZG clock for the R8A774C0 SoC.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ drivers/clk/renesas/r8a774c0-cpg-mssr.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/renesas/r8a774c0-cpg-mssr.c b/drivers/clk/renesas/r8a774c0-cpg-mssr.c
+index ed3a2cf..c50ad2f 100644
+--- a/drivers/clk/renesas/r8a774c0-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a774c0-cpg-mssr.c
+@@ -90,6 +90,7 @@ static const struct cpg_core_clk r8a774c0_core_clks[] __initconst = {
+ 	DEF_FIXED("za2",       R8A774C0_CLK_ZA2,   CLK_PLL0D24,    1, 1),
+ 	DEF_FIXED("za8",       R8A774C0_CLK_ZA8,   CLK_PLL0D8,     1, 1),
+ 	DEF_GEN3_Z("z2",       R8A774C0_CLK_Z2,    CLK_TYPE_GEN3_Z, CLK_PLL0, 4, 8),
++	DEF_GEN3_Z("zg",       R8A774C0_CLK_ZG,    CLK_TYPE_GEN3_ZG, CLK_PLL0, 8, 24),
+ 	DEF_FIXED("ztr",       R8A774C0_CLK_ZTR,   CLK_PLL1,       6, 1),
+ 	DEF_FIXED("zt",        R8A774C0_CLK_ZT,    CLK_PLL1,       4, 1),
+ 	DEF_FIXED("zx",        R8A774C0_CLK_ZX,    CLK_PLL1,       3, 1),
+-- 
+2.7.4
+

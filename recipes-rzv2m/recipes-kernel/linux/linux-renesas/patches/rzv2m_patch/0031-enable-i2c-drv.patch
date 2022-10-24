@@ -1,0 +1,380 @@
+From 5d8ed3fc0e7087906857c782ec5c86caf3297304 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Mon, 28 Feb 2022 10:44:34 +0700
+Subject: [PATCH] enable-i2c-drv
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ .../dts/renesas/r9a09g011gbg-evaluation-board.dts  |   4 +-
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi      |   4 +-
+ drivers/i2c/busses/i2c-rzv2m.c                     | 128 ++++++++++-----------
+ 3 files changed, 67 insertions(+), 69 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 5202cd6..5ab346e 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -146,7 +146,7 @@
+        status = "okay";
+ };
+ 
+-#if 0
++#if 1
+ &usb3_peri0 {
+ //     companion = <&xhci0>;
+ 
+@@ -166,7 +166,7 @@
+ #endif
+ 
+ 
+-#if 0
++#if 1
+ &i2c0 {
+        status = "okay";
+        clock-frequency = <100000>;
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index e59a84d..11fd5e7 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -182,7 +182,7 @@
+                        #size-cells = <0>;
+                        compatible = "renesas,rzv2m-i2c";
+                        reg = <0 0xa4030000 0 0x80>;
+-                       interrupts = <GIC_SPI 232 IRQ_TYPE_LEVEL_HIGH>,<GIC_SPI 236 IRQ_TYPE_LEVEL_HIGH>;
++		       interrupts = <GIC_SPI 232 IRQ_TYPE_EDGE_RISING>,<GIC_SPI 236 IRQ_TYPE_EDGE_RISING>;
+                        clocks = <&pclk>;
+        /*              power-domains = <&sysc R8A774C0_PD_ALWAYS_ON>;*/
+        /*              resets = <&cpg 931>;*/
+@@ -203,7 +203,7 @@
+                        /*resets = <&cpg 328>;*/
+                        status = "disabled";
+                };
+-#if 0
++#if 1
+                usb3_peri0: usb@85070000 {
+                        compatible = "renesas,r8a774c0-usb3-peri",
+                                     "renesas,rcar-gen3-usb3-peri";
+diff --git a/drivers/i2c/busses/i2c-rzv2m.c b/drivers/i2c/busses/i2c-rzv2m.c
+index d84685b..eea2752 100644
+--- a/drivers/i2c/busses/i2c-rzv2m.c
++++ b/drivers/i2c/busses/i2c-rzv2m.c
+@@ -109,6 +109,19 @@ static const struct bcr_cfg bcr_cfg_table[] = {
+        {52, 48, 900},
+ };
+ 
++/* This function support to access write 32bit */
++static void rzv2m_i2c_write(struct rzv2m_i2c_priv *priv, u32 val, int reg)
++{
++       writel(val, priv->base + reg);
++}
++
++/* This function support to access read 32bit */
++static u32 rzv2m_i2c_read(struct rzv2m_i2c_priv *priv, int reg)
++{
++       return readl(priv->base + reg);
++}
++
++
+ /* Tia interrupt callback */
+ static irqreturn_t rzv2m_i2c_tia_irq_handler(int this_irq, void *dev_id)
+ {
+@@ -125,7 +138,6 @@ static int rzv2m_i2c_clock_calculate(struct device *dev,
+                        struct rzv2m_i2c_priv *priv)
+ {
+        const struct bcr_cfg *sbcr_cfg;
+-       int ret;
+        unsigned long input_rate;
+        u32 bus_clk_rate, scl_rise_ns, scl_fall_ns, sum;
+        u64 div;
+@@ -221,33 +233,28 @@ static int rzv2m_i2c_clock_calculate(struct device *dev,
+ /* I2c init */
+ static void rzv2m_i2c_init(struct rzv2m_i2c_priv *priv)
+ {
+-       u8 i2c_ctl0 = 0;
+-       u8 i2c_ctl1 = 0;
++       u32 i2c_ctl0 = 0;
++       u32 i2c_ctl1 = 0;
+ 
+        /* i2c disable */
+-//     writeb(0, priv->base + IICB0CTL0);
+-       writel(0, priv->base + IICB0CTL0);
++       rzv2m_i2c_write(priv, 0, IICB0CTL0);
+ 
+        /* IICB0CTL1 setting */
+        i2c_ctl1 = (priv->bus_mode ? IICB0MDSC : 0)
+                         | IICB0SLSE;
+-//     writeb(i2c_ctl1, priv->base + IICB0CTL1);
+-       writel(i2c_ctl1, priv->base + IICB0CTL1);
++       rzv2m_i2c_write(priv, i2c_ctl1, IICB0CTL1);
+ 
+        /* IICB0WL IICB0WH setting */
+-//     writew(priv->iicb0wl, priv->base + IICB0WL);
+-//     writew(priv->iicb0wh, priv->base + IICB0WH);
+-       writel(priv->iicb0wl, priv->base + IICB0WL);
+-       writel(priv->iicb0wh, priv->base + IICB0WH);
++       rzv2m_i2c_write(priv, priv->iicb0wl, IICB0WL);
++       rzv2m_i2c_write(priv, priv->iicb0wh, IICB0WH);
+ 
+        /* i2c enable after setting */
+        i2c_ctl0 = IICB0SLWT | IICB0SLAC | IICB0IICE;
+-//     writeb(i2c_ctl0, priv->base + IICB0CTL0);
+-       writel(i2c_ctl0, priv->base + IICB0CTL0);
++       rzv2m_i2c_write(priv, i2c_ctl0, IICB0CTL0);
+ }
+ 
+-/* I2c write(one byte) */
+-static int rzv2m_i2c_writeb(struct rzv2m_i2c_priv *priv, u8 data)
++/* I2c write with ACK confirm*/
++static int rzv2m_i2c_write_with_ACK(struct rzv2m_i2c_priv *priv, u32 data)
+ {
+        unsigned long time_left;
+ 
+@@ -255,8 +262,7 @@ static int rzv2m_i2c_writeb(struct rzv2m_i2c_priv *priv, u8 data)
+        reinit_completion(&priv->msg_tia_done);
+ 
+        /* Write data */
+-//     writeb(data, priv->base + IICB0DAT);
+-       writel(data, priv->base + IICB0DAT);
++       rzv2m_i2c_write(priv, data, IICB0DAT);
+ 
+        /* Wait for transaction */
+        time_left = wait_for_completion_timeout(&priv->msg_tia_done,
+@@ -265,30 +271,29 @@ static int rzv2m_i2c_writeb(struct rzv2m_i2c_priv *priv, u8 data)
+                return -ETIMEDOUT;
+ 
+        /* Confirm ACK */
+-       if ((readw(priv->base + IICB0STR0) & IICB0SSAC) != IICB0SSAC)
++       if ((rzv2m_i2c_read(priv, IICB0STR0) & IICB0SSAC) != IICB0SSAC)
+                return -ENXIO;
+ 
+        return 0;
+ }
+ 
+-/* I2c read(one byte) */
+-static int rzv2m_i2c_readb(struct rzv2m_i2c_priv *priv, u8 *data, bool last)
++/* I2c read with ACK confirm*/
++static int rzv2m_i2c_read_with_ACK(struct rzv2m_i2c_priv *priv, u8 *data, bool last)
+ {
+        unsigned long time_left;
+-       u8 i2c_ctl0;
++       u32 i2c_ctl0;
++       u32 data_tmp;
+ 
+        /* Flag clear*/
+        reinit_completion(&priv->msg_tia_done);
+ 
+        /*  Interrupt request timing : 8th clock */
+-       i2c_ctl0 = readb(priv->base + IICB0CTL0);
++       i2c_ctl0 = rzv2m_i2c_read(priv, IICB0CTL0);
+        i2c_ctl0 &= ~IICB0SLWT;
+-//     writeb(i2c_ctl0, priv->base + IICB0CTL0);
+-       writel(i2c_ctl0, priv->base + IICB0CTL0);
++       rzv2m_i2c_write(priv, i2c_ctl0, IICB0CTL0);
+ 
+        /* Exit the wait state */
+-//     writeb(IICB0WRET, priv->base + IICB0TRG);
+-       writel(IICB0WRET, priv->base + IICB0TRG);
++       rzv2m_i2c_write(priv, IICB0WRET, IICB0TRG);
+ 
+        /* Wait for transaction */
+        time_left = wait_for_completion_timeout(&priv->msg_tia_done,
+@@ -298,26 +303,23 @@ static int rzv2m_i2c_readb(struct rzv2m_i2c_priv *priv, u8 *data, bool last)
+ 
+        if (!last) {/* Not last */
+                /* Read data */
+-               *data = readb(priv->base + IICB0DAT);
++	       data_tmp = rzv2m_i2c_read(priv, IICB0DAT);
+        } else { /* Last */
+                /* Disable ACK */
+-               i2c_ctl0 = readb(priv->base + IICB0CTL0);
++	       i2c_ctl0 = rzv2m_i2c_read(priv, IICB0CTL0);
+                i2c_ctl0 &= ~IICB0SLAC;
+-//             writeb(i2c_ctl0, priv->base + IICB0CTL0);
+-               writel(i2c_ctl0, priv->base + IICB0CTL0);
++	       rzv2m_i2c_write(priv, i2c_ctl0, IICB0CTL0);
+ 
+                /* Read data*/
+-               *data = readb(priv->base + IICB0DAT);
++	       data_tmp = rzv2m_i2c_read(priv, IICB0DAT);
+ 
+                /* Interrupt request timing : 9th clock */
+-               i2c_ctl0 = readb(priv->base + IICB0CTL0);
++	       i2c_ctl0 = rzv2m_i2c_read(priv, IICB0CTL0);
+                i2c_ctl0 |= IICB0SLWT;
+-//             writeb(i2c_ctl0, priv->base + IICB0CTL0);
+-               writel(i2c_ctl0, priv->base + IICB0CTL0);
++	       rzv2m_i2c_write(priv, i2c_ctl0, IICB0CTL0);
+ 
+                /* Exit the wait state */
+-//             writeb(IICB0WRET, priv->base + IICB0TRG);
+-               writel(IICB0WRET, priv->base + IICB0TRG);
++	       rzv2m_i2c_write(priv, IICB0WRET, IICB0TRG);
+ 
+                /* Wait for transaction */
+                time_left = wait_for_completion_timeout(&priv->msg_tia_done,
+@@ -326,24 +328,24 @@ static int rzv2m_i2c_readb(struct rzv2m_i2c_priv *priv, u8 *data, bool last)
+                        return -ETIMEDOUT;
+ 
+                /* Enable ACK */
+-               i2c_ctl0 = readb(priv->base + IICB0CTL0);
++	       i2c_ctl0 = rzv2m_i2c_read(priv, IICB0CTL0);
+                i2c_ctl0 |= IICB0SLAC;
+-//             writeb(i2c_ctl0, priv->base + IICB0CTL0);
+-               writel(i2c_ctl0, priv->base + IICB0CTL0);
++	       rzv2m_i2c_write(priv, i2c_ctl0, IICB0CTL0);
+        }
++	*data = (u8)(data_tmp & 0x000000ff);
+ 
+        return 0;
+ }
+ 
+ 
+ /* I2c write */
+-static int rzv2m_i2c_write(struct rzv2m_i2c_priv *priv, struct i2c_msg *msg,
+-                       int *count)
++static int rzv2m_i2c_send(struct rzv2m_i2c_priv *priv, struct i2c_msg *msg,
++		       int *count)
+ {
+        int i, ret = 0;
+ 
+        for (i = 0; i < msg->len; i++) {
+-               ret = rzv2m_i2c_writeb(priv, msg->buf[i]);
++	       ret = rzv2m_i2c_write_with_ACK(priv, msg->buf[i]);
+                if (ret < 0)
+                        break;
+        }
+@@ -354,13 +356,13 @@ static int rzv2m_i2c_write(struct rzv2m_i2c_priv *priv, struct i2c_msg *msg,
+ }
+ 
+ /* I2c read */
+-static int rzv2m_i2c_read(struct rzv2m_i2c_priv *priv, struct i2c_msg *msg,
+-                       int *count)
++static int rzv2m_i2c_receive(struct rzv2m_i2c_priv *priv, struct i2c_msg *msg,
++		       int *count)
+ {
+        int i, ret = 0;
+ 
+        for (i = 0; i < msg->len; i++) {
+-               ret = rzv2m_i2c_readb(priv, &msg->buf[i],
++	       ret = rzv2m_i2c_read_with_ACK(priv, &msg->buf[i],
+                                        ((msg->len - 1) == i));
+                if (ret < 0)
+                        break;
+@@ -376,7 +378,7 @@ static int rzv2m_i2c_read(struct rzv2m_i2c_priv *priv, struct i2c_msg *msg,
+ static int rzv2m_i2c_send_address(struct rzv2m_i2c_priv *priv,
+                        struct i2c_msg *msg, int read)
+ {
+-       u8 addr;
++       u32 addr;
+        int ret;
+ 
+        if (msg->flags & I2C_M_TEN) {
+@@ -387,17 +389,17 @@ static int rzv2m_i2c_send_address(struct rzv2m_i2c_priv *priv,
+                addr = 0xF0 | ((msg->addr >> 7) & 0x06);
+                addr |= read;
+                /* Send 1st address(extend code) */
+-               ret = rzv2m_i2c_writeb(priv, addr);
++	       ret = rzv2m_i2c_write_with_ACK(priv, addr);
+                if (ret < 0)
+                        return ret;
+                /* Send 2nd address */
+-               ret = rzv2m_i2c_writeb(priv, msg->addr & 0xFF);
++	       ret = rzv2m_i2c_write_with_ACK(priv, msg->addr & 0xFF);
+                if (ret < 0)
+                        return ret;
+        } else {
+                /* 7-bit address */
+                addr = (msg->addr << 1) | read;
+-               ret = rzv2m_i2c_writeb(priv, addr);
++	       ret = rzv2m_i2c_write_with_ACK(priv, addr);
+                if (ret < 0)
+                        return ret;
+        }
+@@ -412,11 +414,10 @@ static void rzv2m_i2c_stop_condition(struct rzv2m_i2c_priv *priv)
+        timeout = jiffies + msecs_to_jiffies(priv->adap.timeout);
+ 
+        /* Send stop condition */
+-//     writeb(IICB0SPT, priv->base + IICB0TRG);
+-       writel(IICB0SPT, priv->base + IICB0TRG);
++       rzv2m_i2c_write(priv, IICB0SPT, IICB0TRG);
+        do {
+                current_time = jiffies;
+-               if ((readw(priv->base + IICB0STR0) & IICB0SSSP) == IICB0SSSP)
++	       if ((rzv2m_i2c_read(priv, IICB0STR0) & IICB0SSSP) == IICB0SSSP)
+                        break;
+        } while (time_before(current_time, timeout));
+ 
+@@ -430,8 +431,7 @@ static int __rzv2m_i2c_master_xfer(struct rzv2m_i2c_priv *priv,
+        int ret, read = !!(msg->flags & I2C_M_RD);
+ 
+        /* Send start condition */
+-//     writeb(IICB0STT, priv->base + IICB0TRG);
+-       writel(IICB0STT, priv->base + IICB0TRG);
++       rzv2m_i2c_write(priv, IICB0STT, IICB0TRG);
+ 
+        /* Send slave address and R/W type */
+        ret = rzv2m_i2c_send_address(priv, msg, read);
+@@ -441,12 +441,12 @@ static int __rzv2m_i2c_master_xfer(struct rzv2m_i2c_priv *priv,
+                goto out_reset;
+ 
+        if (read) {
+-               ret = rzv2m_i2c_read(priv, msg, &count);
++	       ret = rzv2m_i2c_receive(priv, msg, &count);
+                if (ret < 0)
+                        goto out_reset;
+        } else {
+                /* Write data */
+-               ret = rzv2m_i2c_write(priv, msg, &count);
++	       ret = rzv2m_i2c_send(priv, msg, &count);
+                if (ret == -ENXIO)
+                        goto out;
+                else if (ret < 0)
+@@ -474,7 +474,7 @@ static int rzv2m_i2c_master_xfer(struct i2c_adapter *adap,
+        struct rzv2m_i2c_priv *priv = i2c_get_adapdata(adap);
+        int ret, i;
+ 
+-       if (readw(priv->base + IICB0STR0) & IICB0SSBS)
++       if (rzv2m_i2c_read(priv, IICB0STR0) & IICB0SSBS)
+                return -EAGAIN;
+ 
+        /* I2C main transfer  */
+@@ -573,16 +573,15 @@ static int rzv2m_i2c_probe(struct platform_device *pdev)
+ static int rzv2m_i2c_remove(struct platform_device *pdev)
+ {
+        struct rzv2m_i2c_priv *priv = platform_get_drvdata(pdev);
+-       u8 i2c_ctl0;
++       u32 i2c_ctl0;
+ 
+        /* Delete adapter */
+        i2c_del_adapter(&priv->adap);
+ 
+        /* I2c disable */
+-       i2c_ctl0 = readb(priv->base + IICB0CTL0);
++       i2c_ctl0 = rzv2m_i2c_read(priv, IICB0CTL0);
+        i2c_ctl0 &= ~IICB0IICE;
+-//     writeb(i2c_ctl0, priv->base + IICB0CTL0);
+-       writel(i2c_ctl0, priv->base + IICB0CTL0);
++       rzv2m_i2c_write(priv, i2c_ctl0, IICB0CTL0);
+ 
+        return 0;
+ }
+@@ -592,13 +591,12 @@ static int rzv2m_i2c_remove(struct platform_device *pdev)
+ static int rzv2m_i2c_suspend(struct device *dev)
+ {
+        struct rzv2m_i2c_priv *priv = dev_get_drvdata(dev);
+-       u8 i2c_ctl0;
++       u32 i2c_ctl0;
+ 
+        /* I2c disable */
+-       i2c_ctl0 = readb(priv->base + IICB0CTL0);
++       i2c_ctl0 = rzv2m_i2c_read(priv, IICB0CTL0);
+        i2c_ctl0 &= ~IICB0IICE;
+-//     writeb(i2c_ctl0, priv->base + IICB0CTL0);
+-       writel(i2c_ctl0, priv->base + IICB0CTL0);
++       rzv2m_i2c_write(priv, i2c_ctl0, IICB0CTL0);
+ 
+        return 0;
+ }
+-- 
+2.7.4
+

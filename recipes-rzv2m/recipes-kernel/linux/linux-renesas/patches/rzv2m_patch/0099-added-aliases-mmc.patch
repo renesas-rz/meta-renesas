@@ -1,0 +1,13 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index b4265d7..95330bc 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -16,6 +16,8 @@
+ 
+     aliases {
+         serial0 = &uart0;
++        mmc0 = &sdhi0;
++        mmc1 = &eMM;
+     };
+ 
+     chosen {

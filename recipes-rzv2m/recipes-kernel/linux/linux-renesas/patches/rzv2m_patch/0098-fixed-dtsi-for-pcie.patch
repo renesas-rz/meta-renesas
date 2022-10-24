@@ -1,0 +1,25 @@
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index fce6c20..4a127a3 100755
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -260,16 +260,14 @@
+            bus-range = <0x0 0xff>;
+            linux,pci-domain = <0x0>;
+            interrupts = <GIC_SPI 324 IRQ_TYPE_LEVEL_HIGH>;
+-           ranges = <0x01000000 0x0 0x00000000 0x0 0xc0000000 0x0 0x00100000
+-				    0x03000000 0x0 0xC0300000 0x0 0xC0300000 0x0 0x08000000
+-				    0x03000000 0x0 0xC0100000 0x0 0xC0100000 0x0 0x00200000
+-				    0x42000000 0x0 0xC8300000 0x0 0xC8300000 0x0 0x08000000>;
+-           dma-ranges = <0x42000000 0x0 0x60000000 0x0 0x60000000 0x0 0x1D000000>;
++           ranges = <0x03000000 0x0 0xc0000000 0x0 0xc0000000 0x0 0x00200000
++                     0x03000000 0x0 0xc0300000 0x0 0xc0300000 0x0 0x08000000>;
++           dma-ranges = <0x03000000 0x1 0x80000000 0x1 0x80000000 0x0 0x80000000>;
+            #interrupt-cells = <0x1>;
+            interrupt-map-mask = <0 0 0 0>;
+            interrupt-map = <0 0 0 0 &gic GIC_SPI 324 IRQ_TYPE_LEVEL_HIGH>;
+        };
+-
++       
+        csi0: csi@a4020000 {
+             compatible = "renesas,rzv2m-csi";
+             reg = <0x00 0xa4020000 0x0 0x80>;

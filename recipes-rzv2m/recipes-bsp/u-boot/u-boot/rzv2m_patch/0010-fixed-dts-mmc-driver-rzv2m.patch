@@ -1,0 +1,16 @@
+diff --git a/arch/arm/dts/r9a09g011gbg.dtsi b/arch/arm/dts/r9a09g011gbg.dtsi
+index 0bdf5e5..6d25d9a 100755
+--- a/arch/arm/dts/r9a09g011gbg.dtsi
++++ b/arch/arm/dts/r9a09g011gbg.dtsi
+@@ -79,9 +79,9 @@
+ 			clocks = <&imclk>;
+ 			max-frequency = <200000000>;
+ 			bus-width = <4>;
+-			sd-uhs-sdr50;
+-			sd-uhs-sdr104;
++			cap-sd-highspeed;
+ 			non-removable;
++			no-1-8-v;
+ 			status = "disabled";
+ 		};
+ 		

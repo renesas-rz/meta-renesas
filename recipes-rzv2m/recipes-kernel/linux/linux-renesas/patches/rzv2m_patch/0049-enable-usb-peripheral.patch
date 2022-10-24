@@ -1,0 +1,58 @@
+From 80de5c82af88abd11d09a50c6bae87e25b0de0e3 Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Fri, 15 Apr 2022 16:24:29 +0700
+Subject: [PATCH] enable-usb-peripheral
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi | 5 +++--
+ drivers/usb/gadget/udc/renesas_usb3.c         | 8 ++++----
+ 2 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 4ea22300944b..9a3c6e4af753 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -204,10 +204,11 @@ usb3_peri0: usb@85070000 {
+             compatible = "renesas,r8a774c0-usb3-peri",
+                      "renesas,rcar-gen3-usb3-peri";
+             reg = <0 0x85070000 0 0x1000>;
+-            interrupts = <GIC_SPI 242 IRQ_TYPE_LEVEL_HIGH>,
++            /*interrupts = <GIC_SPI 242 IRQ_TYPE_LEVEL_HIGH>,
+                      <GIC_SPI 243 IRQ_TYPE_LEVEL_HIGH>,
+                      <GIC_SPI 244 IRQ_TYPE_LEVEL_HIGH>,
+-                     <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
++                     <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;*/
++	    interrupts = <GIC_SPI 246 IRQ_TYPE_LEVEL_HIGH>;
+             clocks =  <&cpg CPG_MOD 405>; 
+             status = "disabled";
+         };
+diff --git a/drivers/usb/gadget/udc/renesas_usb3.c b/drivers/usb/gadget/udc/renesas_usb3.c
+index 803a3e105c5f..6946495ea52c 100644
+--- a/drivers/usb/gadget/udc/renesas_usb3.c
++++ b/drivers/usb/gadget/udc/renesas_usb3.c
+@@ -45,9 +45,9 @@
+ #define USB3_USB_INT_ENA_2	0x22c
+ #define USB3_STUP_DAT_0		0x230
+ #define USB3_STUP_DAT_1		0x234
+-#define USB3_USB_OTG_STA	0x268
+-#define USB3_USB_OTG_INT_STA	0x26c
+-#define USB3_USB_OTG_INT_ENA	0x270
++#define USB3_USB_OTG_STA        0x410	
++#define USB3_USB_OTG_INT_STA	0x414
++#define USB3_USB_OTG_INT_ENA	0x418
+ #define USB3_P0_MOD		0x280
+ #define USB3_P0_CON		0x288
+ #define USB3_P0_STA		0x28c
+@@ -155,7 +155,7 @@
+ #define USB_INT_2_PIPE(n)	BIT(n)
+ 
+ /* USB_OTG_STA, USB_OTG_INT_STA and USB_OTG_INT_ENA */
+-#define USB_OTG_IDMON		BIT(4)
++#define USB_OTG_IDMON		BIT(0)
+ 
+ /* P0_MOD */
+ #define P0_MOD_DIR		BIT(6)
+-- 
+2.25.1
+

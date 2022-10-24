@@ -1,0 +1,53 @@
+From 9e6ebf77c8bf005958ad1528e9febe856c3af1ba Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 25 Feb 2022 16:04:15 +0700
+Subject: [PATCH] modified-dts-CMAforDRP-rzv2m
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ .../arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index f4e341e..69f6fc1 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -35,30 +35,28 @@
+                ranges;
+ 
+                /* global autoconfigured region for contiguous allocations */
+-	       linux,cma@58000000 {
++	       linux,cma@18000000 {
+                        compatible = "shared-dma-pool";
+                        reusable;
+-		       reg = <0x00000000 0x58000000 0x0 0x10000000>;
++		       reg = <0x00000000 0x18000000 0x0 0x10000000>;
+                        linux,cma-default;
+                };
+-#if 0
+                /* device specific region for contiguous allocations */
+                drp_reserved: linux,CMAtoDRP {
+                        compatible = "shared-dma-pool";
+                        reusable;
+-		       reg = <0x00000000 0x68000000 0x0 0x08000000>;
++		       reg = <0x00000000 0x28000000 0x0 0x08000000>;
+                };
+-#endif
+ 
++#if 0
+                /* device specific region for contiguous allocations */
+                mmp_reserved: linux,multimedia {
+                        compatible = "shared-dma-pool";
+                        reusable;
+                        reg = <0x00000000 0x68000000 0x0 0x08000000>;
+               };
+-       };
+ #endif
+-
++	};
+        mmngr {
+                compatible = "renesas,mmngr";
+ /*             memory-region = <&mmp_reserved>; */
+-- 
+2.7.4
+

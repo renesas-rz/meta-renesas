@@ -6,4 +6,4 @@ EXTRA_IMAGEDEPENDS += " firmware-pack"
 
 MACHINEOVERRIDES =. "rzg2l:"
 
-BBMASK_append = " recipes-rzg2h|recipes-rzv2l"
+BBMASK_append = " recipes-rzg2h"

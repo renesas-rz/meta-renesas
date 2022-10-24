@@ -1,0 +1,45 @@
+diff --git a/drivers/hw_tim/Kconfig b/drivers/hw_tim/Kconfig
+index 8a8cd19..5f7573f 100755
+--- a/drivers/hw_tim/Kconfig
++++ b/drivers/hw_tim/Kconfig
+@@ -1,8 +1,8 @@
+ menu "RZ/V2M TIM drivers"
+ 
+ config TIM_RZV2M
+-       bool "Timer for the RZ/V2M"
+-       help
+-         RZ/V2M TIM drivers enable.
++	bool "Timer for the RZ/V2M"
++	help
++	  RZ/V2M TIM drivers enable.
+ 
+ endmenu
+diff --git a/drivers/hw_tim/tim_rzv2m.c b/drivers/hw_tim/tim_rzv2m.c
+index 3e40737..8ff55a9 100755
+--- a/drivers/hw_tim/tim_rzv2m.c
++++ b/drivers/hw_tim/tim_rzv2m.c
+@@ -138,7 +138,6 @@ static int rzv2m_tim_start(struct tim_priv *priv)
+         if( ret < 0 )
+             return ret;
+ 
+-        time_left = wait_for_completion_timeout(&priv->hw_tim_wait_done, 60 * HZ );
+         time_left = wait_for_completion_timeout(&priv->hw_tim_wait_done, MAX_TIM_TIMEOUT * HZ );
+         if (!time_left)
+             return -ETIMEDOUT;
+@@ -178,7 +177,7 @@ static int rzv2m_calc_cycle_div(struct tim_priv *priv)
+         max_cnt = ((MAX_TIMCYS * (1UL << (div+1)))/ clk_mhz);
+         tim_cmd_val = usec / ( (1UL << (div+1) ) / clk_mhz );
+ 
+-	if( max_cnt >= usec )
++        if( max_cnt >= usec )
+             break;
+     }
+ 
+@@ -351,7 +350,6 @@ static int tim_dev_probe(struct platform_device *pdev)
+ 
+     //printk("%s:phy_addr[0x%x] \n",__func__,res->start);
+ 
+-    //priv->base = devm_ioremap_nocache(&pdev->dev, res->start, resource_size(res));
+     priv->base = devm_ioremap(&pdev->dev, res->start, resource_size(res));
+     if (!priv->base) {
+         dev_err(&pdev->dev, "cannot ioremap\n");

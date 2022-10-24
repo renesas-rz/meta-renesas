@@ -1,0 +1,29 @@
+From 1b8cf6a700c5a014c85aa151d3fafd5f6328557a Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Tue, 8 Mar 2022 10:38:29 +0700
+Subject: [PATCH] apply-ddr-4gb
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index dde6819..c3faf29 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -29,6 +29,11 @@
+         reg = <0x00000000 0x58000000 0x0 0x28000000>;
+     };
+ 
++    memory@180000000 {
++        device_type = "memory";
++        reg = <0x1 0x80000000 0x0 0x80000000>;
++    };
++
+     reserved-memory {
+         #address-cells = <2>;
+         #size-cells = <2>;
+-- 
+2.7.4
+

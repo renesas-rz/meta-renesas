@@ -1,0 +1,44 @@
+From 30857097fdf7248d012c48336013087735e9a675 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 25 Feb 2022 16:08:34 +0700
+Subject: [PATCH] modified-kernel-memoryarea
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts | 4 ++--
+ arch/arm64/kernel/head.S                                      | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+index 69f6fc1..8a404d0 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg-evaluation-board.dts
+@@ -22,10 +22,10 @@
+ 		stdout-path = "serial0:115200n8";
+        };
+ 
+-       memory@10000000 {
++       memory@08000000 {
+                device_type = "memory";
+                /* first 256MB is reserved for secure area. */
+-               reg = <0x00000000 0x10000000 0x0 0x70000000>;
++		reg = <0x00000000 0x08000000 0x0 0x78000000>;
+        };
+ 
+ #if 1 /*  */
+diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
+index 2fd170a..1e4e6b0 100644
+--- a/arch/arm64/kernel/head.S
++++ b/arch/arm64/kernel/head.S
+@@ -103,7 +103,7 @@ pe_header:
+ 	 *  x24        __primary_switch() .. relocate_kernel()  current RELR displacement
+ 	 */
+ SYM_CODE_START(primary_entry)
+-	mov     x0, #0x10000000
++	mov     x0, #0x08000000
+ //     mov     x4, #0x40007fc0
+ 	bl	preserve_boot_args
+ 	bl      el3_setup                       // Drop to EL2, w0=cpu_boot_mode
+-- 
+2.7.4
+

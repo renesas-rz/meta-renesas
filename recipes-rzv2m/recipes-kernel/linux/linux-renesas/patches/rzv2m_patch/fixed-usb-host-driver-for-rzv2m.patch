@@ -1,0 +1,40 @@
+diff --git a/drivers/usb/host/xhci-rzv2m.c b/drivers/usb/host/xhci-rzv2m.c
+index 7f27998..6d169de 100755
+--- a/drivers/usb/host/xhci-rzv2m.c
++++ b/drivers/usb/host/xhci-rzv2m.c
+@@ -53,17 +53,28 @@
+ #define RZV2M_DRD_HOST_RST     0x40000000 /* Hostcon Rst */
+ #define RZV2M_DRD_PERICON      0x01000000 /* PeriHost select*/
+ 
++#define RZV2M_DRD_REG 0x85070400
++
+ int xhci_rzv2m_drd_init(struct usb_hcd *hcd)
+ {
+-       /* DRD INIT */
++
+        u32 temp;
++       void __iomem * remap_addr;
++
++       remap_addr = ioremap(RZV2M_DRD_REG, sizeof(*remap_addr));
++       if (!remap_addr) {
++        return -EINVAL;
++    }
++
++       temp = readl( remap_addr );
++
++       iounmap( remap_addr );
++
++       if(temp == (RZV2M_DRD_HOST_RST | RZV2M_DRD_PERICON) )
++               return -EFAULT;
++       else
++         //no nothing
+ 
+-       if (hcd->regs != NULL) {
+-               temp = readl(hcd->regs + RZV2M_DRD_HC_OFFSET);
+-               if(temp != RZV2M_DRD_PERI_RST){
+-                       return -EFAULT;
+-               }
+-       }
+        return 0;
+ }
+ 

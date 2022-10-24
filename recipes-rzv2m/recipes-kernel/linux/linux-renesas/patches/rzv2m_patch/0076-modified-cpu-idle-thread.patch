@@ -1,0 +1,45 @@
+From f6e693dc201d7940bcbe5801d32d2eddda719cdd Mon Sep 17 00:00:00 2001
+From: Khai Nguyen <khai.nguyen.wx@renesas.com>
+Date: Thu, 10 Mar 2022 15:10:33 +0700
+Subject: [PATCH] modified-cpu-idle-thread
+
+Signed-off-by: Khai Nguyen <khai.nguyen.wx@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+index 6415f43..b36689d 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
++++ b/arch/arm64/boot/dts/renesas/r9a09g011gbg.dtsi
+@@ -30,7 +30,6 @@
+             dynamic-power-coefficient = <277>;
+             cooling-min-level = <0>;
+             cooling-max-level = <2>;
+-            cpu-idle-states = <&CPU_SLEEP_1>;
+             clocks = <&cpg CPG_CORE R8A774C0_CLK_Z2>;
+         };
+ 
+@@ -41,19 +40,6 @@
+             cache-level = <2>;
+         };
+ 
+-        idle-states {
+-            entry-method = "psci";
+-
+-            CPU_SLEEP_1: cpu-sleep-1 {
+-                compatible = "arm,idle-state";
+-                arm,psci-suspend-param = <0x0010000>;
+-                local-timer-stop;
+-                entry-latency-us = <700>;
+-                exit-latency-us = <700>;
+-                min-residency-us = <5000>;
+-                status = "okay";
+-            };
+-        };
+     };
+ 
+     pmu_a53 { /* Support only for core0 not core1 */
+-- 
+2.7.4
+

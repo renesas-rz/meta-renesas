@@ -1,0 +1,26 @@
+From 975281b457ad6d009b2d093510b1693670d44ecf Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Mon, 21 Feb 2022 09:48:59 +0700
+Subject: [PATCH] clk-renesas-r8a774c0-Add-Z2-clock
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/clk/renesas/r8a774c0-cpg-mssr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clk/renesas/r8a774c0-cpg-mssr.c b/drivers/clk/renesas/r8a774c0-cpg-mssr.c
+index 112ed99..7332e71 100644
+--- a/drivers/clk/renesas/r8a774c0-cpg-mssr.c
++++ b/drivers/clk/renesas/r8a774c0-cpg-mssr.c
+@@ -89,7 +89,7 @@ static const struct cpg_core_clk r8a774c0_core_clks[] __initconst = {
+ 	/* Core Clock Outputs */
+ 	DEF_FIXED("za2",       R8A774C0_CLK_ZA2,   CLK_PLL0D24,    1, 1),
+ 	DEF_FIXED("za8",       R8A774C0_CLK_ZA8,   CLK_PLL0D8,     1, 1),
+-	DEF_GEN3_Z("z2",       R8A774C0_CLK_Z2,    CLK_TYPE_GEN3_Z, CLK_PLL0, 4, 8),
++	DEF_GEN3_Z("z2",       R8A774C0_CLK_Z2,    CLK_TYPE_GEN3_Z2, CLK_PLL0, 4, 8),
+ 	DEF_GEN3_Z("zg",       R8A774C0_CLK_ZG,    CLK_TYPE_GEN3_ZG, CLK_PLL0, 8, 24),
+ 	DEF_FIXED("ztr",       R8A774C0_CLK_ZTR,   CLK_PLL1,       6, 1),
+ 	DEF_FIXED("zt",        R8A774C0_CLK_ZT,    CLK_PLL1,       4, 1),
+-- 
+2.7.4
+

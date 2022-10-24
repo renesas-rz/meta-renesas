@@ -2,8 +2,8 @@ require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip13-rt5", "rz-5.10-cip13",d)}"
-SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "c8798f35184b8115f9aba9f972eb12ed3bb4e9e0", "61bbadb8a4b899371c83e1cbadd0a46ffd6ebb40",d)}"
+BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip1-rt1", "rz-5.10-cip1",d)}"
+SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "4394838d911d3f4894212375d47d946568c2cc46", "f223930be911a670018bf64156e3ebf1b4547fd0",d)}"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
