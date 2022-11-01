@@ -1,4 +1,4 @@
-From 66c1c9126f4a39199f283a2e239ef52920ec11a3 Mon Sep 17 00:00:00 2001
+From e2aa07b0f34f18878b365637d868d55d37d3ee83 Mon Sep 17 00:00:00 2001
 From: hienhuynh <hien.huynh.px@renesas.com>
 Date: Thu, 8 Sep 2022 13:13:50 +0700
 Subject: [PATCH] Fixed an issue that caused flicker when outputting the screen
@@ -9,8 +9,8 @@ Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
 ---
  drivers/gpu/drm/bridge/adv7511/adv7533.c |   5 ++
  drivers/gpu/drm/rcar-du/rcar_du_crtc.c   | 103 ++++++++++++++++++-----
- drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c |   5 +-
- 3 files changed, 92 insertions(+), 21 deletions(-)
+ drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c |   3 +
+ 3 files changed, 91 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/gpu/drm/bridge/adv7511/adv7533.c b/drivers/gpu/drm/bridge/adv7511/adv7533.c
 index aa19d5a40e31..a42348e2150c 100644
@@ -173,21 +173,19 @@ index 3870041c93e1..196667b40366 100644
  		iounmap(cpg_base);
  
 diff --git a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
-index 9432ba8e39b7..3ed44a9b1472 100644
+index 8f90d2e4556c..21954f407bb6 100644
 --- a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
 +++ b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
-@@ -183,7 +183,10 @@ static int rzg2l_mipi_dsi_startup(struct rzg2l_mipi_dsi *mipi_dsi)
- 		timings.ths_settle = 9;
- 		timings.ths_exit = 13;
- 		timings.ths_trail = 17;
--		timings.ths_zero = 23;
-+		if (IS_ENABLED(CONFIG_DRM_I2C_ADV7511))
-+			timings.ths_zero = 25;
-+		else
-+			timings.ths_zero = 23;
+@@ -199,6 +199,9 @@ static int rzg2l_mipi_dsi_startup(struct rzg2l_mipi_dsi *mipi_dsi)
+ 		timings.ths_prepare = 10;
  	}
  
++	if (IS_ENABLED(CONFIG_DRM_I2C_ADV7511))
++		timings.ths_zero = 25;
++
  	dphytim0 = DSIDPHYTIM0_TCLK_MISS(timings.tclk_miss) |
+ 		   DSIDPHYTIM0_T_INIT(timings.t_init);
+ 	dphytim1 = DSIDPHYTIM1_THS_PREPARE(timings.ths_prepare) |
 -- 
 2.25.1
 
