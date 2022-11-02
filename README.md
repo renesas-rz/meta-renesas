@@ -173,9 +173,19 @@ It is possible to change some build configs as below:
   ```
   #INCOMPATIBLE_LICENSE = "GPLv3 GPLv3+"
   ```
-* CIP Core: choose the version of CIP Core to build with. CIP Core are software packages that are maintained for long term by CIP community. You can select the value "1" or "0" for CIP_CORE variable
+* CIP Core: choose the version of CIP Core to build with. CIP Core are software packages that are maintained for long term by CIP community. You can select by changing "CIP_MODE".
   ```
-  CIP_CORE = "1"
+  * **Buster (default)**: use as many packages from CIP Core Buster as possible.
+  ```
+  CIP_MODE = "Buster"
+  ```
+  * Bullseye: use as many packages from CIP Core Bullseye.
+  ```
+  CIP_MODE = "Bullseye"
+  ```
+  * None CIP Core: not use CIP Core at all, use all default version from Yocto 3.1 Dunfell
+  ```
+  CIP_MODE = "None" or unset CIP_MODE
   ```
 * QT Demo: choose QT5 Demonstration to build with core-image-qt. QT5 Demos are some applications to demonstrate QT5 framework.
   * Unset QT_DEMO (default): all QT5 Demos are not built with core-image-qt.
