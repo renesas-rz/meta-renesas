@@ -32,6 +32,7 @@ SRC_URI_append_rzg2l = " \
 	file://0010-Fix-wrong-output-size-in-setting-case-rs_par-is-NULL.patch \
 	file://0011-Fix-error-cannot-detect-NOOUT-in-case-rs_par-NULL.patch \
 	file://0012-vspm_main-Update-isu-clock-enable.patch \
+	file://0013-vspm-isu-Check-addr-of-1st-plane-in-parameter-for-RP.patch \
 "
 
 S = "${WORKDIR}/git"

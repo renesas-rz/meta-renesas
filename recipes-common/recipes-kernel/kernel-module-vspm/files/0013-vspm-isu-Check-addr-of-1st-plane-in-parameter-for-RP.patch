@@ -1,0 +1,40 @@
+From 91b09f49c556af3bf856f8ce20dc56e319d06fc1 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 10 Nov 2022 21:37:12 +0700
+Subject: [PATCH] vspm: isu: Check addr of 1st plane in parameter for RPF and
+ WPF
+
+We do not allow the address of 1st plane is NULL when configure
+RPF and WPF of ISU driver, or we will get stuck in ISU when it start
+processing.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index 32a6eb1..1154568 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -58,7 +58,7 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+ 		return E_ISU_PARA_NOIN;
+ 
+ 	/* check input addr 32 boundary */
+-	if (src_par->addr%32)
++	if ((!src_par->addr) || (src_par->addr % 32))
+ 		return E_ISU_PARA_IN_ADDR;
+ 
+ 	/* check stride 32 boundary */
+@@ -318,7 +318,7 @@ static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
+ 		return E_ISU_PARA_NOOUT;
+ 
+ 	/* check format parameter */
+-	if (dst_par->addr%512)
++	if ((!dst_par->addr) || (dst_par->addr % 512))
+ 		return E_ISU_PARA_OUT_ADDR;
+ 
+ 	/* check stride 32 boundary */
+-- 
+2.17.1
+
