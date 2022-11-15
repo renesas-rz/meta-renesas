@@ -32,3 +32,7 @@ PREFERRED_VERSION_busybox_debian = "1.30.%"
 RDEPENDS_xz_append_debian = "bash"
 RDEPENDS_gzip_append_debian = "bash"
 RDEPENDS_adduser_append_debian = "perl"
+
+# Using the package versions provided in the security update mirror
+# is now necessary to pull updates by Debian LTS
+DEBIAN_SECURITY_UPDATE_MIRROR ?= "http://security.debian.org/debian-security/pool/updates"
