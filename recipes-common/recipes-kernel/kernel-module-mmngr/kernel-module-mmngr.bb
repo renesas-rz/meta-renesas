@@ -28,6 +28,7 @@ SRC_URI_append_rzg2l = " \
     file://0001-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
     file://0002-Fix-ioctl-MM_IOC_VTOP-hang-up.patch \
     file://0003-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
+    file://0004-mmngr-lock-mm-read-before-finding-VMA.patch \
 "
 
 MMNGR_CFG ?= "MMNGR_SALVATORX"

@@ -1,0 +1,37 @@
+From b0bc73d7a0aa1b85d92250c132c34eeee4009f88 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Mon, 21 Nov 2022 09:57:06 +0700
+Subject: [PATCH] mmngr: lock mm read before finding VMA
+
+Conflict timing between we find VMA and another process update VMA in RB
+tree of MM such as vma_adjust/vma_merge make us can not get the right VMA.
+
+Use lock semaphore for mm before we find VMA to avoid this issue.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index b59800c..fdef30b 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -880,12 +880,14 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ 	int lp = 0;
+ 	int ret = 0;
+ 
++	mmap_read_lock(mm);
+ 	vma = find_vma(mm, tmp->user_virt_addr);
+ 	start = tmp->user_virt_addr & PAGE_MASK;
+ 	ret = follow_pfn(vma, start, &pfn);
+ 	if(ret != 0)
+ 		 pr_warn("Could not convert virt[%p] addr", tmp->user_virt_addr);
+ 	tmp->hard_addr = pfn << PAGE_SHIFT;
++	mmap_read_unlock(mm);
+ 
+ 	return;
+ }
+-- 
+2.17.1
+
