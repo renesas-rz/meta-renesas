@@ -121,7 +121,7 @@ Prepare default configuration files. :
 * RZ/G2E:  ek874
 * RZ/G2L:  smarc-rzg2l
 * RZ/G2LC: smarc-rzg2lc
-* RZ/G2UL: smarc-rzg2ul
+* RZ/G2UL: smarc-rzg2ul, rzg2ul-dev
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev
 * RZ/Five:  smarc-rzfive
 

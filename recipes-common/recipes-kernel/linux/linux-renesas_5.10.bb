@@ -4,7 +4,7 @@ require recipes-kernel/linux/linux-yocto.inc
 require include/docker-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
-COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
+COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|rzg2ul-dev|smarc-rzv2l|rzv2l-dev)"
 COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2n|hihope-rzg2m|hihope-rzg2h)"
 COMPATIBLE_MACHINE_rzfive = "(smarc-rzfive)"
 
