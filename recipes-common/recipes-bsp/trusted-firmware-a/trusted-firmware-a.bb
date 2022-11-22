@@ -26,7 +26,7 @@ SRCREV_mbedtls = "dd79db10014d85b26d11fe57218431f2e5ede6f2"
 PV = "v2.7+git"
 
 COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2m|hihope-rzg2n|hihope-rzg2h)"
-COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|smarc-rzg2lc|smarc-rzg2ul|rzg2ul-dev|smarc-rzv2l|rzv2l-dev)"
+COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|smarc-rzg2ul|rzg2ul-dev|smarc-rzv2l|rzv2l-dev)"
 
 PLATFORM ?= "rzg"
 
@@ -36,6 +36,11 @@ EXTRA_FLAGS_smarc-rzg2l = "BOARD=smarc_2"
 PMIC_EXTRA_FLAGS_smarc-rzg2l = "BOARD=smarc_pmic_2"
 FLASH_ADDRESS_BL2_BP_smarc-rzg2l = "00000"
 FLASH_ADDRESS_FIP_smarc-rzg2l = "1D200"
+
+PLATFORM_rzg2l-dev = "g2l"
+EXTRA_FLAGS_rzg2l-dev = "BOARD=dev15_4"
+FLASH_ADDRESS_BL2_BP_rzg2l-dev = "00000"
+FLASH_ADDRESS_FIP_rzg2l-dev = "1D200"
 
 PLATFORM_smarc-rzg2lc = "g2l"
 EXTRA_FLAGS_smarc-rzg2lc = "BOARD=smarc_1"

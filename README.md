@@ -119,7 +119,7 @@ Prepare default configuration files. :
 * RZ/G2M:  hihope-rzg2m
 * RZ/G2N:  hihope-rzg2n
 * RZ/G2E:  ek874
-* RZ/G2L:  smarc-rzg2l
+* RZ/G2L:  smarc-rzg2l, rzg2l-dev
 * RZ/G2LC: smarc-rzg2lc
 * RZ/G2UL: smarc-rzg2ul, rzg2ul-dev
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev

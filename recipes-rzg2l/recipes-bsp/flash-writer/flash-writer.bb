@@ -20,6 +20,8 @@ do_compile() {
         if [ "${MACHINE}" = "smarc-rzg2l" ]; then
                 BOARD="RZG2L_SMARC";
                 PMIC_BOARD="RZG2L_SMARC_PMIC";
+	elif [ "${MACHINE}" = "rzg2l-dev" ]; then
+		BOARD="RZG2L_15MMSQ_DEV";
         elif [ "${MACHINE}" = "smarc-rzg2lc" ]; then
                 BOARD="RZG2LC_SMARC";
 	elif [ "${MACHINE}" = "smarc-rzg2ul" ]; then
