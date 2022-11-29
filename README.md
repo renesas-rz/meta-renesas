@@ -8,8 +8,11 @@ Currently the following boards and MPUs are supported:
 - Board: HIHOPE-RZG2N / MPU: R8A774B1 (RZG2N)
 - Board: HIHOPE-RZG2H / MPU: R8A774E1 (RZG2H)
 - Board: RZG2L SMARC Evaluation Kit / MPU: R9A07G044L (RZ/G2L)
+- Board: RZG2L Development Evaluation Kit / MPU: R9A07G044L (RZ/G2L)
 - Board: RZG2LC SMARC Evaluation Kit / MPU: R9A07G044C (RZ/G2LC)
+- Board: RZG2LC Development Evaluation Kit / MPU: R9A07G044C (RZ/G2L)
 - Board: RZG2UL SMARC Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
+- Board: RZG2UL Development Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
 - Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 - Board: RZV2L Development Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 - Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
@@ -120,7 +123,7 @@ Prepare default configuration files. :
 * RZ/G2N:  hihope-rzg2n
 * RZ/G2E:  ek874
 * RZ/G2L:  smarc-rzg2l, rzg2l-dev
-* RZ/G2LC: smarc-rzg2lc
+* RZ/G2LC: smarc-rzg2lc, rzg2lc-dev
 * RZ/G2UL: smarc-rzg2ul, rzg2ul-dev
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev
 * RZ/Five:  smarc-rzfive
@@ -175,7 +178,7 @@ It is possible to change some build configs as below:
   ```
 * CIP Core: choose the version of CIP Core to build with. CIP Core are software packages that are maintained for long term by CIP community. You can select by changing "CIP_MODE".
   ```
-  * **Buster (default)**: use as many packages from CIP Core Buster as possible.
+  * **Buster (default):** use as many packages from CIP Core Buster as possible.
   ```
   CIP_MODE = "Buster"
   ```

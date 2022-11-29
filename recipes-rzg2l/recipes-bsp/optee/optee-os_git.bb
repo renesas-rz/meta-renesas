@@ -19,12 +19,13 @@ SRC_URI = " \
 	git://github.com/renesas-rz/rzg_optee-os.git;branch=${BRANCH} \
 "
 
-COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
+COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
 
 PLATFORM = "rz"
 PLATFORM_FLAVOR_smarc-rzg2l = "g2l_smarc_2"
 PLATFORM_FLAVOR_rzg2l-dev = "g2l_dev15_4"
 PLATFORM_FLAVOR_smarc-rzg2lc = "g2lc_smarc_1"
+PLATFORM_FLAVOR_rzg2lc-dev = "g2l_dev13_1"
 PLATFORM_FLAVOR_smarc-rzg2ul = "g2ul_smarc"
 PLATFORM_FLAVOR_smarc-rzv2l = "g2l_smarc_4"
 PLATFORM_FLAVOR_rzv2l-dev = "g2l_dev15_4"
