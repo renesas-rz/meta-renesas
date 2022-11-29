@@ -49,6 +49,10 @@ update_issue() {
       BSP_SOC="RZFive"
       BSP_BOARD="RZFive-SMARC-EVK"
       ;;
+    rzfive-dev)
+      BSP_SOC="RZFive"
+      BSP_BOARD="RZFive-DEV"
+      ;;
     hihope-rzg2h)
       BSP_SOC="RZG2H"
       BSP_BOARD="HIHOPE-RZG2H"

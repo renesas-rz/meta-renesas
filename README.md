@@ -16,6 +16,7 @@ Currently the following boards and MPUs are supported:
 - Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 - Board: RZV2L Development Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 - Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
+- Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
 
 ## Patches
 
@@ -126,13 +127,15 @@ Prepare default configuration files. :
 * RZ/G2LC: smarc-rzg2lc, rzg2lc-dev
 * RZ/G2UL: smarc-rzg2ul, rzg2ul-dev
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev
-* RZ/Five:  smarc-rzfive
+* RZ/Five:  smarc-rzfive, rzfive-dev
 
 Build the target file system image using bitbake:
 ```bash
     $ bitbake core-image-<target>
 ```
-\<target\>:bsp, weston, qt
+\<target\>:
+* RZ/Five: bsp
+* Others: bsp, weston, qt
 
 After completing the images for the target machine will be available in the output
 directory _'tmp/deploy/images/\<supported board name\>'_.
@@ -177,7 +180,6 @@ It is possible to change some build configs as below:
   #INCOMPATIBLE_LICENSE = "GPLv3 GPLv3+"
   ```
 * CIP Core: choose the version of CIP Core to build with. CIP Core are software packages that are maintained for long term by CIP community. You can select by changing "CIP_MODE".
-  ```
   * **Buster (default):** use as many packages from CIP Core Buster as possible.
   ```
   CIP_MODE = "Buster"

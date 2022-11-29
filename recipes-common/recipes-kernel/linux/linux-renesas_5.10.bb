@@ -6,7 +6,7 @@ require include/docker-control.inc
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev|smarc-rzg2ul|rzg2ul-dev|smarc-rzv2l|rzv2l-dev)"
 COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2n|hihope-rzg2m|hihope-rzg2h)"
-COMPATIBLE_MACHINE_rzfive = "(smarc-rzfive)"
+COMPATIBLE_MACHINE_rzfive = "(smarc-rzfive|rzfive-dev)"
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
