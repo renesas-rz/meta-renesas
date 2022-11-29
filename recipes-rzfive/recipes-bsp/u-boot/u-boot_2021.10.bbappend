@@ -1,20 +1,9 @@
-require recipes-bsp/u-boot/u-boot-common.inc
-require recipes-bsp/u-boot/u-boot.inc
-
-LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
-
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 DEPENDS:append = " bc dtc-native opensbi"
 
-SRCREV="ea6d1659b79402a6137e7cda9620bfe956801780"
-BRANCH="v2021.12/rzf-smarc"
-
-SRC_URI = " \
-	git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https;branch=${BRANCH} \
+SRC_URI_append = " \
 	file://BootLoaderHeader.bin \
-    "
-
-PV = "v2020.10+git${SRCPV}"
+"
 
 do_compile:prepend() {
     export OPENSBI=${DEPLOY_DIR_IMAGE}/fw_dynamic.bin
