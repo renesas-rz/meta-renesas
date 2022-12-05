@@ -1,0 +1,33 @@
+From 91b9d727d696701bc0fa09a66a91fbfe3a639e55 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Tue, 29 Nov 2022 11:14:08 +0000
+Subject: [PATCH] ld: emulparams: elf32lriscv-defs.sh: Adjust TEXT_START_ADDR
+ for RZ/Five
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+With applications compiled with a static flag the virtual address for the
+applications may fall within H’0_0003_0000 - H’0_0004_FFFF where the ILM
+and DLM blocks of the AX45MP exist.
+The MMU won't trigger page faults when the virtual address falls in the
+range of AX45MP local memory. So to make sure statically compiled
+applications run successfully, adjust the TEXT_START_ADDR to 0x50000.
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+---
+ ld/emulparams/elf32lriscv-defs.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/ld/emulparams/elf32lriscv-defs.sh b/ld/emulparams/elf32lriscv-defs.sh
+index 91015d44..bba34c17 100644
+--- a/ld/emulparams/elf32lriscv-defs.sh
++++ b/ld/emulparams/elf32lriscv-defs.sh
+@@ -26,7 +26,7 @@ case "$target" in
+     ;;
+ esac
+ 
+-TEXT_START_ADDR=0x10000
++TEXT_START_ADDR=0x50000
+ MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
+ COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
+ 
+-- 
+2.25.1

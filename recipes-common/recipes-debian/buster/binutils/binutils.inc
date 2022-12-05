@@ -36,6 +36,7 @@ SRC_URI += " \
      file://0012-Add-support-for-Netlogic-XLP.patch \
      file://0012-fix-the-incorrect-assembling-for-ppc-wait-mnemonic.patch \
      file://0014-sync-with-OE-libtool-changes.patch \
+     file://00016-ld-emulparams-elf32lriscv-defs.sh-Adjust-TEXT_START_.patch \
      file://reverse_129_multiarch_libpath.patch \
      file://reverse_aarch64-libpath.diff.patch \
 "
