@@ -16,6 +16,9 @@ do_compile () {
 
 	# Create bl2_bp.bin
 	bootparameter ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}.bin bl2_bp.bin
+	# Add for eSD boot image
+	cp bl2_bp.bin bl2_bp_esd.bin
+
 	cat ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}.bin >> bl2_bp.bin
 
 	# Create fip.bin
@@ -27,6 +30,9 @@ do_compile () {
 
         if [ "${PMIC_SUPPORT}" = "1" ]; then
 		bootparameter ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}_pmic.bin bl2_bp_pmic.bin
+		# Add for eSD boot image
+		cp bl2_bp_pmic.bin bl2_bp_esd_pmic.bin
+
 		cat ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}_pmic.bin >> bl2_bp_pmic.bin
 		fiptool create --align 16 --soc-fw ${WORKDIR}/recipe-sysroot/boot/bl31-${MACHINE}_pmic.bin --nt-fw ${WORKDIR}/recipe-sysroot/boot/u-boot.bin fip_pmic.bin
 		objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp_pmic.bin bl2_bp_pmic.srec
@@ -45,11 +51,17 @@ do_deploy () {
 	install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
 	install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/fip-${MACHINE}.srec
 
+	# Copy fip image for eSD boot
+	install -m 0644 ${S}/bl2_bp_esd.bin ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}.bin
+
 	if [ "${PMIC_SUPPORT}" = "1" ]; then
 		install -m 0644 ${S}/bl2_bp_pmic.bin ${DEPLOYDIR}/bl2_bp-${MACHINE}_pmic.bin
 		install -m 0644 ${S}/bl2_bp_pmic.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}_pmic.srec
 		install -m 0644 ${S}/fip_pmic.bin ${DEPLOYDIR}/fip-${MACHINE}_pmic.bin
 		install -m 0644 ${S}/fip_pmic.srec ${DEPLOYDIR}/fip-${MACHINE}_pmic.srec
+
+		# Copy fip image for eSD boot
+		install -m 0644 ${S}/bl2_bp_esd_pmic.bin ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}_pmic.bin
 	fi
 }
 

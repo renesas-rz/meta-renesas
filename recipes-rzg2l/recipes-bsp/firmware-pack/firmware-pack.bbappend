@@ -26,6 +26,9 @@ do_compile_append () {
 
 		bootparameter bl2_tbb.bin ${S}/bl2_bp_tbb.bin
 
+		# Add for eSD boot image
+		cp ${S}/bl2_bp_tbb.bin bl2_bp_esd_tbb.bin
+
 		cat bl2_tbb.bin >> ${S}/bl2_bp_tbb.bin
 
 		fiptool create --align 16 --soc-fw ${STAGING_DIR_HOST}/boot/bl31-${MACHINE}_tbb.bin --soc-fw-key-cert ${STAGING_DIR_HOST}/boot/bl31-kcert-${MACHINE}.bin --soc-fw-cert ${STAGING_DIR_HOST}/boot/bl31-ccert-${MACHINE}.bin ${S}/fip_tbb.bin
@@ -48,6 +51,9 @@ do_compile_append () {
 
 			bootparameter bl2_pmic_tbb.bin ${S}/bl2_bp_pmic_tbb.bin
 
+			# Add for eSD boot image
+			cp ${S}/bl2_bp_pmic_tbb.bin bl2_bp_esd_pmic_tbb.bin
+
 			cat bl2_pmic_tbb.bin >> ${S}/bl2_bp_pmic_tbb.bin
 
 			cp ${S}/fip_tbb.bin ${S}/fip_pmic_tbb.bin
@@ -69,11 +75,17 @@ do_deploy_append () {
 		install -m 0644 ${S}/fip_tbb.bin     ${DEPLOYDIR}/fip-${MACHINE}_tbb.bin
 		install -m 0644 ${S}/fip_tbb.srec    ${DEPLOYDIR}/fip-${MACHINE}_tbb.srec
 
+		# Copy fip eSD boot image
+		install -m 0644 ${S}/bl2_bp_esd_tbb.bin    ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}_tbb.bin
+
 		if [ "${PMIC_SUPPORT}" = "1" ]; then
 			install -m 0644 ${S}/bl2_bp_pmic_tbb.bin  ${DEPLOYDIR}/bl2_bp-${MACHINE}_pmic_tbb.bin
 			install -m 0644 ${S}/bl2_bp_pmic_tbb.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}_pmic_tbb.srec
 			install -m 0644 ${S}/fip_pmic_tbb.bin     ${DEPLOYDIR}/fip-${MACHINE}_pmic_tbb.bin
 			install -m 0644 ${S}/fip_pmic_tbb.srec    ${DEPLOYDIR}/fip-${MACHINE}_pmic_tbb.srec
+
+			# Copy fip eSD boot image
+			install -m 0644 ${S}/bl2_bp_esd_pmic_tbb.bin    ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}_pmic_tbb.bin
 		fi
 	fi
 
