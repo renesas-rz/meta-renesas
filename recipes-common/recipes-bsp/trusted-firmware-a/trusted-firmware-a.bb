@@ -20,7 +20,7 @@ SRC_URI = " \
 	git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
 
-SRCREV = "00b60e384060b8cab412058a9a3d29b69e4b0a29"
+SRCREV = "203c78323b50059ea38eceb09f6bfda5d5934b55"
 SRCREV_mbedtls = "dd79db10014d85b26d11fe57218431f2e5ede6f2"
 
 PV = "v2.7+git"
