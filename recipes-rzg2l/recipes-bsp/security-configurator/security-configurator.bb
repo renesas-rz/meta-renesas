@@ -6,7 +6,7 @@ inherit deploy python3native
 
 PV = "v1.11"
 
-SRC_URI = " file://security_configurator "
+SRC_URI = " file://security_configurator.zip "
 
 DEPENDS = " \
 	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", "python3-pycryptodome-native python3-pycryptodomex-native secprv-native bootparameter-native", "",d)} \

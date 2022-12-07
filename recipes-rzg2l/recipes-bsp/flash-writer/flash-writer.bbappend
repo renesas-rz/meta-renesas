@@ -14,7 +14,7 @@ do_compile_append() {
 		oe_runmake BOARD=${BOARD} OUTPUT_DIR=${BUILD_TBB_DIR} TRUSTED_BOARD_BOOT=ENABLE
 
 		mkdir -p ${BUILD_TBB_DIR}/tbb
-		FILE_NAME=$(find "${BUILD_TBB_DIR}" -name "*_TBB.bin" -maxdepth 1 -printf "%f\n" )
+		FILE_NAME=$(find "${BUILD_TBB_DIR}" -name "*.bin" -maxdepth 1 -printf "%f\n" )
 
 		python3 ${MANIFEST_GENERATION_KCERT} -info ${DIRPATH_MANIFEST_GENTOOL}/info/bl2_${IMG_AUTH_MODE}_info.xml \
 			-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -certout ${BUILD_TBB_DIR}/tbb/flash_writer-kcert.bin
@@ -33,14 +33,14 @@ do_compile_append() {
 		cat ${BUILD_TBB_DIR}/tbb/flash_writer-image.bin >> ${BUILD_TBB_DIR}/tbb/${FILE_NAME}
 
 		objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${BUILD_TBB_DIR}/tbb/${FILE_NAME} \
-			${BUILD_TBB_DIR}/tbb/${FILE_NAME%.*}.mot
+			${BUILD_TBB_DIR}/tbb/${FILE_NAME%.*}_TBB.mot
 
 		if [ "${PMIC_SUPPORT}" = "1" ]; then
 			oe_runmake OUTPUT_DIR=${PMIC_BUILD_TBB_DIR} clean
 			oe_runmake BOARD=${PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_TBB_DIR} TRUSTED_BOARD_BOOT=ENABLE
 
 			mkdir -p ${PMIC_BUILD_TBB_DIR}/tbb
-			FILE_NAME=$(find "${PMIC_BUILD_TBB_DIR}" -name "*_TBB.bin" -maxdepth 1 -printf "%f\n" )
+			FILE_NAME=$(find "${PMIC_BUILD_TBB_DIR}" -name "*.bin" -maxdepth 1 -printf "%f\n" )
 
 			python3 ${MANIFEST_GENERATION_KCERT} -info ${DIRPATH_MANIFEST_GENTOOL}/info/bl2_${IMG_AUTH_MODE}_info.xml \
 				-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem -certout ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-kcert_pmic.bin
@@ -58,7 +58,7 @@ do_compile_append() {
 			cat ${PMIC_BUILD_TBB_DIR}/tbb/flash_writer-image_pmic.bin >> ${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME}
 
 			objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME} \
-				${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME%.*}.mot
+				${PMIC_BUILD_TBB_DIR}/tbb/${FILE_NAME%.*}_TBB.mot
 		fi
 	fi
 }

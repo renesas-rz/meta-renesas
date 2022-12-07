@@ -12,6 +12,11 @@ SEC_FLAGS = " \
 EXTRA_FLAGS_append += "${SEC_FLAGS}"
 PMIC_EXTRA_FLAGS_append += "${SEC_FLAGS}"
 
+FILESEXTRAPATHS_append := "${THISDIR}/files"
+SRC_URI += " \
+	file://0001-plat-renesas-rz-Disable-unused-CRYPTO_SUPPORT.patch \
+"
+
 do_compile_append() {
 
 	if [ "${TRUSTED_BOARD_BOOT}" = "1" ]; then

@@ -1,0 +1,28 @@
+From 4354322dd884695f07ac9c4821dd789db43d5cc2 Mon Sep 17 00:00:00 2001
+From: Takunori Otsuka <takunori.otsuka.ur@renesas.com>
+Date: Fri, 7 Oct 2022 15:17:06 +0900
+Subject: [PATCH] plat: renesas: rz: Disable unused CRYPTO_SUPPORT
+
+---
+ plat/renesas/rz/common/rz_common.mk | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/plat/renesas/rz/common/rz_common.mk b/plat/renesas/rz/common/rz_common.mk
+index 9698837..9b94120 100755
+--- a/plat/renesas/rz/common/rz_common.mk
++++ b/plat/renesas/rz/common/rz_common.mk
+@@ -17,6 +17,11 @@ DEBUG_RZG2L_FPGA				:= 0
+ $(eval $(call add_define,PROTECTED_CHIPID))
+ $(eval $(call add_define,DEBUG_RZG2L_FPGA))
+ 
++# This option gets enabled automatically if the TRUSTED_BOARD_BOOT
++# is set via root Makefile, but Renesas support Trusted-Boot without
++# Crypto module.
++override CRYPTO_SUPPORT			:= 0
++
+ WA_RZG2L_GIC64BIT				:= 1
+ $(eval $(call add_define,WA_RZG2L_GIC64BIT))
+ 
+-- 
+2.25.1
+
