@@ -10,10 +10,10 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 require include/rzg2l-security-config.inc
 inherit deploy python3native
 
-PV = "3.17.0+git${SRCPV}"
-BRANCH = "3.17.0/rz"
-#TAG: 3.17.0
-SRCREV = "c6c0c5d713b6083cc71c1d48633e97d79ecb9f21"
+PV = "3.19.0+git${SRCPV}"
+BRANCH = "3.19.0/rz"
+#TAG: 3.19.0
+SRCREV = "f9a0900230a5341d9a83799dab89f08f65840458"
 
 SRC_URI = " \
 	git://github.com/renesas-rz/rzg_optee-os.git;branch=${BRANCH} \
@@ -31,7 +31,7 @@ PLATFORM_FLAVOR_smarc-rzv2l = "g2l_smarc_4"
 PLATFORM_FLAVOR_rzv2l-dev = "g2l_dev15_4"
 
 DEPENDS = " \
-	python3-pyelftools-native python3-cryptography-native python3-idna-native secprv-native \
+	python3-pyelftools-native python3-cryptography-native python3-pycryptodome-native secprv-native \
 "
 
 # Let the Makefile handle setting up the flags as it is a standalone application
