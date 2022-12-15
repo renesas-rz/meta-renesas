@@ -15,6 +15,7 @@ SRC_URI = " \
     file://0002-fdpm-Port-kernel-module-fdpm-to-kernel-v5.10.83-cip1.patch \
     file://0003-fdpm-Change-compat-string-to-avoid-conflict.patch \
     file://0004-fdpm-Fix-issue-failed-to-get-clock-in-Linux-kernel-v.patch \
+    file://0005-fdpm-fix-issue-failed-to-get-fdp1-12-clock.patch \
 "
 S = "${WORKDIR}/fdpm"
 includedir = "${RENESAS_DATADIR}/include"
