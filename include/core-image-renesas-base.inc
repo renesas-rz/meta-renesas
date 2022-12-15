@@ -9,7 +9,7 @@ IMAGE_INSTALL_append = " \
 
 update_issue() {
     # Set BSP version
-    BSP_VERSION="3.0.2-rc"
+    BSP_VERSION="3.0.2"
 
     # Set SoC and Board info
     case "${MACHINE}" in
