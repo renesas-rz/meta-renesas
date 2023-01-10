@@ -2,8 +2,6 @@ require conf/machine/include/${SOC_FAMILY}.inc
 
 MACHINEOVERRIDES =. "rzfive:"
 
-BBMASK_append = " recipes-rzg2h|recipes-rzv2l|recipes-rzg2l"
-
 MACHINE_FEATURES = ""
 
 KERNEL_IMAGETYPE = "Image"
