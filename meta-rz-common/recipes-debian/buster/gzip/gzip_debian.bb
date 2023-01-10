@@ -1,7 +1,7 @@
 require recipes-extended/gzip/gzip.inc
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/gzip.inc
+require recipes-debian/buster/sources/gzip.inc
 
 LICENSE = "GPLv3+"
 LIC_FILES_CHKSUM = " \

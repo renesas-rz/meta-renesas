@@ -1,4 +1,4 @@
-require recipes-common/recipes-debian/bullseye/glibc/glibc-collateral.inc
+require recipes-debian/bullseye/glibc/glibc-collateral.inc
 
 SUMMARY = "Locale data from glibc"
 

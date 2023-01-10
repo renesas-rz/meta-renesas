@@ -8,7 +8,7 @@ SUMMARY = "Keytable files and keyboard utilities"
 HOMEPAGE = "http://www.kbd-project.org/"
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/kbd.inc
+require recipes-debian/buster/sources/kbd.inc
 
 # everything minus console-fonts is GPLv2+
 LICENSE = "GPLv2+"

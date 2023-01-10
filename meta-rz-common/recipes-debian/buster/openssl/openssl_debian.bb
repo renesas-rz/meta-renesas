@@ -11,7 +11,7 @@ BUGTRACKER = "http://www.openssl.org/news/vulnerabilities.html"
 SECTION = "libs/network"
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/openssl.inc
+require recipes-debian/buster/sources/openssl.inc
 
 # "openssl" here actually means both OpenSSL and SSLeay licenses apply
 # (see meta/files/common-licenses/OpenSSL to which "openssl" is SPDXLICENSEMAPped)

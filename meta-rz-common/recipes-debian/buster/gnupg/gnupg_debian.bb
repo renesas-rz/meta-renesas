@@ -12,7 +12,7 @@ LIC_FILES_CHKSUM = " \
 "
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/gnupg2.inc
+require recipes-debian/buster/sources/gnupg2.inc
 
 FILESPATH_append = ":${COREBASE}/meta/recipes-support/gnupg/gnupg"
 SRC_URI += " \

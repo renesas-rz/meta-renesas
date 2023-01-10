@@ -11,7 +11,7 @@ DEPENDS = "gmp libcap"
 DEPENDS_class-native = ""
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/coreutils.inc
+require recipes-debian/buster/sources/coreutils.inc
 FILESPATH_append = ":${COREBASE}/meta/recipes-core/coreutils/coreutils"
 
 inherit autotools gettext texinfo

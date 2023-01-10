@@ -7,7 +7,7 @@
 require glibc.inc
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/glibc.inc
+require recipes-debian/buster/sources/glibc.inc
 BPN = "glibc"
 
 LICENSE = "GPLv2 & LGPLv2.1"

@@ -7,7 +7,7 @@
 require glibc.inc
 
 inherit debian-package
-require recipes-common/recipes-debian/bullseye/sources/glibc.inc
+require recipes-debian/bullseye/sources/glibc.inc
 BPN = "glibc"
 
 LICENSE = "GPLv2 & LGPLv2.1"

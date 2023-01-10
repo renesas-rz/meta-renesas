@@ -27,7 +27,7 @@ SRC_URI += "file://iconv-m4-remove-the-test-to-convert-euc-jp.patch \
 "
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/libunistring.inc
+require recipes-debian/buster/sources/libunistring.inc
 
 inherit autotools texinfo
 BBCLASSEXTEND = "native nativesdk"

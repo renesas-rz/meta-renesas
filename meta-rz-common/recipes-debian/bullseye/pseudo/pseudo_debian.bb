@@ -8,7 +8,7 @@ LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=a1d8023a6f953ac6ea4af765ff62d574"
 
 inherit debian-package
-require recipes-common/recipes-debian/bullseye/sources/pseudo.inc
+require recipes-debian/bullseye/sources/pseudo.inc
 FILESPATH_append = ":${COREBASE}/meta/recipes-devtools/pseudo/files:${THISDIR}/pseudo"
 DEPENDS += "python3-native"
 

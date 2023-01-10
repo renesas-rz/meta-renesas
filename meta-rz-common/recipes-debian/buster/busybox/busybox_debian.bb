@@ -7,7 +7,7 @@
 require busybox.inc
 
 inherit debian-package
-require recipes-common/recipes-debian/buster/sources/busybox.inc
+require recipes-debian/buster/sources/busybox.inc
 
 SRC_URI += " \
            file://busybox-udhcpc-no_deconfig.patch \
