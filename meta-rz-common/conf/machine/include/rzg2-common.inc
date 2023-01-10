@@ -1,4 +1,4 @@
-EXT_GFX_BACKEND = "${@oe.utils.ifelse((d.getVar('RZ_FEATURE') == 'True') and (d.getVar('USE_RENESAS_GLES') == '1'), '1', '0')}"
+EXT_GFX_BACKEND = "${@bb.utils.contains('COMBINED_FEATURES', 'opengles', '1', '0', d)}"
 
 # 32BIT package install (default is disable)
 # This variables can be used only in multilib.

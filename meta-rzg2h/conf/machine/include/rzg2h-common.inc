@@ -5,3 +5,5 @@ require include/ecc-control.inc
 EXTRA_IMAGEDEPENDS += " optee-os"
 
 MACHINEOVERRIDES =. "rzg2h:"
+
+MACHINE_FEATURES_append = " opengles hwh264dec hwh264enc hwh265dec "
