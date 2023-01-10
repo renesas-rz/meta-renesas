@@ -1,7 +1,6 @@
 DESCRIPTION = "Linux kernel for the RZG2 based board"
 
 require recipes-kernel/linux/linux-yocto.inc
-require include/docker-control.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/:"
 COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev|smarc-rzg2ul|rzg2ul-dev|smarc-rzv2l|rzv2l-dev)"
@@ -21,7 +20,6 @@ PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
 SRC_URI_append = "\
-  ${@oe.utils.conditional("USE_DOCKER", "1", " file://docker.cfg ", "", d)} \
   file://touch.cfg \
 "
 

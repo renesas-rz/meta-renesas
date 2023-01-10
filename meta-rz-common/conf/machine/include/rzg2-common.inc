@@ -29,3 +29,5 @@ PREFERRED_VERSION_gdbm-native ?= "${@bb.utils.contains("INCOMPATIBLE_LICENSE", "
 # u-boot
 PREFERRED_VERSION_u-boot = "v2021.10%"
 EXTRA_IMAGEDEPENDS += " u-boot"
+
+DISTRO_FEATURES_append = " docker"

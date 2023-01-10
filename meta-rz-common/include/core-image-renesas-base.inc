@@ -112,6 +112,11 @@ IMAGE_INSTALL_append_rzg2h = " \
     ${QOS_USER_PKGS} \
 "
 
+# Support Docker Engine
+IMAGE_INSTALL_append = " \
+    packagegroup-docker \
+"
+
 # Environment setup, support building kernel modules with kernel src in SDK
 export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
 export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
