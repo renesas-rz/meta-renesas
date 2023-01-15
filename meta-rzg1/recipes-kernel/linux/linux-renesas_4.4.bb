@@ -9,11 +9,11 @@ COMPATIBLE_MACHINE = "iwg20m-g1m|iwg20m-g1n|iwg21m|iwg22m|iwg23s"
 DEPENDS_append = " util-linux-native openssl-native"
 KERNEL_URL=" \
 	git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "rzg1-cip70"
-SRCREV = "cf20f2b80364a8d8dfec466befd8a10fa1e1b716"
+BRANCH = "rzg1-cip71"
+SRCREV = "24088a8d33a3ddbebc810b111fded7e521078ab0"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
-LINUX_VERSION ?= "4.4.302-cip70"
+LINUX_VERSION ?= "4.4.302-cip71"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 
