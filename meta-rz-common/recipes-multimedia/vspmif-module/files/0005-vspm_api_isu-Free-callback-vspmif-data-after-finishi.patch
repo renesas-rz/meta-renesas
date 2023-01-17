@@ -1,0 +1,29 @@
+From 99858ef98332243e0a539686957c540365b03b9d Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 17 Jan 2023 14:56:16 +0700
+Subject: [PATCH] vspm_api_isu: Free callback vspmif data after finishing
+
+After calling callback function of user, vspmif do not have any process
+and need to be freed.
+Add the missing free here to avoid mem-leak.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ vspm_if-module/files/vspm_if/if/vspm_api_isu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/vspm_if-module/files/vspm_if/if/vspm_api_isu.c b/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
+index 994ab37..2dbbd92 100755
+--- a/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
++++ b/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
+@@ -216,6 +216,7 @@ static void vspm_if_set_isu_param(
+ 
+ static void vspm_if_release_memory(struct vspm_if_isu_cb_t *cb_info)
+ {
++	free(cb_info);
+ }
+ 
+ 
+-- 
+2.17.1
+

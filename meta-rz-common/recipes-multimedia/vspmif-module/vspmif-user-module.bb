@@ -21,6 +21,7 @@ SRC_URI_append_rzg2l = " \
 	file://0002-Modify-Makefile-for-building-vspm_api_isu.patch \
 	file://0003-Add-vspm_api_isu.c-for-ISUM.patch \
 	file://0004-Support-libvspm-32bit.patch \
+	file://0005-vspm_api_isu-Free-callback-vspmif-data-after-finishi.patch \
 "
 
 do_compile_prepend_rzg2l() {
