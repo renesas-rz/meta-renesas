@@ -1,0 +1,1 @@
+../../../../meta-rz-common/docs/template/conf/conf-notes.txt
