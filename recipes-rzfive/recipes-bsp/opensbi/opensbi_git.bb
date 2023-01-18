@@ -8,7 +8,7 @@ inherit autotools-brokensep deploy
 PV = "0.9+git${SRCPV}"
 
 BRANCH = "work/OpenSBI-PMA"
-SRCREV="7af9be69c8171c9ea702faa0c1c51992d94337ed"
+SRCREV="e08ec1dfb1952941b7c0a9dba0b5fdae9d82f33b"
 
 SRC_URI = " \
 	git://github.com/renesas-rz/rz_opensbi.git;protocol=https;branch=${BRANCH} \
