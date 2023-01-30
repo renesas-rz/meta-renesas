@@ -28,6 +28,7 @@ IMAGE_INSTALL_append = " \
     libdrm \
     libdrm-tests \
     yavta \
+    kernel-module-uvcvideo \
 "
 
 # Installation for Wifi/Bluetooth packages

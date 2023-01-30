@@ -61,8 +61,13 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ cd meta-gplv2 
     $ git checkout 60b251c25ba87e946a0ca4cdc8d17b1cb09292ac
     $ cd ..
+    $
+    $ git clone  -b dunfell/rzv2ma https://github.com/renesas-rz/meta-renesas.git
+    $ cd meta-renesas
+    $ git checkout <tag>
+    $ cd ..
 ```
-Note: meta-renesas for RZ/V2MA is not public on GitHub in this version.
+\<tag\> should be **RZV2MA-BSP-x.x.x**."x.x.x" indeicates the version number.
 
 Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
 ```bash

@@ -57,13 +57,13 @@ update_issue() {
       ;;
     rzv2m)
       # Set BSP version
-      BSP_VERSION="1.2.0"
+      BSP_VERSION="1.3.0"
       BSP_SOC="RZV2M"
       BSP_BOARD="Evaluation Board Kit"
       ;;
     rzv2ma)
       # Set BSP version
-      BSP_VERSION="1.0.0"
+      BSP_VERSION="1.1.0"
       BSP_SOC="RZV2MA"
       BSP_BOARD="Evaluation Board Kit"
       ;;
