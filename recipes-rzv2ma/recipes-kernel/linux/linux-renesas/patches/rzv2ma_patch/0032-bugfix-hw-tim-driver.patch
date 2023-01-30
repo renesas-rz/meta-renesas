@@ -1,0 +1,22 @@
+diff --git a/drivers/hw_tim/tim_rzv2m.c b/drivers/hw_tim/tim_rzv2m.c
+index e847a1f..7600a6e 100755
+--- a/drivers/hw_tim/tim_rzv2m.c
++++ b/drivers/hw_tim/tim_rzv2m.c
+@@ -1,7 +1,7 @@
+ /*
+  * Driver for the Renesas RZ/V2M Timer unit(TIM)
+  *
+- * Copyright (C) 2020 Renesas Electronics Corporation
++ * Copyright (C) 2022 Renesas Electronics Corporation
+  *
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -60,7 +60,7 @@ struct tim_priv {
+ #define TMD     0x00
+ #define CMD     0x04
+ #define TMCD    0x08
+-#define INTCLR  0x10
++#define INTCLR  0x0C
+ 
+ //CMD register field
+ #define MAX_TIMCYS      0xFFFFFFFF /* Max value of 32 bits register is ffffffff */

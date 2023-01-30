@@ -1,0 +1,12 @@
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index e2abe58..a3e25a7 100755
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -952,7 +952,6 @@ int renesas_sdhi_probe(struct platform_device *pdev,
+ 	int num_irqs, irq, ret, i;
+ 	struct resource *res;
+ 	u16 ver;
+-	u32 psc_pins = 0;
+ 
+ 	of_data = of_device_get_match_data(&pdev->dev);
+ 

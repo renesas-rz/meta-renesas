@@ -1,0 +1,49 @@
+diff --git a/drivers/pinctrl/rzv2m/core.c b/drivers/pinctrl/rzv2m/core.c
+index ba41f61..80c5c31 100755
+--- a/drivers/pinctrl/rzv2m/core.c
++++ b/drivers/pinctrl/rzv2m/core.c
+@@ -20,7 +20,6 @@
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+ #include <linux/pinctrl/machine.h>
+-#include <linux/pinctrl/pinconf-generic.h>
+ #include <linux/platform_device.h>
+ #include <linux/psci.h>
+ #include <linux/slab.h>
+diff --git a/drivers/pinctrl/rzv2m/core.h b/drivers/pinctrl/rzv2m/core.h
+index e4f2e3f..c70cd96 100755
+--- a/drivers/pinctrl/rzv2m/core.h
++++ b/drivers/pinctrl/rzv2m/core.h
+@@ -12,6 +12,7 @@
+ #ifndef __RZV2M_CORE_H__
+ #define __RZV2M_CORE_H__
+ 
++#include <linux/pinctrl/pinconf-generic.h>
+ #include "pfc.h"
+ 
+ #define DRV_NAME	"PFC_RZV2M"
+diff --git a/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c b/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c
+index 5cd61ab..1a5080d 100755
+--- a/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c
++++ b/drivers/pinctrl/rzv2m/pfc-r8arzv2m.c
+@@ -1971,6 +1971,7 @@ static const struct rzv2m_func_desc funcs_mux[] = {
+ 
+ static const struct rzv2m_pfc_config_reg config_regs[] = {
+ #define FN(x)	x,
++#undef F_
+ #define F_(x)	0,
+ 	/*
+ 	 *  In case the register control not continuous pin such 0,1,3, we can
+diff --git a/drivers/pinctrl/rzv2m/pfc.h b/drivers/pinctrl/rzv2m/pfc.h
+index b26c452..7ec9e7e 100755
+--- a/drivers/pinctrl/rzv2m/pfc.h
++++ b/drivers/pinctrl/rzv2m/pfc.h
+@@ -79,7 +79,7 @@
+ #define RZV2M_PINCTRL(pin_name, port, pf, config)	\
+ 	{					\
+ 		.pin = RZV2M_PIN(port, pf),	\
+-		.configs = config,		\
++		.configs = (unsigned short)(config),		\
+ 		.name = pin_name,		\
+ 	}
+ 

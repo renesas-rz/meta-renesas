@@ -44,8 +44,6 @@ SRC_URI_append = " \
    file://patches/rzv2m_patch/0041-fixed-bug-cpgdriver-clocksource.patch \
    file://patches/rzv2m_patch/0042-fixed-bug-pwm.patch \
    file://patches/rzv2m_patch/0043-fixed-bug-hw_tim.patch \
-   file://patches/rzv2m_patch/0044-modified-gicd-init.patch \
-   file://patches/rzv2m_patch/0045-modified-gic-set-affinity.patch \
    file://patches/rzv2m_patch/0046-add-usbrole-setting.patch \
    file://patches/rzv2m_patch/0047_chg_cpg_clock_table.patch \
    file://patches/rzv2m_patch/0048-add-switching-voltage-sd.patch \
@@ -68,7 +66,6 @@ SRC_URI_append = " \
    file://patches/rzv2m_patch/0061-modify-ioremap-nocache-to-ioremap-for-WDT-driver.patch \
    file://patches/rzv2m_patch/0062-fixed-bug-csi.patch \
    file://patches/rzv2m_patch/0063-apply-ddr-4gb.patch \
-   file://patches/rzv2m_patch/0064-chg-gic-init.patch \
    file://patches/rzv2m_patch/0065-fixed-bug-usb-peripheral-driver.patch \
    file://patches/rzv2m_patch/0065-change-usb_role_switch_property-to-role_sw_by_connec.patch \
    file://patches/rzv2m_patch/0066-Enable-uinput-mousedev-kernel-module.patch \
@@ -122,6 +119,22 @@ SRC_URI_append = " \
    file://patches/rzv2ma_patch/0027-deleted-unsupported-files.patch \
    file://patches/rzv2ma_patch/0028-bugfix-dts-regulator-vccq-sdhi0.patch \
    file://patches/rzv2ma_patch/0029-disable-config-thermal-rcar-ems.patch \
+   file://patches/rzv2ma_patch/0030-Modularize_uvcvideo.patch \
+   file://patches/rzv2ma_patch/0031-fix-usb_host_error_correction.patch \
+   file://patches/rzv2ma_patch/0032-bugfix-hw-tim-driver.patch \
+   file://patches/rzv2ma_patch/0033-added-aliases-mmc.patch \
+   file://patches/rzv2ma_patch/0034-added-PCIe-driver-multiple-devices.patch \
+   file://patches/rzv2ma_patch/0035-fix-the-warning-of-cpg.patch \
+   file://patches/rzv2ma_patch/0036-fix-the-warning-of-pawer-off.patch \
+   file://patches/rzv2ma_patch/0037-fix-the-warning-of-usb.patch \
+   file://patches/rzv2ma_patch/0038-fix-the-warning-of-wdt.patch \
+   file://patches/rzv2ma_patch/0039-fix-the-warning-of-sd.patch \
+   file://patches/rzv2ma_patch/0040-fix-the-warning-of-hw-tim.patch \
+   file://patches/rzv2ma_patch/0041-fix-the-warning-of-dma.patch \
+   file://patches/rzv2ma_patch/0042-fix-the-warning-of-clk.patch \
+   file://patches/rzv2ma_patch/0043-fix-the-warning-of-renesas-soc.patch \
+   file://patches/rzv2ma_patch/0044-fix-the-warning-of-pfc.patch \
+   file://patches/rzv2ma_patch/0045-fix-the-warning-of-device-tree.patch \
 "
 
 SRC_URI_append = " \

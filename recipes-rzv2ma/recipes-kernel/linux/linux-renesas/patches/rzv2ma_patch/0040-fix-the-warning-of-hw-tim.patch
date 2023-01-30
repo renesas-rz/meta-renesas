@@ -1,0 +1,24 @@
+diff --git a/drivers/hw_tim/tim_rzv2m.c b/drivers/hw_tim/tim_rzv2m.c
+index 7600a6e..72a67c2 100755
+--- a/drivers/hw_tim/tim_rzv2m.c
++++ b/drivers/hw_tim/tim_rzv2m.c
+@@ -39,9 +39,9 @@ static const unsigned int minor_num  = 1;
+ /* latch minor number */
+ static int minor_n = 0;
+ 
+-static unsigned int hw_tim_device_num = NULL;
++static unsigned int hw_tim_device_num = 0;
+ static struct class *tim_class = NULL;
+-dev_t g_tim_dev = NULL;
++dev_t g_tim_dev = 0;
+ 
+ 
+ struct tim_priv {
+@@ -93,7 +93,6 @@ static void rzv2m_tim_stop(struct tim_priv *priv);
+ static uint32_t rzv2m_tim_read_cnt(struct tim_priv *priv);
+ 
+ static int rzv2m_calc_cycle_div(struct tim_priv *priv);
+-static int rzv2m_calc_cnt(struct tim_priv *priv);
+ static irqreturn_t irq_tim_interrupt(int irq, void *dev);
+ 
+ static struct file_operations hw_tim_cdev_fops =

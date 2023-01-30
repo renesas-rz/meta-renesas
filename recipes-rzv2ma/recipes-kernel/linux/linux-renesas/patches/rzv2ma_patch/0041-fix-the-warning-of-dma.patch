@@ -1,0 +1,22 @@
+diff --git a/drivers/dma/sh/rzv2ma-dmac.c b/drivers/dma/sh/rzv2ma-dmac.c
+index 7573325..1982cdc 100755
+--- a/drivers/dma/sh/rzv2ma-dmac.c
++++ b/drivers/dma/sh/rzv2ma-dmac.c
+@@ -282,8 +282,6 @@ static void rzv2ma_dmac_disable_hw(struct rzv2ma_dmac_chan *channel)
+ 
+ static void rzv2ma_dmac_prepare_desc_for_memcpy(struct rzv2ma_dmac_chan *channel)
+ {
+-	struct dma_chan *chan = &channel->vc.chan;
+-	struct rzv2ma_dmac *dmac = to_rzv2ma_dmac(chan->device);
+ 	struct rzv2ma_lmdesc *lmdesc = channel->lmdesc.tail;
+ 	struct rzv2ma_dmac_desc *d = channel->desc;
+ 	u32 chcfg = CHCFG_MEM_COPY;
+@@ -303,8 +301,6 @@ static void rzv2ma_dmac_prepare_desc_for_memcpy(struct rzv2ma_dmac_chan *channel
+ 
+ static void rzv2ma_dmac_prepare_descs_for_slave_sg(struct rzv2ma_dmac_chan *channel)
+ {
+-	struct dma_chan *chan = &channel->vc.chan;
+-	struct rzv2ma_dmac *dmac = to_rzv2ma_dmac(chan->device);
+ 	struct rzv2ma_dmac_desc *d = channel->desc;
+ 	struct scatterlist *sg, *sgl = d->sg;
+ 	struct rzv2ma_lmdesc *lmdesc;

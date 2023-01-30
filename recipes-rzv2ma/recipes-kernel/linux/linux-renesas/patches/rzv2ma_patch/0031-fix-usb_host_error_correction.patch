@@ -1,0 +1,43 @@
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 81ad4f8..fe5a8dc 100755
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -651,8 +651,20 @@ pinctrl_bind_failed:
+ 		break;
+ 	default:
+ 		/* driver matched but the probe failed */
++#ifndef CONFIG_ARCH_R9A09G055MA3GBG
+ 		pr_warn("%s: probe of %s failed with error %d\n",
+ 			drv->name, dev_name(dev), ret);
++#else
++		if(strcmp(drv->name, "xhci-hcd")){
++			pr_warn("%s: probe of %s failed with error %d\n",
++				drv->name, dev_name(dev), ret);
++		}
++		else{
++			pr_debug("%s: probe of %s failed with error(pr_debug) %d\n",
++				drv->name, dev_name(dev), ret);
++		}
++#endif
++
+ 	}
+ 	/*
+ 	 * Ignore errors returned by ->probe so that the next driver can try
+diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c
+index 99908d8..1c867df 100755
+--- a/drivers/usb/core/hcd.c
++++ b/drivers/usb/core/hcd.c
+@@ -2760,8 +2760,13 @@ int usb_add_hcd(struct usb_hcd *hcd,
+ 	if (hcd->driver->reset) {
+ 		retval = hcd->driver->reset(hcd);
+ 		if (retval < 0) {
++#ifndef CONFIG_ARCH_R9A09G055MA3GBG
+ 			dev_err(hcd->self.controller, "can't setup: %d\n",
+ 					retval);
++#else
++			dev_dbg(hcd->self.controller, "can't setup(dev_dbg): %d\n",
++					retval);
++#endif
+ 			goto err_hcd_driver_setup;
+ 		}
+ 	}

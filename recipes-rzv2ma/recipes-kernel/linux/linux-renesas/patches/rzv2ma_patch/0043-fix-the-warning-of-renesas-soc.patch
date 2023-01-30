@@ -1,0 +1,16 @@
+diff --git a/drivers/soc/renesas/renesas-soc.c b/drivers/soc/renesas/renesas-soc.c
+index b6a9af2..e8aa512 100755
+--- a/drivers/soc/renesas/renesas-soc.c
++++ b/drivers/soc/renesas/renesas-soc.c
+@@ -369,7 +369,10 @@ static int __init renesas_soc_init(void)
+ 	void __iomem *chipid = NULL;
+ 	struct soc_device *soc_dev;
+ 	struct device_node *np;
+-	unsigned int product, eshi = 0, eslo;
++	unsigned int product;
++#if !defined(CONFIG_ARCH_R9A09G011GBG) && !defined(CONFIG_ARCH_R9A09G055MA3GBG)	
++	unsigned int eshi = 0, eslo;
++#endif
+ 
+ 	match = of_match_node(renesas_socs, of_root);
+ 	if (!match)

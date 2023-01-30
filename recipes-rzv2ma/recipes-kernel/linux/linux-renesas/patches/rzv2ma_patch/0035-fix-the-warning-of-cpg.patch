@@ -1,0 +1,176 @@
+diff --git a/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c b/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
+index 418aba2..fc8e7f6 100755
+--- a/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
++++ b/drivers/clk/renesas/r9a09g055ma3gbg-cpg-cocr.c
+@@ -228,64 +228,64 @@ static const unsigned int r9a09g011gbg_crit_mod_clks[] __initconst = {
+ static const struct rcr_reset r9a09g055ma3gbg_resets[] __initconst = {
+ 	/*           Name                ID      Rst-type   msk(bit)  
+ 	        clk-num     clk-id[clk-num]                 */
+-	"dmaa_aresetn",     107,    RST_TYPEB,  4,  
+-		1,  {111,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"tsu0_resetn",      112,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {114,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"tsu1_resetn",      113,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {115,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"sdi0_ixrst",       300,    RST_TYPEB,  6,  
+-		1,  {302,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"sdi1_ixrst",       301,    RST_TYPEB,  7,  
+-		1,  {306,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"emm_ixrst",        302,    RST_TYPEB,  8,  
+-		1,  {310,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"usb_preset_n",     307,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {406,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"usb_drd_reset",    308,    RST_TYPEA,  RST_MON_UNUSED, 
+-		2,  {404,    405,    0,      0,      0,      0,      0,      0,      0},
+-	"usb_aresetn_p",    309,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {405,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"usb_aresetn_h",    310,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {404,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"eth0_rst_hw_n",    311,    RST_TYPEB,  11, 
+-		1,  {408,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"pci_aresetn",      312,    RST_TYPEA,  RST_MON_UNUSED, 
+-		2,  {400,    401,    0,      0,      0,      0,      0,      0,      0},
+-	"tim_gpa_presetn",  600,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {900,    904,    905,    906,    907,    908,    909,    910,    911},
+-	"tim_gpb_presetn",  601,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {1000,   1004,   1005,   1006,   1007,   1008,   1009,   1010,   1011},
+-	"tim_gpc_presetn",  602,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {1100,   1104,   1105,   1106,   1107,   1108,   1109,   1110,   1111},
+-	"tim_gpd_presetn",  603,    RST_TYPEA,  RST_MON_UNUSED, 
+-		9,  {1200,   1204,   1205,   1206,   1207,   1208,   1209,   1210,   1211},
+-	"pwm_gpe_presetn",  604,    RST_TYPEB,  22, 
+-		9,  {1300,   1304,   1305,   1306,   1307,   1308,   1309,   1310,   1311},
+-	"pwm_gpf_presetn",  605,    RST_TYPEB,  23, 
+-		9,  {1400,   1404,   1405,   1406,   1407,   1408,   1409,   1410,   1411},
+-	"csi_gpg_presetn",  606,    RST_TYPEB,  24, 
+-		1,  {1500,   0,      0,      0,      0,      0,      0,      0,      0},
+-	"csi_gph_presetn",  607,    RST_TYPEB,  25, 
+-		1,  {1501,   0,      0,      0,      0,      0,      0,      0,      0},
+-	"iic_gpa_presetn",  608,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {912,    0,      0,      0,      0,      0,      0,      0,      0},
+-	"iic_gpb_presetn",  609,    RST_TYPEA,  RST_MON_UNUSED, 
+-		1,  {1012,   0,      0,      0,      0,      0,      0,      0,      0},
+-	"urt_presetn",      610,    RST_TYPEB,  26, 
+-		3,  {1505,   1506,   1504,   0,      0,      0,      0,      0,      0},
+-	"wdt_presetn[0]",   612,    RST_TYPEB,  19, 
+-		2,  {1113,   1112,   0,      0,      0,      0,      0,      0,      0},
+-	"wdt_presetn[1]",   613,    RST_TYPEB,  20, 
+-		2,  {1115,   1114,   0,      0,      0,      0,      0,      0,      0},
+-	"wdt_presetn[2]",   614,    RST_TYPEB,  21, 
+-		2,  {1213,   1212,   0,      0,      0,      0,      0,      0,      0},
+-	"drpa_aresetn",     900,    RST_TYPEB,  14, 
+-		1,  {2002,   0,      0,      0,      0,      0,      0,      0,      0},
+-	"drpb_aresetn",     1000,   RST_TYPEB,  15, 
+-		1,  {2102,   0,      0,      0,      0,      0,      0,      0,      0},
+-	"vcd_resetn",       1407,   RST_TYPEB,  18, 
+-		1,  {2605,   0,   0,      0,      0,      0,      0,      0,      0},
++	{"dmaa_aresetn",     107,    RST_TYPEB,  4,  
++		1,  {111,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"tsu0_resetn",      112,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {114,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"tsu1_resetn",      113,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {115,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"sdi0_ixrst",       300,    RST_TYPEB,  6,  
++		1,  {302,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"sdi1_ixrst",       301,    RST_TYPEB,  7,  
++		1,  {306,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"emm_ixrst",        302,    RST_TYPEB,  8,  
++		1,  {310,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"usb_preset_n",     307,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {406,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"usb_drd_reset",    308,    RST_TYPEA,  RST_MON_UNUSED, 
++		2,  {404,    405,    0,      0,      0,      0,      0,      0,      0}},
++	{"usb_aresetn_p",    309,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {405,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"usb_aresetn_h",    310,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {404,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"eth0_rst_hw_n",    311,    RST_TYPEB,  11, 
++		1,  {408,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"pci_aresetn",      312,    RST_TYPEA,  RST_MON_UNUSED, 
++		2,  {400,    401,    0,      0,      0,      0,      0,      0,      0}},
++	{"tim_gpa_presetn",  600,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {900,    904,    905,    906,    907,    908,    909,    910,    911}},
++	{"tim_gpb_presetn",  601,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1000,   1004,   1005,   1006,   1007,   1008,   1009,   1010,   1011}},
++	{"tim_gpc_presetn",  602,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1100,   1104,   1105,   1106,   1107,   1108,   1109,   1110,   1111}},
++	{"tim_gpd_presetn",  603,    RST_TYPEA,  RST_MON_UNUSED, 
++		9,  {1200,   1204,   1205,   1206,   1207,   1208,   1209,   1210,   1211}},
++	{"pwm_gpe_presetn",  604,    RST_TYPEB,  22, 
++		9,  {1300,   1304,   1305,   1306,   1307,   1308,   1309,   1310,   1311}},
++	{"pwm_gpf_presetn",  605,    RST_TYPEB,  23, 
++		9,  {1400,   1404,   1405,   1406,   1407,   1408,   1409,   1410,   1411}},
++	{"csi_gpg_presetn",  606,    RST_TYPEB,  24, 
++		1,  {1500,   0,      0,      0,      0,      0,      0,      0,      0}},
++	{"csi_gph_presetn",  607,    RST_TYPEB,  25, 
++		1,  {1501,   0,      0,      0,      0,      0,      0,      0,      0}},
++	{"iic_gpa_presetn",  608,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {912,    0,      0,      0,      0,      0,      0,      0,      0}},
++	{"iic_gpb_presetn",  609,    RST_TYPEA,  RST_MON_UNUSED, 
++		1,  {1012,   0,      0,      0,      0,      0,      0,      0,      0}},
++	{"urt_presetn",      610,    RST_TYPEB,  26, 
++		3,  {1505,   1506,   1504,   0,      0,      0,      0,      0,      0}},
++	{"wdt_presetn[0]",   612,    RST_TYPEB,  19, 
++		2,  {1113,   1112,   0,      0,      0,      0,      0,      0,      0}},
++	{"wdt_presetn[1]",   613,    RST_TYPEB,  20, 
++		2,  {1115,   1114,   0,      0,      0,      0,      0,      0,      0}},
++	{"wdt_presetn[2]",   614,    RST_TYPEB,  21, 
++		2,  {1213,   1212,   0,      0,      0,      0,      0,      0,      0}},
++	{"drpa_aresetn",     900,    RST_TYPEB,  14, 
++		1,  {2002,   0,      0,      0,      0,      0,      0,      0,      0}},
++	{"drpb_aresetn",     1000,   RST_TYPEB,  15, 
++		1,  {2102,   0,      0,      0,      0,      0,      0,      0,      0}},
++	{"vcd_resetn",       1407,   RST_TYPEB,  18, 
++		1,  {2605,   0,   0,      0,      0,      0,      0,      0,      0}},
+ };
+ 
+ static int __init r9a09g011gbg_cpg_cocr_init(struct device *dev)
+diff --git a/drivers/clk/renesas/renesas-cpg-cocr.c b/drivers/clk/renesas/renesas-cpg-cocr.c
+index 7330c5f..10743ae 100755
+--- a/drivers/clk/renesas/renesas-cpg-cocr.c
++++ b/drivers/clk/renesas/renesas-cpg-cocr.c
+@@ -71,8 +71,8 @@ struct cpg_cocr_priv {
+ 	unsigned int num_hw_resets;
+ 
+ 	struct raw_notifier_head notifiers;
+-	struct cocr_mod_clk *mod_clk;
+-	struct cpg_core_clk *core_clk;
++	const struct cocr_mod_clk *mod_clk;
++	const struct cpg_core_clk *core_clk;
+ 	bool no_hw_clk_rate;
+ };
+ 
+@@ -503,13 +503,13 @@ static int cpg_cocr_assert(struct reset_controller_dev *rcdev, unsigned long id)
+ 		return -EINVAL;
+ 	}
+ 	
+-	dev_dbg(priv->dev, "%s(%lld) \n",__func__, id);
++	dev_dbg(priv->dev, "%s(%lud) \n",__func__, id);
+ 	cpg_reset_ctrl(rcdev,reg,BIT(bit),0);
+ 
+ 	if (priv->resets[id].type == RST_TYPEB) {
+ 		/* Check the monitor */
+ 		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, priv->resets[id].reset_msk, RST_MON_ASSERT) ){
+-			dev_err(priv->dev, "Reset assert was time out:id %d\n", BIT(priv->resets[id].reset_msk));
++			dev_err(priv->dev, "Reset assert was time out:id %lud\n", BIT(priv->resets[id].reset_msk));
+ 		}
+ 	}
+ 	return 0;
+@@ -531,7 +531,7 @@ static int cpg_cocr_deassert(struct reset_controller_dev *rcdev,
+ 		return -EINVAL;
+ 	}
+ 	
+-	dev_dbg(priv->dev, "%s(%lld) \n",__func__, id);
++	dev_dbg(priv->dev, "%s(%lud) \n",__func__, id);
+ 	
+ 	/*The reset control of the TypeB is optional for the clock On/OFF control.
+ 	Therefore, the clock On/OFF control is not performed.*/
+@@ -545,7 +545,7 @@ static int cpg_cocr_deassert(struct reset_controller_dev *rcdev,
+ 	if (priv->resets[id].type == RST_TYPEB){
+ 		/* Check the monitor */
+ 		if (0 != cpg_wait_reset_monitor(rcdev, RST_MON_TIMEOUT, priv->resets[id].reset_msk, RST_MON_DEASSERT) ){
+-			dev_err(priv->dev, "Reset deassert was time out:id %d\n", BIT(priv->resets[id].reset_msk));
++			dev_err(priv->dev, "Reset deassert was time out:id %lud\n", BIT(priv->resets[id].reset_msk));
+ 		}
+ 	}
+ 	

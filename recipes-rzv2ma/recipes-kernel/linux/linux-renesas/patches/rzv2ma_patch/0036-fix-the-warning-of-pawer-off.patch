@@ -1,0 +1,12 @@
+diff --git a/drivers/power/reset/rzv2m-poweroff.c b/drivers/power/reset/rzv2m-poweroff.c
+index 221fca5..7672ebb 100755
+--- a/drivers/power/reset/rzv2m-poweroff.c
++++ b/drivers/power/reset/rzv2m-poweroff.c
+@@ -60,7 +60,6 @@ static int rzv2m_poweroff_reset_handler(struct notifier_block *this,
+ 				 unsigned long mode, void *cmd)
+ {
+ 	struct rzv2m_powercon *pwcon = rzv2m_poweroff;
+-	u32 val;
+ 	
+ 	dev_info(pwcon->dev, "Restarting system.\n");
+ 	
