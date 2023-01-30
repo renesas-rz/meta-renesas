@@ -1,0 +1,46 @@
+diff --git a/board/renesas/rzv2ma-dev/rzv2ma-dev.c b/board/renesas/rzv2ma-dev/rzv2ma-dev.c
+index dd6ebc1..e72f8c9 100755
+--- a/board/renesas/rzv2ma-dev/rzv2ma-dev.c
++++ b/board/renesas/rzv2ma-dev/rzv2ma-dev.c
+@@ -294,19 +294,27 @@ static void usb_init(void)
+ static void iic_init(void)
+ {
+ 	/* asset RESET */
++	/* IIC_GPA_PRESETN:IIC0,IIC1 */
++	/* IIC_GPB_PRESETN:IIC2,IIC3 */
+ 	CPG_SetResetCtrl(6, 0x0300, 0x0000);
+ 	CMN_DelayInUS(1);
+ 
+ 	/* disable supply clock */
++	/* IIC_PCLK[0]:IIC0,IIC1 */
++	/* IIC_PCLK[1]:IIC2,IIC3 */
+ 	CPG_SetClockCtrl(9, 0x1000, 0x0000);
+ 	CPG_SetClockCtrl(10, 0x1000, 0x0000);
+ 	CMN_DelayInUS(1);
+ 
+ 	/* deasset RESET */
++	/* IIC_GPA_PRESETN:IIC0,IIC1 */
++	/* IIC_GPB_PRESETN:IIC2,IIC3 */
+ 	CPG_SetResetCtrl(6, 0x0300, 0x0300);
+ 	CMN_DelayInUS(1);
+ 
+ 	/* enable supply clock */
++	/* IIC_PCLK[0]:IIC0,IIC1 */
++	/* IIC_PCLK[1]:IIC2,IIC3 */
+ 	CPG_SetClockCtrl(9, 0x1000, 0x1000);
+ 	CPG_SetClockCtrl(10, 0x1000, 0x1000);
+ 	CMN_DelayInUS(1);
+@@ -334,11 +342,11 @@ static void pwm_init(void)
+ 	CPG_SetClockCtrl(14, 0x0FF1, 0x0FF1);
+ 	CMN_DelayInUS(1);
+ 	
+-	/* PWM0-7 reset assart */
++	/* PWM0-15 reset assart */
+ 	CPG_SetResetCtrl(6, 0x0030, 0x0000);
+ 	CPG_WaitResetMon(0, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1);
+ 	
+-	/* PWM0-7 reset deassert */
++	/* PWM0-15 reset deassert */
+ 	CPG_SetResetCtrl(6, 0x0030, 0x0030);
+ 	CPG_WaitResetMon(0, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1, 0);
+ }
