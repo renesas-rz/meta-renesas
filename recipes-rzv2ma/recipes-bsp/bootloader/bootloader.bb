@@ -3,7 +3,7 @@ SECTION = "Loader"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-PV = "v1.0.0"
+PV = "v1.1.0"
 PR = "r1"
 
 S = "${WORKDIR}"
@@ -13,7 +13,7 @@ FILES_${PN}  = "/boot "
 
 inherit deploy
 
-SRC_URI = "file://rzv2ma-bootloader-v100.tar.gz"
+SRC_URI = "file://rzv2ma-bootloader-v110.tar.gz"
 
 do_compile() {
 	cd ${S}/source
