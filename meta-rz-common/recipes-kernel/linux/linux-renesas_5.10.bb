@@ -9,12 +9,12 @@ COMPATIBLE_MACHINE_rzfive = "(smarc-rzfive|rzfive-dev)"
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip17-rt7", "rz-5.10-cip17",d)}"
-SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "0f6cb6312a1a6f22fba03705c1b9816b7d27cf5b", "13dea4598e61893e75eae1c1887fa51ea6b22a07",d)}"
+BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip22-rt9", "rz-5.10-cip22",d)}"
+SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "c4e65e5c4f7341096cb669731456f6a87b0fe495", "97d9706510b7f2e088c400ef9f120384e6b49f98",d)}"
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
-LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.145-cip17-rt7", "5.10.145-cip17",d)}"
+LINUX_VERSION ?= "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.158-cip22-rt9", "5.10.158-cip22",d)}"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
