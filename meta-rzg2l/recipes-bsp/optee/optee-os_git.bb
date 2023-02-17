@@ -19,6 +19,10 @@ SRC_URI = " \
 	git://github.com/renesas-rz/rzg_optee-os.git;branch=${BRANCH} \
 "
 
+SRC_URI += " \
+	file://0001-hw_get_random_bytes-SUPPORT.patch \
+"
+
 COMPATIBLE_MACHINE = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev|smarc-rzg2ul|smarc-rzv2l|rzv2l-dev)"
 
 PLATFORM = "rz"

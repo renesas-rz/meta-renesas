@@ -1,0 +1,47 @@
+diff --git a/core/arch/arm/plat-rz/g2l/hw_rng.c b/core/arch/arm/plat-rz/g2l/hw_rng.c
+index ea5e4e2..1efb6ff 100644
+--- a/core/arch/arm/plat-rz/g2l/hw_rng.c
++++ b/core/arch/arm/plat-rz/g2l/hw_rng.c
+@@ -12,10 +12,10 @@
+ #include <trace.h>
+ 
+ #include <r_sce.h>
++#include <string.h>
+ 
+ #define LOCAL_BUFFER_SIZE (16)
+ 
+-static int32_t pos = -1;
+ static uint32_t buffer[LOCAL_BUFFER_SIZE / sizeof(uint32_t)];
+ 
+ static TEE_Result random_number_generator(uint32_t *rand, size_t size)
+@@ -42,21 +42,18 @@ static TEE_Result random_number_generator(uint32_t *rand, size_t size)
+ 	return TEE_SUCCESS;
+ }
+ 
+-uint8_t hw_get_random_byte(void)
++TEE_Result hw_get_random_bytes(void *buf, size_t len)
+ {
+-	uint8_t *queue = (uint8_t *)buffer;
++	TEE_Result ret = TEE_SUCCESS;
+ 
+-	if (pos > 0) {
+-		pos--;
+-		return queue[pos];
+-	}
+-
+-	if (TEE_SUCCESS != random_number_generator(buffer, ARRAY_SIZE(buffer)))
++	for(size_t i = 0; i < len; i += sizeof(buffer))
+ 	{
+-		panic("Failed to generate random numbers");
++		if (TEE_SUCCESS != (ret = random_number_generator(buffer, ARRAY_SIZE(buffer))))
++		{
++			return ret;
++		}
++		memcpy(buf + i, buffer, MIN(sizeof(buffer), len - i));
+ 	}
+ 
+-	pos = LOCAL_BUFFER_SIZE - 1;
+-
+-	return queue[pos];
++	return ret;
+ }
