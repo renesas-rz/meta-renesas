@@ -31,7 +31,7 @@ index e277f2e..bd7b267 100644
  
 @@ -70,6 +73,47 @@ static gchar **exclude_args = NULL;
  /* convenience macro so we don't have to litter the code with if(!quiet) */
- #define PRINT if(!quiet)g_print
+ #define PRINT if(!quiet)gst_print
  
 +GTimeVal start_time;
 +GTimeVal end_time;
@@ -181,9 +181,9 @@ index e277f2e..bd7b267 100644
 +cont:
 +
    if (!savefile) {
-     GstState state, pending;
      GstStateChangeReturn ret;
-@@ -1156,6 +1278,17 @@ main (int argc, char *argv[])
+     GstBus *bus;
+@@ -1182,6 +1304,17 @@ main (int argc, char *argv[])
          goto end;
        }
  
