@@ -1,0 +1,306 @@
+diff --git a/core/arch/arm/plat-rz/g2l/drivers/scif.c b/core/arch/arm/plat-rz/common/drivers/scif.c
+similarity index 100%
+rename from a/core/arch/arm/plat-rz/g2l/drivers/scif.c
+rename to b/core/arch/arm/plat-rz/common/drivers/scif.c
+diff --git a/core/arch/arm/plat-rz/conf.mk b/core/arch/arm/plat-rz/conf.mk
+index 68f0a1c..408b616 100644
+--- a/core/arch/arm/plat-rz/conf.mk
++++ b/core/arch/arm/plat-rz/conf.mk
+@@ -21,6 +21,12 @@ include core/arch/arm/plat-rz/g2l/rzg2l_conf.mk
+ else ifeq ($(PLATFORM_FLAVOR),g2ul_smarc)
+ $(call force,CFG_PLATFORM_GROUP_g2l,y)
+ include core/arch/arm/plat-rz/g2l/rzg2l_conf.mk
++else ifeq ($(PLATFORM_FLAVOR),g3s_smarc_2)
++$(call force,CFG_PLATFORM_GROUP_g3s,y)
++include core/arch/arm/plat-rz/g3s/rzg3s_conf.mk
++else ifeq ($(PLATFORM_FLAVOR),g3s_dev14_1)
++$(call force,CFG_PLATFORM_GROUP_g3s,y)
++include core/arch/arm/plat-rz/g3s/rzg3s_conf.mk
+ else
+ $(error Unsupported PLATFORM_FLAVOR "$(PLATFORM_FLAVOR)")
+ endif
+diff --git a/core/arch/arm/plat-rz/g2l/drivers/sub.mk b/core/arch/arm/plat-rz/g2l/drivers/sub.mk
+index feb6c90..9e7f267 100644
+--- a/core/arch/arm/plat-rz/g2l/drivers/sub.mk
++++ b/core/arch/arm/plat-rz/g2l/drivers/sub.mk
+@@ -1,4 +1,4 @@
+-srcs-$(CFG_RZ_SCIF) += scif.c
++srcs-$(CFG_RZ_SCIF) += ../../common/drivers/scif.c
+ 
+ srcs-$(CFG_RZ_SCE) += sce.c
+ subdirs-$(CFG_RZ_SCE) += r_sce
+diff --git a/core/arch/arm/plat-rz/g2l/hw_rng.c b/core/arch/arm/plat-rz/g2l/hw_rng.c
+index ea5e4e2..1efb6ff 100644
+--- a/core/arch/arm/plat-rz/g2l/hw_rng.c
++++ b/core/arch/arm/plat-rz/g2l/hw_rng.c
+@@ -12,10 +12,10 @@
+ #include <trace.h>
+ 
+ #include <r_sce.h>
++#include <string.h>
+ 
+ #define LOCAL_BUFFER_SIZE (16)
+ 
+-static int32_t pos = -1;
+ static uint32_t buffer[LOCAL_BUFFER_SIZE / sizeof(uint32_t)];
+ 
+ static TEE_Result random_number_generator(uint32_t *rand, size_t size)
+@@ -42,21 +42,18 @@ static TEE_Result random_number_generator(uint32_t *rand, size_t size)
+ 	return TEE_SUCCESS;
+ }
+ 
+-uint8_t hw_get_random_byte(void)
++TEE_Result hw_get_random_bytes(void *buf, size_t len)
+ {
+-	uint8_t *queue = (uint8_t *)buffer;
++	TEE_Result ret = TEE_SUCCESS;
+ 
+-	if (pos > 0) {
+-		pos--;
+-		return queue[pos];
+-	}
+-
+-	if (TEE_SUCCESS != random_number_generator(buffer, ARRAY_SIZE(buffer)))
++	for(size_t i = 0; i < len; i += sizeof(buffer))
+ 	{
+-		panic("Failed to generate random numbers");
++		if (TEE_SUCCESS != (ret = random_number_generator(buffer, ARRAY_SIZE(buffer))))
++		{
++			return ret;
++		}
++		memcpy(buf + i, buffer, MIN(sizeof(buffer), len - i));
+ 	}
+ 
+-	pos = LOCAL_BUFFER_SIZE - 1;
+-
+-	return queue[pos];
++	return ret;
+ }
+diff --git a/core/arch/arm/plat-rz/g2l/rzg2l_conf.mk b/core/arch/arm/plat-rz/g2l/rzg2l_conf.mk
+index 8a703e0..d0ff31a 100644
+--- a/core/arch/arm/plat-rz/g2l/rzg2l_conf.mk
++++ b/core/arch/arm/plat-rz/g2l/rzg2l_conf.mk
+@@ -1,6 +1,6 @@
+ 
+ include core/arch/arm/cpu/cortex-armv8-0.mk
+-include core/arch/arm/plat-rz/g2l/link.mk
++include core/arch/arm/plat-rz/link.mk
+ 
+ $(call force,CFG_SECURE_TIME_SOURCE_CNTPCT,y)
+ $(call force,CFG_WITH_ARM_TRUSTED_FW,y)
+diff --git b/core/arch/arm/plat-rz/g3s/drivers/sub.mk b/core/arch/arm/plat-rz/g3s/drivers/sub.mk
+new file mode 100644
+index 0000000..f93cf9f
+--- /dev/null
++++ b/core/arch/arm/plat-rz/g3s/drivers/sub.mk
+@@ -0,0 +1,2 @@
++srcs-$(CFG_RZ_SCIF) += ../../common/drivers/scif.c
++
+diff --git b/core/arch/arm/plat-rz/g3s/huk.c b/core/arch/arm/plat-rz/g3s/huk.c
+new file mode 100644
+index 0000000..f920559
+--- /dev/null
++++ b/core/arch/arm/plat-rz/g3s/huk.c
+@@ -0,0 +1,53 @@
++// SPDX-License-Identifier: BSD-2-Clause
++/*
++ * Copyright (c) 2021, Renesas Electronics
++ */
++
++#include <trace.h>
++#include <io.h>
++#include <kernel/panic.h>
++#include <kernel/tee_common_otp.h>
++#include <mm/core_memprot.h>
++#include <tee/tee_cryp_pbkdf2.h>
++
++#define CHIPID_BASE		(0x11861140U)
++#define CHIPID_SIZE		(16)
++
++#define REGISTER_SIZE	(sizeof(uint32_t))
++
++register_phys_mem_pgdir(MEM_AREA_IO_SEC, CHIPID_BASE, CHIPID_SIZE);
++
++static void read_chipid(uint8_t *chipid)
++{
++	uint32_t i;
++	vaddr_t  addr_va;
++	uint32_t read_num = CHIPID_SIZE / REGISTER_SIZE;
++
++	addr_va = (vaddr_t)phys_to_virt_io(CHIPID_BASE, CHIPID_SIZE);
++
++	for (i = 0U; i < read_num; i++) {
++		uint32_t read_data = io_read32(addr_va);
++		read_data = TEE_U32_TO_BIG_ENDIAN(read_data);
++		(void)memcpy(&chipid[i * REGISTER_SIZE], &read_data, REGISTER_SIZE);
++		addr_va += REGISTER_SIZE;
++	}
++}
++
++static TEE_Result huk_kdf(uint8_t *huk, size_t huk_length)
++{
++	uint8_t password[CHIPID_SIZE];
++
++	uint8_t salt[] = {0x76,0x6A,0xEF,0x5C,0x39,0xEF,0x6C,0x26,0x41,0x6C,0x46,0x68,0x05,0x43,0x06,0xC0};
++
++	uint32_t iteration_count = 1000;
++
++	read_chipid(password);
++
++	return tee_cryp_pbkdf2(TEE_ALG_HMAC_SHA256, password, sizeof(password), salt, sizeof(salt), iteration_count,
++				huk, huk_length);
++}
++
++TEE_Result tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
++{
++	return huk_kdf(hwkey->data, sizeof(hwkey->data));
++}
+diff --git b/core/arch/arm/plat-rz/g3s/main.c b/core/arch/arm/plat-rz/g3s/main.c
+new file mode 100644
+index 0000000..10376e7
+--- /dev/null
++++ b/core/arch/arm/plat-rz/g3s/main.c
+@@ -0,0 +1,34 @@
++// SPDX-License-Identifier: BSD-2-Clause
++/*
++ * Copyright (c) 2016, GlobalLogic
++ * Copyright (c) 2021, Renesas Electronics
++ */
++
++#include <console.h>
++#include <drivers/gic.h>
++#include <drivers/scif.h>
++#include <kernel/panic.h>
++#include <mm/core_memprot.h>
++#include <platform_config.h>
++
++register_phys_mem_pgdir(MEM_AREA_IO_SEC, CONSOLE_UART_BASE, SCIF_REG_SIZE);
++register_phys_mem_pgdir(MEM_AREA_IO_SEC, GICD_BASE, GIC_DIST_REG_SIZE);
++
++register_dynamic_shm(NSEC_DDR_0_BASE, NSEC_DDR_0_SIZE);
++#ifdef NSEC_DDR_1_BASE
++register_dynamic_shm(NSEC_DDR_1_BASE, NSEC_DDR_1_SIZE);
++#endif
++#ifdef NSEC_DDR_2_BASE
++register_dynamic_shm(NSEC_DDR_2_BASE, NSEC_DDR_2_SIZE);
++#endif
++#ifdef NSEC_DDR_3_BASE
++register_dynamic_shm(NSEC_DDR_3_BASE, NSEC_DDR_3_SIZE);
++#endif
++
++static struct scif_uart_data console_data __nex_bss;
++
++void console_init(void)
++{
++	scif_uart_init(&console_data, CONSOLE_UART_BASE);
++	register_serial_console(&console_data.chip);
++}
+diff --git b/core/arch/arm/plat-rz/g3s/rzg3s_conf.mk b/core/arch/arm/plat-rz/g3s/rzg3s_conf.mk
+new file mode 100644
+index 0000000..ac4a690
+--- /dev/null
++++ b/core/arch/arm/plat-rz/g3s/rzg3s_conf.mk
+@@ -0,0 +1,30 @@
++
++include core/arch/arm/cpu/cortex-armv8-0.mk
++include core/arch/arm/plat-rz/link.mk
++
++$(call force,CFG_SECURE_TIME_SOURCE_CNTPCT,y)
++$(call force,CFG_WITH_ARM_TRUSTED_FW,y)
++$(call force,CFG_SCIF,n)
++$(call force,CFG_RZ_SCIF,y)
++$(call force,CFG_CORE_LARGE_PHYS_ADDR,y)
++$(call force,CFG_CORE_ARM64_PA_BITS,36)
++$(call force,CFG_GIC,y)
++$(call force,CFG_ARM_GICV3,y)
++$(call force,CFG_CORE_ASLR,n)
++
++CFG_TEE_CORE_NB_CORE ?= 1
++
++CFG_TZDRAM_START ?= 0x44100000
++CFG_TZDRAM_SIZE ?= 0x03D00000
++CFG_TEE_RAM_VA_SIZE ?= 0x100000
++ifeq ($(CFG_ARM64_core),y)
++$(call force,CFG_WITH_LPAE,y)
++supported-ta-targets = ta_arm64
++else
++$(call force,CFG_ARM32_core,y)
++endif
++
++CFG_RZ_SCE ?= n
++ifeq ($(CFG_RZ_SCE),y)
++CFG_WITH_SOFTWARE_PRNG ?= n
++endif
+diff --git b/core/arch/arm/plat-rz/g3s/rzg3s_config.h b/core/arch/arm/plat-rz/g3s/rzg3s_config.h
+new file mode 100644
+index 0000000..64a9423
+--- /dev/null
++++ b/core/arch/arm/plat-rz/g3s/rzg3s_config.h
+@@ -0,0 +1,30 @@
++/* SPDX-License-Identifier: BSD-2-Clause */
++/*
++ * Copyright (c) 2016, GlobalLogic
++ * Copyright (c) 2021, Renesas Electronics
++ */
++
++#ifndef RZG3S_CONFIG_H
++#define RZG3S_CONFIG_H
++
++#include <mm/generic_ram_layout.h>
++
++/* Make stacks aligned to data cache line length */
++#define STACK_ALIGNMENT		64
++
++#define GICD_BASE			0x11900000
++
++#define CONSOLE_UART_BASE	0x1004B800
++
++#if defined(PLATFORM_FLAVOR_g3s_dev14_1)
++/* DDR 1Gbyte x1 */
++#define NSEC_DDR_0_BASE     0x47E00000U
++#define NSEC_DDR_0_SIZE     0x38200000
++#else
++#error "Unknown platform flavor"
++#endif
++
++#define TEE_SHMEM_START		(TZDRAM_BASE + TZDRAM_SIZE)
++#define TEE_SHMEM_SIZE		0x100000
++
++#endif /*RZG3S_CONFIG_H*/
+diff --git b/core/arch/arm/plat-rz/g3s/sub.mk b/core/arch/arm/plat-rz/g3s/sub.mk
+new file mode 100644
+index 0000000..dc38fea
+--- /dev/null
++++ b/core/arch/arm/plat-rz/g3s/sub.mk
+@@ -0,0 +1,4 @@
++global-incdirs-y += .
++srcs-y += main.c huk.c
++
++subdirs-y += drivers
+diff --git a/core/arch/arm/plat-rz/g2l/link.mk b/core/arch/arm/plat-rz/link.mk
+similarity index 100%
+rename from a/core/arch/arm/plat-rz/g2l/link.mk
+rename to b/core/arch/arm/plat-rz/link.mk
+diff --git a/core/arch/arm/plat-rz/platform_config.h b/core/arch/arm/plat-rz/platform_config.h
+index ceff9c0..c7fcf80 100644
+--- a/core/arch/arm/plat-rz/platform_config.h
++++ b/core/arch/arm/plat-rz/platform_config.h
+@@ -8,6 +8,8 @@
+ 
+ #if defined(CFG_PLATFORM_GROUP_g2l)
+ #include "g2l/rzg2l_config.h"
++#elif defined(CFG_PLATFORM_GROUP_g3s)
++#include "g3s/rzg3s_config.h"
+ #endif
+ 
+ #endif /*PLATFORM_CONFIG_H*/
+diff --git a/core/arch/arm/plat-rz/sub.mk b/core/arch/arm/plat-rz/sub.mk
+index e085744..deb64f0 100644
+--- a/core/arch/arm/plat-rz/sub.mk
++++ b/core/arch/arm/plat-rz/sub.mk
+@@ -1,4 +1,5 @@
+ global-incdirs-y += .
+ 
+ subdirs-$(CFG_PLATFORM_GROUP_g2l) += g2l
++subdirs-$(CFG_PLATFORM_GROUP_g3s) += g3s
+ 
