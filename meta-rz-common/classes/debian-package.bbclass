@@ -36,6 +36,8 @@ do_debian_unpack_extra() {
 		rm -rf ${DEBIAN_UNPACK_DIR}/debian
 		cd ${DEBIAN_UNPACK_DIR}
 		patch -p1 < ${WORKDIR}/${BPN}_${DPV}.diff
+		# In case this task rerun, don't apply the patch again
+		rm ${WORKDIR}/${BPN}_${DPV}.diff
 	fi
 }
 
@@ -79,16 +81,12 @@ debian_check_source_format() {
 # Please set DEBIAN_QUILT_PATCHES = "" for such packages.
 DEBIAN_QUILT_PATCHES ?= "${DEBIAN_UNPACK_DIR}/debian/patches"
 
-DEBIAN_QUILT_DIR ?= "${DEBIAN_UNPACK_DIR}/.pc"
-DEBIAN_QUILT_DIR_ESC ?= "${DEBIAN_UNPACK_DIR}/.pc.debian"
+# Default quilt data directory .pc is already used by Yocto do_patch
+# Use a different directory in do_debian_patch to avoid conflict
+DEBIAN_QUILT_DIR ?= "${DEBIAN_UNPACK_DIR}/.pc.debian"
 
 # apply patches by quilt
 debian_patch_quilt() {
-	# confirm that other patches didn't applied
-	if [ -d ${DEBIAN_QUILT_DIR} -o -d ${DEBIAN_QUILT_DIR_ESC} ]; then
-		bbfatal "unknown quilt patches already applied"
-	fi
-
 	# Some source packages don't have patch. In such cases,
 	# users can intentionally ignore applying patches
 	# by setting DEBIAN_QUILT_PATCHES to "".
@@ -126,12 +124,14 @@ debian_patch_quilt() {
 		return
 	fi
 
-	# apply patches
-	QUILT_PATCHES=${DEBIAN_QUILT_PATCHES} quilt --quiltrc /dev/null push -a
-
-	# avoid conflict with "do_patch"
-	if [ -d ${DEBIAN_QUILT_DIR} ]; then
-		mv ${DEBIAN_QUILT_DIR} ${DEBIAN_QUILT_DIR_ESC}
+	# Note that if quilt runs when all patches already applied (happen
+	# when this task rerun), it will return value 2 instead.
+	# This is acceptable scenario, catch it to avoid Yocto assume error.
+	export QUILT_PATCHES=${DEBIAN_QUILT_PATCHES}
+	export QUILT_PC=${DEBIAN_QUILT_DIR}
+	quilt --quiltrc /dev/null push -a || \
+	if [ $? = '1' ]; then
+		bbfatal "Error when apply patches from ${DEBIAN_QUILT_PATCHES}"
 	fi
 }
 
