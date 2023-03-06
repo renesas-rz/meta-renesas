@@ -12,6 +12,8 @@ do_configure () {
         sed -i '/^INCLUDE_PATHS/ s,$, \$\{BUILD_CFLAGS},' ${S}/tools/renesas/rz_boot_param/Makefile
 }
 
+EXTRA_OEMAKE = "TRUSTED_BOARD_BOOT=${TRUSTED_BOARD_BOOT}"
+
 do_compile () {
 	cd ${S}/tools/renesas/rz_boot_param
         oe_runmake bptool
