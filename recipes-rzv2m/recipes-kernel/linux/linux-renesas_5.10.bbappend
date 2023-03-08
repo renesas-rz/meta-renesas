@@ -104,6 +104,7 @@ SRC_URI_append = " \
    file://patches/rzv2m_patch/0097-modified-socName.patch \
    file://patches/rzv2m_patch/0098-fixed-dtsi-for-pcie.patch \
    file://patches/rzv2m_patch/0099-added-aliases-mmc.patch \
+   file://patches/rzv2m_patch/0101-improved-uart-response-speed.patch \
 "
 
 SRC_URI_append = " \
