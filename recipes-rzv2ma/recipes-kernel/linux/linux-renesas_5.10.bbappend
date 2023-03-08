@@ -87,6 +87,7 @@ SRC_URI_append = " \
    file://patches/rzv2m_patch/fixed-usb-host-driver-for-rzv2m.patch \
    file://patches/rzv2m_patch/0087-modified-defconfig.patch \
    file://patches/rzv2m_patch/0088_delete_u_dma_buf_config.patch \
+   file://patches/rzv2m_patch/0101-improved-uart-response-speed.patch \
 "
 
 SRC_URI_append = " \
