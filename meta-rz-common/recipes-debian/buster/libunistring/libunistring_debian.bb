@@ -31,3 +31,5 @@ require recipes-debian/buster/sources/libunistring.inc
 
 inherit autotools texinfo
 BBCLASSEXTEND = "native nativesdk"
+
+DEPENDS_class-target += "gperf-native"
