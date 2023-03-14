@@ -21,7 +21,7 @@ RDEPENDS_${PN} += "${DEP}"
 RDEPENDS_${PN}-plugins += "${DEP}"
 RDEPENDS_${PN}-examples += "${DEP}"
 
-DEPENDS_append_rzg2 = " mesa"
+DEPENDS_append_rzg2 = " ${@bb.utils.contains('COMBINED_FEATURES', 'opengles', '', 'mesa', d)}"
 DEPENDS_remove = " xproto"
 
 
