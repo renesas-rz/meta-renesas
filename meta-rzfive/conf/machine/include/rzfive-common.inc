@@ -29,3 +29,10 @@ EXTRA_IMAGEDEPENDS += " u-boot"
 PACKAGE_INSTALL_remove += " optee-client v4l2-init "
 
 DISTRO_FEATURES_append = " docker"
+
+# All related Docker packages setting
+GOVERSION = "${@'1.16' if 'docker' in '${DISTRO_FEATURES}' else '1.14'}"
+PREFERRED_VERSION_go = "${GOVERSION}"
+PREFERRED_VERSION_containerd-opencontainers = "v1.6.8%"
+PREFERRED_VERSION_docker-ce = "20.10.17-ce%"
+PREFERRED_VERSION_runc-docker = "1.1.3%"
