@@ -109,15 +109,49 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
 \<tag\> can be selected in any tags of meta-renesas.
 Now the latest version is **BSP-3.0.x** or **BSP-3.0.x-updatey** if any new updates are applied.
 
-Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
-```bash
-    $ source poky/oe-init-build-env
-```
+Currently, there are 2 types of build procedure supported in below description:
 
-Prepare default configuration files. :
-```bash
+**1. New build procedure (Recommended):**
+- Initialize a build using the 'oe-init-build-env' script in Poky and point TEMPLATECONF to platform conf path. e.g.:
+   ```bash
+   $ TEMPLATECONF=$PWD/meta-renesas/meta-<platform>/docs/template/conf/ source poky/oe-init-build-env build
+   ```
+- To build Docker (optional), Codec or Graphics, QT5, add necessary layers:
+   ```bash
+   $ bitbake-layers add-layer ../meta-openembedded/meta-filesystems
+   $ bitbake-layers add-layer ../meta-openembedded/meta-networking
+   $ bitbake-layers add-layer ../meta-virtualization
+   $ bitbake-layers add-layer ../meta-rz-features/meta-rz-codecs
+   $ bitbake-layers add-layer ../meta-rz-features/meta-rz-graphics
+   $ bitbake-layers add-layer ../meta-rz-features/meta-qt5
+   ```
+- Build the target file system image using bitbake:
+   ```bash
+   $ MACHINE=<board> bitbake core-image-<target>
+   ```
+\<platform\> and \<board\> can be selected in below table:
+
+|Renesas MPU| platform |        board           |
+|:---------:|:--------:|:----------------------:|
+|RZ/G2H     |rzg2h     |hihope-rzg2h            |
+|RZ/G2M     |rzg2h     |hihope-rzg2m            |
+|RZ/G2N     |rzg2h     |hihope-rzg2n            |
+|RZ/G2E     |rzg2h     |ek874                   |
+|RZ/G2L     |rzg2l     |smarc-rzg2l, rzg2l-dev  |
+|RZ/G2LC    |rzg2l     |smarc-rzg2lc, rzg2lc-dev|
+|RZ/G2UL    |rzg2l     |smarc-rzg2ul, rzg2ul-dev|
+|RZ/V2L     |rzv2l     |smarc-rzv2l, rzv2l-dev  |
+|RZ/Five    |rzfive    |smarc-rzfive, rzfive-dev|
+
+**2. Build procedure for legacy users (common procedure):**
+- Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
+    ```bash
+    $ source poky/oe-init-build-env
+    ```
+- Prepare default configuration files. :
+    ```bash
     $ cp $WORK/meta-renesas/docs/template/conf/<board>/*.conf ./conf/
-```
+    ```
 \<board\>: can be selected in any platforms:
 * RZ/G2H:  hihope-rzg2h
 * RZ/G2M:  hihope-rzg2m
@@ -128,12 +162,16 @@ Prepare default configuration files. :
 * RZ/G2UL: smarc-rzg2ul, rzg2ul-dev
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev
 * RZ/Five:  smarc-rzfive, rzfive-dev
-
-Build the target file system image using bitbake:
-```bash
+- Build the target file system image using bitbake:
+    ```bash
     $ bitbake core-image-<target>
-```
-\<target\>:
+    ```
+- To build Docker (optional): comment out a line in conf/local.conf:
+   ```
+   DISTRO_FEATURES_remove = " docker"
+   ```
+
+\<target\> for 2 built types:
 * RZ/Five: bsp
 * Others: bsp, weston, qt
 
