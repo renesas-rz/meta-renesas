@@ -1,10 +1,10 @@
 # For Security Features purpose
 
 # Enable Secure Boot
-TRUSTED_BOARD_BOOT          := '0'
+TRUSTED_BOARD_BOOT          ?= '0'
 
 # Enable build and load of OP-TEE
-ENABLE_SPD_OPTEE            := '0'
+ENABLE_SPD_OPTEE            ?= '0'
 
 # Trusted Board Boot Verification Mode: "encsign" or "sign"
 IMG_AUTH_MODE               = "encsign"
