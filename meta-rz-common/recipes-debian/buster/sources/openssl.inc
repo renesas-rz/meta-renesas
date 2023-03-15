@@ -5,10 +5,10 @@ REPACK_PV = "1.1.1n"
 PV = "1.1.1n"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_SECURITY_UPDATE_MIRROR}/main/o/openssl/openssl_1.1.1n-0+deb10u3.dsc;name=openssl_1.1.1n-0+deb10u3.dsc \
-    ${DEBIAN_SECURITY_UPDATE_MIRROR}/main/o/openssl/openssl_1.1.1n.orig.tar.gz;name=openssl_1.1.1n.orig.tar.gz \
-    ${DEBIAN_SECURITY_UPDATE_MIRROR}/main/o/openssl/openssl_1.1.1n.orig.tar.gz.asc;name=openssl_1.1.1n.orig.tar.gz.asc \
-    ${DEBIAN_SECURITY_UPDATE_MIRROR}/main/o/openssl/openssl_1.1.1n-0+deb10u3.debian.tar.xz;name=openssl_1.1.1n-0+deb10u3.debian.tar.xz \
+    ${DEBIAN_MIRROR}/main/o/openssl/openssl_1.1.1n-0+deb10u3.dsc;name=openssl_1.1.1n-0+deb10u3.dsc \
+    ${DEBIAN_MIRROR}/main/o/openssl/openssl_1.1.1n.orig.tar.gz;name=openssl_1.1.1n.orig.tar.gz \
+    ${DEBIAN_MIRROR}/main/o/openssl/openssl_1.1.1n.orig.tar.gz.asc;name=openssl_1.1.1n.orig.tar.gz.asc \
+    ${DEBIAN_MIRROR}/main/o/openssl/openssl_1.1.1n-0+deb10u3.debian.tar.xz;name=openssl_1.1.1n-0+deb10u3.debian.tar.xz \
 "
 
 SRC_URI[openssl_1.1.1n-0+deb10u3.dsc.md5sum] = "a982122e43a637646f884fd9f3cfb274"
