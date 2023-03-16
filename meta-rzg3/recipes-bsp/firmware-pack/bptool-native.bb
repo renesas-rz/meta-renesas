@@ -1,6 +1,6 @@
 SECTION = "bootloaders"
 SUMMARY = "Bptool from Trusted Firmware-A"
-LICENSE = "MIT"
+LICENSE = "BSD-3-Clause"
 
 inherit native
 
