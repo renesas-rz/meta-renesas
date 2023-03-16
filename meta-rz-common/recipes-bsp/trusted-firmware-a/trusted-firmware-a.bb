@@ -1,6 +1,6 @@
 DESCRIPTION = "Trusted Firmware-A for Renesas RZ"
 
-LICENSE = "MIT"
+LICENSE = "BSD-3-Clause & MIT & Apache-2.0"
 LIC_FILES_CHKSUM = " \
 	file://${WORKDIR}/git/docs/license.rst;md5=b2c740efedc159745b9b31f88ff03dde \
 	file://${WORKDIR}/mbedtls/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57 \
