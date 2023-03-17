@@ -1,5 +1,9 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
+SRC_URI_remove = "\
+	file://0001-hw_get_random_bytes-SUPPORT.patch \
+"
+
 SRC_URI_append = " \
 	file://0001-g3s-optee-os-build.patch \
 "
