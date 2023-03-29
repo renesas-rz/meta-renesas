@@ -57,8 +57,8 @@ do_compile () {
 			--nt-fw-key-cert ${RECIPE_SYSROOT}/boot/bl33-kcert-${MACHINE}.bin \
 			--nt-fw-cert ${RECIPE_SYSROOT}/boot/bl33-ccert-${MACHINE}.bin ${S}/fip_tbb.bin
 
-		objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${S}/bl2_bp_spi_tbb.bin ${S}/bl2_bp_spi_tbb.srec
-		objcopy -I binary -O srec --adjust-vma=0x00011E00 --srec-forceS3 ${S}/bl2_bp_mmc_tbb.bin ${S}/bl2_bp_mmc_tbb.srec
+		objcopy -I binary -O srec --adjust-vma=0x000A1E00 --srec-forceS3 ${S}/bl2_bp_spi_tbb.bin ${S}/bl2_bp_spi_tbb.srec
+		objcopy -I binary -O srec --adjust-vma=0x000A1E00 --srec-forceS3 ${S}/bl2_bp_mmc_tbb.bin ${S}/bl2_bp_mmc_tbb.srec
 		objcopy -I binary -O srec --adjust-vma=0x00000000 --srec-forceS3 ${S}/fip_tbb.bin ${S}/fip_tbb.srec
 	fi
 }
