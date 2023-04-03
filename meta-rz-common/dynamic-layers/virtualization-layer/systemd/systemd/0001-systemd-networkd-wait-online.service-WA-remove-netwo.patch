@@ -1,0 +1,34 @@
+From 1fba6af6f208e15610cb59d8450b5abbba03833e Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 3 Apr 2023 17:59:53 +0700
+Subject: [PATCH] systemd-networkd-wait-online.service: WA remove
+ network-online as previous dependency
+
+Workaround to remove network-online as previous dependency
+of systemd-networkd-wait-online.service.
+Network-online can make systemd-networkd-wait-online wait too long
+to check online status if no network is available.
+It can affect to other system services.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ units/systemd-networkd-wait-online.service.in | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/units/systemd-networkd-wait-online.service.in b/units/systemd-networkd-wait-online.service.in
+index 7666e16669..54cddf5b8c 100644
+--- a/units/systemd-networkd-wait-online.service.in
++++ b/units/systemd-networkd-wait-online.service.in
+@@ -14,7 +14,8 @@ DefaultDependencies=no
+ Conflicts=shutdown.target
+ Requires=systemd-networkd.service
+ After=systemd-networkd.service
+-Before=network-online.target shutdown.target
++#Before=network-online.target shutdown.target
++Before=shutdown.target
+ 
+ [Service]
+ Type=oneshot
+-- 
+2.25.1
+

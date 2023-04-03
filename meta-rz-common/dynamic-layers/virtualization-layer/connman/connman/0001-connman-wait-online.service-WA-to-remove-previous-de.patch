@@ -1,0 +1,32 @@
+From bf777e68c22dd1d13b232c4705cef8a694327f5c Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 3 Apr 2023 17:50:13 +0700
+Subject: [PATCH] connman-wait-online.service: WA to remove previous dependency
+
+Workaround to remove previous dependency (network-online.target) of
+connman-wait-online.service.
+connman-wait-online.service has to wait for finishing of
+network-online.target. But if no network is available, it has to wait
+too long and affect to other system services.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ src/connman-wait-online.service.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/connman-wait-online.service.in b/src/connman-wait-online.service.in
+index c2ad5cc..90127ce 100644
+--- a/src/connman-wait-online.service.in
++++ b/src/connman-wait-online.service.in
+@@ -2,7 +2,7 @@
+ Description=Wait for network to be configured by ConnMan
+ Requisite=connman.service
+ After=connman.service
+-Before=network-online.target
++#Before=network-online.target
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ 
+-- 
+2.25.1
+
