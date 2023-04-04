@@ -139,12 +139,19 @@ Currently, there are 2 types of build procedure supported in below description:
    ```
 - To build Docker (optional), Codec or Graphics, QT5, add necessary layers:
    ```bash
+   # For Docker
    $ bitbake-layers add-layer ../meta-openembedded/meta-filesystems
    $ bitbake-layers add-layer ../meta-openembedded/meta-networking
    $ bitbake-layers add-layer ../meta-virtualization
+
+   # For Codec
    $ bitbake-layers add-layer ../meta-rz-features/meta-rz-codecs
+
+   # For Graphics
    $ bitbake-layers add-layer ../meta-rz-features/meta-rz-graphics
-   $ bitbake-layers add-layer ../meta-rz-features/meta-qt5
+
+   # For QT5
+   $ bitbake-layers add-layer ../meta-qt5
    ```
 - Build the target file system image using bitbake:
    ```bash
