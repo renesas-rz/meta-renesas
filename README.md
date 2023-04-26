@@ -1,6 +1,6 @@
 # meta-renesas
 
-This is a Yocto build layer(version:dunfell) that provides support for the RZ/G2 Group of 64bit Arm-based MPUs and RZ/Five 64bit RISC-V based MPU from Renesas Electronics.
+This is a Yocto build layer(version:dunfell) that provides support for the RZ/G1 Group of 64bit Arm-based MPUs, RZ/G2 Group of 64bit Arm-based MPUs and RZ/Five 64bit RISC-V based MPU from Renesas Electronics.
 Currently the following boards and MPUs are supported:
 
 - Board: EK874 / MPU: R8A774C0 (RZ/G2E)
@@ -19,6 +19,11 @@ Currently the following boards and MPUs are supported:
 - Board: Shimafuji Electric RZV2MA Evaluation Board Kit / MPU: R9A09G055MA3GBG (RZ/V2MA)
 - Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
 - Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
+- Board: iWave RZ/G1H-PF Qseven Development Platform R2.1 / MPU: R8A7742 (RZ/G1H)
+- Board: iWave RZ/G1M-PF Qseven Development Platform R2.0 / MPU: R8A7743 (RZ/G1M)
+- Board: iWave RZ/G1N-PF Qseven Development Platform R3.4 / MPU: R8A7744 (RZ/G1N)
+- Board: iWave RZ/G1E-PF SODIMM Development Platform R3.1 / MPU: R8A7745 (RZ/G1E)
+- Board: iWave RZ/G1C-PF Pi SBC Development Platform R2.0 / MPU: R8A77470 (RZ/G1C)
 
 ## Patches
 
@@ -76,6 +81,16 @@ Please choose correct packages that matches with your MPU.
 Graphic drivers are required for Wayland. Multimedia drivers are optional.
 After downloading the proprietary package, please decompress them then put meta-rz-features folder at $WORK.
 
+For RZ/G1 graphic drivers, after downloading the proprietary packages, please put the files on $WORK/proprietary then run copy scripts as below:
+
+```bash
+    export PKGS_DIR=$WORK/proprietary
+    cd $WORK/meta-renesas/mera-rzg1
+    ./copy_mm_software_lcb.sh $PKGS_DIR
+    ./copy_gfx_software_<MPU>.sh $PKGS_DIR
+    unset PKGS_DIR
+```
+
 Below is the combination of Codec/Graphics library with BSP released versions:
 
 **1. RZ/G2{H,M,N,E}:**
@@ -94,6 +109,12 @@ Below is the combination of Codec/Graphics library with BSP released versions:
 |3.0.2|1.0.1|1.4|
 |3.0.3|1.1.0|1.0.5(\*1)|
 |3.0.4|1.1.0|1.1.0(\*1)|
+
+**3. RZ/G1{C,E,H,M,N}:**
+
+|BSP Version|Codec Version|Graphics Version|
+|:---------:|:-----------:|:--------------:|
+|3.0.4|1.0|1.0|
 
 (\*1) Please note that the naming rule of version is changed from the release.
 v1.0.5 is newer version of v1.4.
@@ -189,6 +210,11 @@ Currently, there are 2 types of build procedure supported in below description:
     $ cp $WORK/meta-renesas/docs/template/conf/<board>/*.conf ./conf/
     ```
 \<board\>: can be selected in any platforms:
+* RZ/G1C:  iwg23s
+* RZ/G1E:  iwg22m
+* RZ/G1H:  iwg21m
+* RZ/G1M:  iwg20m-g1m
+* RZ/G1N:  iwg20m-g1n
 * RZ/G2H:  hihope-rzg2h
 * RZ/G2M:  hihope-rzg2m
 * RZ/G2N:  hihope-rzg2n
