@@ -1,0 +1,213 @@
+From d9da57548ae1681f4ae568e7bfc8dbc1119a9a55 Mon Sep 17 00:00:00 2001
+From: Tai Huynh <tai.huynh.cp@renesas.com>
+Date: Thu, 2 Feb 2023 14:17:19 +0700
+Subject: [PATCH] add-makefile-to-build-with-sdk
+
+Signed-off-by: Tai Huynh <tai.huynh.cp@renesas.com>
+---
+ makefile | 172 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ stdint.h |  13 +++++
+ 2 files changed, 185 insertions(+)
+ create mode 100644 makefile
+ create mode 100644 stdint.h
+
+diff --git a/makefile b/makefile
+new file mode 100644
+index 0000000..67c155b
+--- /dev/null
++++ b/makefile
+@@ -0,0 +1,172 @@
++# DISCLAIMER
++# This software is supplied by Renesas Electronics Corporation and is only
++# intended for use with Renesas products. No other uses are authorized. This
++# software is owned by Renesas Electronics Corporation and is protected under
++# all applicable laws, including copyright laws.
++# THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++# THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++# LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++# AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++# TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++# ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++# FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++# ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++# BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++# Renesas reserves the right, without notice, to make changes to this software
++# and to discontinue the availability of this software. By using this software,
++# you agree to the additional terms and conditions found by accessing the
++# following link:
++# http://www.renesas.com/disclaimer
++# Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.#
++#
++
++#/* Select BOARD("RZV2M" )**************
++ifeq ("$(BOARD)", "")
++BOARD = RZV2M
++endif
++
++#CPU
++CPU     = -march=armv8-a
++AArch   = 64
++THUMB   = 
++AS_NEON = 
++CC_NEON = -mgeneral-regs-only
++ALIGN   = -mstrict-align
++AArch32_64  = AArch64
++BOOTDIR     = AArch64_boot
++OUTPUT_DIR  = AArch64_output
++OBJECT_DIR  = AArch64_obj
++CROSS_COMPILE ?= aarch64-poky-linux-
++
++BOOT_DEF    = Writer
++FILE_NAME   = $(OUTPUT_DIR)/AArch$(AArch)_RZV2M_Flash_writer
++
++MEMORY_DEF = memory_writer.def
++CFLAGS += -DEMMC=1
++
++LIBS        = -L$(subst libc.a, ,$(shell $(CC) -print-file-name=libc.a 2> /dev/null)) -lc
++LIBS        += -L$(subst libgcc.a, ,$(shell $(CC) -print-libgcc-file-name 2> /dev/null)) -lgcc
++
++INCLUDE_DIR = include
++TOOL_DEF = "REWRITE_TOOL"
++
++OUTPUT_FILE = $(FILE_NAME).axf
++
++#Object file
++OBJ_FILE_BOOT =					\
++	$(OBJECT_DIR)/boot_mon.o	\
++	$(OBJECT_DIR)/vectors.o		\
++	$(OBJECT_DIR)/stack.o
++
++SRC_FILE :=					\
++	main.c					\
++	devdrv.c				\
++	init_scif.c				\
++	scifdrv.c				\
++	common.c				\
++	dgtable.c				\
++	Message.c				\
++	ramckmdl.c				\
++	rdk_cmn_cpg.c			\
++	rdk_cmn_pmc.c			\
++	rdk_common.c			\
++	rdk_intc.c				\
++	rdk_pfc.c				\
++	HardwareSetup.c			\
++	dg_emmc_config.c		\
++	dg_emmc_access.c		\
++	emmc_cmd.c				\
++	emmc_init.c				\
++	emmc_interrupt.c		\
++	emmc_mount.c			\
++	emmc_write.c			\
++	emmc_erase.c			\
++	emmc_utility.c
++
++OBJ_FILE := $(addprefix $(OBJECT_DIR)/,$(patsubst %.c,%.o,$(SRC_FILE)))
++
++#Dependency File
++DEPEND_FILE = $(patsubst %.lib, ,$(OBJ_FILE:%.o=%.d))
++
++###################################################
++#C compiler
++CC = $(CROSS_COMPILE)gcc
++#Assembler
++AS = $(CROSS_COMPILE)as
++#Linker
++LD = $(CROSS_COMPILE)ld
++#Liblary
++AR = $(CROSS_COMPILE)ar
++#Object dump
++OBJDMP = $(CROSS_COMPILE)objdump
++#Object copy
++OBJCOPY = $(CROSS_COMPILE)objcopy
++
++#PYTHON
++EXE_PYTHON = python3
++PY_FILE =  gen_128Kbin/sumzero.py
++
++#clean
++CL = rm -rf
++
++###################################################
++# Suffixes
++.SUFFIXES : .s .c .o
++
++###################################################
++# Command
++
++.PHONY: all
++all: $(OBJECT_DIR) $(OUTPUT_DIR) $(OBJ_FILE_BOOT) $(OBJ_FILE) $(OUTPUT_FILE)
++
++#------------------------------------------
++# Make Directory
++#------------------------------------------
++$(OBJECT_DIR):
++	-mkdir "$(OBJECT_DIR)"
++
++$(OUTPUT_DIR):
++	-mkdir "$(OUTPUT_DIR)"
++
++#------------------------------------------
++# Compile
++#------------------------------------------
++$(OBJECT_DIR)/%.o:$(BOOTDIR)/%.s
++	$(AS)  -g $(CPU) $(AS_NEON) --MD $(patsubst %.o,%.d,$@) -I $(BOOTDIR) -I $(INCLUDE_DIR) $< -o $@ --defsym $(AArch32_64)=0 --defsym $(BOOT_DEF)=0 --defsym $(TOOL_DEF)=0
++
++$(OBJECT_DIR)/%.o:%.c
++	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
++	$(CC) -g -Os $(ALIGN) $(CPU) $(CC_NEON) $(THUMB) -MMD -MP -c -I $(BOOTDIR) -I $(INCLUDE_DIR) $< -o $@ -D$(AArch32_64)=0 -D$(BOOT_DEF)=0 -D$(TOOL_DEF)=0 $(CFLAGS)
++
++#------------------------------------------
++# Linker
++#------------------------------------------
++$(OUTPUT_FILE): $(OBJ_FILE_BOOT) $(OBJ_FILE) $(MEMORY_DEF)
++	$(LD) $(OBJ_FILE_BOOT) $(OBJ_FILE) 	\
++	-T '$(MEMORY_DEF)'			\
++	-o '$(OUTPUT_FILE)'			\
++	-Map '$(FILE_NAME).map' 		\
++	-static					\
++	$(LIBS)
++
++#   Make MOT file
++	$(OBJCOPY) -O srec --srec-forceS3 "$(OUTPUT_FILE)" "$(FILE_NAME).mot"
++
++#   Make Binary file
++	$(OBJCOPY) -O binary "$(OUTPUT_FILE)" "$(FILE_NAME).bin"
++	$(EXE_PYTHON) $(PY_FILE) $(FILE_NAME).bin $(OUTPUT_DIR)/B2_intSW.bin
++
++
++#   Dis assemble
++	$(OBJDMP) -d -S "$(OUTPUT_FILE)" > "$(FILE_NAME)_disasm.txt"
++	
++#	Time Stamp
++	@echo ==========  %date% %time%  ==========
++	@echo ========== !!! Compile Complete !!! ==========
++
++
++.PHONY: clean
++clean:
++	$(CL)  $(OBJECT_DIR)/* $(OUTPUT_DIR)/*
++
++-include $(DEPEND_FILE)
+diff --git a/stdint.h b/stdint.h
+new file mode 100644
+index 0000000..4ed06ff
+--- /dev/null
++++ b/stdint.h
+@@ -0,0 +1,13 @@
++#ifndef _GCC_WRAP_STDINT_H
++#if __STDC_HOSTED__
++# if defined __cplusplus && __cplusplus >= 201103L
++#  undef __STDC_LIMIT_MACROS
++#  define __STDC_LIMIT_MACROS
++#  undef __STDC_CONSTANT_MACROS
++#  define __STDC_CONSTANT_MACROS
++# endif
++# include "stdint-gcc.h"
++#endif
++#define _GCC_WRAP_STDINT_H
++#endif
++
+-- 
+2.17.1
+
