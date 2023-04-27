@@ -1,0 +1,25 @@
+From 878c85a5ea2431e5d948c9dc189f967e8be64f25 Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Wed, 16 Aug 2023 17:22:54 +0700
+Subject: [PATCH] rzg1: iwg23s: Update BSP_VERSION to Linux5.10
+
+---
+ board/renesas/iwg23s_Pi/iwg23s_Pi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/board/renesas/iwg23s_Pi/iwg23s_Pi.c b/board/renesas/iwg23s_Pi/iwg23s_Pi.c
+index 4bb6ac5fb1..b00214dea1 100644
+--- a/board/renesas/iwg23s_Pi/iwg23s_Pi.c
++++ b/board/renesas/iwg23s_Pi/iwg23s_Pi.c
+@@ -40,7 +40,7 @@
+ #include <spi_flash.h>
+ #include <micrel.h>
+ 
+-#define BSP_VERSION                             "iW-EMEWQ-SC-01-Linux4.4"
++#define BSP_VERSION                             "iW-EMEWQ-SC-01-Linux5.10"
+ #define SOM_VERSION                             "iW-PRFCC-AP-01"
+ 
+ u8 rst_cause = 0;
+-- 
+2.25.1
+

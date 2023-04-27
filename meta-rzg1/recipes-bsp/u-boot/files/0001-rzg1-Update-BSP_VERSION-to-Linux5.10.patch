@@ -1,0 +1,53 @@
+From 114a3f0ed2eed6a061626a2920190f8599d17f20 Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Wed, 16 Aug 2023 17:20:29 +0700
+Subject: [PATCH] rzg1: Update BSP_VERSION to Linux5.10
+
+---
+ board/renesas/iwg20m_q7/iwg20m_q7.c | 2 +-
+ board/renesas/iwg21m_q7/iwg21m_q7.c | 2 +-
+ board/renesas/iwg22m_sm/iwg22m_sm.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/board/renesas/iwg20m_q7/iwg20m_q7.c b/board/renesas/iwg20m_q7/iwg20m_q7.c
+index 55d3a3408b..1f6ba01673 100644
+--- a/board/renesas/iwg20m_q7/iwg20m_q7.c
++++ b/board/renesas/iwg20m_q7/iwg20m_q7.c
+@@ -42,7 +42,7 @@
+ #include <fdt_support.h>
+ #include "iwg20m_q7.h"
+ 
+-#define BSP_VERSION     "iW-EMEWQ-SC-01Linux4.4"
++#define BSP_VERSION     "iW-EMEWQ-SC-01Linux5.10"
+ #define   MODEMR        0xE6160060
+ static int som_revision;
+ 
+diff --git a/board/renesas/iwg21m_q7/iwg21m_q7.c b/board/renesas/iwg21m_q7/iwg21m_q7.c
+index 2c94802422..a1fb418b4d 100644
+--- a/board/renesas/iwg21m_q7/iwg21m_q7.c
++++ b/board/renesas/iwg21m_q7/iwg21m_q7.c
+@@ -39,7 +39,7 @@
+ #include <libfdt.h>
+ #include <fdt_support.h>
+ 
+-#define BSP_VERSION                             "iW-EMEWQ-SC-01-Linux4.4"
++#define BSP_VERSION                             "iW-EMEWQ-SC-01-Linux5.10"
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+diff --git a/board/renesas/iwg22m_sm/iwg22m_sm.c b/board/renesas/iwg22m_sm/iwg22m_sm.c
+index 3803318962..e04cbce919 100644
+--- a/board/renesas/iwg22m_sm/iwg22m_sm.c
++++ b/board/renesas/iwg22m_sm/iwg22m_sm.c
+@@ -39,7 +39,7 @@
+ #include <micrel.h>
+ #include <miiphy.h>
+ 
+-#define BSP_VERSION				"iW-EMEWQ-SC-01-Linux4.4"
++#define BSP_VERSION				"iW-EMEWQ-SC-01-Linux5.10"
+ #define SOM_VERSION				"iW-PREZZ-AP-01"
+ u8 rst_cause = 0;
+ 
+-- 
+2.25.1
+

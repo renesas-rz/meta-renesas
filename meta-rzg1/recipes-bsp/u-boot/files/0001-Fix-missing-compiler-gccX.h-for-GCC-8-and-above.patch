@@ -1,0 +1,28 @@
+From b5893cc35a1aee2e10a603293a6612349c5f9492 Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Mon, 29 May 2023 11:13:13 +0700
+Subject: [PATCH] Fix missing compiler-gccX.h for GCC 8 and above
+
+---
+ include/linux/compiler-gcc.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/compiler-gcc.h b/include/linux/compiler-gcc.h
+index ad6627787c..d82f0a457b 100644
+--- a/include/linux/compiler-gcc.h
++++ b/include/linux/compiler-gcc.h
+@@ -85,4 +85,9 @@
+ #define __gcc_header(x) #x
+ #define _gcc_header(x) __gcc_header(linux/compiler-gcc##x.h)
+ #define gcc_header(x) _gcc_header(x)
+-#include gcc_header(__GNUC__)
++
++#if __GNUC__ >= 8
++#   include "linux/compiler.h"
++#else
++#   include gcc_header(__GNUC__)
++#endif
+\ No newline at end of file
+-- 
+2.25.1
+
