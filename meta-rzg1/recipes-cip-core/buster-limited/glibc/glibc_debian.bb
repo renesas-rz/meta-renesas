@@ -37,7 +37,6 @@ SRC_URI += " \
            file://0010-eglibc-run-libm-err-tab.pl-with-specific-dirs-in-S.patch \
            file://0011-__ieee754_sqrt-f-are-now-inline-functions-and-call-o.patch \
            file://0012-sysdeps-gnu-configure.ac-handle-correctly-libc_cv_ro.patch \
-           file://0013-Add-unused-attribute.patch \
            file://0014-yes-within-the-path-sets-wrong-config-variables.patch \
            file://0015-timezone-re-written-tzselect-as-posix-sh.patch \
            file://0016-Remove-bash-dependency-for-nscd-init-script.patch \
