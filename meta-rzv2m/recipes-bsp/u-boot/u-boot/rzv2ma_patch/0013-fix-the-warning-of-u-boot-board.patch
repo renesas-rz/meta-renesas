@@ -1,0 +1,73 @@
+diff --git a/board/renesas/rzv2ma-dev/evk_common.c b/board/renesas/rzv2ma-dev/evk_common.c
+index 686a882..ecbd24e 100755
+--- a/board/renesas/rzv2ma-dev/evk_common.c
++++ b/board/renesas/rzv2ma-dev/evk_common.c
+@@ -52,7 +52,6 @@ unsigned long int CMN_GetSysCnt(void)
+  ******************************************************************************/
+ unsigned int CMN_GetFreq4SysCnt(void)
+ {
+-	unsigned int g_syscnt_base = SYSCNT_BASE_ADDRESS;
+     return SYSCNT_FREQUENCY;
+ }
+ 
+diff --git a/board/renesas/rzv2ma-dev/evk_common.h b/board/renesas/rzv2ma-dev/evk_common.h
+index 9d4ba73..5ba8f8c 100755
+--- a/board/renesas/rzv2ma-dev/evk_common.h
++++ b/board/renesas/rzv2ma-dev/evk_common.h
+@@ -62,7 +62,7 @@ unsigned int CMN_GetFreq4SysCnt(void);
+ static inline unsigned int CMN_REG_Read32(unsigned int addr)
+ {
+     /** pointer is (unsigned int *) */
+-    return *((volatile unsigned int *)addr);
++    return *((volatile unsigned int *)((unsigned long)addr));
+ }
+ 
+ /*******************************************************************************
+@@ -79,7 +79,7 @@ static inline unsigned int CMN_REG_Read32(unsigned int addr)
+ static inline void CMN_REG_Write32(unsigned int addr, unsigned int value)
+ {
+     /** sizeof(unsigned int) == sizeof(unsigned int *) */
+-    *((volatile unsigned int *)addr) = value;
++    *((volatile unsigned int *)((unsigned long)addr)) = value;
+ }
+ 
+ /*******************************************************************************
+@@ -94,7 +94,7 @@ static inline void CMN_REG_Write32(unsigned int addr, unsigned int value)
+ static inline unsigned long int CMN_REG_Read64(unsigned int addr)
+ {
+     /** sizeof(unsigned int) == sizeof(unsigned long int *) */
+-    return *((volatile unsigned long int *)addr);
++    return *((volatile unsigned long int *)((unsigned long)addr));
+ }
+ 
+ /*******************************************************************************
+@@ -111,7 +111,7 @@ static inline unsigned long int CMN_REG_Read64(unsigned int addr)
+ static inline void CMN_REG_Write64(unsigned int addr, unsigned long int value)
+ {
+     /** sizeof(unsigned int) == sizeof(unsigned long int *) */
+-    *((volatile unsigned long int *)addr) = value;
++    *((volatile unsigned long int *)((unsigned long)addr)) = value;
+ }
+ 
+ /*******************************************************************************
+diff --git a/board/renesas/rzv2ma-dev/rzv2ma-dev.c b/board/renesas/rzv2ma-dev/rzv2ma-dev.c
+index 6aaf3c5..1dd5ced 100755
+--- a/board/renesas/rzv2ma-dev/rzv2ma-dev.c
++++ b/board/renesas/rzv2ma-dev/rzv2ma-dev.c
+@@ -466,7 +466,6 @@ static void icb_init(void)
+ 
+ static void evk_cpg_init(void)
+ {
+-	int t;
+ 	do
+ 	{	
+ 		/**********************************/
+@@ -549,7 +548,7 @@ void s_init(void)
+ 	if(3 == current_el()){
+ 
+ 		armv8_switch_to_el2((u64)NULL, 0, 0, 0,
+-							_start,
++							(u64)_start,
+ 							ES_TO_AARCH64);
+ 	}
+ 	

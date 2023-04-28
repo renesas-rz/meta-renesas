@@ -1,0 +1,33 @@
+From cdde1b194d148bb9ab65d360939d292b601d6c69 Mon Sep 17 00:00:00 2001
+From: Tai Huynh <tai.huynh.cp@renesas.com>
+Date: Wed, 18 May 2022 10:30:08 +0700
+Subject: [PATCH] -update-memory-map
+
+Signed-off-by: Tai Huynh <tai.huynh.cp@renesas.com>
+---
+ arch/arm/dts/r9a09g011gbg-rzv2m.dts | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/dts/r9a09g011gbg-rzv2m.dts b/arch/arm/dts/r9a09g011gbg-rzv2m.dts
+index ba645fa595..2eda5dd7af 100644
+--- a/arch/arm/dts/r9a09g011gbg-rzv2m.dts
++++ b/arch/arm/dts/r9a09g011gbg-rzv2m.dts
+@@ -21,10 +21,14 @@
+ 		bootargs = "ignore_loglevel";
+ 	};
+ 
+-	memory@48000000 {
++	memory@0 {
+ 		device_type = "memory";
+ 		reg = <0x0 0x00000000 0x0 0x80000000>;
+ 	};
++	memory@180000000 {
++                device_type = "memory";
++                reg = <0x1 0x80000000 0x0 0x80000000>;
++	};
+ 
+ 	reg_3p3v: regulator1 {
+ 		compatible = "regulator-fixed";
+-- 
+2.25.1
+

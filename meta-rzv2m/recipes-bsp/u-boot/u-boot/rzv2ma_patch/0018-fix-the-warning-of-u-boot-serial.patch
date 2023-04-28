@@ -1,0 +1,58 @@
+diff --git a/drivers/serial/serial_rzv2m.c b/drivers/serial/serial_rzv2m.c
+index 5efd060..539c4ae 100755
+--- a/drivers/serial/serial_rzv2m.c
++++ b/drivers/serial/serial_rzv2m.c
+@@ -27,14 +27,14 @@
+ 
+ #include <common.h>
+ #include <asm/io.h>
++#include <linux/delay.h>
+ #include "serial.h"
+ 
+ #include "serial_rzv2m.h"
+-DECLARE_GLOBAL_DATA_PTR;
+-
+ #include <init.h>
+ 
+ /*-----------------------------------------------------------*/
++DECLARE_GLOBAL_DATA_PTR;
+ 
+ struct uart_port *port;
+ 
+@@ -79,7 +79,6 @@ static void rzv2m_serial_init_generic(struct uart_port *port)
+ 
+ static int rzv2m_serial_init(void)
+ {
+-	unsigned int quot;
+ 	int ret = 0;
+ 
+ 	port = &rzv2m_port;
+@@ -108,7 +107,6 @@ static void rzv2m_serial_setbrg_generic(struct uart_port *port, unsigned int bau
+ 
+ static void rzv2m_serial_setbrg(void)
+ {
+-	DECLARE_GLOBAL_DATA_PTR;
+ 	struct uart_port *port = &rzv2m_port;
+ 
+ 	rzv2m_serial_setbrg_generic(port,gd->baudrate);
+diff --git a/drivers/serial/serial_rzv2m.h b/drivers/serial/serial_rzv2m.h
+index 97f51de..524f3df 100755
+--- a/drivers/serial/serial_rzv2m.h
++++ b/drivers/serial/serial_rzv2m.h
+@@ -48,6 +48,16 @@ struct uart_port {
+ 	unsigned long	mapbase;	/* for ioremap */
+ };
+ 
++/* To redefine the register offset for RZ/V2M, the macros already defined are cleared by "UNDEF". */
++#undef UART_FCR
++#undef UART_LCR
++#undef UART_MCR
++#undef UART_LSR
++#undef UART_MSR
++#undef UART_SCR
++#undef UART_DLL
++#undef UART_DLM
++
+ #define UART_FCR	(0x03)	/* Out: FIFO Control Register */
+ #define UART_LCR	(0x04)	/* Out: Line Control Register */
+ 

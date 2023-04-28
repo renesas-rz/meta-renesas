@@ -1,0 +1,63 @@
+From a7a2219e2440f30519eb4e98e7a663d12abfd624 Mon Sep 17 00:00:00 2001
+From: Tai Huynh <tai.huynh.cp@renesas.com>
+Date: Wed, 18 May 2022 10:15:31 +0700
+Subject: [PATCH] add-bank-settings
+
+Signed-off-by: Tai Huynh <tai.huynh.cp@renesas.com>
+---
+ board/renesas/rzv2m-dev/rdk_sys.h   | 2 ++
+ board/renesas/rzv2m-dev/rzv2m-dev.c | 4 ----
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/board/renesas/rzv2m-dev/rdk_sys.h b/board/renesas/rzv2m-dev/rdk_sys.h
+index 1189f1f519..974fae8f30 100644
+--- a/board/renesas/rzv2m-dev/rdk_sys.h
++++ b/board/renesas/rzv2m-dev/rdk_sys.h
+@@ -30,6 +30,7 @@
+ 
+ #define SYS_BASE_ADDRESS            (0xA3F03000)
+ 
++
+ #define SYS_PERI0_BANK              (0x0030)
+ #define SYS_PERI1_BANK              (0x0034)
+ #define SYS_DRP_BANK                (0x0038)
+@@ -51,6 +52,7 @@
+ #define SYS_SRAM_RS2                (0x0194)
+ #define SYS_SRAM_RS3                (0x0198)
+ 
++
+ #define BA00                            BIT(0)
+ #define BA01                            BIT(1)
+ #define BA02                            BIT(2)
+diff --git a/board/renesas/rzv2m-dev/rzv2m-dev.c b/board/renesas/rzv2m-dev/rzv2m-dev.c
+index a372d26710..66c6c0dd33 100644
+--- a/board/renesas/rzv2m-dev/rzv2m-dev.c
++++ b/board/renesas/rzv2m-dev/rzv2m-dev.c
+@@ -33,7 +33,6 @@
+ #include "rdk_psc.h"
+ #include <init.h>
+ 
+-
+ /*
+        TARGET_BANK0_UNIT_LINUX settings as follows:
+                BA_WE00 | BA00  //EMM
+@@ -65,8 +64,6 @@
+                                                                        BA_WE06 | BA06)
+ 
+ 
+-
+-
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+ static void rdk_pfc_init(void)
+@@ -466,7 +463,6 @@ void reset_cpu(ulong addr)
+ }
+ 
+ 
+-
+ void board_cleanup_before_linux(void)
+ {
+        //PERI0 BANK SETTING
+-- 
+2.25.1
+

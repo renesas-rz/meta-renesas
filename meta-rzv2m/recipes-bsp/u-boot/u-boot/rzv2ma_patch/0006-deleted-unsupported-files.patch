@@ -1,0 +1,4460 @@
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 9530924..511e785 100755
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -923,7 +923,7 @@ config ARCH_QEMU
+ config ARCH_RMOBILE
+ 	bool "Renesas ARM SoCs"
+ 	select DM
+-	select DM_SERIAL if !TARGET_RZV2M && !TARGET_RZV2MA
++	select DM_SERIAL if !TARGET_RZV2MA
+ 	select GPIO_EXTRA_HEADER
+ 	imply BOARD_EARLY_INIT_F
+ 	imply CMD_DM
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index fa8212e..a8e2599 100755
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -925,7 +925,6 @@ dtb-$(CONFIG_RCAR_GEN3) += \
+ 	rzg2l-dev.dtb \
+ 	smarc-rzg2l.dtb \
+ 	rzv2l-dev.dtb \
+-	r9a09g011gbg-rzv2m-u-boot.dtb \
+ 	r9a09g055ma3gbg-rzv2ma-u-boot.dtb \
+ 	smarc-rzv2l.dtb \
+ 	rzg2lc-dev.dtb \
+@@ -943,7 +942,6 @@ dtb-$(CONFIG_RZA1) += \
+ 	r7s72100-gr-peach-u-boot.dtb
+ 
+ dtb-$(CONFIG_RCAR_64) += \
+-	r9a09g011gbg-rzv2m-u-boot.dtb \
+ 	r9a09g055ma3gbg-rzv2ma-u-boot.dtb
+ 
+ dtb-$(CONFIG_SOC_KEYSTONE) += keystone-k2hk-evm.dtb \
+diff --git a/arch/arm/dts/r9a09g011gbg-rzv2m-u-boot.dts a/arch/arm/dts/r9a09g011gbg-rzv2m-u-boot.dts
+deleted file mode 100755
+index 5fffec3..0000000
+--- a/arch/arm/dts/r9a09g011gbg-rzv2m-u-boot.dts
++++ /dev/null
+@@ -1,10 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Device Tree Source extras for U-Boot for the RZV2M board
+- *
+- * Copyright (C) 2019 Renesas Electronisc Corporation
+- */
+-
+-#include "r9a09g011gbg-rzv2m.dts"
+-#include "r9a09g011gbg-u-boot.dtsi"
+-
+diff --git a/arch/arm/dts/r9a09g011gbg-rzv2m.dts a/arch/arm/dts/r9a09g011gbg-rzv2m.dts
+deleted file mode 100755
+index 2eda5dd..0000000
+--- a/arch/arm/dts/r9a09g011gbg-rzv2m.dts
++++ /dev/null
+@@ -1,89 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-/*
+- * Device Tree Source for the RZ/V2M RDK platform
+- *
+- * Copyright (C) 2020 Renesas Electronics Corp.
+- */
+-
+-/dts-v1/;
+-#include "r9a09g011gbg.dtsi"
+-#include <dt-bindings/gpio/gpio.h>
+-
+-/ {
+-	model = "RZ/V2M";
+-	compatible = "rdk,rdk", "renesas,r9a09g011gbg";
+-
+-	aliases {
+-		ethernet0 = &avb;
+-	};
+-
+-	chosen {
+-		bootargs = "ignore_loglevel";
+-	};
+-
+-	memory@0 {
+-		device_type = "memory";
+-		reg = <0x0 0x00000000 0x0 0x80000000>;
+-	};
+-	memory@180000000 {
+-                device_type = "memory";
+-                reg = <0x1 0x80000000 0x0 0x80000000>;
+-	};
+-
+-	reg_3p3v: regulator1 {
+-		compatible = "regulator-fixed";
+-		regulator-name = "fixed-3.3V";
+-		regulator-min-microvolt = <3300000>;
+-		regulator-max-microvolt = <3300000>;
+-		regulator-boot-on;
+-		regulator-always-on;
+-	};
+-	
+-	vcc_sdhi0: regulator-vcc-sdhi0 {
+-		compatible = "regulator-fixed";
+-
+-		regulator-name = "SDHI0 Vcc";
+-		regulator-min-microvolt = <3300000>;
+-		regulator-max-microvolt = <3300000>;
+-		regulator-always-on;
+-		regulator-boot-on;
+-	};
+-
+-	vccq_sdhi0: regulator-vccq-sdhi0 {
+-		compatible = "regulator-gpio";
+-
+-		regulator-name = "SDHI0 VccQ";
+-		regulator-min-microvolt = <1800000>;
+-		regulator-max-microvolt = <3300000>;
+-		states = <3300000 1 1800000 0>;
+-	};
+-
+-};
+-
+-&avb {
+-	status = "okay";
+-};
+-
+-&pfc {
+-	avb_pins: avb {
+-		mux {
+-			groups = "avb_link", "avb_mii";
+-			function = "avb";
+-		};
+-	};
+-};
+-
+-&extal_clk {
+-	clock-frequency = <48000000>;
+-};
+-
+-&sdhi0 {
+-	vmmc-supply = <&reg_3p3v>;
+-	vqmmc-supply = <&vccq_sdhi0>;
+-	status = "okay";
+-};
+-
+-&eMM {
+-	status = "okay";
+-};
+-
+diff --git a/arch/arm/dts/r9a09g011gbg-u-boot.dtsi a/arch/arm/dts/r9a09g011gbg-u-boot.dtsi
+deleted file mode 100755
+index ce2e1a0..0000000
+--- a/arch/arm/dts/r9a09g011gbg-u-boot.dtsi
++++ /dev/null
+@@ -1,9 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Device Tree Source extras for U-Boot on RZV2M r9a09g011gbg
+- *
+- * Copyright (C) 2018 Marek Vasut <marek.vasut@gmail.com>
+- */
+-
+-#include "r8a779x-u-boot.dtsi"
+-
+diff --git a/arch/arm/dts/r9a09g011gbg.dtsi a/arch/arm/dts/r9a09g011gbg.dtsi
+deleted file mode 100755
+index 0bdf5e5..0000000
+--- a/arch/arm/dts/r9a09g011gbg.dtsi
++++ /dev/null
+@@ -1,210 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-/*
+- * Device Tree Source for the RZV2M r9a09g011gbg
+- *
+- * Copyright (C) 2019 Renesas Electronics Corp.
+- */
+-
+-#include <dt-bindings/clock/renesas-cpg-mssr.h>
+-#include <dt-bindings/interrupt-controller/arm-gic.h>
+-#include <dt-bindings/power/rzv2m-sysc.h>
+-
+-/ {
+-	compatible = "renesas,r9a09g011gbg";
+-	#address-cells = <2>;
+-	#size-cells = <2>;
+-
+-	cpus {
+-		#address-cells = <1>;
+-		#size-cells = <0>;
+-
+-		a53_0: cpu@0 {
+-			compatible = "arm,cortex-a53", "arm,armv8";
+-			reg = <0x0>;
+-			device_type = "cpu";
+-			power-domains = <&sysc RZV2M_PD_CA53>;
+-			next-level-cache = <&L2_CA53>;
+-			enable-method = "psci";
+-		};
+-
+-		L2_CA53: cache-controller-0 {
+-			compatible = "cache";
+-			power-domains = <&sysc RZV2M_PD_CA53_SCU>;
+-			cache-unified;
+-			cache-level = <2>;
+-		};
+-	};
+-
+-	extal_clk: extal {
+-		compatible = "fixed-clock";
+-		#clock-cells = <0>;
+-		/* This value must be overridden by the board */
+-		clock-frequency = <0>;
+-	};
+-	imclk: imclk@200M {
+-		#clock-cells = <0>;
+-		compatible = "fixed-clock";
+-		clock-frequency = <200000000>;
+-	};
+-	ethclk: ethclk@200M {
+-		#clock-cells = <0>;
+-		compatible = "fixed-clock";
+-		clock-frequency = <200000000>;
+-	};
+-
+-	pmu_a53 {
+-		compatible = "arm,cortex-a53-pmu";
+-		interrupts-extended = <&gic GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>,
+-				      <&gic GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>;
+-		interrupt-affinity = <&a53_0>;
+-	};
+-
+-	psci {
+-		compatible = "arm,psci-1.0", "arm,psci-0.2";
+-		method = "smc";
+-	};
+-
+-	soc: soc {
+-		compatible = "simple-bus";
+-		interrupt-parent = <&gic>;
+-		#address-cells = <2>;
+-		#size-cells = <2>;
+-		ranges;
+-
+-		sdhi0: sd@85000000 {
+-			compatible = "renesas,sdhi-r9a09g011gbg",
+-				     "renesas,rcar-gen3-sdhi";
+-			reg = <0 0x85000000 0 0x2000>;
+-			interrupts = <GIC_SPI 356 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 357 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&imclk>;
+-			max-frequency = <200000000>;
+-			bus-width = <4>;
+-			sd-uhs-sdr50;
+-			sd-uhs-sdr104;
+-			non-removable;
+-			status = "disabled";
+-		};
+-		
+-		eMM: sd@85020000 {
+-			compatible = "renesas,sdhi-r9a09g011gbg",
+-				     "renesas,rcar-gen3-sdhi";
+-			reg = <0 0x85020000 0 0x2000>;
+-			interrupts = <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 355 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&imclk>;
+-			max-frequency = <200000000>;
+-			bus-width = <8>;
+-			non-removable;
+-			status = "disabled";
+-		};
+-
+-		/* PFC_base_addr = 0xB6250000 */
+-		pfc: pin-controller@b6250000 {
+-			compatible = "renesas,pfc-rzv2m";
+-			reg = <0 0xb6250000 0 0x508>;
+-		};
+-
+-                /* CPG_base_addr a3500000 */
+-		cpg: clock-controller@a3500000 {
+-			compatible = "renesas,rzv2m-cpg-mssr";
+-			reg = <0 0xa3500000 0 0x1000>;
+-			clocks = <&extal_clk>;
+-			clock-names = "extal";
+-			#clock-cells = <2>;
+-			#power-domain-cells = <0>;
+-			#reset-cells = <1>;
+-		};
+-
+-		/* PMC_base_addr a3600000 */
+-		sysc: system-controller@a3600000 {
+-			compatible = "renesas,rzv2m-pmc";
+-			reg = <0 0xa3600000 0 0x1000>;
+-			#power-domain-cells = <1>;
+-		};
+-
+-		/* EtherAVB e6800000 */
+-		avb: ethernet@a3300000 {
+-			compatible = "renesas,etheravb-rzv2m";
+-			reg = <0 0xa3300000 0 0x800>;
+-			interrupts = <GIC_SPI 251 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 252 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 253 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 254 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 255 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 256 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 257 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 258 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 259 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 260 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 261 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 262 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 263 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 268 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 269 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 270 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 271 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 272 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 273 IRQ_TYPE_LEVEL_HIGH 
+-				     GIC_SPI 275 IRQ_TYPE_LEVEL_HIGH 
+-				     GIC_SPI 277 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 274 IRQ_TYPE_LEVEL_HIGH 
+-				     GIC_SPI 276 IRQ_TYPE_LEVEL_HIGH 
+-				     GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 279 IRQ_TYPE_LEVEL_HIGH>;
+-			interrupt-names = "ch0", "ch1", "ch2", "ch3",
+-					  "ch4", "ch5", "ch6", "ch7",
+-					  "ch8", "ch9", "ch10", "ch11",
+-					  "ch12", "ch13", "ch14", "ch15",
+-					  "ch16", "ch17", "ch18", "ch19",
+-					  "ch20", "ch21", "ch22", "ch23",
+-					  "ch24";
+-			clocks = <&ethclk>;
+-			renesas,no-ether-link;
+-			phy-handle = <&phy0>;
+-			phy-mode = "gmii";
+-			#address-cells = <1>;
+-			#size-cells = <0>;
+-			status = "disabled";
+-			
+-			phy0: ethernet-phy@0 {
+-				rxc-skew-ps = <1500>;
+-				reg = <0>;
+-				#interrupts = <21 IRQ_TYPE_LEVEL_LOW>;
+-			};
+-		};
+-
+-                /* GIC_GICD_base_addr 82010000 */
+-		gic: interrupt-controller@82010000 {
+-			compatible = "arm,gic-400";
+-			#interrupt-cells = <3>;
+-			#address-cells = <0>;
+-			interrupt-controller;
+-			reg = <0x0 0x82010000 0 0x1000>,
+-			      <0x0 0x82020000 0 0x20000>,
+-			      <0x0 0x82040000 0 0x20000>,
+-			      <0x0 0x82060000 0 0x20000>;
+-			interrupts = <GIC_PPI 9
+-					(GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
+-			clocks = <&cpg CPG_MOD 408>;
+-			clock-names = "clk";
+-			power-domains = <&sysc RZV2M_PD_ALWAYS_ON>;
+-			resets = <&cpg 408>;
+-		};
+-
+-		prr: chipid@fff00044 {
+-			compatible = "renesas,prr";
+-			reg = <0 0xfff00044 0 4>;
+-		};
+-	};
+-
+-	timer {
+-		compatible = "arm,armv8-timer";
+-		interrupts-extended = <&gic GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
+-				      <&gic GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
+-				      <&gic GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
+-				      <&gic GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
+-	};
+-};
+diff --git a/arch/arm/mach-rmobile/Kconfig.64 b/arch/arm/mach-rmobile/Kconfig.64
+index 3642a21..72972ed 100755
+--- a/arch/arm/mach-rmobile/Kconfig.64
++++ b/arch/arm/mach-rmobile/Kconfig.64
+@@ -263,9 +263,6 @@ if RCAR_64
+ choice
+        prompt "Select Target SoC"
+ 
+-config R9A09G011GBG
+-       bool "Renesas RZV2M r9a09g011gbg"
+-
+ config R9A09G055MA3GBG
+        bool "Renesas RZV2MA r9a09g055ma3gbg"
+ 
+@@ -276,11 +273,6 @@ choice
+        prompt "Renesus ARM64 (not Gen3) SoCs board select"
+        optional
+ 
+-config TARGET_RZV2M
+-       bool "RZV2M EVK board"
+-       help
+-          Support for Renesas RZV2M platform
+-
+ config TARGET_RZV2MA
+        bool "RZV2MA EVK board"
+        help
+@@ -291,7 +283,6 @@ endchoice
+ config SYS_SOC
+        default "rmobile"
+ 
+-source "board/renesas/rzv2m-dev/Kconfig"
+ source "board/renesas/rzv2ma-dev/Kconfig"
+ 
+ endif
+diff --git a/arch/arm/mach-rmobile/Makefile b/arch/arm/mach-rmobile/Makefile
+index 493d310..a4e1cfb 100755
+--- a/arch/arm/mach-rmobile/Makefile
++++ b/arch/arm/mach-rmobile/Makefile
+@@ -13,7 +13,6 @@ obj-$(CONFIG_SH73A0) += lowlevel_init.o cpu_info-sh73a0.o pfc-sh73a0.o
+ obj-$(CONFIG_R8A7740) += lowlevel_init.o cpu_info-r8a7740.o pfc-r8a7740.o
+ obj-$(CONFIG_RCAR_GEN2) += lowlevel_init_ca15.o cpu_info-rcar.o
+ obj-$(CONFIG_RCAR_GEN3) += lowlevel_init_gen3.o cpu_info-rcar.o memmap-gen3.o
+-obj-$(CONFIG_R9A09G011GBG) += lowlevel_init_gen3.o memmap-r9a09G011.o
+ obj-$(CONFIG_R9A09G055MA3GBG) += lowlevel_init_gen3.o memmap-r9a09g055ma3gbg.o
+ obj-$(CONFIG_RZ_G2) += cpu_info-rzg.o
+ 
+diff --git a/arch/arm/mach-rmobile/include/mach/r9a09g011.h a/arch/arm/mach-rmobile/include/mach/r9a09g011.h
+deleted file mode 100755
+index 6eca994..0000000
+--- a/arch/arm/mach-rmobile/include/mach/r9a09g011.h
++++ /dev/null
+@@ -1,19 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-/*
+-   + * Copyright (C) 2012 Renesas Solutions Corp.
+-   + */
+-
+-#ifndef __ASM_ARCH_R9A09G011_H
+-#define __ASM_ARCH_R9A09G011_H
+-
+-/*
+-   + * R9A09G011 I/O Addresses
+-   + */
+-
+-
+-#ifndef __ASSEMBLY__
+-#include <asm/types.h>
+-
+-#endif
+-
+-#endif /* __ASM_ARCH_R9A09G011_H */
+diff --git a/arch/arm/mach-rmobile/include/mach/rmobile.h b/arch/arm/mach-rmobile/include/mach/rmobile.h
+index ebe50ea..318f3d8 100755
+--- a/arch/arm/mach-rmobile/include/mach/rmobile.h
++++ b/arch/arm/mach-rmobile/include/mach/rmobile.h
+@@ -18,8 +18,6 @@
+ #include <asm/arch/r8a7794.h>
+ #elif defined(CONFIG_RCAR_GEN3)
+ #include <asm/arch/rcar-gen3-base.h>
+-#elif defined(CONFIG_R9A09G011GBG)
+-#include <asm/arch/r9a09g011.h>
+ #elif defined(CONFIG_R9A09G055MA3GBG)
+ #include <asm/arch/r9a09g055ma3gbg.h>
+ #elif defined(CONFIG_R7S72100)
+diff --git a/arch/arm/mach-rmobile/memmap-r9a09G011.c a/arch/arm/mach-rmobile/memmap-r9a09G011.c
+deleted file mode 100755
+index 5d032bf..0000000
+--- a/arch/arm/mach-rmobile/memmap-r9a09G011.c
++++ /dev/null
+@@ -1,58 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0+
+-/*
+- * Renesas RCar Gen3 memory map tables
+- *
+- * Copyright (C) 2017 Marek Vasut <marek.vasut@gmail.com>
+- */
+-
+-#include <common.h>
+-#include <asm/armv8/mmu.h>
+-
+-#define R9A09G011_NR_REGIONS 16
+-
+-static struct mm_region r9a09G011_mem_map[R9A09G011_NR_REGIONS] = {
+-	{
+-		/* DDR 1-S */
+-		.virt = 0x0UL,
+-		.phys = 0x0UL,
+-		.size = 0x80000000UL,
+-		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
+-			 PTE_BLOCK_INNER_SHARE
+-	}, {
+-		/* Slave */
+-		.virt = 0x80000000UL,
+-		.phys = 0x80000000UL,
+-		.size = 0x40000000UL,
+-		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+-			 PTE_BLOCK_NON_SHARE |
+-			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+-	}, {
+-		/* PCI */
+-		.virt = 0xc0000000UL,
+-		.phys = 0xc0000000UL,
+-		.size = 0x40000000UL,
+-		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+-			 PTE_BLOCK_NON_SHARE |
+-			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+-	}, {
+-		/* DDR 1-M */
+-		.virt = 0x100000000UL,
+-		.phys = 0x100000000UL,
+-		.size = 0x80000000UL,
+-		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
+-			 PTE_BLOCK_INNER_SHARE
+-	}, {
+-		/* DDR 2 */
+-		.virt = 0x180000000UL,
+-		.phys = 0x180000000UL,
+-		.size = 0x180000000UL,
+-		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
+-			 PTE_BLOCK_NON_SHARE
+-	}, {
+-		/* List terminator */
+-		0,
+-	}
+-};
+-
+-struct mm_region *mem_map = r9a09G011_mem_map;
+-
+diff --git a/board/renesas/rzv2m-dev/Kconfig a/board/renesas/rzv2m-dev/Kconfig
+deleted file mode 100755
+index 5cc6460..0000000
+--- a/board/renesas/rzv2m-dev/Kconfig
++++ /dev/null
+@@ -1,15 +0,0 @@
+-if TARGET_RZV2M
+-
+-config SYS_SOC
+-	default "rmobile"
+-
+-config SYS_BOARD
+-	default "rzv2m-dev"
+-
+-config SYS_VENDOR
+-	default "renesas"
+-
+-config SYS_CONFIG_NAME
+-	default "rzv2m"
+-
+-endif
+diff --git a/board/renesas/rzv2m-dev/MAINTAINERS a/board/renesas/rzv2m-dev/MAINTAINERS
+deleted file mode 100755
+index 02fae3d..0000000
+--- a/board/renesas/rzv2m-dev/MAINTAINERS
++++ /dev/null
+@@ -1,6 +0,0 @@
+-RZV2M BOARD
+-M:	Naoya Kawakami <naoya.kawakami+renesas@gmail.com>
+-S:	Maintained
+-F:	board/renesas/rzv2m-dev/
+-F:	include/configs/rzv2m.h
+-F:	configs/r9a09g011gbg_rzv2m_defconfig
+diff --git a/board/renesas/rzv2m-dev/Makefile a/board/renesas/rzv2m-dev/Makefile
+deleted file mode 100755
+index 9b3de13..0000000
+--- a/board/renesas/rzv2m-dev/Makefile
++++ /dev/null
+@@ -1,9 +0,0 @@
+-#
+-# board/renesas/rzv2m-dev/Makefile
+-#
+-# Copyright (C) 2019 Renesas Electronics Corporation
+-#
+-# SPDX-License-Identifier: GPL-2.0+
+-#
+-
+-obj-y	:= rzv2m-dev.o rdk_pfc.o rdk_cmn_cpg.o rdk_common.o rdk_sys.o rdk_psc.o
+diff --git a/board/renesas/rzv2m-dev/rdk_cmn_cpg.c a/board/renesas/rzv2m-dev/rdk_cmn_cpg.c
+deleted file mode 100755
+index bfc3c18..0000000
+--- a/board/renesas/rzv2m-dev/rdk_cmn_cpg.c
++++ /dev/null
+@@ -1,472 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_cmn_cpg.c
+- * Description  : operation functions for CPG
+- ******************************************************************************/
+-
+-#include <stdint.h>
+-#include <stdbool.h>
+-
+-#include "rdk_common.h"
+-#include "rdk_cmn_cpg.h"
+-
+-#define CPG_NO_REGISTER_OFFSET          (0xFFFFFFFF)
+-#define CPG_TIMEOUT_UNIT_IS_US          (10)
+-
+-typedef struct
+-{
+-    unsigned int pll_used_cnt[CPG_PLL_MAX+1];
+-} st_cpg_priv_t;
+-
+-static st_cpg_priv_t gl_cpg_priv =
+-{
+-    .pll_used_cnt = { 0 },
+-};
+-
+-static st_cpg_pll_param_t pll1_param =
+-{
+-    .ssc.word    = 0x00000004,
+-    .clk.word[0] = 0x000014C2,
+-    .clk.word[1] = 0x00150801
+-};
+-
+-static st_cpg_pll_param_t pll2_param =
+-{
+-    .ssc.word    = 0x00000004,
+-    .clk.word[0] = 0x00001903,
+-    .clk.word[1] = 0x000E0E00
+-};
+-
+-/** 600MHz w/o SSCG */
+-static st_cpg_pll_param_t pll3_param =
+-{
+-    .ssc.word    = 0x00000000,
+-    .clk.word[0] = 0x00001903,
+-    .clk.word[1] = 0x00100800
+-};
+-
+-static st_cpg_pll_param_t pll4_param =
+-{
+-    .ssc.word    = 0x00000000,
+-    .clk.word[0] = 0x00001802,
+-    .clk.word[1] = 0x00000002
+-};
+-
+-static st_cpg_pll_param_t pll6_param =
+-{
+-    .ssc.word    = 0x00000000,
+-    .clk.word[0] = 0x00001A42,
+-    .clk.word[1] = 0x00150A01
+-};
+-
+-static st_cpg_pll_param_t pll7_param =
+-{
+-    .ssc.word    = 0x00000004,
+-    .clk.word[0] = 0x000018C2,
+-    .clk.word[1] = 0x00150A01
+-};
+-
+-static st_cpg_pll_param_t * const gl_priv_pll_param_tbl[CPG_PLL_MAX+1] =
+-{
+-    NULL,
+-    &pll1_param,
+-    &pll2_param,
+-    &pll3_param,
+-    &pll4_param,
+-    NULL,
+-    &pll6_param,
+-    &pll7_param
+-};
+-
+-static const unsigned int gl_priv_pll_top_offset_table[CPG_PLL_MAX+1] =
+-{
+-    CPG_NO_REGISTER_OFFSET,
+-    CPG_PLL1_STBY,
+-    CPG_PLL2_STBY,
+-    CPG_PLL3_STBY,
+-    CPG_PLL4_STBY,
+-    CPG_NO_REGISTER_OFFSET,
+-    CPG_PLL6_STBY,
+-    CPG_PLL7_STBY,
+-};
+-
+-#define CPG_REG_WEN_SHIFT           (16)
+-#define CPG_SET_DATA_MASK           (0x0000FFFFUL)
+-
+-#define CPG_PLLN_STBY_OFFSET        (0x00)
+-#define CPG_PLLN_CLK1_OFFSET        (0x04)
+-#define CPG_PLLN_CLK2_OFFSET        (0x08)
+-#define CPG_PLLN_MON_OFFSET         (0x0C)
+-
+-#define CPG_PLL_CCTRL_REG_EXIT_FLAGS    (0x0000009E)
+-
+-#define CPG_TIMEOUT_UNIT_IN_US      (10)
+-#define CPG_PLL_TURN_MODE_TIMEOUT   (500000)
+-#define CPG_CLK_FINISH_CHANGE_TIMEOUT   (500000)
+-#define CPG_PLL_LOCKED  (CPG_PLL_MON_PLL_LOCK)
+-
+-
+-#define CPG_WAIT_EVENT_PLL(m_pll, m_toc, m_err_code, m_condition, m_rslt)   \
+-    {   \
+-        unsigned int count = (m_toc);   \
+-        unsigned int data;  \
+-        while (true) {  \
+-            CPG_GetStatusPLL((m_pll), &data);   \
+-            if ((m_condition) == (data & CPG_PLL_LOCKED)) { \
+-                (m_rslt) = CMN_SUCCESS; \
+-                break;  \
+-            }   \
+-            if ((0 == (m_toc)) || (0 < count)) {    \
+-                CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);  \
+-                count--;    \
+-            } else {    \
+-                (m_rslt) = (m_err_code);    \
+-                break;  \
+-            }   \
+-        }   \
+-    }
+-
+-#define CPG_WAIT_EVENT(m_toc, m_err_code, m_condition, m_rslt)  \
+-    {   \
+-        unsigned int count = (m_toc)/CPG_TIMEOUT_UNIT_IN_US;    \
+-        while (true) {  \
+-            if ((m_condition)) {    \
+-                (m_rslt) = CMN_SUCCESS; \
+-                break;  \
+-            }   \
+-            if ((0 == (m_toc)) || (0 < count)) {    \
+-                CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);  \
+-                count--;    \
+-            } else {    \
+-                (m_rslt) = (m_err_code);    \
+-                break;  \
+-            }   \
+-        }   \
+-    }
+-
+-
+-unsigned int CPG_ReadReg(unsigned int offset)
+-{
+-    return (CMN_REG_Read32(CPG_BASE_ADDRESS + offset));
+-}
+-
+-void CPG_WriteReg(unsigned int offset, unsigned int value)
+-{
+-    CMN_REG_Write32((CPG_BASE_ADDRESS + offset), value);
+-}
+-
+-
+-int CPG_MoveToActivePLL(e_cpg_pll_num_t pll_num, st_cpg_pll_param_t *p_set_data)
+-{
+-    unsigned int offset;
+-    unsigned int value;
+-
+-    if ((pll_num < CPG_PLL_MIN) || (CPG_PLL_MAX < pll_num))
+-    {
+-        return (CPG_ERROR_NO_REGISTER);
+-    }
+-
+-    offset = gl_priv_pll_top_offset_table[pll_num];
+-    if (CPG_NO_REGISTER_OFFSET == offset)
+-    {
+-        return (CPG_ERROR_NO_REGISTER);
+-    }
+-
+-    value = CPG_ReadReg(offset+CPG_PLLN_MON_OFFSET);
+-    if (0 != (value & CPG_PLL_MON_RESETB))
+-    {
+-        return (CPG_ERROR_PLL_ACTIVE);
+-    }
+-
+-    if (NULL != p_set_data)
+-    {
+-        value = p_set_data->clk.word[0];
+-        CPG_WriteReg(offset+CPG_PLLN_CLK1_OFFSET, value);
+-        value = p_set_data->clk.word[1];
+-        CPG_WriteReg(offset+CPG_PLLN_CLK2_OFFSET, value);
+-        value = p_set_data->ssc.word;
+-    }else
+-    {
+-        value = CPG_ReadReg(offset+CPG_PLLN_STBY_OFFSET);
+-    }
+-
+-    if (4 == pll_num)
+-    {
+-        value = 0x00010001;
+-    }else
+-    {
+-        value |= 0x00150001;
+-        value = 0x00050001;    /* Setting up 1chip sim environment */
+-    }
+-
+-    CPG_WriteReg(offset+CPG_PLLN_STBY_OFFSET, value);
+-
+-    return (CMN_SUCCESS);
+-}
+-
+-int CPG_GetStatusPLL(e_cpg_pll_num_t pll_num, unsigned int *p_data)
+-{
+-    unsigned int offset;
+-    if ((pll_num < CPG_PLL_MIN) || (CPG_PLL_MAX < pll_num))
+-    {
+-        return (CPG_ERROR_NO_REGISTER);
+-    }
+-
+-    offset = gl_priv_pll_top_offset_table[pll_num];
+-    if (CPG_NO_REGISTER_OFFSET == offset)
+-    {
+-        return (CPG_ERROR_NO_REGISTER);
+-    }
+-
+-    if (NULL == p_data)
+-    {
+-        return (CPG_ERROR_NULL_POINTER);
+-    }
+-
+-    offset += CPG_PLLN_MON_OFFSET;
+-
+-    *p_data = CPG_ReadReg(offset);
+-
+-    return (CMN_SUCCESS);
+-}
+-
+-
+-void CPG_SetDifClkFreq(e_cpg_divsel_t target_reg, unsigned short int target, unsigned short int set_value)
+-{
+-    unsigned int offset = CPG_CA53_DDIV;
+-    unsigned int value;
+-
+-    while (true)
+-    {
+-        if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
+-        {
+-            break;
+-        }
+-        CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);
+-    }
+-
+-    offset += (target_reg * sizeof(unsigned int));
+-
+-    value = ((unsigned int)target << CPG_REG_WEN_SHIFT)
+-                | (set_value & CPG_MMCDDI_DDIV_DIVX_SET_MSK);
+-
+-    CPG_WriteReg(offset, value);
+-
+-    while (true)
+-    {
+-        if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
+-        {
+-            break;
+-        }
+-        CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);
+-    }
+-}
+-
+-
+-int CPG_SetClockCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value)
+-{
+-    unsigned int offset = CPG_CLK_ON1;
+-    unsigned int value;
+-
+-    if (reg_num < CPG_CLK_ON_REG_MIN || CPG_CLK_ON_REG_MAX < reg_num)
+-    {
+-        return (CPG_ERROR_NO_REGISTER);
+-    }
+-
+-    offset += ((reg_num - 1) * sizeof(unsigned int));
+-
+-    value = ((unsigned int)target << CPG_REG_WEN_SHIFT)
+-            | (set_value & CPG_SET_DATA_MASK);
+-
+-    CPG_WriteReg(offset, value);
+-
+-    return (CMN_SUCCESS);
+-}
+-
+-
+-int CPG_GetClockCtrl(unsigned char reg_num, unsigned int *p_data)
+-{
+-    unsigned int offset = CPG_CLK_ON1;
+-
+-    if (reg_num < CPG_CLK_ON_REG_MIN || CPG_CLK_ON_REG_MAX < reg_num)
+-    {
+-        return (CPG_ERROR_NO_REGISTER);
+-    }
+-    if (NULL == p_data)
+-    {
+-        return (CPG_ERROR_NULL_POINTER);
+-    }
+-
+-    offset += ((reg_num - 1) * sizeof(unsigned int));
+-
+-    *p_data = CPG_ReadReg(offset);
+-
+-    return (CMN_SUCCESS);
+-}
+-
+-
+-int CPG_SetResetCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value)
+-{
+-    unsigned int offset = CPG_RST1;
+-    unsigned int value;
+-
+-    if (reg_num < CPG_RST_REG_MIN || CPG_RST_REG_MAX < reg_num)
+-    {
+-        return (CPG_ERROR_NO_REGISTER);
+-    }
+-
+-    offset += ((reg_num - 1) * sizeof(unsigned int));
+-
+-    value = ((unsigned int)target << CPG_REG_WEN_SHIFT) | (set_value & CPG_SET_DATA_MASK);
+-
+-    CPG_WriteReg(offset, value);
+-
+-    return (CMN_SUCCESS);
+-}
+-
+-
+-int CPG_SetPDResetCtrl(unsigned short int target, unsigned short int set_value)
+-{
+-    unsigned int offset = CPG_PD_RST;
+-    unsigned int value;
+-
+-    value = ((unsigned int)target << CPG_REG_WEN_SHIFT) | (set_value & CPG_SET_DATA_MASK);
+-
+-    CPG_WriteReg(offset, value);
+-
+-    return (CMN_SUCCESS);
+-}
+-
+-
+-int CPG_WaitResetMon(unsigned int timeout_c, unsigned int msk, unsigned int val)
+-{
+-    int rslt = CMN_ERROR;
+-    unsigned int count;
+-
+-    do
+-    {
+-        if (0 == msk)
+-        {
+-            rslt = CMN_SUCCESS;
+-            break;
+-        }
+-
+-        count = timeout_c;
+-        while (true)
+-        {
+-            if (val == (CPG_ReadReg(CPG_RST_MON) & msk))
+-            {
+-                rslt = CMN_SUCCESS;
+-                break;
+-            }
+-            if ((0 == timeout_c) || (0 < count))
+-            {
+-                CMN_DelayInUS(CPG_TIMEOUT_UNIT_IS_US);
+-                count--;
+-            }else
+-            {
+-                rslt = CPG_ERROR_TURN_RESET_TIMEOUT;
+-                break;
+-            }
+-        }
+-    }
+-    while (0);
+-
+-    return rslt;
+-}
+-
+-
+-int cpg_resumePLL(e_cpg_pll_num_t pll_num)
+-{
+-    int rslt;
+-    unsigned int data;
+-    st_cpg_pll_param_t *p_data = NULL;
+-
+-    do
+-    {
+-        rslt = CPG_GetStatusPLL(pll_num, &data);
+-        if (CMN_SUCCESS != rslt)
+-        {
+-            break;
+-        }
+-        if (0 != (data & CPG_PLL_LOCKED))
+-        {
+-            rslt = CPG_ERROR_PLL_NOT_STANDBY | pll_num;
+-            break;
+-        }
+-
+-        p_data = gl_priv_pll_param_tbl[pll_num];
+-        rslt = CPG_MoveToActivePLL(pll_num, p_data);
+-
+-        if (CMN_SUCCESS != rslt)
+-        {
+-            break;
+-        }
+-
+-        CPG_WAIT_EVENT_PLL(pll_num, CPG_PLL_TURN_MODE_TIMEOUT, CPG_ERROR_PLL_TURN_MODE_TIMEOUT, CPG_PLL_LOCKED, rslt);
+-
+-        if (CMN_SUCCESS != rslt)
+-        {
+-            break;
+-        }
+-            }
+-
+-    while (0);
+-
+-    return rslt;
+-}
+-
+-int CPG_WakeUpPLL(e_cpg_pll_num_t pll_num)
+-{
+-    int rslt = CMN_ERROR;
+-
+-    do
+-    {
+-        if ((pll_num < CPG_PLL_MIN) || (CPG_PLL_MAX < pll_num))
+-        {
+-            rslt = CPG_ERROR_NO_REGISTER;
+-            break;
+-        }
+-
+-        if (0 == gl_cpg_priv.pll_used_cnt[pll_num])
+-        {
+-            rslt = cpg_resumePLL(pll_num);
+-            if (CMN_SUCCESS != rslt)
+-            {
+-                break;
+-            }
+-            gl_cpg_priv.pll_used_cnt[pll_num]++;
+-        }else
+-        {
+-            gl_cpg_priv.pll_used_cnt[pll_num]++;
+-            rslt = CMN_SUCCESS;
+-        }
+-    }
+-    while (0);
+-
+-    return rslt;
+-}
+-
+-
+-/*- End of file -*/
+diff --git a/board/renesas/rzv2m-dev/rdk_cmn_cpg.h a/board/renesas/rzv2m-dev/rdk_cmn_cpg.h
+deleted file mode 100755
+index 72c3244..0000000
+--- a/board/renesas/rzv2m-dev/rdk_cmn_cpg.h
++++ /dev/null
+@@ -1,311 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_cmn_cpg.h
+- * Description  : register and API information for CPG
+- ******************************************************************************/
+-
+-#ifndef RDK_CMN_CPG_H
+-#define RDK_CMN_CPG_H
+-
+-/* CPG */
+-#define CPG_BASE_ADDRESS        (0x0A3500000ULL)
+-
+-/** Registor Offset */
+-#define CPG_PLL1_STBY           (0x0000)
+-#define CPG_PLL1_CLK1           (0x0004)
+-#define CPG_PLL1_CLK2           (0x0008)
+-#define CPG_PLL1_MON            (0x000C)
+-#define CPG_PLL2_STBY           (0x0010)
+-#define CPG_PLL2_CLK1           (0x0014)
+-#define CPG_PLL2_CLK2           (0x0018)
+-#define CPG_PLL2_MON            (0x001C)
+-#define CPG_PLL3_STBY           (0x0020)
+-#define CPG_PLL3_CLK1           (0x0024)
+-#define CPG_PLL3_CLK2           (0x0028)
+-#define CPG_PLL3_MON            (0x002C)
+-#define CPG_PLL6_STBY           (0x0030)
+-#define CPG_PLL6_CLK1           (0x0034)
+-#define CPG_PLL6_CLK2           (0x0038)
+-#define CPG_PLL6_MON            (0x003C)
+-#define CPG_PLL7_STBY           (0x0040)
+-#define CPG_PLL7_CLK1           (0x0044)
+-#define CPG_PLL7_CLK2           (0x0048)
+-#define CPG_PLL7_MON            (0x004C)
+-
+-
+-#define CPG_PLL4_STBY           (0x0100)
+-#define CPG_PLL4_CLK1           (0x0104)
+-#define CPG_PLL4_CLK2           (0x0108)
+-#define CPG_PLL4_MON            (0x010C)
+-
+-
+-#define CPG_PLL1_CCTRL_RST      (0x0180)
+-#define CPG_PLL2_CCTRL_RST      (0x0184)
+-#define CPG_PLL3_CCTRL_RST      (0x0188)
+-#define CPG_PLL4_CCTRL_RST      (0x018C)
+-
+-#define CPG_PLL7_CCTRL_RST      (0x0198)
+-
+-#define CPG_CA53_DDIV           (0x0200)
+-#define CPG_SYS_DDIV            (0x0204)
+-#define CPG_MMCDDI_DDIV         (0x0210)
+-#define CPG_CLK48_DSEL          (0x0214)
+-#define CPG_CLKSTATUS           (0x0224)
+-
+-
+-#define CPG_SDIEMM_SSEL         (0x0300)
+-#define CPG_GMCLK_SDIV          (0x031C)
+-#define CPG_GMCLK_SSEL          (0x0320)
+-#define CPG_URT_RCLK_SDIV       (0x0328)
+-#define CPG_URT_RCLK_SSEL       (0x032C)
+-#define CPG_CSI_RCLK_SSEL       (0x0330)
+-
+-
+-#define CPG_CLK_ON1             (0x0400)
+-#define CPG_CLK_ON2             (0x0404)
+-#define CPG_CLK_ON3             (0x0408)
+-#define CPG_CLK_ON4             (0x040C)
+-#define CPG_CLK_ON5             (0x0410)
+-#define CPG_CLK_ON6             (0x0414)
+-#define CPG_CLK_ON7             (0x0418)
+-#define CPG_CLK_ON8             (0x041C)
+-#define CPG_CLK_ON9             (0x0420)
+-#define CPG_CLK_ON10            (0x0424)
+-#define CPG_CLK_ON11            (0x0428)
+-#define CPG_CLK_ON12            (0x042C)
+-#define CPG_CLK_ON13            (0x0430)
+-#define CPG_CLK_ON14            (0x0434)
+-#define CPG_CLK_ON15            (0x0438)
+-#define CPG_CLK_ON16            (0x043C)
+-#define CPG_CLK_ON17            (0x0440)
+-#define CPG_CLK_ON18            (0x0444)
+-#define CPG_CLK_ON19            (0x0448)
+-#define CPG_CLK_ON20            (0x044C)
+-#define CPG_CLK_ON21            (0x0450)
+-#define CPG_CLK_ON22            (0x0454)
+-#define CPG_CLK_ON23            (0x0458)
+-#define CPG_CLK_ON24            (0x045C)
+-#define CPG_CLK_ON25            (0x0460)
+-#define CPG_CLK_ON26            (0x0464)
+-#define CPG_CLK_ON27            (0x0468)
+-
+-#define CPG_RST_MSK             (0x0504)
+-
+-
+-#define CPG_RST1                (0x0600)
+-#define CPG_RST2                (0x0604)
+-#define CPG_RST3                (0x0608)
+-#define CPG_RST4                (0x060C)
+-#define CPG_RST5                (0x0610)
+-#define CPG_RST6                (0x0614)
+-#define CPG_RST7                (0x0618)
+-#define CPG_RST8                (0x061C)
+-#define CPG_RST9                (0x0620)
+-#define CPG_RST10               (0x0624)
+-#define CPG_RST11               (0x0628)
+-#define CPG_RST12               (0x062C)
+-#define CPG_RST13               (0x0630)
+-#define CPG_RST14               (0x0634)
+-#define CPG_RST15               (0x0638)
+-
+-
+-#define CPG_RST_MON             (0x0680)
+-
+-#define CPG_PD_RST              (0x0800)
+-
+-
+-/** Bit assign */
+-#define CPG_PLL_STBY_RESETB                 (0x00000001)
+-#define CPG_PLL_STBY_WEN_RESETB             (0x00010000)
+-#define CPG_PLL_STBY_WEN_SSE_EN             (0x00040000)
+-#define CPG_PLL_STBY_WEN_SSC_MODE           (0x00100000)
+-
+-#define CPG_PLL_MON_RESETB                  (0x00000001)
+-#define CPG_PLL_MON_PLL_LOCK                (0x00000010)
+-
+-#define CPG_PLL1_CCTRL_RST_P1_0_RST         (0x00000001)
+-#define CPG_PLL1_CCTRL_WEN_RST_P1_0_RST     (0x00010000)
+-
+-#define CPG_CA53_DDIV_DIVA_SET_MIN          (0)
+-#define CPG_CA53_DDIV_WEN_DIVA              (0x00010000)
+-
+-#define CPG_SYS_DDIV_DIVD_SET_SHIFT         (4)
+-#define CPG_SYS_DDIV_DIVD_SET_MIN           (0)
+-#define CPG_SYS_DDIV_DIVE_SET_SHIFT         (8)
+-#define CPG_SYS_DDIV_DIVE_SET_MIN           (0)
+-#define CPG_SYS_DDIV_WEN_DIVB               (0x00010000)
+-#define CPG_SYS_DDIV_WEN_DIVD               (0x00100000)
+-#define CPG_SYS_DDIV_WEN_DIVE               (0x01000000)
+-
+-#define CPG_MMCDDI_DDIV_DIVX_SET_MSK        (0x00000003)
+-#define CPG_MMCDDI_DDIV_DIVX_SET_SHIFT      (0)
+-#define CPG_MMCDDI_DDIV_DIVX_SET_MAX        (2)
+-#define CPG_MMCDDI_DDIV_DIVX_SET_MIN        (0)
+-#define CPG_MMCDDI_DDIV_WEN_DIVX            (0x00010000)
+-
+-#define CPG_CLK48_DSEL_SELD                 (0x00000002)
+-#define CPG_CLK48_DSEL_SELE                 (0x00000004)
+-#define CPG_CLK48_DSEL_WEN_SELD             (0x00020000)
+-#define CPG_CLK48_DSEL_WEN_SELE             (0x00040000)
+-
+-#define CPG_SDIEMM_SSEL_SELSDI              (0x00000001)
+-#define CPG_SDIEMM_SSEL_WEN_SELSDI          (0x00010000)
+-
+-#define CPG_URT_RCLK_SSEL_WEN_SELW0         (0x00010000)
+-
+-#define CPG_CLKSTATUS_DIVA                  (0x00000001)
+-#define CPG_CLKSTATUS_DIVB                  (0x00000002)
+-#define CPG_CLKSTATUS_DIVD                  (0x00000004)
+-#define CPG_CLKSTATUS_DIVE                  (0x00000008)
+-#define CPG_CLKSTATUS_DIVF                  (0x00000010)
+-#define CPG_CLKSTATUS_DIVG                  (0x00000020)
+-#define CPG_CLKSTATUS_DIVNFI                (0x00000040)
+-#define CPG_CLKSTATUS_DIVX                  (0x00000080)
+-#define CPG_CLKSTATUS_DIVH                  (0x00000100)
+-#define CPG_CLKSTATUS_DIVI                  (0x00000200)
+-#define CPG_CLKSTATUS_DIVJ                  (0x00000400)
+-#define CPG_CLKSTATUS_DIVM                  (0x00000800)
+-#define CPG_CLKSTATUS_DIVH2                 (0x00001000)
+-
+-#define CPG_PD_RST_MEM_RSTB                 (0x00000001)
+-#define CPG_PD_RST_WEN_MEM_RSTB             (0x00010000)
+-
+-#define CPG_RST_MON_DMAA                    (0x00000010)
+-#define CPG_RST_MON_SDI0                    (0x00000040)
+-#define CPG_RST_MON_EMM                     (0x00000100)
+-#define CPG_RST_MON_ETH0                    (0x00000800)
+-#define CPG_RST_MON_PWM_0                   (0x00400000)
+-#define CPG_RST_MON_PWM_1                   (0x00800000)
+-#define CPG_RST_MON_CSI_1                   (0x01000000)
+-#define CPG_RST_MON_CSI_2                   (0x02000000)
+-#define CPG_RST_MON_URT                     (0x04000000)
+-#define CPG_PD_RST_RFX_RSTB                 (0x00000010)
+-#define CPG_PD_RST_WEN_RFX_RSTB             (0x00100000)
+-
+-#define CPG_PLL_MIN                         (1)
+-#define CPG_PLL_MAX                         (7)
+-
+-#define CPG_CLK_ON_REG_MIN                  (1)
+-#define CPG_CLK_ON_REG_MAX                  (27)
+-
+-#define CPG_RST_REG_MIN                     (1)
+-#define CPG_RST_REG_MAX                     (15)
+-
+-typedef struct
+-{
+-    union
+-    {
+-        unsigned int        word;
+-        struct
+-        {
+-            unsigned int    :2;
+-            unsigned int    enable:1;
+-            unsigned int    :1;
+-            unsigned int    mode:2;
+-            unsigned int    :26;
+-        }bit;
+-    }ssc;
+-    union
+-    {
+-        unsigned int        word[2];
+-        struct
+-        {
+-            unsigned int    p:6;
+-            unsigned int    m:10;
+-            unsigned int    k:16;
+-            unsigned int    s:3;
+-            unsigned int    :5;
+-            unsigned int    mrr:6;
+-            unsigned int    :2;
+-            unsigned int    mfr:8;
+-            unsigned int    :8;
+-        } bit;
+-    } clk;
+-} st_cpg_pll_param_t;
+-
+-typedef enum
+-{
+-    CPG_ERROR_ARGUMENT               = -201,
+-    CPG_ERROR_NO_REGISTER            = -202,
+-    CPG_ERROR_NULL_POINTER           = -203,
+-    CPG_ERROR_PLL_TURN_MODE_TIMEOUT  = -204,
+-    CPG_ERROR_PLL_ACTIVE             = -205,
+-    CPG_ERROR_PLL_STANDBY            = -206,
+-    CPG_ERROR_TURN_RESET_TIMEOUT     = -207,
+-    CPG_ERROR_CLK_CHANGE_TIMEOUT     = -208,
+-    CPG_ERROR_PLL_NOT_ACTIVE         = -280,
+-    CPG_ERROR_PLL_NOT_STANDBY        = -290
+-} e_cpg_error_code_t;
+-
+-typedef enum
+-{
+-    CPG_PLL_1 = 1,
+-    CPG_PLL_2 = 2,
+-    CPG_PLL_3 = 3,
+-    CPG_PLL_4 = 4,
+-    CPG_PLL_6 = 6,
+-    CPG_PLL_7 = 7
+-} e_cpg_pll_num_t;
+-
+-typedef enum
+-{
+-    CPG_DDIV_CA53 = 0,
+-    CPG_DDIV_SYS,
+-    CPG_dmy1,
+-    CPG_dmy2,
+-    CPG_DDIV_MMCDDI,
+-    CPG_DSEL_CLK48,
+-    CPG_dmy3,
+-    CPG_dmy4,
+-    CPG_dmy5,
+-    CPG_SSEL_SDIEMM = 64,
+-    CPG_dmy6,
+-    CPG_dmy7,
+-    CPG_dmy8,
+-    CPG_dmy9,
+-    CPG_dmyA,
+-    CPG_dmyB,
+-    CPG_SDIV_GMCLK,
+-    CPG_SSEL_GMCLK,
+-    CPG_dmyC,
+-    CPG_SDIV_URT_RCLK,
+-    CPG_SSEL_URT_RCLK,
+-    CPG_SSEL_CSI_RCLK
+-} e_cpg_divsel_t;
+-
+-/** prototype defined **/
+-unsigned int CPG_ReadReg(unsigned int offset);
+-void CPG_WriteReg(unsigned int offset, unsigned int value);
+-
+-int CPG_MoveToActivePLL(e_cpg_pll_num_t pll_num, st_cpg_pll_param_t *p_set_data);
+-int CPG_GetStatusPLL(e_cpg_pll_num_t pll_num, unsigned int *p_data);
+-
+-void CPG_SetDifClkFreq(e_cpg_divsel_t target_reg, unsigned short int target, unsigned short int set_value);
+-int CPG_SetClockCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value);
+-int CPG_SetResetCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value);
+-int CPG_SetPDResetCtrl(unsigned short int target, unsigned short int set_value);
+-int CPG_WaitResetMon(unsigned int timeout_c, unsigned int msk, unsigned int val);
+-int CPG_WakeUpPLL(e_cpg_pll_num_t pll_num);
+-
+-#endif /* RDK_CMN_CPG_H */
+diff --git a/board/renesas/rzv2m-dev/rdk_common.c a/board/renesas/rzv2m-dev/rdk_common.c
+deleted file mode 100755
+index b4c2e86..0000000
+--- a/board/renesas/rzv2m-dev/rdk_common.c
++++ /dev/null
+@@ -1,77 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_common.c
+- ******************************************************************************/
+-
+-#include <stdint.h>
+-#include "rdk_common.h"
+-
+-#define SYSCNT_FREQUENCY    (24000000)
+-#define SYSCNT_BASE_ADDRESS (0xA3F00000)
+-
+-#define SYSCNT_CNTCV        (0x1000)
+-
+-/*******************************************************************************
+- * Function Name: CMN_GetSysCnt
+- * Description  : get system counter
+- * Arguments    : none
+- * Return Value : system counter
+- ******************************************************************************/
+-unsigned long int CMN_GetSysCnt(void)
+-{
+-	unsigned int g_syscnt_base = SYSCNT_BASE_ADDRESS;
+-    return CMN_REG_Read64(g_syscnt_base + SYSCNT_CNTCV);
+-}
+-
+-/*******************************************************************************
+- * Function Name: CMN_GetFreq4SysCnt
+- * Description  : get system counter
+- * Arguments    : none
+- * Return Value : system counter
+- ******************************************************************************/
+-unsigned int CMN_GetFreq4SysCnt(void)
+-{
+-	unsigned int g_syscnt_base = SYSCNT_BASE_ADDRESS;
+-    return SYSCNT_FREQUENCY;
+-}
+-
+-/*******************************************************************************
+- * Function Name: CMN_DelayInUSec
+- * Description  : delayed time in microsecond
+- * Arguments    :
+- *                us -
+- *                    delay times in microsecond
+- * Return Value : none
+- ******************************************************************************/
+-void CMN_DelayInUSec(unsigned long int us)
+-{
+-    unsigned long int start = CMN_GetSysCnt();
+-    unsigned long int cycles = (CMN_GetFreq4SysCnt() / 1000000UL) * us;
+-
+-    while ((CMN_GetSysCnt() - start) < cycles)
+-    {
+-        asm volatile("nop");
+-    }
+-}
+-
+diff --git a/board/renesas/rzv2m-dev/rdk_common.h a/board/renesas/rzv2m-dev/rdk_common.h
+deleted file mode 100755
+index ca03b67..0000000
+--- a/board/renesas/rzv2m-dev/rdk_common.h
++++ /dev/null
+@@ -1,133 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_common.h
+- ******************************************************************************/
+-
+-#ifndef RDK_COMMON_H
+-#define RDK_COMMON_H
+-
+-/*
+- * Macro definitions
+- */
+-#ifndef NULL
+-#define NULL    ((void*)0)
+-#endif  /* !defined(NULL) */
+-
+-/*
+- * Global Typedef definitions
+- */
+-typedef enum
+-{
+-    CMN_SUCCESS = 0,
+-    CMN_ERROR   = -1
+-} e_rdk_cmn_error_no_t;
+-
+-/******************************************************************************
+- Prototype define
+- *****************************************************************************/
+-void CMN_DelayInUSec(unsigned long int us);
+-unsigned long int CMN_GetSysCnt(void);
+-unsigned int CMN_GetFreq4SysCnt(void);
+-
+-/*******************************************************************************
+- * Function Name: CMN_REG_Read32
+- * Description  : read access to Register in unsigned int.
+- *
+- * Arguments    : addr -
+- *                    address for read access
+- * Return Value : value -
+- *                    read data.
+- ******************************************************************************/
+-static inline unsigned int CMN_REG_Read32(unsigned int addr)
+-{
+-    /** pointer is (unsigned int *) */
+-    return *((volatile unsigned int *)addr);
+-}
+-
+-/*******************************************************************************
+- * Function Name: CMN_REG_Write32
+- * Description  : write access to Register in unsigned int.
+- *
+- * Arguments    : addr -
+- *                    address for write access
+- *                value -
+- *                    write data
+- * Return Value : non -
+- *
+- ******************************************************************************/
+-static inline void CMN_REG_Write32(unsigned int addr, unsigned int value)
+-{
+-    /** sizeof(unsigned int) == sizeof(unsigned int *) */
+-    *((volatile unsigned int *)addr) = value;
+-}
+-
+-/*******************************************************************************
+- * Function Name: CMN_REG_Read64
+- * Description  : read access to Register in unsigned long int.
+- *
+- * Arguments    : addr -
+- *                    address for read access
+- * Return Value : value -
+- *                    read data.
+- ******************************************************************************/
+-static inline unsigned long int CMN_REG_Read64(unsigned int addr)
+-{
+-    /** sizeof(unsigned int) == sizeof(unsigned long int *) */
+-    return *((volatile unsigned long int *)addr);
+-}
+-
+-/*******************************************************************************
+- * Function Name: CMN_REG_Write64
+- * Description  : write access to Register in unsigned long int.
+- *
+- * Arguments    : addr -
+- *                    address for write access
+- *                value -
+- *                    write data
+- * Return Value : non -
+- *
+- ******************************************************************************/
+-static inline void CMN_REG_Write64(unsigned int addr, unsigned long int value)
+-{
+-    /** sizeof(unsigned int) == sizeof(unsigned long int *) */
+-    *((volatile unsigned long int *)addr) = value;
+-}
+-
+-/*******************************************************************************
+- * Function Name: CMN_DelayInUS
+- * Description  : Does an example task. Making this longer just to see how it
+- *                wraps.
+- * Arguments    : index -
+- *                    Where to start looking
+- *                p_output -
+- *                    Pointer of where to put the output data
+- * Return Value : count -
+- *                    How many entries were found
+- ******************************************************************************/
+-static inline void CMN_DelayInUS(unsigned long int us)
+-{
+-    CMN_DelayInUSec(us);
+-}
+-
+-#endif /* !defined RDK_COMMON_H */
+diff --git a/board/renesas/rzv2m-dev/rdk_pfc.c a/board/renesas/rzv2m-dev/rdk_pfc.c
+deleted file mode 100755
+index 1d25df8..0000000
+--- a/board/renesas/rzv2m-dev/rdk_pfc.c
++++ /dev/null
+@@ -1,780 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_pfc.c
+- * Description  : operation functions for PFC
+- ******************************************************************************/
+-
+-#include <stdint.h>
+-
+-#include "rdk_common.h"
+-#include "rdk_pfc.h"
+-
+-#define PFC_PORT_NUM                        (22)
+-#define PFC_PORT_REGISTER_SIZE              (0x00040)
+-#define PFC_PORT_WE_SHIFT                   (16)
+-#define PFC_PORT_PFSEL_PIN_NUM_IN_REG       (4)
+-#define PFC_PORT_PFSEL_REG_NUM              (4)
+-
+-typedef struct {
+-    unsigned char                 pin_num;
+-	union {
+-        unsigned int            word;
+-		struct {
+-            unsigned int        gpio_do:1;
+-            unsigned int        gpio_oe:1;
+-            unsigned int        gpio_ie:1;
+-            unsigned int        :1;
+-            unsigned int        pfsel:4;
+-            unsigned int        di_mon:1;
+-            unsigned int        pupd:1;
+-            unsigned int        drv:1;
+-            unsigned int        sr:1;
+-            unsigned int        di_msk:1;
+-            unsigned int        en_msk:1;
+-        } flag;
+-    } exist_reg;
+-} st_pfc_internal_info_t;
+-
+-static const unsigned char g_PFC_flag_bit_position[10] = {
+-	    0, /* PFC_PORT_GPIO_DO */
+-	    1, /* PFC_PORT_GPIO_OE */
+-	    2, /* PFC_PORT_GPIO_IE */
+-	    4, /* PFC_PORT_PFSEL */
+-	    8, /* PFC_PORT_DI_MON */
+-	    9, /* PFC_PORT_PUPD */
+-	    10, /* PFC_PORT_DRV */
+-	    11, /* PFC_PORT_SR */
+-	    12, /* PFC_PORT_DI_MSK */
+-	    13  /* PFC_PORT_EN_MSK */
+-	};
+-
+-static const st_pfc_internal_info_t g_PFC_Port_Info[PFC_PORT_NUM] = {
+-{
+-	/** PORT00 **/
+-	        .pin_num = 14,
+-	        .exist_reg.word = 0x3FF7,
+-	    },
+-    {
+-	/** PORT01 **/
+-	        .pin_num = 16,
+-	        .exist_reg.word = 0x3FF7,
+-	    },
+-    {
+-	/** PORT02 **/
+-	        .pin_num = 8,
+-	        .exist_reg.word = 0x3F37,
+-	    },
+-    {
+-	/** PORT03 **/
+-	        .pin_num = 16,
+-	        .exist_reg.word = 0x3FF7,
+-	    },
+-    {
+-	/** PORT04 **/
+-	        .pin_num = 8,
+-	        .exist_reg.word = 0x3F37,
+-	    },
+-    {
+-	/** PORT05 **/
+-	        .pin_num = 4,
+-	        .exist_reg.word = 0x3F17,
+-	    },
+-    {
+-	/** PORT06 **/
+-	        .pin_num = 12,
+-	        .exist_reg.word = 0x3F77,
+-	    },
+-    {
+-	/** PORT07 **/
+-	        .pin_num = 6,
+-	        .exist_reg.word = 0x3F37,
+-	    },
+-    {
+-	/** PORT08 **/
+-	        .pin_num = 8,
+-	        .exist_reg.word = 0x3F37,
+-	    },
+-    {
+-	/** PORT09 **/
+-	        .pin_num = 8,
+-	        .exist_reg.word = 0x3F37,
+-	    },
+-    {
+-	/** PORT10 **/
+-	        .pin_num = 9,
+-	        .exist_reg.word = 0x3F77,
+-	    },
+-    {
+-	/** PORT11 **/
+-	        .pin_num = 9,
+-	        .exist_reg.word = 0x3F77,
+-	    },
+-    {
+-	/** PORT12 **/
+-	        .pin_num = 4,
+-	        .exist_reg.word = 0x3F17,
+-	    },
+-    {
+-	/** PORT13 **/
+-	        .pin_num = 12,
+-	        .exist_reg.word = 0x3F77,
+-	    },
+-    {
+-	/** PORT14 **/
+-	        .pin_num = 8,
+-	        .exist_reg.word = 0x3F37,
+-	    },
+-    {
+-	/** PORT15 **/
+-	        .pin_num = 16,
+-	        .exist_reg.word = 0x3FF7,
+-	    },
+-    {
+-	/** PORT16 **/
+-	        .pin_num = 14,
+-	        .exist_reg.word = 0x3FF7,
+-	    },
+-    {
+-	/** PORT17 **/
+-	        .pin_num = 1,
+-	        .exist_reg.word = 0x3F17,
+-	    },
+-    {
+-	/** (PORT18) **/
+-	        .pin_num = 0,
+-	        .exist_reg.word = 0,
+-	    },
+-    {
+-	/** (PORT19) **/
+-	        .pin_num = 0,
+-	        .exist_reg.word = 0,
+-	    },
+-    {
+-	/** PORT20 **/
+-	        .pin_num = 3,
+-	        .exist_reg.word = 0x3517,
+-	    },
+-    {
+-	/** PORT21 **/
+-	        .pin_num = 1,
+-	        .exist_reg.word = 0x0D07,
+-	    },
+-	};
+-
+-static unsigned int pfc_GetBitMask(e_pfc_port_num_t port_num)
+-{
+-    unsigned int value = 0;
+-    unsigned int shift = 0;
+-	unsigned int pin_num = g_PFC_Port_Info[port_num].pin_num;
+-
+-	if (0 != (pin_num & 0x010)) {
+-        value |= (0x0FFFF << shift);
+-        shift += 16;
+-    }
+-	if (0 != (pin_num & 0x008)) {
+-        value |= (0x0FF << shift);
+-        shift += 8;
+-    }
+-	if (0 != (pin_num & 0x004)) {
+-        value |= (0x0F << shift);
+-        shift += 4;
+-    }
+-	if (0 != (pin_num & 0x002)) {
+-        value |= (0x03 << shift);
+-        shift += 2;
+-    }
+-	if (0 != (pin_num & 0x001)) {
+-        value |= (0x01 << shift);
+-        shift += 1;
+-    }
+-
+-    return value;
+-}
+-
+-static unsigned int pfc_Get2BitMask(e_pfc_port_num_t port_num)
+-{
+-    unsigned int value = 0;
+-    unsigned int shift = 0;
+-	unsigned int pin_num = g_PFC_Port_Info[port_num].pin_num;
+-
+-	if (0 != (pin_num & 0x010)) {
+-        value |= (0xFFFFFFFF << shift);
+-        shift += 32;
+-    }
+-	if (0 != (pin_num & 0x008)) {
+-        value |= (0x0FFFF << shift);
+-        shift += 16;
+-    }
+-	if (0 != (pin_num & 0x004)) {
+-        value |= (0x0FF << shift);
+-        shift += 8;
+-    }
+-	if (0 != (pin_num & 0x002)) {
+-        value |= (0x0F << shift);
+-        shift += 4;
+-    }
+-	if (0 != (pin_num & 0x001)) {
+-        value |= (0x03 << shift);
+-        shift += 2;
+-    }
+-
+-    return value;
+-}
+-
+-
+-unsigned int PFC_ReadReg(unsigned int offset)
+-{
+-    return CMN_REG_Read32(PFC_BASE_ADDRESS + offset);
+-}
+-
+-void PFC_WriteReg(unsigned int offset, unsigned int value)
+-{
+-    CMN_REG_Write32((PFC_BASE_ADDRESS + offset), value);
+-}
+-
+-int PFC_SetPortParam(e_pfc_port_num_t port_num, e_pfc_kind_reg_t kind_reg,
+-    unsigned short int target, u_pfc_data_t *p_set_data)
+-{
+-    unsigned int offset = PFC_P00_GPIO_DO;
+-    unsigned int value[4] = { 0 };
+-    unsigned int mask[4] = { 0 };
+-    int  rslt = CMN_SUCCESS;
+-    int  i;
+-    unsigned char  pos;
+-
+-	pos = g_PFC_flag_bit_position[kind_reg];
+-	if (0 == (g_PFC_Port_Info[port_num].exist_reg.word & (0x01 << pos))) {
+-            return PFC_ERROR_NO_EXIST_REG;
+-    }
+-
+-	if (NULL == p_set_data) {
+-            return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-    offset += (port_num * PFC_PORT_REGISTER_SIZE);
+-    offset += (pos * sizeof(unsigned int));
+-
+-	switch (kind_reg) {
+-        case PFC_PORT_GPIO_DO:
+-        case PFC_PORT_GPIO_OE:
+-        case PFC_PORT_GPIO_IE:
+-        case PFC_PORT_SR:
+-        case PFC_PORT_DI_MSK:
+-        case PFC_PORT_EN_MSK:
+-            mask[0] = pfc_GetBitMask(port_num);
+-		value[0] = (p_set_data->uh_data & mask[0]) |
+-			   ((target & mask[0]) << PFC_PORT_WE_SHIFT);
+-            PFC_WriteReg(offset, value[0]);
+-            break;
+-
+-        case PFC_PORT_PFSEL:
+-		for (i = 0; i < g_PFC_Port_Info[port_num].pin_num; i++) {
+-			if (0 != (target & (0x0001 << i))) {
+-                    mask[i/PFC_PORT_PFSEL_PIN_NUM_IN_REG] |=
+-				    (0x00070007
+-				     << (4 *
+-					 (i % PFC_PORT_PFSEL_PIN_NUM_IN_REG)));
+-                }
+-            }
+-
+-		for (i = 0; i < PFC_PORT_PFSEL_REG_NUM; i++) {
+-			value[i] =
+-			    (p_set_data->func_sel.half.sel[i]) | 0xFFFF0000UL;
+-                value[i] &= mask[i];
+-
+-			if ((0 !=
+-			     (g_PFC_Port_Info[port_num].exist_reg.flag.pfsel &
+-			      (0x01 << i))) &&
+-			    0 != value[i]) {
+-                    PFC_WriteReg(offset, value[i]);
+-                }
+-                offset += sizeof(unsigned int);
+-            }
+-            break;
+-
+-        case PFC_PORT_PUPD:
+-        case PFC_PORT_DRV:
+-		for (i = 0; i < g_PFC_Port_Info[port_num].pin_num; i++) {
+-			if (0 != (target & (0x0001 << i))) {
+-                    mask[0] |= (0x00000003 << (2 * i));
+-                }
+-            }
+-            mask[0] &= pfc_Get2BitMask(port_num);
+-		if (PFC_PORT_PUPD == kind_reg) {
+-                value[0] = p_set_data->pupd.word.pupd[0];
+-		} else /** if (PFC_PORT_DRV == kind_reg) */
+-            {
+-                value[0] = p_set_data->drv_sel.word.drv_sel[0];
+-            }
+-            value[0] &= mask[0];
+-            value[0] |= (PFC_ReadReg(offset) & (~mask[0]));
+-            PFC_WriteReg(offset, value[0]);
+-            break;
+-
+-        case PFC_PORT_DI_MON:
+-        default:
+-            rslt = PFC_ERROR_NO_EXIST_REG;
+-            break;
+-    }
+-
+-    return rslt;
+-}
+-
+-int PFC_GetPortParam(e_pfc_port_num_t port_num, e_pfc_kind_reg_t kind_reg,
+-    u_pfc_data_t *p_data)
+-{
+-    unsigned int offset = PFC_P00_GPIO_DO;
+-    int  rslt = CMN_SUCCESS;
+-    unsigned int value;
+-    int  i;
+-    unsigned char  pos;
+-
+-	pos = g_PFC_flag_bit_position[kind_reg];
+-	if (0 == (g_PFC_Port_Info[port_num].exist_reg.word & (0x01 << pos))) {
+-            return PFC_ERROR_NO_EXIST_REG;
+-    }
+-
+-	if (NULL == p_data) {
+-            return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-    offset += (port_num * PFC_PORT_REGISTER_SIZE);
+-    offset += (pos * 4UL);
+-
+-	switch (kind_reg) {
+-        case PFC_PORT_GPIO_DO:
+-        case PFC_PORT_GPIO_OE:
+-        case PFC_PORT_GPIO_IE:
+-        case PFC_PORT_DI_MON:
+-        case PFC_PORT_PUPD:
+-        case PFC_PORT_DRV:
+-        case PFC_PORT_SR:
+-        case PFC_PORT_DI_MSK:
+-        case PFC_PORT_EN_MSK:
+-            p_data->uw_data = PFC_ReadReg(offset);
+-            break;
+-
+-        case PFC_PORT_PFSEL:
+-            p_data->func_sel.word.sel[0] = 0;
+-            p_data->func_sel.word.sel[1] = 0;
+-		for (i = 0; i < PFC_PORT_PFSEL_REG_NUM; i++) {
+-                value = 0;
+-			if (0 !=
+-			    (g_PFC_Port_Info[port_num].exist_reg.flag.pfsel &
+-			     (0x01 << i))) {
+-                    value = PFC_ReadReg(offset);
+-                }
+-                p_data->func_sel.half.sel[i] = (value & 0x0FFFF);
+-                offset += sizeof(unsigned int);
+-            }
+-            break;
+-
+-        default:
+-            rslt = PFC_ERROR_NO_EXIST_REG;
+-            break;
+-    }
+-
+-    return rslt;
+-}
+-
+-int PFC_SetPortParamH(e_pfc_port_num_t port_num, e_pfc_kind_reg_t kind_reg,
+-    unsigned short int target, unsigned short int set_data)
+-{
+-    int res;
+-    u_pfc_data_t data;
+-
+-    data.uh_data = set_data;
+-
+-    res = PFC_SetPortParam(port_num, kind_reg, target, &data);
+-
+-    return res;
+-}
+-
+-int PFC_SetCXRXD_SEL(unsigned short int target, unsigned short int set_data)
+-{
+-    unsigned int value;
+-
+-	value = (set_data & target) | (((unsigned int)target) << PFC_PORT_WE_SHIFT);
+-
+-    PFC_WriteReg( PFC_CSRXD_SEL, value);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_GetCXRXD_SEL(unsigned short int *p_data)
+-{
+-	if (NULL == p_data) {
+-        return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-    *p_data = PFC_ReadReg(PFC_CSRXD_SEL);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_SetROP_DI_SEL(unsigned int set_data)
+-{
+-    PFC_WriteReg( PFC_ROP_DI_SEL, set_data);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_GetROP_DI_SEL(unsigned int *p_data)
+-{
+-	if (NULL == p_data) {
+-        return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-    *p_data = PFC_ReadReg(PFC_ROP_DI_SEL);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_SetPEXDRV(unsigned short int target, u_pfc_pex_drv_t *p_set_data)
+-{
+-    unsigned int i;
+-    unsigned int mask = 0;
+-    unsigned int value;
+-    unsigned short int exist_bit = 0x5867;
+-
+-	if (NULL == p_set_data) {
+-        return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-	for (i = 0; i < (sizeof(unsigned short int) * 8); i++) {
+-		if (0 != ((target & exist_bit) & (0x0001 << i))) {
+-            mask |= (0x00000003 << (2 * i));
+-        }
+-    }
+-
+-    value = PFC_ReadReg(PFC_PEX0_DRV);
+-    value &= ~(mask);
+-    value |= (p_set_data->word.drv[0] & mask);
+-    PFC_WriteReg(PFC_PEX0_DRV, value);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_GetPEXDRV(unsigned int *p_data)
+-{
+-	if (NULL == p_data) {
+-        return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-    *p_data = PFC_ReadReg(PFC_PEX0_DRV);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_SetPEXSR(unsigned short int target, unsigned short int set_data)
+-{
+-    unsigned int value;
+-
+-    value = set_data | ((unsigned int)target << PFC_PORT_WE_SHIFT);
+-    PFC_WriteReg(PFC_PEX0_SR, value);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_GetPEXSR(unsigned int *p_data)
+-{
+-	if (NULL == p_data) {
+-        return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-    *p_data = PFC_ReadReg(PFC_PEX0_SR);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_SetEXTINT(e_pfc_extint_reg_num_t reg_num, unsigned short int target_pin,
+-		      unsigned short int set_data)
+-{
+-    unsigned int offset = PFC_EXTINT_INV0;
+-    unsigned int value;
+-
+-    offset += reg_num * sizeof(unsigned int);
+-    value = (set_data & target_pin) |
+-        (((unsigned int)target_pin) << PFC_PORT_WE_SHIFT);
+-
+-    PFC_WriteReg(offset, value);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-int PFC_GetEXTINT(e_pfc_extint_reg_num_t reg_num, unsigned int *p_data)
+-{
+-    unsigned int offset = PFC_EXTINT_INV0;
+-
+-	if (NULL == p_data) {
+-        return PFC_ERROR_NULL_POINTER;
+-    }
+-
+-    offset += reg_num * sizeof(unsigned int);
+-
+-    *p_data = PFC_ReadReg(offset);
+-
+-    return PFC_SUCCESSED;
+-}
+-
+-/*****************************************************************************
+- *****************************************************************************/
+-
+-/*
+- * Set change pin function procduer
+- * 1. target pins are set mask to Pmm_DI_MSK
+- * 2. target pins are set enable mask to Pmm_EN_MSK
+- * 3. set change function to Pmm_PFSEL0-3
+- * 4. target pins are set enable to Pmm_EN_MSK
+- * 5. target pins are set unmask to Pmm_DI_MSK
+- */
+-/*
+- * EMM   : Port00, pin 0-7 10-11, 2
+- * URT0  : Port03, pin 0-3, 2
+-
+- */
+-/*
+- * port#, target pin map, select#
+- */
+-typedef struct {
+-    unsigned int pin_pupd;
+-    unsigned int pin_drv;
+-    unsigned short int pin_oe;
+-    unsigned short int pin_ie;
+-    unsigned short int pin_map;
+-    unsigned short int pin_sr;
+-    unsigned char port;
+-    unsigned char select;
+-} st_pfc_select_port_info_t;
+-
+-typedef struct {
+-    unsigned int cnt;
+-    const st_pfc_select_port_info_t *p_data;
+-} st_pfc_select_info_t;
+-
+-/*
+- * [pin_pupd] b00:pull-down / b10:pull-up / bX1:neither
+- * [pin_driv] b00:X1 / b01:X2 / b10:X4 / b11:X6
+- * [pin_sr  ] b0:FastSlew / b1:SlowSlew
+- */
+-
+-static const st_pfc_select_port_info_t gl_pfc_select_emm[] = {
+-    {.port = PFC_PORT00,
+-     .select = 2,
+-     .pin_map = 0x0CFFU,
+-     .pin_oe = 0x0000U,
+-     .pin_ie = 0x0000U,
+-     .pin_pupd = 0x00000059,
+-     .pin_drv = 0x00505555,
+-     .pin_sr = 0x0CFFU},
+-};
+-
+-static const st_pfc_select_port_info_t gl_pfc_select_urt0[] = {
+-    {.port = PFC_PORT03,
+-     .select = 2,
+-     .pin_map = 0x000FU,
+-     .pin_oe = 0x0000U,
+-     .pin_ie = 0x0000U,
+-     .pin_pupd = 0x00000059,
+-     .pin_drv = 0x00000055,
+-     .pin_sr = 0x000FU},
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_urt1[] =
+-{
+-    { .port = PFC_PORT03, .select = 2, .pin_map = 0x00F0U,
+-      .pin_oe = 0x00F0U, .pin_ie = 0x00F0U,
+-      .pin_pupd = 0x00005500, .pin_drv = 0x00005500, .pin_sr = 0x00F0U },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_eth0[] =
+-{
+-    { .port = PFC_PORT15, .select = 1, .pin_map = 0xFFFFU,
+-      .pin_oe = 0xFFFFU, .pin_ie = 0xFFFFU,
+-      .pin_pupd = 0x55555555, .pin_drv = 0x55555555, .pin_sr = 0xFFFFU },
+-    { .port = PFC_PORT16, .select = 1, .pin_map = 0x3FFFU,
+-      .pin_oe = 0x3FFFU, .pin_ie = 0x3FFFU,
+-      .pin_pupd = 0x05555555, .pin_drv = 0x05555555, .pin_sr = 0x3FFFU },
+-    { .port = PFC_PORT17, .select = 0, .pin_map = 0x0001U,
+-      .pin_oe = 0x0001U, .pin_ie = 0x0001U,
+-      .pin_pupd = 0x00000001, .pin_drv = 0x00000001, .pin_sr = 0x0001U },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_sdi0[] =
+-{
+-    { .port = PFC_PORT08, .select = 1, .pin_map = 0x00FFU,
+-      .pin_oe = 0x00FFU, .pin_ie = 0x00FFU,
+-      .pin_pupd = 0x00009555, .pin_drv = 0x00000555, .pin_sr = 0x00FFU },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_sdi1[] =
+-{
+-    { .port = PFC_PORT09, .select = 1, .pin_map = 0x00FFU,
+-      .pin_oe = 0x00FFU, .pin_ie = 0x00FFU,
+-      .pin_pupd = 0x00009555, .pin_drv = 0x05555555, .pin_sr = 0x3FFFU },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_iic00[] =
+-{
+-    { .port = PFC_PORT05, .select = 2, .pin_map = 0x000FU,
+-      .pin_oe = 0x0000U, .pin_ie = 0x0000U,
+-      .pin_pupd = 0x00000055, .pin_drv = 0x00000000, .pin_sr = 0x000FU },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_pwm0_7[] =
+-{
+-    { .port = PFC_PORT01, .select = 1, .pin_map = 0x00FFU,
+-      .pin_oe = 0x0000U, .pin_ie = 0x0000U,
+-      .pin_pupd = 0x00550555U, .pin_drv = 0x55555555U, .pin_sr = 0xFFFFU },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_pwm8_15[] =
+-{
+-    { .port = PFC_PORT01, .select = 1, .pin_map = 0xFF00U,
+-      .pin_oe = 0x0000U, .pin_ie = 0x0000U,
+-      .pin_pupd = 0x05550555U, .pin_drv = 0x55555555U, .pin_sr = 0xFFFFU },
+-};
+-
+-
+-const st_pfc_select_port_info_t gl_pfc_select_csi2[] =
+-{
+-    { .port = PFC_PORT03, .select = 1, .pin_map = 0x0F00U,
+-      .pin_oe = 0x0000U, .pin_ie = 0x0000U,
+-      .pin_pupd = 0x05555555U, .pin_drv = 0x55555555U, .pin_sr = 0xFFFFU },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_csi3[] =
+-{
+-    { .port = PFC_PORT03, .select = 1, .pin_map = 0xF000U,
+-      .pin_oe = 0x0000U, .pin_ie = 0x0000U,
+-      .pin_pupd = 0x05555555U, .pin_drv = 0x55555555U, .pin_sr = 0xFFFFU },
+-};
+-
+-const st_pfc_select_port_info_t gl_pfc_select_csi4[] =
+-{
+-    { .port = PFC_PORT04, .select = 1, .pin_map = 0x000FU,
+-      .pin_oe = 0x0000U, .pin_ie = 0x0000U,
+-      .pin_pupd = 0x000000000U, .pin_drv = 0x00005555U, .pin_sr = 0x00FFU },
+-};
+-
+-
+-const st_pfc_select_port_info_t gl_pfc_select_csi5[] =
+-{
+-    { .port = PFC_PORT04, .select = 1, .pin_map = 0x000FU,
+-      .pin_oe = 0x0000U, .pin_ie = 0x0000U,
+-      .pin_pupd = 0x000000000U, .pin_drv = 0x00005555U, .pin_sr = 0x00FFU },
+-};
+-
+-#define PFC_SET_SELECT_TBL(m_ip_info)   \
+-    .cnt = (sizeof(m_ip_info)/sizeof(st_pfc_select_port_info_t)),   \
+-    .p_data = m_ip_info
+-
+-static const st_pfc_select_info_t gl_pfc_select_tbl[] = {
+-    {   PFC_SET_SELECT_TBL(gl_pfc_select_emm)   },
+-    {   PFC_SET_SELECT_TBL(gl_pfc_select_urt0)  },
+-    {   PFC_SET_SELECT_TBL(gl_pfc_select_urt1)  },
+-    {   PFC_SET_SELECT_TBL(gl_pfc_select_eth0)  },
+-    {   PFC_SET_SELECT_TBL(gl_pfc_select_sdi0)  },
+-    {   PFC_SET_SELECT_TBL(gl_pfc_select_sdi1)  },
+-    {   PFC_SET_SELECT_TBL(gl_pfc_select_iic00)  },
+-	{   PFC_SET_SELECT_TBL(gl_pfc_select_pwm0_7)  },
+-	{   PFC_SET_SELECT_TBL(gl_pfc_select_pwm8_15)  },
+-	{   PFC_SET_SELECT_TBL(gl_pfc_select_csi2)  },	
+-	{   PFC_SET_SELECT_TBL(gl_pfc_select_csi3)  },	
+-	{   PFC_SET_SELECT_TBL(gl_pfc_select_csi4)  },	
+-	{   PFC_SET_SELECT_TBL(gl_pfc_select_csi5)  },	
+-};
+-
+-int PFC_SetPinFunc(e_pfc_select_ip_t tgt_ip)
+-{
+-    int rslt;
+-    unsigned int i;
+-    unsigned int j;
+-    const st_pfc_select_port_info_t *p_sel_info;
+-    unsigned int cnt;
+-    unsigned int port_num;
+-    unsigned int pin_cnt;
+-    u_pfc_pfsel_t sel_data;
+-    unsigned short int sel_pin;
+-    unsigned int select_num;
+-    u_pfc_pupd_t   pupd_data;
+-    u_pfc_drvsel_t drv_data;
+-    unsigned short int sr_data;
+-    unsigned short int oe_data;
+-    unsigned short int ie_data;
+-
+-	do {
+-		if (PFC_SELECT_NUM <= tgt_ip) {
+-            rslt = PFC_ERROR_INVALID_ARG;
+-            break;
+-        }
+-
+-        cnt = gl_pfc_select_tbl[tgt_ip].cnt;
+-        p_sel_info = gl_pfc_select_tbl[tgt_ip].p_data;
+-
+-		for (i = 0; i < cnt; i++) {
+-            port_num = p_sel_info[i].port;
+-            sel_pin = p_sel_info[i].pin_map;
+-            select_num = p_sel_info[i].select;
+-			pin_cnt = g_PFC_Port_Info[port_num].pin_num;
+-            pupd_data.word.pupd[0] = p_sel_info[i].pin_pupd;
+-            drv_data.word.drv_sel[0] = p_sel_info[i].pin_drv;
+-            sr_data = p_sel_info[i].pin_sr;
+-            oe_data = p_sel_info[i].pin_oe;
+-            ie_data = p_sel_info[i].pin_ie;
+-            sel_data.word.sel[0] = 0;
+-            sel_data.word.sel[1] = 0;
+-			for (j = 0; j < pin_cnt; j++) {
+-				if (0 != (sel_pin & (0x01U << j))) {
+-                    sel_data.word.sel[j/8] |=
+-                        (select_num << (j * 4));
+-                }
+-            }
+-
+-            (void)PFC_SetDI_MSK(port_num, sel_pin, sel_pin);
+-
+-            (void)PFC_SetEN_MSK(port_num, sel_pin, sel_pin);
+-
+-            (void)PFC_SetPFSEL(port_num, sel_pin, &sel_data);
+-
+-            (void)PFC_SetGPIO_OE(port_num, sel_pin, oe_data);
+-
+-            (void)PFC_SetGPIO_IE(port_num, sel_pin, ie_data);
+-
+-            (void)PFC_SetEN_MSK(port_num, sel_pin, 0);
+-
+-            (void)PFC_SetDI_MSK(port_num, sel_pin, 0);
+-
+-            (void)PFC_SetPUPD(port_num, sel_pin, &pupd_data);
+-
+-            (void)PFC_SetDRV(port_num, sel_pin, &drv_data);
+-
+-            (void)PFC_SetSR(port_num, sel_pin, sr_data);
+-        }
+-        rslt = CMN_SUCCESS;
+-	} while (0);
+-
+-    return rslt;
+-}
+-
+diff --git a/board/renesas/rzv2m-dev/rdk_pfc.h a/board/renesas/rzv2m-dev/rdk_pfc.h
+deleted file mode 100755
+index 69d5cc0..0000000
+--- a/board/renesas/rzv2m-dev/rdk_pfc.h
++++ /dev/null
+@@ -1,803 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_pfc.h
+- * Description  : register and API information for PFC
+- ******************************************************************************/
+-
+-#ifndef RDK_PFC_H_
+-#define RDK_PFC_H_
+-
+-#define PFC_BASE_ADDRESS            (0xB6250000)
+-
+-#define PFC_P00_GPIO_DO             (0x0000)
+-#define PFC_P00_GPIO_OE             (0x0004)
+-#define PFC_P00_GPIO_IE             (0x0008)
+-#define PFC_P00_PFSEL0              (0x0010)
+-#define PFC_P00_PFSEL1              (0x0014)
+-#define PFC_P00_PFSEL2              (0x0018)
+-#define PFC_P00_PFSEL3              (0x001C)
+-#define PFC_P00_DI_MON              (0x0020)
+-#define PFC_P00_PUPD                (0x0024)
+-#define PFC_P00_DRV                 (0x0028)
+-#define PFC_P00_SR                  (0x002C)
+-#define PFC_P00_DI_MSK              (0x0030)
+-#define PFC_P00_EN_MSK              (0x0034)
+-
+-#define PFC_P01_GPIO_DO             (0x0040)
+-#define PFC_P01_GPIO_OE             (0x0044)
+-#define PFC_P01_GPIO_IE             (0x0048)
+-#define PFC_P01_PFSEL0              (0x0050)
+-#define PFC_P01_PFSEL1              (0x0054)
+-#define PFC_P01_PFSEL2              (0x0058)
+-#define PFC_P01_PFSEL3              (0x005C)
+-#define PFC_P01_DI_MON              (0x0060)
+-#define PFC_P01_PUPD                (0x0064)
+-#define PFC_P01_DRV                 (0x0068)
+-#define PFC_P01_SR                  (0x006C)
+-#define PFC_P01_DI_MSK              (0x0070)
+-#define PFC_P01_EN_MSK              (0x0074)
+-
+-#define PFC_P02_GPIO_DO             (0x0080)
+-#define PFC_P02_GPIO_OE             (0x0084)
+-#define PFC_P02_GPIO_IE             (0x0088)
+-#define PFC_P02_PFSEL0              (0x0090)
+-#define PFC_P02_PFSEL1              (0x0094)
+-#define PFC_P02_DI_MON              (0x00A0)
+-#define PFC_P02_PUPD                (0x00A4)
+-#define PFC_P02_DRV                 (0x00A8)
+-#define PFC_P02_SR                  (0x00AC)
+-#define PFC_P02_DI_MSK              (0x00B0)
+-#define PFC_P02_EN_MSK              (0x00B4)
+-
+-#define PFC_P03_GPIO_DO             (0x00C0)
+-#define PFC_P03_GPIO_OE             (0x00C4)
+-#define PFC_P03_GPIO_IE             (0x00C8)
+-#define PFC_P03_PFSEL0              (0x00D0)
+-#define PFC_P03_PFSEL1              (0x00D4)
+-#define PFC_P03_PFSEL2              (0x00D8)
+-#define PFC_P03_PFSEL3              (0x00DC)
+-#define PFC_P03_DI_MON              (0x00E0)
+-#define PFC_P03_PUPD                (0x00E4)
+-#define PFC_P03_DRV                 (0x00E8)
+-#define PFC_P03_SR                  (0x00EC)
+-#define PFC_P03_DI_MSK              (0x00F0)
+-#define PFC_P03_EN_MSK              (0x00F4)
+-
+-#define PFC_P04_GPIO_DO             (0x0100)
+-#define PFC_P04_GPIO_OE             (0x0104)
+-#define PFC_P04_GPIO_IE             (0x0108)
+-#define PFC_P04_PFSEL0              (0x0110)
+-#define PFC_P04_PFSEL1              (0x0114)
+-#define PFC_P04_DI_MON              (0x0120)
+-#define PFC_P04_PUPD                (0x0124)
+-#define PFC_P04_DRV                 (0x0128)
+-#define PFC_P04_SR                  (0x012C)
+-#define PFC_P04_DI_MSK              (0x0130)
+-#define PFC_P04_EN_MSK              (0x0134)
+-
+-#define PFC_P05_GPIO_DO             (0x0140)
+-#define PFC_P05_GPIO_OE             (0x0144)
+-#define PFC_P05_GPIO_IE             (0x0148)
+-#define PFC_P05_PFSEL0              (0x0150)
+-#define PFC_P05_DI_MON              (0x0160)
+-#define PFC_P05_PUPD                (0x0164)
+-#define PFC_P05_DRV                 (0x0168)
+-#define PFC_P05_SR                  (0x016C)
+-#define PFC_P05_DI_MSK              (0x0170)
+-#define PFC_P05_EN_MSK              (0x0174)
+-
+-#define PFC_P06_GPIO_DO             (0x0180)
+-#define PFC_P06_GPIO_OE             (0x0184)
+-#define PFC_P06_GPIO_IE             (0x0188)
+-#define PFC_P06_PFSEL0              (0x0190)
+-#define PFC_P06_PFSEL1              (0x0194)
+-#define PFC_P06_PFSEL2              (0x0198)
+-#define PFC_P06_DI_MON              (0x01A0)
+-#define PFC_P06_PUPD                (0x01A4)
+-#define PFC_P06_DRV                 (0x01A8)
+-#define PFC_P06_SR                  (0x01AC)
+-#define PFC_P06_DI_MSK              (0x01B0)
+-#define PFC_P06_EN_MSK              (0x01B4)
+-
+-#define PFC_P07_GPIO_DO             (0x01C0)
+-#define PFC_P07_GPIO_OE             (0x01C4)
+-#define PFC_P07_GPIO_IE             (0x01C8)
+-#define PFC_P07_PFSEL0              (0x01D0)
+-#define PFC_P07_PFSEL1              (0x01D4)
+-#define PFC_P07_DI_MON              (0x01E0)
+-#define PFC_P07_PUPD                (0x01E4)
+-#define PFC_P07_DRV                 (0x01E8)
+-#define PFC_P07_SR                  (0x01EC)
+-#define PFC_P07_DI_MSK              (0x01F0)
+-#define PFC_P07_EN_MSK              (0x01F4)
+-
+-#define PFC_P08_GPIO_DO             (0x0200)
+-#define PFC_P08_GPIO_OE             (0x0204)
+-#define PFC_P08_GPIO_IE             (0x0208)
+-#define PFC_P08_PFSEL0              (0x0210)
+-#define PFC_P08_PFSEL1              (0x0214)
+-#define PFC_P08_DI_MON              (0x0220)
+-#define PFC_P08_PUPD                (0x0224)
+-#define PFC_P08_DRV                 (0x0228)
+-#define PFC_P08_SR                  (0x022C)
+-#define PFC_P08_DI_MSK              (0x0230)
+-#define PFC_P08_EN_MSK              (0x0234)
+-
+-#define PFC_P09_GPIO_DO             (0x0240)
+-#define PFC_P09_GPIO_OE             (0x0244)
+-#define PFC_P09_GPIO_IE             (0x0248)
+-#define PFC_P09_PFSEL0              (0x0250)
+-#define PFC_P09_PFSEL1              (0x0254)
+-#define PFC_P09_DI_MON              (0x0260)
+-#define PFC_P09_PUPD                (0x0264)
+-#define PFC_P09_DRV                 (0x0268)
+-#define PFC_P09_SR                  (0x026C)
+-#define PFC_P09_DI_MSK              (0x0270)
+-#define PFC_P09_EN_MSK              (0x0274)
+-
+-#define PFC_P10_GPIO_DO             (0x0280)
+-#define PFC_P10_GPIO_OE             (0x0284)
+-#define PFC_P10_GPIO_IE             (0x0288)
+-#define PFC_P10_PFSEL0              (0x0290)
+-#define PFC_P10_PFSEL1              (0x0294)
+-#define PFC_P10_PFSEL2              (0x0298)
+-#define PFC_P10_DI_MON              (0x02A0)
+-#define PFC_P10_PUPD                (0x02A4)
+-#define PFC_P10_DRV                 (0x02A8)
+-#define PFC_P10_SR                  (0x02AC)
+-#define PFC_P10_DI_MSK              (0x02B0)
+-#define PFC_P10_EN_MSK              (0x02B4)
+-
+-#define PFC_P11_GPIO_DO             (0x02C0)
+-#define PFC_P11_GPIO_OE             (0x02C4)
+-#define PFC_P11_GPIO_IE             (0x02C8)
+-#define PFC_P11_PFSEL0              (0x02D0)
+-#define PFC_P11_PFSEL1              (0x02D4)
+-#define PFC_P11_PFSEL2              (0x02D8)
+-#define PFC_P11_DI_MON              (0x02E0)
+-#define PFC_P11_PUPD                (0x02E4)
+-#define PFC_P11_DRV                 (0x02E8)
+-#define PFC_P11_SR                  (0x02EC)
+-#define PFC_P11_DI_MSK              (0x02F0)
+-#define PFC_P11_EN_MSK              (0x02F4)
+-
+-#define PFC_P12_GPIO_DO             (0x0300)
+-#define PFC_P12_GPIO_OE             (0x0304)
+-#define PFC_P12_GPIO_IE             (0x0308)
+-#define PFC_P12_PFSEL0              (0x0310)
+-#define PFC_P12_DI_MON              (0x0330)
+-#define PFC_P12_PUPD                (0x0334)
+-#define PFC_P12_DRV                 (0x0338)
+-#define PFC_P12_SR                  (0x033C)
+-#define PFC_P12_DI_MSK              (0x0330)
+-#define PFC_P12_EN_MSK              (0x0334)
+-
+-#define PFC_P13_GPIO_DO             (0x0340)
+-#define PFC_P13_GPIO_OE             (0x0344)
+-#define PFC_P13_GPIO_IE             (0x0348)
+-#define PFC_P13_PFSEL0              (0x0350)
+-#define PFC_P13_PFSEL1              (0x0354)
+-#define PFC_P13_PFSEL2              (0x0358)
+-#define PFC_P13_DI_MON              (0x0360)
+-#define PFC_P13_PUPD                (0x0364)
+-#define PFC_P13_DRV                 (0x0368)
+-#define PFC_P13_SR                  (0x036C)
+-#define PFC_P13_DI_MSK              (0x0370)
+-#define PFC_P13_EN_MSK              (0x0374)
+-
+-#define PFC_P14_GPIO_DO             (0x0380)
+-#define PFC_P14_GPIO_OE             (0x0384)
+-#define PFC_P14_GPIO_IE             (0x0388)
+-#define PFC_P14_PFSEL0              (0x0390)
+-#define PFC_P14_PFSEL1              (0x0394)
+-#define PFC_P14_DI_MON              (0x03A0)
+-#define PFC_P14_PUPD                (0x03A4)
+-#define PFC_P14_DRV                 (0x03A8)
+-#define PFC_P14_SR                  (0x03AC)
+-#define PFC_P14_DI_MSK              (0x03B0)
+-#define PFC_P14_EN_MSK              (0x03B4)
+-
+-#define PFC_P15_GPIO_DO             (0x03C0)
+-#define PFC_P15_GPIO_OE             (0x03C4)
+-#define PFC_P15_GPIO_IE             (0x03C8)
+-#define PFC_P15_PFSEL0              (0x03D0)
+-#define PFC_P15_PFSEL1              (0x03D4)
+-#define PFC_P15_PFSEL2              (0x03D8)
+-#define PFC_P15_PFSEL3              (0x03DC)
+-#define PFC_P15_DI_MON              (0x03E0)
+-#define PFC_P15_PUPD                (0x03E4)
+-#define PFC_P15_DRV                 (0x03E8)
+-#define PFC_P15_SR                  (0x03EC)
+-#define PFC_P15_DI_MSK              (0x03F0)
+-#define PFC_P15_EN_MSK              (0x03F4)
+-
+-#define PFC_P16_GPIO_DO             (0x0400)
+-#define PFC_P16_GPIO_OE             (0x0404)
+-#define PFC_P16_GPIO_IE             (0x0408)
+-#define PFC_P16_PFSEL0              (0x0410)
+-#define PFC_P16_PFSEL1              (0x0414)
+-#define PFC_P16_PFSEL2              (0x0418)
+-#define PFC_P16_PFSEL3              (0x041C)
+-#define PFC_P16_DI_MON              (0x0420)
+-#define PFC_P16_PUPD                (0x0424)
+-#define PFC_P16_DRV                 (0x0428)
+-#define PFC_P16_SR                  (0x042C)
+-#define PFC_P16_DI_MSK              (0x0430)
+-#define PFC_P16_EN_MSK              (0x0434)
+-
+-#define PFC_P17_GPIO_DO             (0x0440)
+-#define PFC_P17_GPIO_OE             (0x0444)
+-#define PFC_P17_GPIO_IE             (0x0448)
+-#define PFC_P17_PFSEL0              (0x0450)
+-#define PFC_P17_DI_MON              (0x0460)
+-#define PFC_P17_PUPD                (0x0464)
+-#define PFC_P17_DRV                 (0x0468)
+-#define PFC_P17_SR                  (0x046C)
+-#define PFC_P17_DI_MSK              (0x0470)
+-#define PFC_P17_EN_MSK              (0x0474)
+-
+-#define PFC_P20_GPIO_DO             (0x0500)
+-#define PFC_P20_GPIO_OE             (0x0504)
+-#define PFC_P20_GPIO_IE             (0x0508)
+-#define PFC_P20_PFSEL0              (0x0510)
+-#define PFC_P20_DI_MON              (0x0520)
+-#define PFC_P20_DRV                 (0x0528)
+-#define PFC_P20_DI_MSK              (0x0530)
+-#define PFC_P20_EN_MSK              (0x0534)
+-
+-#define PFC_P21_GPIO_DO             (0x0540)
+-#define PFC_P21_GPIO_OE             (0x0544)
+-#define PFC_P21_GPIO_IE             (0x0548)
+-#define PFC_P21_DI_MON              (0x0560)
+-#define PFC_P21_DRV                 (0x0568)
+-#define PFC_P21_SR                  (0x056C)
+-
+-#define PFC_CSRXD_SEL               (0x0580)
+-#define PFC_ROP_DI_SEL              (0x0584)
+-
+-#define PFC_PEX0_DRV                (0x0590)
+-#define PFC_PEX0_SR                 (0x0594)
+-
+-#define PFC_EXTINT_INV0             (0x05A0)
+-#define PFC_EXTINT_INV1             (0x05A4)
+-#define PFC_EXTINT_INV2             (0x05A8)
+-
+-#define PFC_EXTINT_MSK0             (0x05B0)
+-#define PFC_EXTINT_MSK1             (0x05B4)
+-#define PFC_EXTINT_MSK2             (0x05B8)
+-
+-
+-/** Bit assign **/
+-#define PFC_PORT_PIN00              (0x00000001)
+-#define PFC_PORT_PIN01              (0x00000002)
+-#define PFC_PORT_PIN02              (0x00000004)
+-#define PFC_PORT_PIN03              (0x00000008)
+-#define PFC_PORT_PIN04              (0x00000010)
+-#define PFC_PORT_PIN05              (0x00000020)
+-#define PFC_PORT_PIN06              (0x00000040)
+-#define PFC_PORT_PIN07              (0x00000080)
+-#define PFC_PORT_PIN08              (0x00000100)
+-#define PFC_PORT_PIN09              (0x00000200)
+-#define PFC_PORT_PIN10              (0x00000400)
+-#define PFC_PORT_PIN11              (0x00000800)
+-#define PFC_PORT_PIN12              (0x00001000)
+-#define PFC_PORT_PIN13              (0x00002000)
+-#define PFC_PORT_PIN14              (0x00004000)
+-#define PFC_PORT_PIN15              (0x00008000)
+-
+-#define PFC_CSRXD_RXD0_RXD0         (0x00000000)
+-#define PFC_CSRXD_RXD1_RXD1         (0x00000000)
+-#define PFC_CSRXD_RXD2_RXD2         (0x00000000)
+-#define PFC_CSRXD_RXD3_RXD3         (0x00000000)
+-#define PFC_CSRXD_RXD4_RXD4         (0x00000000)
+-#define PFC_CSRXD_RXD5_RXD5         (0x00000000)
+-#define PFC_CSRXD_RXD0_TXD0         (0x00000001)
+-#define PFC_CSRXD_RXD1_TXD1         (0x00000002)
+-#define PFC_CSRXD_RXD2_TXD2         (0x00000004)
+-#define PFC_CSRXD_RXD3_TXD3         (0x00000008)
+-#define PFC_CSRXD_RXD4_TXD4         (0x00000010)
+-#define PFC_CSRXD_RXD5_TXD5         (0x00000020)
+-
+-#define PFC_CSRXD_RXD0_WE           (0x00010000)
+-#define PFC_CSRXD_RXD1_WE           (0x00020000)
+-#define PFC_CSRXD_RXD2_WE           (0x00040000)
+-#define PFC_CSRXD_RXD3_WE           (0x00080000)
+-#define PFC_CSRXD_RXD4_WE           (0x00100000)
+-#define PFC_CSRXD_RXD5_WE           (0x00200000)
+-
+-#define PFC_CSRXD_RXD0              (0x0001)
+-#define PFC_CSRXD_RXD1              (0x0002)
+-#define PFC_CSRXD_RXD2              (0x0004)
+-#define PFC_CSRXD_RXD3              (0x0008)
+-#define PFC_CSRXD_RXD4              (0x0010)
+-#define PFC_CSRXD_RXD5              (0x0020)
+-
+-
+-#define PFC_ROP_DI_SEL9_PM1         (0x00000000)
+-#define PFC_ROP_DI_SEL9_P0609       (0x00000100)
+-#define PFC_ROP_DI_SEL9_GETXC       (0x00000200)
+-
+-#define PFC_PEX0_NAWPN              (0x00000001)
+-#define PFC_PEX0_IM0CLK             (0x00000002)
+-#define PFC_PEX0_IM1CLK             (0x00000004)
+-#define PFC_PEX0_DETDO              (0x00000020)
+-#define PFC_PEX0_DETMS              (0x00000040)
+-#define PFC_PEX0_PCCLKREQB          (0x00000800)
+-#define PFC_PEX0_PCRSTOUTB          (0x00001000)
+-#define PFC_PEX0_USPWEN             (0x00004000)
+-
+-typedef enum
+-{
+-    PFC_SUCCESSED                   = CMN_SUCCESS,
+-    PFC_ERROR_GENERAL               = -100,
+-    PFC_ERROR_NO_EXIST_REG          = -101,
+-    PFC_ERROR_NULL_POINTER          = -102,
+-    PFC_ERROR_INVALID_ARG           = -103
+-} e_pfc_result_t;
+-
+-typedef union
+-{
+-    struct
+-    {
+-        unsigned char     sel[8];
+-    } byte;
+-    struct
+-    {
+-        unsigned short int    sel[4];
+-    } half;
+-    struct
+-    {
+-        unsigned int    sel[2];
+-    } word;
+-    struct
+-    {
+-        unsigned int    pin00:3;
+-        unsigned int    :1;
+-        unsigned int    pin01:3;
+-        unsigned int    :1;
+-        unsigned int    pin02:3;
+-        unsigned int    :1;
+-        unsigned int    pin03:3;
+-        unsigned int    :1;
+-        unsigned int    pin04:3;
+-        unsigned int    :1;
+-        unsigned int    pin05:3;
+-        unsigned int    :1;
+-        unsigned int    pin06:3;
+-        unsigned int    :1;
+-        unsigned int    pin07:3;
+-        unsigned int    :1;
+-        unsigned int    pin08:3;
+-        unsigned int    :1;
+-        unsigned int    pin09:3;
+-        unsigned int    :1;
+-        unsigned int    pin10:3;
+-        unsigned int    :1;
+-        unsigned int    pin11:3;
+-        unsigned int    :1;
+-        unsigned int    pin12:3;
+-        unsigned int    :1;
+-        unsigned int    pin13:3;
+-        unsigned int    :1;
+-        unsigned int    pin14:3;
+-        unsigned int    :1;
+-        unsigned int    pin15:3;
+-        unsigned int    :1;
+-    } func_sel;
+-} u_pfc_pfsel_t;
+-
+-typedef union
+-{
+-    struct
+-    {
+-        unsigned char     drv_sel[4];
+-    } byte;
+-    struct
+-    {
+-        unsigned short int    drv_sel[2];
+-    } half;
+-    struct
+-    {
+-        unsigned int    drv_sel[1];
+-    } word;
+-    struct
+-    {
+-        unsigned int    pin00:2;
+-        unsigned int    pin01:2;
+-        unsigned int    pin02:2;
+-        unsigned int    pin03:2;
+-        unsigned int    pin04:2;
+-        unsigned int    pin05:2;
+-        unsigned int    pin06:2;
+-        unsigned int    pin07:2;
+-        unsigned int    pin08:2;
+-        unsigned int    pin09:2;
+-        unsigned int    pin10:2;
+-        unsigned int    pin11:2;
+-        unsigned int    pin12:2;
+-        unsigned int    pin13:2;
+-        unsigned int    pin14:2;
+-        unsigned int    pin15:2;
+-    } drv_sel;
+-} u_pfc_drvsel_t;
+-
+-typedef union
+-{
+-    struct
+-    {
+-        unsigned char     pupd[4];
+-    } byte;
+-    struct
+-    {
+-        unsigned short int    pupd[2];
+-    } half;
+-    struct
+-    {
+-        unsigned int    pupd[1];
+-    } word;
+-    struct
+-    {
+-        unsigned int    pin00:2;
+-        unsigned int    pin01:2;
+-        unsigned int    pin02:2;
+-        unsigned int    pin03:2;
+-        unsigned int    pin04:2;
+-        unsigned int    pin05:2;
+-        unsigned int    pin06:2;
+-        unsigned int    pin07:2;
+-        unsigned int    pin08:2;
+-        unsigned int    pin09:2;
+-        unsigned int    pin10:2;
+-        unsigned int    pin11:2;
+-        unsigned int    pin12:2;
+-        unsigned int    pin13:2;
+-        unsigned int    pin14:2;
+-        unsigned int    pin15:2;
+-    } pupd;
+-} u_pfc_pupd_t;
+-
+-typedef union
+-{
+-    struct
+-    {
+-        unsigned char     pin[4];
+-    } byte;
+-    struct
+-    {
+-        unsigned short int    pin[2];
+-    } half;
+-    struct
+-    {
+-        unsigned int    pin[1];
+-    } word;
+-    struct
+-    {
+-        unsigned int    pin00:1;
+-        unsigned int    pin01:1;
+-        unsigned int    pin02:1;
+-        unsigned int    pin03:1;
+-        unsigned int    pin04:1;
+-        unsigned int    pin05:1;
+-        unsigned int    pin06:1;
+-        unsigned int    pin07:1;
+-        unsigned int    pin08:1;
+-        unsigned int    pin09:1;
+-        unsigned int    pin10:1;
+-        unsigned int    pin11:1;
+-        unsigned int    pin12:1;
+-        unsigned int    pin13:1;
+-        unsigned int    pin14:1;
+-        unsigned int    pin15:1;
+-    } bit;
+-} u_pfc_port_t;
+-
+-typedef union
+-{
+-    u_pfc_pfsel_t   func_sel;
+-    u_pfc_drvsel_t  drv_sel;
+-    u_pfc_pupd_t    pupd;
+-    u_pfc_port_t    pin;
+-    unsigned int        uw_data;
+-    unsigned short int        uh_data;
+-} u_pfc_data_t;
+-
+-typedef enum
+-{
+-    PFC_PORT00 = 0,
+-    PFC_PORT01 = 1,
+-    PFC_PORT02 = 2,
+-    PFC_PORT03 = 3,
+-    PFC_PORT04 = 4,
+-    PFC_PORT05 = 5,
+-    PFC_PORT06 = 6,
+-    PFC_PORT07 = 7,
+-    PFC_PORT08 = 8,
+-    PFC_PORT09 = 9,
+-    PFC_PORT10 = 10,
+-    PFC_PORT11 = 11,
+-    PFC_PORT12 = 12,
+-    PFC_PORT13 = 13,
+-    PFC_PORT14 = 14,
+-    PFC_PORT15 = 15,
+-    PFC_PORT16 = 16,
+-    PFC_PORT17 = 17,
+-    PFC_PORT20 = 20,
+-    PFC_PORT21 = 21
+-} e_pfc_port_num_t;
+-
+-typedef enum
+-{
+-    PFC_PORT_GPIO_DO = 0,
+-    PFC_PORT_GPIO_OE,
+-    PFC_PORT_GPIO_IE,
+-    PFC_PORT_PFSEL,
+-    PFC_PORT_DI_MON,
+-    PFC_PORT_PUPD,
+-    PFC_PORT_DRV,
+-    PFC_PORT_SR,
+-    PFC_PORT_DI_MSK,
+-    PFC_PORT_EN_MSK
+-} e_pfc_kind_reg_t;
+-
+-typedef union
+-{
+-    struct
+-    {
+-        unsigned char     drv[4];
+-    } byte;
+-    struct
+-    {
+-        unsigned short int    drv[2];
+-    } half;
+-    struct
+-    {
+-        unsigned int    drv[1];
+-    } word;
+-    struct
+-    {
+-        unsigned int    nawpn:2;
+-        unsigned int    im0clk:2;
+-        unsigned int    im1clk:2;
+-        unsigned int    :4;
+-        unsigned int    detdo:2;
+-        unsigned int    detms:2;
+-        unsigned int    :8;
+-        unsigned int    pcclkreqb:2;
+-        unsigned int    pcrstoutb:2;
+-        unsigned int    :2;
+-        unsigned int    uspwen:2;
+-        unsigned int    :2;
+-    } drv;
+-} u_pfc_pex_drv_t;
+-
+-typedef union
+-{
+-    struct
+-    {
+-        unsigned char     pin[4];
+-    } byte;
+-    struct
+-    {
+-        unsigned short int    pin[2];
+-    } half;
+-    struct
+-    {
+-        unsigned int    pin[1];
+-    } word;
+-    struct
+-    {
+-        unsigned int    nawpn:1;
+-        unsigned int    im0clk:1;
+-        unsigned int    im1clk:1;
+-        unsigned int    :2;
+-        unsigned int    detdo:1;
+-        unsigned int    detms:1;
+-        unsigned int    :4;
+-        unsigned int    pcclkreqb:1;
+-        unsigned int    pcrstoutb:1;
+-        unsigned int    :1;
+-        unsigned int    uspwen:1;
+-        unsigned int    :1;
+-    } pin;
+-} u_pfc_pex_t;
+-
+-typedef enum
+-{
+-    PFC_EXTINT0_INV = 0,
+-    PFC_EXTINT1_INV = 1,
+-    PFC_EXTINT2_INV = 2,
+-    PFC_EXTINT0_MSK = 4,
+-    PFC_EXTINT1_MSK = 5,
+-    PFC_EXTINT2_MSK = 6
+-} e_pfc_extint_reg_num_t;
+-
+-typedef enum
+-{
+-    PFC_SELECT_EMM= 0,
+-    PFC_SELECT_URT0,
+-    PFC_SELECT_URT1,
+-    PFC_SELECT_ETH0,
+-    PFC_SELECT_SDI0,
+-    PFC_SELECT_SDI1,
+-    PFC_SELECT_IIC00,
+-	PFC_SELECT_PWM0_7,
+-    PFC_SELECT_PWM8_15,
+-	PFC_SELECT_CSI2,
+-    PFC_SELECT_CSI3,
+-    PFC_SELECT_CSI4,
+-    PFC_SELECT_CSI5,
+-    PFC_SELECT_NUM
+-} e_pfc_select_ip_t;
+-
+-unsigned int PFC_ReadReg(unsigned int offset);
+-void PFC_WriteReg(unsigned int offset, unsigned int value);
+-
+-int PFC_SetPortParam(e_pfc_port_num_t port_num, e_pfc_kind_reg_t kind_reg,
+-    unsigned short int target, u_pfc_data_t *p_set_data);
+-int PFC_GetPortParam(e_pfc_port_num_t port_num, e_pfc_kind_reg_t kind_reg,
+-    u_pfc_data_t *p_data);
+-int PFC_SetPortParamH(e_pfc_port_num_t port_num, e_pfc_kind_reg_t kind_reg,
+-    unsigned short int target, unsigned short int set_data);
+-
+-static inline int PFC_SetGPIO_DO(e_pfc_port_num_t port_num,
+-    unsigned short int target, unsigned short int set_data)
+-{
+-    return PFC_SetPortParamH(port_num, PFC_PORT_GPIO_DO, target, set_data);
+-}
+-
+-static inline int PFC_GetGPIO_DO(e_pfc_port_num_t port_num,
+-    unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_GPIO_DO,
+-                (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetGPIO_OE(e_pfc_port_num_t port_num,
+-    unsigned short int target, unsigned short int set_data)
+-{
+-    return PFC_SetPortParamH(port_num, PFC_PORT_GPIO_OE, target, set_data);
+-}
+-
+-static inline int PFC_GetGPIO_OE(e_pfc_port_num_t port_num,
+-    unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_GPIO_OE,
+-                (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetGPIO_IE(e_pfc_port_num_t port_num,
+-    unsigned short int target, unsigned short int set_data)
+-{
+-    return PFC_SetPortParamH(port_num, PFC_PORT_GPIO_IE, target, set_data);
+-}
+-
+-static inline int PFC_GetGPIO_IE(e_pfc_port_num_t port_num,
+-    unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_GPIO_OE,
+-                (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetPFSEL(e_pfc_port_num_t port_num,
+-    unsigned short int target, u_pfc_pfsel_t *p_set_data)
+-{
+-    return PFC_SetPortParam(port_num, PFC_PORT_PFSEL, target,
+-                (u_pfc_data_t *)p_set_data);
+-}
+-
+-static inline int PFC_GetPFSEL(e_pfc_port_num_t port_num,
+-    u_pfc_pfsel_t *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_PFSEL,
+-                (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_GetDI_MON(e_pfc_port_num_t port_num,
+-    unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_DI_MON,
+-                (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetPUPD(e_pfc_port_num_t port_num,
+-    unsigned short int target, u_pfc_pupd_t *p_set_data)
+-{
+-    return PFC_SetPortParam(port_num, PFC_PORT_PUPD, target,
+-            (u_pfc_data_t *)p_set_data);
+-}
+-
+-static inline int PFC_GetPUPD(e_pfc_port_num_t port_num, unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_PUPD,
+-            (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetDRV(e_pfc_port_num_t port_num,
+-    unsigned short int target, u_pfc_drvsel_t *p_set_data)
+-{
+-    return PFC_SetPortParam(port_num, PFC_PORT_DRV, target,
+-            (u_pfc_data_t *)p_set_data);
+-}
+-
+-static inline int PFC_GetDRV(e_pfc_port_num_t port_num, unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_DRV, (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetSR(e_pfc_port_num_t port_num,
+-    unsigned short int target, unsigned short int set_data)
+-{
+-    return PFC_SetPortParamH(port_num, PFC_PORT_SR, target, set_data);
+-}
+-
+-static inline int PFC_GetSR(e_pfc_port_num_t port_num, unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_SR, (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetDI_MSK(e_pfc_port_num_t port_num,
+-    unsigned short int target, unsigned short int set_data)
+-{
+-    return PFC_SetPortParamH(port_num, PFC_PORT_DI_MSK, target, set_data);
+-}
+-
+-static inline int PFC_GetDI_MSK(e_pfc_port_num_t port_num,
+-    unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_DI_MSK,
+-                (u_pfc_data_t *)p_data);
+-}
+-
+-static inline int PFC_SetEN_MSK(e_pfc_port_num_t port_num,
+-    unsigned short int target, unsigned short int set_data)
+-{
+-    return PFC_SetPortParamH(port_num, PFC_PORT_EN_MSK, target, set_data);
+-}
+-
+-static inline int PFC_GetEN_MSK(e_pfc_port_num_t port_num,
+-    unsigned int *p_data)
+-{
+-    return PFC_GetPortParam(port_num, PFC_PORT_EN_MSK,
+-                (u_pfc_data_t *)p_data);
+-}
+-
+-
+-int PFC_SetCXRXD_SEL(unsigned short int target, unsigned short int set_data);
+-int PFC_GetCXRXD_SEL(unsigned short int *p_data);
+-
+-int PFC_SetROP_DI_SEL(unsigned int set_data);
+-int PFC_GetROP_DI_SEL(unsigned int *p_data);
+-
+-int PFC_SetPEXDRV(unsigned short int target, u_pfc_pex_drv_t *p_set_data);
+-int PFC_GetPEXDRV(unsigned int *p_data);
+-
+-int PFC_SetPEXSR(unsigned short int target, unsigned short int set_data);
+-int PFC_GetPEXSR(unsigned int *p_data);
+-
+-int PFC_SetEXTINT(e_pfc_extint_reg_num_t reg_num, unsigned short int target_pin,
+-        unsigned short int set_data);
+-int PFC_GetEXTINT(e_pfc_extint_reg_num_t reg_num, unsigned int *p_data);
+-
+-int PFC_SetPinFunc(e_pfc_select_ip_t tgt_ip);
+-#endif  /* !defined(RDK_PFC_H_) */
+diff --git a/board/renesas/rzv2m-dev/rdk_psc.c a/board/renesas/rzv2m-dev/rdk_psc.c
+deleted file mode 100755
+index 86b01ff..0000000
+--- a/board/renesas/rzv2m-dev/rdk_psc.c
++++ /dev/null
+@@ -1,46 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-#include <stdint.h>
+-#include "rdk_psc.h"
+-
+-static void psc_set_rst(unsigned char rst);
+-static void psc_set_cken(unsigned char cken);
+-
+-void rdk_psc_init(void)
+-{
+-    psc_set_rst(1);//psc module reset de-assert
+-    psc_set_cken(1);//psc module clock enable
+-	return;
+-}
+-
+-static void psc_set_rst(unsigned char rst)
+-{
+-    PSC_WRITE_REG(PSC_RST, (rst & 0x1));
+-	return;
+-}
+-
+-static void psc_set_cken(unsigned char cken)
+-{
+-    PSC_WRITE_REG(PSC_CKEN, (cken & 0x1));
+-	return;
+-}
+diff --git a/board/renesas/rzv2m-dev/rdk_psc.h a/board/renesas/rzv2m-dev/rdk_psc.h
+deleted file mode 100755
+index 469ea7c..0000000
+--- a/board/renesas/rzv2m-dev/rdk_psc.h
++++ /dev/null
+@@ -1,35 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-#ifndef RDK_PSC_H_
+-#define RDK_PSC_H_
+-
+-
+-#define PSC_BASE_ADDR     (0x00000000A3700000ULL)
+-#define PSC_RST           (PSC_BASE_ADDR + 0x0000)
+-#define PSC_CKEN          (PSC_BASE_ADDR + 0x0004)
+-
+-#define PSC_WRITE_REG(addr, data)  (*((volatile unsigned int   *)((unsigned int)(addr))) = ((unsigned int  )(data)))
+-
+-void rdk_psc_init(void);
+-
+-#endif  /* !defined(RDK_PSC_H_) */
+diff --git a/board/renesas/rzv2m-dev/rdk_sys.c a/board/renesas/rzv2m-dev/rdk_sys.c
+deleted file mode 100755
+index e8f63d2..0000000
+--- a/board/renesas/rzv2m-dev/rdk_sys.c
++++ /dev/null
+@@ -1,116 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_sys.c
+- * Description  : operation functions for SYS
+- ******************************************************************************/
+-
+-#include <stdint.h>
+-
+-#include "rdk_common.h"
+-#include "rdk_sys.h"
+-
+-/*******************************************************************************
+- * Function Name: sys_GetRegOffset
+- * Description  : get register offset
+- *
+- * Arguments    : value -
+- *                    target value
+- * Return Value : offset -
+- *                    register offset value
+- ******************************************************************************/
+-static inline unsigned int sys_GetRegOffset(unsigned int value)
+-{
+-    return (((((value) & 0xFF00) >> 8) - 1) * 4);
+-}
+-/*******************************************************************************
+- End of function sys_GetRegOffset
+- ******************************************************************************/
+-
+-
+-/*******************************************************************************
+- * Function Name: SYS_ReadReg
+- * Description  : Read access to a SYSTEM Register in unsigned int.
+- *
+- * Arguments    : offset -
+- *                    SYSTEM Register Offset.
+- * Return Value : read data -
+- *
+- ******************************************************************************/
+-unsigned int SYS_ReadReg(unsigned int offset)
+-{
+-    return (CMN_REG_Read32(SYS_BASE_ADDRESS + offset));
+-}
+-/*******************************************************************************
+- End of function SYS_ReadReg
+- ******************************************************************************/
+-
+-/*******************************************************************************
+- * Function Name: SYS_WriteReg
+- * Description  : Write access to a SYSTEM Register in unsigned int.
+- *
+- * Arguments    : offset -
+- *                    SYSTEM Register Offset.
+- *                value -
+- *                    Write data.
+- * Return Value : none -
+- *
+- ******************************************************************************/
+-void SYS_WriteReg(unsigned int offset, unsigned int value)
+-{
+-    CMN_REG_Write32((SYS_BASE_ADDRESS + offset), value);
+-}
+-/*******************************************************************************
+- End of function SYS_WriteReg
+- ******************************************************************************/
+-
+-
+-/*******************************************************************************
+- * Function Name: SYS_MoveToActiveSRAM
+- * Description  : target SRAM change state to active.
+- *
+- * Arguments    : target -
+- *                    target SRAM kind
+- * Return Value : none -
+- *
+- ******************************************************************************/
+-void SYS_MoveToActiveSRAM(e_sys_target_sram_t target)
+-{
+-    unsigned int reg_addr_sram_sdm = SYS_SRAM_SDM1;
+-    unsigned int reg_addr_sram_rs  = SYS_SRAM_RS1;
+-    unsigned int target_bit;
+-
+-    reg_addr_sram_sdm += sys_GetRegOffset(target);
+-    reg_addr_sram_rs  += sys_GetRegOffset(target);
+-    target_bit = 0x01 << (target & 0xFF);
+-    target_bit = (target_bit << 16);
+-
+-    SYS_WriteReg( reg_addr_sram_rs, target_bit);
+-    CMN_DelayInUS(1);
+-    SYS_WriteReg( reg_addr_sram_sdm, target_bit);
+-    CMN_DelayInUS(1);
+-}
+-/*******************************************************************************
+- End of function SYS_MoveToActiveSRAM
+- ******************************************************************************/
+-
+diff --git a/board/renesas/rzv2m-dev/rdk_sys.h a/board/renesas/rzv2m-dev/rdk_sys.h
+deleted file mode 100755
+index 974fae8..0000000
+--- a/board/renesas/rzv2m-dev/rdk_sys.h
++++ /dev/null
+@@ -1,127 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_sys.h
+- * Description  : register and API information for SYS
+- ******************************************************************************/
+-
+-#ifndef RDK_SYS_H_
+-#define RDK_SYS_H_
+-
+-#define SYS_BASE_ADDRESS            (0xA3F03000)
+-
+-
+-#define SYS_PERI0_BANK              (0x0030)
+-#define SYS_PERI1_BANK              (0x0034)
+-#define SYS_DRP_BANK                (0x0038)
+-
+-
+-#define SYS_MD_MON                  (0x0100)
+-#define SYS_VERSION                 (0x0104)
+-#define SYS_RAMA_ECC_CNT            (0x0110)
+-#define SYS_RAMA_INIT               (0x0114)
+-#define SYS_RAMA_INIT_END           (0x0118)
+-
+-
+-#define SYS_SRAM_SDM1               (0x0180)
+-#define SYS_SRAM_SDM2               (0x0184)
+-#define SYS_SRAM_SDM3               (0x0188)
+-
+-
+-#define SYS_SRAM_RS1                (0x0190)
+-#define SYS_SRAM_RS2                (0x0194)
+-#define SYS_SRAM_RS3                (0x0198)
+-
+-
+-#define BA00                            BIT(0)
+-#define BA01                            BIT(1)
+-#define BA02                            BIT(2)
+-#define BA03                            BIT(3)
+-#define BA04                            BIT(4)
+-#define BA05                            BIT(5)
+-#define BA06                            BIT(6)
+-#define BA07                            BIT(7)
+-#define BA08                            BIT(8)
+-#define BA09                            BIT(9)
+-#define BA10                            BIT(10)
+-#define BA11                            BIT(11)
+-#define BA12                            BIT(12)
+-#define BA13                            BIT(13)
+-#define BA14                            BIT(14)
+-#define BA15                            BIT(15)
+-#define BA_WE00                         BIT(16)
+-#define BA_WE01                         BIT(17)
+-#define BA_WE02                         BIT(18)
+-#define BA_WE03                         BIT(19)
+-#define BA_WE04                         BIT(20)
+-#define BA_WE05                         BIT(21)
+-#define BA_WE06                         BIT(22)
+-#define BA_WE07                         BIT(23)
+-#define BA_WE08                         BIT(24)
+-#define BA_WE09                         BIT(25)
+-#define BA_WE10                         BIT(26)
+-#define BA_WE11                         BIT(27)
+-#define BA_WE12                         BIT(28)
+-#define BA_WE13                         BIT(29)
+-#define BA_WE14                         BIT(30)
+-#define BA_WE15                         BIT(31)
+-
+-
+-typedef enum
+-{
+-    SYS_SRAM_CST        = 0x100,
+-    SYS_SRAM_SDI0,
+-    SYS_SRAM_SDI1,
+-    SYS_SRAM_EMMC,
+-    SYS_SRAM_DMY1,
+-    SYS_SRAM_DMY2,
+-    SYS_SRAM_USB_HOST,
+-    SYS_SRAM_USB_FUNC,
+-    SYS_SRAM_ETH0,
+-    SYS_SRAM_DMY3        = 0x10A,
+-    SYS_SRAM_DMY4       = 0x10C,
+-    SYS_SRAM_DMY5,
+-    SYS_SRAM_DMY6       = 0x200,
+-    SYS_SRAM_DMY7,
+-    SYS_SRAM_DMY8,
+-    SYS_SRAM_SRAMA      = 0x204,
+-    SYS_SRAM_SRAMB0     = 0x208,
+-    SYS_SRAM_SRAMB1,
+-    SYS_SRAM_SRAMB2,
+-    SYS_SRAM_SRAMB3,
+-    SYS_SRAM_RESERVE0       = 0x300,
+-    SYS_SRAM_RESERVE1,
+-    SYS_SRAM_RESERVE2,
+-    SYS_SRAM_RESERVE3,
+-    SYS_SRAM_RESERVE4,
+-    SYS_SRAM_RESERVE5,
+-    SYS_SRAM_RESERVE9       = 0x309,
+-    SYS_SRAM_RESERVE13      = 0x30D,
+-} e_sys_target_sram_t;
+-
+-unsigned int SYS_ReadReg(unsigned int offset);
+-void SYS_WriteReg(unsigned int offset, unsigned int value);
+-
+-void SYS_MoveToActiveSRAM(e_sys_target_sram_t target);
+-
+-#endif  /* !defined(RDK_SYS_H_) */
+diff --git a/board/renesas/rzv2m-dev/rdk_usbtest.h a/board/renesas/rzv2m-dev/rdk_usbtest.h
+deleted file mode 100755
+index 8347bdf..0000000
+--- a/board/renesas/rzv2m-dev/rdk_usbtest.h
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-/*******************************************************************************
+- * File Name    : rdk_usbtest.h
+- ******************************************************************************/
+-
+-#ifndef RDK_USBTEST_H_
+-#define RDK_USBTEST_H_
+-
+-#define USBTEST_BASE_ADDRESS     (0xA3F90000)
+-
+-#define USBTEST_RESET1		(0x0000)+USBTEST_BASE_ADDRESS
+-#define USBTEST_RESET2		(0x0004)+USBTEST_BASE_ADDRESS
+-#define USBTEST_PIPE_MON1		(0x0124)+USBTEST_BASE_ADDRESS
+-#define USBTEST_CLKRST2		(0x0304)+USBTEST_BASE_ADDRESS
+-#define USBTEST_CLKRST3		(0x0308)+USBTEST_BASE_ADDRESS
+-
+-#endif  /* !defined(RDK_USBTEST_H_) */
+diff --git a/board/renesas/rzv2m-dev/rzv2m-dev.c a/board/renesas/rzv2m-dev/rzv2m-dev.c
+deleted file mode 100755
+index 66c6c0d..0000000
+--- a/board/renesas/rzv2m-dev/rzv2m-dev.c
++++ /dev/null
+@@ -1,476 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-#include <common.h>
+-#include <malloc.h>
+-#include <fdtdec.h>
+-#include <linux/errno.h>
+-#include <asm/system.h>
+-#include "rdk_common.h"
+-#include "rdk_pfc.h"
+-#include "rdk_cmn_cpg.h"
+-#include "rdk_usbtest.h"
+-#include "rdk_sys.h"
+-#include "rdk_psc.h"
+-#include <init.h>
+-
+-/*
+-       TARGET_BANK0_UNIT_LINUX settings as follows:
+-               BA_WE00 | BA00  //EMM
+-               BA_WE02 | BA02  //SDI0
+-               BA_WE04 | BA04  //SDI1
+-               BA_WE08 | BA08  //USB HOST
+-               BA_WE10 | BA10  //USB PERI
+-               BA_WE12 | BA12  //PCI
+-*/
+-#define TARGET_BANK0_UNIT_LINUX        (BA_WE00 | BA00 | \
+-                                                                       BA_WE02 | BA02 | \
+-                                                                       BA_WE04 | BA04 | \
+-                                                                       BA_WE08 | BA08 | \
+-                                                                       BA_WE10 | BA10 | \
+-                                                                       BA_WE12 | BA12)
+-
+-
+-#define TARGET_BANK1_UNIT_LINUX        (BA_WE00 | BA00)       //ETH0 BANK
+-/*
+-       TARGET_DRP_UNIT_LINUX settings as follows:
+-               BA_WE00 | BA00  //DRPA M0
+-               BA_WE02 | BA02  //DRPA M1
+-               BA_WE04 | BA04  //DRPA M2
+-               BA_WE06 | BA06  //DRPA M3
+-*/
+-#define TARGET_DRP_UNIT_LINUX  (BA_WE00 | BA00 | \
+-                                                                       BA_WE02 | BA02 | \
+-                                                                       BA_WE04 | BA04 | \
+-                                                                       BA_WE06 | BA06)
+-
+-
+-DECLARE_GLOBAL_DATA_PTR;
+-
+-static void rdk_pfc_init(void)
+-{
+-	do
+-	{
+-		PFC_SetPinFunc(PFC_SELECT_URT0);
+-		PFC_SetPinFunc(PFC_SELECT_URT1);
+-		PFC_SetPinFunc(PFC_SELECT_EMM);
+-		PFC_SetPinFunc(PFC_SELECT_SDI0);
+-		PFC_SetPinFunc(PFC_SELECT_ETH0);
+-		PFC_WriteReg(PFC_P17_GPIO_DO, 0x10001);
+-		CMN_DelayInUS(50);
+-		PFC_SetPinFunc(PFC_SELECT_IIC00);
+-		PFC_SetPinFunc(PFC_SELECT_PWM0_7);
+-		PFC_SetPinFunc(PFC_SELECT_PWM8_15);
+-		PFC_SetPinFunc(PFC_SELECT_CSI2);
+-		PFC_SetPinFunc(PFC_SELECT_CSI3);
+-		PFC_SetPinFunc(PFC_SELECT_CSI4);
+-		PFC_SetPinFunc(PFC_SELECT_CSI5);
+-	}
+-	while (0);
+-	return;
+-}
+-
+-static void drp_init(void){
+-
+-	uint32_t regval;
+-	
+-    //Initialize the PLL6
+-	regval = CMN_REG_Read32(0xa350003c);
+-	while((regval & 0x11) != 0x00){
+-		regval = CMN_REG_Read32(0xa350003c);
+-		CMN_DelayInUS(1);
+-	}
+-	CMN_REG_Write32(0xa3500034, 0x00001a42);
+-	CMN_REG_Write32(0xA3500038, 0x00150A01);
+-
+-	//Release standby mode with PLL6
+-	CMN_REG_Write32(0xA3500030, 0x00010001);
+-	regval = CMN_REG_Read32(0xa350003c);
+-	while((regval & 0x11) != 0x11){
+-		regval = CMN_REG_Read32(0xa350003c);
+-		CMN_DelayInUS(1);
+-	}
+-
+-    //Power on with PD_DRPA
+-	CMN_REG_Write32(0xA3600018, 0x0BB70BB7);
+-	CMN_REG_Write32(0xa3600000, 0x00000015);
+-	regval = CMN_REG_Read32(0xa3600044);
+-	while((regval & 0x1) != 0x1){
+-		regval = CMN_REG_Read32(0xa3600044);
+-		CMN_DelayInUS(1000);
+-	}
+-
+-	CMN_REG_Write32(0xa3600000, 0x00000016);
+-	regval = CMN_REG_Read32(0xa3600044);
+-	while((regval & 0x1) != 0x1){
+-		regval = CMN_REG_Read32(0xa3600044);
+-		CMN_DelayInUS(1);
+-	}
+-
+-    //Clear interrupt status with PMC
+-	CMN_REG_Write32(0xa3600048, 0x00000001);
+-
+-    //Clock supply with PD_DRP
+-	CMN_REG_Write32(0xa350044c,0x00040004);
+-	CMN_DelayInUS(1000);
+-	CMN_REG_Write32(0xa3500450,0x00040004);
+-	CMN_DelayInUS(1000);
+-
+-    //Isolation off with DRP
+-	CMN_REG_Write32(0xa360002c, 0x00000000);
+-	regval = CMN_REG_Read32(0xa360002c);
+-	while((regval & 0x8000) != 0x8000){
+-		regval = CMN_REG_Read32(0xa360002c);
+-		CMN_DelayInUS(1000);
+-	}
+-
+-	CMN_REG_Write32(0xa3600030, 0x00000000);
+-	regval = CMN_REG_Read32(0xa3600030);
+-	while((regval & 0x8000) != 0x8000){
+-		regval = CMN_REG_Read32(0xa360002c);
+-		CMN_DelayInUS(1000);
+-	}
+-
+-	//Clock supply and deassert with DRP
+-	CMN_REG_Write32(0xa350044c, 0x00030003);
+-	CMN_DelayInUS(10000);
+-	CMN_REG_Write32(0xa3500450, 0x00030003);
+-	CMN_DelayInUS(10000);
+-
+-	CMN_REG_Write32(0xa3500620, 0x00010001);
+-	CMN_REG_Write32(0xa3500624, 0x00010001);
+-	CMN_DelayInUS(1);
+-
+-}
+-
+-static void rdk_cpg_init(void)
+-{
+-	int t;
+-	do
+-	{	
+-		/* select  DEVB(400MHz) ,select DEVD(200MHz) and select DEVE(100MHz) */
+-		CPG_WriteReg(CPG_SYS_DDIV, (CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD));
+-		t = 0;
+-		while (1000000 > t++)
+-		{
+-			if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
+-			{
+-				break;
+-			}
+-			CMN_DelayInUS(10);
+-		}
+-
+-		/**********************************/
+-		/**** URT *******************/
+-		/**********************************/
+-		/* select URT clock source(48MHz) */
+-		//CPG_WriteReg(CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW0 | CPG_URT_RCLK_SSEL_WEN_SELW1);
+-
+-		/* enable supply clock to URT */
+-		CPG_SetClockCtrl(15, 0x0070, 0x0070);
+-		CMN_DelayInUS(1);
+-
+-		/* asset RESET to URT0,1 */
+-		CPG_SetResetCtrl(6, 0x0400, 0x0000);
+-		CPG_WaitResetMon(/*500000*/0, CPG_RST_MON_URT, CPG_RST_MON_URT);
+-
+-		/* deasset RESET to URT0,1 */
+-		CPG_SetResetCtrl(6, 0x0400, 0x0400);
+-		CPG_WaitResetMon(/*500000*/0, CPG_RST_MON_URT, 0);
+-
+-		/**********************************/
+-		/**** SDI0 EMM ************/
+-		/**********************************/
+-		/* select SDI0 EMM clock source(200MHz) */
+-		CPG_WriteReg(CPG_SDIEMM_SSEL, (CPG_SDIEMM_SSEL_SELSDI|CPG_SDIEMM_SSEL_WEN_SELSDI));
+-
+-		/* enable supply clock */
+-		CPG_SetClockCtrl(3, 0x0f0f, 0x0f0f);
+-		CMN_DelayInUS(1);
+-
+-		/* asset RESET */
+-		CPG_SetResetCtrl(3, 0x0005, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_SDI0, CPG_RST_MON_SDI0);
+-		CPG_WaitResetMon(0, CPG_RST_MON_EMM,  CPG_RST_MON_EMM);
+-
+-		/* deasset RESET */
+-		CPG_SetResetCtrl(3, 0x0005, 0x0005);
+-		CPG_WaitResetMon(0, CPG_RST_MON_SDI0, 0);
+-		CPG_WaitResetMon(0, CPG_RST_MON_EMM,  0);
+-
+-		/**********************************/
+-		/**** USB *******************/
+-		/**********************************/
+-		/* select USB DEVD(200MHz) and select USB DEVE(100MHz) */
+-		//CPG_WriteReg(CPG_SYS_DDIV, (CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD));	
+-		// while (true)
+-		// {
+-		// 	if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
+-		// 	{
+-		// 		break;
+-		// 	}
+-		// 	CMN_DelayInUS(10);
+-		// }
+-
+-		/* usb reset assart */
+-		CPG_SetResetCtrl(3, 0x0780, 0x0000);
+-		CMN_DelayInUS(1);//50ns
+-
+-		/* usb clock off */
+-		CPG_SetClockCtrl(4, 0x0070, 0x0000);
+-		CMN_DelayInUS(1);//125ns
+-
+-		/* usb reset assart */
+-		CPG_SetResetCtrl(3, 0x0780, 0x0780);
+-		CMN_DelayInUS(1);//50ns
+-
+-		/* usb clock on */
+-		CPG_SetClockCtrl(4, 0x0070, 0x0070);
+-		CMN_DelayInUS(1);//125ns
+-
+-		/**********************************/
+-		/**** IIC0-3****************/
+-		/**********************************/
+-		/* asset RESET */
+-		CPG_SetResetCtrl(6, 0x0300, 0x0000);
+-		CMN_DelayInUS(1);
+-
+-		/* disable supply clock */
+-		CPG_SetClockCtrl(9, 0x1000, 0x0000);
+-		CPG_SetClockCtrl(10, 0x1000, 0x0000);
+-		CMN_DelayInUS(1);
+-
+-		/* deasset RESET */
+-		CPG_SetResetCtrl(6, 0x0300, 0x0300);
+-		CMN_DelayInUS(1);
+-
+-		/* enable supply clock */
+-		CPG_SetClockCtrl(9, 0x1000, 0x1000);
+-		CPG_SetClockCtrl(10, 0x1000, 0x1000);
+-		CMN_DelayInUS(1);
+-
+-		/**********************************/
+-		/**** ETH0 ****************/
+-		/**********************************/
+-
+-		/* eth0 clock on */
+-		CPG_SetClockCtrl(4, 0x0300, 0x0300);
+-		CPG_SetClockCtrl(16, 0x2000, 0x2000);
+-		CMN_DelayInUS(1);
+-
+-		/* eth0 reset assart */
+-		CPG_SetResetCtrl(3, 0x0800, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_ETH0, CPG_RST_MON_ETH0);
+-
+-		/* eth0 reset deassert */
+-		CPG_SetResetCtrl(3, 0x0800, 0x0800);
+-		CPG_WaitResetMon(0, CPG_RST_MON_ETH0, 0);
+-
+-		/**********************************/
+-		/**** PWM0-15 ****************/
+-		/**********************************/
+-		CPG_SetClockCtrl(13, 0x0FF1, 0x0FF1);
+-		CPG_SetClockCtrl(14, 0x0FF1, 0x0FF1);
+-		CMN_DelayInUS(1);
+-		
+-		/* PWM0-7 reset assart */
+-		CPG_SetResetCtrl(6, 0x0030, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1);
+-		
+-		/* PWM0-7 reset deassert */
+-		CPG_SetResetCtrl(6, 0x0030, 0x0030);
+-		CPG_WaitResetMon(0, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1, 0);
+-
+-		/**********************************/
+-		/**** CSI2-5 ****************/
+-		/**********************************/
+-		/* select CSI REF */
+-		//Keep defalt setting
+-		//CPG_WriteReg(CPG_CSI_RCLK_SSEL, (CPG_CSI_RCLK_SSEL_WEN_SELCSI2|CPG_CSI_RCLK_SSEL_WEN_SELCSI3|CPG_CSI_RCLK_SSEL_WEN_SELCSI4|CPG_CSI_RCLK_SSEL_WEN_SELCSI5));
+-
+-		CPG_SetClockCtrl(15, 0x3C03, 0x3C03);
+-		CMN_DelayInUS(1);
+-		
+-		/* CSI4 reset assart */
+-		CPG_SetResetCtrl(6, 0x00C0, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_CSI_1|CPG_RST_MON_CSI_2, CPG_RST_MON_CSI_1|CPG_RST_MON_CSI_2);
+-		
+-		/* CSI4 reset deassert */
+-		CPG_SetResetCtrl(6, 0x00C0, 0x00C0);
+-		CPG_WaitResetMon(0, CPG_RST_MON_CSI_1|CPG_RST_MON_CSI_2, 0);
+-
+-	    
+-		CPG_SetClockCtrl(4, 0x0007, 0x0007);
+-		CMN_DelayInUS(1);
+-		CPG_SetResetCtrl(3, 0x1000, 0x0000);
+-		CMN_DelayInUS(1);
+-		CPG_SetResetCtrl(3, 0x1000, 0x1000);
+-		CMN_DelayInUS(1);
+-		
+-		/**********************************/
+-		/**** TIM0-31 ****************/
+-		/**********************************/
+-		/* TIM group A-D reset assart */
+-		CPG_SetResetCtrl(6, 0x000F, 0x0000);
+-		CMN_DelayInUS(1);
+-		
+-		/* TIM group A and TIM 0-7 clock off */
+-		CPG_SetClockCtrl(9, 0x0FF1, 0x0000);
+-		/* TIM group B and TIM 8-15 clock off */
+-		CPG_SetClockCtrl(10, 0x0FF1, 0x0000);
+-		/* TIM group C and TIM 16-23 clock off */
+-		CPG_SetClockCtrl(11, 0x0FF1, 0x0000);
+-		/* TIM group D and TIM 24-31 clock off */
+-		CPG_SetClockCtrl(12, 0x0FF1, 0x0000);
+-		CMN_DelayInUS(1);
+-
+-		/* TIM group A-D reset deassert */
+-		CPG_SetResetCtrl(6, 0x000F, 0x000F);
+-		CMN_DelayInUS(1);
+-
+-		/* TIM group A and TIM 0-7 clock on */
+-		CPG_SetClockCtrl(9, 0x0FF1, 0x0FF1);
+-		/* TIM group B and TIM 8-15 clock on */
+-		CPG_SetClockCtrl(10, 0x0FF1, 0x0FF1);
+-		/* TIM group C and TIM 16-23 clock on */
+-		CPG_SetClockCtrl(11, 0x0FF1, 0x0FF1);
+-		/* TIM group D and TIM 24-31 clock on */
+-		CPG_SetClockCtrl(12,0x0FF1, 0x0FF1);
+-		CMN_DelayInUS(1);
+-		
+-		/**********************************/
+-		/**** DMAA ****************/
+-		/**********************************/
+-
+-		/* DMAA clock on */ 
+-		CPG_SetClockCtrl(1, 0x0800, 0x0800);
+-			
+-		/* DMAA reset assart */
+-		CPG_SetResetCtrl(1, 0x0080, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_DMAA,CPG_RST_MON_DMAA);
+-		
+-		/* DMAA reset deassert */
+-		CPG_SetResetCtrl(1, 0x0080, 0x0080);
+-		CPG_WaitResetMon(0, CPG_RST_MON_DMAA,0);
+-
+-
+-		/**********************************/
+-		/**** DRPA ****************/
+-		/**********************************/
+-		drp_init();
+-	}
+-	while (0);
+-	return;
+-}
+-
+-static void rdk_module_init(void)
+-{
+-	//USB TEST Module initialize
+-	CMN_REG_Write32(USBTEST_RESET2,  0x00000001);
+-	CMN_DelayInUS(10);
+-	CMN_REG_Write32(USBTEST_CLKRST2, 0x00000005);
+-	CMN_REG_Write32(USBTEST_CLKRST2, 0x00000004);
+-	CMN_DelayInUS(20);
+-	CMN_REG_Write32(USBTEST_RESET1,  0x00000300);
+-	CMN_REG_Write32(USBTEST_RESET1,  0x00000000);
+-	CMN_DelayInUS(75);
+-
+-}
+-int32_t ilStartUpUART(void)
+-{
+-	return CMN_SUCCESS;
+-}
+-
+-extern void _start(void);
+-
+-void s_init(void)
+-{
+-
+-	if(3 == current_el()){
+-
+-		armv8_switch_to_el2((u64)NULL, 0, 0, 0,
+-							_start,
+-							ES_TO_AARCH64);
+-	}
+-	
+-	return;
+-}
+-
+-int board_early_init_f(void)
+-{
+-    
+-	rdk_pfc_init();
+-    
+-	/* move to active for SRAM in ETH0 */
+-	SYS_MoveToActiveSRAM(SYS_SRAM_ETH0);
+-    
+-	rdk_cpg_init();
+-
+-	rdk_module_init();
+-    
+-	rdk_psc_init();
+-	
+-	return 0;
+-}
+-
+-int board_init(void)
+-{
+-	/* adress of boot parameters */
+-	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
+-
+-	/* init UART */
+-	//serial_init();
+-
+-	return 0;
+-}
+-
+-int dram_init(void)
+-{
+-	if (fdtdec_setup_mem_size_base() != 0)
+-		return -EINVAL;
+-
+-	return 0;
+-}
+-
+-int dram_init_banksize(void)
+-{
+-	fdtdec_setup_memory_banksize();
+-
+-	return 0;
+-}
+-
+-void reset_cpu(ulong addr)
+-{
+-}
+-
+-
+-void board_cleanup_before_linux(void)
+-{
+-       //PERI0 BANK SETTING
+-       SYS_WriteReg(SYS_PERI0_BANK, TARGET_BANK0_UNIT_LINUX);
+-       //PERI1 BANK SETTING
+-       SYS_WriteReg(SYS_PERI1_BANK, TARGET_BANK1_UNIT_LINUX);
+-       //DRP BANK SETTING
+-       SYS_WriteReg(SYS_DRP_BANK, TARGET_DRP_UNIT_LINUX);
+-
+-}
+-
+diff --git a/cmd/boot.c b/cmd/boot.c
+index 7e5a233..be67a59 100755
+--- a/cmd/boot.c
++++ b/cmd/boot.c
+@@ -69,133 +69,3 @@ U_BOOT_CMD(
+ 	""
+ );
+ #endif
+-
+-#define BitCA53Core0    0x0u
+-#define BitCA53Core1    0x1u
+-#define TARGET_CORE     BitCA53Core1
+-
+-#define BASE_ADDR_CA53      0xA3F02000
+-#define OFFSET_REG_EDCR     0x00    /* Endian */
+-#define OFFSET_REG_VACR     0x04    /* Vector address */
+-#define OFFSET_REG_TECR     0x08    /* Thumb */
+-#define OFFSET_REG_CP15SACR 0x0C    /* Coprocessor15 */
+-#define OFFSET_REG_AARCHCR  0x10
+-#define OFFSET_REG_RVA1CRL  0x28    /* Reset vector Low */
+-#define OFFSET_REG_RVA1CRH  0x2C    /* Reset vector High */
+-#define OFFSET_REG_PSCR     0x3C    /* Processor power Status */
+-
+-#define EDCR_LITTLE_ENDIAN      0x0
+-#define VACR_ABTVECT_ADR_ZERO   0x0
+-#define TECR_ENABLE_ARM         0x0
+-#define CP15SACR_WRITE_ENABLE   0x0
+-#define AARCHCR_AARCH64         0x1
+-#define PSCR_PS_POWERUP         0x1
+-
+-#define BASE_ADDR_CPG       0xA3500000
+-#define OFFSET_REG_CPG_RST8 0x61C
+-
+-#define NCPUPORESET_RESET_ASSERT        (0x0<<1)
+-#define NCPUPORESET_RESET_DEASSERT      (0x1<<1)
+-#define NCPUPORESET_EN (0x1<<17)
+-
+-#define NCORERESET1_RESET_ASSERT        (0x0<<3)
+-#define NCORERESET1_RESET_DEASSERT      (0x1<<3)
+-#define NCORERESET1_EN (0x1<<19)
+-
+-//#define ONLY_NCPUPORESET_MODE
+-
+-#ifdef ONLY_NCPUPORESET_MODE
+-#define CORE1_COLD_RESET_ASSERT         (NCPUPORESET_RESET_ASSERT) + \
+-                                        (NCPUPORESET_EN)
+-#define CORE1_COLD_RESET_DEASSERT       (NCPUPORESET_RESET_DEASSERT) + \
+-                                        (NCPUPORESET_EN)
+-#else
+-#define CORE1_COLD_RESET_ASSERT         (NCPUPORESET_RESET_ASSERT + NCORERESET1_RESET_ASSERT) + \
+-                                        (NCPUPORESET_EN + NCORERESET1_EN)
+-#define CORE1_COLD_RESET_DEASSERT       (NCPUPORESET_RESET_DEASSERT + NCORERESET1_RESET_DEASSERT) + \
+-                                        (NCPUPORESET_EN + NCORERESET1_EN)
+-#endif /*ONLY_NCPUPORESET_MODE*/
+-extern void CMN_DelayInUSec(uint64_t us);
+-
+-static inline unsigned int ca53_read32( uintptr_t addr )
+-{
+-        return *(volatile unsigned int*)(BASE_ADDR_CA53+addr);
+-}
+-static inline void ca53_write32( uintptr_t addr, uint32_t val )
+-{
+-        *(volatile unsigned int*)(BASE_ADDR_CA53+addr) = val;
+-}
+-static inline void cpg_write32( uintptr_t addr, uint32_t val )
+-{
+-        *(volatile unsigned int*)(BASE_ADDR_CPG+addr) = val;
+-}
+-
+-
+-//static int do_wakeup_secondary_cpu(cmd_tl_t *cmdtp, int flag, int argc, char * const argv[])
+-static int do_wakeup_secondary_cpu(caddr_t *cmdtp, int flag, int argc, char * const argv[])
+-
+-//caddr_t
+-{
+-    unsigned int reg;
+-    unsigned int reset_vector_addr;
+-    unsigned long kernel_start_addr;
+-
+-    if(argc < 2)
+-    {
+-        return CMD_RET_USAGE;
+-    }
+-
+-    reset_vector_addr = simple_strtoul(argv[1], NULL, 16);
+-    kernel_start_addr = env_get_hex("fdt_addr",0);
+-    if( reset_vector_addr > kernel_start_addr )
+-    {
+-        printf("[ERROR] ResetVector address[%08x] is greater than Linux area[%08x].\n", \
+-                reset_vector_addr,kernel_start_addr
+-        );
+-        return CMD_RET_USAGE;
+-    }
+-    printf("[DEBUG]Reset vector address 0x%08x\n",reset_vector_addr);
+-
+-    /* Setting secondary cpu for cold reset */
+-    reg = ca53_read32( OFFSET_REG_EDCR );
+-    reg &= ( ~TARGET_CORE );    //Little endian
+-    ca53_write32( OFFSET_REG_EDCR, reg );
+-
+-    reg = ca53_read32( OFFSET_REG_VACR );
+-    reg &= ( ~TARGET_CORE );    //Abort vector address is zero
+-    ca53_write32( OFFSET_REG_VACR, reg );
+-
+-    reg = ca53_read32( OFFSET_REG_TECR );
+-    reg &= ( ~TARGET_CORE );    //Reset on ARM
+-    ca53_write32( OFFSET_REG_TECR, reg );
+-
+-    reg = ca53_read32( OFFSET_REG_CP15SACR );
+-    reg &= ( ~TARGET_CORE );    //Enable write access for CP15 secure register
+-    ca53_write32( OFFSET_REG_CP15SACR, reg );
+-
+-    reg = ca53_read32( OFFSET_REG_AARCHCR );
+-    reg |= ( AARCHCR_AARCH64 << TARGET_CORE );
+-    ca53_write32( OFFSET_REG_AARCHCR, reg );
+-
+-    ca53_write32( OFFSET_REG_RVA1CRL, reset_vector_addr );  //Set reset vector
+-    ca53_write32( OFFSET_REG_RVA1CRH, 0x0 );                //Set reset vector
+-
+-    printf("Wakeup for Secondary CPU\n");
+-
+-    /*Assert ca53 core1 processor */
+-    cpg_write32( OFFSET_REG_CPG_RST8, CORE1_COLD_RESET_ASSERT);
+-    CMN_DelayInUSec(1); //wait 1us
+-
+-    /*Deassert ca53 core1 processor */
+-    cpg_write32( OFFSET_REG_CPG_RST8, CORE1_COLD_RESET_DEASSERT);
+-    CMN_DelayInUSec(1); //wait 1us
+-
+-    return 0;
+-}
+-
+-U_BOOT_CMD(
+-        wakeup_a53core1, 2, 0,  do_wakeup_secondary_cpu,
+-        "Wakeup the Cortex-A53 core1 for Real Time OS.",
+-    "[reset vector address]\n"
+-    "\t- Cold boot CA53 #1 at [reset vector address]"
+-);
+diff --git a/configs/r9a09g011gbg_rzv2m_defconfig a/configs/r9a09g011gbg_rzv2m_defconfig
+deleted file mode 100755
+index efd3d65..0000000
+--- a/configs/r9a09g011gbg_rzv2m_defconfig
++++ /dev/null
+@@ -1,77 +0,0 @@
+-CONFIG_ARM=y
+-CONFIG_ARCH_RMOBILE=y
+-CONFIG_SYS_TEXT_BASE=0x7C000000
+-CONFIG_SYS_MALLOC_F_LEN=0x2000
+-CONFIG_RCAR_64=y
+-#CONFIG_RCAR_GEN3=y
+-CONFIG_R9A09G011GBG=y
+-CONFIG_TARGET_RZV2M=y
+-CONFIG_ARCH_MISC_INIT=n
+-CONFIG_SMBIOS_PRODUCT_NAME=""
+-CONFIG_FIT=y
+-# CONFIG_ARCH_FIXUP_FDT_MEMORY is not set
+-CONFIG_BOOTDELAY=3
+-CONFIG_USE_BOOTARGS=y
+-CONFIG_BOOTARGS="root=/dev/nfs rw nfsroot=192.168.0.2:/nfs/rzv2m,nfsvers=3 ip=192.168.0.1:192.168.0.2::255.255.255.0:rzv2m:eth0"
+-CONFIG_SUPPORT_RAW_INITRD=y
+-CONFIG_DEFAULT_FDT_FILE="r9a09g011gbg-evaluation-board.dtb"
+-CONFIG_VERSION_VARIABLE=y
+-CONFIG_HUSH_PARSER=y
+-CONFIG_CMD_BOOTZ=y
+-CONFIG_CMD_GPIO=y
+-CONFIG_CMD_I2C=y
+-CONFIG_CMD_MMC=y
+-CONFIG_CMD_USB=y
+-CONFIG_CMD_DHCP=y
+-CONFIG_CMD_MII=y
+-CONFIG_CMD_PING=y
+-CONFIG_CMD_CACHE=y
+-CONFIG_CMD_EXT2=y
+-CONFIG_CMD_EXT4=y
+-CONFIG_CMD_EXT4_WRITE=y
+-CONFIG_CMD_FAT=y
+-CONFIG_CMD_FS_GENERIC=y
+-CONFIG_OF_CONTROL=y
+-CONFIG_DEFAULT_DEVICE_TREE="r9a09g011gbg-rzv2m-u-boot"
+-CONFIG_ENV_IS_IN_MMC=y
+-#CONFIG_ENV_IS_IN_FAT=y
+-#CONFIG_ENV_FAT_INTERFACE="mmc"
+-#CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+-#CONFIG_ENV_FAT_FILE="rzv2m-u-boot.env"
+-CONFIG_REGMAP=y
+-CONFIG_SYSCON=y
+-CONFIG_BLK=y
+-CONFIG_CLK=y
+-#CONFIG_CLK_RENESAS=y
+-CONFIG_DM_GPIO=y
+-#CONFIG_RCAR_GPIO=y
+-CONFIG_DM_I2C=y
+-CONFIG_SYS_I2C_RCAR_IIC=y
+-CONFIG_DM_MMC=y
+-CONFIG_MMC_IO_VOLTAGE=y
+-CONFIG_MMC_UHS_SUPPORT=y
+-CONFIG_MMC_HS200_SUPPORT=y
+-CONFIG_RENESAS_SDHI=y
+-CONFIG_PHY_REALTEK=y
+-CONFIG_DM_ETH=y
+-CONFIG_RENESAS_RAVB=y
+-CONFIG_PINCTRL=y
+-CONFIG_PINCONF=y
+-CONFIG_PINCTRL_PFC=y
+-CONFIG_DM_REGULATOR=y
+-CONFIG_DM_REGULATOR_FIXED=y
+-CONFIG_DM_REGULATOR_GPIO=y
+-#CONFIG_SCIF_CONSOLE=y
+-CONFIG_DM_SERIAL=n
+-CONFIG_RZV2M_SERIAL=y
+-CONFIG_USB=y
+-CONFIG_DM_USB=y
+-CONFIG_USB_XHCI_HCD=y
+-CONFIG_USB_EHCI_HCD=y
+-CONFIG_USB_EHCI_GENERIC=y
+-CONFIG_USB_STORAGE=y
+-CONFIG_OF_LIBFDT_OVERLAY=y
+-CONFIG_SMBIOS_MANUFACTURER=""
+-CONFIG_PRAM=1
+-CONFIG_ENV_OFFSET=0xFFFE0000
+-CONFIG_SYS_CONFIG_NAME="rzv2m"
+diff --git a/dts/Makefile b/dts/Makefile
+index 8de3173..49327d1 100755
+--- a/dts/Makefile
++++ b/dts/Makefile
+@@ -32,8 +32,6 @@ $(obj)/dt.dtb: $(DTB) FORCE
+ endif
+ 
+ dtb-$(CONFIG_ARCH_RMOBILE) += \
+-       r9a09g011gbg-rzv2m-u-boot.dtb \
+-       r9a09g011gbg-rzv2m.dtb \
+        r9a09g055ma3gbg-rzv2ma-u-boot.dtb \
+        r9a09g055ma3gbg-rzv2ma.dtb \
+ targets += dt.dtb
+diff --git a/include/configs/rzv2m.h a/include/configs/rzv2m.h
+deleted file mode 100755
+index 46c3932..0000000
+--- a/include/configs/rzv2m.h
++++ /dev/null
+@@ -1,75 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0+ */
+-/*
+- * include/configs/rzv2m.h
+- *     This file is rzv2m board configuration.
+- *
+- * Copyright (C) 2019 Renesas Electronics Corporation
+- */
+-
+-#ifndef __RZV2M_H
+-#define __RZV2M_H
+-
+-#include <asm/arch/rmobile.h>
+-
+-/* Ethernet RAVB */
+-/*#define CONFIG_NET_MULTI*/
+-#define CONFIG_BITBANGMII
+-#define CONFIG_BITBANGMII_MULTI
+-
+-/* Generic Timer Definitions (use in assembler source) */
+-#define COUNTER_FREQUENCY	24000000	/* 24MHz from CNT_CLK */
+-
+-/* Environment in eMMC, at the end of 2nd "boot sector" */
+-#define CONFIG_ENV_OFFSET		(-CONFIG_ENV_SIZE)
+-#define CONFIG_SYS_MMC_ENV_DEV		1
+-#define CONFIG_SYS_MMC_ENV_PART		2
+-
+-
+-/* add 20200206 */
+-/*#define DEBUG */
+-#define CONFIG_REMAKE_ELF
+-
+-#define CONFIG_ARCH_CPU_INIT
+-#undef CONFIG_DISPLAY_CPUINFO
+-#define CONFIG_SYS_INIT_SP_ADDR 0x000BFFFC
+-
+-/* Generic Interrupt Controller Definitions */
+-#define CONFIG_GICV2
+-#define GICD_BASE	0x82010000
+-#define GICC_BASE	0x82020000
+-
+-/* MEMORY */
+-#define CONFIG_SYS_SDRAM_BASE		0x00000000
+-#define CONFIG_SYS_SDRAM_SIZE		0x80000000
+-#define CONFIG_SYS_LOAD_ADDR		0x40007fc0
+-#define CONFIG_SYS_MONITOR_LEN		(768 * 1024)
+-#define CONFIG_SYS_MALLOC_LEN		(1 * 1024 * 1024)
+-
+-
+-/* ENV setting */
+-#define CONFIG_ENV_SECT_SIZE	(128 * 1024)
+-#define CONFIG_ENV_SIZE		(CONFIG_ENV_SECT_SIZE)
+-#define CONFIG_ENV_OVERWRITE
+-//#define CONFIG_ENV_SIZE_REDUND	(CONFIG_ENV_SIZE)
+-#define CONFIG_EXTRA_ENV_SETTINGS \
+-	"ethaddr=02:11:22:33:44:55\0" \
+-	"ipaddr=192.168.1.11\0" \
+-	"serverip=192.168.1.10\0" \
+-	"gatewayip=192.168.0.1\0" \
+-	"netmask=255.255.255.0\0" \
+-	"loadaddr=0x180080000\0" \
+-        "fdt_addr=0x180000000\0" \
+-	"fdt_file=r9a09g011gbg-evaluation-board.dtb\0" \
+-	"kernel=Image\0" \
+-	"rtos=core1_uart.bin\0" \
+-	"core1addr=0x0\0" \
+-	"core1_vector=0x0\0" \
+-	"bootargs_sd=setenv bootargs root=/dev/mmcblk0p2 rootwait rootfstype=ext3 rw\0" \
+-	"bootsd=run bootargs_sd;" \
+-	"fatload mmc 0:1 ${loadaddr} ${kernel};fatload mmc 0:1 ${fdt_addr} ${fdt_file};booti ${loadaddr} - ${fdt_addr}\0" \
+-    "bootargs_nfs=setenv bootargs root=/dev/nfs rw nfsroot=${serverip}:/nfs/rzv2m,nfsvers=3 ip=${ipaddr}:${serverip}::${netmask}:rzv2m:eth0\0" \
+-	"bootnfs=run bootargs_nfs;" \
+-	"tftp ${loadaddr} ${kernel};tftp ${fdt_addr} ${fdt_file};booti ${loadaddr} - ${fdt_addr}\0" \
+-	"bootcmd=run bootsd\0" \
+-
+-#endif /* __RZV2M_H */
+diff --git a/include/dt-bindings/power/r9a09g011gbg-sysc.h a/include/dt-bindings/power/r9a09g011gbg-sysc.h
+deleted file mode 100755
+index fb9df9c..0000000
+--- a/include/dt-bindings/power/r9a09g011gbg-sysc.h
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-#ifndef __DT_BINDINGS_POWER_R9A09G011GBG_SYSC_H__
+-#define __DT_BINDINGS_POWER_R9A09G011GBG_SYSC_H__
+-
+-/*
+- * These power domain indices match the numbers of the interrupt bits
+- * representing the power areas in the various Interrupt Registers
+- * (e.g. SYSCISR, Interrupt Status Register)
+- */
+-
+-#define R8A774C0_PD_CA53_CPU0		 5
+-#define R8A774C0_PD_CA53_SCU		21
+-
+-/* Always-on power area */
+-#define R8A774C0_PD_ALWAYS_ON		32
+-
+-#endif /* __DT_BINDINGS_POWER_R9A09G011GBG_SYSC_H__ */
+diff --git a/include/dt-bindings/power/rzv2m-sysc.h a/include/dt-bindings/power/rzv2m-sysc.h
+deleted file mode 100755
+index 8ba1fc6..0000000
+--- a/include/dt-bindings/power/rzv2m-sysc.h
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/*******************************************************************************
+-* DISCLAIMER
+-* This software is supplied by Renesas Electronics Corporation and is only
+-* intended for use with Renesas products. No other uses are authorized. This
+-* software is owned by Renesas Electronics Corporation and is protected under
+-* all applicable laws, including copyright laws.
+-* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
+-* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
+-* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+-* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
+-* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
+-* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
+-* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
+-* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
+-* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+-* Renesas reserves the right, without notice, to make changes to this software
+-* and to discontinue the availability of this software. By using this software,
+-* you agree to the additional terms and conditions found by accessing the
+-* following link:
+-* http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
+-*******************************************************************************/ 
+-#ifndef __DT_BINDINGS_POWER_RZV2M_SYSC_H__
+-#define __DT_BINDINGS_POWER_RZV2M_SYSC_H__
+-
+-/*
+- * These power domain indices match the numbers of the interrupt bits
+- * representing the power areas in the various Interrupt Registers
+- * (e.g. SYSCISR, Interrupt Status Register)
+- */
+-
+-#define RZV2M_PD_CA53_SCU		1
+-#define RZV2M_PD_CA53			7
+-
+-/* Always-on power area */
+-#define RZV2M_PD_ALWAYS_ON		32
+-
+-#endif /* __DT_BINDINGS_POWER_RZV2M_SYSC_H__ */

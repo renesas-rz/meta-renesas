@@ -1,0 +1,2272 @@
+diff --git a/board/renesas/rzv2m-dev/Kconfig b/board/renesas/rzv2m-dev/Kconfig
+old mode 100755
+new mode 100644
+diff --git a/board/renesas/rzv2m-dev/Makefile b/board/renesas/rzv2m-dev/Makefile
+old mode 100755
+new mode 100644
+index 9b3de13..58d0cd8
+--- a/board/renesas/rzv2m-dev/Makefile
++++ b/board/renesas/rzv2m-dev/Makefile
+@@ -1,9 +1,9 @@
+ #
+ # board/renesas/rzv2m-dev/Makefile
+ #
+-# Copyright (C) 2019 Renesas Electronics Corporation
++# Copyright (C) 2022 Renesas Electronics Corporation
+ #
+ # SPDX-License-Identifier: GPL-2.0+
+ #
+ 
+-obj-y	:= rzv2m-dev.o rdk_pfc.o rdk_cmn_cpg.o rdk_common.o rdk_sys.o rdk_psc.o
++obj-y	:= rzv2m-dev.o evk_cmn_cpg.o evk_common.o evk_sys.o evk_psc.o
+diff --git b/board/renesas/rzv2m-dev/evk_cmn_cpg.c b/board/renesas/rzv2m-dev/evk_cmn_cpg.c
+new file mode 100644
+index 0000000..66bb1f1
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_cmn_cpg.c
+@@ -0,0 +1,472 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++/*******************************************************************************
++ * File Name    : evk_cmn_cpg.c
++ * Description  : operation functions for CPG
++ ******************************************************************************/
++
++#include <stdint.h>
++#include <stdbool.h>
++
++#include "evk_common.h"
++#include "evk_cmn_cpg.h"
++
++#define CPG_NO_REGISTER_OFFSET          (0xFFFFFFFF)
++#define CPG_TIMEOUT_UNIT_IS_US          (10)
++
++typedef struct
++{
++    unsigned int pll_used_cnt[CPG_PLL_MAX+1];
++} st_cpg_priv_t;
++
++static st_cpg_priv_t gl_cpg_priv =
++{
++    .pll_used_cnt = { 0 },
++};
++
++static st_cpg_pll_param_t pll1_param =
++{
++    .ssc.word    = 0x00000004,
++    .clk.word[0] = 0x000014C2,
++    .clk.word[1] = 0x00150801
++};
++
++static st_cpg_pll_param_t pll2_param =
++{
++    .ssc.word    = 0x00000004,
++    .clk.word[0] = 0x00001903,
++    .clk.word[1] = 0x000E0E00
++};
++
++/** 600MHz w/o SSCG */
++static st_cpg_pll_param_t pll3_param =
++{
++    .ssc.word    = 0x00000000,
++    .clk.word[0] = 0x00001903,
++    .clk.word[1] = 0x00100800
++};
++
++static st_cpg_pll_param_t pll4_param =
++{
++    .ssc.word    = 0x00000000,
++    .clk.word[0] = 0x00001802,
++    .clk.word[1] = 0x00000002
++};
++
++static st_cpg_pll_param_t pll6_param =
++{
++    .ssc.word    = 0x00000000,
++    .clk.word[0] = 0x00001A42,
++    .clk.word[1] = 0x00150A01
++};
++
++static st_cpg_pll_param_t pll7_param =
++{
++    .ssc.word    = 0x00000004,
++    .clk.word[0] = 0x000018C2,
++    .clk.word[1] = 0x00150A01
++};
++
++static st_cpg_pll_param_t * const gl_priv_pll_param_tbl[CPG_PLL_MAX+1] =
++{
++    NULL,
++    &pll1_param,
++    &pll2_param,
++    &pll3_param,
++    &pll4_param,
++    NULL,
++    &pll6_param,
++    &pll7_param
++};
++
++static const unsigned int gl_priv_pll_top_offset_table[CPG_PLL_MAX+1] =
++{
++    CPG_NO_REGISTER_OFFSET,
++    CPG_PLL1_STBY,
++    CPG_PLL2_STBY,
++    CPG_PLL3_STBY,
++    CPG_PLL4_STBY,
++    CPG_NO_REGISTER_OFFSET,
++    CPG_PLL6_STBY,
++    CPG_PLL7_STBY,
++};
++
++#define CPG_REG_WEN_SHIFT           (16)
++#define CPG_SET_DATA_MASK           (0x0000FFFFUL)
++
++#define CPG_PLLN_STBY_OFFSET        (0x00)
++#define CPG_PLLN_CLK1_OFFSET        (0x04)
++#define CPG_PLLN_CLK2_OFFSET        (0x08)
++#define CPG_PLLN_MON_OFFSET         (0x0C)
++
++#define CPG_PLL_CCTRL_REG_EXIT_FLAGS    (0x0000009E)
++
++#define CPG_TIMEOUT_UNIT_IN_US      (10)
++#define CPG_PLL_TURN_MODE_TIMEOUT   (500000)
++#define CPG_CLK_FINISH_CHANGE_TIMEOUT   (500000)
++#define CPG_PLL_LOCKED  (CPG_PLL_MON_PLL_LOCK)
++
++
++#define CPG_WAIT_EVENT_PLL(m_pll, m_toc, m_err_code, m_condition, m_rslt)   \
++    {   \
++        unsigned int count = (m_toc);   \
++        unsigned int data;  \
++        while (true) {  \
++            CPG_GetStatusPLL((m_pll), &data);   \
++            if ((m_condition) == (data & CPG_PLL_LOCKED)) { \
++                (m_rslt) = CMN_SUCCESS; \
++                break;  \
++            }   \
++            if ((0 == (m_toc)) || (0 < count)) {    \
++                CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);  \
++                count--;    \
++            } else {    \
++                (m_rslt) = (m_err_code);    \
++                break;  \
++            }   \
++        }   \
++    }
++
++#define CPG_WAIT_EVENT(m_toc, m_err_code, m_condition, m_rslt)  \
++    {   \
++        unsigned int count = (m_toc)/CPG_TIMEOUT_UNIT_IN_US;    \
++        while (true) {  \
++            if ((m_condition)) {    \
++                (m_rslt) = CMN_SUCCESS; \
++                break;  \
++            }   \
++            if ((0 == (m_toc)) || (0 < count)) {    \
++                CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);  \
++                count--;    \
++            } else {    \
++                (m_rslt) = (m_err_code);    \
++                break;  \
++            }   \
++        }   \
++    }
++
++
++unsigned int CPG_ReadReg(unsigned int offset)
++{
++    return (CMN_REG_Read32(CPG_BASE_ADDRESS + offset));
++}
++
++void CPG_WriteReg(unsigned int offset, unsigned int value)
++{
++    CMN_REG_Write32((CPG_BASE_ADDRESS + offset), value);
++}
++
++
++int CPG_MoveToActivePLL(e_cpg_pll_num_t pll_num, st_cpg_pll_param_t *p_set_data)
++{
++    unsigned int offset;
++    unsigned int value;
++
++    if ((pll_num < CPG_PLL_MIN) || (CPG_PLL_MAX < pll_num))
++    {
++        return (CPG_ERROR_NO_REGISTER);
++    }
++
++    offset = gl_priv_pll_top_offset_table[pll_num];
++    if (CPG_NO_REGISTER_OFFSET == offset)
++    {
++        return (CPG_ERROR_NO_REGISTER);
++    }
++
++    value = CPG_ReadReg(offset+CPG_PLLN_MON_OFFSET);
++    if (0 != (value & CPG_PLL_MON_RESETB))
++    {
++        return (CPG_ERROR_PLL_ACTIVE);
++    }
++
++    if (NULL != p_set_data)
++    {
++        value = p_set_data->clk.word[0];
++        CPG_WriteReg(offset+CPG_PLLN_CLK1_OFFSET, value);
++        value = p_set_data->clk.word[1];
++        CPG_WriteReg(offset+CPG_PLLN_CLK2_OFFSET, value);
++        value = p_set_data->ssc.word;
++    }else
++    {
++        value = CPG_ReadReg(offset+CPG_PLLN_STBY_OFFSET);
++    }
++
++    if (4 == pll_num)
++    {
++        value = 0x00010001;
++    }else
++    {
++        value |= 0x00150001;
++        value = 0x00050001;    /* Setting up 1chip sim environment */
++    }
++
++    CPG_WriteReg(offset+CPG_PLLN_STBY_OFFSET, value);
++
++    return (CMN_SUCCESS);
++}
++
++int CPG_GetStatusPLL(e_cpg_pll_num_t pll_num, unsigned int *p_data)
++{
++    unsigned int offset;
++    if ((pll_num < CPG_PLL_MIN) || (CPG_PLL_MAX < pll_num))
++    {
++        return (CPG_ERROR_NO_REGISTER);
++    }
++
++    offset = gl_priv_pll_top_offset_table[pll_num];
++    if (CPG_NO_REGISTER_OFFSET == offset)
++    {
++        return (CPG_ERROR_NO_REGISTER);
++    }
++
++    if (NULL == p_data)
++    {
++        return (CPG_ERROR_NULL_POINTER);
++    }
++
++    offset += CPG_PLLN_MON_OFFSET;
++
++    *p_data = CPG_ReadReg(offset);
++
++    return (CMN_SUCCESS);
++}
++
++
++void CPG_SetDifClkFreq(e_cpg_divsel_t target_reg, unsigned short int target, unsigned short int set_value)
++{
++    unsigned int offset = CPG_CA53_DDIV;
++    unsigned int value;
++
++    while (true)
++    {
++        if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
++        {
++            break;
++        }
++        CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);
++    }
++
++    offset += (target_reg * sizeof(unsigned int));
++
++    value = ((unsigned int)target << CPG_REG_WEN_SHIFT)
++                | (set_value & CPG_MMCDDI_DDIV_DIVX_SET_MSK);
++
++    CPG_WriteReg(offset, value);
++
++    while (true)
++    {
++        if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
++        {
++            break;
++        }
++        CMN_DelayInUS(CPG_TIMEOUT_UNIT_IN_US);
++    }
++}
++
++
++int CPG_SetClockCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value)
++{
++    unsigned int offset = CPG_CLK_ON1;
++    unsigned int value;
++
++    if (reg_num < CPG_CLK_ON_REG_MIN || CPG_CLK_ON_REG_MAX < reg_num)
++    {
++        return (CPG_ERROR_NO_REGISTER);
++    }
++
++    offset += ((reg_num - 1) * sizeof(unsigned int));
++
++    value = ((unsigned int)target << CPG_REG_WEN_SHIFT)
++            | (set_value & CPG_SET_DATA_MASK);
++
++    CPG_WriteReg(offset, value);
++
++    return (CMN_SUCCESS);
++}
++
++
++int CPG_GetClockCtrl(unsigned char reg_num, unsigned int *p_data)
++{
++    unsigned int offset = CPG_CLK_ON1;
++
++    if (reg_num < CPG_CLK_ON_REG_MIN || CPG_CLK_ON_REG_MAX < reg_num)
++    {
++        return (CPG_ERROR_NO_REGISTER);
++    }
++    if (NULL == p_data)
++    {
++        return (CPG_ERROR_NULL_POINTER);
++    }
++
++    offset += ((reg_num - 1) * sizeof(unsigned int));
++
++    *p_data = CPG_ReadReg(offset);
++
++    return (CMN_SUCCESS);
++}
++
++
++int CPG_SetResetCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value)
++{
++    unsigned int offset = CPG_RST1;
++    unsigned int value;
++
++    if (reg_num < CPG_RST_REG_MIN || CPG_RST_REG_MAX < reg_num)
++    {
++        return (CPG_ERROR_NO_REGISTER);
++    }
++
++    offset += ((reg_num - 1) * sizeof(unsigned int));
++
++    value = ((unsigned int)target << CPG_REG_WEN_SHIFT) | (set_value & CPG_SET_DATA_MASK);
++
++    CPG_WriteReg(offset, value);
++
++    return (CMN_SUCCESS);
++}
++
++
++int CPG_SetPDResetCtrl(unsigned short int target, unsigned short int set_value)
++{
++    unsigned int offset = CPG_PD_RST;
++    unsigned int value;
++
++    value = ((unsigned int)target << CPG_REG_WEN_SHIFT) | (set_value & CPG_SET_DATA_MASK);
++
++    CPG_WriteReg(offset, value);
++
++    return (CMN_SUCCESS);
++}
++
++
++int CPG_WaitResetMon(unsigned int timeout_c, unsigned int msk, unsigned int val)
++{
++    int rslt = CMN_ERROR;
++    unsigned int count;
++
++    do
++    {
++        if (0 == msk)
++        {
++            rslt = CMN_SUCCESS;
++            break;
++        }
++
++        count = timeout_c;
++        while (true)
++        {
++            if (val == (CPG_ReadReg(CPG_RST_MON) & msk))
++            {
++                rslt = CMN_SUCCESS;
++                break;
++            }
++            if ((0 == timeout_c) || (0 < count))
++            {
++                CMN_DelayInUS(CPG_TIMEOUT_UNIT_IS_US);
++                count--;
++            }else
++            {
++                rslt = CPG_ERROR_TURN_RESET_TIMEOUT;
++                break;
++            }
++        }
++    }
++    while (0);
++
++    return rslt;
++}
++
++
++int cpg_resumePLL(e_cpg_pll_num_t pll_num)
++{
++    int rslt;
++    unsigned int data;
++    st_cpg_pll_param_t *p_data = NULL;
++
++    do
++    {
++        rslt = CPG_GetStatusPLL(pll_num, &data);
++        if (CMN_SUCCESS != rslt)
++        {
++            break;
++        }
++        if (0 != (data & CPG_PLL_LOCKED))
++        {
++            rslt = CPG_ERROR_PLL_NOT_STANDBY | pll_num;
++            break;
++        }
++
++        p_data = gl_priv_pll_param_tbl[pll_num];
++        rslt = CPG_MoveToActivePLL(pll_num, p_data);
++
++        if (CMN_SUCCESS != rslt)
++        {
++            break;
++        }
++
++        CPG_WAIT_EVENT_PLL(pll_num, CPG_PLL_TURN_MODE_TIMEOUT, CPG_ERROR_PLL_TURN_MODE_TIMEOUT, CPG_PLL_LOCKED, rslt);
++
++        if (CMN_SUCCESS != rslt)
++        {
++            break;
++        }
++            }
++
++    while (0);
++
++    return rslt;
++}
++
++int CPG_WakeUpPLL(e_cpg_pll_num_t pll_num)
++{
++    int rslt = CMN_ERROR;
++
++    do
++    {
++        if ((pll_num < CPG_PLL_MIN) || (CPG_PLL_MAX < pll_num))
++        {
++            rslt = CPG_ERROR_NO_REGISTER;
++            break;
++        }
++
++        if (0 == gl_cpg_priv.pll_used_cnt[pll_num])
++        {
++            rslt = cpg_resumePLL(pll_num);
++            if (CMN_SUCCESS != rslt)
++            {
++                break;
++            }
++            gl_cpg_priv.pll_used_cnt[pll_num]++;
++        }else
++        {
++            gl_cpg_priv.pll_used_cnt[pll_num]++;
++            rslt = CMN_SUCCESS;
++        }
++    }
++    while (0);
++
++    return rslt;
++}
++
++
++/*- End of file -*/
+diff --git b/board/renesas/rzv2m-dev/evk_cmn_cpg.h b/board/renesas/rzv2m-dev/evk_cmn_cpg.h
+new file mode 100644
+index 0000000..7972050
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_cmn_cpg.h
+@@ -0,0 +1,312 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++/*******************************************************************************
++ * File Name    : evk_cmn_cpg.h
++ * Description  : register and API information for CPG
++ ******************************************************************************/
++
++#ifndef EVK_CMN_CPG_H
++#define EVK_CMN_CPG_H
++
++/* CPG */
++#define CPG_BASE_ADDRESS        (0x0A3500000ULL)
++
++/** Registor Offset */
++#define CPG_PLL1_STBY           (0x0000)
++#define CPG_PLL1_CLK1           (0x0004)
++#define CPG_PLL1_CLK2           (0x0008)
++#define CPG_PLL1_MON            (0x000C)
++#define CPG_PLL2_STBY           (0x0010)
++#define CPG_PLL2_CLK1           (0x0014)
++#define CPG_PLL2_CLK2           (0x0018)
++#define CPG_PLL2_MON            (0x001C)
++#define CPG_PLL3_STBY           (0x0020)
++#define CPG_PLL3_CLK1           (0x0024)
++#define CPG_PLL3_CLK2           (0x0028)
++#define CPG_PLL3_MON            (0x002C)
++#define CPG_PLL6_STBY           (0x0030)
++#define CPG_PLL6_CLK1           (0x0034)
++#define CPG_PLL6_CLK2           (0x0038)
++#define CPG_PLL6_MON            (0x003C)
++#define CPG_PLL7_STBY           (0x0040)
++#define CPG_PLL7_CLK1           (0x0044)
++#define CPG_PLL7_CLK2           (0x0048)
++#define CPG_PLL7_MON            (0x004C)
++
++
++#define CPG_PLL4_STBY           (0x0100)
++#define CPG_PLL4_CLK1           (0x0104)
++#define CPG_PLL4_CLK2           (0x0108)
++#define CPG_PLL4_MON            (0x010C)
++
++
++#define CPG_PLL1_CCTRL_RST      (0x0180)
++#define CPG_PLL2_CCTRL_RST      (0x0184)
++#define CPG_PLL3_CCTRL_RST      (0x0188)
++#define CPG_PLL4_CCTRL_RST      (0x018C)
++
++#define CPG_PLL7_CCTRL_RST      (0x0198)
++
++#define CPG_CA53_DDIV           (0x0200)
++#define CPG_SYS_DDIV            (0x0204)
++#define CPG_MMCDDI_DDIV         (0x0210)
++#define CPG_CLK48_DSEL          (0x0214)
++#define CPG_CLKSTATUS           (0x0224)
++
++
++#define CPG_SDIEMM_SSEL         (0x0300)
++#define CPG_GMCLK_SDIV          (0x031C)
++#define CPG_GMCLK_SSEL          (0x0320)
++#define CPG_URT_RCLK_SDIV       (0x0328)
++#define CPG_URT_RCLK_SSEL       (0x032C)
++#define CPG_CSI_RCLK_SSEL       (0x0330)
++
++
++#define CPG_CLK_ON1             (0x0400)
++#define CPG_CLK_ON2             (0x0404)
++#define CPG_CLK_ON3             (0x0408)
++#define CPG_CLK_ON4             (0x040C)
++#define CPG_CLK_ON5             (0x0410)
++#define CPG_CLK_ON6             (0x0414)
++#define CPG_CLK_ON7             (0x0418)
++#define CPG_CLK_ON8             (0x041C)
++#define CPG_CLK_ON9             (0x0420)
++#define CPG_CLK_ON10            (0x0424)
++#define CPG_CLK_ON11            (0x0428)
++#define CPG_CLK_ON12            (0x042C)
++#define CPG_CLK_ON13            (0x0430)
++#define CPG_CLK_ON14            (0x0434)
++#define CPG_CLK_ON15            (0x0438)
++#define CPG_CLK_ON16            (0x043C)
++#define CPG_CLK_ON17            (0x0440)
++#define CPG_CLK_ON18            (0x0444)
++#define CPG_CLK_ON19            (0x0448)
++#define CPG_CLK_ON20            (0x044C)
++#define CPG_CLK_ON21            (0x0450)
++#define CPG_CLK_ON22            (0x0454)
++#define CPG_CLK_ON23            (0x0458)
++#define CPG_CLK_ON24            (0x045C)
++#define CPG_CLK_ON25            (0x0460)
++#define CPG_CLK_ON26            (0x0464)
++#define CPG_CLK_ON27            (0x0468)
++
++#define CPG_RST_MSK             (0x0504)
++
++
++#define CPG_RST1                (0x0600)
++#define CPG_RST2                (0x0604)
++#define CPG_RST3                (0x0608)
++#define CPG_RST4                (0x060C)
++#define CPG_RST5                (0x0610)
++#define CPG_RST6                (0x0614)
++#define CPG_RST7                (0x0618)
++#define CPG_RST8                (0x061C)
++#define CPG_RST9                (0x0620)
++#define CPG_RST10               (0x0624)
++#define CPG_RST11               (0x0628)
++#define CPG_RST12               (0x062C)
++#define CPG_RST13               (0x0630)
++#define CPG_RST14               (0x0634)
++#define CPG_RST15               (0x0638)
++
++
++#define CPG_RST_MON             (0x0680)
++
++#define CPG_PD_RST              (0x0800)
++
++
++/** Bit assign */
++#define CPG_PLL_STBY_RESETB                 (0x00000001)
++#define CPG_PLL_STBY_WEN_RESETB             (0x00010000)
++#define CPG_PLL_STBY_WEN_SSE_EN             (0x00040000)
++#define CPG_PLL_STBY_WEN_SSC_MODE           (0x00100000)
++
++#define CPG_PLL_MON_RESETB                  (0x00000001)
++#define CPG_PLL_MON_PLL_LOCK                (0x00000010)
++
++#define CPG_PLL1_CCTRL_RST_P1_0_RST         (0x00000001)
++#define CPG_PLL1_CCTRL_WEN_RST_P1_0_RST     (0x00010000)
++
++#define CPG_CA53_DDIV_DIVA_SET_MIN          (0)
++#define CPG_CA53_DDIV_WEN_DIVA              (0x00010000)
++
++#define CPG_SYS_DDIV_DIVD_SET_SHIFT         (4)
++#define CPG_SYS_DDIV_DIVD_SET_MIN           (0)
++#define CPG_SYS_DDIV_DIVE_SET_SHIFT         (8)
++#define CPG_SYS_DDIV_DIVE_SET_MIN           (0)
++#define CPG_SYS_DDIV_WEN_DIVB               (0x00010000)
++#define CPG_SYS_DDIV_WEN_DIVD               (0x00100000)
++#define CPG_SYS_DDIV_WEN_DIVE               (0x01000000)
++
++#define CPG_MMCDDI_DDIV_DIVX_SET_MSK        (0x00000003)
++#define CPG_MMCDDI_DDIV_DIVX_SET_SHIFT      (0)
++#define CPG_MMCDDI_DDIV_DIVX_SET_MAX        (2)
++#define CPG_MMCDDI_DDIV_DIVX_SET_MIN        (0)
++#define CPG_MMCDDI_DDIV_WEN_DIVX            (0x00010000)
++
++#define CPG_CLK48_DSEL_SELD                 (0x00000002)
++#define CPG_CLK48_DSEL_SELE                 (0x00000004)
++#define CPG_CLK48_DSEL_WEN_SELD             (0x00020000)
++#define CPG_CLK48_DSEL_WEN_SELE             (0x00040000)
++
++#define CPG_SDIEMM_SSEL_SELSDI              (0x00000001)
++#define CPG_SDIEMM_SSEL_WEN_SELSDI          (0x00010000)
++
++#define CPG_URT_RCLK_SSEL_WEN_SELW0         (0x00010000)
++
++#define CPG_CLKSTATUS_DIVA                  (0x00000001)
++#define CPG_CLKSTATUS_DIVB                  (0x00000002)
++#define CPG_CLKSTATUS_DIVD                  (0x00000004)
++#define CPG_CLKSTATUS_DIVE                  (0x00000008)
++#define CPG_CLKSTATUS_DIVF                  (0x00000010)
++#define CPG_CLKSTATUS_DIVG                  (0x00000020)
++#define CPG_CLKSTATUS_DIVNFI                (0x00000040)
++#define CPG_CLKSTATUS_DIVX                  (0x00000080)
++#define CPG_CLKSTATUS_DIVH                  (0x00000100)
++#define CPG_CLKSTATUS_DIVI                  (0x00000200)
++#define CPG_CLKSTATUS_DIVJ                  (0x00000400)
++#define CPG_CLKSTATUS_DIVM                  (0x00000800)
++#define CPG_CLKSTATUS_DIVH2                 (0x00001000)
++
++#define CPG_PD_RST_MEM_RSTB                 (0x00000001)
++#define CPG_PD_RST_WEN_MEM_RSTB             (0x00010000)
++
++#define CPG_RST_MON_DMAA                    (0x00000010)
++#define CPG_RST_MON_SDI0                    (0x00000040)
++#define CPG_RST_MON_SDI1                    (0x00000080)
++#define CPG_RST_MON_EMM                     (0x00000100)
++#define CPG_RST_MON_ETH0                    (0x00000800)
++#define CPG_RST_MON_PWM_0                   (0x00400000)
++#define CPG_RST_MON_PWM_1                   (0x00800000)
++#define CPG_RST_MON_CSI_1                   (0x01000000)
++#define CPG_RST_MON_CSI_2                   (0x02000000)
++#define CPG_RST_MON_URT                     (0x04000000)
++#define CPG_PD_RST_RFX_RSTB                 (0x00000010)
++#define CPG_PD_RST_WEN_RFX_RSTB             (0x00100000)
++
++#define CPG_PLL_MIN                         (1)
++#define CPG_PLL_MAX                         (7)
++
++#define CPG_CLK_ON_REG_MIN                  (1)
++#define CPG_CLK_ON_REG_MAX                  (27)
++
++#define CPG_RST_REG_MIN                     (1)
++#define CPG_RST_REG_MAX                     (15)
++
++typedef struct
++{
++    union
++    {
++        unsigned int        word;
++        struct
++        {
++            unsigned int    :2;
++            unsigned int    enable:1;
++            unsigned int    :1;
++            unsigned int    mode:2;
++            unsigned int    :26;
++        }bit;
++    }ssc;
++    union
++    {
++        unsigned int        word[2];
++        struct
++        {
++            unsigned int    p:6;
++            unsigned int    m:10;
++            unsigned int    k:16;
++            unsigned int    s:3;
++            unsigned int    :5;
++            unsigned int    mrr:6;
++            unsigned int    :2;
++            unsigned int    mfr:8;
++            unsigned int    :8;
++        } bit;
++    } clk;
++} st_cpg_pll_param_t;
++
++typedef enum
++{
++    CPG_ERROR_ARGUMENT               = -201,
++    CPG_ERROR_NO_REGISTER            = -202,
++    CPG_ERROR_NULL_POINTER           = -203,
++    CPG_ERROR_PLL_TURN_MODE_TIMEOUT  = -204,
++    CPG_ERROR_PLL_ACTIVE             = -205,
++    CPG_ERROR_PLL_STANDBY            = -206,
++    CPG_ERROR_TURN_RESET_TIMEOUT     = -207,
++    CPG_ERROR_CLK_CHANGE_TIMEOUT     = -208,
++    CPG_ERROR_PLL_NOT_ACTIVE         = -280,
++    CPG_ERROR_PLL_NOT_STANDBY        = -290
++} e_cpg_error_code_t;
++
++typedef enum
++{
++    CPG_PLL_1 = 1,
++    CPG_PLL_2 = 2,
++    CPG_PLL_3 = 3,
++    CPG_PLL_4 = 4,
++    CPG_PLL_6 = 6,
++    CPG_PLL_7 = 7
++} e_cpg_pll_num_t;
++
++typedef enum
++{
++    CPG_DDIV_CA53 = 0,
++    CPG_DDIV_SYS,
++    CPG_dmy1,
++    CPG_dmy2,
++    CPG_DDIV_MMCDDI,
++    CPG_DSEL_CLK48,
++    CPG_dmy3,
++    CPG_dmy4,
++    CPG_dmy5,
++    CPG_SSEL_SDIEMM = 64,
++    CPG_dmy6,
++    CPG_dmy7,
++    CPG_dmy8,
++    CPG_dmy9,
++    CPG_dmyA,
++    CPG_dmyB,
++    CPG_SDIV_GMCLK,
++    CPG_SSEL_GMCLK,
++    CPG_dmyC,
++    CPG_SDIV_URT_RCLK,
++    CPG_SSEL_URT_RCLK,
++    CPG_SSEL_CSI_RCLK
++} e_cpg_divsel_t;
++
++/** prototype defined **/
++unsigned int CPG_ReadReg(unsigned int offset);
++void CPG_WriteReg(unsigned int offset, unsigned int value);
++
++int CPG_MoveToActivePLL(e_cpg_pll_num_t pll_num, st_cpg_pll_param_t *p_set_data);
++int CPG_GetStatusPLL(e_cpg_pll_num_t pll_num, unsigned int *p_data);
++
++void CPG_SetDifClkFreq(e_cpg_divsel_t target_reg, unsigned short int target, unsigned short int set_value);
++int CPG_SetClockCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value);
++int CPG_SetResetCtrl(unsigned char reg_num, unsigned short int target, unsigned short int set_value);
++int CPG_SetPDResetCtrl(unsigned short int target, unsigned short int set_value);
++int CPG_WaitResetMon(unsigned int timeout_c, unsigned int msk, unsigned int val);
++int CPG_WakeUpPLL(e_cpg_pll_num_t pll_num);
++
++#endif /* EVK_CMN_CPG_H */
+diff --git b/board/renesas/rzv2m-dev/evk_common.c b/board/renesas/rzv2m-dev/evk_common.c
+new file mode 100644
+index 0000000..686a882
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_common.c
+@@ -0,0 +1,77 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++/*******************************************************************************
++ * File Name    : evk_common.c
++ ******************************************************************************/
++
++#include <stdint.h>
++#include "evk_common.h"
++
++#define SYSCNT_FREQUENCY    (24000000)
++#define SYSCNT_BASE_ADDRESS (0xA3F00000)
++
++#define SYSCNT_CNTCV        (0x1000)
++
++/*******************************************************************************
++ * Function Name: CMN_GetSysCnt
++ * Description  : get system counter
++ * Arguments    : none
++ * Return Value : system counter
++ ******************************************************************************/
++unsigned long int CMN_GetSysCnt(void)
++{
++	unsigned int g_syscnt_base = SYSCNT_BASE_ADDRESS;
++    return CMN_REG_Read64(g_syscnt_base + SYSCNT_CNTCV);
++}
++
++/*******************************************************************************
++ * Function Name: CMN_GetFreq4SysCnt
++ * Description  : get system counter
++ * Arguments    : none
++ * Return Value : system counter
++ ******************************************************************************/
++unsigned int CMN_GetFreq4SysCnt(void)
++{
++	unsigned int g_syscnt_base = SYSCNT_BASE_ADDRESS;
++    return SYSCNT_FREQUENCY;
++}
++
++/*******************************************************************************
++ * Function Name: CMN_DelayInUSec
++ * Description  : delayed time in microsecond
++ * Arguments    :
++ *                us -
++ *                    delay times in microsecond
++ * Return Value : none
++ ******************************************************************************/
++void CMN_DelayInUSec(unsigned long int us)
++{
++    unsigned long int start = CMN_GetSysCnt();
++    unsigned long int cycles = (CMN_GetFreq4SysCnt() / 1000000UL) * us;
++
++    while ((CMN_GetSysCnt() - start) < cycles)
++    {
++        asm volatile("nop");
++    }
++}
++
+diff --git b/board/renesas/rzv2m-dev/evk_common.h b/board/renesas/rzv2m-dev/evk_common.h
+new file mode 100644
+index 0000000..9d4ba73
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_common.h
+@@ -0,0 +1,133 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++/*******************************************************************************
++ * File Name    : evk_common.h
++ ******************************************************************************/
++
++#ifndef EVK_COMMON_H
++#define EVK_COMMON_H
++
++/*
++ * Macro definitions
++ */
++#ifndef NULL
++#define NULL    ((void*)0)
++#endif  /* !defined(NULL) */
++
++/*
++ * Global Typedef definitions
++ */
++typedef enum
++{
++    CMN_SUCCESS = 0,
++    CMN_ERROR   = -1
++} e_evk_cmn_error_no_t;
++
++/******************************************************************************
++ Prototype define
++ *****************************************************************************/
++void CMN_DelayInUSec(unsigned long int us);
++unsigned long int CMN_GetSysCnt(void);
++unsigned int CMN_GetFreq4SysCnt(void);
++
++/*******************************************************************************
++ * Function Name: CMN_REG_Read32
++ * Description  : read access to Register in unsigned int.
++ *
++ * Arguments    : addr -
++ *                    address for read access
++ * Return Value : value -
++ *                    read data.
++ ******************************************************************************/
++static inline unsigned int CMN_REG_Read32(unsigned int addr)
++{
++    /** pointer is (unsigned int *) */
++    return *((volatile unsigned int *)addr);
++}
++
++/*******************************************************************************
++ * Function Name: CMN_REG_Write32
++ * Description  : write access to Register in unsigned int.
++ *
++ * Arguments    : addr -
++ *                    address for write access
++ *                value -
++ *                    write data
++ * Return Value : non -
++ *
++ ******************************************************************************/
++static inline void CMN_REG_Write32(unsigned int addr, unsigned int value)
++{
++    /** sizeof(unsigned int) == sizeof(unsigned int *) */
++    *((volatile unsigned int *)addr) = value;
++}
++
++/*******************************************************************************
++ * Function Name: CMN_REG_Read64
++ * Description  : read access to Register in unsigned long int.
++ *
++ * Arguments    : addr -
++ *                    address for read access
++ * Return Value : value -
++ *                    read data.
++ ******************************************************************************/
++static inline unsigned long int CMN_REG_Read64(unsigned int addr)
++{
++    /** sizeof(unsigned int) == sizeof(unsigned long int *) */
++    return *((volatile unsigned long int *)addr);
++}
++
++/*******************************************************************************
++ * Function Name: CMN_REG_Write64
++ * Description  : write access to Register in unsigned long int.
++ *
++ * Arguments    : addr -
++ *                    address for write access
++ *                value -
++ *                    write data
++ * Return Value : non -
++ *
++ ******************************************************************************/
++static inline void CMN_REG_Write64(unsigned int addr, unsigned long int value)
++{
++    /** sizeof(unsigned int) == sizeof(unsigned long int *) */
++    *((volatile unsigned long int *)addr) = value;
++}
++
++/*******************************************************************************
++ * Function Name: CMN_DelayInUS
++ * Description  : Does an example task. Making this longer just to see how it
++ *                wraps.
++ * Arguments    : index -
++ *                    Where to start looking
++ *                p_output -
++ *                    Pointer of where to put the output data
++ * Return Value : count -
++ *                    How many entries were found
++ ******************************************************************************/
++static inline void CMN_DelayInUS(unsigned long int us)
++{
++    CMN_DelayInUSec(us);
++}
++
++#endif /* !defined EVK_COMMON_H */
+diff --git b/board/renesas/rzv2m-dev/evk_psc.c b/board/renesas/rzv2m-dev/evk_psc.c
+new file mode 100644
+index 0000000..b597773
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_psc.c
+@@ -0,0 +1,46 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++#include <stdint.h>
++#include "evk_psc.h"
++
++static void psc_set_rst(unsigned char rst);
++static void psc_set_cken(unsigned char cken);
++
++void evk_psc_init(void)
++{
++    psc_set_rst(1);//psc module reset de-assert
++    psc_set_cken(1);//psc module clock enable
++	return;
++}
++
++static void psc_set_rst(unsigned char rst)
++{
++    PSC_WRITE_REG(PSC_RST, (rst & 0x1));
++	return;
++}
++
++static void psc_set_cken(unsigned char cken)
++{
++    PSC_WRITE_REG(PSC_CKEN, (cken & 0x1));
++	return;
++}
+diff --git b/board/renesas/rzv2m-dev/evk_psc.h b/board/renesas/rzv2m-dev/evk_psc.h
+new file mode 100644
+index 0000000..d9135b7
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_psc.h
+@@ -0,0 +1,35 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++#ifndef EVK_PSC_H_
++#define EVK_PSC_H_
++
++
++#define PSC_BASE_ADDR     (0x00000000A3700000ULL)
++#define PSC_RST           (PSC_BASE_ADDR + 0x0000)
++#define PSC_CKEN          (PSC_BASE_ADDR + 0x0004)
++
++#define PSC_WRITE_REG(addr, data)  (*((volatile unsigned int   *)((unsigned int)(addr))) = ((unsigned int  )(data)))
++
++void evk_psc_init(void);
++
++#endif  /* !defined(EVK_PSC_H_) */
+diff --git b/board/renesas/rzv2m-dev/evk_sys.c b/board/renesas/rzv2m-dev/evk_sys.c
+new file mode 100644
+index 0000000..39b1f7d
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_sys.c
+@@ -0,0 +1,116 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++/*******************************************************************************
++ * File Name    : evk_sys.c
++ * Description  : operation functions for SYS
++ ******************************************************************************/
++
++#include <stdint.h>
++
++#include "evk_common.h"
++#include "evk_sys.h"
++
++/*******************************************************************************
++ * Function Name: sys_GetRegOffset
++ * Description  : get register offset
++ *
++ * Arguments    : value -
++ *                    target value
++ * Return Value : offset -
++ *                    register offset value
++ ******************************************************************************/
++static inline unsigned int sys_GetRegOffset(unsigned int value)
++{
++    return (((((value) & 0xFF00) >> 8) - 1) * 4);
++}
++/*******************************************************************************
++ End of function sys_GetRegOffset
++ ******************************************************************************/
++
++
++/*******************************************************************************
++ * Function Name: SYS_ReadReg
++ * Description  : Read access to a SYSTEM Register in unsigned int.
++ *
++ * Arguments    : offset -
++ *                    SYSTEM Register Offset.
++ * Return Value : read data -
++ *
++ ******************************************************************************/
++unsigned int SYS_ReadReg(unsigned int offset)
++{
++    return (CMN_REG_Read32(SYS_BASE_ADDRESS + offset));
++}
++/*******************************************************************************
++ End of function SYS_ReadReg
++ ******************************************************************************/
++
++/*******************************************************************************
++ * Function Name: SYS_WriteReg
++ * Description  : Write access to a SYSTEM Register in unsigned int.
++ *
++ * Arguments    : offset -
++ *                    SYSTEM Register Offset.
++ *                value -
++ *                    Write data.
++ * Return Value : none -
++ *
++ ******************************************************************************/
++void SYS_WriteReg(unsigned int offset, unsigned int value)
++{
++    CMN_REG_Write32((SYS_BASE_ADDRESS + offset), value);
++}
++/*******************************************************************************
++ End of function SYS_WriteReg
++ ******************************************************************************/
++
++
++/*******************************************************************************
++ * Function Name: SYS_MoveToActiveSRAM
++ * Description  : target SRAM change state to active.
++ *
++ * Arguments    : target -
++ *                    target SRAM kind
++ * Return Value : none -
++ *
++ ******************************************************************************/
++void SYS_MoveToActiveSRAM(e_sys_target_sram_t target)
++{
++    unsigned int reg_addr_sram_sdm = SYS_SRAM_SDM1;
++    unsigned int reg_addr_sram_rs  = SYS_SRAM_RS1;
++    unsigned int target_bit;
++
++    reg_addr_sram_sdm += sys_GetRegOffset(target);
++    reg_addr_sram_rs  += sys_GetRegOffset(target);
++    target_bit = 0x01 << (target & 0xFF);
++    target_bit = (target_bit << 16);
++
++    SYS_WriteReg( reg_addr_sram_rs, target_bit);
++    CMN_DelayInUS(1);
++    SYS_WriteReg( reg_addr_sram_sdm, target_bit);
++    CMN_DelayInUS(1);
++}
++/*******************************************************************************
++ End of function SYS_MoveToActiveSRAM
++ ******************************************************************************/
++
+diff --git b/board/renesas/rzv2m-dev/evk_sys.h b/board/renesas/rzv2m-dev/evk_sys.h
+new file mode 100644
+index 0000000..1f25c46
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_sys.h
+@@ -0,0 +1,127 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++/*******************************************************************************
++ * File Name    : evk_sys.h
++ * Description  : register and API information for SYS
++ ******************************************************************************/
++
++#ifndef EVK_SYS_H_
++#define EVK_SYS_H_
++
++#define SYS_BASE_ADDRESS            (0xA3F03000)
++
++
++#define SYS_PERI0_BANK              (0x0030)
++#define SYS_PERI1_BANK              (0x0034)
++#define SYS_DRP_BANK                (0x0038)
++
++
++#define SYS_MD_MON                  (0x0100)
++#define SYS_VERSION                 (0x0104)
++#define SYS_RAMA_ECC_CNT            (0x0110)
++#define SYS_RAMA_INIT               (0x0114)
++#define SYS_RAMA_INIT_END           (0x0118)
++
++
++#define SYS_SRAM_SDM1               (0x0180)
++#define SYS_SRAM_SDM2               (0x0184)
++#define SYS_SRAM_SDM3               (0x0188)
++
++
++#define SYS_SRAM_RS1                (0x0190)
++#define SYS_SRAM_RS2                (0x0194)
++#define SYS_SRAM_RS3                (0x0198)
++
++
++#define BA00                            BIT(0)
++#define BA01                            BIT(1)
++#define BA02                            BIT(2)
++#define BA03                            BIT(3)
++#define BA04                            BIT(4)
++#define BA05                            BIT(5)
++#define BA06                            BIT(6)
++#define BA07                            BIT(7)
++#define BA08                            BIT(8)
++#define BA09                            BIT(9)
++#define BA10                            BIT(10)
++#define BA11                            BIT(11)
++#define BA12                            BIT(12)
++#define BA13                            BIT(13)
++#define BA14                            BIT(14)
++#define BA15                            BIT(15)
++#define BA_WE00                         BIT(16)
++#define BA_WE01                         BIT(17)
++#define BA_WE02                         BIT(18)
++#define BA_WE03                         BIT(19)
++#define BA_WE04                         BIT(20)
++#define BA_WE05                         BIT(21)
++#define BA_WE06                         BIT(22)
++#define BA_WE07                         BIT(23)
++#define BA_WE08                         BIT(24)
++#define BA_WE09                         BIT(25)
++#define BA_WE10                         BIT(26)
++#define BA_WE11                         BIT(27)
++#define BA_WE12                         BIT(28)
++#define BA_WE13                         BIT(29)
++#define BA_WE14                         BIT(30)
++#define BA_WE15                         BIT(31)
++
++
++typedef enum
++{
++    SYS_SRAM_CST        = 0x100,
++    SYS_SRAM_SDI0,
++    SYS_SRAM_SDI1,
++    SYS_SRAM_EMMC,
++    SYS_SRAM_DMY1,
++    SYS_SRAM_DMY2,
++    SYS_SRAM_USB_HOST,
++    SYS_SRAM_USB_FUNC,
++    SYS_SRAM_ETH0,
++    SYS_SRAM_DMY3        = 0x10A,
++    SYS_SRAM_DMY4       = 0x10C,
++    SYS_SRAM_DMY5,
++    SYS_SRAM_DMY6       = 0x200,
++    SYS_SRAM_DMY7,
++    SYS_SRAM_DMY8,
++    SYS_SRAM_SRAMA      = 0x204,
++    SYS_SRAM_SRAMB0     = 0x208,
++    SYS_SRAM_SRAMB1,
++    SYS_SRAM_SRAMB2,
++    SYS_SRAM_SRAMB3,
++    SYS_SRAM_RESERVE0       = 0x300,
++    SYS_SRAM_RESERVE1,
++    SYS_SRAM_RESERVE2,
++    SYS_SRAM_RESERVE3,
++    SYS_SRAM_RESERVE4,
++    SYS_SRAM_RESERVE5,
++    SYS_SRAM_RESERVE9       = 0x309,
++    SYS_SRAM_RESERVE13      = 0x30D,
++} e_sys_target_sram_t;
++
++unsigned int SYS_ReadReg(unsigned int offset);
++void SYS_WriteReg(unsigned int offset, unsigned int value);
++
++void SYS_MoveToActiveSRAM(e_sys_target_sram_t target);
++
++#endif  /* !defined(EVK_SYS_H_) */
+diff --git b/board/renesas/rzv2m-dev/evk_usbtest.h b/board/renesas/rzv2m-dev/evk_usbtest.h
+new file mode 100644
+index 0000000..9a055b0
+--- /dev/null
++++ b/board/renesas/rzv2m-dev/evk_usbtest.h
+@@ -0,0 +1,78 @@
++/*******************************************************************************
++* DISCLAIMER
++* This software is supplied by Renesas Electronics Corporation and is only
++* intended for use with Renesas products. No other uses are authorized. This
++* software is owned by Renesas Electronics Corporation and is protected under
++* all applicable laws, including copyright laws.
++* THIS SOFTWARE IS PROVIDED "AS IS" AND RENESAS MAKES NO WARRANTIES REGARDING
++* THIS SOFTWARE, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT
++* LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
++* AND NON-INFRINGEMENT. ALL SUCH WARRANTIES ARE EXPRESSLY DISCLAIMED.
++* TO THE MAXIMUM EXTENT PERMITTED NOT PROHIBITED BY LAW, NEITHER RENESAS
++* ELECTRONICS CORPORATION NOR ANY OF ITS AFFILIATED COMPANIES SHALL BE LIABLE
++* FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES FOR
++* ANY REASON RELATED TO THIS SOFTWARE, EVEN IF RENESAS OR ITS AFFILIATES HAVE
++* BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
++* Renesas reserves the right, without notice, to make changes to this software
++* and to discontinue the availability of this software. By using this software,
++* you agree to the additional terms and conditions found by accessing the
++* following link:
++* http://www.renesas.com/disclaimer
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
++*******************************************************************************/ 
++/*******************************************************************************
++ * File Name    : evk_usbtest.h
++ ******************************************************************************/
++
++#ifndef EVK_USBTEST_H_
++#define EVK_USBTEST_H_
++
++#define USBTEST_BASE_ADDRESS     (0xA3F90000)
++
++#define USBTEST_RESET1		(0x0000)+USBTEST_BASE_ADDRESS
++#define USBTEST_RESET2		(0x0004)+USBTEST_BASE_ADDRESS
++#define USBTEST_PIPE_MON1	(0x0124)+USBTEST_BASE_ADDRESS
++#define USBTEST_CLKRST2		(0x0304)+USBTEST_BASE_ADDRESS
++#define USBTEST_CLKRST3		(0x0308)+USBTEST_BASE_ADDRESS
++
++#define USB_TEST_REG_RESET1_R     USBTEST_BASE_ADDRESS + (0x000)
++#define USB_TEST_REG_RESET2_R     USBTEST_BASE_ADDRESS + (0x004)
++#define USB_TEST_REG_PIPE_MON1_R  USBTEST_BASE_ADDRESS + (0x124)
++#define USB_TEST_REG_CLKRST2_R    USBTEST_BASE_ADDRESS + (0x304)
++#define USB_TEST_REG_CLKRST3_R    USBTEST_BASE_ADDRESS + (0x308)
++
++#define USB_TEST_REG_PRMCTRL1_R   USBTEST_BASE_ADDRESS + (0xC00)
++#define USB_TEST_REG_PRMCTRL5_R   USBTEST_BASE_ADDRESS + (0xC10)
++
++#define USB_TEST_REG_CRA1_R       USBTEST_BASE_ADDRESS + (0x900)
++#define USB_TEST_REG_CRA2_R       USBTEST_BASE_ADDRESS + (0x904)
++#define USB_TEST_REG_CRA3_R       USBTEST_BASE_ADDRESS + (0x908)
++#define USB_TEST_REG_CRA4_R       USBTEST_BASE_ADDRESS + (0x90C)
++#define USB_TEST_REG_CRA5_R       USBTEST_BASE_ADDRESS + (0x910)
++#define USB_TEST_REG_CRA_MON1_R   USBTEST_BASE_ADDRESS + (0x914)
++#define USB_TEST_REG_CRA_MON2_R   USBTEST_BASE_ADDRESS + (0x918)
++
++/* PHY Register offset */
++#define USB_PHY_REG_LANE0_DIG_OVRD_DRV_LO       (0x1002)
++
++#define USB_PHY_REG_RX_OVRD_IN_HI               (0x1006)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN      (0x1 << 6)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN_OVRD (0x1 << 7)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_MASK    (0x7 << 8)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_SHIFT   (8)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_OVRD    (0x1 << 11)
++    
++#define CLKRST2_REF_USE_PAD     (0x01 << 0)
++
++#define PORTRESET0_ODEN         (0x01 << 9)
++#define PIPE0_RESET_N_ODEN      (0x01 << 8)
++#define PHY_RESET_REG           (0x01 << 2)
++#define PORTRESET0_REG          (0x01 << 1)
++#define PIPE0_RESET_REG         (0x01 << 0)
++
++#define UT_RESET2_REF_SSP_EN    (0x01 << 0)
++
++#define PIPE0_PHYSTATUS         (0x01 << 7)
++
++
++#endif  /* !defined(EVK_USBTEST_H_) */
+diff --git a/board/renesas/rzv2m-dev/rzv2m-dev.c b/board/renesas/rzv2m-dev/rzv2m-dev.c
+old mode 100755
+new mode 100644
+index 66c6c0d..ea63805
+--- a/board/renesas/rzv2m-dev/rzv2m-dev.c
++++ b/board/renesas/rzv2m-dev/rzv2m-dev.c
+@@ -18,21 +18,25 @@
+ * you agree to the additional terms and conditions found by accessing the
+ * following link:
+ * http://www.renesas.com/disclaimer
+-* Copyright (C) 2021 Renesas Electronics Corporation. All rights reserved.
++* Copyright (C) 2022 Renesas Electronics Corporation. All rights reserved.
+ *******************************************************************************/ 
+ #include <common.h>
+ #include <malloc.h>
+ #include <fdtdec.h>
+ #include <linux/errno.h>
+ #include <asm/system.h>
+-#include "rdk_common.h"
+-#include "rdk_pfc.h"
+-#include "rdk_cmn_cpg.h"
+-#include "rdk_usbtest.h"
+-#include "rdk_sys.h"
+-#include "rdk_psc.h"
++#include "evk_common.h"
++#include "evk_cmn_cpg.h"
++#include "evk_usbtest.h"
++#include "evk_sys.h"
++#include "evk_psc.h"
+ #include <init.h>
+ 
++static void usb_test_set_addr_phy_reg(uint16_t offset);
++static uint16_t usb_test_read_phy_reg(uint16_t offset);
++static void usb_test_write_phy_reg(uint16_t offset, uint16_t write_data);
++static void evk_usb_phy_setting(void);
++
+ /*
+        TARGET_BANK0_UNIT_LINUX settings as follows:
+                BA_WE00 | BA00  //EMM
+@@ -42,15 +46,19 @@
+                BA_WE10 | BA10  //USB PERI
+                BA_WE12 | BA12  //PCI
+ */
+-#define TARGET_BANK0_UNIT_LINUX        (BA_WE00 | BA00 | \
+-                                                                       BA_WE02 | BA02 | \
+-                                                                       BA_WE04 | BA04 | \
+-                                                                       BA_WE08 | BA08 | \
+-                                                                       BA_WE10 | BA10 | \
+-                                                                       BA_WE12 | BA12)
++#define TARGET_BANK0_UNIT_LINUX  (BA_WE00 | BA00 | \
++                                  BA_WE02 | BA02 | \
++                                  BA_WE04 | BA04 | \
++                                  BA_WE08 | BA08 | \
++                                  BA_WE10 | BA10 | \
++                                  BA_WE12 | BA12)
+ 
++/*
++       TARGET_BANK0_UNIT_LINUX settings as follows:
++               BA_WE00 | BA00  //ETH0
++*/
++#define TARGET_BANK1_UNIT_LINUX  (BA_WE00 | BA00)
+ 
+-#define TARGET_BANK1_UNIT_LINUX        (BA_WE00 | BA00)       //ETH0 BANK
+ /*
+        TARGET_DRP_UNIT_LINUX settings as follows:
+                BA_WE00 | BA00  //DRPA M0
+@@ -59,41 +67,17 @@
+                BA_WE06 | BA06  //DRPA M3
+ */
+ #define TARGET_DRP_UNIT_LINUX  (BA_WE00 | BA00 | \
+-                                                                       BA_WE02 | BA02 | \
+-                                                                       BA_WE04 | BA04 | \
+-                                                                       BA_WE06 | BA06)
+-
++                                BA_WE02 | BA02 | \
++                                BA_WE04 | BA04 | \
++                                BA_WE06 | BA06)
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+-static void rdk_pfc_init(void)
+-{
+-	do
+-	{
+-		PFC_SetPinFunc(PFC_SELECT_URT0);
+-		PFC_SetPinFunc(PFC_SELECT_URT1);
+-		PFC_SetPinFunc(PFC_SELECT_EMM);
+-		PFC_SetPinFunc(PFC_SELECT_SDI0);
+-		PFC_SetPinFunc(PFC_SELECT_ETH0);
+-		PFC_WriteReg(PFC_P17_GPIO_DO, 0x10001);
+-		CMN_DelayInUS(50);
+-		PFC_SetPinFunc(PFC_SELECT_IIC00);
+-		PFC_SetPinFunc(PFC_SELECT_PWM0_7);
+-		PFC_SetPinFunc(PFC_SELECT_PWM8_15);
+-		PFC_SetPinFunc(PFC_SELECT_CSI2);
+-		PFC_SetPinFunc(PFC_SELECT_CSI3);
+-		PFC_SetPinFunc(PFC_SELECT_CSI4);
+-		PFC_SetPinFunc(PFC_SELECT_CSI5);
+-	}
+-	while (0);
+-	return;
+-}
+-
+-static void drp_init(void){
++static void drp_a_init(void){
+ 
+ 	uint32_t regval;
+ 	
+-    //Initialize the PLL6
++	//Initialize the PLL6
+ 	regval = CMN_REG_Read32(0xa350003c);
+ 	while((regval & 0x11) != 0x00){
+ 		regval = CMN_REG_Read32(0xa350003c);
+@@ -109,8 +93,8 @@ static void drp_init(void){
+ 		regval = CMN_REG_Read32(0xa350003c);
+ 		CMN_DelayInUS(1);
+ 	}
+-
+-    //Power on with PD_DRPA
++	
++	//Power on with PD_DRPA
+ 	CMN_REG_Write32(0xA3600018, 0x0BB70BB7);
+ 	CMN_REG_Write32(0xa3600000, 0x00000015);
+ 	regval = CMN_REG_Read32(0xa3600044);
+@@ -118,283 +102,284 @@ static void drp_init(void){
+ 		regval = CMN_REG_Read32(0xa3600044);
+ 		CMN_DelayInUS(1000);
+ 	}
+-
+-	CMN_REG_Write32(0xa3600000, 0x00000016);
+-	regval = CMN_REG_Read32(0xa3600044);
+-	while((regval & 0x1) != 0x1){
+-		regval = CMN_REG_Read32(0xa3600044);
+-		CMN_DelayInUS(1);
+-	}
+-
+-    //Clear interrupt status with PMC
++	
++	//Clear interrupt status with PMC
+ 	CMN_REG_Write32(0xa3600048, 0x00000001);
+-
+-    //Clock supply with PD_DRP
++	
++	//Clock supply with PD_DRP
+ 	CMN_REG_Write32(0xa350044c,0x00040004);
+ 	CMN_DelayInUS(1000);
+-	CMN_REG_Write32(0xa3500450,0x00040004);
+-	CMN_DelayInUS(1000);
+-
+-    //Isolation off with DRP
++	
++	//Isolation off with DRP
+ 	CMN_REG_Write32(0xa360002c, 0x00000000);
+ 	regval = CMN_REG_Read32(0xa360002c);
+ 	while((regval & 0x8000) != 0x8000){
+ 		regval = CMN_REG_Read32(0xa360002c);
+ 		CMN_DelayInUS(1000);
+ 	}
+-
+-	CMN_REG_Write32(0xa3600030, 0x00000000);
+-	regval = CMN_REG_Read32(0xa3600030);
+-	while((regval & 0x8000) != 0x8000){
+-		regval = CMN_REG_Read32(0xa360002c);
+-		CMN_DelayInUS(1000);
+-	}
+-
+ 	//Clock supply and deassert with DRP
+ 	CMN_REG_Write32(0xa350044c, 0x00030003);
+ 	CMN_DelayInUS(10000);
+-	CMN_REG_Write32(0xa3500450, 0x00030003);
+-	CMN_DelayInUS(10000);
+-
++	
+ 	CMN_REG_Write32(0xa3500620, 0x00010001);
+-	CMN_REG_Write32(0xa3500624, 0x00010001);
+ 	CMN_DelayInUS(1);
+ 
+ }
+ 
+-static void rdk_cpg_init(void)
++static void pcie_init (void)
++{
++	// set SYS register
++	CMN_REG_Write32(0xA3F03094,0x00000000);
++	CMN_REG_Write32(0xA3F03090,0x00000001);
++	CMN_DelayInUS(10);
++
++	/* assert RESET */
++	CPG_SetResetCtrl(3, 0x1000, 0x0000);
++	CMN_DelayInUS(2);
++
++	/* disable supply clock */
++	CPG_SetClockCtrl(4, 0x0007, 0x0000);
++	CMN_DelayInUS(2);
++
++	/* deassert RESET */
++	CPG_SetResetCtrl(3, 0x1000, 0x1000);
++	CMN_DelayInUS(2);
++
++	/* enable supply clock */
++	CPG_SetClockCtrl(4, 0x0007, 0x0007);
++	CMN_DelayInUS(2);
++}
++
++static void div_init(void)
+ {
+ 	int t;
+-	do
+-	{	
+-		/* select  DEVB(400MHz) ,select DEVD(200MHz) and select DEVE(100MHz) */
+-		CPG_WriteReg(CPG_SYS_DDIV, (CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD));
+-		t = 0;
+-		while (1000000 > t++)
++
++	/* select  DEVB(400MHz) ,select DEVD(200MHz) and select DEVE(100MHz) */
++	CPG_WriteReg(CPG_SYS_DDIV, (CPG_SYS_DDIV_WEN_DIVB|CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD));
++	t = 0;
++	while (1000000 > t++)
++	{
++		if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
+ 		{
+-			if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
+-			{
+-				break;
+-			}
+-			CMN_DelayInUS(10);
++			break;
+ 		}
++		CMN_DelayInUS(10);
++	}
++}
+ 
+-		/**********************************/
+-		/**** URT *******************/
+-		/**********************************/
+-		/* select URT clock source(48MHz) */
+-		//CPG_WriteReg(CPG_URT_RCLK_SSEL, CPG_URT_RCLK_SSEL_WEN_SELW0 | CPG_URT_RCLK_SSEL_WEN_SELW1);
++static void sdi_emm_init(void)
++{
++	/* select SDI0 EMM clock source(200MHz) */
++	CPG_WriteReg(CPG_SDIEMM_SSEL, (CPG_SDIEMM_SSEL_SELSDI|CPG_SDIEMM_SSEL_WEN_SELSDI));
+ 
+-		/* enable supply clock to URT */
+-		CPG_SetClockCtrl(15, 0x0070, 0x0070);
+-		CMN_DelayInUS(1);
++	/* enable supply clock */
++	CPG_SetClockCtrl(3, 0x0f0f, 0x0f0f);
++	CMN_DelayInUS(1);
+ 
+-		/* asset RESET to URT0,1 */
+-		CPG_SetResetCtrl(6, 0x0400, 0x0000);
+-		CPG_WaitResetMon(/*500000*/0, CPG_RST_MON_URT, CPG_RST_MON_URT);
++	/* asset RESET */
++	CPG_SetResetCtrl(3, 0x0005, 0x0000);
++	CPG_WaitResetMon(0, CPG_RST_MON_SDI0, CPG_RST_MON_SDI0);
++	CPG_WaitResetMon(0, CPG_RST_MON_EMM,  CPG_RST_MON_EMM);
+ 
+-		/* deasset RESET to URT0,1 */
+-		CPG_SetResetCtrl(6, 0x0400, 0x0400);
+-		CPG_WaitResetMon(/*500000*/0, CPG_RST_MON_URT, 0);
++	/* deasset RESET */
++	CPG_SetResetCtrl(3, 0x0005, 0x0005);
++	CPG_WaitResetMon(0, CPG_RST_MON_SDI0, 0);
++	CPG_WaitResetMon(0, CPG_RST_MON_EMM,  0);
++}
+ 
+-		/**********************************/
+-		/**** SDI0 EMM ************/
+-		/**********************************/
+-		/* select SDI0 EMM clock source(200MHz) */
+-		CPG_WriteReg(CPG_SDIEMM_SSEL, (CPG_SDIEMM_SSEL_SELSDI|CPG_SDIEMM_SSEL_WEN_SELSDI));
++static void usb_init(void)
++{
++	/* usb reset assart */
++	CPG_SetResetCtrl(3, 0x0780, 0x0000);
++	CMN_DelayInUS(1);//50ns
+ 
+-		/* enable supply clock */
+-		CPG_SetClockCtrl(3, 0x0f0f, 0x0f0f);
+-		CMN_DelayInUS(1);
++	/* usb clock off */
++	CPG_SetClockCtrl(4, 0x0070, 0x0000);
++	CMN_DelayInUS(1);//125ns
+ 
+-		/* asset RESET */
+-		CPG_SetResetCtrl(3, 0x0005, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_SDI0, CPG_RST_MON_SDI0);
+-		CPG_WaitResetMon(0, CPG_RST_MON_EMM,  CPG_RST_MON_EMM);
++	/* usb reset assart */
++	CPG_SetResetCtrl(3, 0x0780, 0x0780);
++	CMN_DelayInUS(1);//50ns
+ 
+-		/* deasset RESET */
+-		CPG_SetResetCtrl(3, 0x0005, 0x0005);
+-		CPG_WaitResetMon(0, CPG_RST_MON_SDI0, 0);
+-		CPG_WaitResetMon(0, CPG_RST_MON_EMM,  0);
++	/* usb clock on */
++	CPG_SetClockCtrl(4, 0x0070, 0x0070);
++	CMN_DelayInUS(1);//125ns
+ 
+-		/**********************************/
+-		/**** USB *******************/
+-		/**********************************/
+-		/* select USB DEVD(200MHz) and select USB DEVE(100MHz) */
+-		//CPG_WriteReg(CPG_SYS_DDIV, (CPG_SYS_DDIV_WEN_DIVE|CPG_SYS_DDIV_WEN_DIVD));	
+-		// while (true)
+-		// {
+-		// 	if (0 == (CPG_ReadReg(CPG_CLKSTATUS) & CPG_CLKSTATUS_DIVX))
+-		// 	{
+-		// 		break;
+-		// 	}
+-		// 	CMN_DelayInUS(10);
+-		// }
+-
+-		/* usb reset assart */
+-		CPG_SetResetCtrl(3, 0x0780, 0x0000);
+-		CMN_DelayInUS(1);//50ns
+-
+-		/* usb clock off */
+-		CPG_SetClockCtrl(4, 0x0070, 0x0000);
+-		CMN_DelayInUS(1);//125ns
+-
+-		/* usb reset assart */
+-		CPG_SetResetCtrl(3, 0x0780, 0x0780);
+-		CMN_DelayInUS(1);//50ns
+-
+-		/* usb clock on */
+-		CPG_SetClockCtrl(4, 0x0070, 0x0070);
+-		CMN_DelayInUS(1);//125ns
++	//USB TEST Module initialize
++	CMN_REG_Write32(USBTEST_RESET2,  0x00000001);
++	CMN_DelayInUS(10);
++	CMN_REG_Write32(USBTEST_CLKRST2, 0x00000005);
++	CMN_REG_Write32(USBTEST_CLKRST2, 0x00000004);
++	CMN_DelayInUS(20);
++	CMN_REG_Write32(USBTEST_RESET1,  0x00000300);
++	CMN_REG_Write32(USBTEST_RESET1,  0x00000000);
++	CMN_DelayInUS(75);
+ 
+-		/**********************************/
+-		/**** IIC0-3****************/
+-		/**********************************/
+-		/* asset RESET */
+-		CPG_SetResetCtrl(6, 0x0300, 0x0000);
+-		CMN_DelayInUS(1);
++	/* usb phy setting */
++	evk_usb_phy_setting();
+ 
+-		/* disable supply clock */
+-		CPG_SetClockCtrl(9, 0x1000, 0x0000);
+-		CPG_SetClockCtrl(10, 0x1000, 0x0000);
+-		CMN_DelayInUS(1);
++}
+ 
+-		/* deasset RESET */
+-		CPG_SetResetCtrl(6, 0x0300, 0x0300);
+-		CMN_DelayInUS(1);
++static void iic_init(void)
++{
++	/* asset RESET */
++	/* IIC_GPA_PRESETN:IIC0,IIC1 */
++	/* IIC_GPB_PRESETN:IIC2,IIC3 */
++	CPG_SetResetCtrl(6, 0x0300, 0x0000);
++	CMN_DelayInUS(1);
+ 
+-		/* enable supply clock */
+-		CPG_SetClockCtrl(9, 0x1000, 0x1000);
+-		CPG_SetClockCtrl(10, 0x1000, 0x1000);
+-		CMN_DelayInUS(1);
++	/* disable supply clock */
++	/* IIC_PCLK[0]:IIC0,IIC1 */
++	/* IIC_PCLK[1]:IIC2,IIC3 */
++	CPG_SetClockCtrl(9, 0x1000, 0x0000);
++	CPG_SetClockCtrl(10, 0x1000, 0x0000);
++	CMN_DelayInUS(1);
+ 
+-		/**********************************/
+-		/**** ETH0 ****************/
+-		/**********************************/
++	/* deasset RESET */
++	/* IIC_GPA_PRESETN:IIC0,IIC1 */
++	/* IIC_GPB_PRESETN:IIC2,IIC3 */
++	CPG_SetResetCtrl(6, 0x0300, 0x0300);
++	CMN_DelayInUS(1);
+ 
+-		/* eth0 clock on */
+-		CPG_SetClockCtrl(4, 0x0300, 0x0300);
+-		CPG_SetClockCtrl(16, 0x2000, 0x2000);
+-		CMN_DelayInUS(1);
++	/* enable supply clock */
++	/* IIC_PCLK[0]:IIC0,IIC1 */
++	/* IIC_PCLK[1]:IIC2,IIC3 */
++	CPG_SetClockCtrl(9, 0x1000, 0x1000);
++	CPG_SetClockCtrl(10, 0x1000, 0x1000);
++	CMN_DelayInUS(1);
++}
++
++static void ether_init(void)
++{
++	/* eth0 clock on */
++	CPG_SetClockCtrl(4, 0x0300, 0x0300);
++	CPG_SetClockCtrl(16, 0x2000, 0x2000);
++	CMN_DelayInUS(1);
++
++	/* eth0 reset assart */
++	CPG_SetResetCtrl(3, 0x0800, 0x0000);
++	CPG_WaitResetMon(0, CPG_RST_MON_ETH0, CPG_RST_MON_ETH0);
++
++	/* eth0 reset deassert */
++	CPG_SetResetCtrl(3, 0x0800, 0x0800);
++	CPG_WaitResetMon(0, CPG_RST_MON_ETH0, 0);
++}
++
++static void pwm_init(void)
++{
++	/* enable supply clock */
++	/* PWM[14]:b'10 - PWM[8]:b'4, GRPF_PCLK:b'0*/
++	CPG_SetClockCtrl(14, 0x07F1, 0x07F1);
++	CMN_DelayInUS(1);
++	
++	/* PWM8-15 reset assart with PWM_GPF_PRESETN */
++	CPG_SetResetCtrl(6, 0x0020, 0x0000);
++	CPG_WaitResetMon(0, CPG_RST_MON_PWM_1, CPG_RST_MON_PWM_1);
++	
++	/* PWM8-15 reset deassart with PWM_GPF_PRESETN */
++	CPG_SetResetCtrl(6, 0x0020, 0x0020);
++	CPG_WaitResetMon(0, CPG_RST_MON_PWM_1, 0);
++}
+ 
+-		/* eth0 reset assart */
+-		CPG_SetResetCtrl(3, 0x0800, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_ETH0, CPG_RST_MON_ETH0);
++static void csi_init(void)
++{
++	/* enable supply clock */
++	/* CSI[4]:b'12, CPERI_GRPH_PCLK:b'1*/
++	CPG_SetClockCtrl(15, 0x1002, 0x1002);
++	CMN_DelayInUS(1);
++	
++	/* CSI4 reset assart with CSI_GPH_PRESETN */
++	CPG_SetResetCtrl(6, 0x0080, 0x0000);
++	CPG_WaitResetMon(0, CPG_RST_MON_CSI_2, CPG_RST_MON_CSI_2);
++	
++	/* CSI4 reset deassert */
++	CPG_SetResetCtrl(6, 0x0080, 0x0080);
++	CPG_WaitResetMon(0, CPG_RST_MON_CSI_2, 0);
++}
+ 
+-		/* eth0 reset deassert */
+-		CPG_SetResetCtrl(3, 0x0800, 0x0800);
+-		CPG_WaitResetMon(0, CPG_RST_MON_ETH0, 0);
++static void tim_init(void)
++{
++	/* TIM group B and C reset assart */
++	CPG_SetResetCtrl(6, 0x0006, 0x0000);
++	CMN_DelayInUS(1);
++	
++	/* TIM group B and TIM 8-15 clock off */
++	CPG_SetClockCtrl(10, 0x0FF1, 0x0000);
++	/* TIM group C and TIM 16-23 clock off */
++	CPG_SetClockCtrl(11, 0x0FF1, 0x0000);
++	CMN_DelayInUS(1);
++
++	/* TIM group B and C reset deassert */
++	CPG_SetResetCtrl(6, 0x0006, 0x0006);
++	CMN_DelayInUS(1);
+ 
++	/* TIM group B and TIM 8-15 clock on */
++	CPG_SetClockCtrl(10, 0x0FF1, 0x0FF1);
++	/* TIM group C and TIM 16-23 clock on */
++	CPG_SetClockCtrl(11, 0x0FF1, 0x0FF1);
++	CMN_DelayInUS(1);
++}
++
++static void evk_cpg_init(void)
++{
++	int t;
++	do
++	{
+ 		/**********************************/
+-		/**** PWM0-15 ****************/
++		/*    Clock division control      */
+ 		/**********************************/
+-		CPG_SetClockCtrl(13, 0x0FF1, 0x0FF1);
+-		CPG_SetClockCtrl(14, 0x0FF1, 0x0FF1);
+-		CMN_DelayInUS(1);
++		div_init();
+ 		
+-		/* PWM0-7 reset assart */
+-		CPG_SetResetCtrl(6, 0x0030, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1);
++		/**********************************/
++		/*    SDI0 SDI1 EMM               */
++		/**********************************/
++		sdi_emm_init();
+ 		
+-		/* PWM0-7 reset deassert */
+-		CPG_SetResetCtrl(6, 0x0030, 0x0030);
+-		CPG_WaitResetMon(0, CPG_RST_MON_PWM_0 | CPG_RST_MON_PWM_1, 0);
+-
+ 		/**********************************/
+-		/**** CSI2-5 ****************/
++		/*    USB                         */
+ 		/**********************************/
+-		/* select CSI REF */
+-		//Keep defalt setting
+-		//CPG_WriteReg(CPG_CSI_RCLK_SSEL, (CPG_CSI_RCLK_SSEL_WEN_SELCSI2|CPG_CSI_RCLK_SSEL_WEN_SELCSI3|CPG_CSI_RCLK_SSEL_WEN_SELCSI4|CPG_CSI_RCLK_SSEL_WEN_SELCSI5));
+-
+-		CPG_SetClockCtrl(15, 0x3C03, 0x3C03);
+-		CMN_DelayInUS(1);
++		usb_init();
+ 		
+-		/* CSI4 reset assart */
+-		CPG_SetResetCtrl(6, 0x00C0, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_CSI_1|CPG_RST_MON_CSI_2, CPG_RST_MON_CSI_1|CPG_RST_MON_CSI_2);
++		/**********************************/
++		/*    IIC0,2                      */
++		/**********************************/
++		iic_init();
+ 		
+-		/* CSI4 reset deassert */
+-		CPG_SetResetCtrl(6, 0x00C0, 0x00C0);
+-		CPG_WaitResetMon(0, CPG_RST_MON_CSI_1|CPG_RST_MON_CSI_2, 0);
+-
+-	    
+-		CPG_SetClockCtrl(4, 0x0007, 0x0007);
+-		CMN_DelayInUS(1);
+-		CPG_SetResetCtrl(3, 0x1000, 0x0000);
+-		CMN_DelayInUS(1);
+-		CPG_SetResetCtrl(3, 0x1000, 0x1000);
+-		CMN_DelayInUS(1);
++		/**********************************/
++		/*    ETH0                        */
++		/**********************************/
++		ether_init();
+ 		
+ 		/**********************************/
+-		/**** TIM0-31 ****************/
++		/*    PWM8-14                     */
+ 		/**********************************/
+-		/* TIM group A-D reset assart */
+-		CPG_SetResetCtrl(6, 0x000F, 0x0000);
+-		CMN_DelayInUS(1);
++		pwm_init();
+ 		
+-		/* TIM group A and TIM 0-7 clock off */
+-		CPG_SetClockCtrl(9, 0x0FF1, 0x0000);
+-		/* TIM group B and TIM 8-15 clock off */
+-		CPG_SetClockCtrl(10, 0x0FF1, 0x0000);
+-		/* TIM group C and TIM 16-23 clock off */
+-		CPG_SetClockCtrl(11, 0x0FF1, 0x0000);
+-		/* TIM group D and TIM 24-31 clock off */
+-		CPG_SetClockCtrl(12, 0x0FF1, 0x0000);
+-		CMN_DelayInUS(1);
+-
+-		/* TIM group A-D reset deassert */
+-		CPG_SetResetCtrl(6, 0x000F, 0x000F);
+-		CMN_DelayInUS(1);
+-
+-		/* TIM group A and TIM 0-7 clock on */
+-		CPG_SetClockCtrl(9, 0x0FF1, 0x0FF1);
+-		/* TIM group B and TIM 8-15 clock on */
+-		CPG_SetClockCtrl(10, 0x0FF1, 0x0FF1);
+-		/* TIM group C and TIM 16-23 clock on */
+-		CPG_SetClockCtrl(11, 0x0FF1, 0x0FF1);
+-		/* TIM group D and TIM 24-31 clock on */
+-		CPG_SetClockCtrl(12,0x0FF1, 0x0FF1);
+-		CMN_DelayInUS(1);
++		/**********************************/
++		/*    CSI4                        */
++		/**********************************/
++		csi_init();
+ 		
+ 		/**********************************/
+-		/**** DMAA ****************/
++		/*    TIM8-23                     */
+ 		/**********************************/
+-
+-		/* DMAA clock on */ 
+-		CPG_SetClockCtrl(1, 0x0800, 0x0800);
+-			
+-		/* DMAA reset assart */
+-		CPG_SetResetCtrl(1, 0x0080, 0x0000);
+-		CPG_WaitResetMon(0, CPG_RST_MON_DMAA,CPG_RST_MON_DMAA);
++		tim_init();
+ 		
+-		/* DMAA reset deassert */
+-		CPG_SetResetCtrl(1, 0x0080, 0x0080);
+-		CPG_WaitResetMon(0, CPG_RST_MON_DMAA,0);
+-
+-
+ 		/**********************************/
+-		/**** DRPA ****************/
++		/*    DRPA                        */
++		/**********************************/
++		drp_a_init();
++		
++		/**********************************/
++		/*    PCIe                         */
+ 		/**********************************/
+-		drp_init();
++		pcie_init();
++
+ 	}
+ 	while (0);
+ 	return;
+ }
+ 
+-static void rdk_module_init(void)
+-{
+-	//USB TEST Module initialize
+-	CMN_REG_Write32(USBTEST_RESET2,  0x00000001);
+-	CMN_DelayInUS(10);
+-	CMN_REG_Write32(USBTEST_CLKRST2, 0x00000005);
+-	CMN_REG_Write32(USBTEST_CLKRST2, 0x00000004);
+-	CMN_DelayInUS(20);
+-	CMN_REG_Write32(USBTEST_RESET1,  0x00000300);
+-	CMN_REG_Write32(USBTEST_RESET1,  0x00000000);
+-	CMN_DelayInUS(75);
+-
+-}
+ int32_t ilStartUpUART(void)
+ {
+ 	return CMN_SUCCESS;
+@@ -405,6 +390,7 @@ extern void _start(void);
+ void s_init(void)
+ {
+ 
++	/* change the EL2 with ca53 core0 */
+ 	if(3 == current_el()){
+ 
+ 		armv8_switch_to_el2((u64)NULL, 0, 0, 0,
+@@ -417,17 +403,17 @@ void s_init(void)
+ 
+ int board_early_init_f(void)
+ {
+-    
+-	rdk_pfc_init();
+-    
+ 	/* move to active for SRAM in ETH0 */
+ 	SYS_MoveToActiveSRAM(SYS_SRAM_ETH0);
+-    
+-	rdk_cpg_init();
+ 
+-	rdk_module_init();
+-    
+-	rdk_psc_init();
++	evk_cpg_init();
++	evk_psc_init();
++	
++	/*- Release Ether PHY reset : PFC_P17_GPIO_DO -*/
++	CMN_REG_Write32(0xB6250440, 0x10001);
++	
++	/* HDMI phy setting : SYS GEN_REG2 reg : offset 208h */
++	CMN_REG_Write32(0xA3F03208,0x60106010);
+ 	
+ 	return 0;
+ }
+@@ -437,9 +423,6 @@ int board_init(void)
+ 	/* adress of boot parameters */
+ 	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
+ 
+-	/* init UART */
+-	//serial_init();
+-
+ 	return 0;
+ }
+ 
+@@ -462,7 +445,6 @@ void reset_cpu(ulong addr)
+ {
+ }
+ 
+-
+ void board_cleanup_before_linux(void)
+ {
+        //PERI0 BANK SETTING
+@@ -471,6 +453,124 @@ void board_cleanup_before_linux(void)
+        SYS_WriteReg(SYS_PERI1_BANK, TARGET_BANK1_UNIT_LINUX);
+        //DRP BANK SETTING
+        SYS_WriteReg(SYS_DRP_BANK, TARGET_DRP_UNIT_LINUX);
++}
++
++static void usb_test_set_addr_phy_reg(uint16_t offset)
++{
++    CMN_REG_Write32(USB_TEST_REG_CRA5_R,  offset);
++    CMN_REG_Write32(USB_TEST_REG_CRA1_R,  0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA1_R,0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++}
++
+ 
++static uint16_t usb_test_read_phy_reg(uint16_t offset)
++{
++    uint16_t read_data;
++
++    usb_test_set_addr_phy_reg(offset);
++
++    CMN_REG_Write32(USB_TEST_REG_CRA3_R,0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    read_data = (uint16_t)CMN_REG_Read32(USB_TEST_REG_CRA_MON2_R);
++
++    CMN_REG_Write32(USB_TEST_REG_CRA3_R,0x0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    return read_data;
++}
++
++
++static void usb_test_write_phy_reg(uint16_t offset, uint16_t write_data)
++{
++    usb_test_set_addr_phy_reg(offset);
++
++    CMN_REG_Write32(USB_TEST_REG_CRA5_R,write_data);
++    CMN_REG_Write32(USB_TEST_REG_CRA2_R,0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA2_R,0x0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA4_R,0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA4_R,0x0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++}
++
++static void evk_usb_phy_setting(void)
++{
++    uint32_t reg_tmp;
++    uint16_t phy_reg_tmp;
++    uint32_t gs_usbtest_tx_amp;
++    uint32_t gs_usbtest_crt1;
++    uint16_t eq_setting;
++
++    gs_usbtest_tx_amp = 3;
++    gs_usbtest_crt1   = 0x7204;
++    eq_setting        = 1;
++
++    /* Phy Preemphasis setting */
++    reg_tmp = CMN_REG_Read32(USB_TEST_REG_PRMCTRL5_R);
++    reg_tmp &= (~0x07);
++    reg_tmp |= (gs_usbtest_tx_amp << 1);
++    CMN_REG_Write32(USB_TEST_REG_PRMCTRL5_R,reg_tmp);
++
++    /* Phy Tx Swing full, vboost level */
++    CMN_REG_Write32(USB_TEST_REG_PRMCTRL1_R,gs_usbtest_crt1);
++
++    phy_reg_tmp = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp &= ~USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN;
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
++
++    phy_reg_tmp  = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp |= USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN_OVRD;
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
++
++    phy_reg_tmp  = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp &= ~USB_PHY_RX_OVRD_IN_HI_RX_EQ_MASK;
++    phy_reg_tmp |= (eq_setting << USB_PHY_RX_OVRD_IN_HI_RX_EQ_SHIFT);
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
++
++    phy_reg_tmp  = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp |= USB_PHY_RX_OVRD_IN_HI_RX_EQ_OVRD;
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
+ }
+ 
++

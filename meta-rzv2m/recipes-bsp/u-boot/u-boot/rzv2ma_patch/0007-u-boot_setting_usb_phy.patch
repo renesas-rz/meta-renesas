@@ -1,0 +1,199 @@
+diff --git a/board/renesas/rzv2ma-dev/evk_usbtest.h b/board/renesas/rzv2ma-dev/evk_usbtest.h
+index d8851f2..83a9676 100755
+--- a/board/renesas/rzv2ma-dev/evk_usbtest.h
++++ b/board/renesas/rzv2ma-dev/evk_usbtest.h
+@@ -35,4 +35,44 @@
+ #define USBTEST_CLKRST2		(0x0304)+USBTEST_BASE_ADDRESS
+ #define USBTEST_CLKRST3		(0x0308)+USBTEST_BASE_ADDRESS
+ 
++#define USB_TEST_REG_RESET1_R     USBTEST_BASE_ADDRESS + (0x000)
++#define USB_TEST_REG_RESET2_R     USBTEST_BASE_ADDRESS + (0x004)
++#define USB_TEST_REG_PIPE_MON1_R  USBTEST_BASE_ADDRESS + (0x124)
++#define USB_TEST_REG_CLKRST2_R    USBTEST_BASE_ADDRESS + (0x304)
++#define USB_TEST_REG_CLKRST3_R    USBTEST_BASE_ADDRESS + (0x308)
++
++#define USB_TEST_REG_PRMCTRL1_R   USBTEST_BASE_ADDRESS + (0xC00)
++#define USB_TEST_REG_PRMCTRL5_R   USBTEST_BASE_ADDRESS + (0xC10)
++
++#define USB_TEST_REG_CRA1_R       USBTEST_BASE_ADDRESS + (0x900)
++#define USB_TEST_REG_CRA2_R       USBTEST_BASE_ADDRESS + (0x904)
++#define USB_TEST_REG_CRA3_R       USBTEST_BASE_ADDRESS + (0x908)
++#define USB_TEST_REG_CRA4_R       USBTEST_BASE_ADDRESS + (0x90C)
++#define USB_TEST_REG_CRA5_R       USBTEST_BASE_ADDRESS + (0x910)
++#define USB_TEST_REG_CRA_MON1_R   USBTEST_BASE_ADDRESS + (0x914)
++#define USB_TEST_REG_CRA_MON2_R   USBTEST_BASE_ADDRESS + (0x918)
++
++/* PHY Register offset */
++#define USB_PHY_REG_LANE0_DIG_OVRD_DRV_LO       (0x1002)
++
++#define USB_PHY_REG_RX_OVRD_IN_HI               (0x1006)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN      (0x1 << 6)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN_OVRD (0x1 << 7)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_MASK    (0x7 << 8)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_SHIFT   (8)
++    #define USB_PHY_RX_OVRD_IN_HI_RX_EQ_OVRD    (0x1 << 11)
++    
++#define CLKRST2_REF_USE_PAD     (0x01 << 0)
++
++#define PORTRESET0_ODEN         (0x01 << 9)
++#define PIPE0_RESET_N_ODEN      (0x01 << 8)
++#define PHY_RESET_REG           (0x01 << 2)
++#define PORTRESET0_REG          (0x01 << 1)
++#define PIPE0_RESET_REG         (0x01 << 0)
++
++#define UT_RESET2_REF_SSP_EN    (0x01 << 0)
++
++#define PIPE0_PHYSTATUS         (0x01 << 7)
++
++
+ #endif  /* !defined(EVK_USBTEST_H_) */
+diff --git a/board/renesas/rzv2ma-dev/rzv2ma-dev.c b/board/renesas/rzv2ma-dev/rzv2ma-dev.c
+index ae73982..dd6ebc1 100755
+--- a/board/renesas/rzv2ma-dev/rzv2ma-dev.c
++++ b/board/renesas/rzv2ma-dev/rzv2ma-dev.c
+@@ -32,6 +32,11 @@
+ #include "evk_psc.h"
+ #include <init.h>
+ 
++static void usb_test_set_addr_phy_reg(uint16_t offset);
++static uint16_t usb_test_read_phy_reg(uint16_t offset);
++static void usb_test_write_phy_reg(uint16_t offset, uint16_t write_data);
++static void evk_usb_phy_setting(void);
++
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+ static void drp_a_init(void){
+@@ -280,6 +285,10 @@ static void usb_init(void)
+ 	CMN_REG_Write32(USBTEST_RESET1,  0x00000300);
+ 	CMN_REG_Write32(USBTEST_RESET1,  0x00000000);
+ 	CMN_DelayInUS(75);
++
++	/* usb phy setting */
++	evk_usb_phy_setting();
++
+ }
+ 
+ static void iic_init(void)
+@@ -530,3 +539,122 @@ void reset_cpu(ulong addr)
+ {
+ }
+ 
++static void usb_test_set_addr_phy_reg(uint16_t offset)
++{
++    CMN_REG_Write32(USB_TEST_REG_CRA5_R,  offset);
++    CMN_REG_Write32(USB_TEST_REG_CRA1_R,  0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA1_R,0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++}
++
++
++static uint16_t usb_test_read_phy_reg(uint16_t offset)
++{
++    uint16_t read_data;
++
++    usb_test_set_addr_phy_reg(offset);
++
++    CMN_REG_Write32(USB_TEST_REG_CRA3_R,0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    read_data = (uint16_t)CMN_REG_Read32(USB_TEST_REG_CRA_MON2_R);
++
++    CMN_REG_Write32(USB_TEST_REG_CRA3_R,0x0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    return read_data;
++}
++
++
++static void usb_test_write_phy_reg(uint16_t offset, uint16_t write_data)
++{
++    usb_test_set_addr_phy_reg(offset);
++
++    CMN_REG_Write32(USB_TEST_REG_CRA5_R,write_data);
++    CMN_REG_Write32(USB_TEST_REG_CRA2_R,0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA2_R,0x0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA4_R,0x1);
++
++    while (0x01 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++
++    CMN_REG_Write32(USB_TEST_REG_CRA4_R,0x0);
++
++    while (0x00 != (CMN_REG_Read32(USB_TEST_REG_CRA_MON1_R) & 0x01))
++    {
++        ;
++    }
++}
++
++static void evk_usb_phy_setting(void)
++{
++    uint32_t reg_tmp;
++    uint16_t phy_reg_tmp;
++    uint32_t gs_usbtest_tx_amp;
++    uint32_t gs_usbtest_crt1;
++    uint16_t eq_setting;
++
++    gs_usbtest_tx_amp = 3;
++    gs_usbtest_crt1   = 0x7204;
++    eq_setting        = 1;
++
++    /* Phy Preemphasis setting */
++    reg_tmp = CMN_REG_Read32(USB_TEST_REG_PRMCTRL5_R);
++    reg_tmp &= (~0x07);
++    reg_tmp |= (gs_usbtest_tx_amp << 1);
++    CMN_REG_Write32(USB_TEST_REG_PRMCTRL5_R,reg_tmp);
++
++    /* Phy Tx Swing full, vboost level */
++    CMN_REG_Write32(USB_TEST_REG_PRMCTRL1_R,gs_usbtest_crt1);
++
++    phy_reg_tmp = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp &= ~USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN;
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
++
++    phy_reg_tmp  = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp |= USB_PHY_RX_OVRD_IN_HI_RX_EQ_EN_OVRD;
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
++
++    phy_reg_tmp  = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp &= ~USB_PHY_RX_OVRD_IN_HI_RX_EQ_MASK;
++    phy_reg_tmp |= (eq_setting << USB_PHY_RX_OVRD_IN_HI_RX_EQ_SHIFT);
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
++
++    phy_reg_tmp  = usb_test_read_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI);
++    phy_reg_tmp |= USB_PHY_RX_OVRD_IN_HI_RX_EQ_OVRD;
++    usb_test_write_phy_reg(USB_PHY_REG_RX_OVRD_IN_HI, phy_reg_tmp);
++}
++
++
