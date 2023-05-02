@@ -53,6 +53,14 @@ update_issue() {
       BSP_SOC="RZFive"
       BSP_BOARD="RZFive-DEV"
       ;;
+    rzv2m)
+      BSP_SOC="RZV2M"
+      BSP_BOARD="RZV2M Evaluation Board Kit"
+      ;;
+    rzv2ma)
+      BSP_SOC="RZV2MA"
+      BSP_BOARD="RZV2MA Evaluation Board Kit"
+      ;;
     hihope-rzg2h)
       BSP_SOC="RZG2H"
       BSP_BOARD="HIHOPE-RZG2H"

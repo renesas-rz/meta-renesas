@@ -15,6 +15,8 @@ Currently the following boards and MPUs are supported:
 - Board: RZG2UL Development Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
 - Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 - Board: RZV2L Development Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
+- Board: CSM Solution RZV2M Evaluation Board Kit / MPU: R9A09G011GBG (RZ/V2M)
+- Board: Shimafuji Electric RZV2MA Evaluation Board Kit / MPU: R9A09G055MA3GBG (RZ/V2MA)
 - Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
 - Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
 
@@ -169,6 +171,8 @@ Currently, there are 2 types of build procedure supported in below description:
 |RZ/G2LC    |rzg2l     |smarc-rzg2lc, rzg2lc-dev|
 |RZ/G2UL    |rzg2l     |smarc-rzg2ul, rzg2ul-dev|
 |RZ/V2L     |rzv2l     |smarc-rzv2l, rzv2l-dev  |
+|RZ/V2M     |rzv2m     |rzv2m                   |
+|RZ/V2MA    |rzv2m     |rzv2ma                  |
 |RZ/Five    |rzfive    |smarc-rzfive, rzfive-dev|
 
 **2. Build procedure for legacy users (common procedure):**
@@ -189,6 +193,8 @@ Currently, there are 2 types of build procedure supported in below description:
 * RZ/G2LC: smarc-rzg2lc, rzg2lc-dev
 * RZ/G2UL: smarc-rzg2ul, rzg2ul-dev
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev
+* RZ/V2M:  rzv2m
+* RZ/V2MA:  rzv2ma
 * RZ/Five:  smarc-rzfive, rzfive-dev
 - Build the target file system image using bitbake:
     ```bash
@@ -200,7 +206,7 @@ Currently, there are 2 types of build procedure supported in below description:
    ```
 
 \<target\> for 2 built types:
-* RZ/Five: bsp
+* RZ/Five, RZ/V2M, RZ/V2MA: bsp
 * Others: bsp, weston, qt
 
 After completing the images for the target machine will be available in the output
