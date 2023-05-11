@@ -14,11 +14,11 @@ FILES_${PN}  = "/boot "
 
 inherit deploy
 
-SRC_URI_rzv2m = "file://rzv2m-bootloader-v130.tar.gz"
+SRC_URI_rzv2m = "file://rzv2m-bootloader-vlp-v3.0.4.tar.gz"
 SRC_URI_rzv2m[md5sum] = "cbd296d9fa0d8ee41b69aa8055d03545"
 SRC_URI_rzv2m[sha256sum] = "4955c99be4d4ff6bab1528e138183a02a15697e268e96eea6405264d6c533613"
 
-SRC_URI_rzv2ma = "file://rzv2ma-bootloader-v110.tar.gz"
+SRC_URI_rzv2ma = "file://rzv2ma-bootloader-vlp-v3.0.4.tar.gz"
 SRC_URI_rzv2ma[md5sum] = "02e92347f76584e92595394f687ab1a5"
 SRC_URI_rzv2ma[sha256sum] = "e78e5a26cee3626ed9e9ad6d8a808a9c6d90dd162becad444fac5b0e35e18e67"
 
