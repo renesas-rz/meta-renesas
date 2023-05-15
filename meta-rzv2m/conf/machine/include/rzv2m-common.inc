@@ -8,3 +8,6 @@ IMAGE_INSTALL_append = " \
 	openssh-sshd \
 	openssl-bin \
 "
+
+RZ_FEATURE_BOOTLOADER = "${@os.path.isdir("${TOPDIR}/../meta-rz-features/meta-rz-bootloaders")}"
+EXTRA_IMAGEDEPENDS += " ${@oe.utils.conditional('RZ_FEATURE_BOOTLOADER', 'True', ' bootloader', '', d)}"
