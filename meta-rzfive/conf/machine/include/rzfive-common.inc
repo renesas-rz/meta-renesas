@@ -5,7 +5,7 @@ MACHINEOVERRIDES =. "rzfive:"
 MACHINE_FEATURES = ""
 
 KERNEL_IMAGETYPE = "Image"
-IMAGE_FSTYPES_append = " tar.bz2 ext4"
+IMAGE_FSTYPES_append = " tar.bz2 ext4 wic.gz wic.bmap"
 
 SERIAL_CONSOLES = "115200;ttySC0"
 
