@@ -154,6 +154,9 @@ Currently, there are 2 types of build procedure supported in below description:
 
    # For QT5
    $ bitbake-layers add-layer ../meta-qt5
+
+   # For Bootloaders (only for RZ/V2M and RZ/V2MA)
+   $ bitbake-layers add-layer ../meta-rz-features/meta-rz-bootloaders
    ```
 - Build the target file system image using bitbake:
    ```bash
@@ -193,8 +196,6 @@ Currently, there are 2 types of build procedure supported in below description:
 * RZ/G2LC: smarc-rzg2lc, rzg2lc-dev
 * RZ/G2UL: smarc-rzg2ul, rzg2ul-dev
 * RZ/V2L:  smarc-rzv2l, rzv2l-dev
-* RZ/V2M:  rzv2m
-* RZ/V2MA:  rzv2ma
 * RZ/Five:  smarc-rzfive, rzfive-dev
 - Build the target file system image using bitbake:
     ```bash
