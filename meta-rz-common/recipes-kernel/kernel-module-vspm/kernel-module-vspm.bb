@@ -36,6 +36,10 @@ SRC_URI_append_rzg2l = " \
 	file://0014-ISU-remove-csc-mode-in-struct-isu_csc_t.patch \
 "
 
+SRC_URI_append_rzv2h = " \
+	file://0001-Support-vspm-isu-driver-for-V2H.patch \
+"
+
 S = "${WORKDIR}/git"
 VSPM_DRV_DIR = "vspm-module/files/vspm"
 includedir = "${RENESAS_DATADIR}/include"

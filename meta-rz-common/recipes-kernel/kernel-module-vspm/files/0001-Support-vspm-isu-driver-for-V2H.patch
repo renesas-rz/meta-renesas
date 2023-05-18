@@ -1,0 +1,134 @@
+From 35c4f42c6f9c58df60bb8d210a00ad956382209d Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Wed, 21 Feb 2024 14:53:46 +0700
+Subject: [PATCH] Support vspm/isu driver for V2H
+
+This patch will do following:
+  1. Added ISU_FM_INT_FREC register (Not used)
+  2. Removed ISU_FM_INT_STA.FREND bit due to V2H board is not
+  supported (End frame interrupt on V2H is Edge type instead of Level type on G2L)
+  3. Change supported input resolution 2800x2047 to 4096x4096 and supported output
+  resolution 1920x1080 to 4096x4096
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_local.h |  2 +-
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c   | 12 ++++++------
+ vspm-module/files/vspm/drv/isu/isu_drv_phy.c   | 12 +++---------
+ 3 files changed, 10 insertions(+), 16 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_local.h b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+index c015071..f1e075e 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_local.h
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+@@ -8,6 +8,7 @@
+ #define ISU_FM_STOP		0x000C  /* FM Module Stop Registers */
+ #define ISU_FM_INT_EN		0x0010  /* FM Interrupt Enable Registers */
+ #define ISU_FM_INT_STA		0x0014  /* FM Interrupt Status Registers */
++#define ISU_FM_INT_FREC        0x0018  /* FM Frame End Interrupt Control Registers */
+ #define ISU_AXI_ERAC		0x0020  /* AXI Error Action Registers */
+ #define ISU_AXI_FIFO_CAP	0x002C  /* AXI FIFO Capability Registers */
+ 
+@@ -75,7 +76,6 @@ Sets input/ouput, reduction ratio and color conversion coefficient
+ #define ISU_INT_LISTERR		0x00010000	/* Displays the status of "Descriptor List" format violations */
+ #define ISU_INT_SRSTEND		0x00000100	/* Displays the status of the emergency stop completion */
+ #define ISU_INT_DESEND		0x00000002	/* Displays the status of the descriptor footer read completion */
+-#define ISU_INT_FREND		0x00000001	/* Displays the status of the frame processing end */
+ 
+ #define ISU_RPF_TD_USE		(0x80000000)
+ #define ISU_RPF_AEXT		(0x00010000)
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index ac46b92..464b3ca 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -121,13 +121,13 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+ 	rpf_info->swap = (unsigned int)(src_par->swap);
+ 
+ 	/* check basic area */
+-	if ((src_par->width < 1) || (src_par->width > 2800) || ((fmt_yuv)&&(src_par->width%2)))
++	if ((src_par->width < 1) || (src_par->width > 4096) || ((fmt_yuv)&&(src_par->width%2)))
+ 		return E_ISU_PARA_IN_WIDTH;
+ 	else {
+ 		rpf_info->width = src_par->width;
+ 	}
+ 
+-	if ((src_par->height < 1) || (src_par->height > 2047) || ((fmt_yuv)&&(src_par->height%2)))
++	if ((src_par->height < 1) || (src_par->height > 4096) || ((fmt_yuv)&&(src_par->height%2)))
+ 		return E_ISU_PARA_IN_HEIGHT;
+ 	else {
+ 		rpf_info->height = src_par->height;
+@@ -182,7 +182,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		}
+ 
+ 		/* Check output size */
+-		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 1920))
++		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 4096))
+ 			return E_ISU_PARA_RS_CROP_WIDTH;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+@@ -197,7 +197,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		else
+ 			rs_info->crop_w = rs_param->crop_w;
+ 
+-		if ((rs_param->crop_h < 1) ||(rs_param->crop_h > 1080))
++		if ((rs_param->crop_h < 1) ||(rs_param->crop_h > 4096))
+ 			return E_ISU_PARA_RS_CROP_HEIGHT;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+@@ -237,7 +237,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		rs_info->tune_x = 0;
+ 		rs_info->tune_y = 0;
+ 
+-		if ((rpf_info->width < 1)||(rpf_info->width > 1920))
++		if ((rpf_info->width < 1)||(rpf_info->width > 4096))
+ 			return E_ISU_PARA_RS_CROP_WIDTH;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+@@ -252,7 +252,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		else
+ 			rs_info->crop_w = rpf_info->width;
+ 
+-		if ((rpf_info->height < 1) ||(rpf_info->height > 1080))
++		if ((rpf_info->height < 1) ||(rpf_info->height > 4096))
+ 			return E_ISU_PARA_RS_CROP_HEIGHT;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+index 2e45b44..24a6fac 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+@@ -540,17 +540,13 @@ static irqreturn_t isu_ins_ih(int irq, void *dev)
+ 		/* read control register */
+ 		status = isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 		if (!(ch_info->dl_info)){
+-			if ((status & ISU_INT_FREND) == ISU_INT_FREND) {
+-			/* clear interrupt */
+-			isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
+-
++			/* Frame end interruption by rising edge detection */
+ 			/* dummy read */
+ 			isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 			isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 
+ 			/* callback function */
+ 			isu_ins_cb_function(prv, R_VSPM_OK);
+-			}
+ 		} else {
+ 			if ((status & ISU_INT_LISTERR)==ISU_INT_LISTERR){
+ 				/* clear interrupt */
+@@ -558,10 +554,8 @@ static irqreturn_t isu_ins_ih(int irq, void *dev)
+ 
+ 				/* callback function */
+ 				isu_ins_cb_function(prv, E_ISU_DL_FORMAT);
+-			} else if ((status&ISU_INT_FREND)==ISU_INT_FREND){
+-				/* clear interrupt */
+-				isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
+-
++			} else {
++			        /* Frame end interruption by rising edge detection */
+ 				/* dummy read */
+ 				isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 				isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+-- 
+2.17.1
+
