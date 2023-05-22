@@ -1,0 +1,71 @@
+From ecdeb8231f40361d229bb6799deb3ad72be3ee36 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Thu, 21 Jul 2022 19:17:31 +0700
+Subject: [PATCH 2/3] Fix error Resolution do not match in running case fill
+ buffer
+
+This error can happen because port_def is not updated in gst_omx_video_dec_loop before run gst_omx_video_dec_fill_buffer.
+This patch fixed that error.
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ omx/gstomxvideodec.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index a30e271..0ff1591 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -1930,7 +1930,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+   if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (self)) ||
+       acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+     GstVideoCodecState *state;
+-    OMX_PARAM_PORTDEFINITIONTYPE port_def;
++    OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->dec_out_port->port_def;
+     GstVideoFormat format;
+ 
+     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
+@@ -1963,17 +1963,17 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+       /* Just update caps */
+       GST_VIDEO_DECODER_STREAM_LOCK (self);
+ 
+-      gst_omx_port_get_port_definition (port, &port_def);
+-      g_assert (port_def.format.video.eCompressionFormat ==
++      gst_omx_port_get_port_definition (port, port_def);
++      g_assert (port_def->format.video.eCompressionFormat ==
+           OMX_VIDEO_CodingUnused);
+ 
+       format =
+-          gst_omx_video_get_format_from_omx (port_def.format.video.
++          gst_omx_video_get_format_from_omx (port_def->format.video.
+           eColorFormat);
+ 
+       if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+         GST_ERROR_OBJECT (self, "Unsupported color format: %d",
+-            port_def.format.video.eColorFormat);
++            port_def->format.video.eColorFormat);
+         if (buf)
+           gst_omx_port_release_buffer (port, buf);
+         GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+@@ -1983,13 +1983,13 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
+       GST_DEBUG_OBJECT (self,
+           "Setting output state: format %s (%d), width %u, height %u",
+           gst_video_format_to_string (format),
+-          port_def.format.video.eColorFormat,
+-          (guint) port_def.format.video.nFrameWidth,
+-          (guint) port_def.format.video.nFrameHeight);
++          port_def->format.video.eColorFormat,
++          (guint) port_def->format.video.nFrameWidth,
++          (guint) port_def->format.video.nFrameHeight);
+ 
+       state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
+-          format, port_def.format.video.nFrameWidth,
+-          port_def.format.video.nFrameHeight, self->input_state);
++          format, port_def->format.video.nFrameWidth,
++          port_def->format.video.nFrameHeight, self->input_state);
+ 
+       /* Take framerate and pixel-aspect-ratio from sinkpad caps */
+       if (klass->cdata.hacks & GST_OMX_HACK_DEFAULT_PIXEL_ASPECT_RATIO) {
+-- 
+2.25.1
+

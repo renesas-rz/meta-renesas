@@ -1,0 +1,43 @@
+--- a/sys/v4l2/gstv4l2bufferpool.c	2023-07-25 14:58:29.490577986 +0700
++++ b/sys/v4l2/gstv4l2bufferpool.c	2023-07-25 14:56:18.376097432 +0700
+@@ -742,7 +742,7 @@
+             g_array_index (mpool->mmngr_bufs, GstBuffer *, i);
+ 
+         /* free mmngr buffer */
+-        mmngr_export_end_in_user_ext (g_array_index (mpool->mmngr_id, gint, i));
++        mmngr_export_end_in_user (g_array_index (mpool->mmngr_id, gint, i));
+         gst_buffer_unref (mmngr_buf);
+       }
+ #endif
+@@ -1659,8 +1659,8 @@
+ 
+   /* Got top of Y plane's address from v4l2fd */
+   ret =
+-      mmngr_import_start_in_user_ext (&importid, &v4l2memsize,
+-      &phys_addr, v4l2fd, NULL);
++      mmngr_import_start_in_user (&importid, &v4l2memsize,
++      &phys_addr, v4l2fd);
+   if (ret != R_MM_OK) {
+     GST_ERROR_OBJECT (mpool, "Fail to import v4l2 dmabuf fd");
+     return NULL;
+@@ -1698,9 +1698,9 @@
+     plane_size_ext[i] = GST_ROUND_UP_N (plane_size[i] + page_offset[i],
+         page_size);
+     ret =
+-        mmngr_export_start_in_user_ext (&exportid[i],
++        mmngr_export_start_in_user (&exportid[i],
+         (gsize) plane_size_ext[i], GST_ROUND_DOWN_N (phys_addr, page_size),
+-        &exportfd[i], NULL);
++        &exportfd[i]);
+     if (ret != R_MM_OK) {
+       GST_ERROR_OBJECT (mpool,
+           "mmngr_export_start_in_user failed (phys_addr:0x%08x)", phys_addr);
+@@ -1723,7 +1723,7 @@
+         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+         info->offset, info->stride);
+ 
+-  mmngr_import_end_in_user_ext (importid);
++  mmngr_import_end_in_user (importid);
+ 
+   return mmngrbuf;
+ }

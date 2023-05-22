@@ -1,0 +1,54 @@
+From 797aa33ce8fedf57cdd132cae22473fbbbbaead6 Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Wed, 2 Nov 2022 16:59:19 +0700
+Subject: [PATCH] gst-launch: fix padprobe duration error
+
+This error happens randomly when playing video with padprobe, especially
+in duration test.
+
+The rootcause is using g_print inside a SIGALRM handler.
+Every kind of "print" is non-reentrant so put it inside a signal
+handler is not safe.
+
+This patch fixes this issue by replacing g_print with write.
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ tools/gst-launch.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/tools/gst-launch.c b/tools/gst-launch.c
+index e3010e5..752f53a 100644
+--- a/tools/gst-launch.c
++++ b/tools/gst-launch.c
+@@ -1032,8 +1032,24 @@ alarm_awake ()
+ 
+   if (count > 0 && timer == TRUE) {
+     tptr = localtime (&t);
+-    g_print ("FPS: %3d  TIME %02d:%02d:%02d\n", (int) framesinsec,
+-        tptr->tm_hour, tptr->tm_min, tptr->tm_sec);
++
++    /* Write the output fps info to STDOUT
++     * Note that below operation can be replaced
++     * by a simple printf, but every kind of
++     * print is non-reentrant so it is not safe
++     * to use inside a signal handler */
++    gchar str[]="FPS: 000  TIME 00:00:00 ";
++    str[5] = framesinsec / 100 + '0';
++    str[6] = (framesinsec % 100) / 10 + '0';
++    str[7] = framesinsec % 10 + '0';
++    str[15] = tptr->tm_hour / 10 + '0';
++    str[16] = tptr->tm_hour % 10 + '0';
++    str[18] = tptr->tm_min / 10 + '0';
++    str[19] = tptr->tm_min % 10 + '0';
++    str[21] = tptr->tm_sec / 10 + '0';
++    str[22] = tptr->tm_sec % 10 + '0';
++    str[23] = '\n';
++    write (STDOUT_FILENO, str, sizeof(str));
+   }
+ 
+   past_count = count;
+-- 
+2.7.4
+

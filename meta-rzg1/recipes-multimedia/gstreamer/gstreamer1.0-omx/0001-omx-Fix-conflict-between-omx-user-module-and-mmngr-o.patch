@@ -1,0 +1,63 @@
+From adff1824aac39eddf563467833c339485ae28a5d Mon Sep 17 00:00:00 2001
+From: Loc Vu <loc.vu.zn@renesas.com>
+Date: Fri, 23 Sep 2022 15:50:45 +0700
+Subject: [PATCH] omx: Fix conflict between omx-user-module and mmngr of RZG1
+
+MMNGR pakacges of RZG1 are older version and don't support
+some new functions, so we reuse the old ones.
+
+Signed-off-by: Loc Vu <loc.vu.zn@renesas.com>
+---
+ omx/gstomxbufferpool.c | 6 +++---
+ omx/gstomxvideoenc.c   | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/omx/gstomxbufferpool.c b/omx/gstomxbufferpool.c
+index bc0f0af..16dbbd9 100644
+--- a/omx/gstomxbufferpool.c
++++ b/omx/gstomxbufferpool.c
+@@ -410,8 +410,8 @@ gst_omx_buffer_pool_export_dmabuf (GstOMXBufferPool * pool,
+   gint res;
+ 
+   res =
+-      mmngr_export_start_in_user_ext (id_export,
+-      (gsize) size, phys_addr, dmabuf_fd, NULL);
++      mmngr_export_start_in_user (id_export,
++      (gsize) size, phys_addr, dmabuf_fd);
+   if (res != R_MM_OK) {
+     GST_ERROR_OBJECT (pool,
+         "mmngr_export_start_in_user failed (phys_addr:0x%08x)", phys_addr);
+@@ -811,7 +811,7 @@ gst_omx_buffer_pool_finalize (GObject * object)
+     dmabuf_id = g_array_index (pool->id_array, gint, i);
+     if (dmabuf_id >= 0) {
+       GST_DEBUG_OBJECT (pool, "mmngr_export_end_in_user (%d)", dmabuf_id);
+-      mmngr_export_end_in_user_ext (dmabuf_id);
++      mmngr_export_end_in_user (dmabuf_id);
+     } else {
+       GST_WARNING_OBJECT (pool, "Invalid dmabuf_id");
+     }
+diff --git a/omx/gstomxvideoenc.c b/omx/gstomxvideoenc.c
+index e19a29e..45048a6 100644
+--- a/omx/gstomxvideoenc.c
++++ b/omx/gstomxvideoenc.c
+@@ -1873,7 +1873,7 @@ gst_omx_video_enc_stop (GstVideoEncoder * encoder)
+ 
+ #if defined (HAVE_MMNGRBUF) && defined (HAVE_VIDEOR_EXT)
+   for (gint i = 0; i < self->id_array->len; i++)
+-    mmngr_import_end_in_user_ext (g_array_index (self->id_array, gint, i));
++    mmngr_import_end_in_user (g_array_index (self->id_array, gint, i));
+   g_array_set_size (self->fd_table_array, 0);
+   g_array_set_size (self->id_array, 0);
+   g_array_set_size (self->extaddr_array, 0);
+@@ -2358,7 +2358,7 @@ mmngr_import_dmabuf (GstOMXVideoEnc * self, gint fd, gint * id,
+   gsize size;
+   gint ret;
+ 
+-  ret = mmngr_import_start_in_user_ext (id, &size, phys_addr, fd, NULL);
++  ret = mmngr_import_start_in_user (id, &size, phys_addr, fd);
+   if (ret != R_MM_OK) {
+     GST_ERROR_OBJECT (self, "Fail to import dmabuf fd");
+     return FALSE;
+-- 
+2.7.4
+

@@ -1,0 +1,58 @@
+From 92c7a1700640c87a4220219c916a3117b4cee0fc Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Thu, 10 Nov 2022 23:59:50 +0700
+Subject: [PATCH] gst-pipeline cannot corectly decode with vspmfilter and
+ filesink/fakesink
+
+The error conditions are that:
+	1. Videosink is fakesink or filesink
+	2. Using vspmfilter in dmabuf-use, or outbuf-alloc mode
+	3. Do not scale
+	4. Output video format has 2 or 3 planes
+
+In above conditions, the API "GST_VIDEO_META_API_TYPE" is not added to query from downstream.
+This means that omxh264dec will not set "GST_BUFFER_POOL_OPTION_VIDEO_META" config to
+buffer pool when allocating output buffers. As a result, the buffers are sent to
+vspmfilter from omxh264dec which maps by buffermap instead of framemap. Hence, if the
+video format has 2 or 3 planes, the mapping will be incorrect. Because of wrong address,
+it causes 2 difference phenomena on RZG2L and RZG2 series:
+	1. RZG2L: Error -412 will be output if use fakesink/filesink
+	2. RZG2 series: Output file will be wrong if use filesink
+
+-> Solution: Flag GST_BUFFER_POOL_OPTION_VIDEO_META will be added to the buffer pool as
+default to ensure that framemap is always being used to map the buffers instead of buffermap
+in case that framemap is required from downstream. Based on meta information, the buffer is mapped
+correctly. So the error will be fixed
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ omx/gstomxvideodec.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/omx/gstomxvideodec.c b/omx/gstomxvideodec.c
+index b35dfe1..08a26fd 100644
+--- a/omx/gstomxvideodec.c
++++ b/omx/gstomxvideodec.c
+@@ -3749,10 +3749,15 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
+   g_assert (pool != NULL);
+ 
+   config = gst_buffer_pool_get_config (pool);
+-  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+-    gst_buffer_pool_config_add_option (config,
+-        GST_BUFFER_POOL_OPTION_VIDEO_META);
+-  }
++
++  /* The GST_BUFFER_POOL_OPTION_VIDEO_META config must be set 
++   * to buffer pool in order to always add videometa to buffers and then
++   * map buffers using frame map. 
++   *
++   * Frame map should be used instead of buffer map because it will map the
++   * buffer correctly based on the meta information.*/
++  gst_buffer_pool_config_add_option (config,
++      GST_BUFFER_POOL_OPTION_VIDEO_META);
+   gst_buffer_pool_set_config (pool, config);
+   gst_object_unref (pool);
+ 
+-- 
+2.17.1
+
