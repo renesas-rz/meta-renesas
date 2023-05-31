@@ -4,6 +4,7 @@ This is a Yocto build layer(version:dunfell) that provides support for the RZ/G3
 Currently the following boards and MPUs are supported:
 
 - Board: RZG3S Development Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
+- Board: RZG3S SMARC Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
 
 ## Patches
 
@@ -95,7 +96,7 @@ Build the target file system image using bitbake:
 
 |Renesas MPU| platform |        board         |
 |:---------:|:--------:|:--------------------:|
-|RZ/G3S     |rzg3      |       rzg3s-dev      |
+|RZ/G3S     |rzg3      |rzg3s-dev, smarc-rzg3s|
 
 \<target\> for 2 built types:
 * RZ/G3S: minimal, bsp
