@@ -154,6 +154,13 @@ IMAGE_INSTALL_append = " \
     packagegroup-docker \
 "
 
+# Remove since RZG1 don't support LTTNG
+IMAGE_INSTALL_remove_rzg1 = " \
+  lttng-tools \
+  lttng-modules \
+  lttng-ust \
+"
+
 # Environment setup, support building kernel modules with kernel src in SDK
 export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
 export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
