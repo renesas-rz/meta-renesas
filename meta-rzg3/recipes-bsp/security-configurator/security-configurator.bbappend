@@ -1,6 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
-COMPATIBLE_MACHINE_rzg3s = "rzg3s-dev"
+COMPATIBLE_MACHINE_rzg3s = "(rzg3s-dev|smarc-rzg3s)"
 
 BOARD_rzg3s-dev = "RZG3S_DEV"
 
