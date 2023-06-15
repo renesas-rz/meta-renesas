@@ -10,7 +10,7 @@ COMPATIBLE_MACHINE_rzfive = "(smarc-rzfive|rzfive-dev)"
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"
 BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rz-5.10-cip29-rt12", "rz-5.10-cip29",d)}"
-SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "4918f3e9d223dae21b8df7edb11eebd080ec6017", "1035e1cdce232a02fac479f23fbd926d3ca9270a",d)}"
+SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "5de4d17d289dab05a92b718de0ea056c9dbe4c67", "6d2215071fe0ab3d4ddd65dfa70cb8c91545bd9d",d)}"
 
 SRC_URI = "${KERNEL_URL};protocol=https;nocheckout=1;branch=${BRANCH}"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
