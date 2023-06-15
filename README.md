@@ -44,12 +44,12 @@ This layer depends on:
     branch: dunfell
     revision: 60b251c25ba87e946a0ca4cdc8d17b1cb09292ac
 
-    (Optional: core-image-qt)
+    core-image-qt: Optional (unsupported for RZ/V2M and RZ/V2MA)
     URI: https://github.com/meta-qt5/meta-qt5.git
     layers: meta-qt5
     revision: c1b0c9f546289b1592d7a895640de103723a0305
 
-    (Optional: Docker)
+    Docker: Optional (unsupported for RZ/V2M and RZ/V2MA)
     URI: https://git.yoctoproject.org/git/meta-virtualization
     layers: meta-virtualization
     branch: dunfell
@@ -93,6 +93,7 @@ Below is the combination of Codec/Graphics library with BSP released versions:
 |3.0.1|1.0|1.3|
 |3.0.2|1.0.1|1.4|
 |3.0.3|1.1.0|1.0.5(\*1)|
+|3.0.4|1.1.0|1.1.0(\*1)|
 
 (\*1) Please note that the naming rule of version is changed from the release.
 v1.0.5 is newer version of v1.4.
@@ -139,7 +140,7 @@ Currently, there are 2 types of build procedure supported in below description:
    ```bash
    $ TEMPLATECONF=$PWD/meta-renesas/meta-<platform>/docs/template/conf/ source poky/oe-init-build-env build
    ```
-- To build Docker (optional), Codec or Graphics, QT5, add necessary layers:
+- To build optional features (Docker, Codec or Graphics, QT5, Bootloaders), add necessary layers:
    ```bash
    # For Docker
    $ bitbake-layers add-layer ../meta-openembedded/meta-filesystems
@@ -178,7 +179,7 @@ Currently, there are 2 types of build procedure supported in below description:
 |RZ/V2MA    |rzv2m     |rzv2ma                  |
 |RZ/Five    |rzfive    |smarc-rzfive, rzfive-dev|
 
-**2. Build procedure for legacy users (common procedure):**
+**2. Build procedure for legacy users (common procedure) (unsupported for RZ/V2M and RZ/V2MA):**
 - Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
     ```bash
     $ source poky/oe-init-build-env
@@ -206,7 +207,7 @@ Currently, there are 2 types of build procedure supported in below description:
    DISTRO_FEATURES_remove = " docker"
    ```
 
-\<target\> for 2 built types:
+\<target\> for these built types:
 * RZ/Five, RZ/V2M, RZ/V2MA: bsp
 * Others: bsp, weston, qt
 
@@ -265,7 +266,7 @@ It is possible to change some build configs as below:
   ```
   CIP_MODE = "None" or unset CIP_MODE
   ```
-* QT Demo: choose QT5 Demonstration to build with core-image-qt. QT5 Demos are some applications to demonstrate QT5 framework.
+* QT Demo (unsupported for RZ/V2M and RZ/V2MA): choose QT5 Demonstration to build with core-image-qt. QT5 Demos are some applications to demonstrate QT5 framework.
   * Unset QT_DEMO (default): all QT5 Demos are not built with core-image-qt.
   ```
   #QT_DEMO = "1"
@@ -274,7 +275,7 @@ It is possible to change some build configs as below:
   ```
   QT_DEMO = "1"
   ```
-* Realtime Linux: choose realtime characteristic of Linux kernel to build with. You can enable this feature by setting the value "1" to IS_RT_BSP variable in local.conf:
+* Realtime Linux (unsupported for RZ/V2M and RZ/V2MA): choose realtime characteristic of Linux kernel to build with. You can enable this feature by setting the value "1" to IS_RT_BSP variable in local.conf:
   ```
   IS_RT_BSP = "1"
   ```
