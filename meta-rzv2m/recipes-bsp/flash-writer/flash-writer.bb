@@ -17,15 +17,16 @@ SRCREV_rzv2ma = "02abd1200b9792465822927d04747b2ecaf58e6b"
 inherit deploy
 
 SRC_URI_append = " \
-	file://0001-add-makefile-to-build-with-sdk.patch \
+	file://0001-makefile.linaro-update-makefile-to-be-built-with-cro.patch \
 "
 
 S = "${WORKDIR}/git"
 
+CFLAGS_append = " -fno-stack-protector"
+
 do_compile () {
 	cd ${S}
-	cp stdint.h ${RECIPE_SYSROOT_NATIVE}/usr/lib/aarch64-poky-linux/gcc/aarch64-poky-linux/8.3.0/include/
-	oe_runmake BOARD=RZV2M
+	oe_runmake -f makefile.linaro
 }
 
 PARALLEL_MAKE = "-j 1"
