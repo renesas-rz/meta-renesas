@@ -20,6 +20,13 @@ case "$hostname" in
     amixer cset name='PCM Volume' 100%
     amixer cset name='Input PGA Volume' 25
     ;;
+  iwg20m-g1m | iwg20m-g1n | iwg21m | iwg22m)
+  amixer set 'DVC In' 50%
+  amixer set 'DVC Out' 50%
+  amixer set 'PCM' 70%
+  amixer set 'Headphone' 100%
+  amixer set 'Mic' 50%
+  ;;
   *)
     ;;
 esac
