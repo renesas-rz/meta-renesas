@@ -1,0 +1,23 @@
+dummy_device and mm_dev_reserve are not platform_devices, so in initialize device,
+dma_mask and coherent_dma_mask is not set which lead to warning later. Manually set it in
+initial struct will prevent warning.
+--- a/drv/mmngr_drv.c.bk	2023-08-01 15:23:34.503434056 +0700
++++ b/drv/mmngr_drv.c	2023-08-01 15:24:45.264228306 +0700
+@@ -1058,6 +1058,7 @@
+ 		return -1;
+ 
+ 	dummy_device->cma_area = 0;
++	dummy_device->coherent_dma_mask = DMA_BIT_MASK(32);
+ 	/*
+ 	 * dummy_device will serve as !NULL device
+ 	 * for mem alloc in 1st CMA region
+@@ -1066,7 +1067,8 @@
+ 
+ 	/* handle for allocation in 2nd CMA area (MMP) */
+ 	p->mm_dev_reserve = misc.this_device;
+-	dma_set_mask_and_coherent(p->mm_dev_reserve, DMA_BIT_MASK(32));
++	p->mm_dev_reserve->coherent_dma_mask = DMA_BIT_MASK(32);
++
+ 	mm_drvdata = p;
+ 
+ 	spin_lock_init(&lock);

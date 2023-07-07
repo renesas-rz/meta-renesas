@@ -17,6 +17,7 @@ SRC_URI = "file://mmngr.tar.bz2 \
     file://0002-mmngr-Fix-invalid-type-for-argument-variable-of-func.patch \
     file://0003-mmngr-Update-for-Linux-kernel-v5.10.83-cip1.patch \
     file://0004-kernel-module-mmngr-Fix-issue-of-NULL-pointer-with-d.patch \
+    file://0005-Set-coherent-dma-mask-to-avoid-warning.patch \ 
 "
 S = "${WORKDIR}/mmngr"
 includedir = "${RENESAS_DATADIR}/include"
