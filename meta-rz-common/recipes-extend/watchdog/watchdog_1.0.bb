@@ -32,5 +32,5 @@ do_install() {
 	install -d ${D}${bindir}
 	install -m 0755 watchdog-test ${D}${bindir}
 	install -d ${D}${systemd_unitdir}/system
-	install -m 0755 ${WORKDIR}/watchdog.service ${D}${systemd_unitdir}/system
+	install -m 0644 ${WORKDIR}/watchdog.service ${D}${systemd_unitdir}/system
 }
