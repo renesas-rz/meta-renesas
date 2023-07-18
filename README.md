@@ -31,13 +31,13 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
     branch: dunfell
-    revision: aa0073041806c9f417a33b0b7f747d2a86289eda
-    (tag: dunfell-23.0.21)
+    revision: bab87089ad998afc980adb45c11ae356bc35a460
+    (tag: dunfell-23.0.26)
 
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python, meta-multimedia
     branch: dunfell
-    revision: 7952135f650b4a754e2255f5aa03973a32344123
+    revision: 6334241447e461f849035c47f071fa4a2125fee1
     
     URI: https://git.yoctoproject.org/meta-gplv2
     layers: meta-gplv2
@@ -53,7 +53,7 @@ This layer depends on:
     URI: https://git.yoctoproject.org/git/meta-virtualization
     layers: meta-virtualization
     branch: dunfell
-    revision: a63a54df3170fed387f810f23cdc2f483ad587df
+    revision: 521459bf588435e847d981657485bae8d6f003b5
 
 ## Build Instructions
 
@@ -102,12 +102,12 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
 ```bash
     $ git clone https://git.yoctoproject.org/git/poky
     $ cd poky
-    $ git checkout dunfell-23.0.21
+    $ git checkout dunfell-23.0.26
     $ cd ..
     $     
     $ git clone https://github.com/openembedded/meta-openembedded
     $ cd meta-openembedded
-    $ git checkout 7952135f650b4a754e2255f5aa03973a32344123
+    $ git checkout 6334241447e461f849035c47f071fa4a2125fee1
     $ cd ..
     $    
     $ git clone https://git.yoctoproject.org/git/meta-gplv2
@@ -127,7 +127,7 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $
     $ git clone  https://git.yoctoproject.org/git/meta-virtualization -b dunfell
     $ cd meta-virtualization
-    $ git checkout a63a54df3170fed387f810f23cdc2f483ad587df
+    $ git checkout 521459bf588435e847d981657485bae8d6f003b5
     $ cd ..
 ```
 \<tag\> can be selected in any tags of meta-renesas.
