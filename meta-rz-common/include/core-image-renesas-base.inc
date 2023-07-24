@@ -1,5 +1,7 @@
 # Basic packages
 IMAGE_INSTALL_append = " \
+    kernel-image \
+    kernel-devicetree \
     bash \
     v4l-utils \
     v4l2-init \
