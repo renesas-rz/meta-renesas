@@ -1,0 +1,25 @@
+From d275ac3ddd6968afc77cd691c10ac9360ba041bf Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 20 Jun 2019 13:40:32 +0700
+Subject: [PATCH] plugins: alsa: Add default key for alsa plugin
+
+While pulseaudio isn't support on our environment, so we will also use alsa
+as default.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ src/plugins/alsa/alsa.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/plugins/alsa/alsa.json b/src/plugins/alsa/alsa.json
+index c2b22df..bbe6751 100644
+--- a/src/plugins/alsa/alsa.json
++++ b/src/plugins/alsa/alsa.json
+@@ -1,3 +1,3 @@
+ {
+-    "Keys": ["alsa"]
++    "Keys": ["alsa","default"]
+ }
+-- 
+2.7.4
+
