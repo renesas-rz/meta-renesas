@@ -12,6 +12,10 @@ SRC_URI_append = " \
     file://0006-waylandsink-Add-support-for-I420-in-dmabuf.patch \
 "
 
+SRC_URI_append_rzg2l = " \
+    file://0007-gstreamer-waylandsink-Add-stride-restriction-to-buff.patch \
+"
+
 SRCREV_base = "3ef17d3c57e12f9d7536e464656b871a8949fa5b"
 
 DEPENDS += "weston"
