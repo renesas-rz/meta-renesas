@@ -129,3 +129,5 @@ IMAGE_INSTALL_append = " \
 export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
 export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
 export HOST_EXTRACFLAGS="-I${OECORE_NATIVE_SYSROOT}/usr/include/ -L${OECORE_NATIVE_SYSROOT}/usr/lib"
+
+WKS_FILE ?= "rz-image-bootpart-mmc1.wks"
