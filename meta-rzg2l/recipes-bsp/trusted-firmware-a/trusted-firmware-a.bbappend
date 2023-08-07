@@ -5,44 +5,28 @@ inherit python3native
 PLATFORM_smarc-rzg2l = "g2l"
 EXTRA_FLAGS_smarc-rzg2l = "BOARD=smarc_2"
 PMIC_EXTRA_FLAGS_smarc-rzg2l = "BOARD=smarc_pmic_2"
-FLASH_ADDRESS_BL2_BP_smarc-rzg2l = "00000"
-FLASH_ADDRESS_FIP_smarc-rzg2l = "1D200"
 
 PLATFORM_rzg2l-dev = "g2l"
 EXTRA_FLAGS_rzg2l-dev = "BOARD=dev15_4"
-FLASH_ADDRESS_BL2_BP_rzg2l-dev = "00000"
-FLASH_ADDRESS_FIP_rzg2l-dev = "1D200"
 
 PLATFORM_smarc-rzg2lc = "g2l"
 EXTRA_FLAGS_smarc-rzg2lc = "BOARD=smarc_1"
-FLASH_ADDRESS_BL2_BP_smarc-rzg2lc = "00000"
-FLASH_ADDRESS_FIP_smarc-rzg2lc = "1D200"
 
 PLATFORM_rzg2lc-dev = "g2l"
 EXTRA_FLAGS_rzg2lc-dev = "BOARD=dev13_1"
-FLASH_ADDRESS_BL2_BP_rzg2lc-dev = "00000"
-FLASH_ADDRESS_FIP_rzg2lc-dev = "1D200"
 
 PLATFORM_smarc-rzg2ul = "g2ul"
 EXTRA_FLAGS_smarc-rzg2ul = "BOARD=g2ul_smarc SOC_TYPE=1 SPI_FLASH=AT25QL128A"
-FLASH_ADDRESS_BL2_BP_smarc-rzg2ul = "00000"
-FLASH_ADDRESS_FIP_smarc-rzg2ul = "1D200"
 
 PLATFORM_rzg2ul-dev = "g2ul"
 EXTRA_FLAGS_rzg2ul-dev = "BOARD=g2ul_type1_ddr4_dev SOC_TYPE=1"
-FLASH_ADDRESS_BL2_BP_rzg2ul-dev = "00000"
-FLASH_ADDRESS_FIP_rzg2ul-dev = "1D200"
 
 PLATFORM_smarc-rzv2l = "v2l"
 EXTRA_FLAGS_smarc-rzv2l = "BOARD=smarc_4"
 PMIC_EXTRA_FLAGS_smarc-rzv2l = "BOARD=smarc_pmic_2"
-FLASH_ADDRESS_BL2_BP_smarc-rzv2l = "00000"
-FLASH_ADDRESS_FIP_smarc-rzv2l = "1D200"
 
 PLATFORM_rzv2l-dev = "v2l"
 EXTRA_FLAGS_rzv2l-dev = "BOARD=dev15_4"
-FLASH_ADDRESS_BL2_BP_rzv2l-dev = "00000"
-FLASH_ADDRESS_FIP_rzv2l-dev = "1D200"
 
 PMIC_BUILD_DIR = "${S}/build_pmic"
 
