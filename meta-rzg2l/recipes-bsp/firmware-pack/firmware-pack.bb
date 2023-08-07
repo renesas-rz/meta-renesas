@@ -3,9 +3,13 @@ SUMMARY = "Firmware Packaging"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
 
+require include/rzg2l-optee-config.inc
 inherit deploy
 
-DEPENDS = "trusted-firmware-a u-boot"
+DEPENDS = " \
+	trusted-firmware-a u-boot \
+	${@oe.utils.conditional("ENABLE_SPD_OPTEE", "1", " optee-os", "",d)} \
+"
 DEPENDS += " bootparameter-native fiptool-native"
 
 S = "${WORKDIR}"
@@ -39,6 +43,15 @@ do_compile () {
 		objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip_pmic.bin fip_pmic.srec
 	fi
 
+	if [ "${ENABLE_SPD_OPTEE}" = "1" ]; then
+		fiptool update --align 16 --tos-fw ${STAGING_DIR_HOST}/boot/tee-${MACHINE}.bin fip.bin
+		objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip.bin fip.srec
+
+		if [ "${PMIC_SUPPORT}" = "1" ]; then
+			fiptool update --align 16 --tos-fw ${STAGING_DIR_HOST}/boot/tee-${MACHINE}.bin fip_pmic.bin
+			objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip_pmic.bin fip_pmic.srec
+		fi
+	fi
 }
 
 do_deploy () {
