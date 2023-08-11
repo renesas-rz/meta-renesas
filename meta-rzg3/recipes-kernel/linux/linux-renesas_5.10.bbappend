@@ -1,4 +1,4 @@
-COMPATIBLE_MACHINE_rzg3s = "rzg3s-dev"
+COMPATIBLE_MACHINE_rzg3s = "(rzg3s-dev|smarc-rzg3s)"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
