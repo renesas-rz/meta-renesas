@@ -6,7 +6,7 @@ PLATFORM_rzg3s-dev = "g3s"
 EXTRA_FLAGS_rzg3s-dev = "BOARD=dev14_1_lpddr PLAT_SYSTEM_SUSPEND=vbat"
 
 PLATFORM_smarc-rzg3s = "g3s"
-EXTRA_FLAGS_smarc-rzg3s = "BOARD=dev14_1_lpddr PLAT_SYSTEM_SUSPEND=vbat"
+EXTRA_FLAGS_smarc-rzg3s = "BOARD=smarc PLAT_SYSTEM_SUSPEND=vbat"
 
 do_compile () {
 	oe_runmake PLAT=${PLATFORM} ${EXTRA_FLAGS} bl2 bl31
