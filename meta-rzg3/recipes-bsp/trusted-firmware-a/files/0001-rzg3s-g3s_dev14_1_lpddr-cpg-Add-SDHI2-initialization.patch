@@ -1,0 +1,36 @@
+From 2432c6396345a36c9278a1c95ec47eaa78a0e0f1 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Tue, 15 Aug 2023 15:02:01 +0700
+Subject: [PATCH 1/2] rzg3s: g3s_dev14_1_lpddr: cpg: Add SDHI2 initialization
+ for DEV board
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ plat/renesas/rz/board/g3s_dev14_1_lpddr/drivers/cpg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/plat/renesas/rz/board/g3s_dev14_1_lpddr/drivers/cpg.c b/plat/renesas/rz/board/g3s_dev14_1_lpddr/drivers/cpg.c
+index 57dedc8a0..e93751c12 100644
+--- a/plat/renesas/rz/board/g3s_dev14_1_lpddr/drivers/cpg.c
++++ b/plat/renesas/rz/board/g3s_dev14_1_lpddr/drivers/cpg.c
+@@ -233,7 +233,7 @@ static const CPG_SETUP_DATA cpg_iso_clock_tbl[] = {
+ 	{		/* SDHI */
+ 		(uintptr_t)CPG_CLKON_SDHI,
+ 		(uintptr_t)CPG_CLKMON_SDHI,
+-		0x00FF00FF,
++		0x0FFF0FFF,
+ 		CPG_T_CLK
+ 	},
+ 	{		/* USB */
+@@ -308,7 +308,7 @@ static const CPG_SETUP_DATA cpg_iso_reset_tbl[] = {
+ 	{		/* SDHI */
+ 		(uintptr_t)CPG_RST_SDHI,
+ 		(uintptr_t)CPG_RSTMON_SDHI,
+-		0x00030003,
++		0x00070007,
+ 		CPG_T_RST
+ 	},
+ 	{		/* USB */
+-- 
+2.25.1
+

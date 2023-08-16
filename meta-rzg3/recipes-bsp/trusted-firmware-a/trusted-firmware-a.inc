@@ -12,13 +12,12 @@ SRC_URI = " \
 	git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
 
-SRCREV = "63ac802d242b031887dcfa050cda6b0074b969b0"
+SRCREV = "2746108835e3068fed586c336cceec8201975017"
 SRCREV_mbedtls = "dd79db10014d85b26d11fe57218431f2e5ede6f2"
 
 SRC_URI_append = " \
-	file://0001-rzg3s-cpg-Add-SDHI2-initialization.patch \
-	file://0002-rzg3s-Add-SMC-command-for-PCIe-RST_RSM_B-terminal-co.patch \
-	file://0003-rzg3s-Add-SMC-command-for-USB-PWRRDY-terminal-contro.patch \
+	file://0001-rzg3s-g3s_dev14_1_lpddr-cpg-Add-SDHI2-initialization.patch \
+	file://0002-rzg3s-Add-SMC-command-for-USB-PWRRDY-terminal-contro.patch \
 "
 
 S = "${WORKDIR}/git"

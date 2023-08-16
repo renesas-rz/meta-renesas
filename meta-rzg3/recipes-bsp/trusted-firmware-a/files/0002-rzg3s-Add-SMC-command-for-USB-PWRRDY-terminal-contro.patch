@@ -1,7 +1,7 @@
-From a977b3561800ac85309365707d2bf0d35bb25117 Mon Sep 17 00:00:00 2001
+From f46ec425fb4d6121e8b940232402e4405628bce0 Mon Sep 17 00:00:00 2001
 From: Loc Vu <loc.vu.zn@renesas.com>
 Date: Fri, 14 Jul 2023 16:10:24 +0700
-Subject: [PATCH 3/3] rzg3s: Add SMC command for USB PWRRDY terminal control
+Subject: [PATCH 2/2] rzg3s: Add SMC command for USB PWRRDY terminal control
 
 Add SMC command to support USB_PWRRDY terminal control. Example usage from
 Linux kernel as following:
@@ -62,7 +62,7 @@ index 9d2e976b3..334b5e75d 100644
  		WARN("%s: Unimplemented RZ SiP Service Call: 0x%x\n", __func__, smc_fid);
  		SMC_RET1(handle, SMC_UNK);
 diff --git a/plat/renesas/rz/soc/g3s/include/rz_soc_def.h b/plat/renesas/rz/soc/g3s/include/rz_soc_def.h
-index d49e3771b..365602da2 100755
+index bf2bc3161..fed3a7310 100755
 --- a/plat/renesas/rz/soc/g3s/include/rz_soc_def.h
 +++ b/plat/renesas/rz/soc/g3s/include/rz_soc_def.h
 @@ -123,6 +123,7 @@
