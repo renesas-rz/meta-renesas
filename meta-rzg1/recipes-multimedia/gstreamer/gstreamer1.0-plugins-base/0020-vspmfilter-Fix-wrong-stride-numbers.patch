@@ -1,0 +1,186 @@
+From 861e9df06cf50bd670894cd043d15f13a0075f66 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Wed, 25 Jul 2018 11:48:50 +0700
+Subject: [PATCH] vspmfilter: Fix wrong stride numbers
+
+Previously vspmfilter guesses the stride numbers from video foramt.
+But this is not a correct method, upstream and downstream elements
+can use different strides. When this happens, the output video
+is not correct.
+Especially when run with omxh264enc, the strides in omxh264enc is
+largely different with video info due to its alignment requirement.
+
+This wrong stride issue is fix here, use the stride info inside
+frame info (owner of buffer must set stride data correctly in the
+video meta at first)
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 108 ++++++++++++++++++++++-------------------
+ 1 file changed, 59 insertions(+), 49 deletions(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index 9a1c8da..b0c6837 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -1458,6 +1458,32 @@ static void cb_func(
+   end_flag = 1;
+ }
+ 
++static GstFlowReturn
++find_physical_address (GstVspmFilter *space, gpointer in_vir1, gpointer base1,
++    gpointer in_vir2, gpointer base2, gpointer *out_phy1, gpointer *out_phy2)
++{
++  struct MM_PARAM      p_adr[2];
++  GstFlowReturn ret;
++
++  /* change virtual address to physical address */
++  memset(&p_adr, 0, sizeof(p_adr));
++  p_adr[0].user_virt_addr = (unsigned long)in_vir1;
++  p_adr[1].user_virt_addr = (unsigned long)in_vir2;
++  ret = ioctl(space->vsp_info->mmngr_fd, MM_IOC_VTOP, &p_adr);
++  if (ret) {
++    printf("MMNGR VtoP Convert Error. \n");
++    GST_ERROR ("MMNGR VtoP Convert Error. \n");
++    return GST_FLOW_ERROR;
++  }
++  /* Note that this method to find physical address only find the address in
++   * start of page. If there is an offset from page, we need to add it here */
++  p_adr[0].hard_addr += (0xFFF & ((unsigned long)in_vir1 - (unsigned long)base1));
++  p_adr[1].hard_addr += (0xFFF & ((unsigned long)in_vir2 - (unsigned long)base2));
++
++  if (out_phy1 != NULL) *out_phy1 = (gpointer) p_adr[0].hard_addr;
++  if (out_phy2 != NULL) *out_phy2 = (gpointer) p_adr[1].hard_addr;
++  return GST_FLOW_OK;
++}
+ 
+ static GstFlowReturn
+ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+@@ -1480,13 +1506,16 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   gint irc;
+   unsigned long use_module;
+ 
+-  int ret, i;
++  int i;
++  GstFlowReturn ret;
+   gint stride[GST_VIDEO_MAX_PLANES];
+   gsize offset[GST_VIDEO_MAX_PLANES];
+   gint offs, plane_size;
+   const GstVideoFormatInfo * vspm_in_vinfo;
+   const GstVideoFormatInfo * vspm_out_vinfo;
+-  struct MM_PARAM	p_adr[2];
++  void *src_addr[3] = { 0 };
++  void *dst_addr[3] = { 0 };
++  guint in_n_planes, out_n_planes;
+ 
+   space = GST_VIDEO_CONVERT_CAST (filter);
+   vsp_info = space->vsp_info;
+@@ -1529,6 +1558,9 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   out_height = vsp_info->out_height;
+   vspm_out_vinfo = gst_video_format_get_info (vsp_info->gst_format_out);
+ 
++  in_n_planes = GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo);
++  out_n_planes = GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo);
++
+   if ((in_width == out_width) && (in_height == out_height)) {
+     use_module = 0;
+   } else {
+@@ -1536,32 +1568,23 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     use_module = VSP_UDS_USE;
+   }
+ 
+-  /* change virtual address to physical address */
+-  memset(&p_adr, 0, sizeof(p_adr));
+-  p_adr[0].user_virt_addr = (unsigned long)in_frame->data[0];
+-  p_adr[1].user_virt_addr = (unsigned long)out_frame->data[0];
+-  ret = ioctl(vsp_info->mmngr_fd, MM_IOC_VTOP, &p_adr);
+-  if (ret) {
+-    printf("MMNGR VtoP Convert Error. \n");
+-    GST_ERROR ("MMNGR VtoP Convert Error. \n");
+-    return GST_FLOW_ERROR;
++  ret = find_physical_address (space, in_frame->data[0], in_frame->map[0].data,
++      out_frame->data[0], out_frame->map[0].data, &src_addr[0], &dst_addr[0]);
++  if (ret != GST_FLOW_OK) return ret;
++
++  if (in_n_planes >= 2 || out_n_planes >= 2) {
++    ret = find_physical_address (space, in_frame->data[1], in_frame->map[1].data,
++        out_frame->data[1], out_frame->map[1].data, &src_addr[1], &dst_addr[1]);
++    if (ret != GST_FLOW_OK) return ret;
++  }
++  if (in_n_planes >= 3 || out_n_planes >= 3) {
++    ret = find_physical_address (space, in_frame->data[2], in_frame->map[2].data,
++        out_frame->data[2], out_frame->map[2].data, &src_addr[2], &dst_addr[2]);
++    if (ret != GST_FLOW_OK) return ret;
+   }
+ 
+   {
+-    /* Calculate stride and offset of each planes */
+-    offs = 0;
+-    for (i=0; i < GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo); i++) {
+-      offset[i] = offs;
+-      stride[i] = GST_VIDEO_FORMAT_INFO_PSTRIDE(vspm_in_vinfo, i) *
+-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vspm_in_vinfo, i,
+-              in_width);
+-
+-      plane_size = stride[i] * 
+-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vspm_in_vinfo, i, in_height);
+-
+-      offs += plane_size;
+-    }
+-
++    /* Setting input parameters */
+     src_alpha_par.addr_a  = NULL;
+     src_alpha_par.alphan  = VSP_ALPHA_NO;
+     src_alpha_par.alpha1  = 0;
+@@ -1580,11 +1603,11 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     src_alpha_par.mscolor0  = 0;
+     src_alpha_par.mscolor1  = 0;
+ 
+-    src_par.addr        = (void *) p_adr[0].hard_addr;
+-    src_par.stride      = stride[0];
+-    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 1) src_par.stride_c = stride[1];
+-    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 1) src_par.addr_c0  = (void*) ((guint)src_par.addr + offset[1]);
+-    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 2) src_par.addr_c1  = (void*) ((guint)src_par.addr + offset[2]);
++    src_par.addr        = src_addr[0];
++    src_par.addr_c0     = src_addr[1];
++    src_par.addr_c1     = src_addr[2];
++    src_par.stride      = in_frame->info.stride[0];
++    src_par.stride_c    = in_frame->info.stride[1];
+ 
+     src_par.csc         = VSP_CSC_OFF;  /* do not convert colorspace */
+     src_par.width       = in_width;
+@@ -1611,25 +1634,12 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   }
+ 
+   {
+-    /* Calculate stride and offset of each planes */
+-    offs = 0;
+-    for (i=0; i < GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo); i++) {
+-      offset[i] = offs;
+-      stride[i] = GST_VIDEO_FORMAT_INFO_PSTRIDE(vspm_out_vinfo, i) *
+-          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vspm_out_vinfo, i,
+-              out_width);
+-
+-      plane_size = stride[i] * 
+-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vspm_out_vinfo, i, out_height);
+-
+-      offs += plane_size;
+-    }
+-
+-    dst_par.addr      = (void *)p_adr[1].hard_addr;
+-    dst_par.stride    = stride[0];
+-    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.stride_c = stride[1];
+-    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.addr_c0  = (void*) ((guint)dst_par.addr + offset[1]);
+-    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 2) dst_par.addr_c1  = (void*) ((guint)dst_par.addr + offset[2]);
++    /* Setting output parameters */
++    dst_par.addr      = dst_addr[0];
++    dst_par.addr_c0   = dst_addr[1];
++    dst_par.addr_c1   = dst_addr[2];
++    dst_par.stride    = out_frame->info.stride[0];
++    dst_par.stride_c  = out_frame->info.stride[1];
+ 
+     /* convert if format in and out different in color space */
+     if (!GST_VIDEO_FORMAT_INFO_IS_YUV(vspm_in_vinfo) != !GST_VIDEO_FORMAT_INFO_IS_YUV(vspm_out_vinfo))
+-- 
+1.9.1
+

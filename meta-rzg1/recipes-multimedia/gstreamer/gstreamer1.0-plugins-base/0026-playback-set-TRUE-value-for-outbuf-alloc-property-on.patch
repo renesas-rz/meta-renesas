@@ -1,0 +1,31 @@
+From 1a11c375eb1cf480b00ff6129dfc1d4cc27d805a Mon Sep 17 00:00:00 2001
+From: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+Date: Wed, 8 Aug 2018 16:48:23 +0700
+Subject: [PATCH] playback: set TRUE value for outbuf-alloc property on
+ vspmfilter
+
+Signed-off-by: Quoc Ngo <quoc.ngo.wz@rvc.renesas.com>
+---
+ gst/playback/gstplaysinkvideoconvert.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/gst/playback/gstplaysinkvideoconvert.c b/gst/playback/gstplaysinkvideoconvert.c
+index 5bac5d0..6d01ad3 100644
+--- a/gst/playback/gstplaysinkvideoconvert.c
++++ b/gst/playback/gstplaysinkvideoconvert.c
+@@ -57,6 +57,12 @@ gst_play_sink_video_convert_add_conversion_elements (GstPlaySinkVideoConvert *
+   if (self->use_converters) {
+     el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
+         COLORSPACE, "conv");
++
++  if ( strcmp(COLORSPACE, "vspmfilter") == 0) {
++      g_object_set (el, "outbuf-alloc", TRUE, NULL);
++      g_object_set (el, "dmabuf-use", FALSE, NULL);
++  }
++
+     if (el)
+       prev = el;
+ 
+-- 
+1.9.1
+

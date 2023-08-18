@@ -1,0 +1,459 @@
+From 2b0f5e004b7cee4ba6fed843253f50f9162e46b9 Mon Sep 17 00:00:00 2001
+From: HungTran <hung.tran.jy@rvc.renesas.com>
+Date: Mon, 7 Dec 2015 20:41:01 +0700
+Subject: [PATCH] vspmfilter: Update setting in/out params
+
+Remove manual setting for in/out params to prevent errors
+when use other new formats
+
+Signed-off-by: HungTran <hung.tran.jy@rvc.renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 270 ++++++++++++++++++++---------------------
+ 1 file changed, 130 insertions(+), 140 deletions(-)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index a2d4aa0..c275540 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -299,7 +299,8 @@ struct extensions_t
+ /* Note that below swap information will be REVERSED later (in function
+  *     set_colorspace) because current system use Little Endian */
+ static const struct extensions_t exts[] = {
+-  {GST_VIDEO_FORMAT_I420,  VSP_IN_YUV420_PLANAR,     VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV12,  VSP_IN_YUV420_SEMI_NV12,  VSP_SWAP_NO},    /* NV12 format is highest priority as most modules support this */
++  {GST_VIDEO_FORMAT_I420,  VSP_IN_YUV420_PLANAR,     VSP_SWAP_NO},    /* I420 is second priority */
+   {GST_VIDEO_FORMAT_YUY2,  VSP_IN_YUV422_INT0_YUY2,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_UYVY,  VSP_IN_YUV422_INT0_UYVY,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_RGBx,  VSP_IN_RGBA8888,          VSP_SWAP_NO},
+@@ -314,7 +315,6 @@ static const struct extensions_t exts[] = {
+   {GST_VIDEO_FORMAT_BGR ,  VSP_IN_BGR888,            VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_YVYU,  VSP_IN_YUV422_INT0_YVYU,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_Y444,  VSP_IN_YUV444_PLANAR,     VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_NV12,  VSP_IN_YUV420_SEMI_NV12,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_NV21,  VSP_IN_YUV420_SEMI_NV21,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_v308,  VSP_IN_YUV444_INTERLEAVED,VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_RGB16, VSP_IN_RGB565,            VSP_SWAP_NO},
+@@ -323,7 +323,8 @@ static const struct extensions_t exts[] = {
+ };
+ 
+ static const struct extensions_t exts_out[] = {
+-  {GST_VIDEO_FORMAT_I420,  VSP_OUT_YUV420_PLANAR,     VSP_SWAP_NO},
++  {GST_VIDEO_FORMAT_NV12,  VSP_OUT_YUV420_SEMI_NV12,  VSP_SWAP_NO},    /* NV12 format is highest priority as most modules support this */
++  {GST_VIDEO_FORMAT_I420,  VSP_OUT_YUV420_PLANAR,     VSP_SWAP_NO},    /* I420 is second priority */
+   {GST_VIDEO_FORMAT_YUY2,  VSP_OUT_YUV422_INT0_YUY2,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_UYVY,  VSP_OUT_YUV422_INT0_UYVY,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_RGBx,  VSP_OUT_RGBP8888,          VSP_SWAP_NO},
+@@ -338,7 +339,6 @@ static const struct extensions_t exts_out[] = {
+   {GST_VIDEO_FORMAT_BGR ,  VSP_OUT_BGR888,            VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_YVYU,  VSP_OUT_YUV422_INT0_YVYU,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_Y444,  VSP_OUT_YUV444_PLANAR,     VSP_SWAP_NO},
+-  {GST_VIDEO_FORMAT_NV12,  VSP_OUT_YUV420_SEMI_NV12,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_NV21,  VSP_OUT_YUV420_SEMI_NV21,  VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_v308,  VSP_OUT_YUV444_INTERLEAVED,VSP_SWAP_NO},
+   {GST_VIDEO_FORMAT_RGB16, VSP_OUT_RGB565,            VSP_SWAP_NO},
+@@ -435,7 +435,6 @@ gst_vspm_filter_set_info (GstVideoFilter * filter,
+       case GST_VIDEO_FORMAT_NV12:
+       {
+         GstQuery *query;
+-        GValue val = { 0, };
+         GstStructure *structure;
+         gint vspm_used ;
+         GArray *outbuf_paddr_array;
+@@ -548,12 +547,7 @@ gst_vspm_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+ {
+     GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
+     GstVspmFilter *space = GST_VIDEO_CONVERT_CAST (filter);
+-    GstMemory *in_gmem[GST_VIDEO_MAX_PLANES], *out_gmem[GST_VIDEO_MAX_PLANES];
+-    GstVideoFrame in_frame, out_frame;
+-    GstVideoMeta *meta_in,*meta_out;
+-    gint out_stride;
+-    gint in_n_mem, out_n_mem;
+-    gint i;
++
+     GstFlowReturn res = GST_FLOW_OK;
+     if(space->use_dmabuf) {
+         gst_buffer_ref(inbuf);
+@@ -588,11 +582,12 @@ gst_vspmfilter_buffer_pool_create_buffer_from_dmabuf (GstVspmFilter *space,
+   gint i;
+   Vspm_mmng_ar *vspm_in;
+   Vspm_dmabuff vspm_buf;
++  unsigned long psize;
+ 
+   vspm_in = space->vspm_in;
+ 
+   buffer = gst_buffer_new ();
+-  unsigned long psize;
++
+   vspm_buf.buf = buffer;
+   vspm_buf.dmabuf_fd = dmabuf[0];
+   if (R_MM_OK == mmngr_import_start_in_user(&vspm_buf.dmabuf_pid,
+@@ -1139,7 +1134,6 @@ static void
+ gst_vspm_filter_init (GstVspmFilter * space)
+ {
+   GstVspmFilterVspInfo *vsp_info;
+-  int i;
+   Vspm_mmng_ar *vspm_in;
+   Vspm_mmng_ar *vspm_out;
+   VspmbufArray *vspm_outbuf;
+@@ -1287,7 +1281,6 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   T_VSP_ALPHA src_alpha_par;
+   T_VSP_OUT dst_par;
+   T_VSP_CTRL ctrl_par;
+-
+   T_VSP_UDS uds_par;
+   gint in_width, in_height;
+   gint out_width, out_height;
+@@ -1295,8 +1288,13 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   gint irc;
+   unsigned long use_module;
+   unsigned long	bpd = 1;
+-  
+-  int ret;
++
++  int ret, i;
++  gint stride[GST_VIDEO_MAX_PLANES];
++  gsize offset[GST_VIDEO_MAX_PLANES];
++  gint offs, plane_size;
++  const GstVideoFormatInfo * vspm_in_vinfo;
++  const GstVideoFormatInfo * vspm_out_vinfo;
+   struct MM_PARAM	p_adr[2];
+ 
+   space = GST_VIDEO_CONVERT_CAST (filter);
+@@ -1307,6 +1305,13 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+       GST_VIDEO_INFO_NAME (&filter->in_info),
+       GST_VIDEO_INFO_NAME (&filter->out_info));
+ 
++  vsp_info->gst_format_in = GST_VIDEO_FRAME_FORMAT (in_frame);
++  vsp_info->in_width = GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 0);
++  vsp_info->in_height = GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 0);
++
++  vsp_info->gst_format_out = GST_VIDEO_FRAME_FORMAT (out_frame);
++  vsp_info->out_width = GST_VIDEO_FRAME_COMP_WIDTH (out_frame, 0);
++  vsp_info->out_height = GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, 0);
+ 
+   memset(&ctrl_par, 0, sizeof(T_VSP_CTRL));
+ 
+@@ -1325,10 +1330,13 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     vsp_info->format_flag = 1;
+   }
+ 
+-  in_width = GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 0);
+-  in_height = GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 0);
+-  out_width = GST_VIDEO_FRAME_COMP_WIDTH (out_frame, 0);
+-  out_height = GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, 0);
++  in_width = vsp_info->in_width;
++  in_height = vsp_info->in_height;
++  vspm_in_vinfo = gst_video_format_get_info (vsp_info->gst_format_in);
++
++  out_width = vsp_info->out_width;
++  out_height = vsp_info->out_height;
++  vspm_out_vinfo = gst_video_format_get_info (vsp_info->gst_format_out);
+ 
+   if ((in_width == out_width) && (in_height == out_height)) {
+     use_module = 0;
+@@ -1344,10 +1352,25 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   ret = ioctl(vsp_info->mmngr_fd, MM_IOC_VTOP, &p_adr);
+   if (ret) {
+     printf("MMNGR VtoP Convert Error. \n");
++    GST_ERROR ("MMNGR VtoP Convert Error. \n");
+     return GST_FLOW_ERROR;
+   }
+ 
+   {
++    /* Calculate stride and offset of each planes */
++    offs = 0;
++    for (i=0; i < GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo); i++) {
++      offset[i] = offs;
++      stride[i] = GST_VIDEO_FORMAT_INFO_PSTRIDE(vspm_in_vinfo, i) *
++          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vspm_in_vinfo, i,
++              in_width);
++
++      plane_size = stride[i] * 
++        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vspm_in_vinfo, i, in_height);
++
++      offs += plane_size;
++    }
++
+     src_alpha_par.addr_a  = NULL;
+     src_alpha_par.alphan  = VSP_ALPHA_NO;
+     src_alpha_par.alpha1  = 0;
+@@ -1366,40 +1389,13 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     src_alpha_par.mscolor0  = 0;
+     src_alpha_par.mscolor1  = 0;
+ 
+-    src_par.addr      = (void *) p_adr[0].hard_addr;
+-    /* setting every format */
+-    switch (vsp_info->in_format) {
+-    /* YUV420 SemiPlanar */
+-    case VSP_IN_YUV420_SEMI_NV21:
+-    case VSP_IN_YUV420_SEMI_NV12:
+-    {
+-      gint uv_offset = 0;
+-      if ((in_width * in_height) & (4096 - 1))
+-        uv_offset = get_uv_offset_aligned_to_page (4096, in_width, in_height);
+-      else
+-        uv_offset = in_width * in_height;
+-
+-      src_par.addr_c0		= ((guint8 *) p_adr[0].hard_addr + uv_offset);
+-
+-      src_par.stride 		= in_width;
+-      src_par.stride_c	= in_width;
+-      src_par.csc       = VSP_CSC_ON;
+-      break;
+-    }
+-    /* YUV422 Interleaved */
+-    case VSP_IN_YUV422_INT0_YUY2:
+-    case VSP_IN_YUV422_INT0_UYVY:
+-      src_par.addr_c0		= NULL;
+-      src_par.stride 		= in_width * 2;
+-      src_par.stride_c	= 0;
+-      src_par.csc       = VSP_CSC_ON;
+-      break;
+-      
+-    default:
+-      printf("input format is non-support.\n");
+-      return GST_FLOW_ERROR;
+-    }
+-    src_par.addr_c1     = NULL;
++    src_par.addr        = (void *) p_adr[0].hard_addr;
++    src_par.stride      = stride[0];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 1) src_par.stride_c = stride[1];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 1) src_par.addr_c0  = (void*) ((guint)src_par.addr + offset[1]);
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 2) src_par.addr_c1  = (void*) ((guint)src_par.addr + offset[2]);
++
++    src_par.csc         = VSP_CSC_OFF;  /* do not convert colorspace */
+     src_par.width       = in_width;
+     src_par.height      = in_height;
+     src_par.width_ex    = 0;
+@@ -1422,39 +1418,33 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+     src_par.clrcnv      = NULL;
+     src_par.connect     = use_module;
+   }
+-  
++
+   {
++    /* Calculate stride and offset of each planes */
++    offs = 0;
++    for (i=0; i < GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo); i++) {
++      offset[i] = offs;
++      stride[i] = GST_VIDEO_FORMAT_INFO_PSTRIDE(vspm_out_vinfo, i) *
++          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vspm_out_vinfo, i,
++              out_width);
++
++      plane_size = stride[i] * 
++        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vspm_out_vinfo, i, out_height);
++
++      offs += plane_size;
++    }
++
+     dst_par.addr      = (void *)p_adr[1].hard_addr;
+-    switch (vsp_info->out_format) {
+-    /* RGB */
+-    case VSP_IN_ARGB8888:
+-      dst_par.addr_c0   = NULL;
+-      bpd = (unsigned char)( (vsp_info->out_format & VSP_FORMAT_PIXEL_MASK) >> VSP_FORMAT_PIXEL_BIT );
+-      dst_par.stride 		= out_width * bpd;
+-      dst_par.stride_c	= 0;
+-      dst_par.csc       = VSP_CSC_OFF;
+-      break;
+-    case VSP_IN_RGBA8888:
+-    case VSP_IN_RGB888:
+-      dst_par.addr_c0   = NULL;
+-      bpd = (unsigned char)( (vsp_info->out_format & VSP_FORMAT_PIXEL_MASK) >> VSP_FORMAT_PIXEL_BIT );
+-      dst_par.stride 		= out_width * bpd;
+-      dst_par.stride_c	= 0;
+-      dst_par.csc       = VSP_CSC_OFF;
+-      break;
+-    case VSP_OUT_YUV420_SEMI_NV12:
+-    case VSP_OUT_YUV420_SEMI_NV21:
+-      dst_par.addr_c0   = ((guint8 *) p_adr[1].hard_addr + out_width * out_height);
+-      dst_par.stride    = out_width;
+-      dst_par.stride_c	= out_width;
+-      dst_par.csc       = VSP_CSC_ON;
+-      break;
++    dst_par.stride    = stride[0];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.stride_c = stride[1];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.addr_c0  = (void*) ((guint)dst_par.addr + offset[1]);
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 2) dst_par.addr_c1  = (void*) ((guint)dst_par.addr + offset[2]);
++
++    /* convert if format in and out different in color space */
++    if (!GST_VIDEO_FORMAT_INFO_IS_YUV(vspm_in_vinfo) != !GST_VIDEO_FORMAT_INFO_IS_YUV(vspm_out_vinfo))
++      dst_par.csc     = VSP_CSC_ON;
++    else dst_par.csc  = VSP_CSC_OFF;
+ 
+-    default:
+-      printf("output format is non-support.\n");
+-      return GST_FLOW_ERROR;
+-    }
+-    dst_par.addr_c1   = NULL;
+     dst_par.width     = out_width;
+     dst_par.height    = out_height;
+     dst_par.x_offset  = 0;
+@@ -1506,6 +1496,7 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+   ercd = VSPM_lib_Entry(vsp_info->vspm_handle, &vsp_info->jobid, 126, &vspm_ip, 0, cb_func); 
+   if (ercd) {
+     printf("VSPM_lib_Entry() Failed!! ercd=%ld\n", ercd);
++    GST_ERROR ("VSPM_lib_Entry() Failed!! ercd=%ld\n", ercd);
+     return GST_FLOW_ERROR;
+   }
+ 
+@@ -1547,13 +1538,19 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+   unsigned long use_module;
+   unsigned long	bpd = 1;
+ 
+-  int ret;
++  int ret, i;
+   struct MM_PARAM	p_adr[2];
++  gint stride[GST_VIDEO_MAX_PLANES];
++  gsize offset[GST_VIDEO_MAX_PLANES];
++  gint offs, plane_size;
++  const GstVideoFormatInfo * vspm_in_vinfo;
++  const GstVideoFormatInfo * vspm_out_vinfo;
+ 
+   space = GST_VIDEO_CONVERT_CAST (filter);
+   vsp_info = space->vsp_info;
+   vspm_in = space->vspm_in;
+   vspm_out = space->vspm_out;
++
+   in_vmeta = gst_buffer_get_video_meta (inbuf); 
+   if(in_vmeta) {
+     vsp_info->gst_format_in = in_vmeta->format;
+@@ -1591,9 +1588,11 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+ 
+   in_width = vsp_info->in_width;
+   in_height = vsp_info->in_height;
++  vspm_in_vinfo = gst_video_format_get_info (vsp_info->gst_format_in);
+ 
+   out_width = vsp_info->out_width;
+   out_height = vsp_info->out_height;
++  vspm_out_vinfo = gst_video_format_get_info (vsp_info->gst_format_out);
+ 
+   if ((in_width == out_width) && (in_height == out_height)) {
+     use_module = 0;
+@@ -1611,6 +1610,20 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+     p_adr[1].hard_addr = buffer_get_dmabuf_hard_addr(vspm_out,outbuf);
+ 
+   {
++    /* Calculate stride and offset of each planes */
++    offs = 0;
++    for (i=0; i < GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo); i++) {
++      offset[i] = offs;
++      stride[i] = GST_VIDEO_FORMAT_INFO_PSTRIDE(vspm_in_vinfo, i) *
++          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vspm_in_vinfo, i,
++              in_width);
++
++      plane_size = stride[i] * 
++        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vspm_in_vinfo, i, in_height);
++
++      offs += plane_size;
++    }
++
+     src_alpha_par.addr_a    = NULL;
+     src_alpha_par.alphan    = VSP_ALPHA_NO;
+     src_alpha_par.alpha1    = 0;
+@@ -1629,40 +1642,15 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+     src_alpha_par.mscolor0  = 0;
+     src_alpha_par.mscolor1  = 0;
+ 
+-    src_par.addr      = (void *) p_adr[0].hard_addr;
+-    /* setting every format */
+-   switch (vsp_info->in_format) {   
+-    /* YUV420 SemiPlanar */
+-    case VSP_IN_YUV420_SEMI_NV21:
+-    case VSP_IN_YUV420_SEMI_NV12:
+-    {
+-      gint uv_offset = 0;
+-      if ((in_width * in_height) & (4096 - 1))
+-        uv_offset = get_uv_offset_aligned_to_page (4096, in_width, in_height);
+-      else
+-        uv_offset = in_width * in_height;
+-
+-      src_par.addr_c0		= ((guint8 *) p_adr[0].hard_addr + uv_offset);
+-
+-      src_par.stride 		= in_width;
+-      src_par.stride_c	= in_width;
+-      src_par.csc       = VSP_CSC_ON;
+-      break;
+-    }
+-    /* YUV422 Interleaved */
+-    case VSP_IN_YUV422_INT0_YUY2:
+-    case VSP_IN_YUV422_INT0_UYVY:
+-      src_par.addr_c0		= NULL;
+-      src_par.stride 		= in_width * 2;
+-      src_par.stride_c	= 0;
+-      src_par.csc       = VSP_CSC_ON;
+-      break;
+-      
+-    default:
+-      printf("input format is non-support.\n");
+-      return GST_FLOW_ERROR;
+-    }
+-    src_par.addr_c1     = NULL;
++    src_par.addr        = (void *) p_adr[0].hard_addr;
++    src_par.stride      = stride[0];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 1) src_par.stride_c = stride[1];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 1) src_par.addr_c0  = (void*) ((guint)src_par.addr + offset[1]);
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_in_vinfo) > 2) src_par.addr_c1  = (void*) ((guint)src_par.addr + offset[2]);
++
++    /* not convert colorspace */
++    src_par.csc         = VSP_CSC_OFF;
++
+     src_par.width       = in_width;
+     src_par.height      = in_height;
+     src_par.width_ex    = 0;
+@@ -1687,29 +1675,31 @@ gst_vspm_filter_transform_buffer (GstVideoFilter * filter,
+   }
+ 
+   {
+-    dst_par.addr      = (void *)p_adr[1].hard_addr;
+-    switch (vsp_info->out_format) {
+-    /* RGB */
+-    case VSP_IN_ARGB8888:
+-      dst_par.addr_c0   = NULL;
+-      bpd = (unsigned char)( (vsp_info->out_format & VSP_FORMAT_PIXEL_MASK) >> VSP_FORMAT_PIXEL_BIT );
+-      dst_par.stride 		= out_width * bpd;
+-      dst_par.stride_c	= 0;
+-      dst_par.csc       = VSP_CSC_OFF;
+-      break;
+-    case VSP_OUT_YUV420_SEMI_NV12:
+-    case VSP_OUT_YUV420_SEMI_NV21:
+-      dst_par.addr_c0   = ((guint8 *) p_adr[1].hard_addr + out_width * out_height);;
+-      dst_par.stride    = out_width;
+-      dst_par.stride_c	= out_width;
+-      dst_par.csc       = VSP_CSC_ON;
+-      break;
+-    default:
+-      printf("output format is non-support.\n");
+-      return GST_FLOW_ERROR;
++    /* Calculate stride and offset of each planes */
++    offs = 0;
++    for (i=0; i < GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo); i++) {
++      offset[i] = offs;
++      stride[i] = GST_VIDEO_FORMAT_INFO_PSTRIDE(vspm_out_vinfo, i) *
++          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vspm_out_vinfo, i,
++              out_width);
++
++      plane_size = stride[i] * 
++        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vspm_out_vinfo, i, out_height);
++
++      offs += plane_size;
+     }
+ 
+-    dst_par.addr_c1   = NULL;
++    dst_par.addr        = (void *)p_adr[1].hard_addr;
++    dst_par.stride      = stride[0];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.stride_c = stride[1];
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 1) dst_par.addr_c0  = (void*) ((guint)dst_par.addr + offset[1]);
++    if (GST_VIDEO_FORMAT_INFO_N_PLANES(vspm_out_vinfo) > 2) dst_par.addr_c1  = (void*) ((guint)dst_par.addr + offset[2]);
++
++    /* convert if format in and out different in color space */
++    if (!GST_VIDEO_FORMAT_INFO_IS_YUV(vspm_in_vinfo) != !GST_VIDEO_FORMAT_INFO_IS_YUV(vspm_out_vinfo))
++      dst_par.csc     = VSP_CSC_ON;
++    else dst_par.csc  = VSP_CSC_OFF;
++
+     dst_par.width     = out_width;
+     dst_par.height    = out_height;
+     dst_par.x_offset  = 0;
+-- 
+1.9.1
+

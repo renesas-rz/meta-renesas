@@ -1,0 +1,44 @@
+From b486f028f87d20cc8c44883f5e64c2c65b6e6a40 Mon Sep 17 00:00:00 2001
+From: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+Date: Sun, 21 Aug 2016 11:30:39 +0700
+Subject: [PATCH 06/14] vspmfilter add RGB and RGBx output
+
+Add RGB and BGRx output format
+
+Signed-off-by: Chien Nguyen <chien.nguyen.eb@rvc.renesas.com>
+---
+ gst/vspmfilter/gstvspmfilter.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index e409f35..013fdf0 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -313,6 +313,8 @@ struct extensions_t
+ 
+ static const struct extensions_t exts[] = {
+   {GST_VIDEO_FORMAT_BGRA, VSP_IN_ARGB8888},           /* output check ok! */  /* BGRA8888 non-support in VSP, Use ARGB8888, and swap set L | LL */
++  {GST_VIDEO_FORMAT_RGBx, VSP_IN_RGBA8888},
++  {GST_VIDEO_FORMAT_RGB, VSP_IN_RGB888},
+   {GST_VIDEO_FORMAT_NV21, VSP_IN_YUV420_SEMI_NV21},
+   {GST_VIDEO_FORMAT_NV12, VSP_IN_YUV420_SEMI_NV12},   /* input check ok! */
+   {GST_VIDEO_FORMAT_YUY2, VSP_IN_YUV422_INT0_YUY2},
+@@ -1366,6 +1368,15 @@ gst_vspm_filter_transform_frame (GstVideoFilter * filter,
+       dst_par.csc       = VSP_CSC_OFF;
+       dst_par.swap      = VSP_SWAP_L | VSP_SWAP_LL;
+       break;
++    case VSP_IN_RGBA8888:
++    case VSP_IN_RGB888:
++      dst_par.addr_c0   = NULL;
++      bpd = (unsigned char)( (vsp_info->out_format & VSP_FORMAT_PIXEL_MASK) >> VSP_FORMAT_PIXEL_BIT );
++      dst_par.stride 		= out_width * bpd;
++      dst_par.stride_c	= 0;
++      dst_par.csc       = VSP_CSC_OFF;
++      dst_par.swap      = VSP_SWAP_B | VSP_SWAP_W | VSP_SWAP_L | VSP_SWAP_LL;
++      break;
+     case VSP_OUT_YUV420_SEMI_NV12:
+     case VSP_OUT_YUV420_SEMI_NV21:
+       dst_par.addr_c0   = ((guint8 *) p_adr[1].hard_addr + out_width * out_height);
+-- 
+1.9.1
+

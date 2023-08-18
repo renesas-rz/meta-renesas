@@ -1,0 +1,35 @@
+From ae95d122cbee8c8a57f69134b21bafb71db9d081 Mon Sep 17 00:00:00 2001
+From: Tam Nguyen <tamnm2@fsoft.com.vn>
+Date: Fri, 16 Oct 2015 15:30:42 +0700
+Subject: [PATCH] fix memory leak vspmfilter
+
+Signed-off-by: Tam Nguyen <tamnm2@fsoft.com.vn>
+
+---
+ gst/vspmfilter/gstvspmfilter.c |    6 +++++-
+ 1 file changed, 6 insertions(+)
+
+diff --git a/gst/vspmfilter/gstvspmfilter.c b/gst/vspmfilter/gstvspmfilter.c
+index 013fdf0..23b5784 100644
+--- a/gst/vspmfilter/gstvspmfilter.c
++++ b/gst/vspmfilter/gstvspmfilter.c
+@@ -1060,10 +1060,16 @@ gst_vspm_filter_finalize (GObject * obj)
+   
+   if (space->vspm_in)
+     g_free (space->vspm_in);
++  /* free buf_array when finalize */
++  if (space->vspm_outbuf->buf_array)
++    g_ptr_array_free(space->vspm_outbuf->buf_array, TRUE);
+   if (space->vspm_out)
+     g_free (space->vspm_out);
+   if (space->vspm_outbuf)
+     g_free (space->vspm_outbuf);
++  /* free space->allocator when finalize */
++  if (space->allocator)
++    gst_object_unref(space->allocator);
+ 
+   G_OBJECT_CLASS (parent_class)->finalize (obj);
+ }
+-- 
+1.7.9.5
+
