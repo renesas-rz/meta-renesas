@@ -1,6 +1,3 @@
-require include/rzg2l-security-config.inc
-inherit python3native
-
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 SRC_URI = " \
@@ -16,52 +13,12 @@ PV = "0127"
 
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
 
-DEPENDS = " \
-	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", " \
-		python3-pycryptodome-native python3-pycryptodomex-native secprv-native bptool-native fiptool-native \
-	", "",d)}"
-
 S = "${WORKDIR}/${BPN}"
 BUILD_TBB_DIR = "${S}/build_tbb"
 
 do_configure[noexec] = "1"
 
 do_compile () {
-	#create certification binary
-	if [ "${TRUSTED_BOARD_BOOT}" = "1" ]; then
-		mkdir -p ${BUILD_TBB_DIR}/tmp
-
-		python3 ${MANIFEST_GENERATION_KCERT} \
-			-info ${DIRPATH_MANIFEST_GENTOOL}/info/flash_${IMG_AUTH_MODE}_g3s_info.xml \
-			-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem \
-			-certout ${BUILD_TBB_DIR}/tmp/flash_writer-kcert.bin
-
-		python3 ${MANIFEST_GENERATION_CCERT} \
-			-info ${DIRPATH_MANIFEST_GENTOOL}/info/flash_${IMG_AUTH_MODE}_g3s_info.xml \
-			-iskey ${SYMLINK_NATIVE_BOOT_KEY_DIR}/bl2_key.pem \
-			-imgin ${S}/FlashWriter.bin \
-			-certout ${BUILD_TBB_DIR}/tmp/flash_writer-ccert.bin \
-			-imgout ${BUILD_TBB_DIR}/tmp/flash_writer-sign.bin
-
-		objcopy -I binary --pad-to=0x00000400 ${BUILD_TBB_DIR}/tmp/flash_writer-kcert.bin \
-			${BUILD_TBB_DIR}/tmp/flash_writer-kcert_pad.bin
-		objcopy -I binary --pad-to=0x00000C00 ${BUILD_TBB_DIR}/tmp/flash_writer-ccert.bin \
-			${BUILD_TBB_DIR}/tmp/flash_writer-ccert_pad.bin
-
-		cat ${BUILD_TBB_DIR}/tmp/flash_writer-kcert_pad.bin \
-			${BUILD_TBB_DIR}/tmp/flash_writer-ccert_pad.bin \
-			${BUILD_TBB_DIR}/tmp/flash_writer-sign.bin > ${BUILD_TBB_DIR}/tmp/flash_writer-image.bin
-
-		bptool ${BUILD_TBB_DIR}/tmp/flash_writer-image.bin ${BUILD_TBB_DIR}/tmp/flash_writer-bparm.bin 0x107000 scif
-
-		objcopy -I binary -O elf64-little --add-section .parm=${BUILD_TBB_DIR}/tmp/flash_writer-bparm.bin \
-			--set-section-flags .parm=alloc --adjust-section-vma .parm=0xA1E00 \
-			--adjust-section-vma .data=0x107000 ${BUILD_TBB_DIR}/tmp/flash_writer-image.bin \
-			${BUILD_TBB_DIR}/tmp/flash_writer_bp_tbb.elf
-		objcopy -O srec --srec-forceS3 ${BUILD_TBB_DIR}/tmp/flash_writer_bp_tbb.elf \
-			${BUILD_TBB_DIR}/tmp/flash_writer_bp_tbb.mot
-	fi
-
 	# Convert to srec
 	objcopy -I binary -O srec --adjust-vma=0xA1E00 --srec-forceS3 ${S}/FlashWriter.bin ${S}/FlashWriter.srec
 }
@@ -73,11 +30,6 @@ do_deploy () {
 	# Copy fip images
 	install -m 0644  ${S}/FlashWriter.srec ${DEPLOYDIR}/FlashWriter-${MACHINE}.srec
 	install -m 0644  ${S}/FlashWriter.mot ${DEPLOYDIR}/FlashWriter-${MACHINE}.mot
-
-	if [ "${TRUSTED_BOARD_BOOT}" = "1" ]; then
-		install -m 0644  ${BUILD_TBB_DIR}/tmp/flash_writer_bp_tbb.elf ${DEPLOYDIR}/FlashWriter-${MACHINE}_bp_TBB.elf
-		install -m 0644  ${BUILD_TBB_DIR}/tmp/flash_writer_bp_tbb.mot ${DEPLOYDIR}/FlashWriter-${MACHINE}_bp_TBB.mot
-	fi
 }
 
 addtask deploy before do_build after do_compile
