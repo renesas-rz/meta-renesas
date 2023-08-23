@@ -13,6 +13,13 @@ case "$hostname" in
     amixer set 'DVC In',1 20%
     amixer set 'DVC Out',1 20%
     ;;
+  smarc-rzg2ul | smarc-rzg2l | smarc-rzg2lc | smarc-rzv2l | smarc-rzfive)
+    amixer cset name='Left Input Mixer L2 Switch' on
+    amixer cset name='Right Input Mixer R2 Switch' on
+    amixer cset name='Headphone Playback Volume' 100
+    amixer cset name='PCM Volume' 100%
+    amixer cset name='Input PGA Volume' 25
+    ;;
   *)
     ;;
 esac

@@ -28,6 +28,7 @@ IMAGE_INSTALL_append = " \
     yavta \
     kernel-module-uvcvideo \
     watchdog \
+    audio-init \
 "
 
 # Installation for Wifi/Bluetooth packages
@@ -43,7 +44,6 @@ IMAGE_INSTALL_append_rzg2h = " \
     bt-fw \
     obexftp \
     bluez-alsa \
-    audio-init \
 "
 
 # Additional tools for support Tool develop
