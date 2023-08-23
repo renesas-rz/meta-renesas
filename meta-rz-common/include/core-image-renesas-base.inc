@@ -79,6 +79,14 @@ update_issue() {
       BSP_SOC="RZG2E"
       BSP_BOARD="EK874"
       ;;
+    rzg3s-dev)
+      BSP_SOC="RZG3S"
+      BSP_BOARD="RZG3S-DEV"
+      ;;
+    smarc-rzg3s)
+      BSP_SOC="RZG3S"
+      BSP_BOARD="RZG3S-SMARC-EVK"
+      ;;
 
     esac
 
