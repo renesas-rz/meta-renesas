@@ -27,7 +27,7 @@ do_deploy () {
 	# Create deploy folder
 	install -d ${DEPLOYDIR}
 
-	# Copy fip images
+	# Copy Flash-writer binaries to deploy folder
 	install -m 0644  ${S}/FlashWriter.srec ${DEPLOYDIR}/FlashWriter-${MACHINE}.srec
 	install -m 0644  ${S}/FlashWriter.mot ${DEPLOYDIR}/FlashWriter-${MACHINE}.mot
 }
