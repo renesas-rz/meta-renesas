@@ -1,4 +1,4 @@
-require include/rzg1-modules-common.inc
+require include/rz-modules-common.inc
 
 LICENSE = "CLOSED"
 DEPENDS = "kernel-module-mmngr"

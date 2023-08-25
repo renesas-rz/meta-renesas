@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = " \
 "
 
 inherit module
-require include/rzg2-modules-common.inc
+require include/rz-modules-common.inc
 
 DEPENDS = "linux-renesas"
 PN = "kernel-module-vspm"

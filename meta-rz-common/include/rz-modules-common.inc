@@ -6,7 +6,7 @@ export CROSS_COMPILE = "${TARGET_PREFIX}"
 export KERNELDIR = "${STAGING_KERNEL_DIR}"
 export LDFLAGS = ""
 export CP = "cp"
-require include/rzg2-path-common.inc
+require include/rz-path-common.inc
 
 # Fix error: openssl/bio.h: No such file or directory
 do_make_scripts() {

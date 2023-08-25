@@ -3,7 +3,7 @@ LIC_FILES_CHKSUM = " \
     file://COPYING.MIT;md5=96659f2a7571bfa27483882a653c3bb9 \
 "
 
-require include/rzg2-modules-common.inc
+require include/rz-modules-common.inc
 
 QOSIF_LIB_URL = "git://github.com/renesas-rcar/qos_lib.git"
 BRANCH = "rcar-gen3"

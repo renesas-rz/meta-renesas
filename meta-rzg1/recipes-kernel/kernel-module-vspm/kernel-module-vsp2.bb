@@ -1,4 +1,4 @@
-require include/rzg1-modules-common.inc
+require include/rz-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
 LIC_FILES_CHKSUM = " \

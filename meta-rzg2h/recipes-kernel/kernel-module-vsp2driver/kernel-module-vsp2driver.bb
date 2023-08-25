@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = " \
     file://MIT-COPYING;md5=192063521ce782a445a3c9f99a8ad560 \
 "
 inherit module
-require include/rzg2-modules-common.inc
+require include/rz-modules-common.inc
 
 DEPENDS = "linux-renesas kernel-module-vspm"
 PN = "kernel-module-vsp2driver"
