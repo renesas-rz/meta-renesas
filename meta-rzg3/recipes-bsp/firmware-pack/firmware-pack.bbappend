@@ -1,4 +1,7 @@
-DEPENDS = "trusted-firmware-a u-boot"
+DEPENDS = " \
+	trusted-firmware-a u-boot \
+	${@oe.utils.conditional("ENABLE_SPD_OPTEE", "1", " optee-os", "",d)} \
+"
 DEPENDS_append = " bptool-native fiptool-native"
 
 S = "${WORKDIR}/${BPN}-${PV}"
