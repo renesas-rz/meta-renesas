@@ -79,6 +79,21 @@ update_issue() {
       BSP_SOC="RZG2E"
       BSP_BOARD="EK874"
       ;;
+
+    esac
+
+    # Make issue file
+    echo "BSP: ${BSP_SOC}/${BSP_BOARD}/${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
+    echo "LSI: ${BSP_SOC}" >> ${IMAGE_ROOTFS}/etc/issue
+    echo "Version: ${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
+}
+
+update_issue_rzg3s() {
+    # Set BSP version
+    BSP_VERSION="1.0.0"
+
+    # Set SoC and Board info
+    case "${MACHINE}" in
     rzg3s-dev)
       BSP_SOC="RZG3S"
       BSP_BOARD="RZG3S-DEV"
