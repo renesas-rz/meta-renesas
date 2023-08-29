@@ -1,0 +1,78 @@
+From d1183ace68da4781a97bedaa7dedde2bfd3f69ce Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Mon, 24 Aug 2020 09:46:34 +0700
+Subject: [PATCH] libmediactl-v4l2: Fix undefined symbols when building with
+ new glibc(s)
+
+Since glibc-2.23, sys/sysmacros.h has been no longer included from
+sys/types.h. This may cause system unable to locate its macros like
+major/minor/makedev and trigger following error when loading library
+libmediactrl-v4l2 from Weston:
+
+Failed to load module: /usr/lib/libmediactl-v4l2.so.0: undefined symbol: minor
+
+This patch use AC_HEADER_MAJOR of AutoConf to find out which header
+defines reqiured macros:
+    https://www.gnu.org/software/autoconf/manual/autoconf-2.69/html_node/Particular-Headers.html
+
+This change should also increase portability across other libcs.
+(refer from https://lists.freedesktop.org/archives/wayland-devel/2017-March/033511.html)
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ configure.ac    | 3 +++
+ libmediactl.c   | 6 ++++++
+ libv4l2subdev.c | 6 ++++++
+ 3 files changed, 15 insertions(+)
+
+diff --git a/configure.ac b/configure.ac
+index 542d5e5..235fbca 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -7,6 +7,9 @@ AC_INIT([libmediactl-v4l2], [1.0.0],
+ AC_CONFIG_SRCDIR([Makefile.am])
+ AC_CONFIG_HEADERS([config.h])
+ 
++# For checking the location of major/minor/makedev macros
++AC_HEADER_MAJOR
++
+ # Initialize Automake
+ AM_INIT_AUTOMAKE([foreign dist-bzip2])
+ 
+diff --git a/libmediactl.c b/libmediactl.c
+index f15b1a3..2d8cae2 100644
+--- a/libmediactl.c
++++ b/libmediactl.c
+@@ -25,6 +25,12 @@
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ 
++#ifdef MAJOR_IN_MKDEV
++#	include <sys/mkdev.h>
++#elif MAJOR_IN_SYSMACROS
++#	include <sys/sysmacros.h>
++#endif
++
+ #include <ctype.h>
+ #include <errno.h>
+ #include <fcntl.h>
+diff --git a/libv4l2subdev.c b/libv4l2subdev.c
+index 4ede4fa..de506e1 100644
+--- a/libv4l2subdev.c
++++ b/libv4l2subdev.c
+@@ -23,6 +23,12 @@
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ 
++#ifdef MAJOR_IN_MKDEV
++#	include <sys/mkdev.h>
++#elif MAJOR_IN_SYSMACROS
++#	include <sys/sysmacros.h>
++#endif
++
+ #include <ctype.h>
+ #include <errno.h>
+ #include <fcntl.h>
+-- 
+2.7.4
+
