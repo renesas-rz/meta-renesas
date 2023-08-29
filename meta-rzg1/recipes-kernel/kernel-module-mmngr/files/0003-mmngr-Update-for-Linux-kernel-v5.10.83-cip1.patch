@@ -1,0 +1,85 @@
+From 813d0ce9e830eed3e118347bb47921e06a608b66 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Thu, 7 Apr 2022 13:54:33 +0700
+Subject: [PATCH] mmngr: Update for Linux kernel v5.10.83-cip1
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drv/mmngr_drv.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drv/mmngr_drv.c b/drv/mmngr_drv.c
+index 9a26dcd..a0555b9 100644
+--- a/drv/mmngr_drv.c
++++ b/drv/mmngr_drv.c
+@@ -63,6 +63,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/slab.h>
+ #include <linux/dma-mapping.h>
++#include <linux/dma-map-ops.h>
+ #include <linux/bitmap.h>
+ #include <linux/cdev.h>
+ #include <linux/platform_device.h>
+@@ -70,8 +71,6 @@
+ #include <linux/sched.h>
+ #include <linux/mm.h>
+ #include <linux/version.h>
+-#include <linux/dma-attrs.h>
+-#include <linux/dma-contiguous.h>
+ 
+ #include "mmngr_public.h"
+ #include "mmngr_private.h"
+@@ -515,41 +514,41 @@ static int map_register(void)
+ 	if (!request_mem_region(MM_MXI_ADDR, MM_MXI_SIZE, DRVNAME))
+ 		return -1;
+ 
+-	top = ioremap_nocache(MM_MXI_ADDR, MM_MXI_SIZE);
++	top = ioremap(MM_MXI_ADDR, MM_MXI_SIZE);
+ 	if (top == NULL) {
+ 		release_mem_region(MM_MXI_ADDR, MM_MXI_SIZE);
+ 		return -1;
+ 	}
+ 
+-	top_prr = ioremap_nocache(MM_PRR_ADDR, MM_PRR_SIZE);
++	top_prr = ioremap(MM_PRR_ADDR, MM_PRR_SIZE);
+ 	if (top_prr == NULL)
+ 		return -1;
+ 
+-	top_impctr = ioremap_nocache(MM_IMPCTR_ADDR, MM_IPMMU_SIZE);
++	top_impctr = ioremap(MM_IMPCTR_ADDR, MM_IPMMU_SIZE);
+ 	if (top_impctr == NULL)
+ 		return -1;
+ 
+-	top_impmba0 = ioremap_nocache(MM_IMPMBA0_ADDR, MM_IPMMU_SIZE);
++	top_impmba0 = ioremap(MM_IMPMBA0_ADDR, MM_IPMMU_SIZE);
+ 	if (top_impmba0 == NULL)
+ 		return -1;
+ 
+-	top_impmba1 = ioremap_nocache(MM_IMPMBA1_ADDR, MM_IPMMU_SIZE);
++	top_impmba1 = ioremap(MM_IMPMBA1_ADDR, MM_IPMMU_SIZE);
+ 	if (top_impmba1 == NULL)
+ 		return -1;
+ 
+-	top_impmbd0 = ioremap_nocache(MM_IMPMBD0_ADDR, MM_IPMMU_SIZE);
++	top_impmbd0 = ioremap(MM_IMPMBD0_ADDR, MM_IPMMU_SIZE);
+ 	if (top_impmbd0 == NULL)
+ 		return -1;
+ 
+-	top_impmbd1 = ioremap_nocache(MM_IMPMBD1_ADDR, MM_IPMMU_SIZE);
++	top_impmbd1 = ioremap(MM_IMPMBD1_ADDR, MM_IPMMU_SIZE);
+ 	if (top_impmbd1 == NULL)
+ 		return -1;
+ 
+-	top_imuctr19 = ioremap_nocache(MM_IMUCTR19_ADDR, MM_IPMMU_SIZE);
++	top_imuctr19 = ioremap(MM_IMUCTR19_ADDR, MM_IPMMU_SIZE);
+ 	if (top_imuctr19 == NULL)
+ 		return -1;
+ #ifdef MMNGR_LAGER
+-	top_imuctr22 = ioremap_nocache(MM_IMUCTR22_ADDR, MM_IPMMU_SIZE);
++	top_imuctr22 = ioremap(MM_IMUCTR22_ADDR, MM_IPMMU_SIZE);
+ 	if (top_imuctr22 == NULL)
+ 		return -1;
+ #endif
+-- 
+2.7.4
+

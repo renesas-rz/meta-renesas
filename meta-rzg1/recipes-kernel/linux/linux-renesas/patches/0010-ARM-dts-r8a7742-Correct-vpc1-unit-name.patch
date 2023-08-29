@@ -1,0 +1,30 @@
+From 54143553053e5f67f6643938d4b490eec3f8ab8d Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Thu, 17 Aug 2023 15:26:46 +0700
+Subject: [PATCH] ARM: dts: r8a7742: Correct vpc1 unit name
+
+On vpc1 node, unit name was vpc0@fe918000 which is incompatible with
+vpc1 node. Change it to vpc1@fe918000 so when UVCS module probes, it
+can find vpc1 node.
+
+Signed-off-by: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+---
+ arch/arm/boot/dts/r8a7742.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
+index b7f1f38371ff..ebe8140d551c 100644
+--- a/arch/arm/boot/dts/r8a7742.dtsi
++++ b/arch/arm/boot/dts/r8a7742.dtsi
+@@ -1163,7 +1163,7 @@ vcp1: vcp1@fe900000 {
+ 			renesas,#ch = <1>;
+ 		};
+ 
+-		vpc1: vpc0@fe918000 {
++		vpc1: vpc1@fe918000 {
+ 			compatible = "renesas,vpc1";
+ 			reg = <0 0xfe918000 0 0x90>;
+ 			clocks = <&cpg CPG_MOD 102>;
+-- 
+2.25.1
+

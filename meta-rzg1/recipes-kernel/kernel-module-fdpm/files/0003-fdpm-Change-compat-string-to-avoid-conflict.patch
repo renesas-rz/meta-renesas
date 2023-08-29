@@ -1,0 +1,29 @@
+From 3ab1fed665d2b3364921eb5571149df6259deacb Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Tue, 24 May 2022 16:13:39 +0700
+Subject: [PATCH] fdpm: Change compat string to avoid conflict
+
+Change driver's compat string to avoid conflict with the upstream
+RCar FDPM driver (rcar_fdp1).
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drv/fdpm_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drv/fdpm_main.c b/drv/fdpm_main.c
+index 7ca417a..51c998c 100755
+--- a/drv/fdpm_main.c
++++ b/drv/fdpm_main.c
+@@ -126,7 +126,7 @@ static const struct dev_pm_ops fdpm_pm_ops = {
+ 
+ static const struct of_device_id fdpm_fdp_of_match[] = {
+ 	{
+-		.compatible = "renesas,fdp1"
++		.compatible = "renesas,fdpm1"
+ 	},
+ 	{ },
+ };
+-- 
+2.7.4
+

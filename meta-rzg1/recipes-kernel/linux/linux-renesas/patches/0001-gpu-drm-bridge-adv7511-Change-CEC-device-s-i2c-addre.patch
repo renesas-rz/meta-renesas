@@ -1,0 +1,80 @@
+From aa6094dc86be6cb5ae8a61d848e269ced015a3ce Mon Sep 17 00:00:00 2001
+From: Duy Bao Dang <duy.dang.yb@renesas.com>
+Date: Thu, 23 Dec 2021 14:27:22 +0700
+Subject: [PATCH 152/203] gpu: drm: bridge: adv7511: Change CEC device's i2c
+ address
+
+Change CEC device's i2c address from 0x3c to 0x3d to avoid
+conflicting with that of OV5640 camera.
+
+Signed-off-by: Duy Bao Dang <duy.dang.yb@renesas.com>
+Signed-off-by: Nhan Nguyen <nhan.nguyen-thanh@banvien.com.vn>
+---
+ drivers/gpu/drm/bridge/adv7511/adv7511_drv.c | 30 +++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+index 430c5e8f0388..e73026d855da 100644
+--- a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
++++ b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+@@ -11,6 +11,7 @@
+ #include <linux/module.h>
+ #include <linux/of_device.h>
+ #include <linux/slab.h>
++#include <linux/of.h>
+ 
+ #include <media/cec.h>
+ 
+@@ -22,6 +23,11 @@
+ 
+ #include "adv7511.h"
+ 
++/* Normal cec_i2c_addr=0x78 but change to 0x7a
++ * alternative address to avoid conflict
++ */
++static const int cec_i2c_addr_alt = 0x7a;
++
+ /* ADI recommended values for proper operation. */
+ static const struct reg_sequence adv7511_fixed_registers[] = {
+ 	{ 0x98, 0x03 },
+@@ -1059,7 +1065,17 @@ static int adv7511_init_cec_regmap(struct adv7511 *adv)
+ {
+ 	int ret;
+ 
+-	adv->i2c_cec = i2c_new_ancillary_device(adv->i2c_main, "cec",
++	/*
++	 * When cec device is probe in RZ/G1MN, it will use 0x3d i2c address
++	 * instead of common 0x3c i2c address to avoid conflict with camera
++	 * OV5640 address
++	 */
++	if (of_machine_is_compatible("renesas,r8a7743") ||
++		of_machine_is_compatible("renesas,r8a7744"))
++		adv->i2c_cec = i2c_new_ancillary_device(adv->i2c_main, "cec",
++						0x3d);
++	else
++		adv->i2c_cec = i2c_new_ancillary_device(adv->i2c_main, "cec",
+ 						ADV7511_CEC_I2C_ADDR_DEFAULT);
+ 	if (IS_ERR(adv->i2c_cec))
+ 		return PTR_ERR(adv->i2c_cec);
+@@ -1271,6 +1287,18 @@ static int adv7511_probe(struct i2c_client *i2c, const struct i2c_device_id *id)
+ 	if (ret)
+ 		goto err_i2c_unregister_packet;
+ 
++	/*
++	 * Use alternative address for CEC Memory address in case of
++	 * RZ/G1{M,N} boards to avoid possible conflict to OV5640 address
++	 */
++	if (of_machine_is_compatible("renesas,r8a7743") ||
++		of_machine_is_compatible("renesas,r8a7744"))
++		regmap_write(adv7511->regmap, ADV7511_REG_CEC_I2C_ADDR,
++				cec_i2c_addr_alt);
++	else
++		regmap_write(adv7511->regmap, ADV7511_REG_CEC_I2C_ADDR,
++			adv7511->i2c_cec->addr << 1);
++
+ 	INIT_WORK(&adv7511->hpd_work, adv7511_hpd_work);
+ 
+ 	if (i2c->irq) {
+-- 
+2.25.1
+

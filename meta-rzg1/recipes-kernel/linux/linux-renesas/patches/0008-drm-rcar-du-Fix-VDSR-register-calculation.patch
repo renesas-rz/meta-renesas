@@ -1,0 +1,52 @@
+From 1e3a2b3f131cfc905c85aa485eff0352226ce5f5 Mon Sep 17 00:00:00 2001
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Date: Mon, 9 Apr 2018 23:13:01 +0700
+Subject: [PATCH 135/174] drm: rcar-du: Fix VDSR register calculation
+
+When the setting value of VDSR register is a negative value,
+The setting value of VDSR register is rounded at 1 by
+specification of H/W.
+
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Signed-off-by: Hung Dong <hung.dong.xd@rvc.renesas.com>
+Signed-off-by: Duy Dang <duy.dang.yb@renesas.com>
+Signed-off-by: Nhan Nguyen <nhan.nguyen-thanh@banvien.com.vn>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 36f1c026adea..2a4e9dc8223d 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -237,6 +237,7 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	unsigned int hdse_offset;
+ 	u32 dsmr;
+ 	u32 escr;
++	int vdsr, vder;
+ 
+ 	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_RZG2L)) {
+ 		struct drm_crtc *crtc = &rcrtc->crtc;
+@@ -570,11 +571,14 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 					mode->hsync_start - 1);
+ 	rcar_du_crtc_write(rcrtc, HCR,  mode->htotal - 1);
+ 
+-	rcar_du_crtc_write(rcrtc, VDSR, mode->crtc_vtotal -
+-					mode->crtc_vsync_end - 2);
+-	rcar_du_crtc_write(rcrtc, VDER, mode->crtc_vtotal -
+-					mode->crtc_vsync_end +
+-					mode->crtc_vdisplay - 2);
++	vdsr = mode->crtc_vtotal - mode->crtc_vsync_end - 2;
++	vder = mode->crtc_vtotal - mode->crtc_vsync_end + mode->crtc_vdisplay - 2;
++	if (vdsr < 1) {
++		vder = vder - vdsr + 1;
++		vdsr = 1;
++	}
++	rcar_du_crtc_write(rcrtc, VDSR, vdsr);
++	rcar_du_crtc_write(rcrtc, VDER, vder);
+ 	rcar_du_crtc_write(rcrtc, VSPR, mode->crtc_vtotal -
+ 					mode->crtc_vsync_end +
+ 					mode->crtc_vsync_start - 1);
+-- 
+2.25.1
+

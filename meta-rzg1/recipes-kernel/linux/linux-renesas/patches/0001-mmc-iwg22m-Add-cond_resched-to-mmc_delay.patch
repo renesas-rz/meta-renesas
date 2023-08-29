@@ -1,0 +1,37 @@
+From 8819229f71a67c3d91354b9350d0536f5cd7fcf6 Mon Sep 17 00:00:00 2001
+From: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+Date: Mon, 14 Aug 2023 10:36:59 +0700
+Subject: [PATCH] mmc: iwg22m: Add cond_resched to mmc_delay
+
+G1E having problem with detecting SD card due to timeout command.
+Issue:
+[  336.775369] mmc2: error -110 whilst initialising SD card
+
+Solution:
+cond_resched() will reduce latency via explicit rescheduling in places
+that are safe. Calling cond_resched() before usleep_range() will ensure
+usleep_range() won't affect other CPU task, which cause MMC command timeout.
+
+Signed-off-by: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+---
+ drivers/mmc/core/core.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mmc/core/core.h b/drivers/mmc/core/core.h
+index a6c814f..cf44a80 100644
+--- a/drivers/mmc/core/core.h
++++ b/drivers/mmc/core/core.h
+@@ -61,8 +61,10 @@ u32 mmc_vddrange_to_ocrmask(int vdd_min, int vdd_max);
+ 
+ static inline void mmc_delay(unsigned int ms)
+ {
+-	if (ms <= 20)
++	if (ms <= 20) {
++		cond_resched();
+ 		usleep_range(ms * 1000, ms * 1250);
++	}
+ 	else
+ 		msleep(ms);
+ }
+-- 
+2.7.4

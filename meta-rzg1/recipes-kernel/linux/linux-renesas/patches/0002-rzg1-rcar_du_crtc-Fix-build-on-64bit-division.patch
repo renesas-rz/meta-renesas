@@ -1,0 +1,277 @@
+From 6b9433353a89a51eaeb2937156039a3ddf3265b2 Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Wed, 2 Aug 2023 15:58:06 +0700
+Subject: [PATCH] rzg1: rcar_du_crtc: Fix build on 64bit division
+
+Since RZG1 devices don't use this part of code. Keeping it
+will cause problems due to not 64bit division limitation on 32bit
+device.
+
+Error logs:
+| arm-poky-linux-gnueabi-ld.bfd: drivers/gpu/drm/rcar-du/rcar_du_crtc.o: in function `rcar_du_crtc_set_display_timing':
+| rcar_du_crtc.c:(.text+0xa90): undefined reference to `__aeabi_uldivmod'
+| arm-poky-linux-gnueabi-ld.bfd: rcar_du_crtc.c:(.text+0xb2c): undefined reference to `__aeabi_ldivmod'
+| arm-poky-linux-gnueabi-ld.bfd: rcar_du_crtc.c:(.text+0xb78): undefined reference to `__aeabi_uldivmod'
+| arm-poky-linux-gnueabi-ld.bfd: rcar_du_crtc.c:(.text+0xb94): undefined reference to `__aeabi_uldivmod'
+| arm-poky-linux-gnueabi-ld.bfd: rcar_du_crtc.c:(.text+0xbdc): undefined reference to `__aeabi_uldivmod'
+| arm-poky-linux-gnueabi-ld.bfd: rcar_du_crtc.c:(.text+0xbf8): undefined reference to `__aeabi_uldivmod'
+| arm-poky-linux-gnueabi-ld.bfd: rcar_du_crtc.c:(.text+0xc14): undefined reference to `__aeabi_uldivmod'
+
+Signed-off-by: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+---
+ drivers/gpu/drm/rcar-du/rcar_du_crtc.c | 239 -------------------------
+ 1 file changed, 239 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 2a4e9dc8223d..053f9cd82575 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -239,245 +239,6 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 	u32 escr;
+ 	int vdsr, vder;
+ 
+-	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_RZG2L)) {
+-		struct drm_crtc *crtc = &rcrtc->crtc;
+-		struct drm_device *ddev = rcrtc->crtc.dev;
+-		struct drm_connector_list_iter iter;
+-		struct drm_connector *connector = NULL;
+-		struct drm_encoder *encoder = NULL;
+-		struct drm_bridge *bridge = NULL;
+-		u32 ditr0, ditr1, ditr2, ditr3, ditr4, ditr5, pbcr0;
+-		u32 bus_flags = 0;
+-		void __iomem *cpg_base = ioremap(0x11010000, 0x1000);
+-		u32 i, found;
+-		u32 parallel_out;
+-		struct cpg_param param;
+-		int lanes, bpp;
+-		u32 pix_clk = mode->clock * 1000;
+-		unsigned long long hs_clk;
+-		unsigned long long pll5_clk;
+-		unsigned long long divide_val;
+-		u32 dsi_div;
+-
+-		/* Common settings */
+-		param.frequency = 0;
+-		param.pl5_refdiv = 1;
+-		param.pl5_divval = 0;
+-		param.pl5_spread = 0x16;
+-
+-		if (of_machine_is_compatible("renesas,r9a07g043")) {
+-			parallel_out = 1;
+-
+-			param.dsi_div_b = 0;	/* must be 0 */
+-			param.dsi_div_a = 1;	/* 1:2 ratio seems the best */
+-
+-			/* Clock frequency for RZ/G2UL is 74.25MHz.
+-			 * It is equal to FullHD@30p or HD@60p.
+-			 */
+-			if (pix_clk > 742500000) {
+-				dev_err(rcdu->dev, "Exceeded max frequency of 74.25MHz\n");
+-
+-				return;
+-			}
+-
+-			pll5_clk = pix_clk * 2;
+-
+-			/* Find a valid value for INTIN */
+-			found = 0;
+-			for(param.pl5_postdiv1 = 7; param.pl5_postdiv1 > 1; param.pl5_postdiv1--) {
+-				for(param.pl5_postdiv2 = 7; param.pl5_postdiv2 > 1; param.pl5_postdiv2--) {
+-					divide_val = pll5_clk * param.pl5_refdiv * param.pl5_postdiv1 * param.pl5_postdiv2;
+-					param.pl5_intin = divide_val / OSCLK_HZ;
+-					/* INTIN must be between 20 and 120 */
+-					if (param.pl5_intin > 20 && param.pl5_intin < 120) {
+-						found = 1;
+-						break;
+-					}
+-				}
+-				if (found)
+-					break;
+-			}
+-
+-			if (!found) {
+-				/* Could not find any combinations */
+-				dev_err(rcdu->dev, "Cannot calculate frequency (postdiv).\n");
+-				return;
+-			}
+-
+-			/* Denominator portion (multiplied by 16k to become an integer) */
+-			/* Remove integer portion */
+-			divide_val = divide_val % OSCLK_HZ;
+-			/* Convert from decimal to integer */
+-			divide_val = divide_val * 16 * 1024 * 1024;
+-			/* Now we can divide */
+-			divide_val = divide_val / OSCLK_HZ;
+-			param.pl5_fracin = divide_val;
+-		} else {
+-			struct rcar_du_crtc_state *rstate = to_rcar_crtc_state(rcrtc->crtc.state);
+-			lanes = (rstate->outputs != BIT(RCAR_DU_OUTPUT_MIPI_DSI0)) ? 4:
+-				 rzg2l_mipi_dsi_get_data_lanes(rcdu->dsi[rcrtc->index]);
+-			bpp = (rstate->outputs != BIT(RCAR_DU_OUTPUT_MIPI_DSI0)) ? 24:
+-			       rzg2l_mipi_dsi_get_bpp(rcdu->dsi[rcrtc->index]);
+-			
+-			parallel_out = 0;
+-
+-			/* Recommended values */
+-			param.pl5_postdiv1 = 1;
+-			param.pl5_postdiv2 = 1;
+-
+-			/* Calculate MIPI DSI High Speed clock and PLL clock(16x) */
+-			hs_clk = ((long long)bpp * pix_clk) / (8 * lanes);
+-			pll5_clk = hs_clk * 16;
+-			if (pll5_clk > 1500000000) {
+-				if (pll5_clk > 3000000000) {
+-					dev_err(rcdu->dev, "Exceeded max frequency\n");
+-					return;
+-				}
+-				param.sel_pll5_4 = 0;	/* 3.0 GHz */
+-			}
+-			else {
+-				param.sel_pll5_4 = 1;	/* 1.5 GHz */
+-			}
+-
+-			/* Divide raw bit clock by source clock. */
+-			/* Numerator portion (integer) */
+-			divide_val = pll5_clk * param.pl5_refdiv * param.pl5_postdiv1 * param.pl5_postdiv2;
+-			param.pl5_intin = divide_val / OSCLK_HZ;
+-
+-			/* Denominator portion (multiplied by 16k to become an integer) */
+-			/* Remove integer portion */
+-			divide_val = divide_val % OSCLK_HZ;
+-			/* Convert from decimal to integer */
+-			divide_val = divide_val * 16 * 1024 * 1024;
+-			/* Now we can divide */
+-			divide_val = divide_val / OSCLK_HZ;
+-			param.pl5_fracin = divide_val;
+-
+-			/* How much we need to divide own our PLL */
+-			dsi_div = pll5_clk / pix_clk;
+-
+-			/* Clock source is 3G or 1.5G? */
+-			if(param.sel_pll5_4)
+-				dsi_div /= 2;
+-
+-			/* Find possible clock divide ratios.
+-			 * The equation is: dsi_div = (2 ^ dis_div_a) * (1 + dis_div_b)
+-			 * With div_a fixed, we get: dis_div_b = (dsi_div / (2 ^ dis_div_a)) - 1
+-			 *   div_a can be 0-4
+-			 *   div_b can be 0-16 */
+-			for(i = 0; i < 4; i++) {
+-				param.dsi_div_a = i;
+-				param.dsi_div_b = (dsi_div / (1 << i)) - 1;
+-				if (param.dsi_div_b > 16)
+-					continue;
+-				break;
+-			}
+-
+-			if (i == 4) {
+-				/* Could not find any combinations */
+-				dev_err(rcdu->dev, "Cannot calculate frequency.\n");
+-				return;
+-			}
+-		}
+-
+-		/* CPG_PLL5_STBY: RESETB=0 */
+-		reg_write(cpg_base + 0x0140, 0x00150000);
+-
+-		/* CPG_OTHERFUNC1_REG: SEL_PLL5_3 clock (1.5GHz or 3.0GHz)*/
+-		if (!parallel_out)
+-			reg_write(cpg_base + 0xbe8, 0x10000 | param.sel_pll5_4);
+-
+-		/* CPG_PL2_DDIV: DIV_DSI_LPCLK */
+-		reg_write(cpg_base + 0x0204, 0x10000000 |
+-			 (CPG_LPCLK_DIV << 12));
+-		/* CPG_PL5_SDIV: DIV_DSI_A, DIV_DSI_B */
+-		reg_write(cpg_base + 0x0420, 0x01010000 |
+-			 (param.dsi_div_a << 0) |
+-			 (param.dsi_div_b << 8));
+-		/* CPG_PLL5_CLK1: POSTDIV1, POSTDIV2, REFDIV */
+-		reg_write(cpg_base + 0x0144,
+-			 (param.pl5_postdiv1 << 0) |
+-			 (param.pl5_postdiv2 << 4) |
+-			 (param.pl5_refdiv << 8));
+-		/* CPG_PLL5_CLK3: DIVVAL=6, FRACIN */
+-		reg_write(cpg_base + 0x014C,
+-			 (param.pl5_divval << 0) |
+-			 (param.pl5_fracin << 8));
+-		/* CPG_PLL5_CLK4: INTIN */
+-		reg_write(cpg_base + 0x0150, 0x000000ff |
+-			 (param.pl5_intin << 16));
+-		/* CPG_PLL5_CLK5: SPREAD */
+-		reg_write(cpg_base + 0x0154,
+-			 (param.pl5_intin << 16));
+-
+-		/* CPG_PLL5_STBY: RESETB=1 */
+-		reg_write(cpg_base + 0x0140, 0x00150001);
+-
+-		iounmap(cpg_base);
+-
+-		clk_prepare_enable(rcrtc->rzg2l_clocks.dclk);
+-
+-		/* get encoder from crtc and figure out bus-flags */
+-		drm_for_each_encoder(encoder, ddev)
+-			if (encoder->crtc == crtc)
+-				break;
+-
+-		if (encoder) {
+-			/* Get bridge from encoder */
+-			list_for_each_entry(bridge, &encoder->bridge_chain,
+-					    chain_node)
+-				if (bridge->encoder == encoder)
+-					break;
+-
+-			/* Get the connector from encoder */
+-			drm_connector_list_iter_begin(ddev, &iter);
+-			drm_for_each_connector_iter(connector, &iter)
+-				if (connector->encoder == encoder)
+-					break;
+-			drm_connector_list_iter_end(&iter);
+-		}
+-
+-		if (bridge && bridge->timings)
+-			bus_flags = bridge->timings->input_bus_flags;
+-		else if (connector)
+-			bus_flags = connector->display_info.bus_flags;
+-
+-		ditr0 = (DU_DITR0_DEMD_HIGH
+-		| ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DU_DITR0_VSPOL : 0)
+-		| ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DU_DITR0_HSPOL : 0)
+-		| ((bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE) ?
+-		    DU_DITR0_DPI_CLKMD : 0));
+-
+-		ditr1 = DU_DITR1_VSA(mode->vsync_end - mode->vsync_start)
+-		      | DU_DITR1_VACTIVE(mode->vdisplay);
+-
+-		ditr2 = DU_DITR2_VBP(mode->vtotal - mode->vsync_end)
+-		      | DU_DITR2_VFP(mode->vsync_start - mode->vdisplay);
+-
+-		ditr3 = DU_DITR3_HSA(mode->hsync_end - mode->hsync_start)
+-		      | DU_DITR3_HACTIVE(mode->hdisplay);
+-
+-		ditr4 = DU_DITR4_HBP(mode->htotal - mode->hsync_end)
+-		      | DU_DITR4_HFP(mode->hsync_start - mode->hdisplay);
+-
+-		ditr5 = DU_DITR5_VSFT(0) | DU_DITR5_HSFT(0);
+-
+-		pbcr0 = DU_PBCR0_PB_DEP(0x1F);
+-
+-		rcar_du_write(rcdu, DU_DITR0, ditr0);
+-		rcar_du_write(rcdu, DU_DITR1, ditr1);
+-		rcar_du_write(rcdu, DU_DITR2, ditr2);
+-		rcar_du_write(rcdu, DU_DITR3, ditr3);
+-		rcar_du_write(rcdu, DU_DITR4, ditr4);
+-		rcar_du_write(rcdu, DU_DITR5, ditr5);
+-		rcar_du_write(rcdu, DU_PBCR0, pbcr0);
+-
+-		/* FIXME: Enable auto resume when underrun */
+-		rcar_du_write(rcdu, 0x40, 0x10000);
+-
+-		return;
+-	}
+-
+ 	if (rcdu->info->dpll_mask & (1 << rcrtc->index)) {
+ 		unsigned long target = mode_clock;
+ 		struct dpll_info dpll = { 0 };
+-- 
+2.25.1
+

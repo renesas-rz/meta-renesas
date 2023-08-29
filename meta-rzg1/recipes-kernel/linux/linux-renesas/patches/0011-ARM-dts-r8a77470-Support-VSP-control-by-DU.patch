@@ -1,0 +1,43 @@
+From 9a75e1b99e5325902e46a9e0c50f8fb180d726fd Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Tue, 22 Aug 2023 18:47:17 +0700
+Subject: [PATCH] ARM: dts: r8a77470: Support VSP control by DU
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+Signed-off-by: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+---
+ arch/arm/boot/dts/r8a77470.dtsi | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/arm/boot/dts/r8a77470.dtsi b/arch/arm/boot/dts/r8a77470.dtsi
+index ebc5384c3c71..54391e815bde 100644
+--- a/arch/arm/boot/dts/r8a77470.dtsi
++++ b/arch/arm/boot/dts/r8a77470.dtsi
+@@ -1115,6 +1115,24 @@ gic: interrupt-controller@f1001000 {
+ 			resets = <&cpg 408>;
+ 		};
+ 
++		vspm@fe928000 {
++				compatible = "renesas,vspm-vsps", "renesas-vspm";
++				reg = <0 0xfe928000 0 0x7404>;
++				interrupts = <0 267 IRQ_TYPE_LEVEL_HIGH>;
++				clocks = <&cpg CPG_MOD 131>;
++				clock-names = "vsps";
++				power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		};
++
++		vspd0: vspd0@fe930000 {
++				compatible = "renesas,vsp1";
++				reg = <0 0xfe930000 0 0x7404>;
++				interrupts = <0 246 IRQ_TYPE_LEVEL_HIGH>;
++				clocks = <&cpg CPG_MOD 128>;
++				clock-names = "vsp1du0";
++				power-domains = <&sysc R8A77470_PD_ALWAYS_ON>;
++		};
++
+ 		du: display@feb00000 {
+ 			compatible = "renesas,du-r8a77470";
+ 			reg = <0 0xfeb00000 0 0x40000>;
+-- 
+2.25.1
+

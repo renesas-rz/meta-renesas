@@ -1,0 +1,58 @@
+From 63cf006b055f1f72b30e102bb76f7af5fa295192 Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Fri, 11 Aug 2023 14:04:22 +0700
+Subject: [PATCH] ARM: dts: r8a7742: Fix DU cannot be probed
+
+This patch is temporarily fix DU cannot be probed in G1H.
+
+Signed-off-by: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+---
+ arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca-rev2.dts | 10 ----------
+ arch/arm/boot/dts/r8a7742-iwg21d-q7-rev2.dts         | 10 ----------
+ 2 files changed, 20 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca-rev2.dts b/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca-rev2.dts
+index 060a08b7500a..cc5f85dcb4d5 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca-rev2.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21d-q7-dbcm-ca-rev2.dts
+@@ -38,16 +38,6 @@ panel-timing {
+ 	};
+ };
+ 
+-&du {
+-	ports {
+-		port@2 {
+-			 endpoint {
+-				remote-endpoint = <&panel_hdmi_in>;
+-			};
+-		};
+-	};
+-};
+-
+ &i2c0 {
+ 	/delete-node/ rtc@51;
+ 	rtc@68 {
+diff --git a/arch/arm/boot/dts/r8a7742-iwg21d-q7-rev2.dts b/arch/arm/boot/dts/r8a7742-iwg21d-q7-rev2.dts
+index 6927f13f1b71..d836b3cabd8e 100644
+--- a/arch/arm/boot/dts/r8a7742-iwg21d-q7-rev2.dts
++++ b/arch/arm/boot/dts/r8a7742-iwg21d-q7-rev2.dts
+@@ -60,16 +60,6 @@ panel-timing {
+ 	};
+ };
+ 
+-&du {
+-	ports {
+-		port@2 {
+-			 endpoint {
+-				remote-endpoint = <&panel_hdmi_in>;
+-			};
+-		};
+-	};
+-};
+-
+ &i2c0 {
+ 	/delete-node/ rtc@51;
+ 	rtc@68 {
+-- 
+2.25.1
+

@@ -1,0 +1,26 @@
+From b07a5d6bcd79093404cb75851390e1c1118573d5 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Tue, 26 Apr 2022 13:08:13 +0700
+Subject: [PATCH] fdpm: Port kernel-module-fdpm to kernel v5.10.83-cip1
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drv/fdp/fdp_drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drv/fdp/fdp_drv.c b/drv/fdp/fdp_drv.c
+index 35a16dd..902aabd 100755
+--- a/drv/fdp/fdp_drv.c
++++ b/drv/fdp/fdp_drv.c
+@@ -373,7 +373,7 @@ long fdp_ins_init_reg(struct platform_device *pdev, int devno, T_FDPD_MEM *prv)
+ 	}
+ 	prv->start_reg_adr = res->start;
+ 	/* remap I/O memory */
+-	prv->mapbase = ioremap_nocache(res->start, resource_size(res));
++	prv->mapbase = ioremap(res->start, resource_size(res));
+ 	if (!prv->mapbase) {
+ 		APRINT("[%s] ioremap_nocache() failed!!\n", __func__);
+ 		return -ENXIO;
+-- 
+2.7.4
+

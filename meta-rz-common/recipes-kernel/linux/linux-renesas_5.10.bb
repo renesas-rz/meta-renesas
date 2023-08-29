@@ -8,6 +8,7 @@ COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2n|hihope-rzg2m|hihope-rzg2h)"
 COMPATIBLE_MACHINE_rzfive = "(smarc-rzfive|rzfive-dev)"
 COMPATIBLE_MACHINE_rzv2m = "(rzv2m)"
 COMPATIBLE_MACHINE_rzv2ma = "(rzv2ma)"
+COMPATIBLE_MACHINE_rzg1 = "(iwg20m-g1m|iwg20m-g1n|iwg21m|iwg22m|iwg23s)"
 
 KERNEL_URL = " \
     git://github.com/renesas-rz/rz_linux-cip.git"

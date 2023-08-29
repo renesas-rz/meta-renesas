@@ -1,0 +1,52 @@
+From 1ea228b759778bda17739f0e0fc17e6a225cf88f Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Thu, 17 Aug 2023 11:51:51 +0700
+Subject: [PATCH] media: iwg23s: Enable rcar-dvdec driver
+
+rcar-dvdec driver is needed for RCA camera to works. Adding
+VIDEO_RCAR_DVDEC definition to Kconfig to make it buildable.
+Include rcar-vin.h to have definition of V4L2_CID_USER_R8A7747X_BASE.
+
+Signed-off-by: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+---
+ drivers/media/platform/Kconfig      | 10 ++++++++++
+ drivers/media/platform/rcar-dvdec.h |  2 ++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/media/platform/Kconfig b/drivers/media/platform/Kconfig
+index 3cea73493705..0519d5834b85 100644
+--- a/drivers/media/platform/Kconfig
++++ b/drivers/media/platform/Kconfig
+@@ -138,6 +138,16 @@ config VIDEO_STM32_DCMI
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called stm32-dcmi.
+ 
++config VIDEO_RCAR_DVDEC
++	tristate "Renesas Digital Video Decoder Driver"
++	depends on VIDEO_DEV && I2C
++	depends on ARCH_RENESAS || COMPILE_TEST
++	help
++	  This is a driver to bind VIN and DVDEC using i2c.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called rcar-dvdec.
++
+ config VIDEO_RENESAS_CEU
+ 	tristate "Renesas Capture Engine Unit (CEU) driver"
+ 	depends on VIDEO_DEV && VIDEO_V4L2
+diff --git a/drivers/media/platform/rcar-dvdec.h b/drivers/media/platform/rcar-dvdec.h
+index 266906c4d877..dc706bb7d97a 100644
+--- a/drivers/media/platform/rcar-dvdec.h
++++ b/drivers/media/platform/rcar-dvdec.h
+@@ -19,6 +19,8 @@
+ #ifndef _RCAR_DVDEC_H_
+ #define _RCAR_DVDEC_H_
+ 
++#include "rcar-vin/rcar-vin.h"
++
+ #define V4L2_CID_USER_R8A7794X_INPUT	(V4L2_CID_USER_R8A7794X_BASE + 0)
+ #define V4L2_CID_USER_R8A7747X_INPUT	(V4L2_CID_USER_R8A7747X_BASE + 0)
+ 
+-- 
+2.25.1
+

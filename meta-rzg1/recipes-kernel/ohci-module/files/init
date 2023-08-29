@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+
+name=0
+
+case "$1" in
+  start)
+	modprobe ohci-hcd
+	name=`uname -a | grep -c "iwg23s"`
+	if [ $name -gt 0 ]
+	then
+		modprobe ohci-platform
+	else
+		modprobe ohci-pci
+	fi
+  ;;
+
+  stop)
+	name=`uname -a | grep -c "iwg23s"`
+	if [ $name -gt 0 ]
+	then
+		echo "Stopping ohci-platform"
+		rmmod ohci-platform
+	else
+		echo "Stopping ohci-pci"
+		rmmod ohci-pci
+	fi
+
+	echo "Stopping ohci-hcd"
+	rmmod ohci-hcd
+  ;;
+
+  restart)
+	$0 stop
+	sleep 1
+	$0 start
+  ;;
+
+  *)
+        echo "usage: $0 { start | stop | restart }"
+  ;;
+esac
+
+exit 0

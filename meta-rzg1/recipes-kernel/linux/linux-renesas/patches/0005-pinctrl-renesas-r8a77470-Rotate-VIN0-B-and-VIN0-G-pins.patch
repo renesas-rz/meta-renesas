@@ -1,0 +1,64 @@
+From a4aae70e0ce6b106640a52f56b47a4c6e1f70aad Mon Sep 17 00:00:00 2001
+From: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+Date: Fri, 28 Jul 2023 08:52:27 +0700
+Subject: [PATCH] pinctrl: renesas: r8a77470: Rotate VIN0-B and VIN0-G pins
+
+Fix issue could not request pin 180 (GP_5_20) from group vin0_data8  
+on device sh-pfc which already requested by e6e68000.serial; cannot 
+claim for e6ef0000.video
+
+Signed-off-by: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+---
+ drivers/pinctrl/renesas/pfc-r8a77470.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pinctrl/renesas/pfc-r8a77470.c b/drivers/pinctrl/renesas/pfc-r8a77470.c
+index 73e9742..4f50518 100644
+--- a/drivers/pinctrl/renesas/pfc-r8a77470.c
++++ b/drivers/pinctrl/renesas/pfc-r8a77470.c
+@@ -2179,16 +2179,16 @@ static const unsigned int usb1_mux[] = {
+ /* - VIN0 ------------------------------------------------------------------- */
+ static const union vin_data vin0_data_pins = {
+ 	.data24 = {
+-		/* B */
+-		RCAR_GP_PIN(5, 20), RCAR_GP_PIN(5, 21),
+-		RCAR_GP_PIN(5, 22), RCAR_GP_PIN(5, 23),
+-		RCAR_GP_PIN(5, 24), RCAR_GP_PIN(5, 25),
+-		RCAR_GP_PIN(5, 26), RCAR_GP_PIN(5, 27),
+ 		/* G */
+ 		RCAR_GP_PIN(4, 2), RCAR_GP_PIN(4, 3),
+ 		RCAR_GP_PIN(4, 4), RCAR_GP_PIN(4, 5),
+ 		RCAR_GP_PIN(4, 6), RCAR_GP_PIN(5, 8),
+ 		RCAR_GP_PIN(5, 9), RCAR_GP_PIN(5, 10),
++		/* B */
++		RCAR_GP_PIN(5, 20), RCAR_GP_PIN(5, 21),
++		RCAR_GP_PIN(5, 22), RCAR_GP_PIN(5, 23),
++		RCAR_GP_PIN(5, 24), RCAR_GP_PIN(5, 25),
++		RCAR_GP_PIN(5, 26), RCAR_GP_PIN(5, 27),
+ 		/* R */
+ 		RCAR_GP_PIN(5, 11), RCAR_GP_PIN(5, 12),
+ 		RCAR_GP_PIN(5, 13), RCAR_GP_PIN(5, 14),
+@@ -2198,16 +2198,16 @@ static const union vin_data vin0_data_pins = {
+ };
+ static const union vin_data vin0_data_mux = {
+ 	.data24 = {
+-		/* B */
+-		VI0_DATA0_VI0_B0_MARK, VI0_DATA1_VI0_B1_MARK,
+-		VI0_DATA2_VI0_B2_MARK, VI0_DATA3_VI0_B3_MARK,
+-		VI0_DATA4_VI0_B4_MARK, VI0_DATA5_VI0_B5_MARK,
+-		VI0_DATA6_VI0_B6_MARK, VI0_DATA7_VI0_B7_MARK,
+ 		/* G */
+ 		VI0_G0_MARK, VI0_G1_MARK,
+ 		VI0_G2_MARK, VI0_G3_MARK,
+ 		VI0_G4_MARK, VI0_G5_MARK,
+ 		VI0_G6_MARK, VI0_G7_MARK,
++		/* B */
++		VI0_DATA0_VI0_B0_MARK, VI0_DATA1_VI0_B1_MARK,
++		VI0_DATA2_VI0_B2_MARK, VI0_DATA3_VI0_B3_MARK,
++		VI0_DATA4_VI0_B4_MARK, VI0_DATA5_VI0_B5_MARK,
++		VI0_DATA6_VI0_B6_MARK, VI0_DATA7_VI0_B7_MARK,
+ 		/* R */
+ 		VI0_R0_MARK, VI0_R1_MARK,
+ 		VI0_R2_MARK, VI0_R3_MARK,
+-- 
+2.7.4

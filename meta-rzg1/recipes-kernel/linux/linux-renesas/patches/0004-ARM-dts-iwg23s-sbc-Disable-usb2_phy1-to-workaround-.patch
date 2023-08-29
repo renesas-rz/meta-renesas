@@ -1,0 +1,35 @@
+From 86e2cfa8a6a94b138afc33d0bec475e49f092c58 Mon Sep 17 00:00:00 2001
+From: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+Date: Fri, 28 Jul 2023 13:10:28 +0700
+Subject: [PATCH] ARM: dts: iwg23s-sbc: Disable usb2_phy1 to workaround 
+ issue phy_rcar_gen3_usb2
+
+Issue:
+[    1.314041] phy_rcar_gen3_usb2 ee0c0200.usb-phy: can't request 
+region for resource [mem 0xee0c0200-0xee0c08ff]
+[    1.314116] phy_rcar_gen3_usb2: probe of ee0c0200.usb-phy failed 
+with error -16
+
+Signed-off-by: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+---
+ arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+index e04bfd6..e85e154 100644
+--- a/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
++++ b/arch/arm/boot/dts/r8a77470-iwg23s-sbc.dts
+@@ -460,10 +460,6 @@
+ 	status = "okay";
+ };
+ 
+-&usb2_phy1 {
+-	status = "okay";
+-};
+-
+ &usbphy0 {
+ 	status = "okay";
+ 	renesas,id-gpio = <&gpio0 1 GPIO_ACTIVE_LOW>;
+-- 
+2.7.4
+

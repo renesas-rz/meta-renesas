@@ -1,0 +1,31 @@
+From 581b783f5f8e72abcdd3e893aff64ae730d52f25 Mon Sep 17 00:00:00 2001
+From: Tran Minh Bao Loc <loc.tran-bao@banvien.com.vn>
+Date: Fri, 4 Aug 2023 13:20:15 +0700
+Subject: [PATCH] watchdog: renesas-wdt: Fix issue kernel warning when reboot.
+
+The use of usleep_range() in the restart handler will cause scheduler to
+induce a context switch which is not desirable.
+
+Reference: https://lkml.iu.edu/hypermail/linux/kernel/2012.3/02640.html
+
+Signed-off-by: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+---
+ drivers/watchdog/renesas_wdt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/watchdog/renesas_wdt.c b/drivers/watchdog/renesas_wdt.c
+index bb13db0a5639..034ce7e5f9fa 100644
+--- a/drivers/watchdog/renesas_wdt.c
++++ b/drivers/watchdog/renesas_wdt.c
+@@ -79,7 +79,7 @@ static void rwdt_wait_cycles(struct rwdt_priv *priv, unsigned int cycles)
+ 
+ 	delay = DIV_ROUND_UP(cycles * 1000000, priv->clk_rate);
+ 
+-	usleep_range(delay, 2 * delay);
++	udelay(delay);
+ }
+ 
+ static int rwdt_start(struct watchdog_device *wdev)
+-- 
+2.25.1
+

@@ -1,0 +1,74 @@
+From 768b115fdb5f6c468ffa8156e7282b71f120e339 Mon Sep 17 00:00:00 2001
+From: nhannguyen <nhan.nguyen.yb@rvc.renesas.com>
+Date: Thu, 18 Aug 2016 07:51:40 +0700
+Subject: [PATCH 2/2] Add physical address translating feature
+
+---
+ drv/mmngr_drv.c         | 27 ++++++++++++++++++++++++++-
+ include/mmngr_private.h |  1 +
+ 2 files changed, 27 insertions(+), 1 deletion(-)
+
+diff --git a/drv/mmngr_drv.c b/drv/mmngr_drv.c
+index 797800f..7cba518 100755
+--- a/drv/mmngr_drv.c
++++ b/drv/mmngr_drv.c
+@@ -67,6 +67,8 @@
+ #include <linux/cdev.h>
+ #include <linux/platform_device.h>
+ #include <linux/miscdevice.h>
++#include <linux/sched.h>
++#include <linux/mm.h>
+ #include <linux/version.h>
+ #include <linux/dma-attrs.h>
+ #include <linux/dma-contiguous.h>
+@@ -475,6 +477,25 @@ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
+ 	return ret;
+ }
+ 
++/* change virtual address to physical address */
++static void mm_cnv_addr(struct MM_PARAM *out)
++{
++  struct vm_area_struct *vma;
++  struct mm_struct *mm = current->mm;
++  unsigned long start;
++  unsigned long pfn;
++  int lp = 0;
++
++  for (lp=0; lp<2; lp++) {
++    vma = find_vma(mm, out[lp].user_virt_addr);
++    start = out[lp].user_virt_addr & PAGE_MASK;
++    follow_pfn(vma, start, &pfn);
++    out[lp].hard_addr = pfn << PAGE_SHIFT;
++  }
++
++  return;
++}
++
+ static int map_register(void)
+ {
+ 	if (!request_mem_region(MM_MXI_ADDR, MM_MXI_SIZE, DRVNAME))
+@@ -779,6 +801,9 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 			goto exit;
+ 		}
+ 		break;
++	case MM_IOC_VTOP:   /* change virtual address to physical address */
++		mm_cnv_addr((int __user *)arg);
++		break;
+ 	default:
+ 		printk(KERN_ERR "MMD CMD EFAULT\n");
+ 		ret = -EFAULT;
+diff --git a/include/mmngr_private.h b/include/mmngr_private.h
+index 1653ac5..f61a890 100755
+--- a/include/mmngr_private.h
++++ b/include/mmngr_private.h
+@@ -95,6 +95,7 @@ struct BM {
+ #define MM_IOC_ALLOC_CO	_IOWR(MM_IOC_MAGIC, 4, struct MM_PARAM)
+ #define MM_IOC_FREE_CO	_IOWR(MM_IOC_MAGIC, 5, struct MM_PARAM)
+ #define MM_IOC_SHARE	_IOWR(MM_IOC_MAGIC, 6, struct MM_PARAM)
++#define MM_IOC_VTOP	_IOWR(MM_IOC_MAGIC, 7, struct MM_PARAM)     /* virt to phys */
+ 
+ #define DEVNAME		"rgnmm"
+ #define DRVNAME		DEVNAME
+-- 
+1.9.1
+

@@ -1,0 +1,12 @@
+# These patches should be applied exclusively for G1 devices
+patch patches/0001-gpu-drm-bridge-adv7511-Change-CEC-device-s-i2c-addre.patch
+patch patches/0002-rzg1-rcar_du_crtc-Fix-build-on-64bit-division.patch
+patch patches/0003-watchdog-renesas-wdt-Fix-issue-kernel-warning-when-reboot.patch
+patch patches/0004-ARM-dts-iwg23s-sbc-Disable-usb2_phy1-to-workaround-.patch
+patch patches/0005-pinctrl-renesas-r8a77470-Rotate-VIN0-B-and-VIN0-G-pins.patch
+patch patches/0006-ARM-dts-r8a7742-Fix-DU-cannot-be-probed.patch
+patch patches/0007-drm-rcar-du-Fix-DU1-restart-condition.patch
+patch patches/0008-drm-rcar-du-Fix-VDSR-register-calculation.patch
+patch patches/0009-drm-rcar-du-Fix-byte-alignment-check-for-pitch.patch
+patch patches/0010-ARM-dts-r8a7742-Correct-vpc1-unit-name.patch
+patch patches/0011-ARM-dts-r8a77470-Support-VSP-control-by-DU.patch

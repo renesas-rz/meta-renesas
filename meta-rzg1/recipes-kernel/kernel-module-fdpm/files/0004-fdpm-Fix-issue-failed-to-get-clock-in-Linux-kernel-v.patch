@@ -1,0 +1,49 @@
+From 366cdbe272be68a4d3b05c0fd802fde349f9e9ed Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Thu, 26 May 2022 18:42:57 +0700
+Subject: [PATCH] fdpm: Fix issue failed to get clock in Linux kernel v5.10
+
+Fix error failed to get clock in kernel v5.10 due to changes in
+devicetree and CPG clock driver.
+
+ "fdpm:154: failed to get FDP0 clock"
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drv/fdpm_sub.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drv/fdpm_sub.c b/drv/fdpm_sub.c
+index fe3cb30..0b99fa3 100755
+--- a/drv/fdpm_sub.c
++++ b/drv/fdpm_sub.c
+@@ -176,7 +176,7 @@ int fdpm_init(struct fdpm_privdata *priv)
+ #endif
+ 
+ 	/* enable clock */
+-	pdrv->fdpm_clk[0] = clk_get(NULL, "fdp1-0");
++	pdrv->fdpm_clk[0] = clk_get(&pdev->dev, "fdp1-0");
+ 	if (IS_ERR(pdrv->fdpm_clk[0])) {
+ 		APRINT("failed to get FDP0 clock\n");
+ 		ercd = -EFAULT;
+@@ -190,7 +190,7 @@ int fdpm_init(struct fdpm_privdata *priv)
+ 	}
+ 
+ #if defined(M2CONFIG) || defined(H2CONFIG)
+-	pdrv->fdpm_clk[1] = clk_get(NULL, "fdp1-1");
++	pdrv->fdpm_clk[1] = clk_get(&pdev->dev, "fdp1-1");
+ 	if (IS_ERR(pdrv->fdpm_clk[1])) {
+ 		APRINT("failed to get FDP1 clock\n");
+ 		ercd = -EFAULT;
+@@ -205,7 +205,7 @@ int fdpm_init(struct fdpm_privdata *priv)
+ #endif
+ 
+ #if defined(H2CONFIG)
+-	pdrv->fdpm_clk[2] = clk_get(NULL, "fdp1-2");
++	pdrv->fdpm_clk[2] = clk_get(&pdev->dev, "fdp1-2");
+ 	if (IS_ERR(pdrv->fdpm_clk[2])) {
+ 		APRINT("failed to get FDP2 clock\n");
+ 		ercd = -EFAULT;
+-- 
+2.7.4
+

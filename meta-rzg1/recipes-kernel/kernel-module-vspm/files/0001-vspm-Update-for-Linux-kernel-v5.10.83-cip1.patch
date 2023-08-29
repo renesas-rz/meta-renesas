@@ -1,0 +1,111 @@
+From 50d80a7256e2cadaacdc690d6e1651be5895c4c4 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Thu, 7 Apr 2022 17:29:46 +0700
+Subject: [PATCH] vspm: Update for Linux kernel v5.10.83-cip1
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drv/tddmac/tddmac_drv_table.c |  4 ++--
+ drv/vsp/vsp_drv_phy.c         |  4 ++--
+ drv/vspm_ioctl.c              | 25 +++++--------------------
+ 3 files changed, 9 insertions(+), 24 deletions(-)
+
+diff --git a/drv/tddmac/tddmac_drv_table.c b/drv/tddmac/tddmac_drv_table.c
+index 6106efa..008e8a2 100755
+--- a/drv/tddmac/tddmac_drv_table.c
++++ b/drv/tddmac/tddmac_drv_table.c
+@@ -243,9 +243,9 @@ long tddmac_ins_init_reg(TDDMAC_PRIVATE_DATA *prv)
+ 	}
+ 
+ 	/* remap I/O memory */
+-	prv->base_reg = ioremap_nocache(res->start, resource_size(res));
++	prv->base_reg = ioremap(res->start, resource_size(res));
+ 	if (!prv->base_reg) {
+-		APRINT("[%s] ioremap_nocache() failed!!\n", __func__);
++		APRINT("[%s] ioremap() failed!!\n", __func__);
+ 		return E_TDDMAC_DEF_REG;
+ 	}
+ 
+diff --git a/drv/vsp/vsp_drv_phy.c b/drv/vsp/vsp_drv_phy.c
+index 9fa6b65..a690ed2 100755
+--- a/drv/vsp/vsp_drv_phy.c
++++ b/drv/vsp/vsp_drv_phy.c
+@@ -1679,9 +1679,9 @@ long vsp_ins_init_reg(
+ 	}
+ 
+ 	/* remap I/O memory */
+-	prv->base_reg = ioremap_nocache(res->start, resource_size(res));
++	prv->base_reg = ioremap(res->start, resource_size(res));
+ 	if (!prv->base_reg) {
+-		APRINT("[%s] ioremap_nocache() failed!!\n", __func__);
++		APRINT("[%s] ioremap() failed!!\n", __func__);
+ 		return E_VSP_DEF_REG;
+ 	}
+ 
+diff --git a/drv/vspm_ioctl.c b/drv/vspm_ioctl.c
+index 2a38d64..58b0953 100755
+--- a/drv/vspm_ioctl.c
++++ b/drv/vspm_ioctl.c
+@@ -447,10 +447,7 @@ static int set_vsp_hgo_par(
+ 
+ 	if (dst_param->hgo.addr) {
+ 		/* check access_ok */
+-		if (!access_ok(
+-				VERIFY_WRITE,
+-				(void __user *)dst_param->hgo.addr,
+-				768)) {
++		if (!access_ok((void __user *)dst_param->hgo.addr, 768)) {
+ 			APRINT("failed to access_ok of T_VSP_HGO\n");
+ 			return -EFAULT;
+ 		}
+@@ -495,10 +492,7 @@ static int set_vsp_hgt_par(
+ 
+ 	if (dst_param->hgt.addr) {
+ 		/* check access_ok */
+-		if (!access_ok(
+-				VERIFY_WRITE,
+-				(void __user *)dst_param->hgt.addr,
+-				768)) {
++		if (!access_ok((void __user *)dst_param->hgt.addr, 768)) {
+ 			APRINT("failed to access_ok of T_VSP_HGT\n");
+ 			return -EFAULT;
+ 		}
+@@ -1505,10 +1499,7 @@ long vspm_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 	switch (cmd) {
+ 	case VSPM_IOC_CMD_ENTRY:
+ 		/* check access */
+-		if (!access_ok(
+-				VERIFY_WRITE,
+-				(void __user *)arg,
+-				_IOC_SIZE(cmd))) {
++		if (!access_ok((void __user *)arg, _IOC_SIZE(cmd))) {
+ 			APRINT("failed to access_ok\n");
+ 			ercd = -EFAULT;
+ 			goto exit;
+@@ -1529,10 +1520,7 @@ long vspm_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 		break;
+ 	case VSPM_IOC_CMD_CANCEL:
+ 		/* check access */
+-		if (!access_ok(
+-				VERIFY_WRITE,
+-				(void __user *)arg,
+-				_IOC_SIZE(cmd))) {
++		if (!access_ok((void __user *)arg, _IOC_SIZE(cmd))) {
+ 			APRINT("failed to access_ok\n");
+ 			ercd = -EFAULT;
+ 			goto exit;
+@@ -1553,10 +1541,7 @@ long vspm_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 		break;
+ 	case VSPM_IOC_CMD_CB:
+ 		/* check access */
+-		if (!access_ok(
+-				VERIFY_WRITE,
+-				(void __user *)arg,
+-				_IOC_SIZE(cmd))) {
++		if (!access_ok((void __user *)arg, _IOC_SIZE(cmd))) {
+ 			APRINT("failed to access_ok\n");
+ 			ercd = -EFAULT;
+ 			goto exit;
+-- 
+2.7.4
+
