@@ -79,7 +79,34 @@ update_issue() {
       BSP_SOC="RZG2E"
       BSP_BOARD="EK874"
       ;;
-
+    iwg20m-g1m)
+      BSP_SOC="RZG1M"
+      BSP_BOARD="iWave"
+      ;;
+    skrzg1m)
+      BSP_SOC="RZG1M"
+      BSP_BOARD="RZG1M-SK"
+      ;;
+    iwg20m-g1n)
+      BSP_SOC="RZG1N"
+      BSP_BOARD="iWave"
+      ;;
+    iwg22m)
+      BSP_SOC="RZG1E"
+      BSP_BOARD="iWave"
+      ;;
+    iwg21m)
+      BSP_SOC="RZG1H"
+      BSP_BOARD="iWave"
+      ;;
+    skrzg1e)
+      BSP_SOC="RZG1E"
+      BSP_BOARD="RZG1E-SK"
+      ;;
+    iwg23s)
+      BSP_SOC="RZG1C"
+      BSP_BOARD="iWave"
+      ;;
     esac
 
     # Make issue file
