@@ -1,3 +1,4 @@
+inherit module
 require include/rz-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
@@ -9,9 +10,7 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-vspm"
 PR = "r0"
 
-SRC_URI = "file://vspm-kernel.tar.bz2 \
-    file://0001-vspm-Update-for-Linux-kernel-v5.10.83-cip1.patch \
-"
+SRC_URI = "file://vspm-kernel.tar.bz2"
 
 S = "${WORKDIR}/vspm"
 includedir = "${RENESAS_DATADIR}/include"

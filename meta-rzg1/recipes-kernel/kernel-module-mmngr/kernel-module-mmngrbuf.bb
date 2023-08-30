@@ -1,3 +1,4 @@
+inherit module
 require include/rz-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
@@ -12,9 +13,7 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngrbuf"
 PR = "r0"
 
-SRC_URI = "file://mmngrbuf.tar.bz2 \
-	   file://0001-mmngrbuf-Port-kernel-modules-mmngrbuf-to-kernel-v5.1.patch \
-"
+SRC_URI = "file://mmngrbuf.tar.bz2"
 
 S = "${WORKDIR}/mmngrbuf"
 includedir = "${RENESAS_DATADIR}/include"

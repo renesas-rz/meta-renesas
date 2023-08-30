@@ -1,3 +1,4 @@
+inherit module
 require include/rz-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
@@ -8,9 +9,7 @@ LIC_FILES_CHKSUM = " \
 DEPENDS = "linux-renesas"
 PN = "kernel-module-s3ctl"
 PR = "r0"
-SRC_URI = "file://s3ctl-kernel.tar.bz2 \
-	   file://0001-s3ctl-Port-kernel-module-s3ctl-to-Linux-kernel-v5.10.patch \
-"
+SRC_URI = "file://s3ctl-kernel.tar.bz2"
 
 S = "${WORKDIR}/s3ctl"
 includedir = "${RENESAS_DATADIR}/include"

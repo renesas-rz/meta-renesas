@@ -1,3 +1,4 @@
+inherit module
 require include/rz-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
@@ -9,14 +10,7 @@ LIC_FILES_CHKSUM = " \
 DEPENDS = "linux-renesas kernel-module-mmngr"
 PN = "kernel-module-fdpm"
 PR = "r0"
-SRC_URI = " \
-    file://fdpm-kernel.tar.bz2 \
-    file://0001-fdpm-Remove-unsed-variable-and-correct-type-of-varia.patch \
-    file://0002-fdpm-Port-kernel-module-fdpm-to-kernel-v5.10.83-cip1.patch \
-    file://0003-fdpm-Change-compat-string-to-avoid-conflict.patch \
-    file://0004-fdpm-Fix-issue-failed-to-get-clock-in-Linux-kernel-v.patch \
-    file://0005-fdpm-fix-issue-failed-to-get-fdp1-12-clock.patch \
-"
+SRC_URI = "file://fdpm-kernel.tar.bz2"
 S = "${WORKDIR}/fdpm"
 includedir = "${RENESAS_DATADIR}/include"
 

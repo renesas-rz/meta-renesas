@@ -1,3 +1,4 @@
+inherit module
 require include/rz-modules-common.inc
 
 LICENSE = "GPLv2 & MIT"
@@ -12,13 +13,7 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngr"
 PR = "r0"
 
-SRC_URI = "file://mmngr.tar.bz2 \
-    file://0001-Add-physical-address-translating-feature.patch \
-    file://0002-mmngr-Fix-invalid-type-for-argument-variable-of-func.patch \
-    file://0003-mmngr-Update-for-Linux-kernel-v5.10.83-cip1.patch \
-    file://0004-kernel-module-mmngr-Fix-issue-of-NULL-pointer-with-d.patch \
-    file://0005-Set-coherent-dma-mask-to-avoid-warning.patch \ 
-"
+SRC_URI = "file://mmngr.tar.bz2"
 S = "${WORKDIR}/mmngr"
 includedir = "${RENESAS_DATADIR}/include"
 
