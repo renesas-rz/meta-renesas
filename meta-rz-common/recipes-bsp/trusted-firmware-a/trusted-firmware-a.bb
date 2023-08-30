@@ -12,7 +12,7 @@ inherit deploy
 
 S = "${WORKDIR}/git"
 
-BRANCH = "v2.7/rz"
+BRANCH = "v2.9/rz"
 BRANCH_mbedtls = "mbedtls-2.28"
 
 SRC_URI = " \
@@ -20,10 +20,10 @@ SRC_URI = " \
 	git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
 
-SRCREV = "ac8a2c2f280c883e5d42ac6315262a1b7aab6fba"
+SRCREV = "e79079864584307071e920eec7e244fe144d8f8c"
 SRCREV_mbedtls = "dd79db10014d85b26d11fe57218431f2e5ede6f2"
 
-PV = "v2.7+git"
+PV = "v2.9+git"
 
 COMPATIBLE_MACHINE_rzg2h = "(ek874|hihope-rzg2m|hihope-rzg2n|hihope-rzg2h)"
 COMPATIBLE_MACHINE_rzg2l = "(smarc-rzg2l|rzg2l-dev|smarc-rzg2lc|rzg2lc-dev|smarc-rzg2ul|rzg2ul-dev|smarc-rzv2l|rzv2l-dev)"
