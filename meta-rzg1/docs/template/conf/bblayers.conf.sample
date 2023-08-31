@@ -5,11 +5,6 @@ POKY_BBLAYERS_CONF_VERSION = "2"
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""
 
-QT_LAYER = "${@os.path.isdir("${TOPDIR}/../meta-qt5")}"
-RZ_FEATURE_CODEC = "${@os.path.isdir("${TOPDIR}/../meta-rz-features/meta-rz-codecs")}"
-RZ_FEATURE_GRAPHICS = "${@os.path.isdir("${TOPDIR}/../meta-rz-features/meta-rz-graphics")}"
-VIRTUALIZATION_LAYER = "${@os.path.isdir("${TOPDIR}/../meta-virtualization")}"
-
 BBLAYERS ?= " \
   ${TOPDIR}/../meta-gplv2 \
   ${TOPDIR}/../poky/meta \
@@ -20,10 +15,4 @@ BBLAYERS ?= " \
   ${TOPDIR}/../meta-openembedded/meta-oe \
   ${TOPDIR}/../meta-openembedded/meta-python \
   ${TOPDIR}/../meta-openembedded/meta-multimedia \
-  ${@'${TOPDIR}/../meta-qt5' if '${QT_LAYER}' == 'True' else ''} \
-  ${@'${TOPDIR}/../meta-rz-features/meta-rz-codecs' if '${RZ_FEATURE_CODEC}' == 'True' else ''} \
-  ${@'${TOPDIR}/../meta-rz-features/meta-rz-graphics' if '${RZ_FEATURE_GRAPHICS}' == 'True' else ''} \
-  ${@'${TOPDIR}/../meta-openembedded/meta-filesystems' if '${VIRTUALIZATION_LAYER}' == 'True' else ''} \
-  ${@'${TOPDIR}/../meta-openembedded/meta-networking' if '${VIRTUALIZATION_LAYER}' == 'True' else ''} \
-  ${@'${TOPDIR}/../meta-virtualization' if '${VIRTUALIZATION_LAYER}' == 'True' else ''} \
   "

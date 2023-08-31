@@ -2,36 +2,14 @@
 # This file is your local configuration file and is where all local user settings
 # are placed. The comments in this file give some guide to the options a new user
 # to the system might want to change but pretty much any configuration option can
-# be set in this file. More adventurous users can look at local.conf.extended 
+# be set in this file. More adventurous users can look at local.conf.extended
 # which contains other examples of configuration which can be placed in this file
 # but new users likely won't need any of them initially.
 #
-# Lines starting with the '#' character are commented out and in some cases the 
+# Lines starting with the '#' character are commented out and in some cases the
 # default values are provided as comments to show people example syntax. Enabling
 # the option is a question of removing the # character and making any change to the
 # variable as required.
-
-#
-# Parallelism Options
-#
-# These two options control how much parallelism BitBake should use. The first 
-# option determines how many tasks bitbake should run in parallel:
-#
-# BB_NUMBER_THREADS ?= "4"
-#
-# Default to setting automatically based on cpu count
-BB_NUMBER_THREADS ?= "${@oe.utils.cpu_count()}"
-# 
-# The second option controls how many processes make should run in parallel when
-# running compile tasks:
-#
-# PARALLEL_MAKE ?= "-j 4"
-#
-# Default to setting automatically based on cpu count
-PARALLEL_MAKE ?= "-j ${@oe.utils.cpu_count()}"
-#
-# For a quad-core machine, BB_NUMBER_THREADS = "4", PARALLEL_MAKE = "-j 4" would
-# be appropriate for example.
 
 #
 # Machine Selection
@@ -40,7 +18,9 @@ PARALLEL_MAKE ?= "-j ${@oe.utils.cpu_count()}"
 # of emulated machines available which can boot and run in the QEMU emulator:
 #
 #MACHINE ?= "qemuarm"
+#MACHINE ?= "qemuarm64"
 #MACHINE ?= "qemumips"
+#MACHINE ?= "qemumips64"
 #MACHINE ?= "qemuppc"
 #MACHINE ?= "qemux86"
 #MACHINE ?= "qemux86-64"
@@ -48,13 +28,12 @@ PARALLEL_MAKE ?= "-j ${@oe.utils.cpu_count()}"
 # There are also the following hardware board target machines included for 
 # demonstration purposes:
 #
-#MACHINE ?= "beaglebone"
+#MACHINE ?= "beaglebone-yocto"
 #MACHINE ?= "genericx86"
 #MACHINE ?= "genericx86-64"
 #MACHINE ?= "mpc8315e-rdb"
 #MACHINE ?= "edgerouter"
-#
-# This sets the default machine to be qemux86 if no other machine is selected:
+
 #
 # Where to place downloads
 #
@@ -114,8 +93,8 @@ DISTRO ?= "poky"
 #
 # Package Management configuration
 #
-# This variable lists which packaging formats to enable. Multiple package backends 
-# can be enabled at once and the first item listed in the variable will be used 
+# This variable lists which packaging formats to enable. Multiple package backends
+# can be enabled at once and the first item listed in the variable will be used
 # to generate the root filesystems.
 # Options are:
 #  - 'package_deb' for debian style deb files
@@ -123,13 +102,13 @@ DISTRO ?= "poky"
 #  - 'package_rpm' for rpm style packages
 # E.g.: PACKAGE_CLASSES ?= "package_rpm package_deb package_ipk"
 # We default to rpm:
-PACKAGE_CLASSES ?= "package_ipk"
+PACKAGE_CLASSES ?= "package_rpm"
 
 #
-# SDK/ADT target architecture
+# SDK target architecture
 #
-# This variable specifies the architecture to build SDK/ADT items for and means
-# you can build the SDK packages for architectures other than the machine you are 
+# This variable specifies the architecture to build SDK items for and means
+# you can build the SDK packages for architectures other than the machine you are
 # running the build on (i.e. building i686 packages on an x86_64 host).
 # Supported values are i686 and x86_64
 #SDKMACHINE ?= "i686"
@@ -137,11 +116,13 @@ PACKAGE_CLASSES ?= "package_ipk"
 #
 # Extra image configuration defaults
 #
-# The EXTRA_IMAGE_FEATURES variable allows extra packages to be added to the generated 
+# The EXTRA_IMAGE_FEATURES variable allows extra packages to be added to the generated
 # images. Some of these options are added to certain image types automatically. The
 # variable can contain the following options:
 #  "dbg-pkgs"       - add -dbg packages for all installed packages
 #                     (adds symbol information for debugging/profiling)
+#  "src-pkgs"       - add -src packages for all installed packages
+#                     (adds source code for debugging)
 #  "dev-pkgs"       - add -dev packages for all installed packages
 #                     (useful if you want to develop against libs in the image)
 #  "ptest-pkgs"     - add -ptest packages for all ptest-enabled packages
@@ -149,7 +130,7 @@ PACKAGE_CLASSES ?= "package_ipk"
 #  "tools-sdk"      - add development tools (gcc, make, pkgconfig etc.)
 #  "tools-debug"    - add debugging tools (gdb, strace)
 #  "eclipse-debug"  - add Eclipse remote debugging support
-#  "tools-profile"  - add profiling tools (oprofile, exmap, lttng, valgrind)
+#  "tools-profile"  - add profiling tools (oprofile, lttng, valgrind)
 #  "tools-testapps" - add useful testing tools (ts_print, aplay, arecord etc.)
 #  "debug-tweaks"   - make an image suitable for development
 #                     e.g. ssh root access has a blank password
@@ -162,12 +143,11 @@ EXTRA_IMAGE_FEATURES ?= "debug-tweaks"
 # Additional image features
 #
 # The following is a list of additional classes to use when building images which
-# enable extra features. Some available options which can be included in this variable 
+# enable extra features. Some available options which can be included in this variable
 # are:
 #   - 'buildstats' collect build statistics
 #   - 'image-mklibs' to reduce shared library files size for an image
 #   - 'image-prelink' in order to prelink the filesystem image
-#   - 'image-swab' to perform host system intrusion detection
 # NOTE: if listing mklibs & prelink both, then make sure mklibs is before prelink
 # NOTE: mklibs also needs to be explicitly enabled for a given image, see local.conf.extended
 USER_CLASSES ?= "buildstats image-mklibs image-prelink"
@@ -176,15 +156,17 @@ USER_CLASSES ?= "buildstats image-mklibs image-prelink"
 # Runtime testing of images
 #
 # The build system can test booting virtual machine images under qemu (an emulator)
-# after any root filesystems are created and run tests against those images. To
-# enable this uncomment this line. See classes/testimage(-auto).bbclass for
-# further details.
-#TEST_IMAGE = "1"
+# after any root filesystems are created and run tests against those images. It can also
+# run tests against any SDK that are built. To enable this uncomment these lines.
+# See classes/test{image,sdk}.bbclass for further details.
+#IMAGE_CLASSES += "testimage testsdk"
+#TESTIMAGE_AUTO_qemuall = "1"
+
 #
 # Interactive shell configuration
 #
-# Under certain circumstances the system may need input from you and to do this it 
-# can launch an interactive shell. It needs to do this since the build is 
+# Under certain circumstances the system may need input from you and to do this it
+# can launch an interactive shell. It needs to do this since the build is
 # multithreaded and needs to be able to handle the case where more than one parallel
 # process may require the user's attention. The default is iterate over the available
 # terminal types to find one that works.
@@ -209,7 +191,7 @@ PATCHRESOLVE = "noop"
 # files and damages the build in ways which may not be easily recoverable.
 # It's necesary to monitor /tmp, if there is no space left the build will fail
 # with very exotic errors.
-BB_DISKMON_DIRS = "\
+BB_DISKMON_DIRS ??= "\
     STOPTASKS,${TMPDIR},1G,100K \
     STOPTASKS,${DL_DIR},1G,100K \
     STOPTASKS,${SSTATE_DIR},1G,100K \
@@ -222,13 +204,13 @@ BB_DISKMON_DIRS = "\
 #
 # Shared-state files from other locations
 #
-# As mentioned above, shared state files are prebuilt cache data objects which can 
+# As mentioned above, shared state files are prebuilt cache data objects which can
 # used to accelerate build time. This variable can be used to configure the system
 # to search other mirror locations for these objects before it builds the data itself.
 #
 # This can be a filesystem directory, or a remote url such as http or ftp. These
-# would contain the sstate-cache results from previous builds (possibly from other 
-# machines). This variable works like fetcher MIRRORS/PREMIRRORS and points to the 
+# would contain the sstate-cache results from previous builds (possibly from other
+# machines). This variable works like fetcher MIRRORS/PREMIRRORS and points to the
 # cache locations to check for the shared objects.
 # NOTE: if the mirror uses the same structure as SSTATE_DIR, you need to add PATH
 # at the end as shown in the examples below. This will be substituted with the
@@ -238,15 +220,44 @@ BB_DISKMON_DIRS = "\
 #file://.* file:///some/local/dir/sstate/PATH"
 
 #
+# Yocto Project SState Mirror
+#
+# The Yocto Project has prebuilt artefacts available for its releases, you can enable
+# use of these by uncommenting the following line. This will mean the build uses
+# the network to check for artefacts at the start of builds, which does slow it down
+# equally, it will also speed up the builds by not having to build things if they are
+# present in the cache. It assumes you can download something faster than you can build it
+# which will depend on your network.
+#
+#SSTATE_MIRRORS ?= "file://.* http://sstate.yoctoproject.org/2.5/PATH;downloadfilename=PATH"
+
+#
 # Qemu configuration
 #
-# By default qemu will build with a builtin VNC server where graphical output can be
-# seen. The two lines below enable the SDL backend too. By default libsdl-native will
-# be built, if you want to use your host's libSDL instead of the minimal libsdl built
-# by libsdl-native then uncomment the ASSUME_PROVIDED line below.
-PACKAGECONFIG_append_pn-qemu-native = " sdl"
-PACKAGECONFIG_append_pn-nativesdk-qemu = " sdl"
-#ASSUME_PROVIDED += "libsdl-native"
+# By default native qemu will build with a builtin VNC server where graphical output can be
+# seen. The line below enables the SDL UI frontend too.
+PACKAGECONFIG_append_pn-qemu-system-native = " sdl"
+# By default libsdl2-native will be built, if you want to use your host's libSDL instead of
+# the minimal libsdl built by libsdl2-native then uncomment the ASSUME_PROVIDED line below.
+#ASSUME_PROVIDED += "libsdl2-native"
+
+# You can also enable the Gtk UI frontend, which takes somewhat longer to build, but adds
+# a handy set of menus for controlling the emulator.
+#PACKAGECONFIG_append_pn-qemu-system-native = " gtk+"
+
+#
+# Hash Equivalence
+#
+# Enable support for automatically running a local hash equivalence server and
+# instruct bitbake to use a hash equivalence aware signature generator. Hash
+# equivalence improves reuse of sstate by detecting when a given sstate
+# artifact can be reused as equivalent, even if the current task hash doesn't
+# match the one that generated the artifact.
+#
+# A shared hash equivalent server can be set with "<HOSTNAME>:<PORT>" format
+#
+#BB_HASHSERVE = "auto"
+#BB_SIGNATURE_HANDLER = "OEEquivHash"
 
 # CONF_VERSION is increased each time build/conf/ changes incompatibly and is used to
 # track the version of this file when it was generated. This can safely be ignored if
@@ -258,70 +269,48 @@ DISTRO_FEATURES_append = " systemd"
 VIRTUAL-RUNTIME_init_manager = "systemd"
 
 # add the static lib to SDK toolchain
-SDKIMAGE_FEATURES_append = " staticdev-pkgs"
+SDKIMAGE_FEATURES_append = " staticdev-pkgs dev-pkgs dbg-pkgs"
 
-# Enable Gfx Pkgs
-MACHINE_FEATURES_append = " rgx"
-MULTI_PROVIDER_WHITELIST += "virtual/libgl virtual/egl virtual/libgles1 virtual/libgles2"
-
-# Define the name of multimedia, dtv, graphic test, multimedia-test for bbmask
-BB_MULTIMEDIA_KERNEL_MODULE = "kernel-module-fdpm|kernel-module-mmngr|\
-                               kernel-module-mmngrbuf|kernel-module-s3ctl|\
-                                                           kernel-module-uvcs|kernel-module-vspm"
-BB_MULTIMEDIA_USER_MODULE = "fdpm-user-module|mmngr-user-module|\
-                             mmngrbuf-user-module|omx-user-module|\
-                                                         s3ctl-user-module|vspm-user-module|libmemcpy"
-BB_MULTIMEDIA_TEST_MODULE = "fdpm-tp-user-module|mmngr-tp-user-module|\
-                             mmngrbuf-tp-user-module|s3ctl-tp-user-module|\
-                                                         vspm-tp-user-module"
-BB_GST_PLUGINS = "meta-renesas/meta-rzg1/recipes-multimedia/gstreamer"
-MULTIMEDIA_BB = "${BB_MULTIMEDIA_KERNEL_MODULE}|${BB_MULTIMEDIA_USER_MODULE}|\
-                 ${BB_MULTIMEDIA_TEST_MODULE}|${BB_GST_PLUGINS}"
-
-# for Wayland/Weston
-DISTRO_FEATURES_NATIVESDK_append = " wayland"
+# Enable pam distro feature
 DISTRO_FEATURES_append = " pam"
 
-PREFERRED_PROVIDER_virtual/libgles1 = ""
-PREFERRED_PROVIDER_virtual/libgles2 = "gles-user-module"
-PREFERRED_PROVIDER_virtual/egl = "libegl"
-PREFERRED_PROVIDER_virtual/mesa = ""
-PREFERRED_PROVIDER_virtual/libgbm = "libgbm"
-
-PREFERRED_PROVIDER_libgbm = "libgbm"
-PREFERRED_PROVIDER_libgbm-dev = "libgbm"
-
-# Mask some recipe from meta-rz-features and meta-rz-common which doesn't support G1 devices
-BBMASK += "mesa-gl"
-BBMASK += "meta-rz-common/recipes-kernel/kernel-module"
-BBMASK += "meta-rz-common/recipes-multimedia/.*-module/"
-BBMASK += "meta-rz-common/.*/packagegroup-gstreamer1.0-plugins"
-BBMASK += "meta-rz-features/.*/gstreamer/"
-BBMASK += "meta-rz-features/.*/omx-module/"
-BBMASK += "meta-rz-features/.*/packagegroups/"
-BBMASK += "meta-rz-features/.*/libegl"
-
-# Enable Multimedia features
-MACHINE_FEATURES_append = " multimedia"
-
-# Add for gstreamer plugins ugly
-LICENSE_FLAGS_WHITELIST = "commercial"
-
-# Encoder Library for Linux
-DISTRO_FEATURES_append = " h264avcenc_lib"
-
-# Choose graphic environment:
-DISTRO_FEATURES_remove = "x11"
+# Enable wayland and disable x11
 DISTRO_FEATURES_append = " wayland"
+DISTRO_FEATURES_remove = " x11"
 
-# Comment out a following line to enable the Docker Engine.
-DISTRO_FEATURES_remove = " docker"
-
-# For meta-virtualization layer
-DISTRO_FEATURES_append = "${@oe.utils.conditional('VIRTUALIZATION_CHECK', 'True', ' virtualization', '', d)}"
+# Add qt5 demonstration to core-image-qt or not
+#QT_DEMO = "1"
 
 # Select CIP Core packages by switching betwwen Buster and Bullseye.
 #  - Buster (default)  : build all supported Debian 10 Buster recipes
 #  - Bullseye          : build all supported Debian 11 Bullseye recipes
 #  - Not set (or different with above): not use CIP Core, use default packages version in Yocto
-# CIP_MODE = "Buster"
+
+CIP_MODE = "Buster"
+
+INCOMPATIBLE_LICENSE = "GPLv3 GPLv3+"
+
+LICENSE_FLAGS_WHITELIST = " \
+	commercial_gstreamer1.0-plugins-ugly commercial_mpeg2dec \
+	commercial_gst-plugins-bad commercial_faad2 commercial_faac \
+	commercial_gstreamer1.0-libav commercial_ffmpeg commercial_x264 \
+"
+
+# For meta-virtualization layer
+DISTRO_FEATURES_append = "${@oe.utils.conditional('VIRTUALIZATION_CHECK', 'True', ' virtualization', '', d)}"
+
+# Generate compressed "git2_" gz of all git packages in DL_DIR
+#BB_GENERATE_MIRROR_TARBALLS = "1"
+
+# Generate compressed "gitshallow_" gz of all git packages in DL_DIR
+#BB_GENERATE_SHALLOW_TARBALLS = "1"
+
+# Use "gitshallow_" instead of normal git files in DL_DIR
+#BB_GIT_SHALLOW = "1"
+#BB_GIT_SHALLOW_DEPTH = "1"
+
+# Remove dnf package which causes high CPU workload
+PACKAGE_INSTALL_remove = " dnf "
+
+# Configuration for USB 3.0
+MACHINE_FEATURES_append = " usb3"
