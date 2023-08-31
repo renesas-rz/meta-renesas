@@ -41,22 +41,9 @@ do_install() {
 
     # Install shared header files to KERNELSRC(STAGING_KERNEL_DIR)
     # This file installed in SDK by kernel-devsrc pkg.
-    install -m 644 ${S}/drv/Module.symvers ${KERNELSRC}/include/vspm.symvers
+    install -m 644 ${S}/include/vspm_if.h ${KERNELSRC}/include/
 
-    install -m 644 ${S}/drv/Module.symvers ${D}/${includedir}/vspm.symvers
-}
-
-# Append function to clean extract source
-do_cleansstate_prepend() {
-        bb.build.exec_func('do_clean_source', d)
-}
-
-do_clean_source() {
-    rm -f ${KERNELSRC}/include/vspm.symvers
-    rm -f ${KERNELSRC}/include/vspm_public.h
-    rm -f ${KERNELSRC}/include/vsp_drv.h
-    rm -f ${KERNELSRC}/include/vspm_if.h
-    rm -f ${KERNELSRC}/include/tddmac_drv.h
+    install -m 644 ${S}/include/vspm_if.h ${D}/${includedir}/
 }
 
 PACKAGES = "\

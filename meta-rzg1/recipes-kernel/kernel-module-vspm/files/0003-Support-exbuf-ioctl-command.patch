@@ -1,0 +1,27 @@
+From 2bcd275b893f7641b08350fb794063e11819f15b Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Sat, 14 Jul 2018 19:28:45 +0700
+Subject: [PATCH] Support exbuf ioctl command
+
+This is necessary for exporting dmabuf fd.
+vspfilter will use this in its processing.
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ drv/vsp2_video.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drv/vsp2_video.c b/drv/vsp2_video.c
+index 9a35210..d7858f8 100755
+--- a/drv/vsp2_video.c
++++ b/drv/vsp2_video.c
+@@ -1168,6 +1168,7 @@ static const struct v4l2_ioctl_ops vsp2_video_ioctl_ops = {
+ 	.vidioc_dqbuf			= vb2_ioctl_dqbuf,
+ 	.vidioc_create_bufs		= vb2_ioctl_create_bufs,
+ 	.vidioc_prepare_buf		= vb2_ioctl_prepare_buf,
++	.vidioc_expbuf                  = vb2_ioctl_expbuf,
+ 	.vidioc_streamon		= vsp2_video_streamon,
+ 	.vidioc_streamoff		= vb2_ioctl_streamoff,
+ };
+-- 
+1.9.1

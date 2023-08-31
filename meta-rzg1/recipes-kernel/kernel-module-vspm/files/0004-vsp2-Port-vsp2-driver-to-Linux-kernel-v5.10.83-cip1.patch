@@ -1,0 +1,330 @@
+From 8e70beb858827781c8d38773668222b9be166255 Mon Sep 17 00:00:00 2001
+From: Hao Bui <hao.bui.yg@renesas.com>
+Date: Thu, 14 Apr 2022 10:34:02 +0700
+Subject: [PATCH] vsp2: Port vsp2 driver to Linux kernel v5.10.83-cip1
+
+Make changes to reflects following updates in kernel v5.10.83-cip1:
+  ab22e77 [media] media framework: rename pads init function to media_entity_pads_init()
+  8df00a1 [media] media: rename the function that create pad links
+  687b420 [media] media controller: get rid of entity subtype on Kernel
+  20b8522 [media] media: Rename graph and pipeline structs and functions
+  d6dd645 [media] media: videobuf2: Move timestamp to vb2_buffer
+  df9ecb0 [media] vb2: drop v4l2_format argument from queue_setup
+  36c0f8b [media] vb2: replace void *alloc_ctxs by struct device *alloc_devs
+  2548fee [media] media/platform: convert drivers to use the new vb2_queue dev field
+
+Signed-off-by: Hao Bui <hao.bui.yg@renesas.com>
+---
+ drv/vsp2_drv.c    |  2 +-
+ drv/vsp2_entity.c |  3 +-
+ drv/vsp2_rpf.c    |  2 +-
+ drv/vsp2_video.c  | 97 ++++++++++++++++---------------------------------------
+ drv/vsp2_wpf.c    |  2 +-
+ 5 files changed, 31 insertions(+), 75 deletions(-)
+
+diff --git a/drv/vsp2_drv.c b/drv/vsp2_drv.c
+index 533d87a..61577b3 100755
+--- a/drv/vsp2_drv.c
++++ b/drv/vsp2_drv.c
+@@ -135,7 +135,7 @@ static int vsp2_create_links(struct vsp2_device *vsp2, struct vsp2_entity *sink)
+ 			if (!(entity->pads[pad].flags & MEDIA_PAD_FL_SINK))
+ 				continue;
+ 
+-			ret = media_entity_create_link(&source->subdev.entity,
++			ret = media_create_pad_link(&source->subdev.entity,
+ 						       source->source_pad,
+ 						       entity, pad, flags);
+ 			if (ret < 0)
+diff --git a/drv/vsp2_entity.c b/drv/vsp2_entity.c
+index 2beaea5..dd31651 100755
+--- a/drv/vsp2_entity.c
++++ b/drv/vsp2_entity.c
+@@ -254,8 +254,7 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 	entity->pads[num_pads - 1].flags = MEDIA_PAD_FL_SOURCE;
+ 
+ 	/* Initialize the media entity. */
+-	return media_entity_init(&entity->subdev.entity, num_pads,
+-				 entity->pads, 0);
++	return media_entity_pads_init(&entity->subdev.entity, num_pads, entity->pads);
+ }
+ 
+ void vsp2_entity_destroy(struct vsp2_entity *entity)
+diff --git a/drv/vsp2_rpf.c b/drv/vsp2_rpf.c
+index 2875a6b..2887882 100755
+--- a/drv/vsp2_rpf.c
++++ b/drv/vsp2_rpf.c
+@@ -401,7 +401,7 @@ struct vsp2_rwpf *vsp2_rpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 	rpf->entity.video = video;
+ 
+ 	/* Connect the video device to the RPF. */
+-	ret = media_entity_create_link(&rpf->video.video.entity, 0,
++	ret = media_create_pad_link(&rpf->video.video.entity, 0,
+ 				       &rpf->entity.subdev.entity,
+ 				       RWPF_PAD_SINK,
+ 				       MEDIA_LNK_FL_ENABLED |
+diff --git a/drv/vsp2_video.c b/drv/vsp2_video.c
+index d7858f8..40ede93 100755
+--- a/drv/vsp2_video.c
++++ b/drv/vsp2_video.c
+@@ -179,7 +179,7 @@ static const struct vsp2_format_info vsp2_video_formats[] = {
+ 	  VI6_FMT_Y_U_V_420, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS |
+ 	  VI6_RPF_DSWAP_P_WDS | VI6_RPF_DSWAP_P_BTS,
+ 	  3, { 8, 8, 8 }, false, false, 2, 2, false },
+-	{ V4L2_PIX_FMT_RGB32S, MEDIA_BUS_FMT_ARGB8888_1X32,
++	{ V4L2_PIX_FMT_RGB32, MEDIA_BUS_FMT_ARGB8888_1X32,
+ 	  VI6_FMT_ARGB_8888, VI6_RPF_DSWAP_P_LLS | VI6_RPF_DSWAP_P_LWS,
+ 	  1, { 32, 0, 0 }, false, false, 1, 1, false },
+ };
+@@ -213,7 +213,7 @@ vsp2_video_remote_subdev(struct media_pad *local, u32 *pad)
+ 
+ 	remote = media_entity_remote_pad(local);
+ 	if (remote == NULL ||
+-	    media_entity_type(remote->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
++		!is_media_entity_v4l2_subdev(remote->entity))
+ 		return NULL;
+ 
+ 	if (pad)
+@@ -320,35 +320,6 @@ static int __vsp2_video_try_format(struct vsp2_video *video,
+ 	return 0;
+ }
+ 
+-static bool
+-vsp2_video_format_adjust(struct vsp2_video *video,
+-			 const struct v4l2_pix_format_mplane *format,
+-			 struct v4l2_pix_format_mplane *adjust)
+-{
+-	unsigned int i;
+-
+-	*adjust = *format;
+-	__vsp2_video_try_format(video, adjust, NULL);
+-
+-	if (format->width != adjust->width ||
+-	    format->height != adjust->height ||
+-	    format->pixelformat != adjust->pixelformat ||
+-	    format->num_planes != adjust->num_planes)
+-		return false;
+-
+-	for (i = 0; i < format->num_planes; ++i) {
+-		if (format->plane_fmt[i].bytesperline !=
+-		    adjust->plane_fmt[i].bytesperline)
+-			return false;
+-
+-		adjust->plane_fmt[i].sizeimage =
+-			max(adjust->plane_fmt[i].sizeimage,
+-			    format->plane_fmt[i].sizeimage);
+-	}
+-
+-	return true;
+-}
+-
+ /* -----------------------------------------------------------------------------
+  * Pipeline Management
+  */
+@@ -372,7 +343,7 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 			return -EPIPE;
+ 
+ 		/* We've reached a video node, that shouldn't have happened. */
+-		if (media_entity_type(pad->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
++		if (!is_media_entity_v4l2_subdev(pad->entity))
+ 			return -EPIPE;
+ 
+ 		entity =
+@@ -399,10 +370,10 @@ static int vsp2_pipeline_validate_branch(struct vsp2_pipeline *pipe,
+ 			break;
+ 
+ 		/* Ensure the branch has no loop. */
+-		if (entities & (1 << entity->subdev.entity.id))
++		if (entities & (1 << media_entity_id(&entity->subdev.entity)))
+ 			return -EPIPE;
+ 
+-		entities |= 1 << entity->subdev.entity.id;
++		entities |= 1 <<  media_entity_id(&entity->subdev.entity);
+ 
+ 		/* UDS can't be chained. */
+ 		if (entity->type == VSP2_ENTITY_UDS) {
+@@ -453,23 +424,23 @@ static void __vsp2_pipeline_cleanup(struct vsp2_pipeline *pipe)
+ static int vsp2_pipeline_validate(struct vsp2_pipeline *pipe,
+ 				  struct vsp2_video *video)
+ {
+-	struct media_entity_graph graph;
++	struct media_graph graph;
+ 	struct media_entity *entity = &video->video.entity;
+-	struct media_device *mdev = entity->parent;
++	struct media_device *mdev = entity->graph_obj.mdev;
+ 	unsigned int i;
+ 	int ret;
+ 
+ 	mutex_lock(&mdev->graph_mutex);
+ 
+ 	/* Walk the graph to locate the entities and video nodes. */
+-	media_entity_graph_walk_start(&graph, entity);
++	media_graph_walk_start(&graph, entity);
+ 
+-	while ((entity = media_entity_graph_walk_next(&graph))) {
++	while ((entity = media_graph_walk_next(&graph))) {
+ 		struct v4l2_subdev *subdev;
+ 		struct vsp2_rwpf *rwpf;
+ 		struct vsp2_entity *e;
+ 
+-		if (media_entity_type(entity) != MEDIA_ENT_T_V4L2_SUBDEV) {
++		if (!is_media_entity_v4l2_subdev(entity)) {
+ 			pipe->num_video++;
+ 			continue;
+ 		}
+@@ -632,7 +603,7 @@ vsp2_video_complete_buffer(struct vsp2_video *video)
+ 	spin_unlock_irqrestore(&video->irqlock, flags);
+ 
+ 	done->buf.sequence = video->sequence++;
+-	v4l2_get_timestamp(&done->buf.timestamp);
++	done->buf.vb2_buf.timestamp = ktime_get_ns();
+ 	for (i = 0; i < done->buf.vb2_buf.num_planes; ++i)
+ 		vb2_set_plane_payload(&done->buf.vb2_buf, i, done->length[i]);
+ 	vb2_buffer_done(&done->buf.vb2_buf, VB2_BUF_STATE_DONE);
+@@ -740,7 +711,7 @@ void vsp2_pipeline_propagate_alpha(struct vsp2_pipeline *pipe,
+ 	pad = media_entity_remote_pad(&input->pads[RWPF_PAD_SOURCE]);
+ 
+ 	while (pad) {
+-		if (media_entity_type(pad->entity) != MEDIA_ENT_T_V4L2_SUBDEV)
++		if (!is_media_entity_v4l2_subdev(pad->entity))
+ 			break;
+ 
+ 		entity =
+@@ -769,33 +740,28 @@ void vsp2_pipeline_propagate_alpha(struct vsp2_pipeline *pipe,
+  */
+ 
+ static int
+-vsp2_video_queue_setup(struct vb2_queue *vq, const void *parg,
++vsp2_video_queue_setup(struct vb2_queue *vq,
+ 		     unsigned int *nbuffers, unsigned int *nplanes,
+-		     unsigned int sizes[], void *alloc_ctxs[])
++		     unsigned int sizes[], struct device *alloc_devs[])
+ {
+-	const struct v4l2_format *fmt = parg;
+ 	struct vsp2_video *video = vb2_get_drv_priv(vq);
+-	const struct v4l2_pix_format_mplane *format;
+-	struct v4l2_pix_format_mplane pix_mp;
++	const struct v4l2_pix_format_mplane *format = &video->format;
+ 	unsigned int i;
+ 
+-	if (fmt) {
+-		/* Make sure the format is valid and adjust the sizeimage field
+-		 * if needed.
+-		 */
+-		if (!vsp2_video_format_adjust(video, &fmt->fmt.pix_mp, &pix_mp))
++	if (*nplanes) {
++		if (*nplanes != format->num_planes)
+ 			return -EINVAL;
+ 
+-		format = &pix_mp;
+-	} else {
+-		format = &video->format;
++		for (i = 0; i < *nplanes; i++)
++			if (sizes[i] < format->plane_fmt[i].sizeimage)
++				return -EINVAL;
++		return 0;
+ 	}
+ 
+ 	*nplanes = format->num_planes;
+ 
+ 	for (i = 0; i < format->num_planes; ++i) {
+ 		sizes[i] = format->plane_fmt[i].sizeimage;
+-		alloc_ctxs[i] = video->alloc_ctx;
+ 	}
+ 
+ 	return 0;
+@@ -996,7 +962,7 @@ static void vsp2_video_stop_streaming(struct vb2_queue *vq)
+ 	mutex_unlock(&pipe->lock);
+ 
+ 	vsp2_pipeline_cleanup(pipe);
+-	media_entity_pipeline_stop(&video->video.entity);
++	media_pipeline_stop(&video->video.entity);
+ 
+ 	/* Remove all buffers from the IRQ queue. */
+ 	spin_lock_irqsave(&video->irqlock, flags);
+@@ -1125,7 +1091,7 @@ vsp2_video_streamon(struct file *file, void *fh, enum v4l2_buf_type type)
+ 	pipe = video->video.entity.pipe
+ 	     ? to_vsp2_pipeline(&video->video.entity) : &video->pipe;
+ 
+-	ret = media_entity_pipeline_start(&video->video.entity, &pipe->pipe);
++	ret = media_pipeline_start(&video->video.entity, &pipe->pipe);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1150,7 +1116,7 @@ vsp2_video_streamon(struct file *file, void *fh, enum v4l2_buf_type type)
+ err_cleanup:
+ 	vsp2_pipeline_cleanup(pipe);
+ err_stop:
+-	media_entity_pipeline_stop(&video->video.entity);
++	media_pipeline_stop(&video->video.entity);
+ 	return ret;
+ }
+ 
+@@ -1269,7 +1235,7 @@ int vsp2_video_init(struct vsp2_video *video, struct vsp2_entity *rwpf)
+ 	video->pipe.state = VSP2_PIPELINE_STOPPED;
+ 
+ 	/* Initialize the media entity... */
+-	ret = media_entity_init(&video->video.entity, 1, &video->pad, 0);
++	ret = media_entity_pads_init(&video->video.entity, 1, &video->pad);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1291,19 +1257,12 @@ int vsp2_video_init(struct vsp2_video *video, struct vsp2_entity *rwpf)
+ 	video->video.fops = &vsp2_video_fops;
+ 	snprintf(video->video.name, sizeof(video->video.name), "%s %s",
+ 		 rwpf->subdev.name, direction);
+-	video->video.vfl_type = VFL_TYPE_GRABBER;
++	video->video.vfl_type = VFL_TYPE_VIDEO;
+ 	video->video.release = video_device_release_empty;
+ 	video->video.ioctl_ops = &vsp2_video_ioctl_ops;
+ 
+ 	video_set_drvdata(&video->video, video);
+ 
+-	/* ... and the buffers queue... */
+-	video->alloc_ctx = vb2_dma_contig_init_ctx(video->vsp2->dev);
+-	if (IS_ERR(video->alloc_ctx)) {
+-		ret = PTR_ERR(video->alloc_ctx);
+-		goto error;
+-	}
+-
+ 	video->queue.type = video->type;
+ 	video->queue.io_modes = VB2_MMAP | VB2_USERPTR | VB2_DMABUF;
+ 	video->queue.lock = &video->lock;
+@@ -1320,7 +1279,7 @@ int vsp2_video_init(struct vsp2_video *video, struct vsp2_entity *rwpf)
+ 
+ 	/* ... and register the video device. */
+ 	video->video.queue = &video->queue;
+-	ret = video_register_device(&video->video, VFL_TYPE_GRABBER, -1);
++	ret = video_register_device(&video->video, VFL_TYPE_VIDEO, -1);
+ 	if (ret < 0) {
+ 		dev_err(video->vsp2->dev, "failed to register video device\n");
+ 		goto error;
+@@ -1329,7 +1288,6 @@ int vsp2_video_init(struct vsp2_video *video, struct vsp2_entity *rwpf)
+ 	return 0;
+ 
+ error:
+-	vb2_dma_contig_cleanup_ctx(video->alloc_ctx);
+ 	vsp2_video_cleanup(video);
+ 	return ret;
+ }
+@@ -1339,6 +1297,5 @@ void vsp2_video_cleanup(struct vsp2_video *video)
+ 	if (video_is_registered(&video->video))
+ 		video_unregister_device(&video->video);
+ 
+-	vb2_dma_contig_cleanup_ctx(video->alloc_ctx);
+ 	media_entity_cleanup(&video->video.entity);
+ }
+diff --git a/drv/vsp2_wpf.c b/drv/vsp2_wpf.c
+index 664f60a..7d7dce5 100755
+--- a/drv/vsp2_wpf.c
++++ b/drv/vsp2_wpf.c
+@@ -304,7 +304,7 @@ struct vsp2_rwpf *vsp2_wpf_create(struct vsp2_device *vsp2, unsigned int index)
+ 	flags = MEDIA_LNK_FL_ENABLED;
+ 	flags |= MEDIA_LNK_FL_IMMUTABLE;
+ 
+-	ret = media_entity_create_link(&wpf->entity.subdev.entity,
++	ret = media_create_pad_link(&wpf->entity.subdev.entity,
+ 				       RWPF_PAD_SOURCE,
+ 				       &wpf->video.video.entity, 0, flags);
+ 	if (ret < 0)
+-- 
+2.7.4
