@@ -81,7 +81,7 @@ update_issue() {
       ;;
     iwg20m-g1m)
       BSP_SOC="RZG1M"
-      BSP_BOARD="iWave"
+      BSP_BOARD="iWave RZ/G1M-PF Development Kit"
       ;;
     skrzg1m)
       BSP_SOC="RZG1M"
@@ -89,15 +89,15 @@ update_issue() {
       ;;
     iwg20m-g1n)
       BSP_SOC="RZG1N"
-      BSP_BOARD="iWave"
-      ;;
-    iwg22m)
-      BSP_SOC="RZG1E"
-      BSP_BOARD="iWave"
+      BSP_BOARD="iWave RZ/G1N-PF Development Kit"
       ;;
     iwg21m)
       BSP_SOC="RZG1H"
-      BSP_BOARD="iWave"
+      BSP_BOARD="iWave RZ/G1H-PF Development Kit"
+      ;;
+    iwg22m)
+      BSP_SOC="RZG1E"
+      BSP_BOARD="iWave RZ/G1E-PF Development Kit"
       ;;
     skrzg1e)
       BSP_SOC="RZG1E"
@@ -105,7 +105,7 @@ update_issue() {
       ;;
     iwg23s)
       BSP_SOC="RZG1C"
-      BSP_BOARD="iWave"
+      BSP_BOARD="iWave RZ/G1C-PF Development Kit"
       ;;
     esac
 
