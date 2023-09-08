@@ -1,0 +1,58 @@
+From ab37fbb7ceff2c2a3587cf471fee3ae21f0ba040 Mon Sep 17 00:00:00 2001
+From: John Vincent <john.vincent.xa.bp.renesas.com>
+Date: Mon, 14 Aug 2023 15:52:32 +0100
+Subject: [PATCH 2/6] smarc rzg2l enable configuration for ARM system read
+
+ARM system ready configuration updates
+
+Signed-off-by: John Vincent <john.vincent.xa.bp.renesas.com>
+---
+ configs/smarc-rzg2l_defconfig | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/configs/smarc-rzg2l_defconfig b/configs/smarc-rzg2l_defconfig
+index d9eb063750..4d6e6fcaae 100644
+--- a/configs/smarc-rzg2l_defconfig
++++ b/configs/smarc-rzg2l_defconfig
+@@ -91,3 +91,38 @@ CONFIG_CMD_SF=y
+ CONFIG_CMD_SPI=y
+ CONFIG_SPI_FLASH_STMICRO=y
+ CONFIG_DM_SPI_FLASH=y
++CONFIG_BOOTM_EFI=y
++CONFIG_CMD_BOOTEFI=y
++CONFIG_CMD_NVEDIT_EFI=y
++CONFIG_CMD_EFIDEBUG=y
++CONFIG_CMD_BOOTEFI_HELLO=y
++CONFIG_CMD_BOOTEFI_HELLO_COMPILE=y
++CONFIG_CMD_BOOTEFI_SELFTEST=y
++CONFIG_CMD_GPT=y
++CONFIG_EFI_PARTITION=y
++CONFIG_EFI_LOADER=y
++CONFIG_EFI_DEVICE_PATH_TO_TEXT=y
++CONFIG_EFI_UNICODE_COLLATION_PROTOCOL2=y
++CONFIG_EFI_UNICODE_CAPITALIZATION=y
++CONFIG_EFI_HAVE_RUNTIME_RESET=y
++CONFIG_CMD_EFI_VARIABLE_FILE_STORE=y
++CONFIG_DM_RTC=y
++CONFIG_EFI_GET_TIME=y
++CONFIG_EFI_SET_TIME=y
++CONFIG_RTC_EMULATION=y
++CONFIG_CMD_DFU=y
++CONFIG_FLASH_CFI_MTD=y
++CONFIG_EFI_CAPSULE_FIRMWARE_FIT=y
++CONFIG_EFI_CAPSULE_FIRMWARE_MANAGEMENT=y
++CONFIG_EFI_CAPSULE_FIRMWARE=y
++CONFIG_EFI_CAPSULE_FIRMWARE_RAW=y
++CONFIG_EFI_CAPSULE_FMP_HEADER=y
++CONFIG_CMD_GPT=y
++CONFIG_FAT_WRITE=y
++CONFIG_FS_FAT=y
++CONFIG_CMD_PART=y
++CONFIG_PARTITIONS=y
++CONFIG_DOS_PARTITION=y
++CONFIG_ISO_PARTITION=y
++CONFIG_EFI_PARTITION=y
++CONFIG_PARTITION_UUIDS=y
+-- 
+2.25.1
+

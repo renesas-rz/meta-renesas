@@ -1,0 +1,91 @@
+From f94918f5e8b6370a5fd9af10d34d8c4943054e18 Mon Sep 17 00:00:00 2001
+From: John Vincent <john.vincent.xa.bp.renesas.com>
+Date: Mon, 14 Aug 2023 16:02:48 +0100
+Subject: smarc rzg2l enable distro bootcmd
+
+Add suppport Autoboot UEFI
+
+automate boot flow from usb and mmc
+
+Signed-off-by: John Vincent <john.vincent.xa.bp.renesas.com>
+---
+ configs/smarc-rzg2l_defconfig |  1 +
+ include/configs/smarc-rzg2l.h | 53 +++++++++++++++++++++++++++++------
+ 2 files changed, 45 insertions(+), 9 deletions(-)
+
+diff --git a/configs/smarc-rzg2l_defconfig b/configs/smarc-rzg2l_defconfig
+index 4d6e6fcaae..0366542b82 100644
+--- a/configs/smarc-rzg2l_defconfig
++++ b/configs/smarc-rzg2l_defconfig
+@@ -126,3 +126,4 @@ CONFIG_DOS_PARTITION=y
+ CONFIG_ISO_PARTITION=y
+ CONFIG_EFI_PARTITION=y
+ CONFIG_PARTITION_UUIDS=y
++CONFIG_DISTRO_DEFAULTS=y
+diff --git a/include/configs/smarc-rzg2l.h b/include/configs/smarc-rzg2l.h
+index bc94abc531..1d0a2d6f48 100644
+--- a/include/configs/smarc-rzg2l.h
++++ b/include/configs/smarc-rzg2l.h
+@@ -61,15 +61,50 @@
+ 
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+ 	"usb_pgood_delay=2000\0" \
+-	"bootm_size=0x10000000 \0" \
+-	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p1 \0" \
+-	"prodemmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p1 \0" \
+-	"bootimage=unzip 0x4A080000 0x48080000; booti 0x48080000 - 0x48000000 \0" \
+-	"emmcload=ext4load mmc 0:1 0x4A080000 boot/Image.gz;ext4load mmc 0:1 0x48000000 boot/r9a07g044l-smarc-rzg2l.dtb;run prodemmcbootargs \0" \
+-	"sd1load=ext4load mmc 1:1 0x4A080000 boot/Image.gz;ext4load mmc 1:1 0x48000000 boot/r9a07g044l-smarc-rzg2l.dtb;run prodsdbootargs \0" \
+-	"bootcmd_check=if mmc dev 1; then run sd1load; else run emmcload; fi \0"
+-
+-#define CONFIG_BOOTCOMMAND	"env default -a;run bootcmd_check;run bootimage"
++	"fdt_addr_r=0x48000000\0" \
++	"fdtfile="CONFIG_DEFAULT_FDT_FILE"\0" \
++	"kernel_addr_r=0x48080000\0" \
++	"boot_efi_binary=efi/boot/bootaa64.efi\0" \
++	"scan_for_usb_dev=" \
++		"usb start; " \
++		"if test ! -e usb ${devnum}:1 /; then usb reset; fi;\0" \
++	"scan_boot_efi=" \
++		"part list ${devtype} ${devnum} devplist; "  \
++		"env exists devplist || setenv devplist 1; " \
++		"for distro_bootpart in ${devplist}; do " \
++			"if test -e ${devtype} ${devnum}:${distro_bootpart} ${boot_efi_binary}; then " \
++				"load ${devtype} ${devnum}:${distro_bootpart} " \
++				"${kernel_addr_r} ${boot_efi_binary};"          \
++				"echo BootEFI from <${devtype}> [${devnum}:${distro_bootpart}]; "\
++				"bootefi ${kernel_addr_r};"                     \
++			"fi;" \
++		"done;\0" \
++	"mmc0=" \
++			"setenv devnum 0;" \
++			"setenv devtype mmc;" \
++			"run scan_boot_efi;\0" \
++	"mmc1=" \
++			"setenv devnum 1;" \
++			"setenv devtype mmc;" \
++			"run scan_boot_efi;\0" \
++	"usb0=" \
++			"setenv devnum 0;" \
++			"setenv devtype usb;" \
++			"run scan_for_usb_dev;"\
++			"run scan_boot_efi;\0"\
++	"usb1=" \
++			"setenv devnum 1;" \
++			"setenv devtype usb;" \
++			"run scan_for_usb_dev;"\
++			"run scan_boot_efi;\0" \
++	"boot_targets=" \
++			"mmc0 mmc1 usb0 usb1\0" \
++	"distro_bootcmd=" \
++			"env exists boot_targets || setenv boot_targets mmc0 mmc1 usb0 usb1; " \
++			"for target in ${boot_targets}; do "\
++				"run ${target};" \
++			"done;" \
++	"bootcmd=run distro_bootcmd\0" \
+ 
+ /* For board */
+ /* Ethernet RAVB */
+-- 
+2.25.1
+

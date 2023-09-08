@@ -1,0 +1,31 @@
+From 9dd77bd89b73b8ba9120034cfe4420c86a88b643 Mon Sep 17 00:00:00 2001
+From: John Vincent <john.vincent.xa.bp.renesas.com>
+Date: Mon, 14 Aug 2023 15:59:34 +0100
+Subject: smarc rzg2l arm system ready increase size of uboot
+
+ARM system ready requires more configuration enabled. This
+increases the uboot size and hence the size set to 2MB
+
+Signed-off-by: John Vincent <john.vincent.xa.bp.renesas.com>
+---
+ include/configs/smarc-rzg2l.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/configs/smarc-rzg2l.h b/include/configs/smarc-rzg2l.h
+index 88d75c63a8..bc94abc531 100644
+--- a/include/configs/smarc-rzg2l.h
++++ b/include/configs/smarc-rzg2l.h
+@@ -54,8 +54,8 @@
+ #define CONFIG_SYS_MALLOC_LEN		(64 * 1024 * 1024)
+ #define CONFIG_SYS_BOOTM_LEN		(64 << 20)
+ 
+-/* The HF/QSPI layout permits up to 1 MiB large bootloader blob */
+-#define CONFIG_BOARD_SIZE_LIMIT		1048576
++/* The HF/QSPI layout permits up to 2 MiB large bootloader blob */
++#define CONFIG_BOARD_SIZE_LIMIT		2097152
+ 
+ /* ENV setting */
+ 
+-- 
+2.25.1
+

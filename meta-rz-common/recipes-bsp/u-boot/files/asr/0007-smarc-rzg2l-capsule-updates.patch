@@ -1,0 +1,65 @@
+From 473a2041700f13aab543eac8f37deed0eaa9ed2a Mon Sep 17 00:00:00 2001
+From: JohnXVincent <john.vincent.xa@bp.renesas.com>
+Date: Fri, 8 Sep 2023 09:56:29 +0100
+Subject: [PATCH] smarc rzg2l capsule updates
+
+Enable the UEFI capsule update features for RZG2L
+
+Signed-off-by: JohnXVincent <john.vincent.xa@bp.renesas.com>
+---
+ configs/smarc-rzg2l_defconfig | 19 +++++++++++++++++++
+ include/configs/smarc-rzg2l.h | 10 +++++++++-
+ 2 files changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/configs/smarc-rzg2l_defconfig b/configs/smarc-rzg2l_defconfig
+index faa63ef93c..81c3510b1e 100644
+--- a/configs/smarc-rzg2l_defconfig
++++ b/configs/smarc-rzg2l_defconfig
+@@ -129,3 +129,22 @@ CONFIG_PARTITION_UUIDS=y
+ CONFIG_DISTRO_DEFAULTS=y
+ CONFIG_NET_RANDOM_ETHADDR=y
+ CONFIG_CMD_RTC=y
++CONFIG_EFI_RUNTIME_UPDATE_CAPSULE=y
++CONFIG_EFI_HAVE_CAPSULE_SUPPORT=y
++CONFIG_EFI_CAPSULE_ON_DISK=y
++CONFIG_SPL_DFU=y
++CONFIG_DM_MTD=y
++CONFIG_DFU_MTD=y
++CONFIG_SPL_DFU_MTD=y
++CONFIG_DFU_SF=y
++CONFIG_DFU_OVER_USB=y
++CONFIG_DFU=y
++CONFIG_DFU_MMC=y
++CONFIG_DFU_NAND=y
++CONFIG_DFU_RAM=y
++CONFIG_DFU_SF_PART=y
++CONFIG_DFU_TIMEOUT=y
++CONFIG_CMD_DFU=y
++CONFIG_OF_LIBFDT=y
++CONFIG_DFU_OVER_TFTP=y
++CONFIG_DFU_TFTP=y
+\ No newline at end of file
+diff --git a/include/configs/smarc-rzg2l.h b/include/configs/smarc-rzg2l.h
+index 1d0a2d6f48..a96fcfdaa8 100644
+--- a/include/configs/smarc-rzg2l.h
++++ b/include/configs/smarc-rzg2l.h
+@@ -98,7 +98,15 @@
+ 			"run scan_for_usb_dev;"\
+ 			"run scan_boot_efi;\0" \
+ 	"boot_targets=" \
+-			"mmc0 mmc1 usb0 usb1\0" \
++			"usb0 usb1 mmc0 mmc1\0" \
++	"dfu_alt_info=" \
++			"sf 0:0=u-boot.bin raw 0x20000 0x1F0000\0" \
++	"dfu_bufsiz=" \
++			"0x1F0000\0" \
++	"ipaddr=" \
++			"192.168.10.7\0" \
++	"serverip=" \
++			"192.168.10.1\0" \
+ 	"distro_bootcmd=" \
+ 			"env exists boot_targets || setenv boot_targets mmc0 mmc1 usb0 usb1; " \
+ 			"for target in ${boot_targets}; do "\
+-- 
+2.25.1
+

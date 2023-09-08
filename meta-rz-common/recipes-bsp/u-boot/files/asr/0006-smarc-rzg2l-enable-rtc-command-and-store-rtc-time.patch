@@ -1,0 +1,51 @@
+From 0508decced8c14cace128aaac89bd95388096707 Mon Sep 17 00:00:00 2001
+From: John Vincent <john.vincent.xa.bp.renesas.com>
+Date: Mon, 14 Aug 2023 16:08:23 +0100
+Subject: [PATCH 6/6] smarc rzg2l enable rtc command and store rtc time
+
+For ARM system ready it requires  RTC command support
+
+Store rtc value for usage in next u-boot recycle
+
+Signed-off-by: John Vincent <john.vincent.xa.bp.renesas.com>
+---
+ configs/smarc-rzg2l_defconfig | 1 +
+ drivers/rtc/emul_rtc.c        | 6 ++++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/configs/smarc-rzg2l_defconfig b/configs/smarc-rzg2l_defconfig
+index a103184af6..faa63ef93c 100644
+--- a/configs/smarc-rzg2l_defconfig
++++ b/configs/smarc-rzg2l_defconfig
+@@ -128,3 +128,4 @@ CONFIG_EFI_PARTITION=y
+ CONFIG_PARTITION_UUIDS=y
+ CONFIG_DISTRO_DEFAULTS=y
+ CONFIG_NET_RANDOM_ETHADDR=y
++CONFIG_CMD_RTC=y
+diff --git a/drivers/rtc/emul_rtc.c b/drivers/rtc/emul_rtc.c
+index 8f0e1ab5ac..c39122b989 100644
+--- a/drivers/rtc/emul_rtc.c
++++ b/drivers/rtc/emul_rtc.c
+@@ -55,6 +55,9 @@ static int emul_rtc_set(struct udevice *dev, const struct rtc_time *time)
+ 	else
+ 		priv->isdst = 0;
+ 
++	env_set_ulong("rtc_emul_epoch", rtc_mktime(time));
++	env_save();
++
+ 	return 0;
+ }
+ 
+@@ -75,6 +78,9 @@ int emul_rtc_probe(struct udevice *dev)
+ 	priv->offset_us = epoch * 1000000ULL - timer_get_us();
+ 	priv->isdst = -1;
+ 
++	env_set_ulong("rtc_emul_epoch", epoch);
++	env_save();
++
+ 	return 0;
+ }
+ 
+-- 
+2.25.1
+

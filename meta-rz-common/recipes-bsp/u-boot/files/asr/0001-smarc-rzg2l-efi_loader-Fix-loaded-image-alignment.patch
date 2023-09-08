@@ -1,0 +1,123 @@
+From bf198aa4c7a518b74f9932a6ae48e9f468131373 Mon Sep 17 00:00:00 2001
+From: John Vincent <john.vincent.xa.bp.renesas.com>
+Date: Tue, 20 Jun 2023 10:08:21 +0100
+Subject: [PATCH 1/6] smarc rzg2l efi_loader-Fix-loaded-image-alignment
+
+ARM system ready fixes for the efi loader
+
+Signed-off-by: John Vincent <john.vincent.xa.bp.renesas.com>
+---
+ include/efi_loader.h              |  2 ++
+ lib/efi_loader/efi_image_loader.c | 12 +++----
+ lib/efi_loader/efi_memory.c       | 52 +++++++++++++++++++++++++++++++
+ 3 files changed, 60 insertions(+), 6 deletions(-)
+
+diff --git a/include/efi_loader.h b/include/efi_loader.h
+index c440962fe5..5cdc72345e 100644
+--- a/include/efi_loader.h
++++ b/include/efi_loader.h
+@@ -675,6 +675,8 @@ struct efi_device_path *efi_get_dp_from_boot(const efi_guid_t guid);
+ #define efi_size_in_pages(size) (((size) + EFI_PAGE_MASK) >> EFI_PAGE_SHIFT)
+ /* Generic EFI memory allocator, call this to get memory */
+ void *efi_alloc(uint64_t len, int memory_type);
++/* Allocate pages on the specified alignment */
++void *efi_alloc_aligned_pages(u64 len, int memory_type, size_t align);
+ /* More specific EFI memory allocator, called by EFI payloads */
+ efi_status_t efi_allocate_pages(enum efi_allocate_type type,
+ 				enum efi_memory_type memory_type,
+diff --git a/lib/efi_loader/efi_image_loader.c b/lib/efi_loader/efi_image_loader.c
+index e9572d4d5d..eb95580538 100644
+--- a/lib/efi_loader/efi_image_loader.c
++++ b/lib/efi_loader/efi_image_loader.c
+@@ -898,9 +898,9 @@ efi_status_t efi_load_pe(struct efi_loaded_image_obj *handle,
+ 		image_base = opt->ImageBase;
+ 		efi_set_code_and_data_type(loaded_image_info, opt->Subsystem);
+ 		handle->image_type = opt->Subsystem;
+-		virt_size = ALIGN(virt_size, opt->SectionAlignment);
+-		efi_reloc = efi_alloc(virt_size,
+-				      loaded_image_info->image_code_type);
++		efi_reloc = efi_alloc_aligned_pages(virt_size,
++						    loaded_image_info->image_code_type,
++						    opt->SectionAlignment);
+ 		if (!efi_reloc) {
+ 			log_err("Out of memory\n");
+ 			ret = EFI_OUT_OF_RESOURCES;
+@@ -914,9 +914,9 @@ efi_status_t efi_load_pe(struct efi_loaded_image_obj *handle,
+ 		image_base = opt->ImageBase;
+ 		efi_set_code_and_data_type(loaded_image_info, opt->Subsystem);
+ 		handle->image_type = opt->Subsystem;
+-		virt_size = ALIGN(virt_size, opt->SectionAlignment);
+-		efi_reloc = efi_alloc(virt_size,
+-				      loaded_image_info->image_code_type);
++		efi_reloc = efi_alloc_aligned_pages(virt_size,
++						    loaded_image_info->image_code_type,
++						    opt->SectionAlignment);
+ 		if (!efi_reloc) {
+ 			log_err("Out of memory\n");
+ 			ret = EFI_OUT_OF_RESOURCES;
+diff --git a/lib/efi_loader/efi_memory.c b/lib/efi_loader/efi_memory.c
+index f4acbee4f9..7f0b507281 100644
+--- a/lib/efi_loader/efi_memory.c
++++ b/lib/efi_loader/efi_memory.c
+@@ -549,6 +549,58 @@ efi_status_t efi_free_pages(uint64_t memory, efi_uintn_t pages)
+ 	return ret;
+ }
+ 
++/**
++ * efi_alloc_aligned_pages - allocate
++ *
++ * @len:		len in bytes
++ * @memory_type:	usage type of the allocated memory
++ * @align:		alignment in bytes
++ * Return:		aligned memory or NULL
++ */
++void *efi_alloc_aligned_pages(u64 len, int memory_type, size_t align)
++{
++	u64 req_pages = efi_size_in_pages(len);
++	u64 true_pages = req_pages + efi_size_in_pages(align) - 1;
++	u64 free_pages;
++	u64 aligned_mem;
++	efi_status_t r;
++	u64 mem;
++
++	/* align must be zero or a power of two */
++	if (align & (align - 1))
++		return NULL;
++
++	/* Check for overflow */
++	if (true_pages < req_pages)
++		return NULL;
++
++	if (align < EFI_PAGE_SIZE) {
++		r = efi_allocate_pages(EFI_ALLOCATE_ANY_PAGES, memory_type,
++				       req_pages, &mem);
++		return (r == EFI_SUCCESS) ? (void *)(uintptr_t)mem : NULL;
++	}
++
++	r = efi_allocate_pages(EFI_ALLOCATE_ANY_PAGES, memory_type,
++			       true_pages, &mem);
++	if (r != EFI_SUCCESS)
++		return NULL;
++
++	aligned_mem = ALIGN(mem, align);
++	/* Free pages before alignment */
++	free_pages = efi_size_in_pages(aligned_mem - mem);
++	if (free_pages)
++		efi_free_pages(mem, free_pages);
++
++	/* Free trailing pages */
++	free_pages = true_pages - (req_pages + free_pages);
++	if (free_pages) {
++		mem = aligned_mem + req_pages * EFI_PAGE_SIZE;
++		efi_free_pages(mem, free_pages);
++	}
++
++	return (void *)(uintptr_t)aligned_mem;
++}
++
+ /**
+  * efi_allocate_pool - allocate memory from pool
+  *
+-- 
+2.25.1
+
