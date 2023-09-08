@@ -1,0 +1,28 @@
+From bb65f89496ec96fadad96292eabf77b83d9c0c1c Mon Sep 17 00:00:00 2001
+From: John Vincent <john.vincent.xa.bp.renesas.com>
+Date: Wed, 23 Aug 2023 11:54:06 +0100
+Subject: [PATCH] fip base address align with 64k erase sector size
+
+The fip base address needs to align with erase sector 64k size
+
+Signed-off-by: John Vincent <john.vincent.xa.bp.renesas.com>
+---
+ plat/renesas/rz/common/include/rzg2l_def.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plat/renesas/rz/common/include/rzg2l_def.h b/plat/renesas/rz/common/include/rzg2l_def.h
+index 248302889..7e3b66bcb 100755
+--- a/plat/renesas/rz/common/include/rzg2l_def.h
++++ b/plat/renesas/rz/common/include/rzg2l_def.h
+@@ -46,7 +46,7 @@
+ #define RZG2L_DDR1_SIZE             (RZG2L_DDR2_BASE - RZG2L_DDR1_BASE)
+ #define RZG2L_DDR2_SIZE             (RZG2L_DDR3_BASE - RZG2L_DDR2_BASE)
+ 
+-#define RZG2L_SPIROM_FIP_BASE       (RZG2L_SPIROM_BASE + 0x0001D200)
++#define RZG2L_SPIROM_FIP_BASE       (RZG2L_SPIROM_BASE + 0x00020000)
+ #define RZG2L_SPIROM_FIP_SIZE       (0x30000000 - RZG2L_SPIROM_FIP_BASE)
+ 
+ #define RZG2L_EMMC_FIP_BASE         (0x00020000)
+-- 
+2.25.1
+

@@ -20,6 +20,10 @@ SRC_URI = " \
 	git://github.com/ARMmbed/mbedtls.git;branch=${BRANCH_mbedtls};name=mbedtls;destsuffix=mbedtls \
 "
 
+SRC_URI_append = " \
+    file://asr/0001-fip-base-address-align-with-64k-erase-sector-size.patch       \
+"
+
 SRCREV = "203c78323b50059ea38eceb09f6bfda5d5934b55"
 SRCREV_mbedtls = "dd79db10014d85b26d11fe57218431f2e5ede6f2"
 
