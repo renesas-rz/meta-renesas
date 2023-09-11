@@ -6,6 +6,10 @@ DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngrbuf"
 PR = "r0"
 
+SRC_URI_append = " \
+	file://0001-mmngrbuf-Add-support-dmabuf_vmap-api.patch \
+"
+
 S = "${WORKDIR}/git"
 MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 
