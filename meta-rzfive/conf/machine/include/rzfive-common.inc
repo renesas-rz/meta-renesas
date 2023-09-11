@@ -1,4 +1,5 @@
 require conf/machine/include/${SOC_FAMILY}.inc
+require include/ecc-control.inc
 
 MACHINEOVERRIDES =. "rzfive:"
 
