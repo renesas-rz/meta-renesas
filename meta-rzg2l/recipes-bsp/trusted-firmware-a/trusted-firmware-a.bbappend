@@ -65,6 +65,12 @@ SRC_URI += " \
 	file://0001-plat-renesas-rz-Disable-unused-CRYPTO_SUPPORT.patch \
 "
 
+ECC_FLAGS = " DDR_ECC_ENABLE=1 "
+ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", "DDR_ECC_DETECT=1", "",d)}"
+ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT_CORRECT", "DDR_ECC_DETECT_CORRECT=1", "",d)}"
+EXTRA_FLAGS_append = "${@oe.utils.conditional("USE_ECC", "1", " ${ECC_FLAGS} ", "",d)}"
+PMIC_EXTRA_FLAGS_append = "${@oe.utils.conditional("USE_ECC", "1", " ${ECC_FLAGS} ", "",d)}"
+
 do_compile() {
 	oe_runmake PLAT=${PLATFORM} ${EXTRA_FLAGS} bl2 bl31
 
