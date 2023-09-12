@@ -1,6 +1,12 @@
 require include/rzg2l-security-config.inc
 inherit python3native
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+SRC_URI_append = " \
+	${@oe.utils.conditional("USE_ECC", "1", "file://0001-arm-dts-reserved-ECC-memory-region-for-all-RZ-G2L-Se.patch", "", d)} \
+"
+
 DEPENDS_append = " \
 	${@oe.utils.conditional("TRUSTED_BOARD_BOOT", "1", "python3-pycryptodome-native python3-pycryptodomex-native secprv-native", "",d)} \
 "

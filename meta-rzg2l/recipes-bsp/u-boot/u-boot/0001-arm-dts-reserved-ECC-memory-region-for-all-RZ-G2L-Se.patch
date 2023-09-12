@@ -1,0 +1,116 @@
+From 39de39dbc64af4cd9aa5d103c2f1b3a826bfc253 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Tue, 12 Sep 2023 16:02:51 +0700
+Subject: [PATCH] arm: dts: reserved ECC memory region for all RZ/G2L Series
+ and RZ/V2L
+
+Reserved ECC memory region for all RZ/G2L Series and RZ/V2L (Smarc and
+Dev EVK platform).
+ECC memory will allocate around 1/8 of total memory.
+
+Signed-off-by: NAQIN LI <naqin.li.nx@renesas.com>
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ arch/arm/dts/rzg2l-dev.dts        | 2 +-
+ arch/arm/dts/rzg2lc-dev.dts       | 2 +-
+ arch/arm/dts/rzg2ul-type1-dev.dts | 2 +-
+ arch/arm/dts/rzg2ul-type2-dev.dts | 2 +-
+ arch/arm/dts/smarc-rzg2l.dts      | 2 +-
+ arch/arm/dts/smarc-rzg2lc.dts     | 2 +-
+ arch/arm/dts/smarc-rzg2ul.dts     | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm/dts/rzg2l-dev.dts b/arch/arm/dts/rzg2l-dev.dts
+index b9bb206303..afbc250ecd 100644
+--- a/arch/arm/dts/rzg2l-dev.dts
++++ b/arch/arm/dts/rzg2l-dev.dts
+@@ -27,7 +27,7 @@
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x78000000>;
++		reg = <0 0x48000000 0 0x68000000>;
+ 	};
+ 
+ };
+diff --git a/arch/arm/dts/rzg2lc-dev.dts b/arch/arm/dts/rzg2lc-dev.dts
+index ba11442804..bd983dbbc7 100644
+--- a/arch/arm/dts/rzg2lc-dev.dts
++++ b/arch/arm/dts/rzg2lc-dev.dts
+@@ -27,7 +27,7 @@
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ 
+ };
+diff --git a/arch/arm/dts/rzg2ul-type1-dev.dts b/arch/arm/dts/rzg2ul-type1-dev.dts
+index 3095e428ce..1fe5e27439 100644
+--- a/arch/arm/dts/rzg2ul-type1-dev.dts
++++ b/arch/arm/dts/rzg2ul-type1-dev.dts
+@@ -27,7 +27,7 @@
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ };
+ 
+diff --git a/arch/arm/dts/rzg2ul-type2-dev.dts b/arch/arm/dts/rzg2ul-type2-dev.dts
+index 5bf0131ced..5bc81a0577 100644
+--- a/arch/arm/dts/rzg2ul-type2-dev.dts
++++ b/arch/arm/dts/rzg2ul-type2-dev.dts
+@@ -27,7 +27,7 @@
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ };
+ 
+diff --git a/arch/arm/dts/smarc-rzg2l.dts b/arch/arm/dts/smarc-rzg2l.dts
+index 61ff3688b0..97508d06e2 100644
+--- a/arch/arm/dts/smarc-rzg2l.dts
++++ b/arch/arm/dts/smarc-rzg2l.dts
+@@ -28,7 +28,7 @@
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x78000000>;
++		reg = <0 0x48000000 0 0x68000000>;
+ 	};
+ 
+ };
+diff --git a/arch/arm/dts/smarc-rzg2lc.dts b/arch/arm/dts/smarc-rzg2lc.dts
+index 6cbf67da03..6a7d1006ca 100644
+--- a/arch/arm/dts/smarc-rzg2lc.dts
++++ b/arch/arm/dts/smarc-rzg2lc.dts
+@@ -28,7 +28,7 @@
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ 
+ };
+diff --git a/arch/arm/dts/smarc-rzg2ul.dts b/arch/arm/dts/smarc-rzg2ul.dts
+index fcb999977d..a6f622e14f 100644
+--- a/arch/arm/dts/smarc-rzg2ul.dts
++++ b/arch/arm/dts/smarc-rzg2ul.dts
+@@ -28,7 +28,7 @@
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ 
+ };
+-- 
+2.25.1
+
