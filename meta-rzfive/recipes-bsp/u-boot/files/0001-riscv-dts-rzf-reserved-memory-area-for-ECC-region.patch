@@ -1,0 +1,42 @@
+From caebe6bd71662709aa334fbc0022598aeeaecd6d Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 11 Sep 2023 21:52:21 +0700
+Subject: riscv: dts: rzf: reserved memory area for ECC region
+
+Reserved memory area for ECC region for RZ/Five Development EVK and
+Smarc Boards.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ arch/riscv/dts/rzf-dev_ddr4.dts | 2 +-
+ arch/riscv/dts/smarc-rzf.dts    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/dts/rzf-dev_ddr4.dts b/arch/riscv/dts/rzf-dev_ddr4.dts
+index 8a861cf836..8865789b6e 100644
+--- a/arch/riscv/dts/rzf-dev_ddr4.dts
++++ b/arch/riscv/dts/rzf-dev_ddr4.dts
+@@ -26,6 +26,6 @@
+ 		u-boot,dm-spl;
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ };
+diff --git a/arch/riscv/dts/smarc-rzf.dts b/arch/riscv/dts/smarc-rzf.dts
+index e64df11e9c..cf79b86408 100644
+--- a/arch/riscv/dts/smarc-rzf.dts
++++ b/arch/riscv/dts/smarc-rzf.dts
+@@ -28,7 +28,7 @@
+ 		u-boot,dm-spl;
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ };
+ 
+-- 
+2.25.1
+

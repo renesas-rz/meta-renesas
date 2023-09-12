@@ -1,0 +1,39 @@
+From cecb8411c27be79177850be7f5ca3b281b63ff4e Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 11 Sep 2023 23:26:06 +0700
+Subject: [PATCH] configs: rzf_defconfig: enable ECC configs support for
+ RZ/Five
+
+Enable ECC configs support for RZ/Five SMARC and Development EVK
+DDR4 Boards.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ configs/rzf-dev_ddr4_defconfig | 3 ++-
+ configs/smarc-rzf_defconfig    | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/configs/rzf-dev_ddr4_defconfig b/configs/rzf-dev_ddr4_defconfig
+index 405a4633ae..2145f9c777 100644
+--- a/configs/rzf-dev_ddr4_defconfig
++++ b/configs/rzf-dev_ddr4_defconfig
+@@ -143,4 +143,5 @@ CONFIG_RZF_DDR_SIZE=0x40000000
+ CONFIG_DEBUG_OPENSBI=y
+ CONFIG_SBI_V02=y
+ CONFIG_CMD_EXCEPTION=y
+-
++CONFIG_CMD_RZG2L_ECC=y
++CONFIG_RZF_DDR_ECC=y
+diff --git a/configs/smarc-rzf_defconfig b/configs/smarc-rzf_defconfig
+index 0e244174a5..102fd9ce29 100644
+--- a/configs/smarc-rzf_defconfig
++++ b/configs/smarc-rzf_defconfig
+@@ -154,3 +154,5 @@ CONFIG_CMD_SF=y
+ CONFIG_CMD_SPI=y
+ CONFIG_SPI_FLASH_STMICRO=y
+ CONFIG_DM_SPI_FLASH=y
++CONFIG_CMD_RZG2L_ECC=y
++CONFIG_RZF_DDR_ECC=y
+-- 
+2.25.1
+

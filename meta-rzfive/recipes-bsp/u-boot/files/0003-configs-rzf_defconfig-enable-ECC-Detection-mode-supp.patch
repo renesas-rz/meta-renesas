@@ -1,0 +1,36 @@
+From c087818cd1409d2345cf59911c78e16dd07e2c4d Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 11 Sep 2023 23:33:55 +0700
+Subject: [PATCH] configs: rzf_defconfig: enable ECC Detection mode support for
+ RZ/Five
+
+Enable ECC Detection mode support for RZ/Five SMARC and Development EVK
+DDR4 Boards.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ configs/rzf-dev_ddr4_defconfig | 1 +
+ configs/smarc-rzf_defconfig    | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/configs/rzf-dev_ddr4_defconfig b/configs/rzf-dev_ddr4_defconfig
+index 2145f9c777..d9012d7be0 100644
+--- a/configs/rzf-dev_ddr4_defconfig
++++ b/configs/rzf-dev_ddr4_defconfig
+@@ -145,3 +145,4 @@ CONFIG_SBI_V02=y
+ CONFIG_CMD_EXCEPTION=y
+ CONFIG_CMD_RZG2L_ECC=y
+ CONFIG_RZF_DDR_ECC=y
++CONFIG_RZF_DDR_ECC_DETECT=y
+diff --git a/configs/smarc-rzf_defconfig b/configs/smarc-rzf_defconfig
+index 102fd9ce29..3ba309c5a7 100644
+--- a/configs/smarc-rzf_defconfig
++++ b/configs/smarc-rzf_defconfig
+@@ -156,3 +156,4 @@ CONFIG_SPI_FLASH_STMICRO=y
+ CONFIG_DM_SPI_FLASH=y
+ CONFIG_CMD_RZG2L_ECC=y
+ CONFIG_RZF_DDR_ECC=y
++CONFIG_RZF_DDR_ECC_DETECT=y
+-- 
+2.25.1
+

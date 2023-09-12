@@ -3,6 +3,10 @@ DEPENDS:append = " bc dtc-native opensbi"
 
 SRC_URI_append = " \
 	file://BootLoaderHeader.bin \
+	${@oe.utils.conditional("USE_ECC", "1", "file://0001-riscv-dts-rzf-reserved-memory-area-for-ECC-region.patch", "", d)} \
+	${@oe.utils.conditional("USE_ECC", "1", "file://0002-configs-rzf_defconfig-enable-ECC-configs-support-for.patch", "", d)} \
+	${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", "file://0003-configs-rzf_defconfig-enable-ECC-Detection-mode-supp.patch", "", d)} \
+	${@oe.utils.conditional("ECC_MODE", "ERR_DETECT_CORRECT", "file://0004-configs-rzf_defconfig-enable-ECC-Detection-and-Corre.patch", "", d)} \
 "
 
 do_compile:prepend() {
