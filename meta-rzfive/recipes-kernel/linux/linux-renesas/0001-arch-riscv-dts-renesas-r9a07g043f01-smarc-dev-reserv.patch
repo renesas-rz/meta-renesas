@@ -1,0 +1,45 @@
+From e577c496d1e9f69434114b6da7df246325914d22 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 12 Sep 2023 06:48:37 +0700
+Subject: [PATCH] arch: riscv: dts: renesas: r9a07g043f01-[smarc,dev]: reserved
+ memory for ECC region
+
+Reserved 1/8 of total memory for ECC region
+from 0x0_7800_0000 to 0x0_8000_0000.
+
+Signed-off-by: NAQIN LI <naqin.li.nx@renesas.com>
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ arch/riscv/boot/dts/renesas/r9a07g043f01-dev.dts   | 2 +-
+ arch/riscv/boot/dts/renesas/r9a07g043f01-smarc.dts | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/renesas/r9a07g043f01-dev.dts b/arch/riscv/boot/dts/renesas/r9a07g043f01-dev.dts
+index 6e3f0b01e703..cd1bf1dd3952 100755
+--- a/arch/riscv/boot/dts/renesas/r9a07g043f01-dev.dts
++++ b/arch/riscv/boot/dts/renesas/r9a07g043f01-dev.dts
+@@ -18,7 +18,7 @@ / {
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
++		reg = <0 0x48000000 0 0x30000000>;
+ 	};
+ 
+ 	reserved-memory {
+diff --git a/arch/riscv/boot/dts/renesas/r9a07g043f01-smarc.dts b/arch/riscv/boot/dts/renesas/r9a07g043f01-smarc.dts
+index 460744ecac59..dd93c73a6baa 100755
+--- a/arch/riscv/boot/dts/renesas/r9a07g043f01-smarc.dts
++++ b/arch/riscv/boot/dts/renesas/r9a07g043f01-smarc.dts
+@@ -30,7 +30,7 @@ / {
+ 	memory@48000000 {
+ 		device_type = "memory";
+ 		/* first 128MB is reserved for secure area. */
+-		reg = <0x0 0x48000000 0x0 0x38000000>;
++		reg = <0x0 0x48000000 0x0 0x30000000>;
+ 	};
+ 
+ 	reserved-memory {
+-- 
+2.25.1
+
