@@ -166,4 +166,7 @@ export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
 export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
 export HOST_EXTRACFLAGS="-I${OECORE_NATIVE_SYSROOT}/usr/include/ -L${OECORE_NATIVE_SYSROOT}/usr/lib"
 
-WKS_FILE ?= "rz-image-bootpart-mmc1.wks"
+# WKS setup
+WKS_DEFAULT_FILE ?= "rz-image-bootpart-mmc1.wks"
+WKS_DEFAULT_FILE_ek874 ?= "rz-image-bootpart-mmc0.wks"
+WKS_FILE = "${@oe.utils.conditional("WKS_SUPPORT", "1", "${WKS_DEFAULT_FILE}", "", d)}"
