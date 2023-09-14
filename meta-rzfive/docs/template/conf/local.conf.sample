@@ -296,8 +296,9 @@ INCOMPATIBLE_LICENSE = "GPLv3 GPLv3+"
 # Remove dnf package which causes high CPU workload
 PACKAGE_INSTALL_remove = " dnf "
 
-# Specify WKS file for the wic image
-WKS_FILE = "rz-image-bootpart-mmc1.wks"
+# Support WIC images with default wks from WKS_DEFAULT_FILE
+# Reupdate WKS_DEFAULT_FILE if want to support another wks file.
+WKS_SUPPORT ?= "1"
 # Defines additional free disk space created in the image in Kbytes.
 IMAGE_ROOTFS_EXTRA_SPACE = "1048576"
 
