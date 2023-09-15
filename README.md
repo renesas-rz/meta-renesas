@@ -1,6 +1,6 @@
 # meta-renesas
 
-This is a Yocto build layer(version:dunfell) that provides support for the RZ/G1 Group of 64bit Arm-based MPUs, RZ/G2 Group of 64bit Arm-based MPUs and RZ/Five 64bit RISC-V based MPU from Renesas Electronics.
+This is a Yocto build layer(version:dunfell) that provides support for the RZ/G1 Group of 32bit Arm-based MPUs, RZ/G2 Group of 64bit Arm-based MPUs and RZ/Five 64bit RISC-V based MPU from Renesas Electronics.
 Currently the following boards and MPUs are supported:
 
 - Board: EK874 / MPU: R8A774C0 (RZ/G2E)
@@ -81,16 +81,6 @@ Please choose correct packages that matches with your MPU.
 Graphic drivers are required for Wayland. Multimedia drivers are optional.
 After downloading the proprietary package, please decompress them then put meta-rz-features folder at $WORK.
 
-For RZ/G1 graphic drivers, after downloading the proprietary packages, please put the files on $WORK/proprietary then run copy scripts as below:
-
-```bash
-    export PKGS_DIR=$WORK/proprietary
-    cd $WORK/meta-renesas/mera-rzg1
-    ./copy_mm_software_lcb.sh $PKGS_DIR
-    ./copy_gfx_software_<MPU>.sh $PKGS_DIR
-    unset PKGS_DIR
-```
-
 Below is the combination of Codec/Graphics library with BSP released versions:
 
 **1. RZ/G2{H,M,N,E}:**
@@ -99,6 +89,7 @@ Below is the combination of Codec/Graphics library with BSP released versions:
 |:---------:|:-----------:|:--------------:|
 |3.0.0 - 3.0.2|1.0|1.0|
 |3.0.3|1.0.1|1.0.1|
+|3.0.5|1.0.1|1.0.2|
 
 **2. RZ/G2{L,LC,UL} and RZ/V2L:**
 
@@ -109,12 +100,7 @@ Below is the combination of Codec/Graphics library with BSP released versions:
 |3.0.2|1.0.1|1.4|
 |3.0.3|1.1.0|1.0.5(\*1)|
 |3.0.4|1.1.0|1.1.0(\*1)|
-
-**3. RZ/G1{C,E,H,M,N}:**
-
-|BSP Version|Codec Version|Graphics Version|
-|:---------:|:-----------:|:--------------:|
-|3.0.4|1.0|1.0|
+|3.0.5|1.1.0|1.1.0|
 
 (\*1) Please note that the naming rule of version is changed from the release.
 v1.0.5 is newer version of v1.4.
@@ -161,7 +147,7 @@ Currently, there are 2 types of build procedure supported in below description:
    ```bash
    $ TEMPLATECONF=$PWD/meta-renesas/meta-<platform>/docs/template/conf/ source poky/oe-init-build-env build
    ```
-- To build optional features (Docker, Codec or Graphics, QT5, Bootloaders), add necessary layers:
+- To build optional features (Docker, Codec or Graphics, QT5, Bootloaders, Security), add necessary layers:
    ```bash
    # For Docker
    $ bitbake-layers add-layer ../meta-openembedded/meta-filesystems
@@ -179,6 +165,9 @@ Currently, there are 2 types of build procedure supported in below description:
 
    # For Bootloaders (only for RZ/V2M and RZ/V2MA)
    $ bitbake-layers add-layer ../meta-rz-features/meta-rz-bootloaders
+
+   # For Security (supported for RZ/G2[H,M,N,E], RZ/G2[L,LC,UL] and RZ/V2L)
+   $ bitbake-layers add-layer ../meta-rz-features/meta-rz-security
    ```
 - Build the target file system image using bitbake:
    ```bash
@@ -188,6 +177,11 @@ Currently, there are 2 types of build procedure supported in below description:
 
 |Renesas MPU| platform |        board           |
 |:---------:|:--------:|:----------------------:|
+|RZ/G1M     |rzg1      |iwg20m-g1m              |
+|RZ/G1N     |rzg1      |iwg20m-g1n              |
+|RZ/G1H     |rzg1      |iwg21m            	|
+|RZ/G1E     |rzg1      |iwg22m                  |
+|RZ/G1C     |rzg1      |iwg23s                  |
 |RZ/G2H     |rzg2h     |hihope-rzg2h            |
 |RZ/G2M     |rzg2h     |hihope-rzg2m            |
 |RZ/G2N     |rzg2h     |hihope-rzg2n            |
@@ -200,7 +194,7 @@ Currently, there are 2 types of build procedure supported in below description:
 |RZ/V2MA    |rzv2m     |rzv2ma                  |
 |RZ/Five    |rzfive    |smarc-rzfive, rzfive-dev|
 
-**2. Build procedure for legacy users (common procedure) (unsupported for RZ/V2M and RZ/V2MA):**
+**2. Build procedure for legacy users (common procedure) (unsupported for RZ/G1 Series, RZ/V2M and RZ/V2MA):**
 - Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
     ```bash
     $ source poky/oe-init-build-env
@@ -210,11 +204,6 @@ Currently, there are 2 types of build procedure supported in below description:
     $ cp $WORK/meta-renesas/docs/template/conf/<board>/*.conf ./conf/
     ```
 \<board\>: can be selected in any platforms:
-* RZ/G1C:  iwg23s
-* RZ/G1E:  iwg22m
-* RZ/G1H:  iwg21m
-* RZ/G1M:  iwg20m-g1m
-* RZ/G1N:  iwg20m-g1n
 * RZ/G2H:  hihope-rzg2h
 * RZ/G2M:  hihope-rzg2m
 * RZ/G2N:  hihope-rzg2n
@@ -245,6 +234,8 @@ Images generated:
 * DTB for target machine
 * core-image-\<target\>-\<machine name\>.tar.bz2 (rootfs tar+bzip2)
 * core-image-\<target\>-\<machine name\>.ext4  (rootfs ext4 format)
+* core-image-\<target\>-\<machine name\>.wic.gz  (rootfs wic gz format)
+* core-image-\<target\>-\<machine name\>.wic.bmap  (rootfs wic block map format)
 
 ## Build Instructions for SDK
 
@@ -305,3 +296,21 @@ It is possible to change some build configs as below:
   ```
   IS_RT_BSP = "1"
   ```
+* Create SBoM SPDX: generate JSON SPDX for images. Default is enabled by below setting in local.conf. Comment out this setting will disable creating SBoM SPDX.
+  ```
+  INHERIT += "create-spdx"
+  ```
+  Below variables are optional settings to create spdx. Comment out to disable and uncomment out to enable the features:
+    * SPDX_PRETTY (default is enabled): Make generated files more human readable (newlines, indentation)
+    ```
+    SPDX_PRETTY = "1"
+    ```
+    * SPDX_ARCHIVE_PACKAGED (default is disabled): Add compressed archives of the files in the generated target packages.
+    ```
+    #SPDX_ARCHIVE_PACKAGED = "1"
+    ```
+* WIC image (unsupported for RZ/G1 MPUs): deploy disk images format. It is enabled by default in local.conf. To disable it, please comment out or set 0 to below setting:
+  ```
+  WKS_SUPPORT ?= "1"
+  ```
+  If you do not want to use default wic image file, please update "WKS_DEFAULT_FILE" or "WKS_FILE" to your desirable file.
