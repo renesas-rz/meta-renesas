@@ -8,27 +8,20 @@ LIC_FILES_CHKSUM = " \
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 inherit deploy python3native
 
-PV = "3.15.0+git${SRCPV}"
-BRANCH = "master"
-#TAG: 3.15.0
-SRCREV = "6be0dbcaa11394a2ad5a46ac77e2f76e31a41722"
+PV = "3.19.0+git${SRCPV}"
+BRANCH = "3.19.0/rz"
+SRCREV = "7c48d905fd57009c2974f247289c84f6d05c384e"
 
 SRC_URI = " \
-    git://github.com/OP-TEE/optee_os.git;branch=${BRANCH} \
-    file://0001-mk-gcc-allow-setting-sysroot-lookup.patch \
-    file://0002-arch-plat-rzg-add-HW-Unique-Key-support-for-TEE-OTP.patch \
-    file://0003-core-arm-plat-rzg-Add-ECC-mode-checking-for-shared-m.patch \
-    file://0004-core-arch-plat-rzg-add-Suspend-To-RAM-feature.patch \
-    file://0005-core-arm-plat-rzg-Add-Suspend-to-RAM-support-for-con.patch \
-    file://0006-plat-rzg-add-some-missing-reference-functions.patch \
+	git://github.com/renesas-rz/rzg_optee-os.git;branch=${BRANCH} \
 "
 
 COMPATIBLE_MACHINE = "(ek874|hihope-rzg2m|hihope-rzg2n|hihope-rzg2h)"
 PLATFORM = "rzg"
 PLATFORM_FLAVOR = "${@d.getVar("MACHINE", False).replace("-", "_")}"
 
-DEPENDS = "python3-pyelftools-native python3-pycryptodome-native python3-pycryptodomex-native"
 export CROSS_COMPILE64="${TARGET_PREFIX}"
+DEPENDS = "python3-pyelftools-native python3-cryptography-native"
 
 # Let the Makefile handle setting up the flags as it is a standalone application
 LD[unexport] = "1"
@@ -38,6 +31,8 @@ export LDcore="${LD}"
 libdir[unexport] = "1"
 
 S = "${WORKDIR}/git"
+
+CFLAGS_prepend = "--sysroot=${STAGING_DIR_HOST} "
 
 EXTRA_OEMAKE = " \
 	PLATFORM=${PLATFORM} PLATFORM_FLAVOR=${PLATFORM_FLAVOR} \
