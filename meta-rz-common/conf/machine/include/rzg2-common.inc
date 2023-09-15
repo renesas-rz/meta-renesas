@@ -9,7 +9,8 @@ USE_32BIT_MMP ?= "0"
 MACHINE_FEATURES = ""
 
 KERNEL_IMAGETYPE = "Image"
-IMAGE_FSTYPES_append = " tar.bz2 ext4 wic.gz wic.bmap"
+IMAGE_FSTYPES_append = " tar.bz2 ext4"
+IMAGE_FSTYPES_append = " ${@oe.utils.conditional("WKS_SUPPORT", "1", "wic.gz wic.bmap", "", d)} "
 
 SERIAL_CONSOLES = "115200;ttySC0"
 
