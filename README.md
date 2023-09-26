@@ -296,19 +296,30 @@ It is possible to change some build configs as below:
   ```
   IS_RT_BSP = "1"
   ```
-* Create SBoM SPDX: generate JSON SPDX for images. Default is enabled by below setting in local.conf. Comment out this setting will disable creating SBoM SPDX.
+* Create SBoM SPDX: generate JSON SPDX for images.
+  * **Disable creating SBoM SPDX (default):** creating SPDX is not supported.
+  ```
+  #INHERIT += "create-spdx"
+  ```
+  * **Enable creating SBoM SPDX:** creating SPDX is supported and built.
   ```
   INHERIT += "create-spdx"
   ```
-  Below variables are optional settings to create spdx. Comment out to disable and uncomment out to enable the features:
-    * SPDX_PRETTY (default is enabled): Make generated files more human readable (newlines, indentation)
-    ```
-    SPDX_PRETTY = "1"
-    ```
-    * SPDX_ARCHIVE_PACKAGED (default is disabled): Add compressed archives of the files in the generated target packages.
-    ```
-    #SPDX_ARCHIVE_PACKAGED = "1"
-    ```
+    * Below variables are optional settings to create spdx. Uncomment out them to enable the features (disabled by default):
+      * SPDX_PRETTY: Make generated files more human readable (newlines, indentation)
+      ```
+      SPDX_PRETTY = "1"
+      ```
+      * SPDX_ARCHIVE_PACKAGED: Add compressed archives of the files in the generated target packages.
+      ```
+      SPDX_ARCHIVE_PACKAGED = "1"
+      ```
+    * When enabling SBoM SPDX support, SDK will be failed to build. To fix it, please apply below changes in "poky/meta/classes/populate_sdk_base.bbclass":
+      ```
+      -do_populate_sdk[cleandirs] = "${SDKDEPLOYDIR}"
+      +do_populate_sdk[cleandirs] += "${SDKDEPLOYDIR}"
+
+      ```
 * WIC image (unsupported for RZ/G1 MPUs): deploy disk images format. It is enabled by default in local.conf. To disable it, please comment out or set 0 to below setting:
   ```
   WKS_SUPPORT ?= "1"
