@@ -1,0 +1,2183 @@
+From e0845fb2663cb7d401a12768a486f87d7e7b26d4 Mon Sep 17 00:00:00 2001
+From: JohnXVincent <john.vincent.xa@bp.renesas.com>
+Date: Tue, 3 Oct 2023 10:14:47 +0100
+Subject: [PATCH] smarc rzv2l arm system ready updates
+
+1. Device tree porting from linux kernel v6.4.3 to u-boot
+2. Clock module adoptation from linux kernel
+3. PFC module updates which is used from rzg2l
+4. distro commands updated for system ready
+5. The capsule file name corrected for rzg2l
+
+Signed-off-by: JohnXVincent <john.vincent.xa@bp.renesas.com>
+---
+ arch/arm/dts/r9a07g054.dtsi               | 1071 +++++++++++++++++++++
+ arch/arm/dts/r9a07g054l2.dtsi             |   13 +
+ arch/arm/dts/smarc-rzv2l.dts              |  146 +--
+ configs/smarc-rzv2l_defconfig             |   57 ++
+ drivers/clk/renesas/clk-rzv2l.c           |   22 +-
+ drivers/clk/renesas/r9a07g054l-cpg-mssr.c |  330 ++++---
+ include/configs/smarc-rzg2l.h             |    2 +-
+ include/configs/smarc-rzv2l.h             |   65 +-
+ include/dt-bindings/clock/r9a07g054-cpg.h |  229 +++++
+ 9 files changed, 1623 insertions(+), 312 deletions(-)
+ create mode 100755 arch/arm/dts/r9a07g054.dtsi
+ create mode 100755 arch/arm/dts/r9a07g054l2.dtsi
+ create mode 100644 include/dt-bindings/clock/r9a07g054-cpg.h
+
+diff --git a/arch/arm/dts/r9a07g054.dtsi b/arch/arm/dts/r9a07g054.dtsi
+new file mode 100755
+index 0000000000..fada736a2d
+--- /dev/null
++++ b/arch/arm/dts/r9a07g054.dtsi
+@@ -0,0 +1,1071 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/V2L SoC
++ *
++ * Copyright (C) 2021 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/clock/r9a07g054-cpg.h>
++
++/ {
++	compatible = "renesas,r9a07g054";
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	audio_clk1: audio1-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by boards that provide it */
++		clock-frequency = <0>;
++	};
++
++	audio_clk2: audio2-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by boards that provide it */
++		clock-frequency = <0>;
++	};
++
++	/* External CAN clock - to be overridden by boards that provide it */
++	can_clk: can-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <0>;
++	};
++
++	/* clock can be either from exclk or crystal oscillator (XIN/XOUT) */
++	extal_clk: extal-clk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		/* This value must be overridden by the board */
++		clock-frequency = <0>;
++	};
++
++	cluster0_opp: opp-table-0 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		opp-150000000 {
++			opp-hz = /bits/ 64 <150000000>;
++			opp-microvolt = <1100000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-300000000 {
++			opp-hz = /bits/ 64 <300000000>;
++			opp-microvolt = <1100000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <1100000>;
++			clock-latency-ns = <300000>;
++		};
++		opp-1200000000 {
++			opp-hz = /bits/ 64 <1200000000>;
++			opp-microvolt = <1100000>;
++			clock-latency-ns = <300000>;
++			opp-suspend;
++		};
++	};
++
++	cpus {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		cpu-map {
++			cluster0 {
++				core0 {
++					cpu = <&cpu0>;
++				};
++				core1 {
++					cpu = <&cpu1>;
++				};
++			};
++		};
++
++		cpu0: cpu@0 {
++			compatible = "arm,cortex-a55";
++			reg = <0>;
++			device_type = "cpu";
++			#cooling-cells = <2>;
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A07G054_CLK_I>;
++			operating-points-v2 = <&cluster0_opp>;
++		};
++
++		cpu1: cpu@100 {
++			compatible = "arm,cortex-a55";
++			reg = <0x100>;
++			device_type = "cpu";
++			next-level-cache = <&L3_CA55>;
++			enable-method = "psci";
++			clocks = <&cpg CPG_CORE R9A07G054_CLK_I>;
++			operating-points-v2 = <&cluster0_opp>;
++		};
++
++		L3_CA55: cache-controller-0 {
++			compatible = "cache";
++			cache-unified;
++			cache-size = <0x40000>;
++			cache-level = <3>;
++		};
++	};
++
++	gpu_opp_table: opp-table-1 {
++		compatible = "operating-points-v2";
++
++		opp-500000000 {
++			opp-hz = /bits/ 64 <500000000>;
++			opp-microvolt = <1100000>;
++		};
++
++		opp-400000000 {
++			opp-hz = /bits/ 64 <400000000>;
++			opp-microvolt = <1100000>;
++		};
++
++		opp-250000000 {
++			opp-hz = /bits/ 64 <250000000>;
++			opp-microvolt = <1100000>;
++		};
++
++		opp-200000000 {
++			opp-hz = /bits/ 64 <200000000>;
++			opp-microvolt = <1100000>;
++		};
++
++		opp-125000000 {
++			opp-hz = /bits/ 64 <125000000>;
++			opp-microvolt = <1100000>;
++		};
++
++		opp-100000000 {
++			opp-hz = /bits/ 64 <100000000>;
++			opp-microvolt = <1100000>;
++		};
++
++		opp-62500000 {
++			opp-hz = /bits/ 64 <62500000>;
++			opp-microvolt = <1100000>;
++		};
++
++		opp-50000000 {
++			opp-hz = /bits/ 64 <50000000>;
++			opp-microvolt = <1100000>;
++		};
++	};
++
++	pmu {
++		compatible = "arm,cortex-a55-pmu";
++		interrupts-extended = <&gic GIC_PPI 7 IRQ_TYPE_LEVEL_LOW>;
++	};
++
++	psci {
++		compatible = "arm,psci-1.0", "arm,psci-0.2";
++		method = "smc";
++	};
++
++	soc: soc {
++		compatible = "simple-bus";
++		interrupt-parent = <&gic>;
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		ssi0: ssi@10049c00 {
++			compatible = "renesas,r9a07g054-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x10049c00 0 0x400>;
++			interrupts = <GIC_SPI 326 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 327 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 328 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rx", "dma_tx";
++			clocks = <&cpg CPG_MOD R9A07G054_SSI0_PCLK2>,
++				 <&cpg CPG_MOD R9A07G054_SSI0_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G054_SSI0_RST_M2_REG>;
++			dmas = <&dmac 0x2655>, <&dmac 0x2656>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
++		ssi1: ssi@1004a000 {
++			compatible = "renesas,r9a07g054-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x1004a000 0 0x400>;
++			interrupts = <GIC_SPI 330 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 331 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 332 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rx", "dma_tx";
++			clocks = <&cpg CPG_MOD R9A07G054_SSI1_PCLK2>,
++				 <&cpg CPG_MOD R9A07G054_SSI1_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G054_SSI1_RST_M2_REG>;
++			dmas = <&dmac 0x2659>, <&dmac 0x265a>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
++		ssi2: ssi@1004a400 {
++			compatible = "renesas,r9a07g054-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x1004a400 0 0x400>;
++			interrupts = <GIC_SPI 334 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 337 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rt";
++			clocks = <&cpg CPG_MOD R9A07G054_SSI2_PCLK2>,
++				 <&cpg CPG_MOD R9A07G054_SSI2_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G054_SSI2_RST_M2_REG>;
++			dmas = <&dmac 0x265f>;
++			dma-names = "rt";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
++		ssi3: ssi@1004a800 {
++			compatible = "renesas,r9a07g054-ssi",
++				     "renesas,rz-ssi";
++			reg = <0 0x1004a800 0 0x400>;
++			interrupts = <GIC_SPI 338 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 339 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 340 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "int_req", "dma_rx", "dma_tx";
++			clocks = <&cpg CPG_MOD R9A07G054_SSI3_PCLK2>,
++				 <&cpg CPG_MOD R9A07G054_SSI3_PCLK_SFR>,
++				 <&audio_clk1>, <&audio_clk2>;
++			clock-names = "ssi", "ssi_sfr", "audio_clk1", "audio_clk2";
++			resets = <&cpg R9A07G054_SSI3_RST_M2_REG>;
++			dmas = <&dmac 0x2661>, <&dmac 0x2662>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			#sound-dai-cells = <0>;
++			status = "disabled";
++		};
++
++		spi0: spi@1004ac00 {
++			compatible = "renesas,r9a07g054-rspi", "renesas,rspi-rz";
++			reg = <0 0x1004ac00 0 0x400>;
++			interrupts = <GIC_SPI 415 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 413 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 414 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "error", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G054_RSPI0_CLKB>;
++			resets = <&cpg R9A07G054_RSPI0_RST>;
++			dmas = <&dmac 0x2e95>, <&dmac 0x2e96>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			num-cs = <1>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		spi1: spi@1004b000 {
++			compatible = "renesas,r9a07g054-rspi", "renesas,rspi-rz";
++			reg = <0 0x1004b000 0 0x400>;
++			interrupts = <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "error", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G054_RSPI1_CLKB>;
++			resets = <&cpg R9A07G054_RSPI1_RST>;
++			dmas = <&dmac 0x2e99>, <&dmac 0x2e9a>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			num-cs = <1>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		spi2: spi@1004b400 {
++			compatible = "renesas,r9a07g054-rspi", "renesas,rspi-rz";
++			reg = <0 0x1004b400 0 0x400>;
++			interrupts = <GIC_SPI 421 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 419 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 420 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "error", "rx", "tx";
++			clocks = <&cpg CPG_MOD R9A07G054_RSPI2_CLKB>;
++			resets = <&cpg R9A07G054_RSPI2_RST>;
++			dmas = <&dmac 0x2e9d>, <&dmac 0x2e9e>;
++			dma-names = "tx", "rx";
++			power-domains = <&cpg>;
++			num-cs = <1>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		scif0: serial@1004b800 {
++			compatible = "renesas,scif-r9a07g054",
++				     "renesas,scif-r9a07g044","renesas,scif";
++			reg = <0 0x1004b800 0 0x400>;
++			interrupts = <GIC_SPI 380 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 383 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 381 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 384 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 384 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A07G054_SCIF0_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_SCIF0_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif1: serial@1004bc00 {
++			compatible = "renesas,scif-r9a07g054",
++				     "renesas,scif-r9a07g044","renesas,scif";
++			reg = <0 0x1004bc00 0 0x400>;
++			interrupts = <GIC_SPI 385 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 387 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 388 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 386 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 389 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 389 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A07G054_SCIF1_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_SCIF1_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif2: serial@1004c000 {
++			compatible = "renesas,scif-r9a07g054",
++				     "renesas,scif-r9a07g044","renesas,scif";
++			reg = <0 0x1004c000 0 0x400>;
++			interrupts = <GIC_SPI 390 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 392 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 393 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 391 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 394 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 394 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A07G054_SCIF2_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_SCIF2_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif3: serial@1004c400 {
++			compatible = "renesas,scif-r9a07g054",
++				     "renesas,scif-r9a07g044","renesas,scif";
++			reg = <0 0x1004c400 0 0x400>;
++			interrupts = <GIC_SPI 395 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 397 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 398 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 396 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 399 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 399 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A07G054_SCIF3_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_SCIF3_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		scif4: serial@1004c800 {
++			compatible = "renesas,scif-r9a07g054",
++				     "renesas,scif-r9a07g044","renesas,scif";
++			reg = <0 0x1004c800 0 0x400>;
++			interrupts = <GIC_SPI 400 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 402 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 403 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 401 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 404 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 404 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi",
++					  "bri", "dri", "tei";
++			clocks = <&cpg CPG_MOD R9A07G054_SCIF4_CLK_PCK>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_SCIF4_RST_SYSTEM_N>;
++			status = "disabled";
++		};
++
++		sci0: serial@1004d000 {
++			compatible = "renesas,r9a07g054-sci", "renesas,sci", "renesas,rz-sci";
++			reg = <0 0x1004d000 0 0x400>;
++			interrupts = <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 406 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 407 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 408 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD R9A07G054_SCI0_CLKP>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_SCI0_RST>;
++			status = "disabled";
++		};
++
++		sci1: serial@1004d400 {
++			compatible = "renesas,r9a07g054-sci", "renesas,sci", "renesas,rz-sci";
++			reg = <0 0x1004d400 0 0x400>;
++			interrupts = <GIC_SPI 409 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 410 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 411 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 412 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "eri", "rxi", "txi", "tei";
++			clocks = <&cpg CPG_MOD R9A07G054_SCI1_CLKP>;
++			clock-names = "fck";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_SCI1_RST>;
++			status = "disabled";
++		};
++
++		canfd: can@10050000 {
++			compatible = "renesas,r9a07g054-canfd", "renesas,rzg2l-canfd";
++			reg = <0 0x10050000 0 0x8000>;
++			interrupts = <GIC_SPI 426 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 427 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 424 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 428 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 423 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 425 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 429 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "g_err", "g_recc",
++					  "ch0_err", "ch0_rec", "ch0_trx",
++					  "ch1_err", "ch1_rec", "ch1_trx";
++			clocks = <&cpg CPG_MOD R9A07G054_CANFD_PCLK>,
++				 <&cpg CPG_CORE R9A07G054_CLK_P0_DIV2>,
++				 <&can_clk>;
++			clock-names = "fck", "canfd", "can_clk";
++			assigned-clocks = <&cpg CPG_CORE R9A07G054_CLK_P0_DIV2>;
++			assigned-clock-rates = <50000000>;
++			resets = <&cpg R9A07G054_CANFD_RSTP_N>,
++				 <&cpg R9A07G054_CANFD_RSTC_N>;
++			reset-names = "rstp_n", "rstc_n";
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			channel0 {
++				status = "disabled";
++			};
++			channel1 {
++				status = "disabled";
++			};
++		};
++
++		i2c0: i2c@10058000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,riic-r9a07g054", "renesas,riic-rz","renesas,riic-r9a07g054l";
++			reg = <0 0x10058000 0 0x400>;
++			interrupts = <GIC_SPI 350 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 348 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 349 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 352 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 353 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 351 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 354 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 355 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "tei", "ri", "ti", "spi", "sti",
++					  "naki", "ali", "tmoi";
++			clocks = <&cpg CPG_MOD R9A07G054_I2C0_PCLK>;
++			clock-frequency = <100000>;
++			resets = <&cpg R9A07G054_I2C0_MRST>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		i2c1: i2c@10058400 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,riic-r9a07g054", "renesas,riic-rz","renesas,riic-r9a07g054l";
++			reg = <0 0x10058400 0 0x400>;
++			interrupts = <GIC_SPI 358 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 356 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 357 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 360 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 361 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 359 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 362 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 363 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "tei", "ri", "ti", "spi", "sti",
++					  "naki", "ali", "tmoi";
++			clocks = <&cpg CPG_MOD R9A07G054_I2C1_PCLK>;
++			clock-frequency = <100000>;
++			resets = <&cpg R9A07G054_I2C1_MRST>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		i2c2: i2c@10058800 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,riic-r9a07g054", "renesas,riic-rz","renesas,riic-r9a07g054l";
++			reg = <0 0x10058800 0 0x400>;
++			interrupts = <GIC_SPI 366 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 364 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 365 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 368 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 369 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 367 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 370 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 371 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "tei", "ri", "ti", "spi", "sti",
++					  "naki", "ali", "tmoi";
++			clocks = <&cpg CPG_MOD R9A07G054_I2C2_PCLK>;
++			clock-frequency = <100000>;
++			resets = <&cpg R9A07G054_I2C2_MRST>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		i2c3: i2c@10058c00 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			compatible = "renesas,riic-r9a07g054", "renesas,riic-rz","renesas,riic-r9a07g054l";
++			reg = <0 0x10058c00 0 0x400>;
++			interrupts = <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 372 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 373 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 377 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 378 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 379 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "tei", "ri", "ti", "spi", "sti",
++					  "naki", "ali", "tmoi";
++			clocks = <&cpg CPG_MOD R9A07G054_I2C3_PCLK>;
++			clock-frequency = <100000>;
++			resets = <&cpg R9A07G054_I2C3_MRST>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		adc: adc@10059000 {
++			compatible = "renesas,r9a07g054-adc", "renesas,rzg2l-adc";
++			reg = <0 0x10059000 0 0x400>;
++			interrupts = <GIC_SPI 347 IRQ_TYPE_EDGE_RISING>;
++			clocks = <&cpg CPG_MOD R9A07G054_ADC_ADCLK>,
++				 <&cpg CPG_MOD R9A07G054_ADC_PCLK>;
++			clock-names = "adclk", "pclk";
++			resets = <&cpg R9A07G054_ADC_PRESETN>,
++				 <&cpg R9A07G054_ADC_ADRST_N>;
++			reset-names = "presetn", "adrst-n";
++			power-domains = <&cpg>;
++			status = "disabled";
++
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			channel@0 {
++				reg = <0>;
++			};
++			channel@1 {
++				reg = <1>;
++			};
++			channel@2 {
++				reg = <2>;
++			};
++			channel@3 {
++				reg = <3>;
++			};
++			channel@4 {
++				reg = <4>;
++			};
++			channel@5 {
++				reg = <5>;
++			};
++			channel@6 {
++				reg = <6>;
++			};
++			channel@7 {
++				reg = <7>;
++			};
++		};
++
++		tsu: thermal@10059400 {
++			compatible = "renesas,r9a07g054-tsu",
++				     "renesas,rzg2l-tsu";
++			reg = <0 0x10059400 0 0x400>;
++			clocks = <&cpg CPG_MOD R9A07G054_TSU_PCLK>;
++			resets = <&cpg R9A07G054_TSU_PRESETN>;
++			power-domains = <&cpg>;
++			#thermal-sensor-cells = <1>;
++		};
++
++		sbc: spi@10060000 {
++			compatible = "renesas,r9a07g054-rpc-if",
++				     "renesas,rzg2l-rpc-if","renesas,r9a07g054l-spibsc";
++			reg = <0 0x10060000 0 0x10000>,
++			      <0 0x20000000 0 0x10000000>,
++			      <0 0x10070000 0 0x10000>;
++			reg-names = "regs", "dirmap", "wbuf";
++			interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_SPI_CLK2>,
++				 <&cpg CPG_MOD R9A07G054_SPI_CLK>;
++			resets = <&cpg R9A07G054_SPI_RST>;
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		cpg: clock-controller@11010000 {
++			compatible = "renesas,r9a07g054-cpg","renesas,r9a07g054l-cpg";
++			reg = <0 0x11010000 0 0x10000>;
++			clocks = <&extal_clk>;
++			clock-names = "extal";
++			#clock-cells = <2>;
++			#reset-cells = <1>;
++			#power-domain-cells = <0>;
++		};
++
++		sysc: system-controller@11020000 {
++			compatible = "renesas,r9a07g054-sysc";
++			reg = <0 0x11020000 0 0x10000>;
++			interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 45 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "lpm_int", "ca55stbydone_int",
++					  "cm33stbyr_int", "ca55_deny";
++			status = "disabled";
++		};
++
++		pinctrl: pinctrl@11030000 {
++			compatible = "renesas,r9a07g054-pinctrl",
++				     "renesas,r9a07g044-pinctrl","renesas,r9a07g054l-pinctrl";
++			reg = <0 0x11030000 0 0x10000>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			#interrupt-cells = <2>;
++			interrupt-parent = <&irqc>;
++			interrupt-controller;
++			gpio-ranges = <&pinctrl 0 0 392>;
++			clocks = <&cpg CPG_MOD R9A07G054_GPIO_HCLK>;
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_GPIO_RSTN>,
++				 <&cpg R9A07G054_GPIO_PORT_RESETN>,
++				 <&cpg R9A07G054_GPIO_SPARE_RESETN>;
++		};
++
++		irqc: interrupt-controller@110a0000 {
++			compatible = "renesas,r9a07g054-irqc",
++				     "renesas,rzg2l-irqc";
++			#interrupt-cells = <2>;
++			#address-cells = <0>;
++			interrupt-controller;
++			reg = <0 0x110a0000 0 0x10000>;
++			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 3 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 6 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 8 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 444 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 445 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 446 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 447 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 448 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 449 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 451 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 452 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 453 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 454 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 457 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 458 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 459 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 460 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 461 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 462 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 463 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 464 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 465 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 466 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 467 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 468 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 469 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 470 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 471 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 472 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 473 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 474 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 475 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_IA55_CLK>,
++				 <&cpg CPG_MOD R9A07G054_IA55_PCLK>;
++			clock-names = "clk", "pclk";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_IA55_RESETN>;
++		};
++
++		dmac: dma-controller@11820000 {
++			compatible = "renesas,r9a07g054-dmac",
++				     "renesas,rz-dmac";
++			reg = <0 0x11820000 0 0x10000>,
++			      <0 0x11830000 0 0x10000>;
++			interrupts = <GIC_SPI 141 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 125 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 126 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 127 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 128 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 129 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 130 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 131 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 132 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 133 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 134 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 135 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 136 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 137 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 138 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 139 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 140 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "error",
++					  "ch0", "ch1", "ch2", "ch3",
++					  "ch4", "ch5", "ch6", "ch7",
++					  "ch8", "ch9", "ch10", "ch11",
++					  "ch12", "ch13", "ch14", "ch15";
++			clocks = <&cpg CPG_MOD R9A07G054_DMAC_ACLK>,
++				 <&cpg CPG_MOD R9A07G054_DMAC_PCLK>;
++			clock-names = "main", "register";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_DMAC_ARESETN>,
++				 <&cpg R9A07G054_DMAC_RST_ASYNC>;
++			reset-names = "arst", "rst_async";
++			#dma-cells = <1>;
++			dma-channels = <16>;
++		};
++
++		gpu: gpu@11840000 {
++			compatible = "renesas,r9a07g054-mali",
++				     "arm,mali-bifrost";
++			reg = <0x0 0x11840000 0x0 0x10000>;
++			interrupts = <GIC_SPI 154 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 155 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 156 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "job", "mmu", "gpu", "event";
++			clocks = <&cpg CPG_MOD R9A07G054_GPU_CLK>,
++				 <&cpg CPG_MOD R9A07G054_GPU_AXI_CLK>,
++				 <&cpg CPG_MOD R9A07G054_GPU_ACE_CLK>;
++			clock-names = "gpu", "bus", "bus_ace";
++			power-domains = <&cpg>;
++			resets = <&cpg R9A07G054_GPU_RESETN>,
++				 <&cpg R9A07G054_GPU_AXI_RESETN>,
++				 <&cpg R9A07G054_GPU_ACE_RESETN>;
++			reset-names = "rst", "axi_rst", "ace_rst";
++			operating-points-v2 = <&gpu_opp_table>;
++		};
++
++		gic: interrupt-controller@11900000 {
++			compatible = "arm,gic-v3";
++			#interrupt-cells = <3>;
++			#address-cells = <0>;
++			interrupt-controller;
++			reg = <0x0 0x11900000 0 0x40000>,
++			      <0x0 0x11940000 0 0x60000>;
++			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_LOW>;
++		};
++
++		sdhi0: mmc@11c00000 {
++			compatible = "renesas,sdhi-r9a07g054","renesas,sdhi-r9a07g054l",
++				     "renesas,rcar-gen3-sdhi";
++			reg = <0x0 0x11c00000 0 0x10000>;
++			interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_SDHI0_IMCLK>,
++				 <&cpg CPG_MOD R9A07G054_SDHI0_CLK_HS>,
++				 <&cpg CPG_MOD R9A07G054_SDHI0_IMCLK2>,
++				 <&cpg CPG_MOD R9A07G054_SDHI0_ACLK>;
++			clock-names = "core", "clkh", "cd", "aclk";
++			resets = <&cpg R9A07G054_SDHI0_IXRST>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		sdhi1: mmc@11c10000 {
++			compatible = "renesas,sdhi-r9a07g054","renesas,sdhi-r9a07g054l",
++				     "renesas,rcar-gen3-sdhi";
++			reg = <0x0 0x11c10000 0 0x10000>;
++			interrupts = <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_SDHI1_IMCLK>,
++				 <&cpg CPG_MOD R9A07G054_SDHI1_CLK_HS>,
++				 <&cpg CPG_MOD R9A07G054_SDHI1_IMCLK2>,
++				 <&cpg CPG_MOD R9A07G054_SDHI1_ACLK>;
++			clock-names = "core", "clkh", "cd", "aclk";
++			resets = <&cpg R9A07G054_SDHI1_IXRST>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		eth0: ethernet@11c20000 {
++			compatible = "renesas,r9a07g054-gbeth","renesas,etheravb-r9a07g054l",
++				     "renesas,rzg2l-gbeth";
++			reg = <0 0x11c20000 0 0x10000>;
++			interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 86 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "mux", "fil", "arp_ns";
++			phy-mode = "rgmii";
++			clocks = <&cpg CPG_MOD R9A07G054_ETH0_CLK_AXI>,
++				 <&cpg CPG_MOD R9A07G054_ETH0_CLK_CHI>,
++				 <&cpg CPG_CORE R9A07G054_CLK_HP>;
++			clock-names = "axi", "chi", "refclk";
++			resets = <&cpg R9A07G054_ETH0_RST_HW_N>;
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		eth1: ethernet@11c30000 {
++			compatible = "renesas,r9a07g054-gbeth","renesas,etheravb-r9a07g054l",
++				     "renesas,rzg2l-gbeth";
++			reg = <0 0x11c30000 0 0x10000>;
++			interrupts = <GIC_SPI 87 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 88 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "mux", "fil", "arp_ns";
++			phy-mode = "rgmii";
++			clocks = <&cpg CPG_MOD R9A07G054_ETH1_CLK_AXI>,
++				 <&cpg CPG_MOD R9A07G054_ETH1_CLK_CHI>,
++				 <&cpg CPG_CORE R9A07G054_CLK_HP>;
++			clock-names = "axi", "chi", "refclk";
++			resets = <&cpg R9A07G054_ETH1_RST_HW_N>;
++			power-domains = <&cpg>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
++		phyrst: usbphy-ctrl@11c40000 {
++			compatible = "renesas,r9a07g054-usbphy-ctrl",
++				     "renesas,rzg2l-usbphy-ctrl";
++			reg = <0 0x11c40000 0 0x10000>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>;
++			resets = <&cpg R9A07G054_USB_PRESETN>;
++			power-domains = <&cpg>;
++			#reset-cells = <1>;
++			status = "disabled";
++		};
++
++		ohci0: usb@11c50000 {
++			compatible = "generic-ohci";
++			reg = <0 0x11c50000 0 0x100>;
++			interrupts = <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_USB_U2H0_HCLK>;
++			resets = <&phyrst 0>,
++				 <&cpg R9A07G054_USB_U2H0_HRESETN>;
++			phys = <&usb2_phy0 1>;
++			phy-names = "usb";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ohci1: usb@11c70000 {
++			compatible = "generic-ohci";
++			reg = <0 0x11c70000 0 0x100>;
++			interrupts = <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_USB_U2H1_HCLK>;
++			resets = <&phyrst 1>,
++				 <&cpg R9A07G054_USB_U2H1_HRESETN>;
++			phys = <&usb2_phy1 1>;
++			phy-names = "usb";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ehci0: usb@11c50100 {
++			compatible = "generic-ehci";
++			reg = <0 0x11c50100 0 0x100>;
++			interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_USB_U2H0_HCLK>;
++			resets = <&phyrst 0>,
++				 <&cpg R9A07G054_USB_U2H0_HRESETN>;
++			phys = <&usb2_phy0 2>;
++			phy-names = "usb";
++			companion = <&ohci0>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ehci1: usb@11c70100 {
++			compatible = "generic-ehci";
++			reg = <0 0x11c70100 0 0x100>;
++			interrupts = <GIC_SPI 97 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_USB_U2H1_HCLK>;
++			resets = <&phyrst 1>,
++				 <&cpg R9A07G054_USB_U2H1_HRESETN>;
++			phys = <&usb2_phy1 2>;
++			phy-names = "usb";
++			companion = <&ohci1>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		usb2_phy0: usb-phy@11c50200 {
++			compatible = "renesas,usb2-phy-r9a07g054",
++				     "renesas,rzg2l-usb2-phy","renesas,rcar-gen3-usb2-phy";
++			reg = <0 0x11c50200 0 0x700>;
++			interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_USB_U2H0_HCLK>;
++			resets = <&phyrst 0>;
++			#phy-cells = <1>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		usb2_phy1: usb-phy@11c70200 {
++			compatible = "renesas,usb2-phy-r9a07g054",
++				     "renesas,rzg2l-usb2-phy","renesas,rcar-gen3-usb2-phy";
++			reg = <0 0x11c70200 0 0x700>;
++			interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_USB_U2H1_HCLK>;
++			resets = <&phyrst 1>;
++			#phy-cells = <1>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		hsusb: usb@11c60000 {
++			compatible = "renesas,usbhs-r9a07g054",
++				     "renesas,rza2-usbhs";
++			reg = <0 0x11c60000 0 0x10000>;
++			interrupts = <GIC_SPI 100 IRQ_TYPE_EDGE_RISING>,
++				     <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&cpg CPG_MOD R9A07G054_USB_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_USB_U2P_EXR_CPUCLK>;
++			resets = <&phyrst 0>,
++				 <&cpg R9A07G054_USB_U2P_EXL_SYSRST>;
++			renesas,buswait = <7>;
++			phys = <&usb2_phy0 3>;
++			phy-names = "usb";
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		wdt0: watchdog@12800800 {
++			compatible = "renesas,r9a07g054-wdt",
++				     "renesas,rzg2l-wdt","renesas,r9a07g054l-wdt";
++			reg = <0 0x12800800 0 0x400>;
++			clocks = <&extal_clk>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		wdt1: watchdog@12800c00 {
++			compatible = "renesas,r9a07g054-wdt","renesas,r9a07g054l-wdt",
++				     "renesas,rzg2l-wdt";
++			reg = <0 0x12800C00 0 0x400>;
++			clocks = <&cpg CPG_MOD R9A07G054_WDT1_PCLK>,
++				 <&cpg CPG_MOD R9A07G054_WDT1_CLK>;
++			clock-names = "pclk", "oscclk";
++			interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "wdt", "perrout";
++			resets = <&cpg R9A07G054_WDT1_PRESETN>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ostm0: timer@12801000 {
++			compatible = "renesas,r9a07g054-ostm",
++				     "renesas,ostm";
++			reg = <0x0 0x12801000 0x0 0x400>;
++			interrupts = <GIC_SPI 46 IRQ_TYPE_EDGE_RISING>;
++			clocks = <&cpg CPG_MOD R9A07G054_OSTM0_PCLK>;
++			resets = <&cpg R9A07G054_OSTM0_PRESETZ>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ostm1: timer@12801400 {
++			compatible = "renesas,r9a07g054-ostm",
++				     "renesas,ostm";
++			reg = <0x0 0x12801400 0x0 0x400>;
++			interrupts = <GIC_SPI 47 IRQ_TYPE_EDGE_RISING>;
++			clocks = <&cpg CPG_MOD R9A07G054_OSTM1_PCLK>;
++			resets = <&cpg R9A07G054_OSTM1_PRESETZ>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++
++		ostm2: timer@12801800 {
++			compatible = "renesas,r9a07g054-ostm",
++				     "renesas,ostm";
++			reg = <0x0 0x12801800 0x0 0x400>;
++			interrupts = <GIC_SPI 48 IRQ_TYPE_EDGE_RISING>;
++			clocks = <&cpg CPG_MOD R9A07G054_OSTM2_PCLK>;
++			resets = <&cpg R9A07G054_OSTM2_PRESETZ>;
++			power-domains = <&cpg>;
++			status = "disabled";
++		};
++	};
++
++	thermal-zones {
++		cpu-thermal {
++			polling-delay-passive = <250>;
++			polling-delay = <1000>;
++			thermal-sensors = <&tsu 0>;
++			sustainable-power = <717>;
++
++			cooling-maps {
++				map0 {
++					trip = <&target>;
++					cooling-device = <&cpu0 0 2>;
++					contribution = <1024>;
++				};
++			};
++
++			trips {
++				sensor_crit: sensor-crit {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "critical";
++				};
++
++				target: trip-point {
++					temperature = <100000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++	};
++
++	timer {
++		compatible = "arm,armv8-timer";
++		interrupts-extended = <&gic GIC_PPI 13 IRQ_TYPE_LEVEL_LOW>,
++				      <&gic GIC_PPI 14 IRQ_TYPE_LEVEL_LOW>,
++				      <&gic GIC_PPI 11 IRQ_TYPE_LEVEL_LOW>,
++				      <&gic GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>;
++	};
++};
+diff --git a/arch/arm/dts/r9a07g054l2.dtsi b/arch/arm/dts/r9a07g054l2.dtsi
+new file mode 100755
+index 0000000000..4d5914bc95
+--- /dev/null
++++ b/arch/arm/dts/r9a07g054l2.dtsi
+@@ -0,0 +1,13 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/V2L R9A07G054L2 SoC specific parts
++ *
++ * Copyright (C) 2021 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r9a07g054.dtsi"
++
++/ {
++	compatible = "renesas,r9a07g054l2", "renesas,r9a07g054";
++};
+diff --git a/arch/arm/dts/smarc-rzv2l.dts b/arch/arm/dts/smarc-rzv2l.dts
+index 3c4bc4ef77..4b375d5d56 100644
+--- a/arch/arm/dts/smarc-rzv2l.dts
++++ b/arch/arm/dts/smarc-rzv2l.dts
+@@ -1,144 +1,18 @@
+-// SPDX-License-Identifier: GPL-2.0
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+ /*
+- * Device Tree Source for the GR-Peach board
++ * Device Tree Source for the RZ/V2L SMARC EVK board
+  *
+- * Copyright (C) 2017 Jacopo Mondi <jacopo+renesas@jmondi.org>
+- * Copyright (C) 2016 Renesas Electronics
++ * Copyright (C) 2021 Renesas Electronics Corp.
+  */
+ 
+ /dts-v1/;
+-#include <dt-bindings/gpio/gpio.h>
+-#include "r9a07g054l.dtsi"
+-#include "r9a07g054l-u-boot.dtsi"
+-#include <dt-bindings/pinctrl/rzv2l-pinctrl.h>
++#include "r9a07g054l2.dtsi"
++#include "rzg2l-smarc-som.dtsi"
++#include "rzg2l-smarc-pinfunction.dtsi"
++#include "rz-smarc-common.dtsi"
++#include "rzg2l-smarc.dtsi"
+ 
+ / {
+-	model = "smarc-rzv2l";
+-	compatible = "renesas,r9a07g054l", "renesas,rzv2l";
+-
+-	aliases {
+-		serial0 = &scif0;
+-		spi0 = &spibsc;
+-	};
+-
+-	chosen {
+-		stdout-path = "serial0:115200n8";
+-	};
+-
+-	memory@48000000 {
+-		device_type = "memory";
+-		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x78000000>;
+-	};
+-
+-};
+-
+-&pinctrl {
+-	eth0_pins: eth0 {
+-		pinmux = <RZV2L_PINMUX(20, 0, 1)>,
+-				<RZV2L_PINMUX(20, 1, 1)>,
+-				<RZV2L_PINMUX(20, 2, 1)>,
+-				<RZV2L_PINMUX(21, 0, 1)>,
+-				<RZV2L_PINMUX(21, 1, 1)>,
+-				<RZV2L_PINMUX(22, 0, 1)>,
+-				<RZV2L_PINMUX(22, 1, 1)>,
+-				<RZV2L_PINMUX(23, 0, 1)>,
+-				<RZV2L_PINMUX(23, 1, 1)>,
+-				<RZV2L_PINMUX(24, 0, 1)>,
+-				<RZV2L_PINMUX(24, 1, 1)>,
+-				<RZV2L_PINMUX(25, 0, 1)>,
+-				<RZV2L_PINMUX(25, 1, 1)>,
+-				<RZV2L_PINMUX(26, 0, 1)>,
+-				<RZV2L_PINMUX(26, 1, 1)>,
+-				<RZV2L_PINMUX(27, 0, 1)>,
+-				<RZV2L_PINMUX(27, 1, 1)>,
+-				<RZV2L_PINMUX(28, 0, 1)>,
+-				<RZV2L_PINMUX(28, 1, 1)>;
+-	};
+-};
+-
+-&xinclk {
+-        clock-frequency = <24000000>;
+-};
+-
+-&scif0 {
+-	status = "okay";
+-	clock = <100000000>;
+-};
+-
+-&sdhi0 {
+-	/* pinctrl placeholder
+-	 * If this channel is used for interfacing with a SD card, a power enable
+-	 * pin (SD0_PWR_EN) must be defined.
+-	 * The SD0_PWR_EN pin is associated with P4_1.
+-	 * A HIGH signal on SD0_PWR_EN will enable supply voltage for SD card.
+-	*/
+-	bus-width = <8>;
+-	status = "okay";
+-	/* This is used for interface that support both eMMC and SD in board */
+-	mutual-channel;
+-};
+-
+-&sdhi1 {
+-	/* pinctrl placeholder
+-	 * A power enable pin (SD1_PWR_EN) must be defined to interface with a
+-	 * SD card.
+-	 * The SD1_PWR_EN pin is associated with P39_2.
+-	 * A HIGH signal on SD1_PWR_EN will enable supply voltage for SD card.
+-	*/
+-	bus-width = <4>;
+-	status = "okay";
+-};
+-
+-&eth0 {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&eth0_pins>;
+-	phy-handle = <&phy0>;
+-	phy-mode = "rgmii";
+-	status = "okay";
+-
+-	phy0: ethernet-phy@7 {
+-		reg = <7>;
+-	};
+-};
+-
+-&i2c1 {
+-	pinctrl-names = "default";
+-	status = "okay";
+-
+-	adv7535: hdmi@3d {
+-		compatible = "adi,adv7535";
+-		reg = <0x3d>;
+-	};
+-};
+-
+-&spibsc {
+-        num-cs = <1>;
+-        status = "okay";
+-        spi-max-frequency = <40000000>;
+-        #address-cells = <1>;
+-        #size-cells = <0>;
+-        flash0: spi-flash@0 {
+-                #address-cells = <1>;
+-                #size-cells = <1>;
+-                compatible = "spi-flash", "jedec,spi-nor";
+-                spi-max-frequency = <40000000>;
+-                spi-tx-bus-width = <1>;
+-                spi-rx-bus-width = <1>;
+-                reg = <0>;
+-                status = "okay";
+-        };
+-};
+-
+-&ehci0 {
+-	status = "okay";
+-};
+-
+-&ehci1 {
+-	status = "okay";
+-};
+-
+-&wdt0 {
+-	status = "okay";
+-	timeout-sec = <60>;
++	model = "Renesas SMARC EVK based on r9a07g054l2";
++	compatible = "renesas,smarc-evk", "renesas,r9a07g054l2", "renesas,r9a07g054", "renesas,r9a07g054l";
+ };
+diff --git a/configs/smarc-rzv2l_defconfig b/configs/smarc-rzv2l_defconfig
+index c609f21695..1fe9fef5a8 100644
+--- a/configs/smarc-rzv2l_defconfig
++++ b/configs/smarc-rzv2l_defconfig
+@@ -91,3 +91,60 @@ CONFIG_CMD_SF=y
+ CONFIG_CMD_SPI=y
+ CONFIG_SPI_FLASH_STMICRO=y
+ CONFIG_DM_SPI_FLASH=y
++CONFIG_BOOTM_EFI=y
++CONFIG_CMD_BOOTEFI=y
++CONFIG_CMD_NVEDIT_EFI=y
++CONFIG_CMD_EFIDEBUG=y
++CONFIG_CMD_BOOTEFI_HELLO=y
++CONFIG_CMD_BOOTEFI_HELLO_COMPILE=y
++CONFIG_CMD_BOOTEFI_SELFTEST=y
++CONFIG_CMD_GPT=y
++CONFIG_EFI_PARTITION=y
++CONFIG_EFI_LOADER=y
++CONFIG_EFI_DEVICE_PATH_TO_TEXT=y
++CONFIG_EFI_UNICODE_COLLATION_PROTOCOL2=y
++CONFIG_EFI_UNICODE_CAPITALIZATION=y
++CONFIG_EFI_HAVE_RUNTIME_RESET=y
++CONFIG_CMD_EFI_VARIABLE_FILE_STORE=y
++CONFIG_DM_RTC=y
++CONFIG_EFI_GET_TIME=y
++CONFIG_EFI_SET_TIME=y
++CONFIG_RTC_EMULATION=y
++CONFIG_CMD_DFU=y
++CONFIG_FLASH_CFI_MTD=y
++CONFIG_EFI_CAPSULE_FIRMWARE_FIT=y
++CONFIG_EFI_CAPSULE_FIRMWARE_MANAGEMENT=y
++CONFIG_EFI_CAPSULE_FIRMWARE=y
++CONFIG_EFI_CAPSULE_FIRMWARE_RAW=y
++CONFIG_EFI_CAPSULE_FMP_HEADER=y
++CONFIG_CMD_GPT=y
++CONFIG_FAT_WRITE=y
++CONFIG_FS_FAT=y
++CONFIG_CMD_PART=y
++CONFIG_PARTITIONS=y
++CONFIG_DOS_PARTITION=y
++CONFIG_ISO_PARTITION=y
++CONFIG_EFI_PARTITION=y
++CONFIG_PARTITION_UUIDS=y
++CONFIG_DISTRO_DEFAULTS=y
++CONFIG_NET_RANDOM_ETHADDR=y
++CONFIG_CMD_RTC=y
++CONFIG_EFI_RUNTIME_UPDATE_CAPSULE=y
++CONFIG_EFI_HAVE_CAPSULE_SUPPORT=y
++CONFIG_EFI_CAPSULE_ON_DISK=y
++CONFIG_SPL_DFU=y
++CONFIG_DM_MTD=y
++CONFIG_DFU_MTD=y
++CONFIG_SPL_DFU_MTD=y
++CONFIG_DFU_SF=y
++CONFIG_DFU_OVER_USB=y
++CONFIG_DFU=y
++CONFIG_DFU_MMC=y
++CONFIG_DFU_NAND=y
++CONFIG_DFU_RAM=y
++CONFIG_DFU_SF_PART=y
++CONFIG_DFU_TIMEOUT=y
++CONFIG_CMD_DFU=y
++CONFIG_OF_LIBFDT=y
++CONFIG_DFU_OVER_TFTP=y
++CONFIG_DFU_TFTP=y
+\ No newline at end of file
+diff --git a/drivers/clk/renesas/clk-rzv2l.c b/drivers/clk/renesas/clk-rzv2l.c
+index e925219099..3322be83d2 100644
+--- a/drivers/clk/renesas/clk-rzv2l.c
++++ b/drivers/clk/renesas/clk-rzv2l.c
+@@ -3,9 +3,9 @@
+  * Renesas RZ/V2L CLK driver
+  *
+  * Copyright (C) 2021 Renesas Electronics Corp.
+- * 
++ *
+  * Based on the following driver from Linux kernel:
+- * r8a774a1 Clock Pulse Generator / Module Standby and Software Reset 
++ * r8a774a1 Clock Pulse Generator / Module Standby and Software Reset
+  */
+ 
+ #include <common.h>
+@@ -19,7 +19,7 @@
+ #include <linux/io.h>
+ 
+ #include <dt-bindings/clock/renesas-cpg-mssr.h>
+-#include <dt-bindings/clock/r9a07g054l-cpg.h>
++#include <dt-bindings/clock/r9a07g054-cpg.h>
+ #include "renesas-rzv2l-cpg.h"
+ 
+ static int mod_clk_get(struct clk *clk, struct cpg_mssr_info *info,
+@@ -46,19 +46,21 @@ static int rzv2l_clk_enable(struct clk *clk)
+ 	const struct mssr_mod_clk *clock;
+ 	uint32_t value=0;
+ 	int ret=0;
+-	
++
+ 	if (!is_mod_clk(clk)) {
+ 		debug("CLK: not a module clock \n");
+ 		return -1;
+ 	}
+-	
++
+ 	/* Set write_mask bit, set clk enable, then check monitor status */
+ 	mod_clk_get(clk, priv->info, &clock);
+ 	value = (MSSR_ON(clock->bit) << 16) | MSSR_ON(clock->bit);
+ 	setbits_le32(priv->base + CLK_ON_R(MSSR_OFF(clock->bit) * 4), value);
+ 	ret = wait_for_bit_le32(priv->base + CLK_MON_R(MSSR_OFF(clock->bit) * 4),
+ 					MSSR_ON(clock->bit), 1, 100, 0);
+-	
++	/* reset the module*/
++	setbits_le32(priv->base + CLK_RST_R(MSSR_OFF(clock->bit) * 4), value);
++
+ 	return ret;
+ }
+ 
+@@ -73,7 +75,7 @@ static int rzv2l_clk_disable(struct clk *clk)
+ 		debug("CLK: not a module clock \n");
+ 		return -1;
+ 	}
+-	
++
+ 	mod_clk_get(clk, priv->info, &clock);
+ 	value = MSSR_ON(clock->bit) << 16;
+ 	iowrite32(value, priv->base + 0x500 + MSSR_OFF(clock->bit) * 4);
+@@ -85,7 +87,7 @@ static int rzv2l_clk_disable(struct clk *clk)
+ 
+ static ulong rzv2l_clk_set_rate(struct clk *clk, ulong rate)
+ {
+-	
++
+ 	return 0;
+ }
+ 
+@@ -100,13 +102,13 @@ int rzv2l_clk_probe(struct udevice *dev)
+ 	struct rzv2l_clk_priv *priv = dev_get_priv(dev);
+ 	struct cpg_mssr_info *info =
+ 		(struct cpg_mssr_info *)dev_get_driver_data(dev);
+-	
++
+ 	priv->info = info;
+ 	priv->base = dev_read_addr_ptr(dev);
+ 	if (!priv->base)
+ 		return -EINVAL;
+ 
+-	ret = clk_get_by_name(dev, "xinclk", &priv->clk_extal);
++	ret = clk_get_by_name(dev, "extal", &priv->clk_extal);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/clk/renesas/r9a07g054l-cpg-mssr.c b/drivers/clk/renesas/r9a07g054l-cpg-mssr.c
+index b012e681c6..edcaf7279c 100644
+--- a/drivers/clk/renesas/r9a07g054l-cpg-mssr.c
++++ b/drivers/clk/renesas/r9a07g054l-cpg-mssr.c
+@@ -1,5 +1,5 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+-/*	
++/*
+  * Renesas R9A07G054L Clock Module
+  *
+  * Copyright (C) 2021 Renesas Electronics Corp.
+@@ -12,7 +12,7 @@
+ #include <clk-uclass.h>
+ #include <dm.h>
+ #include <linux/clk-provider.h>
+-#include <dt-bindings/clock/r9a07g054l-cpg.h>
++#include <dt-bindings/clock/r9a07g054-cpg.h>
+ #include "renesas-rzv2l-cpg.h"
+ 
+ 
+@@ -22,7 +22,7 @@ extern const struct clk_ops rzv2l_clk_ops;
+ 
+ enum clk_ids {
+ 	/* Core Clock Outputs exported to DT */
+-	LAST_DT_CORE_CLK = R9A07G054L_OSCCLK,
++	LAST_DT_CORE_CLK = R9A07G054_CLK_DRP_A,
+ 
+ 	/* External Input Clocks */
+ 	CLK_XINCLK,
+@@ -154,7 +154,7 @@ static const struct cpg_core_clk r9a07g054l_core_clks[] = {
+ 	DEF_INPUT("xinclk",	 CLK_XINCLK),
+ 
+ 	/* Internal Core Clocks */
+-	DEF_FIXED(".osc", R9A07G054L_OSCCLK, CLK_XINCLK, 1, 1),
++	DEF_FIXED(".osc", R9A07G054_OSCCLK, CLK_XINCLK, 1, 1),
+ 	DEF_FIXED(".osc_div1000", CLK_OSC_DIV1000, CLK_XINCLK, 1, 1000),
+ 	DEF_BASE(".pll1", CLK_PLL1, CLK_TYPE_PLL1, CLK_XINCLK),
+ 	DEF_BASE(".pll2", CLK_PLL2, CLK_TYPE_PLL2, CLK_XINCLK),
+@@ -226,208 +226,230 @@ static const struct cpg_core_clk r9a07g054l_core_clks[] = {
+ 			sel_pll6_2, 2, 0),
+ 
+ 	/* Core output clk*/
+-	DEF_DIV("I", R9A07G054L_CLK_I, CLK_SEL_PLL1,
++	DEF_DIV("I", R9A07G054_CLK_I, CLK_SEL_PLL1,
+ 			DIVPL1, NULL, CLK_DIVIDER_POWER_OF_TWO),
+-	DEF_DIV("I2", R9A07G054L_CLK_I2, CLK200FIX_CD,
++	DEF_DIV("I2", R9A07G054_CLK_I2, CLK200FIX_CD,
+ 		DIVPL3CLK200FIX, dtable_3b, 0),
+-	DEF_DIV("G", R9A07G054L_CLK_G, CLK_SEL_G2,
++	DEF_DIV("G", R9A07G054_CLK_G, CLK_SEL_G2,
+ 			DIVGPU, NULL, CLK_DIVIDER_POWER_OF_TWO),
+-	DEF_FIXED("S0", R9A07G054L_CLK_S0, CLK_SEL_PLL4, 1, 2),
+-	DEF_FIXED("S1", R9A07G054L_CLK_S0, CLK_SEL_PLL4, 1, 4),
+-	DEF_FIXED("SPI0", R9A07G054L_CLK_SPI0, CLK533_CD, 1, 2),
+-	DEF_FIXED("SPI1", R9A07G054L_CLK_SPI1, CLK533_CD, 1, 4),
+-	DEF_MUX("SD0", R9A07G054L_CLK_SD0, SEL_SDHI0,
++	DEF_FIXED("S0", R9A07G054_CLK_S0, CLK_SEL_PLL4, 1, 2),
++	DEF_FIXED("S1", R9A07G054_CLK_S0, CLK_SEL_PLL4, 1, 4),
++	DEF_FIXED("SPI0", R9A07G054_CLK_SPI0, CLK533_CD, 1, 2),
++	DEF_FIXED("SPI1", R9A07G054_CLK_SPI1, CLK533_CD, 1, 4),
++	DEF_MUX("SD0", R9A07G054_CLK_SD0, SEL_SDHI0,
+ 			sel_shdi, 4, 0),
+-	DEF_MUX("SD1", R9A07G054L_CLK_SD1, SEL_SDHI1,
++	DEF_MUX("SD1", R9A07G054_CLK_SD1, SEL_SDHI1,
+ 			sel_shdi, 4, 0),
+-	DEF_FIXED("M0", R9A07G054L_CLK_M0, CLK200FIX_CD, 1, 1),
+-	DEF_FIXED("M1", R9A07G054L_CLK_M1, CLK_SEL_PLL5_1, 1, 1),
+-	DEF_FIXED("M2", R9A07G054L_CLK_M2, CLK533FIX_CD, 1, 2),
+-	DEF_2DIV("M3", R9A07G054L_CLK_M3, CLK_SEL_PLL5_4,
++	DEF_FIXED("M0", R9A07G054_CLK_M0, CLK200FIX_CD, 1, 1),
++	DEF_FIXED("M1", R9A07G054_CLK_M1, CLK_SEL_PLL5_1, 1, 1),
++	DEF_FIXED("M2", R9A07G054_CLK_M2, CLK533FIX_CD, 1, 2),
++	DEF_2DIV("M3", R9A07G054_CLK_M3, CLK_SEL_PLL5_4,
+ 		DIVDSIA, DIVDSIB, dtable_2b, dtable_4b, 0),
+-	DEF_DIV("M4", R9A07G054L_CLK_M4, CLK533FIX_LPCLK,
++	DEF_DIV("M4", R9A07G054_CLK_M4, CLK533FIX_LPCLK,
+ 			DIVDSILPCL, divdsilpcl, 0),
+-	DEF_MUX("HP", R9A07G054L_CLK_HP, SEL_ETH, sel_eth, 2, 0),
+-	DEF_FIXED("TSU", R9A07G054L_CLK_TSU, CLK800FIX_C, 1, 10),
+-	DEF_FIXED("ZT", R9A07G054L_CLK_ZT, CLK100FIX_CD, 1, 1),
+-	DEF_DIV("P0", R9A07G054L_CLK_P0, CLK100FIX_C,
++	DEF_MUX("HP", R9A07G054_CLK_HP, SEL_ETH, sel_eth, 2, 0),
++	DEF_FIXED("TSU", R9A07G054_CLK_TSU, CLK800FIX_C, 1, 10),
++	DEF_FIXED("ZT", R9A07G054_CLK_ZT, CLK100FIX_CD, 1, 1),
++	DEF_DIV("P0", R9A07G054_CLK_P0, CLK100FIX_C,
+ 			DIVPL2A, dtable_3b, 0),
+-	DEF_DIV("P1", R9A07G054L_CLK_P1, CLK200FIX_CD,
++	DEF_DIV("P1", R9A07G054_CLK_P1, CLK200FIX_CD,
+ 			DIVPL3B, dtable_3b, 0),
+-	DEF_DIV("P2", R9A07G054L_CLK_P2, CLK100FIX_CD,
++	DEF_DIV("P2", R9A07G054_CLK_P2, CLK100FIX_CD,
+ 			DIVPL3A, dtable_3b, 0),
+-	DEF_FIXED("AT", R9A07G054L_CLK_AT, CLK800FIX_CD, 1, 2),
++	DEF_FIXED("AT", R9A07G054_CLK_AT, CLK800FIX_CD, 1, 2),
+ };
+ 
+ static struct mssr_mod_clk r9a07g054l_mod_clks[] = {
+-	DEF_MOD("gic",		R9A07G054L_CLK_GIC600,
+-				R9A07G054L_CLK_P1,
++	DEF_MOD("gic",		R9A07G054_GIC600_GICCLK,
++				R9A07G054_CLK_P1,
+ 				MSSR(5, BIT(0), (BIT(0) | BIT(1)))),
+-	DEF_MOD("ia55",		R9A07G054L_CLK_IA55,
+-				R9A07G054L_CLK_P1,
++	DEF_MOD("ia55",		R9A07G054_IA55_PCLK,
++				R9A07G054_CLK_P1,
+ 				MSSR(6, (BIT(0) | BIT(1)), BIT(0))),
+-	DEF_MOD("syc",		R9A07G054L_CLK_SYC,
+-				CLK_XINCLK,
+-				MSSR(10, BIT(0), BIT(0))),
+-	DEF_MOD("dmac",		R9A07G054L_CLK_DMAC,
+-				R9A07G054L_CLK_P1,
++	DEF_MOD("ia55",		R9A07G054_IA55_CLK,
++				R9A07G054_CLK_P1,
++				MSSR(6, (BIT(0) | BIT(1)), BIT(0))),
++
++	DEF_MOD("dmac_aclk",R9A07G054_DMAC_ACLK,
++				R9A07G054_CLK_P1,
+ 				MSSR(11, (BIT(0) | BIT(1)),
+ 					 (BIT(0) | BIT(1)))),
+-	DEF_MOD("sysc",		R9A07G054L_CLK_SYSC,
+-				CLK_XINCLK,
+-				MSSR(12, (BIT(0) | BIT(1)),
+-					 (BIT(0) | BIT(1) | BIT(2)))),
+-	DEF_MOD("mtu3",		R9A07G054L_CLK_MTU,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("dmac_aclk",R9A07G054_DMAC_PCLK,
++				R9A07G054_CLK_P1,
++				MSSR(11, (BIT(0) | BIT(1)),
++					 (BIT(0) | BIT(1)))),
++
++	DEF_MOD("mtu3",		R9A07G054_MTU_X_MCK_MTU3,
++				R9A07G054_CLK_P0,
+ 				MSSR(14, BIT(0), BIT(0))),
+-	DEF_MOD("gpt",		R9A07G054L_CLK_GPT,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("gpt",		R9A07G054_GPT_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(16, BIT(0), BIT(0))),
+-	DEF_MOD("eth0",		R9A07G054L_CLK_ETH0,
+-				R9A07G054L_CLK_HP,
++	DEF_MOD("eth0",		R9A07G054_ETH0_CLK_AXI,
++				R9A07G054_CLK_HP,
+ 				MSSR(31, BIT(0), BIT(0))),
+-	DEF_MOD("eth1",		R9A07G054L_CLK_ETH1,
+-				R9A07G054L_CLK_HP,
++	DEF_MOD("eth1",		R9A07G054_ETH1_CLK_AXI,
++				R9A07G054_CLK_HP,
+ 				MSSR(31, BIT(1), BIT(1))),
+-	DEF_MOD("i2c0",		R9A07G054L_CLK_I2C0,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("i2c0",		R9A07G054_I2C0_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(32, BIT(0), BIT(0))),
+-	DEF_MOD("i2c1",		R9A07G054L_CLK_I2C1,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("i2c1",		R9A07G054_I2C1_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(32, BIT(1), BIT(1))),
+-	DEF_MOD("i2c2",		R9A07G054L_CLK_I2C2,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("i2c2",		R9A07G054_I2C2_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(32, BIT(2), BIT(2))),
+-	DEF_MOD("i2c3",		R9A07G054L_CLK_I2C3,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("i2c3",		R9A07G054_I2C3_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(32, BIT(3), BIT(3))),
+-	DEF_MOD("scif0",	R9A07G054L_CLK_SCIF0,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("scif0",	R9A07G054_SCIF0_CLK_PCK,
++				R9A07G054_CLK_P0,
+ 				MSSR(33, BIT(0), BIT(0))),
+-	DEF_MOD("scif1",	R9A07G054L_CLK_SCIF1,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("scif1",	R9A07G054_SCIF1_CLK_PCK,
++				R9A07G054_CLK_P0,
+ 				MSSR(33, BIT(1), BIT(1))),
+-	DEF_MOD("scif2",	R9A07G054L_CLK_SCIF2,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("scif2",	R9A07G054_SCIF2_CLK_PCK,
++				R9A07G054_CLK_P0,
+ 				MSSR(33, BIT(2), BIT(2))),
+-	DEF_MOD("scif3",	R9A07G054L_CLK_SCIF3,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("scif3",	R9A07G054_SCIF3_CLK_PCK,
++				R9A07G054_CLK_P0,
+ 				MSSR(33, BIT(3), BIT(3))),
+-	DEF_MOD("scif4",	R9A07G054L_CLK_SCIF4,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("scif4",	R9A07G054_SCIF4_CLK_PCK,
++				R9A07G054_CLK_P0,
+ 				MSSR(33, BIT(4), BIT(4))),
+-	DEF_MOD("sci0",		R9A07G054L_CLK_SCI0,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("sci0",		R9A07G054_SCI0_CLKP,
++				R9A07G054_CLK_P0,
+ 				MSSR(34, BIT(0), BIT(0))),
+-	DEF_MOD("sci1",		R9A07G054L_CLK_SCI1,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("sci1",		R9A07G054_SCI1_CLKP,
++				R9A07G054_CLK_P0,
+ 				MSSR(34, BIT(1), BIT(1))),
+-	DEF_MOD("gpio",		R9A07G054L_CLK_GPIO,
++	DEF_MOD("gpio",		R9A07G054_GPIO_HCLK,
+ 				CLK_XINCLK,
+ 				MSSR(38, BIT(0),
+ 					(BIT(0) | BIT(1) | BIT(2)))),
+-	DEF_MOD("sdhi0",	R9A07G054L_CLK_SDHI0,
+-				R9A07G054L_CLK_SD0,
+-				MSSR(21, (BIT(0) | BIT(1) | BIT(2) | BIT(3)),
++	DEF_MOD("sdhi0_imclk",	R9A07G054_SDHI0_IMCLK,
++				R9A07G054_CLK_SD0,
++				MSSR(21, (BIT(0)),
++					 BIT(0))),
++	DEF_MOD("sdhi0_imclk2",	R9A07G054_SDHI0_IMCLK2,
++				R9A07G054_CLK_SD0,
++				MSSR(21, (BIT(1)),
++					 BIT(0))),
++	DEF_MOD("sdhi0_clk_hs",	R9A07G054_SDHI0_CLK_HS,
++				R9A07G054_CLK_SD0,
++				MSSR(21, (BIT(2)),
++					 BIT(0))),
++	DEF_MOD("sdhi0_aclk",	R9A07G054_SDHI0_ACLK,
++				R9A07G054_CLK_SD0,
++				MSSR(21, (BIT(3)),
++					 BIT(0))),
++	DEF_MOD("sdhi1_imclk",	R9A07G054_SDHI1_IMCLK,
++				R9A07G054_CLK_SD1,
++				MSSR(21, (BIT(4)),
++					 BIT(1))),
++	DEF_MOD("sdhi1_imclk2",	R9A07G054_SDHI1_IMCLK2,
++				R9A07G054_CLK_SD1,
++				MSSR(21, (BIT(5)),
++					 BIT(1))),
++	DEF_MOD("sdhi1_clk_hs",	R9A07G054_SDHI1_CLK_HS,
++				R9A07G054_CLK_SD1,
++				MSSR(21, (BIT(6)),
++					 BIT(1))),
++	DEF_MOD("sdhi1_aclk",	R9A07G054_SDHI1_ACLK,
++				R9A07G054_CLK_SD1,
++				MSSR(21, (BIT(7)),
++					 BIT(1))),
++
++	DEF_MOD("usb0_host",R9A07G054_USB_U2H0_HCLK,
++				R9A07G054_CLK_P1,
++				MSSR(30, BIT(0),
+ 					 BIT(0))),
+-	DEF_MOD("sdhi1",	R9A07G054L_CLK_SDHI1,
+-				R9A07G054L_CLK_SD1,
+-				MSSR(21, (BIT(4) | BIT(5) | BIT(6) | BIT(7)),
++	DEF_MOD("usb1_host",R9A07G054_USB_U2H1_HCLK,
++				R9A07G054_CLK_P1,
++				MSSR(30, BIT(1),
+ 					 BIT(1))),
+-	DEF_MOD("usb0",		R9A07G054L_CLK_USB0,
+-				R9A07G054L_CLK_P1,
+-				MSSR(30, (BIT(0) | BIT(2) | BIT(3)),
+-					 (BIT(0) | BIT(2) | BIT(3)))),
+-	DEF_MOD("usb1",		R9A07G054L_CLK_USB1,
+-				R9A07G054L_CLK_P1,
+-				MSSR(30, (BIT(1) | BIT(3)),
+-					 (BIT(1) | BIT(3)))),
+-	DEF_MOD("canfd",	R9A07G054L_CLK_CANFD,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("usb0_func",R9A07G054_USB_U2P_EXR_CPUCLK,
++				R9A07G054_CLK_P1,
++				MSSR(30, BIT(2),
++					 BIT(2))),
++	DEF_MOD("usb_pclk",R9A07G054_USB_PCLK,
++				R9A07G054_CLK_P1,
++				MSSR(30, BIT(3),
++					 BIT(3))),
++
++
++
++	DEF_MOD("canfd",	R9A07G054_CANFD_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(37, BIT(0), (BIT(0) | BIT(1)))),
+-	DEF_MOD("ssi0",		R9A07G054L_CLK_SSI0,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("ssi0_pclk",		R9A07G054_SSI0_PCLK2,
++				R9A07G054_CLK_P0,
+ 				MSSR(28, (BIT(0) | BIT(1)), BIT(0))),
+-	DEF_MOD("ssi1",		R9A07G054L_CLK_SSI1,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("ssi0_sfr",		R9A07G054_SSI0_PCLK_SFR,
++				R9A07G054_CLK_P0,
++				MSSR(28, (BIT(0) | BIT(1)), BIT(0))),
++	DEF_MOD("ssi1_pclk",		R9A07G054_SSI1_PCLK2,
++				R9A07G054_CLK_P0,
++				MSSR(28, (BIT(2) | BIT(3)), BIT(1))),
++	DEF_MOD("ssi1_sfr",		R9A07G054_SSI1_PCLK_SFR,
++				R9A07G054_CLK_P0,
+ 				MSSR(28, (BIT(2) | BIT(3)), BIT(1))),
+-	DEF_MOD("ssi2",		R9A07G054L_CLK_SSI2,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("ssi2_pclk",		R9A07G054_SSI2_PCLK2,
++				R9A07G054_CLK_P0,
++				MSSR(28, (BIT(4) | BIT(5)), BIT(2))),
++	DEF_MOD("ssi2_sfr",		R9A07G054_SSI2_PCLK_SFR,
++				R9A07G054_CLK_P0,
+ 				MSSR(28, (BIT(4) | BIT(5)), BIT(2))),
+-	DEF_MOD("ssi3",		R9A07G054L_CLK_SSI3,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("ssi3_pclk",		R9A07G054_SSI3_PCLK2,
++				R9A07G054_CLK_P0,
+ 				MSSR(28, (BIT(6) | BIT(7)), BIT(3))),
+-	DEF_MOD("mhu",		R9A07G054L_CLK_MHU,
+-				R9A07G054L_CLK_P1,
+-				MSSR(8, BIT(0), BIT(0))),
+-	DEF_MOD("ostm0",	R9A07G054L_CLK_OSTM0,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("ssi3_sfr",		R9A07G054_SSI3_PCLK_SFR,
++				R9A07G054_CLK_P0,
++				MSSR(28, (BIT(6) | BIT(7)), BIT(3))),
++	DEF_MOD("ostm0",	R9A07G054_OSTM0_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(13, BIT(0), BIT(0))),
+-	DEF_MOD("ostm1",	R9A07G054L_CLK_OSTM1,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("ostm1",	R9A07G054_OSTM1_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(13, BIT(1), BIT(1))),
+-	DEF_MOD("ostm2",	R9A07G054L_CLK_OSTM2,
+-				R9A07G054L_CLK_P0,
++	DEF_MOD("ostm2",	R9A07G054_OSTM2_PCLK,
++				R9A07G054_CLK_P0,
+ 				MSSR(13, BIT(2), BIT(3))),
+-	DEF_MOD("wdt0",		R9A07G054L_CLK_WDT0,
+-				R9A07G054L_CLK_P0,
+-				MSSR(18, (BIT(0) | BIT(1)), BIT(0))),
+-	DEF_MOD("wdt1",		R9A07G054L_CLK_WDT1,
+-				R9A07G054L_CLK_P0,
+-				MSSR(18, (BIT(2) | BIT(3)), BIT(1))),
+-	DEF_MOD("wdt2",		R9A07G054L_CLK_WDT2,
+-				R9A07G054L_CLK_P0,
+-				MSSR(18, (BIT(4) | BIT(5)), BIT(2))),
+-	DEF_MOD("wdt_pon",	R9A07G054L_CLK_WDT_PON,
+-				R9A07G054L_CLK_P0,
+-				MSSR(18, (BIT(6) | BIT(7)), BIT(3))),
+-	DEF_MOD("gpu",		R9A07G054L_CLK_GPU,
+-				R9A07G054L_CLK_G,
++	DEF_MOD("wdt0_pclk", R9A07G054_WDT0_PCLK,
++				R9A07G054_CLK_P0,
++				MSSR(18, (BIT(0)), BIT(0))),
++	DEF_MOD("wdt0_clk", R9A07G054_WDT0_CLK,
++				R9A07G054_CLK_P0,
++				MSSR(18, (BIT(1)), BIT(0))),
++	DEF_MOD("wdt1_pclk", R9A07G054_WDT1_PCLK,
++				R9A07G054_CLK_P0,
++				MSSR(18, (BIT(2)), BIT(1))),
++	DEF_MOD("wdt1_clk", R9A07G054_WDT1_CLK,
++				R9A07G054_CLK_P0,
++				MSSR(18, (BIT(3)), BIT(1))),
++	DEF_MOD("wdt2_pclk", R9A07G054_WDT2_PCLK,
++				R9A07G054_CLK_P0,
++				MSSR(18, (BIT(4)), BIT(2))),
++	DEF_MOD("wdt2_clk", R9A07G054_WDT2_CLK,
++				R9A07G054_CLK_P0,
++				MSSR(18, (BIT(5)), BIT(2))),
++	DEF_MOD("gpu_clk",		R9A07G054_GPU_CLK,
++				R9A07G054_CLK_G,
+ 				MSSR(22, (BIT(0) | BIT(1) | BIT(2)),
+ 					 (BIT(0) | BIT(1) | BIT(2)))),
+-	DEF_MOD("isu",		R9A07G054L_CLK_ISU,
+-				R9A07G054L_CLK_P1,
+-				MSSR(23, (BIT(0) | BIT(1)), (BIT(0) | BIT(1)))),
+-	DEF_MOD("h264",		R9A07G054L_CLK_H264,
+-				R9A07G054L_CLK_M0,
+-				MSSR(24, BIT(0), (BIT(0) | BIT(1)))),
+-	DEF_MOD("cru",		R9A07G054L_CLK_CRU,
+-				R9A07G054L_CLK_M2,
+-				MSSR(25, (BIT(0) | BIT(1) | BIT(3) | BIT(4)),
++	DEF_MOD("gpu_axi_clk",		R9A07G054_GPU_AXI_CLK,
++				R9A07G054_CLK_G,
++				MSSR(22, (BIT(0) | BIT(1) | BIT(2)),
+ 					 (BIT(0) | BIT(1) | BIT(2)))),
+-	DEF_MOD("mipi_dsi",	R9A07G054L_CLK_MIPI_DSI,
+-				R9A07G054L_CLK_M3,
+-				MSSR(26, (BIT(0) | BIT(1) | BIT(2) | BIT(3)
+-							  | BIT(4) | BIT(5)),
++	DEF_MOD("gpu_cce_clk",		R9A07G054_GPU_ACE_CLK,
++				R9A07G054_CLK_G,
++				MSSR(22, (BIT(0) | BIT(1) | BIT(2)),
+ 					 (BIT(0) | BIT(1) | BIT(2)))),
+-	DEF_MOD("lcdc",		R9A07G054L_CLK_LCDC,
+-				R9A07G054L_CLK_M3,
+-				MSSR(27, (BIT(0) | BIT(1)), BIT(0))),
+-	DEF_MOD("src",		R9A07G054L_CLK_SRC,
+-				R9A07G054L_CLK_P0,
+-				MSSR(29, BIT(0), BIT(0))),
+-	DEF_MOD("rspi0",	R9A07G054L_CLK_RSPI0,
+-				R9A07G054L_CLK_P0,
+-				MSSR(36, BIT(0), BIT(0))),
+-	DEF_MOD("rspi1",	R9A07G054L_CLK_RSPI1,
+-				R9A07G054L_CLK_P0,
+-				MSSR(36, BIT(1), BIT(1))),
+-	DEF_MOD("rspi2",	R9A07G054L_CLK_RSPI2,
+-				R9A07G054L_CLK_P0,
+-				MSSR(36, BIT(2), BIT(2))),
+-	DEF_MOD("adc",		R9A07G054L_CLK_ADC,
+-				R9A07G054L_CLK_TSU,
+-				MSSR(42, (BIT(0) | BIT(1)), (BIT(0) | BIT(1)))),
+-	DEF_MOD("tsu",		R9A07G054L_CLK_TSU_PCLK,
+-				R9A07G054L_CLK_TSU,
+-				MSSR(43, BIT(0), BIT(0))),
+-	DEF_MOD("spi-multi",	R9A07G054L_CLK_SPI,
+-				R9A07G054L_CLK_SPI1,
+-				MSSR(21, (BIT(0) | BIT(1)), BIT(0))),
+ };
+ 
+ static const unsigned int r9a07g054l_crit_mod_clks[] = {
+-	CLK_MODE_BASE + R9A07G054L_CLK_GIC600,
++	CLK_MODE_BASE + R9A07G054_GIC600_GICCLK,
+ };
+ 
+ /* clock type, register offset1, register offset2, register offset3*/
+diff --git a/include/configs/smarc-rzg2l.h b/include/configs/smarc-rzg2l.h
+index a96fcfdaa8..1a376b3b04 100644
+--- a/include/configs/smarc-rzg2l.h
++++ b/include/configs/smarc-rzg2l.h
+@@ -100,7 +100,7 @@
+ 	"boot_targets=" \
+ 			"usb0 usb1 mmc0 mmc1\0" \
+ 	"dfu_alt_info=" \
+-			"sf 0:0=u-boot.bin raw 0x20000 0x1F0000\0" \
++			"sf 0:0=fip-smarc-rzg2l_pmic.bin raw 0x20000 0x1F0000\0" \
+ 	"dfu_bufsiz=" \
+ 			"0x1F0000\0" \
+ 	"ipaddr=" \
+diff --git a/include/configs/smarc-rzv2l.h b/include/configs/smarc-rzv2l.h
+index e7d37080e3..db8c68c9ed 100644
+--- a/include/configs/smarc-rzv2l.h
++++ b/include/configs/smarc-rzv2l.h
+@@ -54,22 +54,65 @@
+ #define CONFIG_SYS_MALLOC_LEN		(64 * 1024 * 1024)
+ #define CONFIG_SYS_BOOTM_LEN		(64 << 20)
+ 
+-/* The HF/QSPI layout permits up to 1 MiB large bootloader blob */
+-#define CONFIG_BOARD_SIZE_LIMIT		1048576
++/* The HF/QSPI layout permits up to 2 MiB large bootloader blob */
++#define CONFIG_BOARD_SIZE_LIMIT		2097152
+ 
+ /* ENV setting */
+ 
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+ 	"usb_pgood_delay=2000\0" \
+-	"bootm_size=0x10000000 \0" \
+-	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p1 \0" \
+-	"prodemmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p1 \0" \
+-	"bootimage=unzip 0x4A080000 0x48080000; booti 0x48080000 - 0x48000000 \0" \
+-	"emmcload=ext4load mmc 0:1 0x4A080000 boot/Image.gz;ext4load mmc 0:1 0x48000000 boot/r9a07g054l-smarc-rzv2l.dtb;run prodemmcbootargs \0" \
+-	"sd1load=ext4load mmc 1:1 0x4A080000 boot/Image.gz;ext4load mmc 1:1 0x48000000 boot/r9a07g054l-smarc-rzv2l.dtb;run prodsdbootargs \0" \
+-	"bootcmd_check=if mmc dev 1; then run sd1load; else run emmcload; fi \0"
+-
+-#define CONFIG_BOOTCOMMAND	"env default -a;run bootcmd_check;run bootimage"
++	"fdt_addr_r=0x48000000\0" \
++	"fdtfile="CONFIG_DEFAULT_FDT_FILE"\0" \
++	"kernel_addr_r=0x48080000\0" \
++	"boot_efi_binary=efi/boot/bootaa64.efi\0" \
++	"scan_for_usb_dev=" \
++		"usb start; " \
++		"if test ! -e usb ${devnum}:1 /; then usb reset; fi;\0" \
++	"scan_boot_efi=" \
++		"part list ${devtype} ${devnum} devplist; "  \
++		"env exists devplist || setenv devplist 1; " \
++		"for distro_bootpart in ${devplist}; do " \
++			"if test -e ${devtype} ${devnum}:${distro_bootpart} ${boot_efi_binary}; then " \
++				"load ${devtype} ${devnum}:${distro_bootpart} " \
++				"${kernel_addr_r} ${boot_efi_binary};"          \
++				"echo BootEFI from <${devtype}> [${devnum}:${distro_bootpart}]; "\
++				"bootefi ${kernel_addr_r};"                     \
++			"fi;" \
++		"done;\0" \
++	"mmc0=" \
++			"setenv devnum 0;" \
++			"setenv devtype mmc;" \
++			"run scan_boot_efi;\0" \
++	"mmc1=" \
++			"setenv devnum 1;" \
++			"setenv devtype mmc;" \
++			"run scan_boot_efi;\0" \
++	"usb0=" \
++			"setenv devnum 0;" \
++			"setenv devtype usb;" \
++			"run scan_for_usb_dev;"\
++			"run scan_boot_efi;\0"\
++	"usb1=" \
++			"setenv devnum 1;" \
++			"setenv devtype usb;" \
++			"run scan_for_usb_dev;"\
++			"run scan_boot_efi;\0" \
++	"boot_targets=" \
++			"usb0 usb1 mmc0 mmc1\0" \
++	"dfu_alt_info=" \
++			"sf 0:0=fip-smarc-rzv2l_pmic.bin raw 0x20000 0x1F0000\0" \
++	"dfu_bufsiz=" \
++			"0x1F0000\0" \
++	"ipaddr=" \
++			"192.168.10.7\0" \
++	"serverip=" \
++			"192.168.10.1\0" \
++	"distro_bootcmd=" \
++			"env exists boot_targets || setenv boot_targets mmc0 mmc1 usb0 usb1; " \
++			"for target in ${boot_targets}; do "\
++				"run ${target};" \
++			"done;" \
++	"bootcmd=run distro_bootcmd\0" \
+ 
+ /* For board */
+ /* Ethernet RAVB */
+diff --git a/include/dt-bindings/clock/r9a07g054-cpg.h b/include/dt-bindings/clock/r9a07g054-cpg.h
+new file mode 100644
+index 0000000000..43f4dbda87
+--- /dev/null
++++ b/include/dt-bindings/clock/r9a07g054-cpg.h
+@@ -0,0 +1,229 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++#ifndef __DT_BINDINGS_CLOCK_R9A07G054_CPG_H__
++#define __DT_BINDINGS_CLOCK_R9A07G054_CPG_H__
++
++#include <dt-bindings/clock/renesas-cpg-mssr.h>
++
++/* R9A07G054 CPG Core Clocks */
++#define R9A07G054_CLK_I			0
++#define R9A07G054_CLK_I2		1
++#define R9A07G054_CLK_G			2
++#define R9A07G054_CLK_S0		3
++#define R9A07G054_CLK_S1		4
++#define R9A07G054_CLK_SPI0		5
++#define R9A07G054_CLK_SPI1		6
++#define R9A07G054_CLK_SD0		7
++#define R9A07G054_CLK_SD1		8
++#define R9A07G054_CLK_M0		9
++#define R9A07G054_CLK_M1		10
++#define R9A07G054_CLK_M2		11
++#define R9A07G054_CLK_M3		12
++#define R9A07G054_CLK_M4		13
++#define R9A07G054_CLK_HP		14
++#define R9A07G054_CLK_TSU		15
++#define R9A07G054_CLK_ZT		16
++#define R9A07G054_CLK_P0		17
++#define R9A07G054_CLK_P1		18
++#define R9A07G054_CLK_P2		19
++#define R9A07G054_CLK_AT		20
++#define R9A07G054_OSCCLK		21
++#define R9A07G054_CLK_P0_DIV2		22
++#define R9A07G054_CLK_DRP_M		23
++#define R9A07G054_CLK_DRP_D		24
++#define R9A07G054_CLK_DRP_A		25
++
++/* R9A07G054 Module Clocks */
++#define R9A07G054_CA55_SCLK		0
++#define R9A07G054_CA55_PCLK		1
++#define R9A07G054_CA55_ATCLK		2
++#define R9A07G054_CA55_GICCLK		3
++#define R9A07G054_CA55_PERICLK		4
++#define R9A07G054_CA55_ACLK		5
++#define R9A07G054_CA55_TSCLK		6
++#define R9A07G054_GIC600_GICCLK		7
++#define R9A07G054_IA55_CLK		8
++#define R9A07G054_IA55_PCLK		9
++#define R9A07G054_MHU_PCLK		10
++#define R9A07G054_SYC_CNT_CLK		11
++#define R9A07G054_DMAC_ACLK		12
++#define R9A07G054_DMAC_PCLK		13
++#define R9A07G054_OSTM0_PCLK		14
++#define R9A07G054_OSTM1_PCLK		15
++#define R9A07G054_OSTM2_PCLK		16
++#define R9A07G054_MTU_X_MCK_MTU3	17
++#define R9A07G054_POE3_CLKM_POE		18
++#define R9A07G054_GPT_PCLK		19
++#define R9A07G054_POEG_A_CLKP		20
++#define R9A07G054_POEG_B_CLKP		21
++#define R9A07G054_POEG_C_CLKP		22
++#define R9A07G054_POEG_D_CLKP		23
++#define R9A07G054_WDT0_PCLK		24
++#define R9A07G054_WDT0_CLK		25
++#define R9A07G054_WDT1_PCLK		26
++#define R9A07G054_WDT1_CLK		27
++#define R9A07G054_WDT2_PCLK		28
++#define R9A07G054_WDT2_CLK		29
++#define R9A07G054_SPI_CLK2		30
++#define R9A07G054_SPI_CLK		31
++#define R9A07G054_SDHI0_IMCLK		32
++#define R9A07G054_SDHI0_IMCLK2		33
++#define R9A07G054_SDHI0_CLK_HS		34
++#define R9A07G054_SDHI0_ACLK		35
++#define R9A07G054_SDHI1_IMCLK		36
++#define R9A07G054_SDHI1_IMCLK2		37
++#define R9A07G054_SDHI1_CLK_HS		38
++#define R9A07G054_SDHI1_ACLK		39
++#define R9A07G054_GPU_CLK		40
++#define R9A07G054_GPU_AXI_CLK		41
++#define R9A07G054_GPU_ACE_CLK		42
++#define R9A07G054_ISU_ACLK		43
++#define R9A07G054_ISU_PCLK		44
++#define R9A07G054_H264_CLK_A		45
++#define R9A07G054_H264_CLK_P		46
++#define R9A07G054_CRU_SYSCLK		47
++#define R9A07G054_CRU_VCLK		48
++#define R9A07G054_CRU_PCLK		49
++#define R9A07G054_CRU_ACLK		50
++#define R9A07G054_MIPI_DSI_PLLCLK	51
++#define R9A07G054_MIPI_DSI_SYSCLK	52
++#define R9A07G054_MIPI_DSI_ACLK		53
++#define R9A07G054_MIPI_DSI_PCLK		54
++#define R9A07G054_MIPI_DSI_VCLK		55
++#define R9A07G054_MIPI_DSI_LPCLK	56
++#define R9A07G054_LCDC_CLK_A		57
++#define R9A07G054_LCDC_CLK_P		58
++#define R9A07G054_LCDC_CLK_D		59
++#define R9A07G054_SSI0_PCLK2		60
++#define R9A07G054_SSI0_PCLK_SFR		61
++#define R9A07G054_SSI1_PCLK2		62
++#define R9A07G054_SSI1_PCLK_SFR		63
++#define R9A07G054_SSI2_PCLK2		64
++#define R9A07G054_SSI2_PCLK_SFR		65
++#define R9A07G054_SSI3_PCLK2		66
++#define R9A07G054_SSI3_PCLK_SFR		67
++#define R9A07G054_SRC_CLKP		68
++#define R9A07G054_USB_U2H0_HCLK		69
++#define R9A07G054_USB_U2H1_HCLK		70
++#define R9A07G054_USB_U2P_EXR_CPUCLK	71
++#define R9A07G054_USB_PCLK		72
++#define R9A07G054_ETH0_CLK_AXI		73
++#define R9A07G054_ETH0_CLK_CHI		74
++#define R9A07G054_ETH1_CLK_AXI		75
++#define R9A07G054_ETH1_CLK_CHI		76
++#define R9A07G054_I2C0_PCLK		77
++#define R9A07G054_I2C1_PCLK		78
++#define R9A07G054_I2C2_PCLK		79
++#define R9A07G054_I2C3_PCLK		80
++#define R9A07G054_SCIF0_CLK_PCK		81
++#define R9A07G054_SCIF1_CLK_PCK		82
++#define R9A07G054_SCIF2_CLK_PCK		83
++#define R9A07G054_SCIF3_CLK_PCK		84
++#define R9A07G054_SCIF4_CLK_PCK		85
++#define R9A07G054_SCI0_CLKP		86
++#define R9A07G054_SCI1_CLKP		87
++#define R9A07G054_IRDA_CLKP		88
++#define R9A07G054_RSPI0_CLKB		89
++#define R9A07G054_RSPI1_CLKB		90
++#define R9A07G054_RSPI2_CLKB		91
++#define R9A07G054_CANFD_PCLK		92
++#define R9A07G054_GPIO_HCLK		93
++#define R9A07G054_ADC_ADCLK		94
++#define R9A07G054_ADC_PCLK		95
++#define R9A07G054_TSU_PCLK		96
++#define R9A07G054_STPAI_INITCLK		97
++#define R9A07G054_STPAI_ACLK		98
++#define R9A07G054_STPAI_MCLK		99
++#define R9A07G054_STPAI_DCLKIN		100
++#define R9A07G054_STPAI_ACLK_DRP	101
++
++/* R9A07G054 Resets */
++#define R9A07G054_CA55_RST_1_0		0
++#define R9A07G054_CA55_RST_1_1		1
++#define R9A07G054_CA55_RST_3_0		2
++#define R9A07G054_CA55_RST_3_1		3
++#define R9A07G054_CA55_RST_4		4
++#define R9A07G054_CA55_RST_5		5
++#define R9A07G054_CA55_RST_6		6
++#define R9A07G054_CA55_RST_7		7
++#define R9A07G054_CA55_RST_8		8
++#define R9A07G054_CA55_RST_9		9
++#define R9A07G054_CA55_RST_10		10
++#define R9A07G054_CA55_RST_11		11
++#define R9A07G054_CA55_RST_12		12
++#define R9A07G054_GIC600_GICRESET_N	13
++#define R9A07G054_GIC600_DBG_GICRESET_N	14
++#define R9A07G054_IA55_RESETN		15
++#define R9A07G054_MHU_RESETN		16
++#define R9A07G054_DMAC_ARESETN		17
++#define R9A07G054_DMAC_RST_ASYNC	18
++#define R9A07G054_SYC_RESETN		19
++#define R9A07G054_OSTM0_PRESETZ		20
++#define R9A07G054_OSTM1_PRESETZ		21
++#define R9A07G054_OSTM2_PRESETZ		22
++#define R9A07G054_MTU_X_PRESET_MTU3	23
++#define R9A07G054_POE3_RST_M_REG	24
++#define R9A07G054_GPT_RST_C		25
++#define R9A07G054_POEG_A_RST		26
++#define R9A07G054_POEG_B_RST		27
++#define R9A07G054_POEG_C_RST		28
++#define R9A07G054_POEG_D_RST		29
++#define R9A07G054_WDT0_PRESETN		30
++#define R9A07G054_WDT1_PRESETN		31
++#define R9A07G054_WDT2_PRESETN		32
++#define R9A07G054_SPI_RST		33
++#define R9A07G054_SDHI0_IXRST		34
++#define R9A07G054_SDHI1_IXRST		35
++#define R9A07G054_GPU_RESETN		36
++#define R9A07G054_GPU_AXI_RESETN	37
++#define R9A07G054_GPU_ACE_RESETN	38
++#define R9A07G054_ISU_ARESETN		39
++#define R9A07G054_ISU_PRESETN		40
++#define R9A07G054_H264_X_RESET_VCP	41
++#define R9A07G054_H264_CP_PRESET_P	42
++#define R9A07G054_CRU_CMN_RSTB		43
++#define R9A07G054_CRU_PRESETN		44
++#define R9A07G054_CRU_ARESETN		45
++#define R9A07G054_MIPI_DSI_CMN_RSTB	46
++#define R9A07G054_MIPI_DSI_ARESET_N	47
++#define R9A07G054_MIPI_DSI_PRESET_N	48
++#define R9A07G054_LCDC_RESET_N		49
++#define R9A07G054_SSI0_RST_M2_REG	50
++#define R9A07G054_SSI1_RST_M2_REG	51
++#define R9A07G054_SSI2_RST_M2_REG	52
++#define R9A07G054_SSI3_RST_M2_REG	53
++#define R9A07G054_SRC_RST		54
++#define R9A07G054_USB_U2H0_HRESETN	55
++#define R9A07G054_USB_U2H1_HRESETN	56
++#define R9A07G054_USB_U2P_EXL_SYSRST	57
++#define R9A07G054_USB_PRESETN		58
++#define R9A07G054_ETH0_RST_HW_N		59
++#define R9A07G054_ETH1_RST_HW_N		60
++#define R9A07G054_I2C0_MRST		61
++#define R9A07G054_I2C1_MRST		62
++#define R9A07G054_I2C2_MRST		63
++#define R9A07G054_I2C3_MRST		64
++#define R9A07G054_SCIF0_RST_SYSTEM_N	65
++#define R9A07G054_SCIF1_RST_SYSTEM_N	66
++#define R9A07G054_SCIF2_RST_SYSTEM_N	67
++#define R9A07G054_SCIF3_RST_SYSTEM_N	68
++#define R9A07G054_SCIF4_RST_SYSTEM_N	69
++#define R9A07G054_SCI0_RST		70
++#define R9A07G054_SCI1_RST		71
++#define R9A07G054_IRDA_RST		72
++#define R9A07G054_RSPI0_RST		73
++#define R9A07G054_RSPI1_RST		74
++#define R9A07G054_RSPI2_RST		75
++#define R9A07G054_CANFD_RSTP_N		76
++#define R9A07G054_CANFD_RSTC_N		77
++#define R9A07G054_GPIO_RSTN		78
++#define R9A07G054_GPIO_PORT_RESETN	79
++#define R9A07G054_GPIO_SPARE_RESETN	80
++#define R9A07G054_ADC_PRESETN		81
++#define R9A07G054_ADC_ADRST_N		82
++#define R9A07G054_TSU_PRESETN		83
++#define R9A07G054_STPAI_ARESETN		84
++
++#endif /* __DT_BINDINGS_CLOCK_R9A07G054_CPG_H__ */
+-- 
+2.25.1
+

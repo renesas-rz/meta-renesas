@@ -18,6 +18,7 @@ SRC_URI_append = " \
 	file://asr/0005-smarc-rzg2l-randomize-ethernet-address-to-avoid-null.patch    \
 	file://asr/0006-smarc-rzg2l-enable-rtc-command-and-store-rtc-time.patch       \
 	file://asr/0007-smarc-rzg2l-capsule-updates.patch                             \
-        file://asr/0008-smarc-rzg2l-dt-update-for-linux-6-0.patch                     \
-        file://asr/0009-smarc-rzg2l-dt-update-for-linux-6-4-3.patch                   \
+	file://asr/0008-smarc-rzg2l-dt-update-for-linux-6-0.patch                     \
+	file://asr/0009-smarc-rzg2l-dt-update-for-linux-6-4-3.patch                   \
+	file://asr/0010-smarc-rzv2l-arm-system-ready-updates.patch                    \
 "
