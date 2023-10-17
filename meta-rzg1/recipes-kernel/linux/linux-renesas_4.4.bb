@@ -10,11 +10,11 @@ DEPENDS_append = " util-linux-native openssl-native"
 
 KERNEL_URL=" \
 	git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "rzg1-cip74-rt43"
-SRCREV = "f2b2498bfa3763611606fa48540f4293b7b95799"
+BRANCH = "rzg1-cip76-rt44"
+SRCREV = "b5d7f1a9b8505ebd9bd2f10dbd8d685d60cdcd08"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
-LINUX_VERSION ?= "4.4.302-cip74-rt43"
+LINUX_VERSION ?= "4.4.302-cip76-rt44"
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
 

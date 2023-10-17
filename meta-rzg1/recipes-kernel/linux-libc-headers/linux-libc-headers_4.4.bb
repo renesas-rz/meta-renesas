@@ -2,8 +2,8 @@ require recipes-kernel/linux-libc-headers/linux-libc-headers.inc
 
 KERNEL_URL=" \
 	git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "rzg1-cip74-rt43"
-SRCREV = "f2b2498bfa3763611606fa48540f4293b7b95799"
+BRANCH = "rzg1-cip76-rt44"
+SRCREV = "b5d7f1a9b8505ebd9bd2f10dbd8d685d60cdcd08"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
 SRC_URI_append = " \
