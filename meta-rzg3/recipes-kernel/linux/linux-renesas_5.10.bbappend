@@ -3,7 +3,7 @@ COMPATIBLE_MACHINE_rzg3s = "(rzg3s-dev|smarc-rzg3s)"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 BRANCH = "${@oe.utils.conditional("IS_RT_BSP", "1", "rzg3s-cip17-rt7", "rzg3s-cip17",d)}"
-SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "14ec0928ebe91d323c103eeb68a5118d04eaea8e", "bbd33951a02e7d6b70532ad919be6003ac137ac6",d)}"
+SRCREV = "${@oe.utils.conditional("IS_RT_BSP", "1", "dba3104dccca586e776be05c52ea6209ff9aa406", "eda8e1a3e8e274080b6595f39a3c102af74c761e",d)}"
 
 LINUX_VERSION = "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.145-cip17-rt7", "5.10.145-cip17",d)}"
 
