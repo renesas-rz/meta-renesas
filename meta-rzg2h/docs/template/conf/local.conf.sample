@@ -277,6 +277,8 @@ DISTRO_FEATURES_append = " pam"
 # Enable wayland and disable x11
 DISTRO_FEATURES_append = " wayland"
 DISTRO_FEATURES_remove = " x11"
+DISTRO_FEATURES_NATIVESDK_append = " wayland"
+DISTRO_FEATURES_NATIVESDK_remove = " x11"
 
 # Add qt5 demonstration to core-image-qt or not
 #QT_DEMO = "1"
