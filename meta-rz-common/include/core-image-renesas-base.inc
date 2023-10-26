@@ -167,6 +167,8 @@ export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
 export HOST_EXTRACFLAGS="-I${OECORE_NATIVE_SYSROOT}/usr/include/ -L${OECORE_NATIVE_SYSROOT}/usr/lib"
 
 # WKS setup
-WKS_DEFAULT_FILE ?= "rz-image-bootpart-mmc1.wks"
-WKS_DEFAULT_FILE_ek874 ?= "rz-image-bootpart-mmc0.wks"
+WKS_DEFAULT_FILE ?= "rz-image-bootpart-mmc0.wks"
 WKS_FILE = "${@oe.utils.conditional("WKS_SUPPORT", "1", "${WKS_DEFAULT_FILE}", "", d)}"
+
+# Ensure firmware-pack already run before creating wic image
+do_image_wic[depends] += "firmware-pack:do_deploy"
