@@ -1,0 +1,14 @@
+# Short-description: Create SD card image for eSD boot
+# Long-description: Creates a SD card image that can be used to boot up RZ boards.
+#                   First area (unformatted) contains bootloader
+#                   Second area (first partition) contains files of bootloader and related components
+#                   Last area (second partition) contains rootfs, as well as Linux image and devicetree
+#                   Note: for eSD boot, SD card must be mmc0. If not use eSD boot mode, on the boards
+#                         with multiple SD card slots, SD card can be either mmc0 or mmc1.
+
+part --source rawcopy --sourceparams="file=bl2_bp_esd-${MACHINE}_pmic.bin" --no-table
+part --source rawcopy --sourceparams="file=bl2_bp-${MACHINE}_pmic.bin" --no-table --align 4
+part --source rawcopy --sourceparams="file=fip-${MACHINE}_pmic.bin" --no-table  --align 64
+
+part --source bootimg-partition --fstype=vfat --label bootloaderfiles --align 1024
+part --source rootfs            --fstype=ext4 --label root            --align 4
