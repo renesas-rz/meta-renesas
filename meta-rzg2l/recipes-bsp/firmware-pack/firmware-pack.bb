@@ -6,6 +6,8 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec
 require include/rzg2l-optee-config.inc
 inherit deploy
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 DEPENDS = " \
 	trusted-firmware-a u-boot \
 	${@oe.utils.conditional("ENABLE_SPD_OPTEE", "1", " optee-os", "",d)} \
