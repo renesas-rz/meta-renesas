@@ -22,4 +22,5 @@ SRC_URI_append = " \
 	file://asr/0009-smarc-rzg2l-dt-update-for-linux-6-4-3.patch                   \
 	file://asr/0010-smarc-rzv2l-arm-system-ready-updates.patch                    \
 	file://asr/0011-smarc-rzg2ul-arm-system-ready-updates.patch                   \
+        file://asr/0012-smarc-rzg2lc-arm-system-ready-updates.patch                   \
 "

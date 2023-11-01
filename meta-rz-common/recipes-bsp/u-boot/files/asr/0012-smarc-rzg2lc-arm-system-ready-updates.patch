@@ -1,0 +1,975 @@
+From 078989d90d101da50fee3b78f313b6a27333582d Mon Sep 17 00:00:00 2001
+From: johnv <john.vincent.xa@bp.renesas.com>
+Date: Wed, 1 Nov 2023 09:51:35 +0000
+Subject: [PATCH] smarc rzg2lc arm system ready updates
+
+1. Device tree changes to match linux 6.4.3
+2. Clock, GPIO and PFC modules updates
+3. Additional configuration for ARM system ready
+
+Signed-off-by: johnv <john.vincent.xa@bp.renesas.com>
+---
+ 3-rzg2ul-copy.sh                           |  56 +++++
+ arch/arm/dts/r9a07g044c2.dtsi              |  20 ++
+ arch/arm/dts/rzg2lc-smarc-pinfunction.dtsi | 134 ++++++++++
+ arch/arm/dts/rzg2lc-smarc-som.dtsi         | 278 +++++++++++++++++++++
+ arch/arm/dts/rzg2lc-smarc.dtsi             |  87 +++++++
+ arch/arm/dts/smarc-rzg2lc.dts              | 163 +++---------
+ configs/smarc-rzg2lc_defconfig             |  57 +++++
+ configs/smarc-rzg2ul_defconfig             |   2 +-
+ include/configs/smarc-rzg2lc.h             |  65 ++++-
+ 9 files changed, 719 insertions(+), 143 deletions(-)
+ create mode 100755 3-rzg2ul-copy.sh
+ create mode 100755 arch/arm/dts/r9a07g044c2.dtsi
+ create mode 100755 arch/arm/dts/rzg2lc-smarc-pinfunction.dtsi
+ create mode 100755 arch/arm/dts/rzg2lc-smarc-som.dtsi
+ create mode 100755 arch/arm/dts/rzg2lc-smarc.dtsi
+
+diff --git a/3-rzg2ul-copy.sh b/3-rzg2ul-copy.sh
+new file mode 100755
+index 0000000000..68a86df40e
+--- /dev/null
++++ b/3-rzg2ul-copy.sh
+@@ -0,0 +1,56 @@
++#!/bin/bash
++
++
++#r9a07g044.dtsi
++#r9a07g044l2.dtsi
++#rzg2l-smarc.dtsi
++#rzg2l-smarc-pinfunction.dtsi
++#rzg2l-smarc-som.dtsi
++#rz-smarc-common.dtsi
++
++#source_dir="/media/sf_tftp/dts/U-boot/02-RZV2L/dt-u-boot-6_4_3/"
++#target_dir="./arch/arm/dts/"
++
++source_dir="./arch/arm/dts/"
++target_dir="/media/sf_ubuntu/dts/U-boot/03-RZG2UL/all-dt-u-boot-6_4_3-20231016/"
++
++# Check if the source directory exists
++if [ ! -d "$source_dir" ]; then
++    echo "Source directory does not exist."
++    exit 1
++fi
++
++# Create the target directory if it doesn't exist
++if [ ! -d "$target_dir" ]; then
++    mkdir -p "$target_dir"
++fi
++
++#original u-boot files are copied here
++
++#cp -r "$source_dir"r9a07g054l.dtsi "$target_dir"
++#cp -r "$source_dir"r9a07g054l-u-boot.dtsi "$target_dir"
++#cp -r "$source_dir"smarc-rzv2l.dts "$target_dir"
++
++# Copy files from source to target directory
++
++#cp -r "$source_dir"r9a07g044l2-smarc.dts "$target_dir"
++mkdir -p "$target_dir"arch/arm/dts/
++mkdir -p "$target_dir"drivers/clk/renesas/
++mkdir -p "$target_dir"include/dt-bindings/clock/
++mkdir -p "$target_dir"include/configs/
++
++cp -r "$source_dir"smarc-rzg2ul.dts "$target_dir"arch/arm/dts/
++cp -r "$source_dir"r9a07g043u.dtsi "$target_dir"arch/arm/dts/
++cp -r "$source_dir"rzg2ul-smarc-som.dtsi "$target_dir"arch/arm/dts/
++cp -r "$source_dir"rzg2ul-smarc-pinfunction.dtsi "$target_dir"arch/arm/dts/
++cp -r "$source_dir"rz-smarc-common.dtsi "$target_dir"arch/arm/dts/
++cp -r "$source_dir"rzg2ul-smarc.dtsi "$target_dir"arch/arm/dts/
++cp -r "$source_dir"r9a07g043.dtsi "$target_dir"arch/arm/dts/
++
++cp ./drivers/clk/renesas/r9a07g043u-cpg-mssr.c  "$target_dir"drivers/clk/renesas/
++cp ./include/dt-bindings/clock/r9a07g043-cpg.h  "$target_dir"include/dt-bindings/clock/
++cp ./include/configs/smarc-rzg2ul.h "$target_dir"include/configs
++cp ./configs/smarc-rzg2ul_defconfig "$target_dir"/configs
++
++
++echo "Files copied successfully."
+diff --git a/arch/arm/dts/r9a07g044c2.dtsi b/arch/arm/dts/r9a07g044c2.dtsi
+new file mode 100755
+index 0000000000..7bb8917fe4
+--- /dev/null
++++ b/arch/arm/dts/r9a07g044c2.dtsi
+@@ -0,0 +1,20 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/G2LC R9A07G044C2 SoC specific parts
++ *
++ * Copyright (C) 2021 Renesas Electronics Corp.
++ */
++
++/dts-v1/;
++#include "r9a07g044.dtsi"
++
++/ {
++	compatible = "renesas,r9a07g044c2", "renesas,r9a07g044";
++};
++
++&soc {
++	/delete-node/ ssi@1004a800;
++	/delete-node/ serial@1004c800;
++	/delete-node/ adc@10059000;
++	/delete-node/ ethernet@11c30000;
++};
+diff --git a/arch/arm/dts/rzg2lc-smarc-pinfunction.dtsi b/arch/arm/dts/rzg2lc-smarc-pinfunction.dtsi
+new file mode 100755
+index 0000000000..a78a8def36
+--- /dev/null
++++ b/arch/arm/dts/rzg2lc-smarc-pinfunction.dtsi
+@@ -0,0 +1,134 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/G2LC SMARC pincontrol parts
++ *
++ * Copyright (C) 2021 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
++
++&pinctrl {
++	pinctrl-0 = <&sound_clk_pins>;
++	pinctrl-names = "default";
++
++#if SW_SCIF_CAN
++	/* SW8 should be at position 2->1 */
++	can1_pins: can1 {
++		pinmux = <RZG2L_PORT_PINMUX(40, 0, 3)>, /* TxD */
++			 <RZG2L_PORT_PINMUX(40, 1, 3)>; /* RxD */
++	};
++#endif
++
++#if SW_RSPI_CAN
++	/* SW8 should be at position 2->3 so that GPIO9_CAN1_STB line is activated */
++	can1-stb-hog {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(44, 3) GPIO_ACTIVE_HIGH>;
++		output-low;
++		line-name = "can1_stb";
++	};
++
++	can1_pins: can1 {
++		pinmux = <RZG2L_PORT_PINMUX(44, 0, 3)>, /* TxD */
++			 <RZG2L_PORT_PINMUX(44, 1, 3)>; /* RxD */
++	};
++#endif
++
++	i2c0_pins: i2c0 {
++		pins = "RIIC0_SDA", "RIIC0_SCL";
++		input-enable;
++	};
++
++	i2c1_pins: i2c1 {
++		pins = "RIIC1_SDA", "RIIC1_SCL";
++		input-enable;
++	};
++
++	i2c2_pins: i2c2 {
++		pinmux = <RZG2L_PORT_PINMUX(42, 3, 1)>, /* SDA */
++			 <RZG2L_PORT_PINMUX(42, 4, 1)>; /* SCL */
++	};
++
++	scif0_pins: scif0 {
++		pinmux = <RZG2L_PORT_PINMUX(38, 0, 1)>,	/* TxD */
++			 <RZG2L_PORT_PINMUX(38, 1, 1)>;	/* RxD */
++	};
++
++	scif1_pins: scif1 {
++		pinmux = <RZG2L_PORT_PINMUX(40, 0, 1)>, /* TxD */
++			 <RZG2L_PORT_PINMUX(40, 1, 1)>, /* RxD */
++			 <RZG2L_PORT_PINMUX(41, 0, 1)>, /* CTS# */
++			 <RZG2L_PORT_PINMUX(41, 1, 1)>; /* RTS# */
++	};
++
++	sd1-pwr-en-hog {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(39, 2) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "sd1_pwr_en";
++	};
++
++	sdhi1_pins: sd1 {
++		sd1_data {
++			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
++			power-source = <3300>;
++		};
++
++		sd1_ctrl {
++			pins = "SD1_CLK", "SD1_CMD";
++			power-source = <3300>;
++		};
++
++		sd1_mux {
++			pinmux = <RZG2L_PORT_PINMUX(19, 0, 1)>; /* SD1_CD */
++		};
++	};
++
++	sdhi1_pins_uhs: sd1_uhs {
++		sd1_data_uhs {
++			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
++			power-source = <1800>;
++		};
++
++		sd1_ctrl_uhs {
++			pins = "SD1_CLK", "SD1_CMD";
++			power-source = <1800>;
++		};
++
++		sd1_mux_uhs {
++			pinmux = <RZG2L_PORT_PINMUX(19, 0, 1)>; /* SD1_CD */
++		};
++	};
++
++	sound_clk_pins: sound_clk {
++		pins = "AUDIO_CLK1", "AUDIO_CLK2";
++		input-enable;
++	};
++
++	spi1_pins: spi1 {
++		pinmux = <RZG2L_PORT_PINMUX(44, 0, 1)>, /* CK */
++			 <RZG2L_PORT_PINMUX(44, 1, 1)>, /* MOSI */
++			 <RZG2L_PORT_PINMUX(44, 2, 1)>, /* MISO */
++			 <RZG2L_PORT_PINMUX(44, 3, 1)>; /* SSL */
++	};
++
++	ssi0_pins: ssi0 {
++		pinmux = <RZG2L_PORT_PINMUX(45, 0, 1)>, /* BCK */
++			 <RZG2L_PORT_PINMUX(45, 1, 1)>, /* RCK */
++			 <RZG2L_PORT_PINMUX(45, 2, 1)>, /* TXD */
++			 <RZG2L_PORT_PINMUX(45, 3, 1)>; /* RXD */
++	};
++
++	usb0_pins: usb0 {
++		pinmux = <RZG2L_PORT_PINMUX(4, 0, 1)>, /* VBUS */
++			 <RZG2L_PORT_PINMUX(5, 0, 1)>, /* OVC */
++			 <RZG2L_PORT_PINMUX(5, 1, 1)>; /* OTG_ID */
++	};
++
++	usb1_pins: usb1 {
++		pinmux = <RZG2L_PORT_PINMUX(42, 0, 1)>, /* VBUS */
++			 <RZG2L_PORT_PINMUX(42, 1, 1)>; /* OVC */
++	};
++};
++
+diff --git a/arch/arm/dts/rzg2lc-smarc-som.dtsi b/arch/arm/dts/rzg2lc-smarc-som.dtsi
+new file mode 100755
+index 0000000000..8a0d56872d
+--- /dev/null
++++ b/arch/arm/dts/rzg2lc-smarc-som.dtsi
+@@ -0,0 +1,278 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/G2LC SMARC SOM common parts
++ *
++ * Copyright (C) 2021 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
++
++/ {
++	aliases {
++		ethernet0 = &eth0;
++	};
++
++	chosen {
++		bootargs = "ignore_loglevel rw root=/dev/nfs ip=on";
++	};
++
++	memory@48000000 {
++		device_type = "memory";
++		/* first 128MB is reserved for secure area. */
++		reg = <0x0 0x48000000 0x0 0x38000000>;
++	};
++
++	reg_1p8v: regulator-1p8v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.8V";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_3p3v: regulator-3p3v {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-3.3V";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	reg_1p1v: regulator-vdd-core {
++		compatible = "regulator-fixed";
++		regulator-name = "fixed-1.1V";
++		regulator-min-microvolt = <1100000>;
++		regulator-max-microvolt = <1100000>;
++		regulator-boot-on;
++		regulator-always-on;
++	};
++
++	vccq_sdhi0: regulator-vccq-sdhi0 {
++		compatible = "regulator-gpio";
++
++		regulator-name = "SDHI0 VccQ";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++		states = <3300000 1>, <1800000 0>;
++		regulator-boot-on;
++		gpios = <&pinctrl RZG2L_GPIO(39, 0) GPIO_ACTIVE_HIGH>;
++		regulator-always-on;
++	};
++};
++
++&eth0 {
++	pinctrl-0 = <&eth0_pins>;
++	pinctrl-names = "default";
++	phy-handle = <&phy0>;
++	phy-mode = "rgmii-id";
++	status = "okay";
++
++	phy0: ethernet-phy@7 {
++		compatible = "ethernet-phy-id0022.1640",
++			     "ethernet-phy-ieee802.3-c22";
++		reg = <7>;
++		rxc-skew-psec = <2400>;
++		txc-skew-psec = <2400>;
++		rxdv-skew-psec = <0>;
++		txdv-skew-psec = <0>;
++		rxd0-skew-psec = <0>;
++		rxd1-skew-psec = <0>;
++		rxd2-skew-psec = <0>;
++		rxd3-skew-psec = <0>;
++		txd0-skew-psec = <0>;
++		txd1-skew-psec = <0>;
++		txd2-skew-psec = <0>;
++		txd3-skew-psec = <0>;
++	};
++};
++
++&extal_clk {
++	clock-frequency = <24000000>;
++};
++
++&gpu {
++	mali-supply = <&reg_1p1v>;
++};
++
++&ostm1 {
++	status = "okay";
++};
++
++&ostm2 {
++	status = "okay";
++};
++
++&pinctrl {
++	eth0_pins: eth0 {
++		pinmux = <RZG2L_PORT_PINMUX(28, 1, 1)>, /* ET0_LINKSTA */
++			 <RZG2L_PORT_PINMUX(27, 1, 1)>, /* ET0_MDC */
++			 <RZG2L_PORT_PINMUX(28, 0, 1)>, /* ET0_MDIO */
++			 <RZG2L_PORT_PINMUX(20, 0, 1)>, /* ET0_TXC */
++			 <RZG2L_PORT_PINMUX(20, 1, 1)>, /* ET0_TX_CTL */
++			 <RZG2L_PORT_PINMUX(20, 2, 1)>, /* ET0_TXD0 */
++			 <RZG2L_PORT_PINMUX(21, 0, 1)>, /* ET0_TXD1 */
++			 <RZG2L_PORT_PINMUX(21, 1, 1)>, /* ET0_TXD2 */
++			 <RZG2L_PORT_PINMUX(22, 0, 1)>, /* ET0_TXD3 */
++			 <RZG2L_PORT_PINMUX(24, 0, 1)>, /* ET0_RXC */
++			 <RZG2L_PORT_PINMUX(24, 1, 1)>, /* ET0_RX_CTL */
++			 <RZG2L_PORT_PINMUX(25, 0, 1)>, /* ET0_RXD0 */
++			 <RZG2L_PORT_PINMUX(25, 1, 1)>, /* ET0_RXD1 */
++			 <RZG2L_PORT_PINMUX(26, 0, 1)>, /* ET0_RXD2 */
++			 <RZG2L_PORT_PINMUX(26, 1, 1)>; /* ET0_RXD3 */
++	};
++
++	gpio-sd0-pwr-en-hog {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(18, 1) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "gpio_sd0_pwr_en";
++	};
++
++	qspi0_pins: qspi0 {
++		qspi0-data {
++			pins = "QSPI0_IO0", "QSPI0_IO1", "QSPI0_IO2", "QSPI0_IO3";
++			power-source = <1800>;
++		};
++
++		qspi0-ctrl {
++			pins = "QSPI0_SPCLK", "QSPI0_SSL", "QSPI_RESET#";
++			power-source = <1800>;
++		};
++	};
++
++	/*
++	 * SD0 device selection is XOR between GPIO_SD0_DEV_SEL and SW1[2]
++	 * The below switch logic can be used to select the device between
++	 * eMMC and microSD, after setting GPIO_SD0_DEV_SEL to high in DT.
++	 * SW1[2] should be at OFF position to enable 64 GB eMMC
++	 * SW1[2] should be at position ON to enable uSD card CN3
++	 */
++	gpio-sd0-dev-sel-hog {
++		gpio-hog;
++		gpios = <RZG2L_GPIO(40, 2) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "gpio_sd0_dev_sel";
++	};
++
++	sdhi0_emmc_pins: sd0emmc {
++		sd0_emmc_data {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3",
++			       "SD0_DATA4", "SD0_DATA5", "SD0_DATA6", "SD0_DATA7";
++			power-source = <1800>;
++		};
++
++		sd0_emmc_ctrl {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source = <1800>;
++		};
++
++		sd0_emmc_rst {
++			pins = "SD0_RST#";
++			power-source = <1800>;
++		};
++	};
++
++	sdhi0_pins: sd0 {
++		sd0_data {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3";
++			power-source = <3300>;
++		};
++
++		sd0_ctrl {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source = <3300>;
++		};
++
++		sd0_mux {
++			pinmux = <RZG2L_PORT_PINMUX(18, 0, 1)>; /* SD0_CD */
++		};
++	};
++
++	sdhi0_pins_uhs: sd0_uhs {
++		sd0_data_uhs {
++			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3";
++			power-source = <1800>;
++		};
++
++		sd0_ctrl_uhs {
++			pins = "SD0_CLK", "SD0_CMD";
++			power-source = <1800>;
++		};
++
++		sd0_mux_uhs {
++			pinmux = <RZG2L_PORT_PINMUX(18, 0, 1)>; /* SD0_CD */
++		};
++	};
++};
++
++&sbc {
++	pinctrl-0 = <&qspi0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	flash@0 {
++		compatible = "micron,mt25qu512a", "jedec,spi-nor";
++		reg = <0>;
++		m25p,fast-read;
++		spi-max-frequency = <50000000>;
++		spi-rx-bus-width = <4>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			boot@0 {
++				reg = <0x00000000 0x2000000>;
++				read-only;
++			};
++			user@2000000 {
++				reg = <0x2000000 0x2000000>;
++			};
++		};
++	};
++};
++
++#if (!SW_SD0_DEV_SEL)
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_pins>;
++	pinctrl-1 = <&sdhi0_pins_uhs>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&vccq_sdhi0>;
++	bus-width = <4>;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	status = "okay";
++};
++#endif
++
++#if SW_SD0_DEV_SEL
++&sdhi0 {
++	pinctrl-0 = <&sdhi0_emmc_pins>;
++	pinctrl-1 = <&sdhi0_emmc_pins>;
++	pinctrl-names = "default", "state_uhs";
++
++	vmmc-supply = <&reg_3p3v>;
++	vqmmc-supply = <&reg_1p8v>;
++	bus-width = <8>;
++	mmc-hs200-1_8v;
++	non-removable;
++	fixed-emmc-driver-type = <1>;
++	status = "okay";
++};
++#endif
++
++&wdt0 {
++	status = "okay";
++	timeout-sec = <60>;
++};
++
++&wdt1 {
++	status = "okay";
++	timeout-sec = <60>;
++};
+diff --git a/arch/arm/dts/rzg2lc-smarc.dtsi b/arch/arm/dts/rzg2lc-smarc.dtsi
+new file mode 100755
+index 0000000000..b6bd27196d
+--- /dev/null
++++ b/arch/arm/dts/rzg2lc-smarc.dtsi
+@@ -0,0 +1,87 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Device Tree Source for the RZ/G2LC SMARC EVK parts
++ *
++ * Copyright (C) 2022 Renesas Electronics Corp.
++ */
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
++
++#include "rzg2lc-smarc-pinfunction.dtsi"
++#include "rz-smarc-common.dtsi"
++
++
++/ {
++	aliases {
++		serial1 = &scif1;
++		i2c2 = &i2c2;
++	};
++};
++
++#if (SW_SCIF_CAN || SW_RSPI_CAN)
++&canfd {
++	pinctrl-0 = <&can1_pins>;
++	/delete-node/ channel@0;
++};
++#else
++&canfd {
++	/delete-property/ pinctrl-0;
++	/delete-property/ pinctrl-names;
++	status = "disabled";
++};
++#endif
++
++&cpu_dai {
++	sound-dai = <&ssi0>;
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_pins>;
++	pinctrl-names = "default";
++	clock-frequency = <400000>;
++
++	status = "okay";
++
++	wm8978: codec@1a {
++		compatible = "wlf,wm8978";
++		#sound-dai-cells = <0>;
++		reg = <0x1a>;
++	};
++};
++
++/*
++ * To enable SCIF1 (SER0) on PMOD1 (CN7), On connector board
++ * SW1 should be at position 2->3 so that SER0_CTS# line is activated
++ * SW2 should be at position 2->3 so that SER0_TX line is activated
++ * SW3 should be at position 2->3 so that SER0_RX line is activated
++ * SW4 should be at position 2->3 so that SER0_RTS# line is activated
++ */
++#if (!SW_SCIF_CAN && PMOD1_SER0)
++&scif1 {
++	pinctrl-0 = <&scif1_pins>;
++	pinctrl-names = "default";
++
++	uart-has-rtscts;
++	status = "okay";
++};
++#endif
++
++&ssi0 {
++	pinctrl-0 = <&ssi0_pins>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++#if (SW_RSPI_CAN)
++&spi1 {
++	/delete-property/ pinctrl-0;
++	/delete-property/ pinctrl-names;
++	status = "disabled";
++};
++#endif
++
++&vccq_sdhi1 {
++	gpios = <&pinctrl RZG2L_GPIO(39, 1) GPIO_ACTIVE_HIGH>;
++};
+diff --git a/arch/arm/dts/smarc-rzg2lc.dts b/arch/arm/dts/smarc-rzg2lc.dts
+index 6cbf67da03..f67a6f125d 100644
+--- a/arch/arm/dts/smarc-rzg2lc.dts
++++ b/arch/arm/dts/smarc-rzg2lc.dts
+@@ -1,144 +1,45 @@
+-// SPDX-License-Identifier: GPL-2.0
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+ /*
+- * Device Tree Source for the GR-Peach board
++ * Device Tree Source for the RZ/G2LC SMARC EVK board
+  *
+- * Copyright (C) 2017 Jacopo Mondi <jacopo+renesas@jmondi.org>
+- * Copyright (C) 2016 Renesas Electronics
++ * Copyright (C) 2021 Renesas Electronics Corp.
+  */
+ 
+ /dts-v1/;
+-#include <dt-bindings/gpio/gpio.h>
+-#include "r9a07g044c.dtsi"
+-#include "r9a07g044c-u-boot.dtsi"
+-#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+ 
+-/ {
+-	model = "smarc-rzg2lc";
+-	compatible = "renesas,r9a07g044c", "renesas,rzg2lc";
+-
+-	aliases {
+-		serial0 = &scif0;
+-		spi0 = &spibsc;
+-	};
+-
+-	chosen {
+-		stdout-path = "serial0:115200n8";
+-	};
+-
+-	memory@48000000 {
+-		device_type = "memory";
+-		/* first 128MB is reserved for secure area. */
+-		reg = <0 0x48000000 0 0x38000000>;
+-	};
+-
+-};
+-
+-&pinctrl {
+-	eth0_pins: eth0 {
+-		pinmux = <RZG2L_PINMUX(20, 0, 1)>,
+-				<RZG2L_PINMUX(20, 1, 1)>,
+-				<RZG2L_PINMUX(20, 2, 1)>,
+-				<RZG2L_PINMUX(21, 0, 1)>,
+-				<RZG2L_PINMUX(21, 1, 1)>,
+-				<RZG2L_PINMUX(22, 0, 1)>,
+-				<RZG2L_PINMUX(22, 1, 1)>,
+-				<RZG2L_PINMUX(23, 0, 1)>,
+-				<RZG2L_PINMUX(23, 1, 1)>,
+-				<RZG2L_PINMUX(24, 0, 1)>,
+-				<RZG2L_PINMUX(24, 1, 1)>,
+-				<RZG2L_PINMUX(25, 0, 1)>,
+-				<RZG2L_PINMUX(25, 1, 1)>,
+-				<RZG2L_PINMUX(26, 0, 1)>,
+-				<RZG2L_PINMUX(26, 1, 1)>,
+-				<RZG2L_PINMUX(27, 0, 1)>,
+-				<RZG2L_PINMUX(27, 1, 1)>,
+-				<RZG2L_PINMUX(28, 0, 1)>,
+-				<RZG2L_PINMUX(28, 1, 1)>;
+-	};
+-};
+-
+-&xinclk {
+-        clock-frequency = <24000000>;
+-};
+-
+-&scif0 {
+-	status = "okay";
+-	clock = <100000000>;
+-};
+-
+-&sdhi0 {
+-	/* pinctrl placeholder
+-	 * If this channel is used for interfacing with a SD card, a power enable
+-	 * pin (SD0_PWR_EN) must be defined.
+-	 * The SD0_PWR_EN pin is associated with P4_1.
+-	 * A HIGH signal on SD0_PWR_EN will enable supply voltage for SD card.
+-	*/
+-	bus-width = <8>;
+-	status = "okay";
+-	/* This is used for interface that support both eMMC and SD in board */
+-	mutual-channel;
+-};
+-
+-&sdhi1 {
+-	/* pinctrl placeholder
+-	 * A power enable pin (SD1_PWR_EN) must be defined to interface with a
+-	 * SD card.
+-	 * The SD1_PWR_EN pin is associated with P39_2.
+-	 * A HIGH signal on SD1_PWR_EN will enable supply voltage for SD card.
+-	*/
+-	bus-width = <4>;
+-	status = "okay";
+-};
+-
+-&eth0 {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&eth0_pins>;
+-	phy-handle = <&phy0>;
+-	phy-mode = "rgmii";
+-	status = "okay";
+-
+-	phy0: ethernet-phy@7 {
+-		reg = <7>;
+-	};
+-};
++/*
++ * DIP-Switch SW1 setting on SoM
++ * 1 : High; 0: Low
++ * SW1-2 : SW_SD0_DEV_SEL	(1: eMMC; 0: uSD)
++ * SW1-3 : SW_SCIF_CAN		(1: CAN1; 0: SCIF1)
++ * SW1-4 : SW_RSPI_CAN		(1: CAN1; 0: RSPI1)
++ * SW1-5 : SW_I2S0_I2S1		(1: I2S2 (HDMI audio); 0: I2S0)
++ * Please change below macros according to SW1 setting
++ */
+ 
+-&i2c1 {
+-	pinctrl-names = "default";
+-	status = "okay";
++#define SW_SD0_DEV_SEL	1
+ 
+-	adv7535: hdmi@3d {
+-		compatible = "adi,adv7535";
+-		reg = <0x3d>;
+-	};
+-};
++#define SW_SCIF_CAN	0
++#if (SW_SCIF_CAN)
++/* Due to HW routing, SW_RSPI_CAN is always 0 when SW_SCIF_CAN is set to 1 */
++#define SW_RSPI_CAN	0
++#else
++/* Please set SW_RSPI_CAN. Default value is 1 */
++#define SW_RSPI_CAN	1
++#endif
+ 
+-&spibsc {
+-        num-cs = <1>;
+-        status = "okay";
+-        spi-max-frequency = <40000000>;
+-        #address-cells = <1>;
+-        #size-cells = <0>;
+-        flash0: spi-flash@0 {
+-                #address-cells = <1>;
+-                #size-cells = <1>;
+-                compatible = "spi-flash", "jedec,spi-nor";
+-                spi-max-frequency = <40000000>;
+-                spi-tx-bus-width = <1>;
+-                spi-rx-bus-width = <1>;
+-                reg = <0>;
+-                status = "okay";
+-        };
+-};
++#if (SW_SCIF_CAN && SW_RSPI_CAN)
++#error "Can not set 1 to both SW_SCIF_CAN and SW_RSPI_CAN due to HW routing"
++#endif
+ 
+-&ehci0 {
+-	status = "okay";
+-};
++/* comment the #define statement to disable SCIF1 (SER0) on PMOD1 (CN7) */
++#define PMOD1_SER0	1
+ 
+-&ehci1 {
+-	status = "okay";
+-};
++#include "r9a07g044c2.dtsi"
++#include "rzg2lc-smarc-som.dtsi"
++#include "rzg2lc-smarc.dtsi"
+ 
+-&wdt0 {
+-	status = "okay";
+-	timeout-sec = <60>;
++/ {
++	model = "Renesas SMARC EVK based on r9a07g044c2";
++	compatible = "renesas,smarc-evk", "renesas,r9a07g044c2", "renesas,r9a07g044";
+ };
+diff --git a/configs/smarc-rzg2lc_defconfig b/configs/smarc-rzg2lc_defconfig
+index 2c9275c946..7f2eb821d5 100644
+--- a/configs/smarc-rzg2lc_defconfig
++++ b/configs/smarc-rzg2lc_defconfig
+@@ -91,3 +91,60 @@ CONFIG_CMD_SF=y
+ CONFIG_CMD_SPI=y
+ CONFIG_SPI_FLASH_STMICRO=y
+ CONFIG_DM_SPI_FLASH=y
++CONFIG_BOOTM_EFI=y
++CONFIG_CMD_BOOTEFI=y
++CONFIG_CMD_NVEDIT_EFI=y
++CONFIG_CMD_EFIDEBUG=y
++CONFIG_CMD_BOOTEFI_HELLO=y
++CONFIG_CMD_BOOTEFI_HELLO_COMPILE=y
++CONFIG_CMD_BOOTEFI_SELFTEST=y
++CONFIG_CMD_GPT=y
++CONFIG_EFI_PARTITION=y
++CONFIG_EFI_LOADER=y
++CONFIG_EFI_DEVICE_PATH_TO_TEXT=y
++CONFIG_EFI_UNICODE_COLLATION_PROTOCOL2=y
++CONFIG_EFI_UNICODE_CAPITALIZATION=y
++CONFIG_EFI_HAVE_RUNTIME_RESET=y
++CONFIG_CMD_EFI_VARIABLE_FILE_STORE=y
++CONFIG_DM_RTC=y
++CONFIG_EFI_GET_TIME=y
++CONFIG_EFI_SET_TIME=y
++CONFIG_RTC_EMULATION=y
++CONFIG_CMD_DFU=y
++CONFIG_FLASH_CFI_MTD=y
++CONFIG_EFI_CAPSULE_FIRMWARE_FIT=y
++CONFIG_EFI_CAPSULE_FIRMWARE_MANAGEMENT=y
++CONFIG_EFI_CAPSULE_FIRMWARE=y
++CONFIG_EFI_CAPSULE_FIRMWARE_RAW=y
++CONFIG_EFI_CAPSULE_FMP_HEADER=y
++CONFIG_CMD_GPT=y
++CONFIG_FAT_WRITE=y
++CONFIG_FS_FAT=y
++CONFIG_CMD_PART=y
++CONFIG_PARTITIONS=y
++CONFIG_DOS_PARTITION=y
++CONFIG_ISO_PARTITION=y
++CONFIG_EFI_PARTITION=y
++CONFIG_PARTITION_UUIDS=y
++CONFIG_DISTRO_DEFAULTS=y
++CONFIG_NET_RANDOM_ETHADDR=y
++CONFIG_CMD_RTC=y
++CONFIG_EFI_RUNTIME_UPDATE_CAPSULE=y
++CONFIG_EFI_HAVE_CAPSULE_SUPPORT=y
++CONFIG_EFI_CAPSULE_ON_DISK=y
++CONFIG_SPL_DFU=y
++CONFIG_DM_MTD=y
++CONFIG_DFU_MTD=y
++CONFIG_SPL_DFU_MTD=y
++CONFIG_DFU_SF=y
++CONFIG_DFU_OVER_USB=y
++CONFIG_DFU=y
++CONFIG_DFU_MMC=y
++CONFIG_DFU_NAND=y
++CONFIG_DFU_RAM=y
++CONFIG_DFU_SF_PART=y
++CONFIG_DFU_TIMEOUT=y
++CONFIG_CMD_DFU=y
++CONFIG_OF_LIBFDT=y
++CONFIG_DFU_OVER_TFTP=y
++CONFIG_DFU_TFTP=y
+diff --git a/configs/smarc-rzg2ul_defconfig b/configs/smarc-rzg2ul_defconfig
+index 4cc0e6d584..83e023833c 100644
+--- a/configs/smarc-rzg2ul_defconfig
++++ b/configs/smarc-rzg2ul_defconfig
+@@ -91,7 +91,7 @@ CONFIG_CMD_SF=y
+ CONFIG_CMD_SPI=y
+ CONFIG_SPI_FLASH_STMICRO=y
+ CONFIG_DM_SPI_FLASH=y
+-ONFIG_BOOTM_EFI=y
++CONFIG_BOOTM_EFI=y
+ CONFIG_CMD_BOOTEFI=y
+ CONFIG_CMD_NVEDIT_EFI=y
+ CONFIG_CMD_EFIDEBUG=y
+diff --git a/include/configs/smarc-rzg2lc.h b/include/configs/smarc-rzg2lc.h
+index 6707dba3ea..4f4a12552d 100644
+--- a/include/configs/smarc-rzg2lc.h
++++ b/include/configs/smarc-rzg2lc.h
+@@ -54,22 +54,65 @@
+ #define CONFIG_SYS_MALLOC_LEN		(64 * 1024 * 1024)
+ #define CONFIG_SYS_BOOTM_LEN		(64 << 20)
+ 
+-/* The HF/QSPI layout permits up to 1 MiB large bootloader blob */
+-#define CONFIG_BOARD_SIZE_LIMIT		1048576
++/* The HF/QSPI layout permits up to 2 MiB large bootloader blob */
++#define CONFIG_BOARD_SIZE_LIMIT		2097152
+ 
+ /* ENV setting */
+ 
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+ 	"usb_pgood_delay=2000\0" \
+-	"bootm_size=0x10000000 \0" \
+-	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p1 \0" \
+-	"prodemmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p1 \0" \
+-	"bootimage=unzip 0x4A080000 0x48080000; booti 0x48080000 - 0x48000000 \0" \
+-	"emmcload=ext4load mmc 0:1 0x4A080000 boot/Image.gz;ext4load mmc 0:1 0x48000000 boot/r9a07g044l-smarc-rzg2l.dtb;run prodemmcbootargs \0" \
+-	"sd1load=ext4load mmc 1:1 0x4A080000 boot/Image.gz;ext4load mmc 1:1 0x48000000 boot/r9a07g044l-smarc-rzg2l.dtb;run prodsdbootargs \0" \
+-	"bootcmd_check=if mmc dev 1; then run sd1load; else run emmcload; fi \0"
+-
+-#define CONFIG_BOOTCOMMAND	"env default -a;run bootcmd_check;run bootimage"
++	"fdt_addr_r=0x48000000\0" \
++	"fdtfile="CONFIG_DEFAULT_FDT_FILE"\0" \
++	"kernel_addr_r=0x48080000\0" \
++	"boot_efi_binary=efi/boot/bootaa64.efi\0" \
++	"scan_for_usb_dev=" \
++		"usb start; " \
++		"if test ! -e usb ${devnum}:1 /; then usb reset; fi;\0" \
++	"scan_boot_efi=" \
++		"part list ${devtype} ${devnum} devplist; "  \
++		"env exists devplist || setenv devplist 1; " \
++		"for distro_bootpart in ${devplist}; do " \
++			"if test -e ${devtype} ${devnum}:${distro_bootpart} ${boot_efi_binary}; then " \
++				"load ${devtype} ${devnum}:${distro_bootpart} " \
++				"${kernel_addr_r} ${boot_efi_binary};"          \
++				"echo BootEFI from <${devtype}> [${devnum}:${distro_bootpart}]; "\
++				"bootefi ${kernel_addr_r};"                     \
++			"fi;" \
++		"done;\0" \
++	"mmc0=" \
++			"setenv devnum 0;" \
++			"setenv devtype mmc;" \
++			"run scan_boot_efi;\0" \
++	"mmc1=" \
++			"setenv devnum 1;" \
++			"setenv devtype mmc;" \
++			"run scan_boot_efi;\0" \
++	"usb0=" \
++			"setenv devnum 0;" \
++			"setenv devtype usb;" \
++			"run scan_for_usb_dev;"\
++			"run scan_boot_efi;\0"\
++	"usb1=" \
++			"setenv devnum 1;" \
++			"setenv devtype usb;" \
++			"run scan_for_usb_dev;"\
++			"run scan_boot_efi;\0" \
++	"boot_targets=" \
++			"usb0 usb1 mmc0 mmc1\0" \
++	"dfu_alt_info=" \
++			"sf 0:0=fip-smarc-rzg2lc.bin raw 0x20000 0x1F0000\0" \
++	"dfu_bufsiz=" \
++			"0x1F0000\0" \
++	"ipaddr=" \
++			"192.168.10.7\0" \
++	"serverip=" \
++			"192.168.10.1\0" \
++	"distro_bootcmd=" \
++			"env exists boot_targets || setenv boot_targets mmc0 mmc1 usb0 usb1; " \
++			"for target in ${boot_targets}; do "\
++				"run ${target};" \
++			"done;" \
++	"bootcmd=run distro_bootcmd\0" \
+ 
+ /* For board */
+ /* Ethernet RAVB */
+-- 
+2.25.1
+
