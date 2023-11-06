@@ -1,0 +1,54 @@
+From 9dba9860859b3066a6838053e20c3c131ce631f8 Mon Sep 17 00:00:00 2001
+From: Duy Truong <duy.truong.yw@renesas.com>
+Date: Thu, 28 Sep 2023 10:37:18 +0700
+Subject: [PATCH] qtmultimedia: Fix blank video output for G2L on qmlvideo
+
+In G2L's Mali graphic, when using glEGLImageTargetTexture2DOES(), GLES 
+require GL_TEXTURE_EXTERNAL_OES to be used as the texturing mode, if used 
+GL_TEXTURE_2D the output video will be blank.
+
+Signed-off-by: Duy Truong <duy.truong.yw@renesas.com>
+---
+ src/qtmultimediaquicktools/qsgvideonode_yuv.cpp          | 12 ++++++------
+ src/qtmultimediaquicktools/shaders/biplanaryuvvideo.frag |  5 +++--
+ 2 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/src/qtmultimediaquicktools/qsgvideonode_yuv.cpp b/src/qtmultimediaquicktools/qsgvideonode_yuv.cpp
+index 7e361a6..02eca4f 100644
+--- a/src/qtmultimediaquicktools/qsgvideonode_yuv.cpp
++++ b/src/qtmultimediaquicktools/qsgvideonode_yuv.cpp
+@@ -447,12 +447,12 @@ void QSGVideoMaterial_YUV::bind()
+                        eglimage_used = 1;
+                        eglimage_arr = set_current_eglimage(eglimage_arr);
+                        functions->glActiveTexture(GL_TEXTURE0);
+-                       functions->glBindTexture(GL_TEXTURE_2D, m_textureIds[0]);
+-                       glEGLImageTargetTexture2D(GL_TEXTURE_2D, eglimage);
+-                       functions->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+-                       functions->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+-                       functions->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+-                       functions->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
++                       functions->glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_textureIds[0]);
++                       glEGLImageTargetTexture2D(GL_TEXTURE_EXTERNAL_OES, eglimage);
++                       functions->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
++                       functions->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
++                       functions->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
++                       functions->glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                 } else {
+ #endif
+                 eglimage_used = 0;
+diff --git a/src/qtmultimediaquicktools/shaders/biplanaryuvvideo.frag b/src/qtmultimediaquicktools/shaders/biplanaryuvvideo.frag
+index f7739a2..71621c8 100644
+--- a/src/qtmultimediaquicktools/shaders/biplanaryuvvideo.frag
++++ b/src/qtmultimediaquicktools/shaders/biplanaryuvvideo.frag
+@@ -1,5 +1,6 @@
+-uniform sampler2D plane1Texture;
+-uniform sampler2D plane2Texture;
++#extension GL_OES_EGL_image_external : require
++uniform samplerExternalOES plane1Texture;
++uniform samplerExternalOES plane2Texture;
+ uniform mediump mat4 colorMatrix;
+ uniform lowp float opacity;
+ uniform lowp float eglimage;
+-- 
+2.17.1
+

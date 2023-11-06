@@ -24,6 +24,10 @@ SRC_URI_append = " \
 	file://0012-plugins-alsa-Add-default-key-for-alsa-plugin.patch \
 "
 
+SRC_URI_append_rzg2l = " \
+        file://0013-qtmultimedia-fix-blank-video-output-for-g2l.patch \
+"
+
 PACKAGECONFIG_append = " gstreamer alsa"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
