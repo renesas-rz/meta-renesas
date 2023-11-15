@@ -68,6 +68,7 @@ static int ksz90xx_startup(struct phy_device *phydev)
 }
 
 /* Common OF config bits for KSZ9021 and KSZ9031 */
+#ifdef CONFIG_DM_ETH
 struct ksz90x1_reg_field {
 	const char	*name;
 	const u8	size;	/* Size of the bitfield, in bits */
@@ -210,6 +211,23 @@ static int ksz9031_center_flp_timing(struct phy_device *phydev)
 	return ret;
 }
 
+#else /* !CONFIG_DM_ETH */
+static int ksz9021_of_config(struct phy_device *phydev)
+{
+	return 0;
+}
+
+static int ksz9031_of_config(struct phy_device *phydev)
+{
+	return 0;
+}
+
+static int ksz9031_center_flp_timing(struct phy_device *phydev)
+{
+	return 0;
+}
+#endif
+
 /*
  * KSZ9021
  */
@@ -270,7 +288,7 @@ static int ksz9021_config(struct phy_device *phydev)
 	return 0;
 }
 
-U_BOOT_PHY_DRIVER(ksz9021) = {
+static struct phy_driver ksz9021_driver = {
 	.name = "Micrel ksz9021",
 	.uid  = 0x221610,
 	.mask = 0xfffffe,
@@ -368,7 +386,7 @@ static int ksz9031_config(struct phy_device *phydev)
 	return genphy_config(phydev);
 }
 
-U_BOOT_PHY_DRIVER(ksz9031) = {
+static struct phy_driver ksz9031_driver = {
 	.name = "Micrel ksz9031",
 	.uid  = PHY_ID_KSZ9031,
 	.mask = MII_KSZ9x31_SILICON_REV_MASK,
@@ -379,6 +397,28 @@ U_BOOT_PHY_DRIVER(ksz9031) = {
 	.writeext = &ksz9031_phy_extwrite,
 	.readext = &ksz9031_phy_extread,
 };
+
+#define KSZ9131RN_MMD_COMMON_CTRL_REG   2
+#define MII_KSZ9031RN_CONTROL_PAD_SKEW  4
+#define MII_KSZ9031RN_RX_DATA_PAD_SKEW  5
+#define MII_KSZ9031RN_TX_DATA_PAD_SKEW  6
+#define MII_KSZ9031RN_CLK_PAD_SKEW      8
+
+static int ksz9131_clock_skew(struct phy_device *phydev)
+{
+	int val;
+
+	val = phy_read_mmd(phydev, KSZ9131RN_MMD_COMMON_CTRL_REG, MII_KSZ9031RN_CLK_PAD_SKEW);
+
+	if (val < 0)
+		return val;
+
+	val |= 0xffff;
+
+	phy_write_mmd(phydev, KSZ9131RN_MMD_COMMON_CTRL_REG, MII_KSZ9031RN_CLK_PAD_SKEW, val);
+
+	return 0;
+}
 
 /*
  * KSZ9131
@@ -473,11 +513,11 @@ static int ksz9131_config(struct phy_device *phydev)
 
 		return 0;
 	}
-
-	return genphy_config(phydev);
+//	return genphy_config(phydev);
+	return ksz9131_clock_skew(phydev);
 }
 
-U_BOOT_PHY_DRIVER(ksz9131) = {
+static struct phy_driver ksz9131_driver = {
 	.name = "Micrel ksz9131",
 	.uid  = PHY_ID_KSZ9131,
 	.mask = MII_KSZ9x31_SILICON_REV_MASK,
@@ -496,4 +536,12 @@ int ksz9xx1_phy_get_id(struct phy_device *phydev)
 	get_phy_id(phydev->bus, phydev->addr, MDIO_DEVAD_NONE, &phyid);
 
 	return phyid;
+}
+
+int phy_micrel_ksz90x1_init(void)
+{
+	phy_register(&ksz9021_driver);
+	phy_register(&ksz9031_driver);
+	phy_register(&ksz9131_driver);
+	return 0;
 }

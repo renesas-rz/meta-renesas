@@ -329,6 +329,12 @@ config RCAR_GPIO
 	help
 	  This driver supports the GPIO banks on Renesas RCar SoCs.
 
+config RZG2L_GPIO
+	bool "Renesas RZ/G2L GPIO driver"
+	depends on DM_GPIO && PINCTRL_PFC_RZG2L
+	help
+	  This driver supports the GPIO banks on Renesas RZ/G2L SoCs.
+
 config RZA1_GPIO
 	bool "Renesas RZ/A1 GPIO driver"
 	depends on DM_GPIO && RZA1

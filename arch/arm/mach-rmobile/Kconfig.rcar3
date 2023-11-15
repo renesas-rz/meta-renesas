@@ -73,6 +73,18 @@ config R8A77995
 config RZ_G2
 	bool "Renesas ARM SoCs RZ/G2 (64bit)"
 
+config R9A07G044L
+	bool "Renesas SoC RZ/G2L"
+
+config R9A07G044C
+	bool "Renesas SoC RZ/G2LC"
+
+config R9A07G054L
+	bool "Renesas SoC RZ/V2L"
+
+config R9A07G043U
+	bool "Renesas SoC RZ/G2UL"
+
 endmenu
 
 choice
@@ -181,6 +193,10 @@ source "board/renesas/v3msk/Kconfig"
 source "board/beacon/beacon-rzg2m/Kconfig"
 source "board/hoperun/hihope-rzg2/Kconfig"
 source "board/silinux/ek874/Kconfig"
+source "board/renesas/rzg2l-dev/Kconfig"
+source "board/renesas/rzv2l-dev/Kconfig"
+source "board/renesas/rzg2lc-dev/Kconfig"
+source "board/renesas/rzg2ul-dev/Kconfig"
 
 config MULTI_DTB_FIT_UNCOMPRESS_SZ
 	default 0x80000 if TARGET_BEACON_RZG2M

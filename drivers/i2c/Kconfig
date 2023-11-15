@@ -515,6 +515,12 @@ config SYS_I2C_RCAR_IIC
 	help
 	  Support for Renesas RCar Gen3 IIC controller.
 
+config SYS_I2C_RZG2L_RIIC
+	bool "Renesas RZG2L RIIC driver"
+	depends on DM_I2C
+	help
+	  Support for Renesas RZG2L RIIC controller.
+
 config SYS_I2C_ROCKCHIP
 	bool "Rockchip I2C driver"
 	depends on DM_I2C

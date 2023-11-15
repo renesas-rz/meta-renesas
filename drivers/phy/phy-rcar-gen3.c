@@ -148,6 +148,7 @@ static int rcar_gen3_phy_remove(struct udevice *dev)
 
 static const struct udevice_id rcar_gen3_phy_of_match[] = {
 	{ .compatible = "renesas,rcar-gen3-usb2-phy", },
+	{ .compatible = "renesas,usb2-phy-r9a07g044", },
 	{ },
 };
 

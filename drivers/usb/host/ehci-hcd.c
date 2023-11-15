@@ -25,6 +25,10 @@
 
 #include "ehci.h"
 
+#ifndef CONFIG_USB_MAX_CONTROLLER_COUNT
+#define CONFIG_USB_MAX_CONTROLLER_COUNT 1
+#endif
+
 /*
  * EHCI spec page 20 says that the HC may take up to 16 uFrames (= 4ms) to halt.
  * Let's time out after 8 to have a little safety margin on top of that.
@@ -104,7 +108,7 @@ static struct descriptor {
 	},
 };
 
-#if defined(CONFIG_USB_EHCI_IS_TDI)
+#if defined(CONFIG_EHCI_IS_TDI)
 #define ehci_is_TDI()	(1)
 #else
 #define ehci_is_TDI()	(0)
@@ -641,7 +645,7 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 		token = hc32_to_cpu(vtd->qt_token);
 		if (!(QT_TOKEN_GET_STATUS(token) & QT_TOKEN_STATUS_ACTIVE))
 			break;
-		schedule();
+		//WATCHDOG_RESET();
 	} while (get_timer(ts) < timeout);
 	qhtoken = hc32_to_cpu(qh->qh_overlay.qt_token);
 
@@ -705,10 +709,12 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 		dev->act_len = length - QT_TOKEN_GET_TOTALBYTES(qhtoken);
 	} else {
 		dev->act_len = 0;
+#ifndef CONFIG_USB_EHCI_FARADAY
 		debug("dev=%u, usbsts=%#x, p[1]=%#x, p[2]=%#x\n",
 		      dev->devnum, ehci_readl(&ctrl->hcor->or_usbsts),
 		      ehci_readl(&ctrl->hcor->or_portsc[0]),
 		      ehci_readl(&ctrl->hcor->or_portsc[1]));
+#endif
 	}
 
 	free(qtd);
@@ -1187,6 +1193,9 @@ int usb_lowlevel_init(int index, enum usb_init_type init, void **controller)
 	rc = ehci_hcd_init(index, init, &ctrl->hccr, &ctrl->hcor);
 	if (rc)
 		return rc;
+#endif
+#ifdef CONFIG_USB_EHCI_FARADAY
+	tweaks |= EHCI_TWEAK_NO_INIT_CF;
 #endif
 	rc = ehci_common_init(ctrl, tweaks);
 	if (rc)
@@ -1761,4 +1770,70 @@ struct dm_usb_ops ehci_usb_ops = {
 	.lock_async = ehci_lock_async,
 };
 
+#endif
+
+#ifdef CONFIG_PHY
+int ehci_setup_phy(struct udevice *dev, struct phy *phy, int index)
+{
+	int ret;
+
+	if (!phy)
+		return 0;
+
+	ret = generic_phy_get_by_index(dev, index, phy);
+	if (ret) {
+		if (ret != -ENOENT) {
+			dev_err(dev, "failed to get usb phy\n");
+			return ret;
+		}
+	} else {
+		ret = generic_phy_init(phy);
+		if (ret) {
+			dev_dbg(dev, "failed to init usb phy\n");
+			return ret;
+		}
+
+		ret = generic_phy_power_on(phy);
+		if (ret) {
+			dev_dbg(dev, "failed to power on usb phy\n");
+			return generic_phy_exit(phy);
+		}
+	}
+
+	return 0;
+}
+
+int ehci_shutdown_phy(struct udevice *dev, struct phy *phy)
+{
+	int ret = 0;
+
+	if (!phy)
+		return 0;
+
+	if (generic_phy_valid(phy)) {
+		ret = generic_phy_power_off(phy);
+		if (ret) {
+			dev_dbg(dev, "failed to power off usb phy\n");
+			return ret;
+		}
+
+		ret = generic_phy_exit(phy);
+		if (ret) {
+			dev_dbg(dev, "failed to power off usb phy\n");
+			return ret;
+		}
+	}
+
+	return 0;
+}
+#else
+int ehci_setup_phy(struct udevice *dev, struct phy *phy, int index)
+{
+	return 0;
+}
+
+int ehci_shutdown_phy(struct udevice *dev, struct phy *phy)
+{
+	return 0;
+}
 #endif

@@ -1,0 +1,83 @@
+include/config/auto.conf: include/common.h include/linux/kconfig.h \
+ include/generated/autoconf.h include/config.h \
+ include/configs/smarc-rzg2l.h arch/arm/include/asm/arch/rmobile.h \
+ arch/arm/include/asm/arch/rcar-gen3-base.h arch/arm/include/asm/types.h \
+ include/asm-generic/int-ll64.h include/linux/bitops.h \
+ include/asm-generic/bitsperlong.h include/linux/compiler.h \
+ include/linux/compiler_types.h include/linux/compiler_attributes.h \
+ include/linux/compiler-gcc.h include/linux/types.h \
+ include/linux/posix_types.h include/linux/stddef.h \
+ arch/arm/include/asm/posix_types.h \
+ /development/toolchains/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-linux-gnu/lib/gcc/aarch64-none-linux-gnu/13.2.1/include/stdbool.h \
+ include/linux/kernel.h include/linux/printk.h include/log.h \
+ include/stdio.h \
+ /development/toolchains/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-linux-gnu/lib/gcc/aarch64-none-linux-gnu/13.2.1/include/stdarg.h \
+ include/linker_lists.h include/dm/uclass-id.h include/linux/list.h \
+ include/linux/poison.h arch/arm/include/asm/bitops.h \
+ include/asm-generic/bitops/__ffs.h include/asm-generic/bitops/__fls.h \
+ include/asm-generic/bitops/fls.h include/asm-generic/bitops/fls64.h \
+ arch/arm/include/asm/proc-armv/system.h arch/arm/include/asm/config.h \
+ include/linux/kconfig.h include/config_fallbacks.h include/errno.h \
+ include/linux/errno.h include/time.h include/linux/typecheck.h \
+ include/linux/string.h arch/arm/include/asm/string.h \
+ include/linux/linux_string.h arch/arm/include/asm/u-boot.h \
+ include/asm-generic/u-boot.h arch/arm/include/asm/u-boot-arm.h \
+ include/vsprintf.h include/env_internal.h include/compiler.h \
+ /development/toolchains/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-linux-gnu/lib/gcc/aarch64-none-linux-gnu/13.2.1/include/stddef.h \
+ arch/arm/include/asm/byteorder.h include/linux/byteorder/little_endian.h \
+ include/linux/byteorder/swab.h include/linux/byteorder/generic.h
+include/linux/kconfig.h:
+include/generated/autoconf.h:
+include/config.h:
+include/configs/smarc-rzg2l.h:
+arch/arm/include/asm/arch/rmobile.h:
+arch/arm/include/asm/arch/rcar-gen3-base.h:
+arch/arm/include/asm/types.h:
+include/asm-generic/int-ll64.h:
+include/linux/bitops.h:
+include/asm-generic/bitsperlong.h:
+include/linux/compiler.h:
+include/linux/compiler_types.h:
+include/linux/compiler_attributes.h:
+include/linux/compiler-gcc.h:
+include/linux/types.h:
+include/linux/posix_types.h:
+include/linux/stddef.h:
+arch/arm/include/asm/posix_types.h:
+/development/toolchains/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-linux-gnu/lib/gcc/aarch64-none-linux-gnu/13.2.1/include/stdbool.h:
+include/linux/kernel.h:
+include/linux/printk.h:
+include/log.h:
+include/stdio.h:
+/development/toolchains/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-linux-gnu/lib/gcc/aarch64-none-linux-gnu/13.2.1/include/stdarg.h:
+include/linker_lists.h:
+include/dm/uclass-id.h:
+include/linux/list.h:
+include/linux/poison.h:
+arch/arm/include/asm/bitops.h:
+include/asm-generic/bitops/__ffs.h:
+include/asm-generic/bitops/__fls.h:
+include/asm-generic/bitops/fls.h:
+include/asm-generic/bitops/fls64.h:
+arch/arm/include/asm/proc-armv/system.h:
+arch/arm/include/asm/config.h:
+include/linux/kconfig.h:
+include/config_fallbacks.h:
+include/errno.h:
+include/linux/errno.h:
+include/time.h:
+include/linux/typecheck.h:
+include/linux/string.h:
+arch/arm/include/asm/string.h:
+include/linux/linux_string.h:
+arch/arm/include/asm/u-boot.h:
+include/asm-generic/u-boot.h:
+arch/arm/include/asm/u-boot-arm.h:
+include/vsprintf.h:
+include/env_internal.h:
+include/compiler.h:
+/development/toolchains/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-linux-gnu/lib/gcc/aarch64-none-linux-gnu/13.2.1/include/stddef.h:
+arch/arm/include/asm/byteorder.h:
+include/linux/byteorder/little_endian.h:
+include/linux/byteorder/swab.h:
+include/linux/byteorder/generic.h:

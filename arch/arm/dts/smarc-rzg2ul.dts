@@ -1,0 +1,128 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Device Tree Source for the GR-Peach board
+ *
+ * Copyright (C) 2017 Jacopo Mondi <jacopo+renesas@jmondi.org>
+ * Copyright (C) 2016 Renesas Electronics
+ */
+
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include "r9a07g043u11.dtsi"
+#include "r9a07g043u11-u-boot.dtsi"
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+
+/ {
+	model = "smarc-rzg2ul";
+	compatible = "renesas,r9a07g043u", "renesas,rzg2ul";
+
+	aliases {
+		serial0 = &scif0;
+		spi0 = &spibsc;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x38000000>;
+	};
+
+};
+
+&pinctrl {
+	eth1_pins: eth1 {
+		pinmux = <RZG2L_PINMUX(7, 0, 1)>,
+				<RZG2L_PINMUX(7, 1, 1)>,
+				<RZG2L_PINMUX(7, 2, 1)>,
+				<RZG2L_PINMUX(7, 3, 1)>,
+				<RZG2L_PINMUX(7, 4, 1)>,
+				<RZG2L_PINMUX(8, 0, 1)>,
+				<RZG2L_PINMUX(8, 4, 1)>,
+				<RZG2L_PINMUX(9, 0, 1)>,
+				<RZG2L_PINMUX(9, 1, 1)>,
+				<RZG2L_PINMUX(9, 2, 1)>,
+				<RZG2L_PINMUX(9, 3, 1)>,
+				<RZG2L_PINMUX(10, 0, 1)>,
+				<RZG2L_PINMUX(10, 2, 1)>,
+				<RZG2L_PINMUX(10, 3, 1)>,
+				<RZG2L_PINMUX(10, 4, 1)>;
+	};
+};
+
+&xinclk {
+        clock-frequency = <24000000>;
+};
+
+&scif0 {
+	status = "okay";
+	clock = <100000000>;
+};
+
+&sdhi0 {
+	bus-width = <8>;
+	status = "okay";
+	/* This is used for interface that support both eMMC and SD in board */
+	mutual-channel;
+};
+
+&sdhi1 {
+	/* pinctrl placeholder
+	 * A power enable pin (SD1_PWR_EN) must be defined to interface with a
+	 * SD card.
+	 * The SD1_PWR_EN pin is associated with P0_3.
+	 * A HIGH signal on SD1_PWR_EN will enable supply voltage for SD card.
+	*/
+	bus-width = <4>;
+	status = "okay";
+};
+
+&eth1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth1_pins>;
+	phy-handle = <&phy1>;
+	phy-mode = "rgmii";
+	status = "okay";
+
+	phy1: ethernet-phy@7 {
+		reg = <7>;
+	};
+};
+
+&i2c0 {
+	status = "okay";
+};
+
+&spibsc {
+        num-cs = <1>;
+        status = "okay";
+        spi-max-frequency = <40000000>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        flash0: spi-flash@0 {
+                #address-cells = <1>;
+                #size-cells = <1>;
+                compatible = "spi-flash", "jedec,spi-nor";
+                spi-max-frequency = <40000000>;
+                spi-tx-bus-width = <1>;
+                spi-rx-bus-width = <1>;
+                reg = <0>;
+                status = "okay";
+        };
+};
+
+&ehci0 {
+	status = "okay";
+};
+
+&ehci1 {
+	status = "okay";
+};
+
+&wdt0 {
+	status = "okay";
+	timeout-sec = <60>;
+};

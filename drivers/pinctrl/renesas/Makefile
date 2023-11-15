@@ -21,3 +21,4 @@ obj-$(CONFIG_PINCTRL_PFC_R8A779F0) += pfc-r8a779f0.o
 obj-$(CONFIG_PINCTRL_PFC_R8A779G0) += pfc-r8a779g0.o
 obj-$(CONFIG_PINCTRL_PFC_R7S72100) += pfc-r7s72100.o
 obj-$(CONFIG_PINCTRL_RZN1) += pinctrl-rzn1.o
+obj-$(CONFIG_PINCTRL_PFC_RZG2L)	   += pfc-rzg2l.o

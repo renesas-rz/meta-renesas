@@ -1,0 +1,26 @@
+CONFIG_SYS_BOOTM_LEN="(64 << 20)"
+CONFIG_BOARD_SIZE_LIMIT=2097152
+CONFIG_EXTRA_ENV_SETTINGS="usb_pgood_delay=20000fdt_addr_r=0x480000000fdtfile=$(CONFIG_DEFAULT_FDT_FILE)0kernel_addr_r=0x480800000boot_efi_binary=efi/boot/bootaa64.efi0scan_for_usb_dev=usb start; if test ! -e usb ${devnum}:1 /; then usb reset; fi;0scan_boot_efi=part list ${devtype} ${devnum} devplist; env exists devplist || setenv devplist 1; for distro_bootpart in ${devplist}; do if test -e ${devtype} ${devnum}:${distro_bootpart} ${boot_efi_binary}; then load ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ${boot_efi_binary};echo BootEFI from <${devtype}> [${devnum}:${distro_bootpart}]; bootefi ${kernel_addr_r};fi;done;0mmc0=setenv devnum 0;setenv devtype mmc;run scan_boot_efi;0mmc1=setenv devnum 1;setenv devtype mmc;run scan_boot_efi;0usb0=setenv devnum 0;setenv devtype usb;run scan_for_usb_dev;run scan_boot_efi;0usb1=setenv devnum 1;setenv devtype usb;run scan_for_usb_dev;run scan_boot_efi;0boot_targets=usb0 usb1 mmc0 mmc10dfu_alt_info=sf 0:0=fip-smarc-rzg2l_pmic.bin raw 0x20000 0x1F00000dfu_bufsiz=0x1F00000ipaddr=192.168.10.70serverip=192.168.10.10distro_bootcmd=env exists boot_targets || setenv boot_targets mmc0 mmc1 usb0 usb1; for target in ${boot_targets}; do run ${target};done;bootcmd=run distro_bootcmd0"
+CONFIG_SYS_CBSIZE=2048
+CONFIG_REMAKE_ELF=y
+CONFIG_LOADADDR=$(CONFIG_SYS_LOAD_ADDR)
+CONFIG_INITRD_TAG=y
+CONFIG_SYS_MONITOR_LEN="(1 * 1024 * 1024)"
+CONFIG_MAX_MEM_MAPPED="(0x80000000u - DRAM_RSV_SIZE)"
+CONFIG_SYS_BARGSIZE=$(CONFIG_SYS_CBSIZE)
+CONFIG_SYS_MAXARGS=64
+CONFIG_NFS_TIMEOUT="(10000)"
+CONFIG_GICV3=y
+CONFIG_SYS_BAUDRATE_TABLE="{ 115200, 38400 }"
+CONFIG_SYS_SDRAM_BASE="(0x40000000 + DRAM_RSV_SIZE)"
+CONFIG_SYS_INIT_SP_ADDR=$(CONFIG_SYS_TEXT_BASE)
+CONFIG_VERY_BIG_RAM=y
+CONFIG_CMDLINE_TAG=y
+CONFIG_CMD_LOADXY_TIMEOUT="(10000)"
+CONFIG_SYS_MALLOC_LEN="(64 * 1024 * 1024)"
+CONFIG_SYS_PBSIZE="(1024)"
+CONFIG_SH_SDHI_FREQ=133000000
+CONFIG_SETUP_MEMORY_TAGS=y
+CONFIG_SYS_MONITOR_BASE=0x00000000
+CONFIG_SYS_SDRAM_SIZE="(0x80000000u - DRAM_RSV_SIZE)"
+CONFIG_BITBANGMII_MULTI=y

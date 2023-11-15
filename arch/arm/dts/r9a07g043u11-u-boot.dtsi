@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * RZ/G2UL(R9A07G043Ux) SoC, specific setting for u-boot
+ *
+ * Copyright (C) 2021 Renesas Electronics Corp.
+ */
+
+&pinctrl {
+	P0: gpio-00 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 0 4>;
+	};
+
+	P1: gpio-01 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 8 5>;
+	};
+
+	P2: gpio-02 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 16 4>;
+	};
+
+	P3: gpio-03 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 24 4>;
+	};
+
+	P4: gpio-04 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 32 6>;
+	};
+
+	P5: gpio-05 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 40 5>;
+	};
+
+	P6: gpio-06 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 48 5>;
+	};
+
+	P7: gpio-07 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 56 5>;
+	};
+
+	P8: gpio-08 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 64 5>;
+	};
+
+	P9: gpio-09 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 72 4>;
+	};
+
+	P10: gpio-10 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 80 5>;
+	};
+
+	P11: gpio-11 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 88 4>;
+	};
+
+	P12: gpio-12 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 96 2>;
+	};
+
+	P13: gpio-13 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 104 5>;
+	};
+
+	P14: gpio-14 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 112 3>;
+	};
+
+	P15: gpio-15 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 120 4>;
+	};
+
+	P16: gpio-16 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 128 2>;
+	};
+
+	P17: gpio-17 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 136 4>;
+	};
+
+	P18: gpio-18 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 144 6>;
+	};
+};

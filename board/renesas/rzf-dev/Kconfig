@@ -1,0 +1,95 @@
+if TARGET_RZF_DEV
+
+config SYS_CPU
+	default "rzfive"
+
+config SYS_BOARD
+	default "rzf-dev"
+
+config SYS_VENDOR
+	default "renesas"
+
+config SYS_SOC
+	default "rzmpu"
+
+config SYS_CONFIG_NAME
+	default "rzf-dev"
+
+config ENV_SIZE
+	default 0x2000 if ENV_IS_IN_SPI_FLASH
+
+config ENV_OFFSET
+	default 0x140000 if ENV_IS_IN_SPI_FLASH
+
+config SPL_TEXT_BASE
+	default 0x00012000
+
+config SPL_OPENSBI_LOAD_ADDR
+	default 0x44000000
+
+config BOARD_SPECIFIC_OPTIONS # dummy
+	def_bool y
+	select RISCV_NDS
+	select SUPPORT_SPL
+
+
+config DEBUG_RZF_FPGA
+	bool "FPGA DEBUG option"
+	default n
+	help
+		DEBUG Flag on FPGA Board
+
+config DEBUG_OPENSBI
+	bool "debug OpenSBI"
+	default n
+	depends on CMD_SBI
+
+endif
+
+if TARGET_SMARC_RZF
+
+config SYS_CPU
+	default "rzfive"
+
+config SYS_BOARD
+	default "rzf-dev"
+
+config SYS_VENDOR
+	default "renesas"
+
+config SYS_SOC
+	default "rzmpu"
+
+config SYS_CONFIG_NAME
+	default "smarc-rzf"
+
+config ENV_SIZE
+	default 0x2000 if ENV_IS_IN_SPI_FLASH
+
+config ENV_OFFSET
+	default 0x140000 if ENV_IS_IN_SPI_FLASH
+
+config SPL_TEXT_BASE
+	default 0x00012000
+
+config SPL_OPENSBI_LOAD_ADDR
+	default 0x44000000
+
+config BOARD_SPECIFIC_OPTIONS # dummy
+	def_bool y
+	select RISCV_NDS
+	select SUPPORT_SPL
+
+
+config DEBUG_RZF_FPGA
+	bool "FPGA DEBUG option"
+	default n
+	help
+		DEBUG Flag on FPGA Board
+
+config DEBUG_OPENSBI
+	bool "debug OpenSBI"
+	default n
+	depends on CMD_SBI
+
+endif

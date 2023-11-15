@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Device Tree Source for the GR-Peach board
+ *
+ * Copyright (C) 2017 Jacopo Mondi <jacopo+renesas@jmondi.org>
+ * Copyright (C) 2016 Renesas Electronics
+ */
+
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include "r9a07g043u12.dtsi"
+#include "r9a07g043u12-u-boot.dtsi"
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+
+/ {
+	model = "rzg2ul-type2-dev";
+	compatible = "renesas,r9a07g043u", "renesas,rzg2ul";
+
+	aliases {
+		serial0 = &scif0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x38000000>;
+	};
+};
+
+&pinctrl {
+	eth0_pins: eth0 {
+		pinmux = <RZG2L_PINMUX(1, 0, 1)>,
+				<RZG2L_PINMUX(1, 1, 1)>,
+				<RZG2L_PINMUX(1, 2, 1)>,
+				<RZG2L_PINMUX(1, 3, 1)>,
+				<RZG2L_PINMUX(1, 4, 1)>,
+				<RZG2L_PINMUX(2, 0, 1)>,
+				<RZG2L_PINMUX(3, 0, 1)>,
+				<RZG2L_PINMUX(3, 1, 1)>,
+				<RZG2L_PINMUX(3, 2, 1)>,
+				<RZG2L_PINMUX(3, 3, 1)>,
+				<RZG2L_PINMUX(4, 0, 1)>,
+				<RZG2L_PINMUX(4, 1, 1)>,
+				<RZG2L_PINMUX(4, 3, 1)>,
+				<RZG2L_PINMUX(4, 4, 1)>,
+				<RZG2L_PINMUX(4, 5, 1)>;
+	};
+};
+
+&xinclk {
+        clock-frequency = <24000000>;
+};
+
+&scif0 {
+	status = "okay";
+	clock = <100000000>;
+};
+
+&sdhi0 {
+	/* pinctrl placeholder
+	 * If this channel is used for interfacing with a SD card, a power enable
+	 * pin (SD0_PWR_EN) must be defined.
+	 * The SD0_PWR_EN pin is associated with P5_1.
+	 * A HIGH signal on SD0_PWR_EN will enable supply voltage for SD card.
+	*/
+	bus-width = <8>;
+	status = "okay";
+};
+
+&sdhi1 {
+	/* pinctrl placeholder
+	 * A power enable pin (SD1_PWR_EN) must be defined to interface with a
+	 * SD card.
+	 * The SD1_PWR_EN pin is associated with P13_4.
+	 * A HIGH signal on SD1_PWR_EN will enable supply voltage for SD card.
+	*/
+	bus-width = <4>;
+	status = "okay";
+};
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth0_pins>;
+	phy-handle = <&phy0>;
+	phy-mode = "rgmii";
+	status = "okay";
+
+	phy0: ethernet-phy@7 {
+		reg = <7>;
+	};
+};

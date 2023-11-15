@@ -1,0 +1,32 @@
+if TARGET_RZV2L_DEV
+
+config SYS_SOC
+	default "rmobile"
+
+config SYS_BOARD
+	default "rzv2l-dev"
+
+config SYS_VENDOR
+	default "renesas"
+
+config SYS_CONFIG_NAME
+	default "rzv2l-dev"
+
+endif
+
+if TARGET_SMARC_RZV2L
+
+config SYS_SOC
+	default "rmobile"
+
+config SYS_BOARD
+	default "rzv2l-dev"
+
+config SYS_VENDOR
+	default "renesas"
+
+config SYS_CONFIG_NAME
+	default "smarc-rzv2l"
+
+endif
+

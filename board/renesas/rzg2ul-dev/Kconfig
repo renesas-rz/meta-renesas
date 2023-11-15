@@ -1,0 +1,31 @@
+if TARGET_RZG2UL_TYPE1_DEV || TARGET_RZG2UL_TYPE1_DDR3L_DEV || TARGET_RZG2UL_TYPE2_DEV
+
+config SYS_SOC
+	default "rmobile"
+
+config SYS_BOARD
+	default "rzg2ul-dev"
+
+config SYS_VENDOR
+	default "renesas"
+
+config SYS_CONFIG_NAME
+	default "rzg2ul-dev"
+
+endif
+
+if TARGET_SMARC_RZG2UL
+
+config SYS_SOC
+	default "rmobile"
+
+config SYS_BOARD
+	default "rzg2ul-dev"
+
+config SYS_VENDOR
+	default "renesas"
+
+config SYS_CONFIG_NAME
+	default "smarc-rzg2ul"
+
+endif

@@ -282,19 +282,6 @@ config SYS_MALLOC_F_LEN
 	  particular needs this to operate, so that it can allocate the
 	  initial serial device and any others that are needed.
 
-config SYS_MALLOC_LEN
-	hex "Define memory for Dynamic allocation"
-	default 0x4000000 if SANDBOX
-	default 0x2000000 if ARCH_ROCKCHIP || ARCH_OMAP2PLUS || ARCH_MESON
-	default 0x200000 if ARCH_BMIPS || X86
-	default 0x4020000 if SUNXI_MINIMUM_DRAM_MB >= 256
-	default 0x220000 if SUNXI_MINIMUM_DRAM_MB >= 64
-	default 0x120000 if SUNXI_MINIMUM_DRAM_MB >= 32
-	default 0x400000
-	help
-	  This defines memory to be allocated for Dynamic allocation
-	  TODO: Use for other architectures
-
 config SPL_SYS_MALLOC_F_LEN
 	hex "Size of malloc() pool in SPL"
 	depends on SYS_MALLOC_F && SPL
@@ -472,16 +459,6 @@ config HAS_BOARD_SIZE_LIMIT
 	  In some cases, we need to enforce a hard limit on how big the U-Boot
 	  image itself can be.
 
-config BOARD_SIZE_LIMIT
-	int "Maximum size of the U-Boot image in bytes"
-	default 1048576 if RCAR_64
-	depends on HAS_BOARD_SIZE_LIMIT
-	help
-	  Maximum size of the U-Boot image. When defined, the build system
-	  checks that the actual size does not exceed it.  This does not
-	  include SPL nor TPL, on platforms that use that functionality, they
-	  have a separate option to restict size.
-
 config SYS_CUSTOM_LDSCRIPT
 	bool "Use a custom location for the U-Boot linker script"
 	help
@@ -577,18 +554,6 @@ config SYS_SRAM_SIZE
 	default 0x10000 if TARGET_DEVKIT8000
 	default 0x10000 if TARGET_TRICORDER
 	default 0x0
-
-config SYS_MONITOR_LEN
-	int "Maximum size in bytes reserved for U-Boot in memory"
-	default 1048576 if X86
-	default 786432 if ARCH_SUNXI
-	default 0
-	help
-	  Size of memory reserved for monitor code, used to determine
-	  _at_compile_time_ (!) if the environment is embedded within the
-	  U-Boot image, or in a separate flash sector, among other uses where
-	  we need to set a maximum size of the U-Boot binary itself that will
-	  be loaded.
 
 config MP
 	bool "Support for multiprocessor"

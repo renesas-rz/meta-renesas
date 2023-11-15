@@ -9,38 +9,35 @@
 
 #include <common.h>
 #include <dm.h>
-#include <fdt_support.h>
-#include <hang.h>
 #include <init.h>
 #include <asm/global_data.h>
-#include <asm/io.h>
 #include <dm/uclass-internal.h>
 #include <asm/arch/rmobile.h>
 #include <linux/libfdt.h>
 
-#ifdef CONFIG_RCAR_64
+#ifdef CONFIG_RCAR_GEN3
+
+#if defined(CONFIG_TARGET_HIHOPE_RZG2)
+#include <asm/system.h>
+#include <asm/ptrace.h>
+
+#include "../rzg-common/common.h"
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
-/* If the firmware passed a device tree use it for e.g. U-Boot DRAM setup. */
+/* If the firmware passed a device tree use it for U-Boot DRAM setup. */
 extern u64 rcar_atf_boot_args[];
 
-#define FDT_RPC_PATH	"/soc/spi@ee200000"
-
-static void apply_atf_overlay(void *fdt_blob)
-{
-	void *atf_fdt_blob = (void *)(rcar_atf_boot_args[1]);
-
-	if (fdt_magic(atf_fdt_blob) == FDT_MAGIC)
-		fdt_overlay_apply_node(fdt_blob, 0, atf_fdt_blob, 0);
-}
-
+#if !(defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G054L) || defined(CONFIG_R9A07G043U))
 int fdtdec_board_setup(const void *fdt_blob)
 {
-	apply_atf_overlay((void *)fdt_blob);
-
+	void *atf_fdt_blob = (void *)(rcar_atf_boot_args[1]);
+	if (fdt_magic(atf_fdt_blob) == FDT_MAGIC)
+		fdt_overlay_apply_node((void *)fdt_blob, 0, atf_fdt_blob, 0);
 	return 0;
 }
+#endif
 
 int dram_init(void)
 {
@@ -49,50 +46,37 @@ int dram_init(void)
 
 int dram_init_banksize(void)
 {
+#if defined (CONFIG_TARGET_HIHOPE_RZG2)
+	int use_ecc = 0;
+	struct pt_regs regs;
+#endif
+
 	fdtdec_setup_memory_banksize();
 
-	return 0;
-}
+#if defined (CONFIG_TARGET_HIHOPE_RZG2)
+	if (rmobile_get_cpu_type() == RMOBILE_CPU_TYPE_R8A7795) {
+		/* Setting SiP Service GET_ECC_MODE command*/
+		regs.regs[0] = RZG_SIP_SVC_GET_ECC_MODE;
+		smc_call(&regs);
+		/* First result is USE ECC or not*/
+		use_ecc = regs.regs[0];
 
-int __weak board_init(void)
-{
-	return 0;
-}
+		if (use_ecc == 1) {
+			int bank;
 
-#if defined(CONFIG_RCAR_GEN3)
-#define RST_BASE	0xE6160000
-#define RST_CA57RESCNT	(RST_BASE + 0x40)
-#define RST_CA53RESCNT	(RST_BASE + 0x44)
-#define RST_RSTOUTCR	(RST_BASE + 0x58)
-#define RST_CA57_CODE	0xA5A5000F
-#define RST_CA53_CODE	0x5A5A000F
-
-void __weak reset_cpu(void)
-{
-	unsigned long midr, cputype;
-
-	asm volatile("mrs %0, midr_el1" : "=r" (midr));
-	cputype = (midr >> 4) & 0xfff;
-
-	if (cputype == 0xd03)
-		writel(RST_CA53_CODE, RST_CA53RESCNT);
-	else if (cputype == 0xd07)
-		writel(RST_CA57_CODE, RST_CA57RESCNT);
-	else
-		hang();
-}
-#elif defined(CONFIG_RCAR_GEN4)
-#define RST_BASE	0xE6160000 /* Domain0 */
-#define RST_SRESCR0	(RST_BASE + 0x18)
-#define RST_SPRES	0x5AA58000
-
-void __weak reset_cpu(void)
-{
-	writel(RST_SPRES, RST_SRESCR0);
-}
-#else
-#error Neither CONFIG_RCAR_GEN3 nor CONFIG_RCAR_GEN4 are set
+			for (bank = 0; bank < CONFIG_NR_DRAM_BANKS; bank++) {
+				if ((gd->bd->bi_dram[bank].start & (0x500000000U)) == (0x500000000U)) {
+					gd->bd->bi_dram[bank].start =
+						(gd->bd->bi_dram[bank].start & 0x0FFFFFFFFU)
+						| 0x600000000U;
+				}
+			}
+		}
+	}
 #endif
+
+	return 0;
+}
 
 #if defined(CONFIG_OF_BOARD_SETUP)
 static int is_mem_overlap(void *blob, int first_mem_node, int curr_mem_node)
@@ -120,9 +104,9 @@ static int is_mem_overlap(void *blob, int first_mem_node, int curr_mem_node)
 			if (curr_mem_res.start >= first_mem_res.end)
 				continue;
 
-			log_debug("Overlap found: 0x%llx..0x%llx / 0x%llx..0x%llx\n",
-				  first_mem_res.start, first_mem_res.end,
-				  curr_mem_res.start, curr_mem_res.end);
+			printf("Overlap found: 0x%llx..0x%llx / 0x%llx..0x%llx\n",
+				first_mem_res.start, first_mem_res.end,
+				curr_mem_res.start, curr_mem_res.end);
 
 			return 1;
 		}
@@ -131,7 +115,7 @@ static int is_mem_overlap(void *blob, int first_mem_node, int curr_mem_node)
 	return 0;
 }
 
-static void scrub_duplicate_memory(void *blob)
+int ft_board_setup(void *blob, struct bd_info *bd)
 {
 	/*
 	 * Scrub duplicate /memory@* node entries here. Some R-Car DTs might
@@ -169,46 +153,6 @@ static void scrub_duplicate_memory(void *blob)
 		first_mem_node = 0;
 		mem = 0;
 	}
-}
-
-static void update_rpc_status(void *blob)
-{
-	void *atf_fdt_blob = (void *)(rcar_atf_boot_args[1]);
-	int offset, enabled;
-
-	/*
-	 * Check if the DT fragment received from TF-A had its RPC-IF device node
-	 * enabled.
-	 */
-	if (fdt_magic(atf_fdt_blob) != FDT_MAGIC)
-		return;
-
-	offset = fdt_path_offset(atf_fdt_blob, FDT_RPC_PATH);
-	if (offset < 0)
-		return;
-
-	enabled = fdtdec_get_is_enabled(atf_fdt_blob, offset);
-	if (!enabled)
-		return;
-
-	/*
-	 * Find the RPC-IF device node, and enable it if it has a flash subnode.
-	 */
-	offset = fdt_path_offset(blob, FDT_RPC_PATH);
-	if (offset < 0)
-		return;
-
-	if (fdt_subnode_offset(blob, offset, "flash") < 0)
-		return;
-
-	fdt_status_okay(blob, offset);
-}
-
-int ft_board_setup(void *blob, struct bd_info *bd)
-{
-	apply_atf_overlay(blob);
-	scrub_duplicate_memory(blob);
-	update_rpc_status(blob);
 
 	return 0;
 }

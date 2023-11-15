@@ -36,6 +36,8 @@
 #define RAVB_REG_RIC0		0x360
 #define RAVB_REG_RIC1		0x368
 #define RAVB_REG_RIC2		0x370
+#define RAVB_REG_RIC3		0x388
+#define RAVB_REG_RTC		0x0B4
 #define RAVB_REG_TIC		0x378
 #define RAVB_REG_ECMR		0x500
 #define RAVB_REG_RFLR		0x508
@@ -52,7 +54,6 @@
 #define CSR_OPS			0x0000000F
 #define CSR_OPS_CONFIG		BIT(1)
 
-#define APSR_RDM		BIT(13)
 #define APSR_TDM		BIT(14)
 
 #define TCCR_TSRQ0		BIT(0)
@@ -64,13 +65,21 @@
 #define PIR_MMD			BIT(1)
 #define PIR_MDC			BIT(0)
 
+/* TOE Registers */
+#define CSR0			0x800
+#define CSR0_RPE		0x00000020
+#define CSR0_TPE		0x00000010
+
 #define ECMR_TRCCM		BIT(26)
+#define ECMR_RCPT		BIT(25)
 #define ECMR_RZPF		BIT(20)
 #define ECMR_PFR		BIT(18)
 #define ECMR_RXF		BIT(17)
+#define ECMR_TXF		BIT(16)
 #define ECMR_RE			BIT(6)
 #define ECMR_TE			BIT(5)
 #define ECMR_DM			BIT(1)
+#define ECMR_PRM		BIT(0)
 #define ECMR_CHG_DM		(ECMR_TRCCM | ECMR_RZPF | ECMR_PFR | ECMR_RXF)
 
 /* DMA Descriptors */
@@ -107,6 +116,7 @@
 	 RAVB_RX_DESC_MSC_RTSF | RAVB_RX_DESC_MSC_CEEF)
 
 #define RAVB_TX_TIMEOUT_MS		1000
+#define RAVB_RCV_BUFF_MAX		8192
 
 struct ravb_desc {
 	u32	ctrl;
@@ -130,7 +140,8 @@ struct ravb_priv {
 	struct phy_device	*phydev;
 	struct mii_dev		*bus;
 	void __iomem		*iobase;
-	struct clk_bulk		clks;
+	struct clk		clk;
+	struct gpio_desc	reset_gpio;
 };
 
 static inline void ravb_flush_dcache(u32 addr, u32 len)
@@ -309,11 +320,20 @@ static int ravb_phy_config(struct udevice *dev)
 	struct ravb_priv *eth = dev_get_priv(dev);
 	struct eth_pdata *pdata = dev_get_plat(dev);
 	struct phy_device *phydev;
-	int reg;
+	int mask = 0xffffffff, reg;
 
-	phydev = phy_connect(eth->bus, -1, dev, pdata->phy_interface);
+	if (dm_gpio_is_valid(&eth->reset_gpio)) {
+		dm_gpio_set_value(&eth->reset_gpio, 1);
+		mdelay(20);
+		dm_gpio_set_value(&eth->reset_gpio, 0);
+		mdelay(1);
+	}
+
+	phydev = phy_find_by_mask(eth->bus, mask, pdata->phy_interface);
 	if (!phydev)
 		return -ENODEV;
+
+	phy_connect_dev(phydev, dev);
 
 	eth->phydev = phydev;
 
@@ -352,11 +372,27 @@ static int ravb_write_hwaddr(struct udevice *dev)
 /* E-MAC init function */
 static int ravb_mac_init(struct ravb_priv *eth)
 {
+#if defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G054L) || defined(CONFIG_R9A07G043U) || defined(CONFIG_RZF_DEV)
+	struct phy_device *phy = eth->phydev;
+	u32 ecmr;
+
+	ecmr = readl(eth->iobase + RAVB_REG_ECMR);
+
+	ecmr |= ECMR_RZPF | ((phy->duplex) ? ECMR_DM : 0) |
+		ECMR_TE | ECMR_RE | ECMR_RCPT |
+		ECMR_TXF | ECMR_RXF | ECMR_PRM;
+
+	writel(ecmr, eth->iobase + RAVB_REG_ECMR);
+
+	/* Recv frame limit set register */
+	writel(RAVB_RCV_BUFF_MAX + ETH_FCS_LEN, eth->iobase + RAVB_REG_RFLR);
+#else
 	/* Disable MAC Interrupt */
 	writel(0, eth->iobase + RAVB_REG_ECSIPR);
 
 	/* Recv frame limit set register */
 	writel(RFLR_RFL_MIN, eth->iobase + RAVB_REG_RFLR);
+#endif
 
 	return 0;
 }
@@ -365,11 +401,10 @@ static int ravb_mac_init(struct ravb_priv *eth)
 static int ravb_dmac_init(struct udevice *dev)
 {
 	struct ravb_priv *eth = dev_get_priv(dev);
+#if !defined(CONFIG_R9A07G044L) && !defined(CONFIG_R9A07G044C) && !defined(CONFIG_R9A07G054L) && !defined(CONFIG_R9A07G043U) && !defined(CONFIG_RZF_DEV)
 	struct eth_pdata *pdata = dev_get_plat(dev);
+#endif
 	int ret = 0;
-	int mode = 0;
-	unsigned int delay;
-	bool explicit_delay = false;
 
 	/* Set CONFIG mode */
 	ret = ravb_reset(dev);
@@ -380,11 +415,26 @@ static int ravb_dmac_init(struct udevice *dev)
 	writel(0, eth->iobase + RAVB_REG_RIC0);
 	writel(0, eth->iobase + RAVB_REG_RIC1);
 	writel(0, eth->iobase + RAVB_REG_RIC2);
+#if defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G054L) || defined(CONFIG_R9A07G043U) || defined(CONFIG_RZF_DEV)
+	writel(0, eth->iobase + RAVB_REG_RIC3);
+#endif
 	writel(0, eth->iobase + RAVB_REG_TIC);
 
 	/* Set little endian */
 	clrbits_le32(eth->iobase + RAVB_REG_CCC, CCC_BOC);
 
+#if defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G054L) || defined(CONFIG_R9A07G043U) || defined(CONFIG_RZF_DEV)
+	/* AVB rx set */
+	writel(0x60000000, eth->iobase + RAVB_REG_RCR);
+
+	/* Set Max Frame Length (RTC) */
+	writel(0x7ffc0000 | RAVB_RCV_BUFF_MAX, eth->iobase + RAVB_REG_RTC);
+
+	/* FIFO size set */
+	writel(0x00222200, eth->iobase + RAVB_REG_TGC);
+
+	writel(0, eth->iobase + RAVB_REG_TCCR);
+#else
 	/* AVB rx set */
 	writel(0x18000001, eth->iobase + RAVB_REG_RCR);
 
@@ -396,33 +446,10 @@ static int ravb_dmac_init(struct udevice *dev)
 	    (rmobile_get_cpu_type() == RMOBILE_CPU_TYPE_R8A77995))
 		return 0;
 
-	if (!dev_read_u32(dev, "rx-internal-delay-ps", &delay)) {
-		/* Valid values are 0 and 1800, according to DT bindings */
-		if (delay) {
-			mode |= APSR_RDM;
-			explicit_delay = true;
-		}
-	}
-
-	if (!dev_read_u32(dev, "tx-internal-delay-ps", &delay)) {
-		/* Valid values are 0 and 2000, according to DT bindings */
-		if (delay) {
-			mode |= APSR_TDM;
-			explicit_delay = true;
-		}
-	}
-
-	if (!explicit_delay) {
-		if (pdata->phy_interface == PHY_INTERFACE_MODE_RGMII_ID ||
-		    pdata->phy_interface == PHY_INTERFACE_MODE_RGMII_RXID)
-			mode |= APSR_RDM;
-
-		if (pdata->phy_interface == PHY_INTERFACE_MODE_RGMII_ID ||
-		    pdata->phy_interface == PHY_INTERFACE_MODE_RGMII_TXID)
-			mode |= APSR_TDM;
-	}
-
-	writel(mode, eth->iobase + RAVB_REG_APSR);
+	if ((pdata->phy_interface == PHY_INTERFACE_MODE_RGMII_ID) ||
+	    (pdata->phy_interface == PHY_INTERFACE_MODE_RGMII_TXID))
+		writel(APSR_TDM, eth->iobase + RAVB_REG_APSR);
+#endif
 
 	return 0;
 }
@@ -431,7 +458,9 @@ static int ravb_config(struct udevice *dev)
 {
 	struct ravb_priv *eth = dev_get_priv(dev);
 	struct phy_device *phy = eth->phydev;
+#if !(defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G054L) || defined(CONFIG_R9A07G043U) || defined(CONFIG_RZF_DEV))
 	u32 mask = ECMR_CHG_DM | ECMR_RE | ECMR_TE;
+#endif
 	int ret;
 
 	/* Configure AVB-DMAC register */
@@ -441,11 +470,24 @@ static int ravb_config(struct udevice *dev)
 	ravb_mac_init(eth);
 	ravb_write_hwaddr(dev);
 
+#if defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G054L) || defined(CONFIG_R9A07G043U) || defined(CONFIG_RZF_DEV)
+	/* Configure TOE registers */
+	writel(CSR0_TPE | CSR0_RPE, eth->iobase + CSR0);
+#endif
+
 	ret = phy_startup(phy);
 	if (ret)
 		return ret;
 
 	/* Set the transfer speed */
+#if defined(CONFIG_R9A07G044L) || defined(CONFIG_R9A07G044C) || defined(CONFIG_R9A07G054L) || defined(CONFIG_R9A07G043U) || defined(CONFIG_RZF_DEV)
+	if (phy->speed == 10)
+		writel(0, eth->iobase + RAVB_REG_GECMR);
+	else if (phy->speed == 100)
+		writel(0x10, eth->iobase + RAVB_REG_GECMR);
+	else if (phy->speed == 1000)
+		writel(0x20, eth->iobase + RAVB_REG_GECMR);
+#else
 	if (phy->speed == 100)
 		writel(0, eth->iobase + RAVB_REG_GECMR);
 	else if (phy->speed == 1000)
@@ -456,6 +498,8 @@ static int ravb_config(struct udevice *dev)
 		mask |= ECMR_DM;
 
 	writel(mask, eth->iobase + RAVB_REG_ECMR);
+
+#endif
 
 	return 0;
 }
@@ -495,6 +539,7 @@ static int ravb_probe(struct udevice *dev)
 {
 	struct eth_pdata *pdata = dev_get_plat(dev);
 	struct ravb_priv *eth = dev_get_priv(dev);
+	struct ofnode_phandle_args phandle_args;
 	struct mii_dev *mdiodev;
 	void __iomem *iobase;
 	int ret;
@@ -502,9 +547,20 @@ static int ravb_probe(struct udevice *dev)
 	iobase = map_physmem(pdata->iobase, 0x1000, MAP_NOCACHE);
 	eth->iobase = iobase;
 
-	ret = clk_get_bulk(dev, &eth->clks);
+	ret = clk_get_by_index(dev, 0, &eth->clk);
 	if (ret < 0)
 		goto err_mdio_alloc;
+
+	ret = dev_read_phandle_with_args(dev, "phy-handle", NULL, 0, 0, &phandle_args);
+	if (!ret) {
+		gpio_request_by_name_nodev(phandle_args.node, "reset-gpios", 0,
+					   &eth->reset_gpio, GPIOD_IS_OUT);
+	}
+
+	if (!dm_gpio_is_valid(&eth->reset_gpio)) {
+		gpio_request_by_name(dev, "reset-gpios", 0, &eth->reset_gpio,
+				     GPIOD_IS_OUT);
+	}
 
 	mdiodev = mdio_alloc();
 	if (!mdiodev) {
@@ -524,7 +580,7 @@ static int ravb_probe(struct udevice *dev)
 	eth->bus = miiphy_get_dev_by_name(dev->name);
 
 	/* Bring up PHY */
-	ret = clk_enable_bulk(&eth->clks);
+	ret = clk_enable(&eth->clk);
 	if (ret)
 		goto err_mdio_register;
 
@@ -539,7 +595,7 @@ static int ravb_probe(struct udevice *dev)
 	return 0;
 
 err_mdio_reset:
-	clk_release_bulk(&eth->clks);
+	clk_disable(&eth->clk);
 err_mdio_register:
 	mdio_free(mdiodev);
 err_mdio_alloc:
@@ -551,11 +607,13 @@ static int ravb_remove(struct udevice *dev)
 {
 	struct ravb_priv *eth = dev_get_priv(dev);
 
-	clk_release_bulk(&eth->clks);
+	clk_disable(&eth->clk);
 
 	free(eth->phydev);
 	mdio_unregister(eth->bus);
 	mdio_free(eth->bus);
+	if (dm_gpio_is_valid(&eth->reset_gpio))
+		dm_gpio_free(dev, &eth->reset_gpio);
 	unmap_physmem(eth->iobase, MAP_NOCACHE);
 
 	return 0;
@@ -650,13 +708,20 @@ static const struct eth_ops ravb_ops = {
 int ravb_of_to_plat(struct udevice *dev)
 {
 	struct eth_pdata *pdata = dev_get_plat(dev);
+	const char *phy_mode;
 	const fdt32_t *cell;
+	int ret = 0;
 
 	pdata->iobase = dev_read_addr(dev);
-
-	pdata->phy_interface = dev_read_phy_mode(dev);
-	if (pdata->phy_interface == PHY_INTERFACE_MODE_NA)
+	pdata->phy_interface = -1;
+	phy_mode = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "phy-mode",
+			       NULL);
+	if (phy_mode)
+		pdata->phy_interface = phy_get_interface_by_name(phy_mode);
+	if (pdata->phy_interface == -1) {
+		debug("%s: Invalid PHY interface '%s'\n", __func__, phy_mode);
 		return -EINVAL;
+	}
 
 	pdata->max_speed = 1000;
 	cell = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "max-speed", NULL);
@@ -665,12 +730,23 @@ int ravb_of_to_plat(struct udevice *dev)
 
 	sprintf(bb_miiphy_buses[0].name, dev->name);
 
-	return 0;
+	return ret;
 }
 
 static const struct udevice_id ravb_ids[] = {
+	{ .compatible = "renesas,etheravb-r8a7795" },
+	{ .compatible = "renesas,etheravb-r8a7796" },
+	{ .compatible = "renesas,etheravb-r8a77965" },
+	{ .compatible = "renesas,etheravb-r8a77970" },
+	{ .compatible = "renesas,etheravb-r8a77990" },
+	{ .compatible = "renesas,etheravb-r8a77995" },
 	{ .compatible = "renesas,etheravb-rcar-gen3" },
-	{ .compatible = "renesas,etheravb-rcar-gen4" },
+	{ .compatible = "renesas,etheravb-r9a07g044l" },
+	{ .compatible = "renesas,etheravb-r9a07g044c" },
+	{ .compatible = "renesas,etheravb-r9a07g054l" },
+	{ .compatible = "renesas,etheravb-r9a07g043u" },
+	{ .compatible = "renesas,etheravb-r9a07g043f" },
+	{ .compatible = "renesas,r9a07g044-gbeth" },
 	{ }
 };
 

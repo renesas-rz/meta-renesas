@@ -25,8 +25,10 @@
 #include <fdtdec.h>
 #include <membuff.h>
 #include <linux/list.h>
+#if !defined(CONFIG_RZF_DEV)
 #include <linux/build_bug.h>
 #include <asm-offsets.h>
+#endif
 
 struct acpi_ctx;
 struct driver_rt;
@@ -463,6 +465,12 @@ struct global_data {
 	 */
 	fdt_addr_t translation_offset;
 #endif
+#if CONFIG_IS_ENABLED(WDT)
+	/**
+	 * @watchdog_dev: watchdog device
+	 */
+	struct udevice *watchdog_dev;
+#endif
 #ifdef CONFIG_ACPI
 	/**
 	 * @acpi_ctx: ACPI context pointer
@@ -496,8 +504,10 @@ struct global_data {
 	 */
 	struct list_head dmtag_list;
 };
+#if !defined(CONFIG_RZF_DEV)
 #ifndef DO_DEPS_ONLY
 static_assert(sizeof(struct global_data) == GD_SIZE);
+#endif
 #endif
 
 /**
@@ -667,6 +677,10 @@ enum gd_flags {
 	 * @GD_FLG_OF_TAG_MIGRATE: Device tree has old u-boot,dm- tags
 	 */
 	GD_FLG_OF_TAG_MIGRATE = 0x200000,
+		/**
+	 * @GD_FLG_WDT_READY: watchdog is ready for use
+	 */
+	GD_FLG_WDT_READY = 0x400000,
 };
 
 #endif /* __ASSEMBLY__ */

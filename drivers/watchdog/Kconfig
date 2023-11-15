@@ -406,4 +406,21 @@ config WDT_FTWDT010
 	help
 	  Faraday Technology ftwdt010 watchdog is an architecture independent
 	  watchdog. It is usually used in SoC chip design.
+
+config WDT_RENESAS
+	bool "Renesas watchdog timer support"
+	depends on WDT
+	imply WATCHDOG
+	help
+	  Select this to enable Renesas watchdog timer, which can be found on some
+	  RZ/G2 Platforms.
+
+config RENESAS_RZG2LWDT
+	tristate "Renesas RZ/G2L WDT Watchdog"
+	depends on WDT
+	imply WATCHDOG
+	help
+	 Select this to enable Renesas watchdog timer, which can be found on some
+	 RZ/G2L Platforms.  
+	
 endmenu

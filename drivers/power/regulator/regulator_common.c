@@ -60,11 +60,13 @@ int regulator_common_get_enable(const struct udevice *dev,
 int regulator_common_set_enable(const struct udevice *dev,
 	struct regulator_common_plat *plat, bool enable)
 {
+#if CONFIG_RENESAS_REGULATOR_GPIO_ENABLE
 	int ret;
-
+#endif
 	debug("%s: dev='%s', enable=%d, delay=%d, has_gpio=%d\n", __func__,
 	      dev->name, enable, plat->startup_delay_us,
 	      dm_gpio_is_valid(&plat->gpio));
+#if CONFIG_RENESAS_REGULATOR_GPIO_ENABLE
 	/* Enable GPIO is optional */
 	if (!dm_gpio_is_valid(&plat->gpio)) {
 		if (!enable)
@@ -95,7 +97,7 @@ int regulator_common_set_enable(const struct udevice *dev,
 		      enable);
 		return ret;
 	}
-
+#endif
 	if (enable && plat->startup_delay_us)
 		udelay(plat->startup_delay_us);
 	debug("%s: done\n", __func__);

@@ -75,6 +75,8 @@ struct bd_info;
 #define MMC_CAP_NEEDS_POLL	BIT(15)
 #define MMC_CAP_CD_ACTIVE_HIGH  BIT(16)
 
+#define MMC_CAP2_STOP_TUNE_SD	BIT(25)	/* Host need to send stop command during tuning in SD */
+
 #define MMC_MODE_8BIT		BIT(30)
 #define MMC_MODE_4BIT		BIT(29)
 #define MMC_MODE_1BIT		BIT(28)
@@ -551,6 +553,7 @@ int mmc_set_ios(struct mmc *mmc);
 int mmc_getcd(struct mmc *mmc);
 int mmc_getwp(struct mmc *mmc);
 int mmc_execute_tuning(struct mmc *mmc, uint opcode);
+int mmc_abort_tuning(struct mmc *mmc, u32 opcode);
 int mmc_wait_dat0(struct mmc *mmc, int state, int timeout_us);
 int mmc_set_enhanced_strobe(struct mmc *mmc);
 int mmc_host_power_cycle(struct mmc *mmc);

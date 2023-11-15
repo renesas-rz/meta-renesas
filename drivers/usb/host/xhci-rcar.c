@@ -93,6 +93,8 @@ static int xhci_rcar_probe(struct udevice *dev)
 		goto err_clk;
 	}
 
+	udelay(400);
+
 	ctx->hcd = (struct xhci_hccr *)plat->hcd_base;
 	len = HC_LENGTH(xhci_readl(&ctx->hcd->cr_capbase));
 	hcor = (struct xhci_hcor *)((uintptr_t)ctx->hcd + len);

@@ -1,0 +1,302 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * RZ/G2LC(R9A07G044Lx) SoC, specific setting for u-boot
+ *
+ * Copyright (C) 2021 Renesas Electronics Corp.
+ */
+
+&pinctrl {
+	P0: gpio-00 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 0 2>;
+	};
+
+	P1: gpio-01 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 8 2>;
+	};
+
+	P2: gpio-02 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 16 2>;
+	};
+
+	P3: gpio-03 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 24 2>;
+	};
+
+	P4: gpio-04 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 32 2>;
+	};
+
+	P5: gpio-05 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 40 3>;
+	};
+
+	P6: gpio-06 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 48 2>;
+	};
+
+	P7: gpio-07 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 56 3>;
+	};
+
+	P8: gpio-08 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 64 3>;
+	};
+
+	P9: gpio-09 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 72 2>;
+	};
+
+	P10: gpio-10 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 80 2>;
+	};
+
+	P11: gpio-11 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 88 2>;
+	};
+
+	P12: gpio-12 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 96 2>;
+	};
+
+	P13: gpio-13 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 104 3>;
+	};
+
+	P14: gpio-14 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 112 2>;
+	};
+
+	P15: gpio-15 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 120 2>;
+	};
+
+	P16: gpio-16 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 128 2>;
+	};
+
+	P17: gpio-17 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 136 3>;
+	};
+
+	P18: gpio-18 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 144 2>;
+	};
+
+	P19: gpio-19 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 152 2>;
+	};
+
+	P20: gpio-20 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 160 3>;
+	};
+
+	P21: gpio-21 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 168 2>;
+	};
+
+	P22: gpio-22 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 176 2>;
+	};
+
+	P23: gpio-23 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 184 2>;
+	};
+
+	P24: gpio-24 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 192 2>;
+	};
+
+	P25: gpio-25 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 200 2>;
+	};
+
+	P26: gpio-26 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 208 2>;
+	};
+
+	P27: gpio-27 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 216 2>;
+	};
+
+	P28: gpio-28 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 224 2>;
+	};
+
+	P29: gpio-29 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 232 2>;
+	};
+
+	P30: gpio-30 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 240 2>;
+	};
+
+	P31: gpio-31 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 248 2>;
+	};
+
+	P32: gpio-32 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 256 2>;
+	};
+
+	P33: gpio-33 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 264 2>;
+	};
+
+	P34: gpio-34 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 272 2>;
+	};
+
+	P35: gpio-35 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 280 2>;
+	};
+
+	P36: gpio-36 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 288 2>;
+	};
+
+	P37: gpio-37 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 296 3>;
+	};
+
+	P38: gpio-38 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 304 2>;
+	};
+
+	P39: gpio-39 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 312 3>;
+	};
+
+	P40: gpio-40 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 320 3>;
+	};
+
+	P41: gpio-41 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 328 2>;
+	};
+
+	P42: gpio-42 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 336 5>;
+	};
+
+	P43: gpio-43 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 344 4>;
+	};
+
+	P44: gpio-44 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 352 4>;
+	};
+
+	P45: gpio-45 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 360 4>;
+	};
+
+	P46: gpio-46 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 368 4>;
+	};
+
+	P47: gpio-47 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 376 4>;
+	};
+
+	P48: gpio-48 {
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-ranges = <&pinctrl 0 384 5>;
+	};
+};

@@ -946,7 +946,28 @@ static int sh_pfc_map_pins(struct sh_pfc *pfc, struct sh_pfc_pinctrl *pmx)
 static int sh_pfc_pinctrl_probe(struct udevice *dev)
 {
 	struct sh_pfc_pinctrl_priv *priv = dev_get_priv(dev);
+#if defined(CONFIG_PINCTRL_PFC_R8A7790) || \
+    defined(CONFIG_PINCTRL_PFC_R8A7791) || \
+    defined(CONFIG_PINCTRL_PFC_R8A7792) || \
+    defined(CONFIG_PINCTRL_PFC_R8A7793) || \
+    defined(CONFIG_PINCTRL_PFC_R8A7794) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77951) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77960) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77961) || \
+    defined(CONFIG_PINCTRL_PFC_R8A774A1) || \
+    defined(CONFIG_PINCTRL_PFC_R8A774B1) || \
+    defined(CONFIG_PINCTRL_PFC_R8A774C0) || \
+    defined(CONFIG_PINCTRL_PFC_R8A774E1) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77965) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77970) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77980) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77990) || \
+    defined(CONFIG_PINCTRL_PFC_R8A77995) || \
+    defined(CONFIG_PINCTRL_PFC_R8A779A0) || \
+    defined(CONFIG_PINCTRL_PFC_R8A779F0) || \
+    defined(CONFIG_PINCTRL_PFC_R8A779G0)
 	enum sh_pfc_model model = dev_get_driver_data(dev);
+#endif
 	fdt_addr_t base;
 
 	base = dev_read_addr(dev);

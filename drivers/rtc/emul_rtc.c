@@ -55,6 +55,9 @@ static int emul_rtc_set(struct udevice *dev, const struct rtc_time *time)
 	else
 		priv->isdst = 0;
 
+	env_set_ulong("rtc_emul_epoch", rtc_mktime(time));
+	env_save();
+
 	return 0;
 }
 
@@ -74,6 +77,9 @@ int emul_rtc_probe(struct udevice *dev)
 	}
 	priv->offset_us = epoch * 1000000ULL - timer_get_us();
 	priv->isdst = -1;
+
+	env_set_ulong("rtc_emul_epoch", epoch);
+	env_save();
 
 	return 0;
 }

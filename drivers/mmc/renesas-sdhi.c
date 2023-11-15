@@ -622,6 +622,8 @@ int renesas_sdhi_execute_tuning(struct udevice *dev, uint opcode)
 			if (ret < 0)
 				dev_dbg(dev, "Tuning abort fail (%d)\n", ret);
 		}
+		if (ret)
+			mmc_abort_tuning(mmc, opcode);
 	}
 
 	ret = renesas_sdhi_select_tuning(priv, taps);

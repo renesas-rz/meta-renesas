@@ -1,0 +1,115 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Device Tree Source for the GR-Peach board
+ *
+ * Copyright (C) 2017 Jacopo Mondi <jacopo+renesas@jmondi.org>
+ * Copyright (C) 2016 Renesas Electronics
+ */
+
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include "r9a07g044c.dtsi"
+#include "r9a07g044c-u-boot.dtsi"
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+
+/ {
+	model = "rzg2lc-dev";
+	compatible = "renesas,r9a07g044c", "renesas,rzg2lc";
+
+	aliases {
+		serial0 = &scif0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x38000000>;
+	};
+
+};
+
+&pinctrl {
+	eth0_pins: eth0 {
+		pinmux = <RZG2L_PINMUX(20, 0, 1)>,
+				<RZG2L_PINMUX(20, 1, 1)>,
+				<RZG2L_PINMUX(20, 2, 1)>,
+				<RZG2L_PINMUX(21, 0, 1)>,
+				<RZG2L_PINMUX(21, 1, 1)>,
+				<RZG2L_PINMUX(22, 0, 1)>,
+				<RZG2L_PINMUX(22, 1, 1)>,
+				<RZG2L_PINMUX(23, 0, 1)>,
+				<RZG2L_PINMUX(23, 1, 1)>,
+				<RZG2L_PINMUX(24, 0, 1)>,
+				<RZG2L_PINMUX(24, 1, 1)>,
+				<RZG2L_PINMUX(25, 0, 1)>,
+				<RZG2L_PINMUX(25, 1, 1)>,
+				<RZG2L_PINMUX(26, 0, 1)>,
+				<RZG2L_PINMUX(26, 1, 1)>,
+				<RZG2L_PINMUX(27, 0, 1)>,
+				<RZG2L_PINMUX(27, 1, 1)>,
+				<RZG2L_PINMUX(28, 0, 1)>,
+				<RZG2L_PINMUX(28, 1, 1)>;
+	};
+};
+
+&xinclk {
+        clock-frequency = <24000000>;
+};
+
+&scif0 {
+	status = "okay";
+	clock = <100000000>;
+};
+
+&sdhi0 {
+	/* pinctrl placeholder
+	 * If this channel is used for interfacing with a SD card, a power enable
+	 * pin (SD0_PWR_EN) must be defined.
+	 * The SD0_PWR_EN pin is associated with P4_1.
+	 * A HIGH signal on SD0_PWR_EN will enable supply voltage for SD card.
+	*/
+	bus-width = <8>;
+	status = "okay";
+};
+
+&sdhi1 {
+	/* pinctrl placeholder
+	 * A power enable pin (SD1_PWR_EN) must be defined to interface with a
+	 * SD card.
+	 * The SD1_PWR_EN pin is associated with P39_2.
+	 * A HIGH signal on SD1_PWR_EN will enable supply voltage for SD card.
+	*/
+	bus-width = <4>;
+	status = "okay";
+};
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth0_pins>;
+	phy-handle = <&phy0>;
+	phy-mode = "rgmii";
+	status = "okay";
+
+	phy0: ethernet-phy@7 {
+		reg = <7>;
+	};
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	status = "okay";
+
+	adv7535: hdmi@3d {
+		compatible = "adi,adv7535";
+		reg = <0x3d>;
+	};
+};
+
+&wdt0 {
+	status = "okay";
+	timeout-sec = <60>;
+};
