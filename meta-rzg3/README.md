@@ -1,14 +1,14 @@
 # meta-renesas
 
-This is a Yocto build layer(version:dunfell) that provides support for the RZ/G3S of 64bit Arm-based MPU from Renesas Electronics.
-Currently the following boards and MPUs are supported:
+This is a Yocto build layer(version:dunfell) that provides support for the RZ/G3S 64bit Arm-based MPU from Renesas Electronics.
+This layer was used for making the image which was written to the flash memory on the RZ/G3S SMARC EVK.
+You can reproduce the image using the following instructions with the commit ID c80467017a564d78ff1bb2c9521d5e71267c2315 of this branch.
+All source code of the OSS necessary for building the image is automatically downloaded when building by bitbake command. Also you can downloaded the same source code from the following URL:
 
-- Board: RZG3S Development Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
-- Board: RZG3S SMARC Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
+https://www.renesas.com/document/swo/open-source-package-rzg3s-evaluation-kit-osspkgrzg3sevk7z
 
-## Patches
-
-To contribute to this layer you should email patches to renesas-rz@renesas.com. Please send .patch files as email attachments, not embedded in the email body.
+For details about the license or copyright information of the OSS, please refer to the source code itself and documentation texts included in the source code archive.
+Note that this layer will not be updated. If you find any issues on this layer, please see another branch which is being maintained.
 
 ## Dependencies
 
