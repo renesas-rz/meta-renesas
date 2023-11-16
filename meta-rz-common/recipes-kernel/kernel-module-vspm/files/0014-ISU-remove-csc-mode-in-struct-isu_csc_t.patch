@@ -1,0 +1,69 @@
+From dee72a68714d2fbf826f3939f44bf875da576357 Mon Sep 17 00:00:00 2001
+From: "Nhat Quang Minh. Thieu" <nhat.thieu.xr@renesas.com>
+Date: Mon, 20 Nov 2023 18:39:38 +0700
+Subject: [PATCH 14/14] ISU: remove csc mode in struct isu_csc_t
+
+Setting for csc mode is ignored from now.
+However, the size of isu_csc_t is unchanged.
+
+Signed-off-by: Nhat Quang Minh. Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c | 40 +++++---------------
+ 1 file changed, 10 insertions(+), 30 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index 5f38e61..ac46b92 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -374,38 +374,18 @@ static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
+ 
+ 	/* check color space conversion parameter */
+ 	if (dst_par->csc) {
+-		switch (dst_par->csc->csc){
+-		case ISU_CSC_CUSTOM:
+-			wpf_info->ccol |= ISU_WPF_CCOL_SEL;  // enable color conversion
+-			wpf_info->ccol |= ISU_WPF_CCOL_ASE; // enable alpha color conversion
+-			for (i = 0; i < ISU_LAYER_NUM; i++) {
+-				for (j = 0; j < ISU_LAYER_NUM; j++) {
+-					wpf_info->k_matrix[i][j] = dst_par->csc->k_matrix[i][j];
+-				}
++		wpf_info->ccol |= ISU_WPF_CCOL_SEL;  // enable color conversion
++		wpf_info->ccol |= ISU_WPF_CCOL_ASE; // enable alpha color conversion
++		for (i = 0; i < ISU_LAYER_NUM; i++) {
++			for (j = 0; j < ISU_LAYER_NUM; j++) {
++				wpf_info->k_matrix[i][j] = dst_par->csc->k_matrix[i][j];
+ 			}
+-			for (i = 0; i < ISU_LAYER_NUM; i++) {
+-				for (j = 0; j < ISU_OFFSET_NUM; j++) {
+-					wpf_info->offset[i][j] = dst_par->csc->offset[i][j]&0xFF;
+-					wpf_info->clip[i][j] = dst_par->csc->clip[i][j]&0xFF;
+-				}
+-			}
+-			break;
+-		case ISU_CSC_RAW:
+-			if((wpf_info->format>=ISU_ARGB1555)
+-			&&(wpf_info->format<=ISU_ABGR8888)){
+-				wpf_info->k_matrix[0][0] = 0x400;
+-				wpf_info->k_matrix[1][0] = 0x400;
+-				wpf_info->k_matrix[2][0] = 0x400;
+-			}
+-			if((wpf_info->format>=ISU_YUV422_UYVY)
+-			&&(wpf_info->format<=ISU_YUV420_NV12)){
+-				wpf_info->k_matrix[0][0] = 0x400;
+-				wpf_info->offset[1][1] = 128;
+-				wpf_info->offset[2][1] = 128;
++		}
++		for (i = 0; i < ISU_LAYER_NUM; i++) {
++			for (j = 0; j < ISU_OFFSET_NUM; j++) {
++				wpf_info->offset[i][j] = dst_par->csc->offset[i][j]&0xFF;
++				wpf_info->clip[i][j] = dst_par->csc->clip[i][j]&0xFF;
+ 			}
+-			break;
+-		default:
+-			return E_ISU_PARA_OUT_CSC;
+ 		}
+ 	} else {
+ 		/* disable color space conversion */
+-- 
+2.25.1
+
