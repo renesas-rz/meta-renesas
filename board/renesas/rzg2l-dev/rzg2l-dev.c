@@ -67,35 +67,11 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define RPC_CMNCR		0x10060000
 
-/*TODO please check this*/
 #define CONFIG_SYS_TEXT_BASE 0x50000000
 
 /* WDT */
 #define WDT_INDEX		0
-#if 0
-#define SMARC_RZG2L_FIP_IMAGE_GUID \
-	EFI_GUID(0x0947545f, 0x0399, 0x4caf, 0x84, 0x19, \
-		 0x89, 0xf3, 0xcb, 0xee, 0x83, 0xcc)
 
-
-#if IS_ENABLED(CONFIG_EFI_HAVE_CAPSULE_SUPPORT)
-struct efi_fw_image fw_images[] = {
-	{
-		.image_type_id = SMARC_RZG2L_FIP_IMAGE_GUID,
-		.fw_name = u"fip-smarc-rzg2l_pmic",
-		.image_index = 1,
-	},
-
-};
-#endif
-
-struct efi_capsule_update_info update_info = {
-	.dfu_string = "sf 0:0=fip-smarc-rzg2l_pmic.bin raw 0x20000 0x1F0000;",
-	.num_images = ARRAY_SIZE(fw_images),
-/*TODO please check this*/
-	.images = fw_images,
-};
-#endif
 void s_init(void)
 {
 	/* SD1 power control: P39_1 = 0; P39_2 = 1; */

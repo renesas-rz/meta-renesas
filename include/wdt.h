@@ -114,5 +114,6 @@ struct wdt_ops {
 };
 
 int initr_watchdog(void);
+extern bool watchdog_overflow;
 
 #endif  /* _WDT_H_ */

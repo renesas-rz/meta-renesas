@@ -645,7 +645,7 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 		token = hc32_to_cpu(vtd->qt_token);
 		if (!(QT_TOKEN_GET_STATUS(token) & QT_TOKEN_STATUS_ACTIVE))
 			break;
-		//WATCHDOG_RESET();
+		WATCHDOG_RESET();
 	} while (get_timer(ts) < timeout);
 	qhtoken = hc32_to_cpu(qh->qh_overlay.qt_token);
 

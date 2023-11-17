@@ -15,7 +15,7 @@
 #include <linux/errno.h>
 #include <linux/list.h>
 #include <asm/global_data.h>
-
+#include <watchdog.h>
 DECLARE_GLOBAL_DATA_PTR;
 
 void hw_watchdog_reset(void);
@@ -105,6 +105,7 @@ void schedule(void)
 	if (IS_ENABLED(CONFIG_HW_WATCHDOG))
 		hw_watchdog_reset();
 
+	WATCHDOG_RESET();
 	/*
 	 * schedule() might get called very early before the cyclic IF is
 	 * ready. Make sure to only call cyclic_run() when it's initalized.
