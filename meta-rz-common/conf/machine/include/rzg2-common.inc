@@ -27,7 +27,7 @@ DISTRO_FEATURES_remove += "${@bb.utils.contains("INCOMPATIBLE_LICENSE", "GPLv3",
 PREFERRED_VERSION_gdbm-native ?= "${@bb.utils.contains("INCOMPATIBLE_LICENSE", "GPLv3", "1.8.3", "",d)}"
 
 # u-boot
-PREFERRED_VERSION_u-boot = "v2021.10%"
+PREFERRED_VERSION_u-boot = "v2023.10%"
 EXTRA_IMAGEDEPENDS += " u-boot"
 
 DISTRO_FEATURES_append = " docker"
