@@ -448,20 +448,6 @@ static struct mssr_mod_clk r9a07g054l_mod_clks[] = {
 					 (BIT(0) | BIT(1) | BIT(2)))),
 };
 
-static const unsigned int r9a07g054l_crit_mod_clks[] = {
-	CLK_MODE_BASE + R9A07G054_GIC600_GICCLK,
-};
-
-/* clock type, register offset1, register offset2, register offset3*/
-static const struct cpg_pll_info cpg_pll_configs[] = {
-	{ CLK_TYPE_PLL1, PLL146_CLK1_R(0), PLL146_CLK2_R(0), 0},
-	{ CLK_TYPE_PLL2, PLL235_CLK1_R(0), PLL235_CLK3_R(0), PLL235_CLK4_R(0)},
-	{ CLK_TYPE_PLL3, PLL235_CLK1_R(1), PLL235_CLK3_R(1), PLL235_CLK4_R(1)},
-	{ CLK_TYPE_PLL4, PLL146_CLK1_R(1), PLL146_CLK2_R(1), 0},
-	{ CLK_TYPE_PLL5, PLL235_CLK1_R(2), PLL235_CLK3_R(2), PLL235_CLK4_R(2)},
-	{ CLK_TYPE_PLL6, PLL146_CLK1_R(2), PLL146_CLK2_R(2), 0},
-};
-
 /* Some struct value not defined: mstp_table, reset_node,get_pll_config */
  const struct cpg_mssr_info r9a07g054l_cpg_info = {
 	.core_clk		= r9a07g054l_core_clks,

@@ -85,17 +85,6 @@ static int rzv2l_clk_disable(struct clk *clk)
 	return ret;
 }
 
-static ulong rzv2l_clk_set_rate(struct clk *clk, ulong rate)
-{
-
-	return 0;
-}
-
-static ulong rzv2l_clk_get_rate(struct clk *clk)
-{
-	return 0;
-}
-
 int rzv2l_clk_probe(struct udevice *dev)
 {
 	int ret;
@@ -129,7 +118,7 @@ static int rzv2l_clk_of_xlate(struct clk *clk, struct ofnode_phandle_args *args)
 
 int rzv2l_clk_remove(struct udevice *dev)
 {
-	struct rzv2l_clk_priv *priv = dev_get_priv(dev);
+	//struct rzv2l_clk_priv *priv = dev_get_priv(dev);
 
 	return 0;
 }
