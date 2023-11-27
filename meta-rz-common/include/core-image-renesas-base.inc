@@ -173,8 +173,6 @@ WKS_DEFAULT_FILE_smarc-rzg2l = "rz-image-bootpart-esd-pmic.wks"
 
 WKS_FILE ?= "${@oe.utils.conditional("WKS_SUPPORT", "1", "${WKS_DEFAULT_FILE}", "", d)}"
 
-# Force remake wic image if its inputs were changed
+# Force remake wic image if its inputs were changed (WIC_INPUT_DEPENDS are defined in each machine conf)
 # Note that environment variable WKS_FILE_DEPENDS can be used here, but it makes do_rootfs rerun as well
-WIC_INPUT_DEPENDS = "u-boot:do_deploy trusted-firmware-a:do_deploy"
-WIC_INPUT_DEPENDS_append_rzg2l = " firmware-pack:do_deploy"
 do_image_wic[depends] += "${WIC_INPUT_DEPENDS}"
