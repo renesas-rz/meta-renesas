@@ -64,6 +64,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define LPSTS			0x102
 
 #define RPC_CMNCR		0x10060000
+#define CONFIG_SYS_TEXT_BASE        0x50000000
 
 /* WDT */
 #define WDT_INDEX		0
