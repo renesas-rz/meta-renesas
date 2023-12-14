@@ -334,3 +334,13 @@ IMAGE_ROOTFS_EXTRA_SPACE = "1048576"
 # - SPDX_ARCHIVE_PACKAGED: Add compressed archives of the files in the generated target packages.
 #SPDX_PRETTY = "1"
 #SPDX_ARCHIVE_PACKAGED = "1"
+
+# Configuration for ECC
+# Add ecc to MACHINE_FEATURES to configure DDR ECC usage,
+# ECC_MODE : ENABLE, ERR_DETECT, ERR_DETECT_CORRECT
+#  - ENABLE : Setting enable ECC DDR only.
+#  - ERR_DETECT : Setting enable ECC DDR and add error detection.
+#  - ERR_DETECT_CORRECT : Setting enable ECC DDR, add single bit error correction multibit detection
+# Example of setting:
+#MACHINE_FEATURES_append = " ecc"
+#ECC_MODE = "ENABLE"
