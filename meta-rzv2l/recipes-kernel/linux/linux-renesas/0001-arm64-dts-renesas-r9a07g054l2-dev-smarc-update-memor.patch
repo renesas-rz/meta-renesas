@@ -1,0 +1,60 @@
+From d99b408c4e375af71daaf606b1b8adfb40615cf9 Mon Sep 17 00:00:00 2001
+From: linaqin <naqin.li.nx@renesas.com>
+Date: Mon, 27 Nov 2023 19:36:18 +0900
+Subject: [PATCH] arm64: dts: renesas: r9a07g054l2-[dev,smarc]: update memory
+ reserved when enable ECC
+
+Update memory reserved when enable ECC for RZ/V2L:
+- image_buf0: 0xB0000000 => 0xa0000000.
+- isp_work0:  0xB4000000 => 0xa4000000
+
+Signed-off-by: NAQIN LI <naqin.li.nx@renesas.com>
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g054l2-dev.dts   | 4 ++--
+ arch/arm64/boot/dts/renesas/r9a07g054l2-smarc.dts | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g054l2-dev.dts b/arch/arm64/boot/dts/renesas/r9a07g054l2-dev.dts
+index f9a7b730ec9e..ec3d3b2a290c 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g054l2-dev.dts
++++ b/arch/arm64/boot/dts/renesas/r9a07g054l2-dev.dts
+@@ -45,13 +45,13 @@
+ 		image_buf0: image_buf@0 {
+ 			compatible = "shared-dma-pool";
+ 			reusable;
+-			reg = <0x0 0xB0000000 0x0 0x04000000>;
++			reg = <0x0 0xa0000000 0x0 0x04000000>;
+ 			label = "image_buf0";
+ 		};
+ 
+ 		isp_work0: SIMPLE_ISP {
+ 			reusable;
+-			reg = <0x0 0xB4000000 0x0 0x03000000>;
++			reg = <0x0 0xa4000000 0x0 0x03000000>;
+ 		};
+ 	};
+ 
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc.dts b/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc.dts
+index 26a1a2f60f9a..7663f857d959 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a07g054l2-smarc.dts
+@@ -30,13 +30,13 @@
+ 		image_buf0: image_buf@0 {
+ 			compatible = "shared-dma-pool";
+ 			reusable;
+-			reg = <0x0 0xB0000000 0x0 0x04000000>;
++			reg = <0x0 0xa0000000 0x0 0x04000000>;
+ 			label = "image_buf0";
+ 		};
+ 
+ 		isp_work0: SIMPLE_ISP {
+ 			reusable;
+-			reg = <0x0 0xB4000000 0x0 0x03000000>;
++			reg = <0x0 0xa4000000 0x0 0x03000000>;
+ 		};
+ 	};
+ };
+-- 
+2.17.1
+
