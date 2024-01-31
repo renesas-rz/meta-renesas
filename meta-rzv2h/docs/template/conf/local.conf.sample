@@ -323,6 +323,9 @@ PACKAGE_INSTALL_remove = " dnf "
 # Support WIC images with default wks from WKS_DEFAULT_FILE
 # Reupdate WKS_DEFAULT_FILE if want to support another wks file.
 WKS_SUPPORT ?= "1"
+WKS_DEFAULT_FILE_rzv2h-dev = "rz-image-bootpart-mmc.wks"
+WKS_DEFAULT_FILE_rzv2h-evk-alpha = "rz-image-bootpart-esd_rzv2h.wks"
+WKS_DEFAULT_FILE_rzv2h-evk-ver1 = "rz-image-bootpart-esd_rzv2h.wks"
 # Defines additional free disk space created in the image in Kbytes.
 IMAGE_ROOTFS_EXTRA_SPACE = "1048576"
 
