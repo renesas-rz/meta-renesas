@@ -142,6 +142,17 @@ update_issue_rzv2h() {
       BSP_SOC="RZV2H"
       BSP_BOARD="RZV2H-DEV"
       ;;
+    rzv2n-dev)
+      BSP_VERSION="Beta"
+      BSP_SOC="RZV2N"
+      BSP_BOARD="RZV2N-DEV"
+      ;;
+    rzv2n-evk)
+      BSP_VERSION="Beta"
+      BSP_SOC="RZV2N"
+      BSP_BOARD="RZV2N-EVK"
+      ;;
+
     esac
 
     # Make issue file
