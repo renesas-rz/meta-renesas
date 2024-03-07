@@ -7,7 +7,7 @@
 #                         with multiple SD card slots, SD card can be either mmc0 or mmc1.
 
 part --source rawcopy --sourceparams="file=bl2_bp_esd-${MACHINE}_pmic.bin" --no-table
-part --source rawcopy --sourceparams="file=bl2_bp-${MACHINE}_pmic.bin" --no-table --align 4
+part --source rawcopy --sourceparams="file=bl2-${MACHINE}_pmic.bin" --no-table --align 4
 part --source rawcopy --sourceparams="file=fip-${MACHINE}_pmic.bin" --no-table  --align 64
 
 part --source bootimg-partition --fstype=vfat --label bootloaderfiles --align 1024
