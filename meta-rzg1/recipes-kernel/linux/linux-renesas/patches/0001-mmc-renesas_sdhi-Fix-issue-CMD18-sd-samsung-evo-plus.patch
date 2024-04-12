@@ -1,0 +1,36 @@
+From f1ee0354ab03155afe70149c6f0f50ed11bff4ff Mon Sep 17 00:00:00 2001
+From: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+Date: Thu, 21 Mar 2024 15:59:10 +0700
+Subject: [PATCH] mmc: renesas_sdhi: Fix issue CMD18 sd samsung evo plus
+
+When use default freq (97.5MHz), function renesas_sdhi_clk_update 
+doesn't perform the division external clock well and cause timeout 
+at READ_MULTIPLE_BLOCK
+
+Signed-off-by: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+---
+ drivers/mmc/host/renesas_sdhi_core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/mmc/host/renesas_sdhi_core.c b/drivers/mmc/host/renesas_sdhi_core.c
+index 11fa9ca74f0b..e55e6258fb8b 100644
+--- a/drivers/mmc/host/renesas_sdhi_core.c
++++ b/drivers/mmc/host/renesas_sdhi_core.c
+@@ -139,6 +139,14 @@ static unsigned int renesas_sdhi_clk_update(struct tmio_mmc_host *host,
+ 	if (!(host->pdata->flags & TMIO_MMC_MIN_RCAR2) || mmc_doing_tune(host->mmc))
+ 		return clk_get_rate(priv->clk);
+ 
++	/*
++	 * We should impose the clock if new_clock large or equal than
++	 * max-frequency due to that can be created bad external clock for some
++	 * sdcard devices.
++	 */
++	if (new_clock >= host->mmc->f_max)
++		return host->mmc->f_max;
++
+ 	/*
+ 	 * We want the bus clock to be as close as possible to, but no
+ 	 * greater than, new_clock.  As we can divide by 1 << i for
+-- 
+2.25.1
+
