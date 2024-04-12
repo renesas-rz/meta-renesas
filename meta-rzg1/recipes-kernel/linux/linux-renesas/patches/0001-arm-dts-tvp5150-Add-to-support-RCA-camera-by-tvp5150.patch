@@ -1,0 +1,186 @@
+From 6f71da979c037e9152b1c31318aef20ccaeeb250 Mon Sep 17 00:00:00 2001
+From: Nhan Nguyen <nhan.nguyen-thanh@banvien.com.vn>
+Date: Wed, 20 Mar 2024 10:08:23 +0700
+Subject: [PATCH] arm: dts: tvp5150: Add to support RCA camera by tvp5150 for
+ RZ/G1M/N
+
+TVP5150 driver of v5.10 is different with v4.4. Therefore, devicetree
+need to update following new format of dt-binding. TVP5150 need
+compositor and s-video for input, and y-out for output. Furthermore,
+media controller need to be enabled.
+
+Signed-off-by: Nhan Nguyen <nhan.nguyen-thanh@banvien.com.vn>
+---
+ arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi    | 86 ++++++++++++++++++++-
+ drivers/media/platform/rcar-vin/rcar-core.c | 22 ++++++
+ 2 files changed, 107 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+index 9ee545bef6c5..ce1c1ea1b918 100644
+--- a/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
++++ b/arch/arm/boot/dts/iwg20d-q7-dbcm-ca.dtsi
+@@ -5,6 +5,8 @@
+  * Copyright (C) 2017 Renesas Electronics Corp.
+  */
+ 
++#include <dt-bindings/display/sdtv-standards.h>
++
+ / {
+ 	aliases {
+ 		serial1 = &scif1;
+@@ -55,6 +57,50 @@ reg_2p8v: 2p8v {
+ 		regulator-max-microvolt = <2800000>;
+ 		regulator-always-on;
+ 	};
++
++	comp_connector_0 {
++		compatible = "composite-video-connector";
++		label = "Composite0";
++		sdtv-standards = <SDTV_STD_PAL_M>;
++
++		port {
++			composite0_to_tvp5150: endpoint {
++				remote-endpoint = <&tvp5150_to_composite0>;
++			};
++		};
++	};
++
++	comp_connector_1 {
++		compatible = "composite-video-connector";
++		label = "Composite1";
++		sdtv-standards = <SDTV_STD_NTSC_M>;
++
++		port {
++			composite1_to_tvp5150: endpoint {
++				remote-endpoint = <&tvp5150_to_composite1>;
++			};
++		};
++	};
++
++	svideo_connector {
++		compatible = "svideo-connector";
++		label = "S-Video";
++
++		port {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			svideo_luma_to_tvp5150: endpoint@0 {
++				reg = <0>;
++				remote-endpoint = <&tvp5150_to_svideo_luma>;
++			};
++
++			svideo_chroma_to_tvp5150: endpoint@1 {
++				reg = <1>;
++				remote-endpoint = <&tvp5150_to_svideo_chroma>;
++			};
++		};
++	};
+ };
+ 
+ &can1 {
+@@ -148,8 +194,44 @@ composite-in@5d {
+ 		compatible = "ti,tvp5150";
+ 		reg = <0x5d>;
+ 		remote = <&vin0>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			reg = <0>;
++
++			tvp5150_to_composite0: endpoint@0 {
++				reg = <0>;
++				remote-endpoint = <&composite0_to_tvp5150>;
++			};
++
++			tvp5150_to_svideo_luma: endpoint@1 {
++				reg = <1>;
++				remote-endpoint = <&svideo_luma_to_tvp5150>;
++			};
++		};
++
++		port@1 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			reg = <1>;
++
++			tvp5150_to_composite1: endpoint@0 {
++				reg = <0>;
++				remote-endpoint = <&composite1_to_tvp5150>;
++			};
++
++			tvp5150_to_svideo_chroma: endpoint@1 {
++				reg = <1>;
++				remote-endpoint = <&svideo_chroma_to_tvp5150>;
++			};
++		};
++
++		port@2 {
++			reg = <2>;
+ 
+-		port {
+ 			tvp5150: endpoint {
+ 				bus-width = <8>;
+ 				remote-endpoint = <&vin0ep>;
+@@ -248,6 +330,7 @@ &scif1 {
+ };
+ 
+ &vin0 {
++	renesas,id = <0>;
+ 	status = "okay";
+ 	pinctrl-0 = <&vin0_pins>;
+ 	pinctrl-names = "default";
+@@ -264,6 +347,7 @@ vin0ep: endpoint {
+ };
+ 
+ &vin2 {
++	renesas,id = <2>;
+ 	status = "okay";
+ 	pinctrl-0 = <&vin2_pins>;
+ 	pinctrl-names = "default";
+diff --git a/drivers/media/platform/rcar-vin/rcar-core.c b/drivers/media/platform/rcar-vin/rcar-core.c
+index cb72b2f0161c..2b2a61f906db 100644
+--- a/drivers/media/platform/rcar-vin/rcar-core.c
++++ b/drivers/media/platform/rcar-vin/rcar-core.c
+@@ -943,6 +943,20 @@ static const struct rvin_info rcar_info_gen2 = {
+ 	.max_height = 2048,
+ };
+ 
++static const struct rvin_info rcar_info_r8a7743 = {
++	.model = RCAR_GEN2,
++	.use_mc = true,
++	.max_width = 2048,
++	.max_height = 2048,
++};
++
++static const struct rvin_info rcar_info_r8a7744 = {
++	.model = RCAR_GEN2,
++	.use_mc = true,
++	.max_width = 2048,
++	.max_height = 2048,
++};
++
+ static const struct rvin_group_route rcar_info_r8a774e1_routes[] = {
+ 	{ .csi = RVIN_CSI40, .channel = 0, .vin = 0, .mask = BIT(0) | BIT(3) },
+ 	{ .csi = RVIN_CSI20, .channel = 0, .vin = 0, .mask = BIT(1) | BIT(4) },
+@@ -1291,6 +1305,14 @@ static const struct of_device_id rvin_of_id_table[] = {
+ 		.compatible = "renesas,rcar-gen2-vin",
+ 		.data = &rcar_info_gen2,
+ 	},
++	{
++		.compatible = "renesas,vin-r8a7743",
++		.data = &rcar_info_r8a7743,
++	},
++	{
++		.compatible = "renesas,vin-r8a7744",
++		.data = &rcar_info_r8a7744,
++	},
+ 	{
+ 		.compatible = "renesas,vin-r8a7795",
+ 		.data = &rcar_info_r8a7795,
+-- 
+2.25.1
+
