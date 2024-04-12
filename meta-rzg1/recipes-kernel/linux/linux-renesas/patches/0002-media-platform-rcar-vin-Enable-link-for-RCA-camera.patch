@@ -1,0 +1,57 @@
+From 4440b40c58d01b1f5f49691d707b925d103c5d6f Mon Sep 17 00:00:00 2001
+From: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+Date: Wed, 10 Apr 2024 14:17:05 +0700
+Subject: [PATCH] media: platform: rcar-vin: Enable link for RCA camera
+
+Enabled flags link to enable RCA camera for RZG1M/N
+
+Signed-off-by: Sang Nguyen <sang.nguyen-hoang@banvien.com.vn>
+---
+ drivers/media/platform/rcar-vin/rcar-dma.c  | 10 ++++++++++
+ drivers/media/platform/rcar-vin/rcar-v4l2.c |  2 +-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/rcar-vin/rcar-dma.c b/drivers/media/platform/rcar-vin/rcar-dma.c
+index a478856341cc..e92e5db7fd19 100644
+--- a/drivers/media/platform/rcar-vin/rcar-dma.c
++++ b/drivers/media/platform/rcar-vin/rcar-dma.c
+@@ -1216,6 +1216,7 @@ static int rvin_set_stream(struct rvin_dev *vin, int on)
+ 	struct media_device *mdev;
+ 	struct v4l2_subdev *sd;
+ 	struct media_pad *pad;
++	struct media_link *link;
+ 	int ret;
+ 
+ 	/* No media controller used, simply pass operation to subdevice. */
+@@ -1226,6 +1227,15 @@ static int rvin_set_stream(struct rvin_dev *vin, int on)
+ 		return ret == -ENOIOCTLCMD ? 0 : ret;
+ 	}
+ 
++	/* Media link flags enable. */
++	if (vin->info->use_mc) {
++		list_for_each_entry(link, &vin->pad.entity->links, list) {
++			if (!(link->flags & MEDIA_LNK_FL_ENABLED)) {
++				link->flags |= MEDIA_LNK_FL_ENABLED;
++			}
++		}
++	}
++
+ 	pad = media_entity_remote_pad(&vin->pad);
+ 	if (!pad)
+ 		return -EPIPE;
+diff --git a/drivers/media/platform/rcar-vin/rcar-v4l2.c b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+index 0bbe6f9f9206..02328f315583 100644
+--- a/drivers/media/platform/rcar-vin/rcar-v4l2.c
++++ b/drivers/media/platform/rcar-vin/rcar-v4l2.c
+@@ -937,7 +937,7 @@ static int rvin_release(struct file *file)
+ 	/* the release helper will cleanup any on-going streaming */
+ 	ret = _vb2_fop_release(file, NULL);
+ 
+-	if (vin->info->use_mc) {
++	if ((vin->info->use_mc) && (vin->info->model != RCAR_GEN2)) {
+ 		v4l2_pipeline_pm_put(&vin->vdev.entity);
+ 	} else {
+ 		if (fh_singular)
+-- 
+2.25.1
+

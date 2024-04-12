@@ -1,1 +1,2 @@
 patch patches/0001-arm-dts-tvp5150-Add-to-support-RCA-camera-by-tvp5150.patch
+patch patches/0002-media-platform-rcar-vin-Enable-link-for-RCA-camera.patch
