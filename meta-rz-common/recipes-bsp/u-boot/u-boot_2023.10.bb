@@ -7,5 +7,5 @@ UBOOT_URL = "git://github.com/renesas-rz/renesas-u-boot-cip.git"
 BRANCH = "v2023.10/rz-asr"
 
 SRC_URI = "${UBOOT_URL};branch=${BRANCH}"
-SRCREV = "269f162cf520c80804db419434de2e0d169df9a3"
+SRCREV = "c2acd42c91633cc6812f83d029485561f0d2a6dc"
 PV = "v2023.10+git${SRCPV}"
