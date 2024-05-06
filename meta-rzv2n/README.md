@@ -96,7 +96,7 @@ Build the target file system image using bitbake:
 
 |Renesas MPU| platform |  board  |
 |:---------:|:--------:|:-------:|
-|RZ/V2N     |rzv2n     |rzv2n-dev|
+|RZ/V2N     |rzv2n     |rzv2n-dev, rzv2n-evk|
 
 \<target\> for 3 built types:
 * RZ/V2N: minimal, bsp, weston
