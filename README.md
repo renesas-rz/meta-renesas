@@ -102,6 +102,11 @@ Enable Qt:
   * RZ/G1E: iwg22m
   * RZ/G1C: iwg23s
 
+**(Optional)** In case of using Realtime Linux kernel, please add the below line into "./conf/local.conf":
+```
+    IS_RT_BSP = "1"
+```
+
 Build a target file system image using bitbake:
 
 ```bash

@@ -62,7 +62,11 @@ IMAGE_INSTALL_append = " \
   kernel-module-ohci-hcd \
   kernel-module-ohci-pci \
   ohci-init \
-  rt-tests \
+"
+
+# Additional tools for support testing Realtime characteristic in system
+IMAGE_INSTALL_append = " \
+    ${@bb.utils.contains("IS_RT_BSP", "1", " rt-tests", " ", d)} \
 "
 
 IMAGE_INSTALL_append_iwg21m = " \
