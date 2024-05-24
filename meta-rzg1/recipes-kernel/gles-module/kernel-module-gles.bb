@@ -20,6 +20,10 @@ KERNEL_SRC_PATH_r8a7742 = "build/linux/r8a7742_linux"
 KERNEL_OLD_SRC_PATH_r8a7742 = "build/linux/r8a7790_linux/"
 TARGET_PATH_r8a7742 = "rogue_km/binary_r8a7742_linux_release/target/kbuild/"
 
+SRC_URI_r8a7742_append = " \
+    ${@bb.utils.contains("IS_RT_BSP", "1", " file://0001-kernel-module-gles-fix-issue-compile-for-the-real-ti.patch", " ", d)} \
+"
+
 SRC_URI_r8a7743 = " \
         file://SGX_KM_M2.tar.bz2 \
         file://0002-kernel-modules-gles-correct-number-of-argument-when-.patch \
