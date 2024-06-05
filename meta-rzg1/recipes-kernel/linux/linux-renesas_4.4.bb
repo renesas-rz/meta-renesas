@@ -28,6 +28,11 @@ SRC_URI_append = " \
     ${@bb.utils.contains("IS_RT_BSP", "1", " file://rt_config.cfg", " ", d)} \
 "
 
+SRC_URI_append = " \
+    ${@bb.utils.contains("IS_RT_BSP", "1", " file://patches/0001-v4l2-core-remove-unhelpful-kernel-warning.patch", " ", d)} \
+    ${@bb.utils.contains("IS_RT_BSP", "1", " file://patches/0002-rt-add-kernel-module-backfire-for-rt-tests.patch", " ", d)} \
+"
+
 SRC_URI_append_iwg20m-g1m = " \
     file://iwg20m.cfg \
 "
