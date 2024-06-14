@@ -15,6 +15,7 @@ Currently the following boards and MPUs are supported:
 - Board: RZG2UL Development Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
 - Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
 - Board: RZV2L Development Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
+- Board: RZV2H Development Evaluation Kit / MPU: R9A09G057H (RZ/V2H)
 - Board: CSM Solution RZV2M Evaluation Board Kit / MPU: R9A09G011GBG (RZ/V2M)
 - Board: Shimafuji Electric RZV2MA Evaluation Board Kit / MPU: R9A09G055MA3GBG (RZ/V2MA)
 - Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
@@ -36,13 +37,15 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
     branch: dunfell
-    revision: bab87089ad998afc980adb45c11ae356bc35a460
-    (tag: dunfell-23.0.26)
+    revision: a9e3cc3b9eab7a83c715bb8440454e8fea852c2a
+    (tag: dunfell-23.0.31)
+    For Docker build:
+    cherry-pick commit eb0915c699fbe86488de172d529f073a30d05b6a
 
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python, meta-multimedia
     branch: dunfell
-    revision: 6334241447e461f849035c47f071fa4a2125fee1
+    revision: daa4619fe3fbf8c28f342c4a7163a84a330f7653
     
     URI: https://git.yoctoproject.org/meta-gplv2
     layers: meta-gplv2
@@ -110,12 +113,13 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
 ```bash
     $ git clone https://git.yoctoproject.org/git/poky
     $ cd poky
-    $ git checkout dunfell-23.0.26
+    $ git checkout dunfell-23.0.31
+    $ git cherry-pick eb0915c699fbe86488de172d529f073a30d05b6a
     $ cd ..
     $     
     $ git clone https://github.com/openembedded/meta-openembedded
     $ cd meta-openembedded
-    $ git checkout 6334241447e461f849035c47f071fa4a2125fee1
+    $ git checkout daa4619fe3fbf8c28f342c4a7163a84a330f7653
     $ cd ..
     $    
     $ git clone https://git.yoctoproject.org/git/meta-gplv2
@@ -176,24 +180,25 @@ Currently, there are 2 types of build procedure supported in below description:
    ```
 \<platform\> and \<board\> can be selected in below table:
 
-|Renesas MPU| platform |        board           |
-|:---------:|:--------:|:----------------------:|
-|RZ/G1M     |rzg1      |iwg20m-g1m              |
-|RZ/G1N     |rzg1      |iwg20m-g1n              |
-|RZ/G1H     |rzg1      |iwg21m            	|
-|RZ/G1E     |rzg1      |iwg22m                  |
-|RZ/G1C     |rzg1      |iwg23s                  |
-|RZ/G2H     |rzg2h     |hihope-rzg2h            |
-|RZ/G2M     |rzg2h     |hihope-rzg2m            |
-|RZ/G2N     |rzg2h     |hihope-rzg2n            |
-|RZ/G2E     |rzg2h     |ek874                   |
-|RZ/G2L     |rzg2l     |smarc-rzg2l, rzg2l-dev  |
-|RZ/G2LC    |rzg2l     |smarc-rzg2lc, rzg2lc-dev|
-|RZ/G2UL    |rzg2l     |smarc-rzg2ul, rzg2ul-dev|
-|RZ/V2L     |rzv2l     |smarc-rzv2l, rzv2l-dev  |
-|RZ/V2M     |rzv2m     |rzv2m                   |
-|RZ/V2MA    |rzv2m     |rzv2ma                  |
-|RZ/Five    |rzfive    |smarc-rzfive, rzfive-dev|
+|Renesas MPU| platform |        board                              |
+|:---------:|:--------:|:-----------------------------------------:|
+|RZ/G1M     |rzg1      |iwg20m-g1m                                 |
+|RZ/G1N     |rzg1      |iwg20m-g1n                                 |
+|RZ/G1H     |rzg1      |iwg21m            	                   |
+|RZ/G1E     |rzg1      |iwg22m                                     |
+|RZ/G1C     |rzg1      |iwg23s                                     |
+|RZ/G2H     |rzg2h     |hihope-rzg2h                               |
+|RZ/G2M     |rzg2h     |hihope-rzg2m                               |
+|RZ/G2N     |rzg2h     |hihope-rzg2n                               |
+|RZ/G2E     |rzg2h     |ek874                                      |
+|RZ/G2L     |rzg2l     |smarc-rzg2l, rzg2l-dev                     |
+|RZ/G2LC    |rzg2l     |smarc-rzg2lc, rzg2lc-dev                   |
+|RZ/G2UL    |rzg2l     |smarc-rzg2ul, rzg2ul-dev                   |
+|RZ/V2L     |rzv2l     |smarc-rzv2l, rzv2l-dev                     |
+|RZ/V2M     |rzv2m     |rzv2m                                      |
+|RZ/V2MA    |rzv2m     |rzv2ma                                     |
+|RZ/V2H     |rzv2h     |rzv2h-dev, rzv2h-evk-alpha, rzv2h-evk-ver1 |
+|RZ/Five    |rzfive    |smarc-rzfive, rzfive-dev                   |
 
 **2. Build procedure for legacy users (common procedure) (unsupported for RZ/G1 Series, RZ/V2M and RZ/V2MA):**
 - Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
