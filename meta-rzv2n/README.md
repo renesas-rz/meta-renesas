@@ -16,13 +16,15 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
     branch: dunfell
-    revision: bab87089ad998afc980adb45c11ae356bc35a460
-    (tag: dunfell-23.0.26)
+    revision: a9e3cc3b9eab7a83c715bb8440454e8fea852c2a
+    (tag: dunfell-23.0.31)
+    For Docker build:
+    cherry-pick commit eb0915c699fbe86488de172d529f073a30d05b6a
 
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python, meta-multimedia
     branch: dunfell
-    revision: 6334241447e461f849035c47f071fa4a2125fee1
+    revision: daa4619fe3fbf8c28f342c4a7163a84a330f7653
 
     URI: https://git.yoctoproject.org/meta-gplv2
     layers: meta-gplv2
@@ -50,12 +52,13 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
 ```bash
     $ git clone https://git.yoctoproject.org/git/poky
     $ cd poky
-    $ git checkout dunfell-23.0.26
+    $ git checkout dunfell-23.0.31
+    $ git cherry-pick eb0915c699fbe86488de172d529f073a30d05b6a
     $ cd ..
     $
     $ git clone https://github.com/openembedded/meta-openembedded
     $ cd meta-openembedded
-    $ git checkout 6334241447e461f849035c47f071fa4a2125fee1
+    $ git checkout daa4619fe3fbf8c28f342c4a7163a84a330f7653
     $ cd ..
     $
     $ git clone https://git.yoctoproject.org/git/meta-gplv2
