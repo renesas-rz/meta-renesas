@@ -143,12 +143,12 @@ update_issue_rzv2h() {
       BSP_BOARD="RZV2H-DEV"
       ;;
     rzv2n-dev)
-      BSP_VERSION="Beta"
+      BSP_VERSION="1.0.0"
       BSP_SOC="RZV2N"
       BSP_BOARD="RZV2N-DEV"
       ;;
     rzv2n-evk)
-      BSP_VERSION="Beta"
+      BSP_VERSION="1.0.0"
       BSP_SOC="RZV2N"
       BSP_BOARD="RZV2N-EVK"
       ;;
