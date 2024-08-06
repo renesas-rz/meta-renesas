@@ -1,0 +1,124 @@
+From 158752d03fcdb5b0938350fc13d80248f0f8e774 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Thu, 13 Jun 2024 15:14:35 +0700
+Subject: [PATCH 4/4] Restarting FDP after stopping with CPG software reset
+
+FDP maybe unstable on some boards that may cause hang and wrong
+operation. We need to re-starting FDP before start process to
+prevent this issue.
+---
+ vspm-module/files/vspm/drv/fdp/fdp_drv_l.c    | 23 +++++++++++++++++++
+ vspm-module/files/vspm/drv/fdp_drv_public.h   |  3 +++
+ .../files/vspm/drv/manager/vspm_drv_fdp.c     |  3 +++
+ vspm-module/files/vspm/drv/vspm_main.c        |  4 +---
+ vspm-module/files/vspm/drv/vspm_main.h        |  1 +
+ 5 files changed, 31 insertions(+), 3 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+index e74bbad..bcb4908 100644
+--- a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
++++ b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+@@ -63,6 +63,7 @@
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/pm_runtime.h>
++#include <linux/reset.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_ip_ctrl.h"
+@@ -1662,8 +1663,11 @@ long fdp_ins_enable_clock(struct fdp_obj_t *obj)
+ {
+ 	struct platform_device *pdev = obj->pdev;
+ 	struct device *dev = &pdev->dev;
++	struct reset_control** rstc = (struct reset_control **)obj->rsts;
+ 
+ 	int ercd;
++	unsigned int i;
++	unsigned int loopcnt;
+ 
+ 	/* wake up device */
+ 	ercd = pm_runtime_get_sync(dev);
+@@ -1672,6 +1676,25 @@ long fdp_ins_enable_clock(struct fdp_obj_t *obj)
+ 		       __func__, ercd);
+ 		return E_FDP_NO_CLK;
+ 	}
++	/* deasert reset controllers to restart FDP */
++	for (i=0; i < RSTNUM; i++) {
++		if (reset_control_deassert(rstc[i])) {
++			EPRINT("%s: failed to deassert resets!! \n",
++			       __func__);
++		}
++		/* waiting deassert process */
++		loopcnt = FDP_STATUS_LOOP_CNT;
++		do {
++			/* sleep */
++			msleep(FDP_STATUS_LOOP_TIME);
++		} while ((reset_control_status(rstc[i])) &&
++			(--loopcnt > 0));
++
++		if (loopcnt == 0) {
++			EPRINT("%s: happen to timeout after deassert resets!! \n",
++				   __func__);
++		}
++	}
+ 
+ 	return 0;
+ }
+diff --git a/vspm-module/files/vspm/drv/fdp_drv_public.h b/vspm-module/files/vspm/drv/fdp_drv_public.h
+index 7c63817..3e8baa9 100644
+--- a/vspm-module/files/vspm/drv/fdp_drv_public.h
++++ b/vspm-module/files/vspm/drv/fdp_drv_public.h
+@@ -94,6 +94,9 @@ struct fdp_obj_t {
+ 	unsigned int fcp_anc_addr_y0;
+ 	unsigned int fcp_anc_addr_y2;
+ 
++	/* reset controllers */
++	void *rsts;
++
+ 	/* platform information */
+ 	struct platform_device *pdev;
+ 	int irq;
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_drv_fdp.c b/vspm-module/files/vspm/drv/manager/vspm_drv_fdp.c
+index 4ef0acd..69e1105 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_drv_fdp.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_drv_fdp.c
+@@ -128,6 +128,9 @@ long vspm_ins_fdp_initialize(
+ 			/* set platform device information */
+ 			g_fdp_obj[ch]->pdev = pdrv->fdp_pdev[ch];
+ 
++			/* set resets */
++			g_fdp_obj[ch]->rsts = (void *)pdrv->fdp_rsts[ch];
++
+ 			/* open the FDP driver */
+ 			ercd = fdp_lib_open(g_fdp_obj[ch]);
+ 			if (ercd)
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 418b41f..056f757 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -431,9 +431,7 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 					reset_names[i], ch);
+ 			return -1;
+ 		}
+-		else {
+-			reset_control_deassert(rstc);
+-		}
++		pdrv->fdp_rsts[ch][i] = rstc;
+ 	}
+ 
+ 	/* set driver data */
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 0fcc9e8..6545496 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -88,6 +88,7 @@ struct vspm_drvdata {
+ 	struct clk *vsp_clks[VSPM_VSP_IP_MAX][CLKNUM];
+ 	struct platform_device *fdp_pdev[VSPM_FDP_IP_MAX];
+ 	struct clk *fdp_clks[VSPM_FDP_IP_MAX][CLKNUM];
++	struct reset_control *fdp_rsts[VSPM_FDP_IP_MAX][RSTNUM];
+ 	struct task_struct *task;
+ 	atomic_t counter;
+ 	atomic_t suspend;
+-- 
+2.17.1
+

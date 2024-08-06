@@ -1,0 +1,35 @@
+From d2563ca99e93e5fd4197b219280e157ab24acb68 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Thu, 25 Apr 2024 16:23:31 +0700
+Subject: [PATCH] Use macro task_is_running over reading task_struct
+
+Read state member of task_struct causes build issue on kernel 6.1 since
+the member was renamed to __state [1] from kernel 5.14.
+To fix this build issue, also, for general improvement, switch to use
+the provided macro task_is_running defined at [2].
+
+Reference:
+[1] https://gitlab.com/linux-kernel/linux/-/commit/2f064a59
+[2] include/linux/sched.h
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index 216db1d..ddd0526 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -516,7 +516,7 @@ static long vspm_ioctl_wait_thread(struct vspm_if_private_t *priv)
+ 	}
+ 
+ 	/* wait for running state of callback thread  */
+-	while ((!priv->thread) || (priv->thread->state == TASK_RUNNING))
++	while ((!priv->thread) || task_is_running(priv->thread))
+ 		schedule();
+ 
+ 	return 0;
+-- 
+2.17.1
+

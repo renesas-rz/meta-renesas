@@ -1,0 +1,159 @@
+From 8cefce237ae120d9375216af61329102ca353e2c Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Thu, 25 Apr 2024 17:24:48 +0700
+Subject: [PATCH 7/8] mmngr: Update following kernel 6.1
+
+compat_alloc_user_space() is no longer available from kernel 5.15 [1],
+which causes build error. So, we will remove all config compat on kernel 6.1.
+
+Reference:
+[1] https://gitlab.com/linux-kernel/linux/-/commit/a7a08b275a8b
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 88 -------------------
+ .../files/mmngr/include/mmngr_private.h       | 22 -----
+ 2 files changed, 110 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 2806fc7..6ba2aac 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -1016,91 +1016,6 @@ exit:
+ 	return ret;
+ }
+ 
+-#ifdef CONFIG_COMPAT
+-static long compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+-{
+-	int ret;
+-	struct MM_PARAM	__user *tmp;
+-	struct COMPAT_MM_PARAM tmp32;
+-	struct COMPAT_MM_PARAM __user *argp = (void __user *)arg;
+-
+-	tmp = compat_alloc_user_space(sizeof(*tmp));
+-
+-	/* Convert 32-bit data to 64-bit data */
+-	if (cmd != COMPAT_MM_IOC_FREE_CO && cmd != COMPAT_MM_IOC_FREE) {
+-		/* Convert 32-bit data to 64-bit data */
+-		if (copy_from_user(&tmp32, argp, sizeof(tmp32))) {
+-			ret = -EFAULT;
+-			return ret;
+-		}
+-	}
+-
+-	switch (cmd) {
+-	case COMPAT_MM_IOC_ALLOC:
+-		cmd = MM_IOC_ALLOC;
+-		if (!access_ok(tmp, sizeof(*tmp))
+-		    || __put_user(tmp32.size, &tmp->size)
+-		    || __put_user(tmp32.flag, &tmp->flag))
+-			return -EFAULT;
+-		break;
+-	case COMPAT_MM_IOC_SET:
+-		cmd = MM_IOC_SET;
+-		if (!access_ok(tmp, sizeof(*tmp))
+-		    || __put_user(tmp32.user_virt_addr, &tmp->user_virt_addr))
+-			return -EFAULT;
+-		break;
+-	case COMPAT_MM_IOC_ALLOC_CO:
+-		cmd = MM_IOC_ALLOC_CO;
+-		if (!access_ok(tmp, sizeof(*tmp))
+-		    || __put_user(tmp32.size, &tmp->size)
+-		    || __put_user(tmp32.flag, &tmp->flag))
+-			return -EFAULT;
+-		break;
+-	case COMPAT_MM_IOC_SHARE:
+-		cmd = MM_IOC_SHARE;
+-		if (!access_ok(tmp, sizeof(*tmp))
+-		    || __put_user(tmp32.size, &tmp->size)
+-		    || __put_user(tmp32.phy_addr, &tmp->phy_addr))
+-			return -EFAULT;
+-		break;
+-	case COMPAT_MM_IOC_GET:
+-		cmd = MM_IOC_GET;
+-		break;
+-	case COMPAT_MM_IOC_FREE_CO:
+-		cmd = MM_IOC_FREE_CO;
+-		break;
+-	case COMPAT_MM_IOC_FREE:
+-		cmd = MM_IOC_FREE;
+-		break;
+-
+-	default:
+-		break;
+-	}
+-
+-	ret = ioctl(file, cmd, (unsigned long)tmp);
+-	if (ret)
+-		return ret;
+-
+-	if (cmd == MM_IOC_GET) {
+-		/* Convert 64-bit data to 32-bit data */
+-		if (__get_user(tmp32.size, &tmp->size)
+-		    || __get_user(tmp32.phy_addr, &tmp->phy_addr)
+-		    || __get_user(tmp32.hard_addr, &tmp->hard_addr)
+-		    || __get_user(tmp32.user_virt_addr,
+-					&tmp->user_virt_addr)
+-		    || __get_user(tmp32.kernel_virt_addr,
+-					&tmp->kernel_virt_addr)
+-		    || __get_user(tmp32.flag, &tmp->flag))
+-			return -EFAULT;
+-
+-		if (copy_to_user(argp, &tmp32, sizeof(tmp32)))
+-			ret = -EFAULT;
+-	}
+-
+-	return ret;
+-}
+-#endif
+-
+ static int mmap(struct file *filp, struct vm_area_struct *vma)
+ {
+ 	phys_addr_t	start;
+@@ -1740,9 +1655,6 @@ static const struct file_operations fops = {
+ 	.open		= open,
+ 	.release	= close,
+ 	.unlocked_ioctl	= ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= compat_ioctl,
+-#endif
+ 	.mmap		= mmap,
+ };
+ 
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+index e7c9d18..e862507 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+@@ -142,28 +142,6 @@ struct rcar_ipmmu_data {
+ };
+ #endif /* IPMMU_MMU_SUPPORT */
+ 
+-#ifdef CONFIG_COMPAT
+-struct COMPAT_MM_PARAM {
+-	compat_size_t	size;
+-	compat_u64	phy_addr;
+-	compat_uint_t	hard_addr;
+-	compat_ulong_t	user_virt_addr;
+-	compat_ulong_t	kernel_virt_addr;
+-	compat_uint_t	flag;
+-};
+-
+-#define COMPAT_MM_IOC_ALLOC	_IOWR(MM_IOC_MAGIC, 0, struct COMPAT_MM_PARAM)
+-#define COMPAT_MM_IOC_FREE	_IOWR(MM_IOC_MAGIC, 1, struct COMPAT_MM_PARAM)
+-#define COMPAT_MM_IOC_SET	_IOWR(MM_IOC_MAGIC, 2, struct COMPAT_MM_PARAM)
+-#define COMPAT_MM_IOC_GET	_IOWR(MM_IOC_MAGIC, 3, struct COMPAT_MM_PARAM)
+-#define COMPAT_MM_IOC_ALLOC_CO	_IOWR(MM_IOC_MAGIC, 4, struct COMPAT_MM_PARAM)
+-#define COMPAT_MM_IOC_FREE_CO	_IOWR(MM_IOC_MAGIC, 5, struct COMPAT_MM_PARAM)
+-#define COMPAT_MM_IOC_SHARE	_IOWR(MM_IOC_MAGIC, 6, struct COMPAT_MM_PARAM)
+-
+-static long compat_ioctl(struct file *file, unsigned int cmd,
+-			unsigned long arg);
+-#endif
+-
+ #define DEVNAME		"rgnmm"
+ #define DRVNAME		DEVNAME
+ #define CLSNAME		DEVNAME
+-- 
+2.17.1
+

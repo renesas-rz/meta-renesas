@@ -1,0 +1,120 @@
+From d3428e046a73c127b9cbd263051d29cdd8421f5f Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Tue, 7 May 2024 11:27:28 +0700
+Subject: [PATCH 2/4] Update clocks and reset controls for RZ/G3E
+
+This commit will update clocks and add reset controls
+for VSP and FDP drivers while probing on RZ/G3E
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm-module/files/vspm/drv/vspm_main.c | 33 ++++++++++++++++++++++++--
+ vspm-module/files/vspm/drv/vspm_main.h | 18 ++++++++++----
+ 2 files changed, 45 insertions(+), 6 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 2e1f09c..418b41f 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -62,6 +62,7 @@
+ #include <linux/slab.h>
+ #include <linux/io.h>
+ #include <linux/pm_runtime.h>
++#include <linux/reset.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_ip_ctrl.h"
+@@ -295,8 +296,10 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+-	char *clk_names[CLKNUM] = {VSP_CLK_NAME, FCP_CLK_NAME};
++	char *clk_names[CLKNUM] = {VSP_MCLK_NAME, VSP_ACLK_NAME, VSP_PCLK_NAME};
++	char *reset_names[RSTNUM] = {VSP_SMST_NAME, VSP_RRST_NAME, VSP_SPST_NAME};
+ 	struct clk *clk;
++	struct reset_control *rstc;
+ 
+ 	int i;
+ 	int ch;
+@@ -331,6 +334,18 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 		pdrv->vsp_clks[ch][i] = clk;
+ 	}
+ 
++	for (i = 0; i < RSTNUM; i++) {
++		rstc = devm_reset_control_get(&pdev->dev, reset_names[i]);
++		if (IS_ERR(rstc)) {
++			APRINT("Failed to get cpg reset (%s)!! ch=%d\n",
++					reset_names[i], ch);
++			return -1;
++		}
++		else {
++			reset_control_deassert(rstc);
++		}
++	}
++
+ 	/* set driver data */
+ 	platform_set_drvdata(pdev, &pdrv->vsp_clks[ch]);
+ 	pdrv->vsp_pdev[ch] = pdev;
+@@ -371,8 +386,10 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+-	char *clk_names[CLKNUM] = {FDP_CLK_NAME, FCP_CLK_NAME};
++	char *clk_names[CLKNUM] = {FDP_MCLK_NAME, FDP_ACLK_NAME, FDP_PCLK_NAME};
++	char *reset_names[RSTNUM] = {FDP_BRST_NAME, FDP_FCST_NAME, FDP_FDST_NAME};
+ 	struct clk *clk;
++	struct reset_control *rstc;
+ 
+ 	int i;
+ 	int ch;
+@@ -407,6 +424,18 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 		pdrv->fdp_clks[ch][i] = clk;
+ 	}
+ 
++	for (i = 0; i < RSTNUM; i++) {
++		rstc = devm_reset_control_get(&pdev->dev, reset_names[i]);
++		if (IS_ERR(rstc)) {
++			APRINT("Failed to get cpg reset (%s)!! ch=%d\n",
++					reset_names[i], ch);
++			return -1;
++		}
++		else {
++			reset_control_deassert(rstc);
++		}
++	}
++
+ 	/* set driver data */
+ 	platform_set_drvdata(pdev, &pdrv->fdp_clks[ch]);
+ 	pdrv->fdp_pdev[ch] = pdev;
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 45093eb..0fcc9e8 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -67,10 +67,20 @@
+ #define THREADNAME			DEVNAME
+ #define DRVNAME				DEVNAME
+ 
+-#define VSP_CLK_NAME		"vsp"
+-#define FDP_CLK_NAME		"fdp"
+-#define FCP_CLK_NAME		"fcp"
+-#define CLKNUM				2
++#define VSP_MCLK_NAME		"vsp_mclk"
++#define VSP_ACLK_NAME		"vsp_aclk"
++#define VSP_PCLK_NAME		"vsp_pclk"
++#define VSP_SMST_NAME		"smreset_vspiss"
++#define VSP_RRST_NAME		"sreset_vsp1z"
++#define VSP_SPST_NAME		"spreset_fcpvi0"
++#define FDP_MCLK_NAME		"fdp_mclk"
++#define FDP_ACLK_NAME		"fdp_aclk"
++#define FDP_PCLK_NAME		"fdp_pclk"
++#define FDP_BRST_NAME		"brdg_resetn"
++#define FDP_FDST_NAME		"fdp1_resetn"
++#define FDP_FCST_NAME		"fcpf1_resetp"
++#define CLKNUM				3
++#define RSTNUM				3
+ 
+ /* vspm driver data structure */
+ struct vspm_drvdata {
+-- 
+2.17.1
+

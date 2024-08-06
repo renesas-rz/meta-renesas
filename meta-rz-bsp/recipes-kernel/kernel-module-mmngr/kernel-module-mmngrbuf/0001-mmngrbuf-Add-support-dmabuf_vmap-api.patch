@@ -1,0 +1,30 @@
+From 9ad4c79c0d4ddec7a92f3785775c79624f05a951 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 11 Sep 2023 17:05:51 +0700
+Subject: [PATCH] mmngrbuf: Add support dmabuf_vmap api
+
+Add virtual mapping for the buffer into kernel address space.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ .../mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c        | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index 5ffee15..b9f76fb 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -307,7 +307,9 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
+ 
+ static void *dmabuf_vmap(struct dma_buf *buf)
+ {
+-	return NULL;
++	struct MM_BUF_PRIVATE *priv = buf->priv;
++
++	return phys_to_virt(priv->hard_addr);
+ }
+ 
+ static void dmabuf_vunmap(struct dma_buf *buf, void *vaddr)
+-- 
+2.25.1
+

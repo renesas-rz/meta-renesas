@@ -1,0 +1,43 @@
+From 178b5186b6402e1bd3cb4b2180ad535221fd77a3 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Thu, 25 Apr 2024 15:38:20 +0700
+Subject: [PATCH 1/4] Use kthread_complete_and_exit instead do_exit
+
+From kernel 5.17, do_exit() is no longer exported [1],
+which causes build error. Referring to [2], using
+complete_and_exit to call kthread_exit instead. Now,
+complete_and_exit is changed to kthread_complete_and_exit
+
+References:
+[1] https://github.com/torvalds/linux/commit/eb55e716
+[2] https://github.com/torvalds/linux/commit/cead1855
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm-module/files/vspm/drv/frame.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/vspm-module/files/vspm/drv/frame.c b/vspm-module/files/vspm/drv/frame.c
+index 7ea5b6d..8b26633 100644
+--- a/vspm-module/files/vspm/drv/frame.c
++++ b/vspm-module/files/vspm/drv/frame.c
+@@ -57,6 +57,7 @@
+ 
+ #include <linux/slab.h>
+ #include <linux/sched.h>
++#include <linux/kthread.h>
+ 
+ #include "frame.h"
+ 
+@@ -401,7 +402,7 @@ int fw_execute(unsigned short tid, struct fw_func_tbl *func_tbl)
+ 	}
+ 
+ 	/* Do exit kthread */
+-	do_exit(FW_OK);
++	kthread_complete_and_exit(&rcv_msg->reply.comp, FW_OK);
+ 	return FW_OK;
+ }
+ 
+-- 
+2.17.1
+

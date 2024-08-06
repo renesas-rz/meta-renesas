@@ -1,0 +1,49 @@
+From e35b629d3cd3f0735312869cc3090037addd7bdf Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Tue, 4 Jun 2024 15:20:19 +0700
+Subject: [PATCH 8/8] mmngr: Do not parse and init lossy memory area for RZ/G3E
+
+RZ/G3E does not support lossy memory area. So, this
+commit is created to let mmngr not parse and init
+lossy memory area for RZ/G3E.
+---
+ mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 6ba2aac..5b66d3b 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -1184,6 +1184,11 @@ static const struct soc_device_attribute rzg2l_match[] = {
+ 	{ /* sentinel*/ }
+ };
+ 
++static const struct soc_device_attribute rzg3e_match[] = {
++	{.family = "RZ/G3E"},
++	{ /* sentinel*/ }
++};
++
+ static int parse_reserved_mem_dt(struct device_node *np)
+ {
+ 	int ret = 0;
+@@ -1199,7 +1204,7 @@ static int parse_reserved_mem_dt(struct device_node *np)
+ 		return ret;
+ 	}
+ 
+-	if (!soc_device_match(rzg2l_match)) {
++	if ((!soc_device_match(rzg2l_match)) && (!soc_device_match(rzg3e_match))) {
+ 		/* Parse reserved memory for lossy compression feature */
+ 		ret = _parse_reserved_mem_dt(np, "memory-region",
+ 					     "linux,lossy_decompress",
+@@ -1716,7 +1721,7 @@ static int mm_probe(struct platform_device *pdev)
+ 	}
+ #endif
+ 
+-	if (!soc_device_match(rzg2l_match)) {
++	if ((!soc_device_match(rzg2l_match)) && (!soc_device_match(rzg3e_match))) {
+ 		ret = init_lossy_info();
+ 		if (ret) {
+ 			pr_err("MMD mm_init ERROR\n");
+-- 
+2.17.1
+

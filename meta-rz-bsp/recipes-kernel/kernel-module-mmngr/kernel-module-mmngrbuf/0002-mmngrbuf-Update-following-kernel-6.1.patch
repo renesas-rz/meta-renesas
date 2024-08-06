@@ -1,0 +1,165 @@
+From 8d48c83649be520f70ac3333d198752002d543e6 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Thu, 25 Apr 2024 19:59:34 +0700
+Subject: [PATCH] mmngrbuf: Update following kernel 6.1
+
+The issues that cause build error:
+- compat_alloc_user_space() is no longer available from kernel 5.15 [1]
+- vmap & vunmap function pointer are changed from kernel 6.0 [2], [3]
+
+To fix above issue, we will remove block of code that use
+compat_alloc_user_space(); and update dmabuf_vmap(), dmabuf_vunmap
+to compatible with vmap and vunmap.
+
+Reference:
+[1] https://gitlab.com/linux-kernel/linux/-/commit/a7a08b275a8b
+[2] https://gitlab.com/linux-kernel/linux/-/commit/6619ccf1bb1d
+[3] https://gitlab.com/linux-kernel/linux/-/commit/20e76f1a7059
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ .../files/mmngrbuf/drv/mmngr_buf_drv.c        | 63 +------------------
+ .../mmngrbuf/include/mmngr_buf_private.h      | 24 +------
+ 2 files changed, 5 insertions(+), 82 deletions(-)
+
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index b9f76fb..e19d75b 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -159,69 +159,11 @@ exit:
+ 	return ret;
+ }
+ 
+-#ifdef CONFIG_COMPAT
+-static long compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+-{
+-	int ret;
+-	struct MM_BUF_PARAM __user *tmp;
+-	struct COMPAT_MM_BUF_PARAM tmp32;
+-	struct COMPAT_MM_BUF_PARAM __user *argp = (void __user *)arg;
+-
+-	tmp = compat_alloc_user_space(sizeof(*tmp));
+-
+-	/* Convert 32-bit data to 64-bit data */
+-	if (copy_from_user(&tmp32, argp, sizeof(tmp32))) {
+-		ret = -EFAULT;
+-		return ret;
+-	}
+-
+-	if (!access_ok(tmp, sizeof(*tmp))
+-	    || __put_user(tmp32.size, &tmp->size)
+-	    || __put_user(tmp32.hard_addr, &tmp->hard_addr)
+-	    || __put_user(tmp32.buf, &tmp->buf))
+-		return -EFAULT;
+-
+-	switch (cmd) {
+-	case COMPAT_MM_IOC_EXPORT_START:
+-		cmd = MM_IOC_EXPORT_START;
+-		break;
+-	case COMPAT_MM_IOC_EXPORT_END:
+-		cmd = MM_IOC_EXPORT_END;
+-		break;
+-	case COMPAT_MM_IOC_IMPORT_START:
+-		cmd = MM_IOC_IMPORT_START;
+-		break;
+-	case COMPAT_MM_IOC_IMPORT_END:
+-		cmd = MM_IOC_IMPORT_END;
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	ret = ioctl(file, cmd, (unsigned long)tmp);
+-
+-	if (cmd != MM_IOC_IMPORT_END) {
+-		/* Convert 64-bit data to 32-bit data */
+-		if (__get_user(tmp32.size, &tmp->size)
+-		    || __get_user(tmp32.hard_addr, &tmp->hard_addr)
+-		    || __get_user(tmp32.buf, &tmp->buf))
+-			return -EFAULT;
+-		if (copy_to_user(argp, &tmp32, sizeof(tmp32)))
+-			ret = -EFAULT;
+-	}
+-
+-	return ret;
+-}
+-#endif
+-
+ static const struct file_operations fops = {
+ 	.owner		= THIS_MODULE,
+ 	.open		= open,
+ 	.release	= close,
+ 	.unlocked_ioctl	= ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl	= compat_ioctl,
+-#endif
+ };
+ 
+ static struct miscdevice misc = {
+@@ -305,14 +247,14 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
+ 	return 0;
+ }
+ 
+-static void *dmabuf_vmap(struct dma_buf *buf)
++static int dmabuf_vmap(struct dma_buf *buf, struct iosys_map *map)
+ {
+ 	struct MM_BUF_PRIVATE *priv = buf->priv;
+ 
+ 	return phys_to_virt(priv->hard_addr);
+ }
+ 
+-static void dmabuf_vunmap(struct dma_buf *buf, void *vaddr)
++static void dmabuf_vunmap(struct dma_buf *buf, struct iosys_map *map)
+ {
+ 
+ }
+@@ -500,3 +442,4 @@ module_init(mm_init);
+ module_exit(mm_exit);
+ 
+ MODULE_LICENSE("Dual MIT/GPL");
++MODULE_IMPORT_NS(DMA_BUF);
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+index a50a196..3d5292e 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+@@ -81,26 +81,6 @@ struct MM_BUF_PRIVATE {
+ #define CLSNAME		DEVNAME
+ #define DEVNUM		1
+ 
+-#ifdef CONFIG_COMPAT
+-struct COMPAT_MM_BUF_PARAM {
+-	compat_size_t	size;
+-	compat_uint_t	hard_addr;
+-	compat_int_t	buf;
+-};
+-
+-#define COMPAT_MM_IOC_EXPORT_START \
+-		_IOWR(MM_IOC_MAGIC, 0, struct COMPAT_MM_BUF_PARAM)
+-#define COMPAT_MM_IOC_EXPORT_END \
+-		_IOWR(MM_IOC_MAGIC, 1, struct COMPAT_MM_BUF_PARAM)
+-#define COMPAT_MM_IOC_IMPORT_START \
+-		_IOWR(MM_IOC_MAGIC, 2, struct COMPAT_MM_BUF_PARAM)
+-#define COMPAT_MM_IOC_IMPORT_END \
+-		_IOWR(MM_IOC_MAGIC, 3, struct COMPAT_MM_BUF_PARAM)
+-
+-static long compat_ioctl(struct file *file, unsigned int cmd,
+-			unsigned long arg);
+-#endif
+-
+ static int open(struct inode *inode, struct file *file);
+ static int close(struct inode *inode, struct file *file);
+ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+@@ -119,8 +99,8 @@ static int dmabuf_begin_cpu_access(struct dma_buf *buf,
+ static int dmabuf_end_cpu_access(struct dma_buf *buf,
+ 				enum dma_data_direction direction);
+ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma);
+-static void *dmabuf_vmap(struct dma_buf *buf);
+-static void dmabuf_vunmap(struct dma_buf *buf, void *vaddr);
++static int dmabuf_vmap(struct dma_buf *buf, struct iosys_map *map);
++static void dmabuf_vunmap(struct dma_buf *buf, struct iosys_map *map);
+ static int mm_probe(struct platform_device *pdev);
+ static int mm_remove(struct platform_device *pdev);
+ static int mm_init(void);
+-- 
+2.17.1
+

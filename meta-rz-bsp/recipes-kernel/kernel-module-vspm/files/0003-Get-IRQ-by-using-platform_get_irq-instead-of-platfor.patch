@@ -1,0 +1,138 @@
+From 091305b8304d0223cc247b6514f8df4fb5cdc5f5 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Fri, 24 May 2024 15:17:16 +0700
+Subject: [PATCH 2/4] Get IRQ by using platform_get_irq instead of
+ platform_get_resource
+
+We usually use platform_get_resource to obtain IRQs. From now on,
+we have switched to platform_get_irq following [1]
+
+[1] https://github.com/torvalds/linux/commit/a1a2b712
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm-module/files/vspm/drv/fdp/fdp_drv_l.c     | 14 ++++++--------
+ vspm-module/files/vspm/drv/fdp_drv_public.h    |  2 +-
+ vspm-module/files/vspm/drv/vsp/vsp_drv_local.h |  2 +-
+ vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c   | 14 ++++++--------
+ 4 files changed, 14 insertions(+), 18 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+index 4bf2149..e74bbad 100644
+--- a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
++++ b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+@@ -1617,25 +1617,24 @@ long fdp_reg_inth(struct fdp_obj_t *obj)
+ 	int ercd;
+ 
+ 	/* get irq information from platform */
+-	obj->irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+-	if (!obj->irq) {
++	obj->irq = platform_get_irq(pdev, 0);
++	if (obj->irq < 0) {
+ 		EPRINT("%s: failed to get IRQ resource!!\n", __func__);
+ 		return E_FDP_DEF_INH;
+ 	}
+ 
+ 	/* registory interrupt handler */
+ 	ercd = request_irq(
+-		obj->irq->start,
++		obj->irq,
+ 		fdp_ins_ih,
+ 		IRQF_SHARED,
+ 		dev_name(&pdev->dev),
+ 		obj);
+ 	if (ercd) {
+ 		EPRINT("%s: failed to request irq!! ercd=%d, irq=%d\n",
+-		       __func__, ercd, (int)obj->irq->start);
++		       __func__, ercd, obj->irq);
+ 		return E_FDP_DEF_INH;
+ 	}
+-
+ 	return 0;
+ }
+ 
+@@ -1647,9 +1646,8 @@ long fdp_reg_inth(struct fdp_obj_t *obj)
+ long fdp_free_inth(struct fdp_obj_t *obj)
+ {
+ 	/* registory interrupt handler */
+-	if (obj->irq) {
+-		free_irq(obj->irq->start, obj);
+-		obj->irq = NULL;
++	if (obj->irq >= 0) {
++		free_irq(obj->irq, obj);
+ 	}
+ 
+ 	return 0;
+diff --git a/vspm-module/files/vspm/drv/fdp_drv_public.h b/vspm-module/files/vspm/drv/fdp_drv_public.h
+index d8298f5..7c63817 100644
+--- a/vspm-module/files/vspm/drv/fdp_drv_public.h
++++ b/vspm-module/files/vspm/drv/fdp_drv_public.h
+@@ -96,7 +96,7 @@ struct fdp_obj_t {
+ 
+ 	/* platform information */
+ 	struct platform_device *pdev;
+-	struct resource *irq;
++	int irq;
+ 	void __iomem *fdp_reg;
+ 	void __iomem *fcp_reg;
+ 	unsigned int lut_tbl_idx;
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h b/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h
+index e2780d8..f575f90 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h
+@@ -759,7 +759,7 @@ struct vsp_prv_data {
+ 	struct platform_device *pdev;
+ 	void __iomem *vsp_reg;
+ 	void __iomem *fcp_reg;
+-	struct resource *irq;
++	int irq;
+ 	struct vsp_res_data {
+ 		unsigned int usable_rpf;
+ 		unsigned int usable_rpf_clut;
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c b/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
+index 5225daa..4c009e0 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
+@@ -2783,23 +2783,22 @@ long vsp_ins_reg_ih(struct vsp_prv_data *prv)
+ 	int ercd;
+ 
+ 	/* get irq information from platform */
+-	prv->irq = platform_get_resource(prv->pdev, IORESOURCE_IRQ, 0);
+-	if (!prv->irq) {
++	prv->irq = platform_get_irq(prv->pdev, 0);
++	if (prv->irq < 0) {
+ 		EPRINT("%s: failed to get IRQ resource!!\n", __func__);
+ 		return E_VSP_DEF_INH;
+ 	}
+ 
+ 	/* registory interrupt handler */
+ 	ercd = request_irq(
+-		prv->irq->start,
++		prv->irq,
+ 		vsp_ins_ih,
+ 		IRQF_SHARED,
+ 		dev_name(&prv->pdev->dev),
+ 		prv);
+ 	if (ercd) {
+ 		EPRINT("%s: failed to request irq!! ercd=%d, irq=%d\n",
+-		       __func__, ercd, (int)prv->irq->start);
+-		prv->irq = NULL;
++		       __func__, ercd, prv->irq);
+ 		return E_VSP_DEF_INH;
+ 	}
+ 
+@@ -2814,9 +2813,8 @@ long vsp_ins_reg_ih(struct vsp_prv_data *prv)
+ long vsp_ins_unreg_ih(struct vsp_prv_data *prv)
+ {
+ 	/* release interrupt handler */
+-	if (prv->irq) {
+-		free_irq(prv->irq->start, prv);
+-		prv->irq = NULL;
++	if (prv->irq >= 0) {
++		free_irq(prv->irq, prv);
+ 	}
+ 
+ 	return 0;
+-- 
+2.17.1
+
