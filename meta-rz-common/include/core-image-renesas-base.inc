@@ -123,6 +123,24 @@ update_issue() {
     echo "LSI: ${BSP_SOC}" >> ${IMAGE_ROOTFS}/etc/issue
     echo "Version: ${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
 }
+
+update_issue_rzt2h() {
+    # Set BSP version
+    BSP_VERSION="1.0.0"
+
+    # Set SoC and Board info
+    case "${MACHINE}" in
+    rzt2h-dev)
+      BSP_SOC="RZT2H"
+      BSP_BOARD="RZT2H-DEV"
+      ;;
+    esac
+
+    # Make issue file
+    echo "BSP: ${BSP_SOC}/${BSP_BOARD}/${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
+    echo "LSI: ${BSP_SOC}" >> ${IMAGE_ROOTFS}/etc/issue
+    echo "Version: ${BSP_VERSION}" >> ${IMAGE_ROOTFS}/etc/issue
+}
 ROOTFS_POSTPROCESS_COMMAND += "update_issue; "
 
 # Renesas Basic packages for 32bit
