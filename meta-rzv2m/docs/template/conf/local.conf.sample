@@ -304,9 +304,6 @@ MULTILIBS = "multilib:lib32"
 DEFAULTTUNE_virtclass-multilib-lib32 = "armv7vethf-neon-vfpv4"
 USE_32BIT_PKGS = "1"
 
-# For meta-virtualization layer
-DISTRO_FEATURES_append = "${@oe.utils.conditional('VIRTUALIZATION_CHECK', 'True', ' virtualization', '', d)}"
-
 # Generate compressed "git2_" gz of all git packages in DL_DIR
 #BB_GENERATE_MIRROR_TARBALLS = "1"
 

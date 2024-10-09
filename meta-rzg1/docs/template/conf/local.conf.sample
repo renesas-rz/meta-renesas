@@ -298,9 +298,6 @@ LICENSE_FLAGS_WHITELIST = " \
 	commercial_gstreamer1.0-libav commercial_ffmpeg commercial_x264 \
 "
 
-# For meta-virtualization layer
-DISTRO_FEATURES_append = "${@oe.utils.conditional('VIRTUALIZATION_CHECK', 'True', ' virtualization', '', d)}"
-
 # Generate compressed "git2_" gz of all git packages in DL_DIR
 #BB_GENERATE_MIRROR_TARBALLS = "1"
 
