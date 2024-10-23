@@ -1,0 +1,70 @@
+From 07898cea0cbcda40862e270fb35423e346188ca3 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Wed, 18 Dec 2024 13:36:29 +0700
+Subject: [PATCH] Update copyright year for these changed files
+
+This commit updates copyright year (2024) for these changed files.
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm_if-module/files/vspm_if/drv/vspm_if_local.h | 2 +-
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c  | 2 +-
+ vspm_if-module/files/vspm_if/drv/vspm_if_sub.c   | 2 +-
+ vspm_if-module/files/vspm_if/include/vspm_if.h   | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_local.h b/vspm_if-module/files/vspm_if/drv/vspm_if_local.h
+index ca623c7..c5ce619 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_local.h
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_local.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index 5328ead..f9eb720 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c b/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
+index 107359d..c0abb94 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm_if-module/files/vspm_if/include/vspm_if.h b/vspm_if-module/files/vspm_if/include/vspm_if.h
+index 6a451b0..0a38ad0 100644
+--- a/vspm_if-module/files/vspm_if/include/vspm_if.h
++++ b/vspm_if-module/files/vspm_if/include/vspm_if.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+-- 
+2.17.1
+

@@ -24,6 +24,15 @@ SRC_URI:append = " \
 	file://0001-Use-macro-task_is_running-over-reading-task_struct.patch \
 "
 
+SRC_URI:append:rzg2l-family = " \
+	file://0001-Add-ISU-to-vspmif.patch \
+	file://0002-Remove-width-height-in-isu_dst_t.patch \
+	file://0003-Correcting-variable-type.patch \
+	file://0004-Remove-unused-memory.patch \
+	file://0005-Correction-32bit-variable.patch \
+	file://0006-Update-copyright-year-for-these-changed-files.patch \
+"
+
 S = "${WORKDIR}/git"
 VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
 

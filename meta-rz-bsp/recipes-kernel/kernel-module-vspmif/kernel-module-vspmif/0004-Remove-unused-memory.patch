@@ -1,0 +1,32 @@
+From 6f7cf8e49c820b4bb0e999903f221ecc1d470db5 Mon Sep 17 00:00:00 2001
+From: Nhat Thieu <nhat.thieu.xr@renesas.com>
+Date: Mon, 15 Nov 2021 12:13:38 +0700
+Subject: [PATCH 4/5] Remove unused memory
+
+Firstly, we intend to create this buffer for display list.
+However, now it is unnecessary. So we remove it.
+
+Signed-off-by: Nhat Thieu <nhat.thieu.xr@renesas.com>
+---
+ vspm_if-module/files/vspm_if/drv/vspm_if_sub.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c b/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
+index b2c8ac9..107359d 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_sub.c
+@@ -962,11 +962,6 @@ int set_isu_par(
+ 		return -EFAULT;
+ 	}
+ 
+-	/* get work buffer */
+-	isu->work_buff = get_work_buffer(entry->priv);
+-	if (!isu->work_buff)
+-		return -EFAULT;
+-
+ 	/* copy isu_src_t parameter */
+ 	if(isu->par.src_par){
+ 		ercd = set_isu_src_par(
+-- 
+2.17.1
+
