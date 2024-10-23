@@ -1,0 +1,71 @@
+From a78e20ae162b35069445f4b368f7b164a16d0b0f Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Tue, 22 Oct 2024 16:15:32 +0700
+Subject: [PATCH 1/2] mmngr: Fix compilation warnings to avoid build failures
+
+On kernel 6.1.x-cip28, compiling warnings are change to errors to avoid
+any warnings occur. This commit will fix all compiling warnings.
+
+Compiling warning types are fixed:
+    1. [-Werror=format=] (format '%p' and '%ld' expect argument of type 'void *'
+       and 'long unsigned int'. But argument has type 'long unsigned int' and
+       'long long unsigned int').
+	-> Solution: Change '%p' to '%lx' with long unsigned int type and '%lx'
+                    to '%llx' with long long unsigned int type.
+
+    2. [-Werror=discarded-qualifiers] (assignment discards 'const'
+       qualifier from pointer target type).
+	-> Solution: Add "const" to declaration.
+
+    3. [-Werror=unused-variable] (Unused variable)
+	-> Solution: Remove unused variables.
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 5b66d3b..80d9718 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -847,7 +847,6 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ 	struct mm_struct *mm = current->mm;
+ 	unsigned long start;
+ 	unsigned long pfn;
+-	int lp = 0;
+ 	int ret = 0;
+ 
+ 	mmap_read_lock(mm);
+@@ -855,7 +854,7 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ 	start = tmp->user_virt_addr & PAGE_MASK;
+ 	ret = follow_pfn(vma, start, &pfn);
+ 	if(ret != 0)
+-		 pr_warn("Could not convert virt[%p] addr", tmp->user_virt_addr);
++		 pr_warn("Could not convert virt[0x%lx] addr", tmp->user_virt_addr);
+ 	tmp->hard_addr = pfn << PAGE_SHIFT;
+ 	mmap_read_unlock(mm);
+ 
+@@ -1068,8 +1067,8 @@ static int validate_memory_map(void)
+ #ifndef IPMMU_MMU_SUPPORT
+ 	if ((mm_kernel_reserve_addr + mm_kernel_reserve_size) > 
+ 	    (legacy_memory_addr + legacy_memory_size)) {
+-		pr_warn("The kernel reserved area (0x%09lx - 0x%09lx) is out of "\
+-			"the legacy area of memory (0x%09lx - 0x%09lx) \n",
++		pr_warn("The kernel reserved area (0x%09llx - 0x%09llx) is out of "\
++			"the legacy area of memory (0x%09llx - 0x%09llx) \n",
+ 			mm_kernel_reserve_addr,
+ 			mm_kernel_reserve_addr + mm_kernel_reserve_size,
+ 			legacy_memory_addr,
+@@ -1162,7 +1161,7 @@ static int parse_legacy_memory_node(struct device_node *np)
+ 
+ 	for_each_child_of_node(np, node) {
+ 		if(of_property_match_string(node, "device_type", "memory") >= 0){
+-			__be32 *regaddr_p = NULL;
++			const __be32 *regaddr_p = NULL;
+ 			regaddr_p = of_get_address(node, 0, &memory_size, NULL);
+ 			if (regaddr_p)
+ 				memory_addr = of_translate_address(node, regaddr_p);
+-- 
+2.17.1
+

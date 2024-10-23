@@ -9,6 +9,7 @@ PR = "r0"
 SRC_URI:append = " \
 	file://0001-mmngrbuf-Add-support-dmabuf_vmap-api.patch \
 	file://0002-mmngrbuf-Update-following-kernel-6.1.patch \
+	file://0003-mmngrbuf-Fix-compilation-warning-to-avoid-build-fail.patch \
 "
 
 S = "${WORKDIR}/git"

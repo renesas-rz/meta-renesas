@@ -1,0 +1,35 @@
+From 041b2cc0173b3625c52099449dba91aa9740f040 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Tue, 22 Oct 2024 18:09:58 +0700
+Subject: [PATCH 2/2] mmngrbuf: Fix compilation warning to avoid build failure
+
+On kernel 6.1.x-cip28, compiling warning is change to error to avoid
+any warnings occur. This commit will fix all compiling warnings.
+
+Compiling warning types is fixed:
+    1. [-Werror=int-conversion] (error: returning 'void *' (phys_to_virt())
+       from function with return type 'int' makes integer from pointer without
+       a cast)
+        -> Solution: Cast phys_to_virt() to (int)(uintptr_t) before return
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ .../mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index e19d75b..5b4dde7 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -251,7 +251,7 @@ static int dmabuf_vmap(struct dma_buf *buf, struct iosys_map *map)
+ {
+ 	struct MM_BUF_PRIVATE *priv = buf->priv;
+ 
+-	return phys_to_virt(priv->hard_addr);
++	return (int)(uintptr_t)phys_to_virt(priv->hard_addr);
+ }
+ 
+ static void dmabuf_vunmap(struct dma_buf *buf, struct iosys_map *map)
+-- 
+2.17.1
+

@@ -1,0 +1,550 @@
+From 4f0395719b80a31310799a546a799c887091631c Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Tue, 22 Oct 2024 15:12:42 +0700
+Subject: [PATCH] Fix compilation warning to avoid build failure
+
+On kernel 6.1.x-cip28, compiling warning is change to error to avoid
+any warnings occur. This commit will fix all compiling warnings.
+
+Compiling warning types is fixed:
+    1. [-Werror=implicit-fallthrough=] (compiler detects a case in a
+       switch statement that falls through into the next case without an
+       explicit break, return or other control statement at end of case).
+        -> Solution: Add break and copy needed block codes for each cases.
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm-module/files/vspm/drv/fdp/fdp_drv_l.c   | 100 +++++++
+ vspm-module/files/vspm/drv/vsp/vsp_drv_par.c | 285 ++++++++++++++++++-
+ 2 files changed, 372 insertions(+), 13 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+index bcb4908..cecd1a0 100644
+--- a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
++++ b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+@@ -302,10 +302,51 @@ static long fdp_ins_check_dstbuf_param(
+ 	case FDP_YUV420_PLANAR:
+ 	case FDP_YUV422_PLANAR:
+ 		stride_c >>= 1;
++		/* check c1 address */
++		if (buf->addr_c1 == 0)
++			return E_FDP_PARA_DST_ADDR_C1;
++
++		/* check c0 address */
++		if (buf->addr_c0 == 0)
++			return E_FDP_PARA_DST_ADDR_C0;
++
++		/* check chroma stride */
++		if (buf->stride_c < stride_c)
++			return E_FDP_PARA_DST_STRIDE_C;
++
++		stride >>= 1;
++
++		/* check luma address */
++		if (buf->addr == 0)
++			return E_FDP_PARA_DST_ADDR;
++
++		/* check luma stride */
++		if (buf->stride < stride)
++			return E_FDP_PARA_DST_STRIDE;
++		break;
+ 	case FDP_YUV444_PLANAR:
+ 		/* check c1 address */
+ 		if (buf->addr_c1 == 0)
+ 			return E_FDP_PARA_DST_ADDR_C1;
++
++		/* check c0 address */
++		if (buf->addr_c0 == 0)
++			return E_FDP_PARA_DST_ADDR_C0;
++
++		/* check chroma stride */
++		if (buf->stride_c < stride_c)
++			return E_FDP_PARA_DST_STRIDE_C;
++
++		stride >>= 1;
++
++		/* check luma address */
++		if (buf->addr == 0)
++			return E_FDP_PARA_DST_ADDR;
++
++		/* check luma stride */
++		if (buf->stride < stride)
++			return E_FDP_PARA_DST_STRIDE;
++		break;
+ 	/* semi-planar */
+ 	case FDP_YUV420:
+ 	case FDP_YUV420_NV21:
+@@ -319,6 +360,15 @@ static long fdp_ins_check_dstbuf_param(
+ 			return E_FDP_PARA_DST_STRIDE_C;
+ 
+ 		stride >>= 1;
++
++		/* check luma address */
++		if (buf->addr == 0)
++			return E_FDP_PARA_DST_ADDR;
++
++		/* check luma stride */
++		if (buf->stride < stride)
++			return E_FDP_PARA_DST_STRIDE;
++		break;
+ 	/* interleaved */
+ 	case FDP_YUV422_YUY2:
+ 	case FDP_YUV422_UYVY:
+@@ -373,10 +423,51 @@ static long fdp_ins_check_refbuf_param(
+ 	case FDP_YUV420_PLANAR:
+ 	case FDP_YUV422_PLANAR:
+ 		stride_c >>= 1;
++		/* check c1 address */
++		if (buf->addr_c1 == 0)
++			return E_FDP_PARA_SRC_ADDR_C1;
++
++		/* check c0 address */
++		if (buf->addr_c0 == 0)
++			return E_FDP_PARA_SRC_ADDR_C0;
++
++		/* check chroma stride */
++		if (buf->stride_c < stride_c)
++			return E_FDP_PARA_SRC_STRIDE_C;
++
++		stride >>= 1;
++
++		/* check luma address */
++		if (buf->addr == 0)
++			return E_FDP_PARA_SRC_ADDR;
++
++		/* check luma stride */
++		if (buf->stride < stride)
++			return E_FDP_PARA_SRC_STRIDE;
++		break;
+ 	case FDP_YUV444_PLANAR:
+ 		/* check c1 address */
+ 		if (buf->addr_c1 == 0)
+ 			return E_FDP_PARA_SRC_ADDR_C1;
++
++		/* check c0 address */
++		if (buf->addr_c0 == 0)
++			return E_FDP_PARA_SRC_ADDR_C0;
++
++		/* check chroma stride */
++		if (buf->stride_c < stride_c)
++			return E_FDP_PARA_SRC_STRIDE_C;
++
++		stride >>= 1;
++
++		/* check luma address */
++		if (buf->addr == 0)
++			return E_FDP_PARA_SRC_ADDR;
++
++		/* check luma stride */
++		if (buf->stride < stride)
++			return E_FDP_PARA_SRC_STRIDE;
++		break;
+ 	/* semi-planar */
+ 	case FDP_YUV420:
+ 	case FDP_YUV420_NV21:
+@@ -390,6 +481,15 @@ static long fdp_ins_check_refbuf_param(
+ 			return E_FDP_PARA_SRC_STRIDE_C;
+ 
+ 		stride >>= 1;
++
++		/* check luma address */
++		if (buf->addr == 0)
++			return E_FDP_PARA_SRC_ADDR;
++
++		/* check luma stride */
++		if (buf->stride < stride)
++			return E_FDP_PARA_SRC_STRIDE;
++		break;
+ 	/* interleaved */
+ 	case FDP_YUV422_YUY2:
+ 	case FDP_YUV422_UYVY:
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c b/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c
+index 33c673d..f7d579b 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c
+@@ -514,7 +514,29 @@ static long vsp_ins_check_rpf_format(
+ 
+ 			x_offset <<= 1;
+ 			y_offset >>= 1;
+-			/* break; */
++
++			/* check width */
++			if (src_par->width & 0x1)
++				return E_VSP_PARA_IN_WIDTH;
++
++			/* check width_ex */
++			if (src_par->width_ex & 0x1)
++				return E_VSP_PARA_IN_WIDTHEX;
++
++			/* check x_offset */
++			if (src_par->x_offset & 0x1)
++				return E_VSP_PARA_IN_XOFFSET;
++
++			x_offset_c >>= 1;
++
++			temp = (y_offset * stride) +
++				(x_offset + x_offset_c + x_offset_c);
++
++			rpf_info->val_addr_y = src_par->addr + temp;
++
++			rpf_info->val_addr_c0 = 0;
++			rpf_info->val_addr_c1 = 0;
++			break;
+ 		case VSP_IN_YUV422_INTERLEAVED0:
+ 		case VSP_IN_YUV422_INT0_YUY2:
+ 		case VSP_IN_YUV422_INT0_YVYU:
+@@ -532,7 +554,15 @@ static long vsp_ins_check_rpf_format(
+ 				return E_VSP_PARA_IN_XOFFSET;
+ 
+ 			x_offset_c >>= 1;
+-			/* break; */
++
++			temp = (y_offset * stride) +
++				(x_offset + x_offset_c + x_offset_c);
++
++			rpf_info->val_addr_y = src_par->addr + temp;
++
++			rpf_info->val_addr_c0 = 0;
++			rpf_info->val_addr_c1 = 0;
++			break;
+ 		case VSP_IN_YUV444_INTERLEAVED:
+ 
+ 			temp = (y_offset * stride) +
+@@ -559,7 +589,37 @@ static long vsp_ins_check_rpf_format(
+ 				return E_VSP_PARA_IN_YOFFSET;
+ 
+ 			y_offset_c >>= 1;
+-			/* break; */
++
++			/* check width */
++			if (src_par->width & 0x1)
++				return E_VSP_PARA_IN_WIDTH;
++
++			/* check width_ex */
++			if (src_par->width_ex & 0x1)
++				return E_VSP_PARA_IN_WIDTHEX;
++
++			/* check x_offset */
++			if (src_par->x_offset & 0x1)
++				return E_VSP_PARA_IN_XOFFSET;
++
++			x_offset_c >>= 1;
++
++			/* check Cb address pointer */
++			if (src_par->addr_c0 == 0)
++				return E_VSP_PARA_IN_ADRC0;
++
++			/* set address */
++			rpf_info->val_addr_y =
++				src_par->addr +
++				(y_offset * stride) +
++				x_offset;
++
++			temp = (y_offset_c * stride_c) +
++				(x_offset_c + x_offset_c);
++
++			rpf_info->val_addr_c0 = src_par->addr_c0 + temp;
++			rpf_info->val_addr_c1 = 0;
++			break;
+ 		case VSP_IN_YUV422_SEMI_PLANAR:
+ 		case VSP_IN_YUV422_SEMI_NV61:
+ 			/* check width */
+@@ -575,7 +635,23 @@ static long vsp_ins_check_rpf_format(
+ 				return E_VSP_PARA_IN_XOFFSET;
+ 
+ 			x_offset_c >>= 1;
+-			/* break; */
++
++			/* check Cb address pointer */
++			if (src_par->addr_c0 == 0)
++				return E_VSP_PARA_IN_ADRC0;
++
++			/* set address */
++			rpf_info->val_addr_y =
++				src_par->addr +
++				(y_offset * stride) +
++				x_offset;
++
++			temp = (y_offset_c * stride_c) +
++				(x_offset_c + x_offset_c);
++
++			rpf_info->val_addr_c0 = src_par->addr_c0 + temp;
++			rpf_info->val_addr_c1 = 0;
++			break;
+ 		case VSP_IN_YUV444_SEMI_PLANAR:
+ 			/* check Cb address pointer */
+ 			if (src_par->addr_c0 == 0)
+@@ -608,7 +684,39 @@ static long vsp_ins_check_rpf_format(
+ 				return E_VSP_PARA_IN_YOFFSET;
+ 
+ 			y_offset_c >>= 1;
+-			/* break; */
++
++			/* check width */
++			if (src_par->width & 0x1)
++				return E_VSP_PARA_IN_WIDTH;
++
++			/* check width_ex */
++			if (src_par->width_ex & 0x1)
++				return E_VSP_PARA_IN_WIDTHEX;
++
++			/* check x_offset */
++			if (src_par->x_offset & 0x1)
++				return E_VSP_PARA_IN_XOFFSET;
++
++			x_offset_c >>= 1;
++
++			/* check CbCr address pointer */
++			if (src_par->addr_c0 == 0)
++				return E_VSP_PARA_IN_ADRC0;
++
++			if (src_par->addr_c1 == 0)
++				return E_VSP_PARA_IN_ADRC1;
++
++			/* set address */
++			rpf_info->val_addr_y =
++				src_par->addr +
++				(y_offset * stride) +
++				x_offset;
++
++			temp = (y_offset_c * stride_c) + x_offset_c;
++
++			rpf_info->val_addr_c0 = src_par->addr_c0 + temp;
++			rpf_info->val_addr_c1 = src_par->addr_c1 + temp;
++			break;
+ 		case VSP_IN_YUV422_PLANAR:
+ 			/* check width */
+ 			if (src_par->width & 0x1)
+@@ -623,7 +731,25 @@ static long vsp_ins_check_rpf_format(
+ 				return E_VSP_PARA_IN_XOFFSET;
+ 
+ 			x_offset_c >>= 1;
+-			/* break; */
++
++			/* check CbCr address pointer */
++			if (src_par->addr_c0 == 0)
++				return E_VSP_PARA_IN_ADRC0;
++
++			if (src_par->addr_c1 == 0)
++				return E_VSP_PARA_IN_ADRC1;
++
++			/* set address */
++			rpf_info->val_addr_y =
++				src_par->addr +
++				(y_offset * stride) +
++				x_offset;
++
++			temp = (y_offset_c * stride_c) + x_offset_c;
++
++			rpf_info->val_addr_c0 = src_par->addr_c0 + temp;
++			rpf_info->val_addr_c1 = src_par->addr_c1 + temp;
++			break;
+ 		case VSP_IN_YUV444_PLANAR:
+ 			/* check CbCr address pointer */
+ 			if (src_par->addr_c0 == 0)
+@@ -708,6 +834,8 @@ static long vsp_ins_check_ckey_unit_param(
+ 			break;
+ 		case VSP_CKEY_TRANS_COLOR2:
+ 			rpf_info->val_ckey_ctrl |= VSP_RPF_CKEY_CTRL_SAPE1;
++			rpf_info->val_ckey_ctrl |= VSP_RPF_CKEY_CTRL_SAPE0;
++			break;
+ 		case VSP_CKEY_TRANS_COLOR1:
+ 			rpf_info->val_ckey_ctrl |= VSP_RPF_CKEY_CTRL_SAPE0;
+ 			break;
+@@ -1229,7 +1357,25 @@ static long vsp_ins_check_wpf_format(
+ 
+ 		x_offset <<= 1;
+ 		y_offset >>= 1;
+-		/* break; */
++
++		/* check width */
++		if (dst_par->width & 0x1)
++			return E_VSP_PARA_OUT_WIDTH;
++
++		/* check x_offset */
++		if (dst_par->x_offset & 0x1)
++			return E_VSP_PARA_OUT_XOFFSET;
++
++		x_offset_c >>= 1;
++
++		temp = (y_offset * stride) +
++			(x_offset + x_offset_c + x_offset_c);
++
++		wpf_info->val_addr_y = dst_par->addr + temp;
++
++		wpf_info->val_addr_c0 = 0;
++		wpf_info->val_addr_c1 = 0;
++		break;
+ 	case VSP_OUT_YUV422_INTERLEAVED0:
+ 	case VSP_OUT_YUV422_INT0_YUY2:
+ 	case VSP_OUT_YUV422_INT0_YVYU:
+@@ -1243,7 +1389,15 @@ static long vsp_ins_check_wpf_format(
+ 			return E_VSP_PARA_OUT_XOFFSET;
+ 
+ 		x_offset_c >>= 1;
+-		/* break; */
++
++		temp = (y_offset * stride) +
++			(x_offset + x_offset_c + x_offset_c);
++
++		wpf_info->val_addr_y = dst_par->addr + temp;
++
++		wpf_info->val_addr_c0 = 0;
++		wpf_info->val_addr_c1 = 0;
++		break;
+ 	case VSP_OUT_YUV444_INTERLEAVED:
+ 
+ 		temp = (y_offset * stride) +
+@@ -1266,7 +1420,32 @@ static long vsp_ins_check_wpf_format(
+ 			return E_VSP_PARA_OUT_YOFFSET;
+ 
+ 		y_offset_c >>= 1;
+-		/* break; */
++
++		/* check width */
++		if (dst_par->width & 0x1)
++			return E_VSP_PARA_OUT_WIDTH;
++
++		/* check x_offset */
++		if (dst_par->x_offset & 0x1)
++			return E_VSP_PARA_OUT_XOFFSET;
++
++		x_offset_c >>= 1;
++
++		/* check Cb address pointer */
++		if (dst_par->addr_c0 == 0)
++			return E_VSP_PARA_OUT_ADRC0;
++
++		/* set address */
++		wpf_info->val_addr_y =
++			dst_par->addr +
++			(y_offset * stride) +
++			x_offset;
++
++		temp = (y_offset_c * stride_c) + (x_offset_c + x_offset_c);
++
++		wpf_info->val_addr_c0 = dst_par->addr_c0 + temp;
++		wpf_info->val_addr_c1 = 0;
++		break;
+ 	case VSP_OUT_YUV422_SEMI_PLANAR:
+ 	case VSP_OUT_YUV422_SEMI_NV61:
+ 		/* check width */
+@@ -1278,7 +1457,22 @@ static long vsp_ins_check_wpf_format(
+ 			return E_VSP_PARA_OUT_XOFFSET;
+ 
+ 		x_offset_c >>= 1;
+-		/* break; */
++
++		/* check Cb address pointer */
++		if (dst_par->addr_c0 == 0)
++			return E_VSP_PARA_OUT_ADRC0;
++
++		/* set address */
++		wpf_info->val_addr_y =
++			dst_par->addr +
++			(y_offset * stride) +
++			x_offset;
++
++		temp = (y_offset_c * stride_c) + (x_offset_c + x_offset_c);
++
++		wpf_info->val_addr_c0 = dst_par->addr_c0 + temp;
++		wpf_info->val_addr_c1 = 0;
++		break;
+ 	case VSP_OUT_YUV444_SEMI_PLANAR:
+ 		/* check Cb address pointer */
+ 		if (dst_par->addr_c0 == 0)
+@@ -1306,7 +1500,35 @@ static long vsp_ins_check_wpf_format(
+ 			return E_VSP_PARA_OUT_YOFFSET;
+ 
+ 		y_offset_c >>= 1;
+-		/* break; */
++
++		/* check width */
++		if (dst_par->width & 0x1)
++			return E_VSP_PARA_OUT_WIDTH;
++
++		/* check x_offset */
++		if (dst_par->x_offset & 0x1)
++			return E_VSP_PARA_OUT_XOFFSET;
++
++		x_offset_c >>= 1;
++
++		/* check CbCr address pointer */
++		if (dst_par->addr_c0 == 0)
++			return E_VSP_PARA_OUT_ADRC0;
++
++		if (dst_par->addr_c1 == 0)
++			return E_VSP_PARA_OUT_ADRC1;
++
++		/* set address */
++		wpf_info->val_addr_y =
++			dst_par->addr +
++			(y_offset * stride) +
++			x_offset;
++
++		temp = (y_offset_c * stride_c) + x_offset_c;
++
++		wpf_info->val_addr_c0 = dst_par->addr_c0 + temp;
++		wpf_info->val_addr_c1 = dst_par->addr_c1 + temp;
++		break;
+ 	case VSP_OUT_YUV422_PLANAR:
+ 		/* check width */
+ 		if (dst_par->width & 0x1)
+@@ -1317,7 +1539,24 @@ static long vsp_ins_check_wpf_format(
+ 			return E_VSP_PARA_OUT_XOFFSET;
+ 
+ 		x_offset_c >>= 1;
+-		/* break; */
++
++		if (dst_par->addr_c0 == 0)
++			return E_VSP_PARA_OUT_ADRC0;
++
++		if (dst_par->addr_c1 == 0)
++			return E_VSP_PARA_OUT_ADRC1;
++
++		/* set address */
++		wpf_info->val_addr_y =
++			dst_par->addr +
++			(y_offset * stride) +
++			x_offset;
++
++		temp = (y_offset_c * stride_c) + x_offset_c;
++
++		wpf_info->val_addr_c0 = dst_par->addr_c0 + temp;
++		wpf_info->val_addr_c1 = dst_par->addr_c1 + temp;
++		break;
+ 	case VSP_OUT_YUV444_PLANAR:
+ 		/* check CbCr address pointer */
+ 		if (dst_par->addr_c0 == 0)
+@@ -1477,7 +1716,27 @@ static long vsp_ins_check_wpf_fcnl(
+ 
+ 				if (wpf_info->val_addr_c1 & 0xff)
+ 					return E_VSP_PARA_OUT_ADRC1;
+-				/* break; */
++
++				/* check stride and address */
++				if (dst_par->stride & 0xff)
++					return E_VSP_PARA_OUT_STRIDE_Y;
++
++				if (wpf_info->val_addr_y & 0xff)
++					return E_VSP_PARA_OUT_ADR;
++
++				/* check format */
++				if (dst_par->format !=
++						VSP_OUT_PRGB8888 &&
++					dst_par->format !=
++						VSP_OUT_YUV422_INT0_YUY2 &&
++					dst_par->format !=
++						VSP_OUT_YUV444_PLANAR &&
++					dst_par->format !=
++						VSP_OUT_YUV422_PLANAR &&
++					dst_par->format !=
++						VSP_OUT_YUV420_PLANAR)
++					return E_VSP_PARA_OUT_FORMAT;
++				break;
+ 			case VSP_ROT_H_FLIP:
+ 			case VSP_ROT_180:
+ 				/* check stride and address */
+-- 
+2.17.1
+
