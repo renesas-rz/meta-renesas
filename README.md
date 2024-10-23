@@ -27,6 +27,7 @@ Currently the following boards and MPUs are supported:
 - Board: RZG3S SMARC Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
 - Board: RZG3S Development Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
 - Board: RZT2H Evaluation Board / MPU: R9A09G077 (RZ/T2H)
+- Board: RZN2H Evaluation Board / MPU: R9A09G087 (RZ/N2H)
 
 ## Patches
 
@@ -204,6 +205,7 @@ Currently, there are 2 types of build procedure supported in below description:
 |RZ/Five    |rzfive    |smarc-rzfive, rzfive-dev|
 |RZ/G3S     |rzg3s     |smarc-rzg3s, rzg3s-dev  |
 |RZ/T2H     |rzt2h     |rzt2h-dev               |
+|RZ/N2H     |rzt2h     |rzn2h-dev               |
 
 **2. Build procedure for legacy users (common procedure) (unsupported for RZ/G1 Series, RZ/V2M, RZ/V2MA and RZ/G3S):**
 - Initialize a build using the 'oe-init-build-env' script in Poky. e.g.:
@@ -234,7 +236,7 @@ Currently, there are 2 types of build procedure supported in below description:
    ```
 
 \<target\> for these built types:
-* RZ/Five, RZ/V2M, RZ/V2MA, RZ/G3S, RZ/T2H: bsp
+* RZ/Five, RZ/V2M, RZ/V2MA, RZ/G3S, RZ/T2H, RZ/N2H: bsp
 * Others: bsp, weston, qt
 
 After completing the images for the target machine will be available in the output
