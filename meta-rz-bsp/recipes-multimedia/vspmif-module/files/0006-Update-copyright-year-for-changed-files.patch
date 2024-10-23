@@ -1,0 +1,50 @@
+From 79a610e3a7d69b79ed48dd4d7e20da73d14e22c2 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Wed, 18 Dec 2024 13:46:13 +0700
+Subject: [PATCH] Update copyright year for changed files
+
+This commit updates copyright year (2024) for these changed files
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm_if-module/files/vspm_if/if/vspm_api.c         | 2 +-
+ vspm_if-module/files/vspm_if/if/vspm_api_isu.c     | 2 +-
+ vspm_if-module/files/vspm_if/include/vspm_public.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/if/vspm_api.c b/vspm_if-module/files/vspm_if/if/vspm_api.c
+index e978ed0..96e91a8 100644
+--- a/vspm_if-module/files/vspm_if/if/vspm_api.c
++++ b/vspm_if-module/files/vspm_if/if/vspm_api.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2015-2017 Renesas Electronics Corporation
++ * Copyright (c) 2015-2024 Renesas Electronics Corporation
+  * Released under the MIT license
+  * http://opensource.org/licenses/mit-license.php
+  */
+diff --git a/vspm_if-module/files/vspm_if/if/vspm_api_isu.c b/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
+index 2dbbd92..960164c 100755
+--- a/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
++++ b/vspm_if-module/files/vspm_if/if/vspm_api_isu.c
+@@ -1,5 +1,5 @@
+ /* 
+- * Copyright (c) 2015-2016 Renesas Electronics Corporation
++ * Copyright (c) 2015-2024 Renesas Electronics Corporation
+  * Released under the MIT license
+  * http://opensource.org/licenses/mit-license.php 
+  */
+diff --git a/vspm_if-module/files/vspm_if/include/vspm_public.h b/vspm_if-module/files/vspm_if/include/vspm_public.h
+index d441894..5c8f8c2 100644
+--- a/vspm_if-module/files/vspm_if/include/vspm_public.h
++++ b/vspm_if-module/files/vspm_if/include/vspm_public.h
+@@ -1,5 +1,5 @@
+ /* 
+- * Copyright (c) 2015-2016 Renesas Electronics Corporation
++ * Copyright (c) 2015-2024 Renesas Electronics Corporation
+  * Released under the MIT license
+  * http://opensource.org/licenses/mit-license.php 
+  */
+-- 
+2.17.1
+

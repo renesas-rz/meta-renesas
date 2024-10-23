@@ -16,6 +16,21 @@ includedir = "${RENESAS_DATADIR}/include"
 WS_aarch64 = ""
 WS_virtclass-multilib-lib32 = "32"
 
+SRC_URI:append:rzg2l-family = " \
+    file://0001-Modify-vspm_public.h-for-ISUM.patch \
+    file://0002-Modify-Makefile-for-building-vspm_api_isu.patch \
+    file://0003-Add-vspm_api_isu.c-for-ISUM.patch \
+    file://0004-Support-libvspm-32bit.patch \
+    file://0005-vspm_api_isu-Free-callback-vspmif-data-after-finishi.patch \
+    file://0006-Update-copyright-year-for-changed-files.patch \
+"
+
+do_compile:prepend:rzg2l-family() {
+    if [ X${WS} = "X32" ]; then
+        export VSPM32="1"
+    fi
+}
+
 do_compile() {
     export VSPM_LEGACY_IF="1"
 
