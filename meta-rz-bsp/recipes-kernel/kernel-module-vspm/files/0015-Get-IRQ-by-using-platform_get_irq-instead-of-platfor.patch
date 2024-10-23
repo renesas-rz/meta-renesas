@@ -1,0 +1,109 @@
+From 18f2cfd043c4b11e2575ccd5362d5c13e27884d2 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Mon, 30 Sep 2024 15:13:23 +0700
+Subject: [PATCH 15/16] Get IRQ by using platform_get_irq instead of
+ platform_get_resource for ISU
+
+We usually use platform_get_resource to obtain IRQs. From now on,
+we have switched to platform_get_irq following [1]
+
+[1] https://github.com/torvalds/linux/commit/a1a2b712
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ .../files/vspm/drv/isu/isu_drv_local.h        |  7 +++++
+ vspm-module/files/vspm/drv/isu/isu_drv_phy.c  | 28 +++++++++++++++++++
+ 2 files changed, 35 insertions(+)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_local.h b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+index c015071..4b893ce 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_local.h
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+@@ -1,5 +1,8 @@
+ #ifndef __ISU_DRV_PHY_H__
+ #define __ISU_DRV_PHY_H__
++
++#include <linux/version.h>
++
+ /* define register offset */
+ /* System Management Register offset address*/
+ #define ISU_FM_DL_STADDH	0x0000  /* FM Descriptor List Address Registers 0 */
+@@ -177,7 +180,11 @@ struct isu_ch_info {
+ struct isu_prv_data {
+ 	struct platform_device *pdev;
+ 	void __iomem *isu_reg;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 0))
+ 	struct resource *irq;
++#else
++	int irq;
++#endif
+ 	struct isu_res_data {
+ 		unsigned int usable_rpf;
+ 		unsigned int usable_wpf;
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+index 2e45b44..0b91d4a 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+@@ -584,13 +584,22 @@ long isu_ins_reg_ih(struct isu_prv_data *prv)
+ 	int ercd;
+ 
+ 	/* get irq information from platform */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 0))
+ 	prv->irq = platform_get_resource(prv->pdev, IORESOURCE_IRQ, 0);
+ 	if (!prv->irq) {
+ 		EPRINT("%s: failed to get IRQ resource!!\n", __func__);
+ 		return E_ISU_DEF_INH;
+ 	}
++#else
++	prv->irq = platform_get_irq(prv->pdev, 0);
++	if (prv->irq < 0) {
++		EPRINT("%s: failed to get IRQ resource!!\n", __func__);
++		return E_ISU_DEF_INH;
++	}
++#endif
+ 
+ 	/* registory interrupt handler */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 0))
+ 	ercd = request_irq(
+ 		prv->irq->start,
+ 		isu_ins_ih,
+@@ -603,6 +612,19 @@ long isu_ins_reg_ih(struct isu_prv_data *prv)
+ 		prv->irq = NULL;
+ 		return E_VSP_DEF_INH;
+ 	}
++#else
++	ercd = request_irq(
++		prv->irq,
++		isu_ins_ih,
++		IRQF_SHARED,
++		dev_name(&prv->pdev->dev),
++		prv);
++	if (ercd) {
++		EPRINT("%s: failed to request irq!! ercd=%d, irq=%d\n",
++			__func__, ercd, prv->irq);
++		return E_VSP_DEF_INH;
++	}
++#endif
+ 
+ 	return 0;
+ }
+@@ -615,10 +637,16 @@ long isu_ins_reg_ih(struct isu_prv_data *prv)
+ long isu_ins_unreg_ih(struct isu_prv_data *prv)
+ {
+ 	/* release interrupt handler */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 0))
+ 	if (prv->irq) {
+ 		free_irq(prv->irq->start, prv);
+ 		prv->irq = NULL;
+ 	}
++#else
++	if (prv->irq >= 0) {
++		free_irq(prv->irq, prv);
++	}
++#endif
+ 
+ 	return 0;
+ }
+-- 
+2.17.1
+

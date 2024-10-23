@@ -1,0 +1,408 @@
+From 34efd7bfe8d540e921dc9511d3072b9415b7725a Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Wed, 18 Dec 2024 12:16:34 +0700
+Subject: [PATCH] Update the copyright year for changed files
+
+This commit updates copyright year of changed files
+
+Signed-off-kby: trungvanle <trung.le.xk@renesas.com>
+---
+ vspm-module/files/vspm/drv/fdp/fdp_drv_l.c    |  2 +-
+ vspm-module/files/vspm/drv/isu/isu_drv.c      |  2 +-
+ .../files/vspm/drv/isu/isu_drv_local.h        | 57 +++++++++++++++++++
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c  | 57 +++++++++++++++++++
+ vspm-module/files/vspm/drv/isu/isu_drv_phy.c  | 57 +++++++++++++++++++
+ vspm-module/files/vspm/drv/isu_drv_public.h   |  2 +-
+ .../files/vspm/drv/manager/vspm_common.h      |  2 +-
+ .../files/vspm/drv/manager/vspm_control.c     |  2 +-
+ .../files/vspm/drv/manager/vspm_drv_isu.c     |  2 +-
+ .../vspm/drv/manager/vspm_exec_manager.c      |  2 +-
+ vspm-module/files/vspm/drv/vsp/vsp_drv_par.c  |  2 +-
+ vspm-module/files/vspm/drv/vspm_ip_ctrl.h     |  2 +-
+ vspm-module/files/vspm/drv/vspm_main.c        |  2 +-
+ vspm-module/files/vspm/drv/vspm_main.h        |  2 +-
+ vspm-module/files/vspm/include/isu_drv.h      |  2 +-
+ vspm-module/files/vspm/include/vspm_cmn.h     |  2 +-
+ vspm-module/files/vspm/include/vspm_public.h  |  2 +-
+ 17 files changed, 185 insertions(+), 14 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+index c18abe7..3c40647 100644
+--- a/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
++++ b/vspm-module/files/vspm/drv/fdp/fdp_drv_l.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv.c b/vspm-module/files/vspm/drv/isu/isu_drv.c
+index 990cb6f..711b397 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * ISUM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_local.h b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+index 4b893ce..a92c88b 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_local.h
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+@@ -1,3 +1,60 @@
++/*************************************************************************/ /*
++ * VSPM
++ *
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
++ *
++ * License        Dual MIT/GPLv2
++ *
++ * The contents of this file are subject to the MIT license as set out below.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * the GNU General Public License Version 2 ("GPL") in which case the provisions
++ * of GPL are applicable instead of those above.
++ *
++ * If you wish to allow use of your version of this file only under the terms of
++ * GPL, and not to allow others to use your version of this file under the terms
++ * of the MIT license, indicate your decision by deleting the provisions above
++ * and replace them with the notice and other provisions required by GPL as set
++ * out in the file called "GPL-COPYING" included in this distribution. If you do
++ * not delete the provisions above, a recipient may use your version of this
++ * file under the terms of either the MIT license or GPL.
++ *
++ * This License is also included in this distribution in the file called
++ * "MIT-COPYING".
++ *
++ * EXCEPT AS OTHERWISE STATED IN A NEGOTIATED AGREEMENT: (A) THE SOFTWARE IS
++ * PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
++ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++ * PARTICULAR PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS
++ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++ * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ *
++ * GPLv2:
++ * If you wish to use this file under the terms of GPL, following terms are
++ * effective.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */ /*************************************************************************/
++
+ #ifndef __ISU_DRV_PHY_H__
+ #define __ISU_DRV_PHY_H__
+ 
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index ac46b92..7f7b011 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -1,3 +1,60 @@
++/*************************************************************************/ /*
++ * VSPM
++ *
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
++ *
++ * License        Dual MIT/GPLv2
++ *
++ * The contents of this file are subject to the MIT license as set out below.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * the GNU General Public License Version 2 ("GPL") in which case the provisions
++ * of GPL are applicable instead of those above.
++ *
++ * If you wish to allow use of your version of this file only under the terms of
++ * GPL, and not to allow others to use your version of this file under the terms
++ * of the MIT license, indicate your decision by deleting the provisions above
++ * and replace them with the notice and other provisions required by GPL as set
++ * out in the file called "GPL-COPYING" included in this distribution. If you do
++ * not delete the provisions above, a recipient may use your version of this
++ * file under the terms of either the MIT license or GPL.
++ *
++ * This License is also included in this distribution in the file called
++ * "MIT-COPYING".
++ *
++ * EXCEPT AS OTHERWISE STATED IN A NEGOTIATED AGREEMENT: (A) THE SOFTWARE IS
++ * PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
++ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++ * PARTICULAR PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS
++ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++ * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ *
++ * GPLv2:
++ * If you wish to use this file under the terms of GPL, following terms are
++ * effective.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */ /*************************************************************************/
++
+ #include "vspm_public.h"
+ #include "vspm_ip_ctrl.h"
+ #include "vspm_main.h"
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+index 0b91d4a..f2b78f3 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+@@ -1,3 +1,60 @@
++/*************************************************************************/ /*
++ * VSPM
++ *
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
++ *
++ * License        Dual MIT/GPLv2
++ *
++ * The contents of this file are subject to the MIT license as set out below.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * the GNU General Public License Version 2 ("GPL") in which case the provisions
++ * of GPL are applicable instead of those above.
++ *
++ * If you wish to allow use of your version of this file only under the terms of
++ * GPL, and not to allow others to use your version of this file under the terms
++ * of the MIT license, indicate your decision by deleting the provisions above
++ * and replace them with the notice and other provisions required by GPL as set
++ * out in the file called "GPL-COPYING" included in this distribution. If you do
++ * not delete the provisions above, a recipient may use your version of this
++ * file under the terms of either the MIT license or GPL.
++ *
++ * This License is also included in this distribution in the file called
++ * "MIT-COPYING".
++ *
++ * EXCEPT AS OTHERWISE STATED IN A NEGOTIATED AGREEMENT: (A) THE SOFTWARE IS
++ * PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
++ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
++ * PARTICULAR PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS
++ * OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
++ * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ *
++ *
++ * GPLv2:
++ * If you wish to use this file under the terms of GPL, following terms are
++ * effective.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */ /*************************************************************************/
++
+ #include <linux/platform_device.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+diff --git a/vspm-module/files/vspm/drv/isu_drv_public.h b/vspm-module/files/vspm/drv/isu_drv_public.h
+index 96a23f9..9995163 100644
+--- a/vspm-module/files/vspm/drv/isu_drv_public.h
++++ b/vspm-module/files/vspm/drv/isu_drv_public.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * ISUM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_common.h b/vspm-module/files/vspm/drv/manager/vspm_common.h
+index afc3066..3d44a22 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_common.h
++++ b/vspm-module/files/vspm/drv/manager/vspm_common.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_control.c b/vspm-module/files/vspm/drv/manager/vspm_control.c
+index 9dd56fd..0ee7bb2 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_control.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_control.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c b/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
+index 8039068..9096db4 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_drv_isu.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c b/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c
+index e6df901..914f6a3 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_exec_manager.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c b/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c
+index f7d579b..2e58315 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv_par.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/vspm_ip_ctrl.h b/vspm-module/files/vspm/drv/vspm_ip_ctrl.h
+index a0c854b..c58cecf 100644
+--- a/vspm-module/files/vspm/drv/vspm_ip_ctrl.h
++++ b/vspm-module/files/vspm/drv/vspm_ip_ctrl.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 65edb84..92f567f 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 3737d68..9b671a9 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/include/isu_drv.h b/vspm-module/files/vspm/include/isu_drv.h
+index 9a13d1c..514dfe9 100644
+--- a/vspm-module/files/vspm/include/isu_drv.h
++++ b/vspm-module/files/vspm/include/isu_drv.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * ISUM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/include/vspm_cmn.h b/vspm-module/files/vspm/include/vspm_cmn.h
+index 78f0bfc..921615f 100644
+--- a/vspm-module/files/vspm/include/vspm_cmn.h
++++ b/vspm-module/files/vspm/include/vspm_cmn.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+diff --git a/vspm-module/files/vspm/include/vspm_public.h b/vspm-module/files/vspm/include/vspm_public.h
+index 0dca03f..9ff9116 100644
+--- a/vspm-module/files/vspm/include/vspm_public.h
++++ b/vspm-module/files/vspm/include/vspm_public.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2021 Renesas Electronics Corporation
++ * Copyright (C) 2015-2024 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+-- 
+2.17.1
+

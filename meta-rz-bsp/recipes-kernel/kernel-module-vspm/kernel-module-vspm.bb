@@ -21,10 +21,32 @@ SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH};protocol=https"
 
 SRC_URI:append = " \
 	file://0001-Use-kthread_complete_and_exit-instead-do_exit.patch \
-	file://0002-Update-clocks-and-reset-controls-for-RZ-G3E.patch \
-	file://0003-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
-	file://0004-Restarting-FDP-after-stopping-with-CPG-software-rese.patch \
-	file://0005-Fix-compilation-warning-to-avoid-build-failure.patch \
+	file://0002-Fix-compilation-warning-to-avoid-build-failure.patch \
+"
+
+SRC_URI:append:rzg3e-family = " \
+	file://0001-Update-clocks-and-reset-controls-for-RZ-G3E.patch \
+	file://0002-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
+	file://0003-Restarting-FDP-after-stopping-with-CPG-software-rese.patch \
+"
+
+SRC_URI:append:rzg2l-family = " \
+	file://0001-Add-ISU-driver.patch \
+	file://0002-Add-option-ISU_CSC_RAW.patch \
+	file://0003-Add-ISU-to-VSPM.patch \
+	file://0004-Modify-Makefile.patch \
+	file://0005-remove-work-around-clock-reset-supply.patch \
+	file://0006-Support-MUTUAL-mode-for-ISU.patch \
+	file://0007-Update-and-fix-some-small-bugs-of-ISU-driver.patch \
+	file://0008-Correcting-variable-type.patch \
+	file://0009-Wrong-initialize-value-of-clip.patch \
+	file://0010-Fix-wrong-output-size-in-setting-case-rs_par-is-NULL.patch \
+	file://0011-Fix-error-cannot-detect-NOOUT-in-case-rs_par-NULL.patch \
+	file://0012-vspm_main-Update-isu-clock-enable.patch \
+	file://0013-vspm-isu-Check-addr-of-1st-plane-in-parameter-for-RP.patch \
+	file://0014-ISU-remove-csc-mode-in-struct-isu_csc_t.patch \
+	file://0015-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
+	file://0016-Update-the-copyright-year-for-changed-files.patch \
 "
 
 S = "${WORKDIR}/git"
@@ -62,6 +84,11 @@ do_install () {
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_cmn.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${D}/${includedir}/
+}
+
+do_install:append:rzg2l-family () {
+    install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${KERNELSRC}/include/
+    install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${D}/${includedir}/
 }
 
 # Should also clean deploy/licenses directory
