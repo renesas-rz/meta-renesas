@@ -134,6 +134,10 @@ update_issue_rzt2h() {
       BSP_SOC="RZT2H"
       BSP_BOARD="RZT2H-DEV"
       ;;
+    rzn2h-dev)
+      BSP_SOC="RZN2H"
+      BSP_BOARD="RZN2H-DEV"
+      ;;
     esac
 
     # Make issue file
