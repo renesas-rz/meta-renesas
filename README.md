@@ -57,6 +57,7 @@ This layer depends on:
     URI: https://github.com/meta-qt5/meta-qt5.git
     layers: meta-qt5
     revision: c1b0c9f546289b1592d7a895640de103723a0305
+    cherry-pick commit 77b6060cef9337b184100083746c2e35f531be74
 
     Docker: Optional (unsupported for RZ/V2M and RZ/V2MA)
     URI: https://git.yoctoproject.org/git/meta-virtualization
@@ -138,6 +139,7 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ git clone  https://github.com/meta-qt5/meta-qt5.git
     $ cd meta-qt5
     $ git checkout -b tmp c1b0c9f546289b1592d7a895640de103723a0305
+    $ git cherry-pick 77b6060cef9337b184100083746c2e35f531be74
     $ cd ..
     $
     $ git clone  https://git.yoctoproject.org/git/meta-virtualization -b dunfell
