@@ -1,5 +1,5 @@
 require conf/machine/include/soc-family.inc
-SOC_FAMILY = "rzg2l-family"
+SOC_FAMILY = "rzg2l-family:mali-family"
 
 # Machine configuration
 MACHINE_FEATURES = "opengles opencl"
