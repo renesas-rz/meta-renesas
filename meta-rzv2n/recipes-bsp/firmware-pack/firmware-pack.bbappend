@@ -21,7 +21,7 @@ do_compile () {
 	objcopy -I binary -O srec --adjust-vma=0x08101E00 --srec-forceS3 ${S}/bl2_bp_esd.bin ${S}/bl2_bp_esd.srec
 	objcopy -I binary -O srec --adjust-vma=0x08101E00 --srec-forceS3 ${S}/bl2_bp_mmc.bin ${S}/bl2_bp_mmc.srec
 
-	objcopy -I binary -O srec --adjust-vma=0x8101E00 --srec-forceS3 ${S}/fip.bin ${S}/fip.srec
+	objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 ${S}/fip.bin ${S}/fip.srec
 }
 
 do_deploy () {
