@@ -148,11 +148,6 @@ BASIC_32BIT_PKGS = " \
     lib32-libstdc++ \
 "
 
-# Support secure environment
-IMAGE_INSTALL_append = " \
-    optee-client \
-"
-
 BASIC_32BIT_PKGS_append_rzg2h = " \
     lib32-optee-client \
 "
