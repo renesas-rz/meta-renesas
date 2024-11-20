@@ -39,4 +39,6 @@ SRC_URI += " \
      file://00016-ld-emulparams-elf32lriscv-defs.sh-Adjust-TEXT_START_.patch \
      file://reverse_129_multiarch_libpath.patch \
      file://reverse_aarch64-libpath.diff.patch \
+     file://0017-binutils-drop-redundant-program_name-definition-fno-.patch \
+     file://0001-Fix-a-missing-include-of-string.patch \
 "

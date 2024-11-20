@@ -1,0 +1,31 @@
+From d2f3056c4f9676d1b07b0493d1ed40970bf12db1 Mon Sep 17 00:00:00 2001
+From: hien huynh <hien.huynh.px@renesas.com>
+Date: Wed, 20 Nov 2024 04:02:55 +0000
+Subject: [PATCH] Fix a missing include of <string>
+
+gold/ChangeLog:
+
+2019-06-07  Martin Liska  <mliska@suse.cz>
+
+	* errors.h: Include string.
+
+Signed-off-by: hien huynh <hien.huynh.px@renesas.com>
+---
+ gold/errors.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/gold/errors.h b/gold/errors.h
+index ebb7e5fb..de2c96df 100644
+--- a/gold/errors.h
++++ b/gold/errors.h
+@@ -24,6 +24,7 @@
+ #define GOLD_ERRORS_H
+ 
+ #include <cstdarg>
++#include <string>
+ 
+ #include "gold-threads.h"
+ 
+-- 
+2.34.1
+
