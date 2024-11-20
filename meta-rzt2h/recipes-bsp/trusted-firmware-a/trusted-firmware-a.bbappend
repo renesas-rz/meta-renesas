@@ -11,7 +11,7 @@ PV = "v2.7+git${SRCPV}"
 S = "${WORKDIR}/git"
 
 TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=https"
-TFA_REV ?= "103e1aaf6394357e0a65a644feaa44c36e6ac984"
+TFA_REV ?= "e98c2806ccd514c2f20c70adaac6c25210797440"
 
 SRC_URI = "${TFA_URI};nobranch=1"
 SRCREV = "${TFA_REV}"
