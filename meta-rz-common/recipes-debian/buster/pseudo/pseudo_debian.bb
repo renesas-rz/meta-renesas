@@ -20,4 +20,8 @@ SRC_URI += " \
 	file://toomanyfiles.patch \
 	file://0001-Add-statx.patch \
 	file://0001-don-t-renameat2-please.patch \
+	file://0001-linux-portdefs.h-Fix-pseudo-to-work-with-glibc-2.33.patch \
+	file://0002-Fix-build-with-gcc-10.patch \
+	file://0003-ports-linux-Add-wrapper-for-fstatat-fstatat64-in-gli.patch \
+	file://0004-makewrappers-Fix-glibc-2.33-fstatat-usage-issues.patch \
 "
