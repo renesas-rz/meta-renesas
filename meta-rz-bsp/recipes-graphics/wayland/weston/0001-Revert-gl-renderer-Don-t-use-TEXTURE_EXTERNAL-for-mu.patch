@@ -1,0 +1,37 @@
+From 1e6a26b0c54fbeb7cec71f456571ab99ad3cb0bf Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Tue, 26 Nov 2024 15:11:00 +0700
+Subject: [PATCH] Revert "gl-renderer: Don't use TEXTURE_EXTERNAL for
+ multi-planar formats"
+
+This reverts commit f36d77a199a6398444f7ae6d1002dad2f65ca679.
+
+Reason: GL_TEXTURE_2D on Mali graphics did not support YUV formats. As a
+result, a black pop-up window will be displayed if you try to use
+GL_TEXTURE_2D with YUV formats. It is necessary to revert this commit to use
+GL_TEXTURE_EXTERNAL_OES with YUV formats, that is supported.
+
+Upstream-Status: Inappropriate [revert for downstream use only]
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ libweston/renderer-gl/gl-renderer.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/libweston/renderer-gl/gl-renderer.c b/libweston/renderer-gl/gl-renderer.c
+index ccb41e66..039842e4 100644
+--- a/libweston/renderer-gl/gl-renderer.c
++++ b/libweston/renderer-gl/gl-renderer.c
+@@ -2835,6 +2835,9 @@ choose_texture_target(struct gl_renderer *gr,
+ 		}
+ 	}
+ 
++	if (attributes->n_planes > 1)
++		return GL_TEXTURE_EXTERNAL_OES;
++
+ 	switch (attributes->format & ~DRM_FORMAT_BIG_ENDIAN) {
+ 	case DRM_FORMAT_YUYV:
+ 	case DRM_FORMAT_YVYU:
+-- 
+2.25.1
+
