@@ -1,4 +1,4 @@
-COMPATIBLE_MACHINE_rzt2h = "(rzt2h-dev)"
+COMPATIBLE_MACHINE_rzt2h = "(rzt2h-dev|rzn2h-dev)"
 
 LINUX_VERSION = "${@oe.utils.conditional("IS_RT_BSP", "1", "5.10.145-cip17-rt7", "5.10.145-cip17",d)}"
 
