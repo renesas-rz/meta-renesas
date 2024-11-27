@@ -1,4 +1,4 @@
-COMPATIBLE_MACHINE_rzt2h = "(rzt2h-dev)"
+COMPATIBLE_MACHINE_rzt2h = "(rzt2h-dev|rzn2h-dev)"
 
 DEPENDS_append = " u-boot"
 
