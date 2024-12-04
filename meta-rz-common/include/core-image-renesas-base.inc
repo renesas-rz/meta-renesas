@@ -117,7 +117,7 @@ update_issue() {
 
 update_issue_rzv2h() {
     # Set BSP version
-    BSP_VERSION="1.0.1"
+    BSP_VERSION="1.0.2"
 
     # Set SoC and Board info
     case "${MACHINE}" in
