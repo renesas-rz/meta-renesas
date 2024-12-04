@@ -16,4 +16,7 @@ SRC_URI += " \
 	file://0001-configure-Prune-PIE-flags.patch \
 	file://fallback-passwd \
 	file://fallback-group \
+	file://0001-linux-portdefs.h-Fix-pseudo-to-work-with-glibc-2.33.patch \
+	file://0002-ports-linux-Add-wrapper-for-fstatat-fstatat64-in-gli.patch \
+	file://0003-makewrappers-Fix-glibc-2.33-fstatat-usage-issues.patch \
 "

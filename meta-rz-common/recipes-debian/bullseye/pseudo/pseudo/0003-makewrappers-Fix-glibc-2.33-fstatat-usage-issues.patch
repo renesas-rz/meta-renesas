@@ -1,0 +1,45 @@
+From fcad8de5c9ddae6d195012fabdcd9bb1cd2ec81f Mon Sep 17 00:00:00 2001
+From: hien huynh <hien.huynh.px@renesas.com>
+Date: Tue, 26 Nov 2024 08:36:01 +0000
+Subject: [PATCH 2/2] makewrappers: Fix glibc 2.33 fstatat usage issues
+
+In glibc 2.33 it makes calls like:
+
+fstatat64 (pathfd, "", &st, AT_EMPTY_PATH);
+
+where pathfd may be a symlink. This interacts badly with
+pseudo_root_path()
+since the empty path is replaced with a pathname from the open fd but
+AT_SYMLINK_NOFOLLOW is not set, hence the link is resolved and pseudo
+throws an abort() due to inode mismatch.
+
+Where the path is empty, an fd is passed and AT_EMPTY_PATH is set,
+we can imply that AT_SYMLINK_NOFOLLOW is also effectly set. Adjust
+the wrapper functions to ensure this, allowing the functions to behave
+correctly in the AT_EMPTY_PATH case.
+
+Signed-off-by: Richard Purdie <richard.purdie@linuxfoundation.org>
+Signed-off-by: hien huynh <hien.huynh.px@renesas.com>
+---
+ makewrappers | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/makewrappers b/makewrappers
+index fa514ba..a8f73b3 100755
+--- a/makewrappers
++++ b/makewrappers
+@@ -367,6 +367,11 @@ class Function:
+             prefix = path[:-4]
+             if prefix not in self.specific_dirfds:
+                 prefix = ''
++            if self.dirfd != "AT_FDCWD" and "flags" in self.flags \
++                    and "AT_SYMLINK_NOFOLLOW" in self.flags:
++                fix_paths.append(
++                    "if (%s && !*%s && (flags & AT_EMPTY_PATH))\n"
++                    "\t\t\tflags |= AT_SYMLINK_NOFOLLOW;" % (path, path))
+             fix_paths.append(
+                 "%s = pseudo_root_path(__func__, __LINE__, %s%s, %s, %s);" %
+                 (path, prefix, self.dirfd, path, self.flags))
+-- 
+2.34.1
+

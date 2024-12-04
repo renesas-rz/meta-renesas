@@ -1,0 +1,77 @@
+From 78ce63841897bc9d53eb8b18d62f35aa6fffb6a0 Mon Sep 17 00:00:00 2001
+From: hien huynh <hien.huynh.px@renesas.com>
+Date: Tue, 26 Nov 2024 08:34:31 +0000
+Subject: [PATCH 1/2] ports/linux: Add wrapper for fstatat/fstatat64 in glibc
+ 2.33
+
+Signed-off-by: Richard Purdie <richard.purdie@linuxfoundation.org>
+Signed-off-by: hien huynh <hien.huynh.px@renesas.com>
+---
+ ports/linux/guts/fstatat.c   | 15 +++++++++++++++
+ ports/linux/guts/fstatat64.c | 15 +++++++++++++++
+ ports/linux/wrapfuncs.in     |  2 ++
+ 3 files changed, 32 insertions(+)
+ create mode 100644 ports/linux/guts/fstatat.c
+ create mode 100644 ports/linux/guts/fstatat64.c
+
+diff --git a/ports/linux/guts/fstatat.c b/ports/linux/guts/fstatat.c
+new file mode 100644
+index 0000000..3267641
+--- /dev/null
++++ b/ports/linux/guts/fstatat.c
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2021 Linux Foundation; see
++ * guts/COPYRIGHT for information.
++ *
++ * SPDX-License-Identifier: LGPL-2.1-only
++ *
++ * int fstatat(int dirfd, const char *path, struct stat *buf, int flags)
++ *	int rc = -1;
++ */
++
++	rc = wrap___fxstatat(_STAT_VER, dirfd, path, buf, flags);
++
++/*	return rc;
++ * }
++ */
+diff --git a/ports/linux/guts/fstatat64.c b/ports/linux/guts/fstatat64.c
+new file mode 100644
+index 0000000..c981e14
+--- /dev/null
++++ b/ports/linux/guts/fstatat64.c
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2021 Linux Foundation; see
++ * guts/COPYRIGHT for information.
++ *
++ * SPDX-License-Identifier: LGPL-2.1-only
++ *
++ * int fstatat64(int dirfd, const char *path, struct stat64 *buf, int flags)
++ *	int rc = -1;
++ */
++
++	rc = wrap___fxstatat64(_STAT_VER, dirfd, path, buf, flags);
++
++/*	return rc;
++ * }
++ */
+diff --git a/ports/linux/wrapfuncs.in b/ports/linux/wrapfuncs.in
+index a129eba..0acbe16 100644
+--- a/ports/linux/wrapfuncs.in
++++ b/ports/linux/wrapfuncs.in
+@@ -22,9 +22,11 @@ int creat64(const char *path, mode_t mode);
+ int stat(const char *path, struct stat *buf); /* real_func=pseudo_stat */
+ int lstat(const char *path, struct stat *buf); /* real_func=pseudo_lstat, flags=AT_SYMLINK_NOFOLLOW */
+ int fstat(int fd, struct stat *buf); /* real_func=pseudo_fstat */
++int fstatat(int dirfd, const char *path, struct stat *buf, int flags);
+ int stat64(const char *path, struct stat64 *buf); /* real_func=pseudo_stat64 */
+ int lstat64(const char *path, struct stat64 *buf); /* real_func=pseudo_lstat64, flags=AT_SYMLINK_NOFOLLOW */
+ int fstat64(int fd, struct stat64 *buf); /* real_func=pseudo_fstat64 */
++int fstatat64(int dirfd, const char *path, struct stat64 *buf, int flags);
+ int __xstat64(int ver, const char *path, struct stat64 *buf);
+ int __lxstat64(int ver, const char *path, struct stat64 *buf); /* flags=AT_SYMLINK_NOFOLLOW */
+ int __fxstat64(int ver, int fd, struct stat64 *buf);
+-- 
+2.34.1
+
