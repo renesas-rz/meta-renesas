@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = " \
 "
 
 URL = "git://github.com/renesas-rz/rzg_trusted-firmware-a.git"
-SRCREV = "2b0c18857eebc7a973f611500f6615e991e2625e"
+SRCREV = "bee53e1a5f2f009a1af320a871d8bac25ad09a5e"
 
 PV = "v2.7+git"
 
