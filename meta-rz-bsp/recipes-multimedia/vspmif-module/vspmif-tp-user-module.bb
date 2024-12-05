@@ -1,4 +1,4 @@
-DESCRIPTION = "VSP Manager Interface test app for RZG3E"
+DESCRIPTION = "VSP Manager Interface test app for RZG2L/RZG3E"
 
 require vspmif.inc
 

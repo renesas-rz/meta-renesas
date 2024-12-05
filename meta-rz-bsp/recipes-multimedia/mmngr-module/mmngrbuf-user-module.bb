@@ -1,4 +1,4 @@
-DESCRIPTION = "Memory Manager Buffer User module for Renesas RZG3E"
+DESCRIPTION = "Memory Manager Buffer User module for Renesas RZG2L/RZG3E"
 require mmngr_lib.inc
 
 DEPENDS = "kernel-module-mmngrbuf"

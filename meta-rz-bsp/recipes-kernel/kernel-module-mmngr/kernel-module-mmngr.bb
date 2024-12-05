@@ -1,4 +1,4 @@
-DESCRIPTION = "Memory Manager Kernel module for Renesas RZG3E"
+DESCRIPTION = "Memory Manager Kernel module for Renesas RZG2L/RZG3E"
 RENESAS_DATADIR ?= "/usr/local"
 require mmngr_drv.inc
 

@@ -1,4 +1,4 @@
-DESCRIPTION = "VSP Manager for the RZG3"
+DESCRIPTION = "VSP Manager for the RZG2L/RZG3E"
 
 LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \

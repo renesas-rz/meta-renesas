@@ -1,4 +1,4 @@
-DESCRIPTION = "VSP Manager Interface library for RZG3E"
+DESCRIPTION = "VSP Manager Interface library for RZG2L/RZG3E"
 
 require vspmif.inc
 
