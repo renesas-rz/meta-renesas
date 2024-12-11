@@ -36,6 +36,10 @@ This layer depends on:
 * meta-qt5
   * URI: https://github.com/meta-qt5/meta-qt5.git
   * revision: c1b0c9f546289b1592d7a895640de103723a0305
+  * cherry-pick commit: 77b6060cef9337b184100083746c2e35f531be74
+  * cherry-pick commit: 85694b94aa0b1e536eda13e7239720bca114b000
+  * cherry-pick commit: 4656ab3636c099906989e0d923e1ac7a8ffe7b31
+    (run "git cherry-pick <commit_id>" after checking out the above revision)
 
 (additional dependencies for Gecko)
 
