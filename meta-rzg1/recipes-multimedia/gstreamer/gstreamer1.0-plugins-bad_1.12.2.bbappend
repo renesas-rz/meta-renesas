@@ -2,7 +2,7 @@ FILESEXTRAPATHS_prepend_rzg1 := '${THISDIR}/${PN}:'
 SRC_URI_remove = "http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
 SRC_URI_append = " \
     git://github.com/renesas-rcar/gst-plugins-bad.git;branch=RCAR-GEN3/1.12.2;name=base \
-    git://anongit.freedesktop.org/gstreamer/common;destsuffix=git/common;name=common \
+    git://gitlab.freedesktop.org/gstreamer/common;destsuffix=git/common;name=common \
 "
 
 SRCREV_base = "db554fad172f2dabb0f7a75ef1e8e4cb35e172c9"
