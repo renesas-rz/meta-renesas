@@ -13,7 +13,7 @@ SRC_URI:append = " \
     file://0001-Add-physical-address-translating-feature.patch \
     file://0002-mmngr-Get-start-address-of-MMP-area-from-DT.patch \
     file://0003-Do-not-parse-and-init-lossy-mem-area-for-RZ-G2L-Seri.patch \
-    file://0004-Reduce-MM_OMXBUF_SIZE-for-omx.patch \
+    file://0004-mmngr-Add-MM_OMXBUF_SIZE-for-RZG2L-and-RZG3E-OMX.patch \
     file://0005-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
     file://0006-mmngr-lock-mm-read-before-finding-VMA.patch \
     file://0007-mmngr-Update-following-kernel-6.1.patch \
@@ -21,7 +21,8 @@ SRC_URI:append = " \
     file://0009-mmngr-Fix-compilation-warnings-to-avoid-build-failur.patch \
 "
 
-MMNGR_CFG ?= "MMNGR_SALVATORX"
+MMNGR_CFG:rzg3e-family ?= "MMNGR_RZG3E"
+MMNGR_CFG:rzg2l-family ?= "MMNGR_RZG2L"
 
 includedir = "${RENESAS_DATADIR}/include"
 SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"

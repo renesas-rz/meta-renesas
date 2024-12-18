@@ -1,0 +1,36 @@
+From a632e14b7218fc73b2081d98dcd0b3fcd9a6614c Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Tue, 8 Mar 2022 14:24:23 +0700
+Subject: [PATCH 1/9] mmngr: Add MM_OMXBUF_SIZE for RZG2L and RZG3E OMX
+
+This commit adds:
+    MM_OMXBUF_SIZE (128 MB) for RZ/G2L Series
+    MM_OMXBUF_SIZE (256 MB) for RZ/G3E
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ .../mmngr-module/files/mmngr/include/mmngr_private.h      | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+index 56ab1f6..4b3f0d4 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+@@ -204,6 +204,14 @@ static void mm_exit(void);
+ 
+ static int validate_memory_map(void);
+ 
++#ifdef MMNGR_RZG2L
++#define MM_OMXBUF_SIZE		(128 * 1024 * 1024)
++#endif /* MMNGR_RZG2L */
++
++#ifdef MMNGR_RZG3E
++#define MM_OMXBUF_SIZE		(256 * 1024 * 1024)
++#endif /* MMNGR_RZG3E */
++
+ #ifdef MMNGR_SALVATORX
+ #define MM_OMXBUF_SIZE		(256 * 1024 * 1024)
+ #endif /* MMNGR_SALVATORX */
+-- 
+2.17.1
+
