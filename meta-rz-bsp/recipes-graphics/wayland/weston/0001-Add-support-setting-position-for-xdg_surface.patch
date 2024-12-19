@@ -1,0 +1,55 @@
+From 46ebd7df6f79aa9b91c0643af81609fec3e618b2 Mon Sep 17 00:00:00 2001
+From: duytruong <duy.truong.yw@renesas.com>
+Date: Wed, 8 Jan 2025 11:35:37 +0700
+Upstream-Status: Inappropriate because this only for RZ-platforms
+Subject: [PATCH] Add support setting position for xdg_surface
+
+This commit will help setting position for xdg_surface by
+set_window_geometry API.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Signed-off-by: duytruong <duy.truong.yw@renesas.com>
+---
+ desktop-shell/shell.c         |  3 +++
+ libweston/desktop/xdg-shell.c | 11 +++++++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/desktop-shell/shell.c b/desktop-shell/shell.c
+index 084e602..552ef44 100644
+--- a/desktop-shell/shell.c
++++ b/desktop-shell/shell.c
+@@ -2728,6 +2728,9 @@ desktop_surface_set_xwayland_position(struct weston_desktop_surface *surface,
+ 	struct shell_surface *shsurf =
+ 		weston_desktop_surface_get_user_data(surface);
+ 
++        if (!shsurf)
++            return ;
++
+ 	shsurf->xwayland.pos = pos;
+ 	shsurf->xwayland.is_set = true;
+ }
+diff --git a/libweston/desktop/xdg-shell.c b/libweston/desktop/xdg-shell.c
+index 0ec57c7..9300203 100644
+--- a/libweston/desktop/xdg-shell.c
++++ b/libweston/desktop/xdg-shell.c
+@@ -1495,6 +1495,17 @@ weston_desktop_xdg_surface_committed(struct weston_desktop_surface *dsurface,
+ 						    surface->next_geometry);
+ 	}
+ 
++        /*
++         * Use xwayland position to set the position of xdg_surface
++         * We double the position in xwayland because it will subtract geometry position
++         */
++        struct weston_coord_global pos;
++        pos.c.x = 2 * surface->next_geometry.x;
++        pos.c.y = 2 * surface->next_geometry.y;
++        weston_desktop_api_set_xwayland_position(surface->desktop,
++                                                 surface->desktop_surface,
++                                                 pos);
++ 
+ 	switch (surface->role) {
+ 	case WESTON_DESKTOP_XDG_SURFACE_ROLE_NONE:
+ 		wl_resource_post_error(surface->resource,
+-- 
+2.25.1
+
