@@ -1,0 +1,60 @@
+header:
+  version: 14
+
+distro: rz-vlp
+
+build_system: openembedded
+
+repos:
+  meta-renesas:
+    layers:
+      meta-rz-boards:
+      meta-rz-bsp:
+  poky:
+    url: "https://git.yoctoproject.org/git/poky"
+    # scarthgap 8637aa34f
+    commit: 8637aa34f0009421eb6c51a93588fe879950e1f4
+    layers:
+      meta:
+      meta-poky:
+      meta-yocto-bsp:
+  meta-arm:
+    url: https://git.yoctoproject.org/meta-arm
+    # yocto-5.0
+    commit: 313ad2a0e600655d9bfbe53646e356372ff02644
+    layers:
+      meta-arm-toolchain:
+      meta-arm:
+  meta-openembedded:
+    url: https://git.openembedded.org/meta-openembedded
+    # scarthgap HEAD
+    commit: 1235dd4ed4a57e67683c045ad76b6a0f9e896b45
+    layers:
+      meta-oe:
+
+bblayers_conf_header:
+  standard: |
+    POKY_BBLAYERS_CONF_VERSION = "2"
+
+local_conf_header:
+  standard: |
+    CONF_VERSION = "2"
+    BB_DISKMON_DIRS ?= " \
+        STOPTASKS,${TMPDIR},1G,100K \
+        STOPTASKS,${DL_DIR},1G,100K \
+        STOPTASKS,${SSTATE_DIR},1G,100K \
+        STOPTASKS,/tmp,100M,100K \
+        HALT,${TMPDIR},100M,1K \
+        HALT,${DL_DIR},100M,1K \
+        HALT,${SSTATE_DIR},100M,1K \
+        HALT,/tmp,10M,1K \
+    "
+
+    # Extra image configuration defaults
+    EXTRA_IMAGE_FEATURES = "debug-tweaks tools-profile tools-testapps"
+
+    # Remove dnf package which causes high CPU workload
+    PACKAGE_INSTALL:remove = " dnf "
+
+    # Additional image features
+    USER_CLASSES ?= "buildstats"
