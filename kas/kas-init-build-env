@@ -1,0 +1,196 @@
+# Kas Build Environment Setup Script
+#
+# Copyright (C) 2024 Renesas Electronics Corporation
+#
+# SPDX-License-Identifier: MIT
+
+# Define the repository where this script is located
+META_RENESAS="meta-renesas"
+
+# Path build directory
+BUILD_DIR="build"
+
+# Downloads directory
+DOWNLOADS_DIR=""
+
+# Flag for printing usage
+USAGE_ENABLED=false
+
+# Flags for printing environment variables
+VERBOSE_ENABLED=false
+
+usage()
+{
+    printf "%b" "Usage: kas-init-build-env [OPTIONS]\n"
+    printf "%b" "-b, --build\t\tSet path build directory.\n"
+    printf "%b" "-d, --downloads\t\tSet downloads directory.\n"
+    printf "%b" "-v, --verbose\t\tPrint environment variables.\n"
+}
+
+################################################################################
+#                                Parse options                                 #
+################################################################################
+
+while [ $# -gt 0 ]; do
+
+    SHIFT_PARAMS=1
+
+    case "$1" in
+    -b|--build)
+        if [ ! $# -lt 2 ]; then
+            BUILD_DIR="$2"
+            let SHIFT_PARAMS++
+        fi
+        ;;
+    -d|--downloads)
+        if [ ! $# -lt 2 ]; then
+            DOWNLOADS_DIR="$2"
+            let SHIFT_PARAMS++
+        fi
+        ;;
+    -v|--verbose)
+        VERBOSE_ENABLED=true
+        ;;
+    *)
+        USAGE_ENABLED=true
+        ;;
+    esac
+
+    shift ${SHIFT_PARAMS}
+    unset SHIFT_PARAMS
+done
+
+################################################################################
+#                                 Print usage                                  #
+################################################################################
+
+if $USAGE_ENABLED; then
+    usage
+fi
+
+################################################################################
+#                   Find the path of the kas work directory                    #
+################################################################################
+
+# Get the path of the directory where 'kas-init-build-env' script is located
+KAS_WORK_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Canonicalize the kas work directory
+KAS_WORK_DIR="$( readlink -f "${KAS_WORK_DIR}" )"
+
+# Traverse up the directory tree until the 'META_RENESAS' directory is found
+while [ ! -d "${KAS_WORK_DIR}/${META_RENESAS}" ] && [ "${KAS_WORK_DIR}" != "/" ]; do
+    KAS_WORK_DIR="$( dirname -- "${KAS_WORK_DIR}" )"
+done
+
+# Export 'KAS_WORK_DIR' variable if its value is considered valid.
+# Otherwise, unset the variable
+if [ -d "${KAS_WORK_DIR}/${META_RENESAS}" ]; then
+    export KAS_WORK_DIR
+else
+    unset KAS_WORK_DIR
+fi
+
+################################################################################
+#              Add directory containing 'kas-container' to 'PATH'              #
+################################################################################
+
+# This should happen only if the 'KAS_WORK_DIR' variable is defined
+if [ ! -z "${KAS_WORK_DIR}" ]; then
+
+    # Find the 'kas-container' script within the 'META_RENESAS' directory
+    KAS_CONTAINER_DIR="$( find "${KAS_WORK_DIR}/${META_RENESAS}" -type f -name "kas-container" -print -quit 2> /dev/null )"
+
+    # Only process further if 'KAS_CONTAINER_DIR' variable is defined
+    if [ ! -z "${KAS_CONTAINER_DIR}" ]; then
+
+        # Get the path of the directory where 'kas-container' script is located
+        KAS_CONTAINER_DIR="$( readlink -f "$( dirname -- "${KAS_CONTAINER_DIR}" )" )"
+
+        # Remove any existences of 'KAS_CONTAINER_DIR' from 'PATH'
+        PATH="$( echo ${PATH} | sed -re "s#(^|:)${KAS_CONTAINER_DIR}(:|$)#\2#g;s#^:##" )"
+
+        # Add 'KAS_CONTAINER_DIR' to 'PATH'
+        PATH="${KAS_CONTAINER_DIR}:${PATH}"
+        export PATH
+    fi
+
+    unset KAS_CONTAINER_DIR
+fi
+
+################################################################################
+#                       Select Bullseye host environment                       #
+################################################################################
+
+export KAS_IMAGE_VERSION="3.3"
+
+################################################################################
+#                           Set path build directory                           #
+################################################################################
+
+if [ "$( basename "${BUILD_DIR}" )" = "${BUILD_DIR}" ]; then
+
+    if [ ! -z "${KAS_WORK_DIR}" ]; then
+
+        # The first input parameter is not a path
+        export KAS_BUILD_DIR="$( readlink -f "${KAS_WORK_DIR}/${BUILD_DIR}" )"
+    fi
+else
+    if [ "${BUILD_DIR}" != "/" ]; then
+
+        # Remove any possible trailing slashes. This is used to work around
+        # buggy readlink in Ubuntu 10.04 that doesn't ignore trailing slashes
+        # and hence "readlink -f new_dir_to_be_created/" returns empty.
+        BUILD_DIR="$( readlink -f "$( echo "${BUILD_DIR}" | sed -re "s|/+$||" )" )"
+
+        if [ ! -z "${BUILD_DIR}" ]; then
+            export KAS_BUILD_DIR="${BUILD_DIR}"
+        fi
+    fi
+fi
+
+################################################################################
+#                           Set downloads directory                            #
+################################################################################
+
+# If 'DOWNLOADS_DIR' is set, set 'DL_DIR' variable.
+# Otherwise, unset 'DL_DIR' variable and yocto will use the downloads directory in 'BUILD_DIR'
+if [ -z "${DOWNLOADS_DIR}" ]; then
+
+    unset DL_DIR
+else
+    DOWNLOADS_DIR="$( readlink -e "${DOWNLOADS_DIR}" )"
+
+    if [ ! -z "${DOWNLOADS_DIR}" ]; then
+        export DL_DIR="${DOWNLOADS_DIR}"
+    fi
+fi
+
+################################################################################
+#                         Print environment variables                          #
+################################################################################
+
+if $VERBOSE_ENABLED; then
+
+    if [ ! -z "${KAS_WORK_DIR}" ]; then
+        echo "KAS_WORK_DIR=${KAS_WORK_DIR}"
+    fi
+
+    if [ ! -z "${KAS_BUILD_DIR}" ]; then
+        echo "KAS_BUILD_DIR=${KAS_BUILD_DIR}"
+    fi
+
+    if [ ! -z "${KAS_IMAGE_VERSION}" ]; then
+        echo "KAS_IMAGE_VERSION=${KAS_IMAGE_VERSION}"
+    fi
+
+    if [ ! -z "${DL_DIR}" ]; then
+        echo "DL_DIR=${DL_DIR}"
+    fi
+fi
+
+# Unset variables
+unset META_RENESAS
+unset BUILD_DIR
+unset DOWNLOADS_DIR
+unset USAGE_ENABLED
