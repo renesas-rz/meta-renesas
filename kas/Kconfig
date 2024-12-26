@@ -1,0 +1,108 @@
+mainmenu "Renesas RZ Configuration"
+
+config KAS_BUILD_SYSTEM
+	string
+	default "openembedded"
+
+config KAS_INCLUDE_BASE
+	string
+	default "kas/base.yml"
+
+config FAMILY_G2L
+bool
+
+config FAMILY_G3E
+bool
+
+menu "Machines"
+choice
+	prompt "Select machine:"
+	default MACHINE_SMARC-RZG2L
+
+	config MACHINE_SMARC-RZG2L
+	bool "smarc-rzg2l"
+	select FAMILY_G2L
+	help
+		Select the Renesas RZ/G2L reference platform.
+
+	config KAS_INCLUDE_MACHINE_SMARC-RZG2L
+	string
+	depends on MACHINE_SMARC-RZG2L
+	default "kas/machines/smarc-rzg2l.yml"
+
+	config MACHINE_SMARC-RZG2LC
+	bool "smarc-rzg2lc"
+	select FAMILY_G2L
+	help
+		Select the Renesas RZ/G2LC reference platform.
+
+	config KAS_INCLUDE_MACHINE_SMARC-RZG2LC
+	string
+	depends on MACHINE_SMARC-RZG2LC
+	default "kas/machines/smarc-rzg2lc.yml"
+
+	config MACHINE_SMARC-RZG2UL
+	bool "smarc-rzg2ul"
+	select FAMILY_G2L
+	help
+		Select the Renesas RZ/G2UL reference platform.
+
+	config KAS_INCLUDE_MACHINE_SMARC-RZG2UL
+	string
+	depends on MACHINE_SMARC-RZG2UL
+	default "kas/machines/smarc-rzg2ul.yml"
+
+	config MACHINE_RZG3E-DEV
+	bool "rzg3e-dev"
+	select FAMILY_G3E
+	help
+		Select the Renesas RZ/G3E reference platform.
+
+	config KAS_INCLUDE_MACHINE_RZG3E-DEV
+	string
+	depends on MACHINE_RZG3E-DEV
+	default "kas/machines/rzg3e-dev.yml"
+
+	config MACHINE_SMARC-RZG3E
+	bool "smarc-rzg3e"
+	select FAMILY_G3E
+	help
+		Select the Renesas RZ/G3E reference platform.
+
+	config KAS_INCLUDE_MACHINE_SMARC-RZG3E
+	string
+	depends on MACHINE_SMARC-RZG3E
+	default "kas/machines/smarc-rzg3e.yml"
+
+endchoice
+endmenu
+
+menu "Targets"
+choice
+	prompt "Select target:"
+	default IMAGE_RENESAS_IMAGE_MINIMAL
+
+	config IMAGE_RENESAS_IMAGE_MINIMAL
+	bool "core-image-minimal"
+	help
+		A small image just capable of allowing a device to boot.
+
+	config KAS_INCLUDE_IMAGE_RENESAS_IMAGE_MINIMAL
+	string
+	depends on IMAGE_RENESAS_IMAGE_MINIMAL
+	default "kas/images/core-image-minimal.yml"
+
+	config IMAGE_RENESAS_IMAGE_WESTON
+	bool "core-image-weston"
+	help
+		A very basic Wayland image with a terminal.
+		This image provides the Wayland protocol libraries and the reference Weston compositor.
+		It also contains GStreamer 1.0 framework, tools, and multimedia support packages.
+
+	config KAS_INCLUDE_IMAGE_RENESAS_IMAGE_WESTON
+	string
+	depends on IMAGE_RENESAS_IMAGE_WESTON
+	default "kas/images/core-image-weston.yml"
+
+endchoice
+endmenu
