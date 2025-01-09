@@ -298,3 +298,6 @@ LICENSE_FLAGS_ACCEPTED = " \
 # track the version of this file when it was generated. This can safely be ignored if
 # this doesn't mean anything to you.
 CONF_VERSION = "2"
+
+# Un-comment a following line to enable the Docker Engine.
+#IS_DOCKER_ENABLED = "1"
