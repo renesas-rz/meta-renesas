@@ -301,3 +301,6 @@ CONF_VERSION = "2"
 
 # Un-comment a following line to enable the Docker Engine.
 #IS_DOCKER_ENABLED = "1"
+
+# Set RT BSP. IS_RT_BSP variable is to select RTLinux.
+# IS_RT_BSP ="1"
