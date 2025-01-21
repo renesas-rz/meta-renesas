@@ -38,15 +38,13 @@ This layer depends on:
     URI: git://git.yoctoproject.org/poky
     layers: meta, meta-poky, meta-yocto-bsp
     branch: dunfell
-    revision: a9e3cc3b9eab7a83c715bb8440454e8fea852c2a
-    (tag: dunfell-23.0.31)
-    For Docker build:
-    cherry-pick commit eb0915c699fbe86488de172d529f073a30d05b6a
+    revision: 63d05fc061006bf1a88630d6d91cdc76ea33fbf2
+    (tag: dunfell-23.0.33)
 
     URI: git://git.openembedded.org/meta-openembedded
     layers: meta-oe, meta-python, meta-multimedia
     branch: dunfell
-    revision: daa4619fe3fbf8c28f342c4a7163a84a330f7653
+    revision: 01358b6d705071cc0ac5aefa7670ab235709729a
     
     URI: https://git.yoctoproject.org/meta-gplv2
     layers: meta-gplv2
@@ -63,7 +61,7 @@ This layer depends on:
     URI: https://git.yoctoproject.org/git/meta-virtualization
     layers: meta-virtualization
     branch: dunfell
-    revision: 521459bf588435e847d981657485bae8d6f003b5
+    revision: 77af3345cb99ae08b04a354b37c4afebd8b36981
 
 ## Build Instructions
 
@@ -117,13 +115,12 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
 ```bash
     $ git clone https://git.yoctoproject.org/git/poky
     $ cd poky
-    $ git checkout dunfell-23.0.31
-    $ git cherry-pick eb0915c699fbe86488de172d529f073a30d05b6a
+    $ git checkout dunfell-23.0.33
     $ cd ..
     $     
     $ git clone https://github.com/openembedded/meta-openembedded
     $ cd meta-openembedded
-    $ git checkout daa4619fe3fbf8c28f342c4a7163a84a330f7653
+    $ git checkout 01358b6d705071cc0ac5aefa7670ab235709729a
     $ cd ..
     $    
     $ git clone https://git.yoctoproject.org/git/meta-gplv2
@@ -144,7 +141,7 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $
     $ git clone  https://git.yoctoproject.org/git/meta-virtualization -b dunfell
     $ cd meta-virtualization
-    $ git checkout 521459bf588435e847d981657485bae8d6f003b5
+    $ git checkout 77af3345cb99ae08b04a354b37c4afebd8b36981
     $ cd ..
 ```
 \<tag\> can be selected in any tags of meta-renesas.
