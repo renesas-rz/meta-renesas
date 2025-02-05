@@ -8,7 +8,7 @@ SRC_URI = " \
 	git://github.com/renesas-rz/rzg_trusted-firmware-a.git;nobranch=1;protocol=https \
 "
 
-SRCREV = "336fba9d8678f2e741734cf4f3f22b850718c3c9"
+SRCREV = "cca4398c9dfa3a375295630234367caccad5a285"
 
 S = "${WORKDIR}/git"
 
