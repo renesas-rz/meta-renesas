@@ -1,6 +1,5 @@
 # These patches should be applied exclusively for G1 devices
 patch patches/0001-ARM-dts-r8a77470-Support-VSP-control-by-DU.patch
-patch patches/0002-rzg1-rcar_du_crtc-Fix-build-on-64bit-division.patch
 patch patches/0003-watchdog-renesas-wdt-Fix-issue-kernel-warning-when-reboot.patch
 patch patches/0004-ARM-dts-iwg23s-sbc-Disable-usb2_phy1-to-workaround-.patch
 patch patches/0005-pinctrl-renesas-r8a77470-Rotate-VIN0-B-and-VIN0-G-pins.patch
