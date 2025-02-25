@@ -5,10 +5,10 @@ LIC_FILES_CHKSUM = "file://COPYING.BSD;md5=42dd9555eb177f35150cf9aa240b61e5"
 
 inherit autotools-brokensep deploy
 
-PV = "0.9+git${SRCPV}"
+PV = "1.5+git${SRCPV}"
 
-BRANCH = "work/OpenSBI-PMA"
-SRCREV="0a0f1580624f46086133d738ed4abb99610e04b3"
+BRANCH = "rzfive-release-1.5.x"
+SRCREV="40e7d0d04bce6622a8118d6f2a8ab884bf91ad00"
 
 SRC_URI = " \
 	git://github.com/renesas-rz/rz_opensbi.git;protocol=https;branch=${BRANCH} \
@@ -16,7 +16,7 @@ SRC_URI = " \
 
 S = "${WORKDIR}/git"
 
-RISCV_SBI_PLAT = "renesas/rzf-dev"
+RISCV_SBI_PLAT = "generic"
 EXTRA_OEMAKE += "PLATFORM=${RISCV_SBI_PLAT} "
 
 do_deploy () {
