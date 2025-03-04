@@ -1,5 +1,5 @@
 DESCRIPTION = "Memory Manager Kernel module for Renesas RZG2L/RZG3E"
-RENESAS_DATADIR ?= "/usr/local"
+
 require mmngr_drv.inc
 
 DEPENDS = "linux-renesas"
@@ -24,7 +24,7 @@ SRC_URI:append = " \
 MMNGR_CFG:rzg3e-family ?= "MMNGR_RZG3E"
 MMNGR_CFG:rzg2l-family ?= "MMNGR_RZG2L"
 
-includedir = "${RENESAS_DATADIR}/include"
+includedir = "/usr/local/include"
 SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 
 # Build Memory Manager kernel module without suffix

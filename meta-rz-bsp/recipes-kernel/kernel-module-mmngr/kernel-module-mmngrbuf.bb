@@ -15,7 +15,7 @@ SRC_URI:append = " \
 S = "${WORKDIR}/git"
 MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 
-includedir = "${RENESAS_DATADIR}/include"
+includedir = "/usr/local/include"
 SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
 
 # Build Memory Manager Buffer kernel module without suffix

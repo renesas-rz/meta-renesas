@@ -36,7 +36,7 @@ SRC_URI:append:rzg2l-family = " \
 S = "${WORKDIR}/git"
 VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
 
-includedir = "${RENESAS_DATADIR}/include"
+includedir = "/usr/local/include"
 
 # Build VSP Manager Interface kernel module without suffix
 KERNEL_MODULE_PACKAGE_SUFFIX = ""
