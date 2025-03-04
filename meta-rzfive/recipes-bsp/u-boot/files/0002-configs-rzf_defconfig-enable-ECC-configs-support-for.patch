@@ -1,6 +1,6 @@
-From cecb8411c27be79177850be7f5ca3b281b63ff4e Mon Sep 17 00:00:00 2001
-From: Hien Huynh <hien.huynh.px@renesas.com>
-Date: Mon, 11 Sep 2023 23:26:06 +0700
+From 151f930d1eaeeb0d32e2b7b693f4bcffcc1fe2af Mon Sep 17 00:00:00 2001
+From: Linh Hua <linh.hua.jc@renesas.com>
+Date: Thu, 13 Mar 2025 11:09:04 +0700
 Subject: [PATCH] configs: rzf_defconfig: enable ECC configs support for
  RZ/Five
 
@@ -8,16 +8,17 @@ Enable ECC configs support for RZ/Five SMARC and Development EVK
 DDR4 Boards.
 
 Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+Signed-off-by: Linh Hua <linh.hua.jc@renesas.com>
 ---
  configs/rzf-dev_ddr4_defconfig | 3 ++-
- configs/smarc-rzf_defconfig    | 2 ++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ configs/smarc-rzf_defconfig    | 4 +++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/configs/rzf-dev_ddr4_defconfig b/configs/rzf-dev_ddr4_defconfig
-index 405a4633ae..2145f9c777 100644
+index 70f8e39d542..0767c33483f 100644
 --- a/configs/rzf-dev_ddr4_defconfig
 +++ b/configs/rzf-dev_ddr4_defconfig
-@@ -143,4 +143,5 @@ CONFIG_RZF_DDR_SIZE=0x40000000
+@@ -137,4 +137,5 @@ CONFIG_RZF_DDR_SIZE=0x40000000
  CONFIG_DEBUG_OPENSBI=y
  CONFIG_SBI_V02=y
  CONFIG_CMD_EXCEPTION=y
@@ -25,13 +26,22 @@ index 405a4633ae..2145f9c777 100644
 +CONFIG_CMD_RZG2L_ECC=y
 +CONFIG_RZF_DDR_ECC=y
 diff --git a/configs/smarc-rzf_defconfig b/configs/smarc-rzf_defconfig
-index 0e244174a5..102fd9ce29 100644
+index 49b7e92ce03..ccfc9ce96fb 100644
 --- a/configs/smarc-rzf_defconfig
 +++ b/configs/smarc-rzf_defconfig
-@@ -154,3 +154,5 @@ CONFIG_CMD_SF=y
- CONFIG_CMD_SPI=y
- CONFIG_SPI_FLASH_STMICRO=y
- CONFIG_DM_SPI_FLASH=y
+@@ -109,7 +109,7 @@ CONFIG_SPL_BSS_START_ADDR=0x48000000
+ CONFIG_SPL_STACK=0x30000
+ CONFIG_SYS_SPL_MALLOC=y
+ CONFIG_SYS_SPL_MALLOC_SIZE=0x200000
+-CONFIG_SPL_MAX_SIZE=0x00013000
++CONFIG_SPL_MAX_SIZE=0x100000
+ CONFIG_SYS_BARGSIZE=2048
+ CONFIG_SPL_BSS_MAX_SIZE=0x100000
+ CONFIG_SYS_MALLOC_LEN=0x8000000
+@@ -168,3 +168,5 @@ CONFIG_USB_RENESAS_USBHS=y
+ CONFIG_USB_GADGET_DOWNLOAD=y
+ CONFIG_USB_FUNCTION_MASS_STORAGE=y
+ CONFIG_CMD_USB_MASS_STORAGE=y
 +CONFIG_CMD_RZG2L_ECC=y
 +CONFIG_RZF_DDR_ECC=y
 -- 
