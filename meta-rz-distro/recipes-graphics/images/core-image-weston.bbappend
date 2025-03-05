@@ -1,1 +1,1 @@
-require include/core-image-renesas-mmp.inc
+require include/rz-distro-common.inc

@@ -1,5 +1,6 @@
 # Common path of MMNGR and MMNGRBUF module
-require include/rz-modules-common.inc
+require include/rz-distro-common.inc
+
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "\
     file://${WORKDIR}/git/COPYING.MIT;md5=30a99e0d36a3da1f5cf93c070ad7888a"
