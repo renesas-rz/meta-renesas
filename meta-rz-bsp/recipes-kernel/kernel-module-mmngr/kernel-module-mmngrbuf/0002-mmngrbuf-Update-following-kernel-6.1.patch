@@ -1,11 +1,11 @@
-From 8d48c83649be520f70ac3333d198752002d543e6 Mon Sep 17 00:00:00 2001
+From 72237bba92f6fc369a73a9e723093ef79b56e339 Mon Sep 17 00:00:00 2001
 From: trungvanle <trung.le.xk@renesas.com>
 Date: Thu, 25 Apr 2024 19:59:34 +0700
 Subject: [PATCH] mmngrbuf: Update following kernel 6.1
 
 The issues that cause build error:
 - compat_alloc_user_space() is no longer available from kernel 5.15 [1]
-- vmap & vunmap function pointer are changed from kernel 6.0 [2], [3]
+- vmap & vunmap function pointer are changed from kernel 6.0 ([2], [3], [4])
 
 To fix above issue, we will remove block of code that use
 compat_alloc_user_space(); and update dmabuf_vmap(), dmabuf_vunmap
@@ -15,17 +15,27 @@ Reference:
 [1] https://gitlab.com/linux-kernel/linux/-/commit/a7a08b275a8b
 [2] https://gitlab.com/linux-kernel/linux/-/commit/6619ccf1bb1d
 [3] https://gitlab.com/linux-kernel/linux/-/commit/20e76f1a7059
+[4] https://gitlab.com/linux-kernel/linux/-/commit/7938f4218168
 
 Signed-off-by: trungvanle <trung.le.xk@renesas.com>
 ---
- .../files/mmngrbuf/drv/mmngr_buf_drv.c        | 63 +------------------
- .../mmngrbuf/include/mmngr_buf_private.h      | 24 +------
- 2 files changed, 5 insertions(+), 82 deletions(-)
+ .../files/mmngrbuf/drv/mmngr_buf_drv.c        | 74 +++----------------
+ .../mmngrbuf/include/mmngr_buf_private.h      | 26 +------
+ 2 files changed, 15 insertions(+), 85 deletions(-)
 
 diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
-index b9f76fb..e19d75b 100644
+index b9f76fb..023ff79 100644
 --- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
 +++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  MMNGR
+ 
+- Copyright (C) 2015-2019 Renesas Electronics Corporation
++ Copyright (C) 2015-2025 Renesas Electronics Corporation
+ 
+  License        Dual MIT/GPLv2
+ 
 @@ -159,69 +159,11 @@ exit:
  	return ret;
  }
@@ -96,7 +106,7 @@ index b9f76fb..e19d75b 100644
  };
  
  static struct miscdevice misc = {
-@@ -305,14 +247,14 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
+@@ -305,14 +247,21 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
  	return 0;
  }
  
@@ -104,8 +114,16 @@ index b9f76fb..e19d75b 100644
 +static int dmabuf_vmap(struct dma_buf *buf, struct iosys_map *map)
  {
  	struct MM_BUF_PRIVATE *priv = buf->priv;
++	void *vaddr;
  
- 	return phys_to_virt(priv->hard_addr);
+-	return phys_to_virt(priv->hard_addr);
++	vaddr = phys_to_virt(priv->hard_addr);
++	if (!vaddr)
++		return -EINVAL;
++
++	iosys_map_set_vaddr(map, vaddr);
++
++	return 0;
  }
  
 -static void dmabuf_vunmap(struct dma_buf *buf, void *vaddr)
@@ -113,15 +131,24 @@ index b9f76fb..e19d75b 100644
  {
  
  }
-@@ -500,3 +442,4 @@ module_init(mm_init);
+@@ -500,3 +449,4 @@ module_init(mm_init);
  module_exit(mm_exit);
  
  MODULE_LICENSE("Dual MIT/GPL");
 +MODULE_IMPORT_NS(DMA_BUF);
 diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
-index a50a196..3d5292e 100644
+index a50a196..ccc41d7 100644
 --- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
 +++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  MMNGR
+ 
+- Copyright (C) 2015-2016 Renesas Electronics Corporation
++ Copyright (C) 2015-2025 Renesas Electronics Corporation
+ 
+  License        Dual MIT/GPLv2
+ 
 @@ -81,26 +81,6 @@ struct MM_BUF_PRIVATE {
  #define CLSNAME		DEVNAME
  #define DEVNUM		1
@@ -161,5 +188,5 @@ index a50a196..3d5292e 100644
  static int mm_remove(struct platform_device *pdev);
  static int mm_init(void);
 -- 
-2.17.1
+2.25.1
 
