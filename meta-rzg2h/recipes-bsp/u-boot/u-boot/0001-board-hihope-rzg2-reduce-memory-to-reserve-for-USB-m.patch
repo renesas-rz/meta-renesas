@@ -1,0 +1,38 @@
+From 0d08b133525ef42b99010c101a69cfb232cb777b Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 10 Mar 2025 17:30:12 +0700
+Subject: [PATCH] board: hihope-rzg2: reduce memory to reserve for USB memory
+ pool
+
+Reduce memory to reserve for USB memory pool when enable ECC Dual Mode.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ board/hoperun/hihope-rzg2/hihope-rzg2.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/board/hoperun/hihope-rzg2/hihope-rzg2.c b/board/hoperun/hihope-rzg2/hihope-rzg2.c
+index 95bc57701d..f2e5e1a816 100644
+--- a/board/hoperun/hihope-rzg2/hihope-rzg2.c
++++ b/board/hoperun/hihope-rzg2/hihope-rzg2.c
+@@ -242,7 +242,7 @@ static const char * const rzg2h_dt_ecc_full_single[] = {
+ };
+ 
+ static const char * const rzg2h_dt_ecc_full_dual[] = {
+-	"/memory@48000000", "reg", "<0x0 0x48000000 0x0 0x78000000>",
++	"/memory@48000000", "reg", "<0x0 0x48000000 0x0 0x76000000>",
+ 	"/memory@500000000", NULL, NULL,
+ 	"/memory@600000000", NULL, NULL,
+ 	"/reserved-memory/linux,lossy_decompress", NULL, NULL,
+@@ -269,7 +269,7 @@ static const char * const rzg2m_dt_ecc_full_single[] = {
+ };
+ 
+ static const char * const rzg2m_dt_ecc_full_dual[] = {
+-	"/memory@48000000", "reg", "<0x0 0x48000000 0x0 0x78000000>",
++	"/memory@48000000", "reg", "<0x0 0x48000000 0x0 0x76000000>",
+ 	"/memory@600000000", NULL, NULL,
+ 	"/reserved-memory/linux,lossy_decompress", NULL, NULL,
+ 	"/reserved-memory/linux,cma", "reg", "<0x0 0x50000000 0x0 0x20000000>",
+-- 
+2.25.1
+

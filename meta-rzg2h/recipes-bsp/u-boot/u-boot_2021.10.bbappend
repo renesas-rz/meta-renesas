@@ -1,3 +1,5 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
 UBOOT_SREC_SUFFIX = "srec"
 UBOOT_SREC ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
 UBOOT_SREC_IMAGE ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"
@@ -28,3 +30,9 @@ do_deploy_append() {
         ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC}
     fi
 }
+
+SRC_URI_append = " \
+	${@oe.utils.ifelse("${ECC_FULL}" == "1"," \
+	file://0001-board-hihope-rzg2-reduce-memory-to-reserve-for-USB-m.patch \
+	", "")} \
+"
