@@ -1,0 +1,132 @@
+From fcd27b496e65a20167b405c6d303f61d0f9b5373 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Mon, 10 Mar 2025 06:08:01 +0700
+Subject: [PATCH 2/2] arm64: dts: renesas: add mempool for EHCI and OHCI device
+ nodes
+
+Add mempool for EHCI and OHCI device nodes for RZ/G2H and RZ/G2M.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ .../boot/dts/renesas/r8a774a1-hihope-rzg2m.dts   | 16 ++++++++++++++++
+ .../boot/dts/renesas/r8a774a3-hihope-rzg2m.dts   | 16 ++++++++++++++++
+ .../boot/dts/renesas/r8a774e1-hihope-rzg2h.dts   | 16 ++++++++++++++++
+ 3 files changed, 48 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a774a1-hihope-rzg2m.dts b/arch/arm64/boot/dts/renesas/r8a774a1-hihope-rzg2m.dts
+index ff806848ba38..43ec3eb50349 100644
+--- a/arch/arm64/boot/dts/renesas/r8a774a1-hihope-rzg2m.dts
++++ b/arch/arm64/boot/dts/renesas/r8a774a1-hihope-rzg2m.dts
+@@ -85,17 +85,33 @@ &xhci0 {
+ };
+ 
+ &ehci0 {
++	reg = <0 0xee080100 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci0 {
++	reg = <0 0xee080000 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ehci1 {
++	reg = <0 0xee0a0100 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci1 {
++	reg = <0 0xee0a0000 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+diff --git a/arch/arm64/boot/dts/renesas/r8a774a3-hihope-rzg2m.dts b/arch/arm64/boot/dts/renesas/r8a774a3-hihope-rzg2m.dts
+index 287b1c7c221a..2054844a88d5 100644
+--- a/arch/arm64/boot/dts/renesas/r8a774a3-hihope-rzg2m.dts
++++ b/arch/arm64/boot/dts/renesas/r8a774a3-hihope-rzg2m.dts
+@@ -85,17 +85,33 @@ &xhci0 {
+ };
+ 
+ &ehci0 {
++	reg = <0 0xee080100 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci0 {
++	reg = <0 0xee080000 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ehci1 {
++	reg = <0 0xee0a0100 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci1 {
++	reg = <0 0xee0a0000 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+diff --git a/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts b/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts
+index 6fb9a7d38217..17907b6d5b0e 100644
+--- a/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts
++++ b/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts
+@@ -97,17 +97,33 @@ &xhci0 {
+ };
+ 
+ &ehci0 {
++	reg = <0 0xee080100 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci0 {
++	reg = <0 0xee080000 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ehci1 {
++	reg = <0 0xee0a0100 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci1 {
++	reg = <0 0xee0a0000 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+-- 
+2.25.1
+

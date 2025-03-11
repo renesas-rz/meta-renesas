@@ -37,3 +37,10 @@ do_download_firmware () {
        install -m 755 ${WORKDIR}/TIInit_11.8.32.bts ${FIRMWARE_DIR}/ti-connectivity
 }
 addtask do_download_firmware after do_configure before do_compile
+
+SRC_URI_append = " \
+	${@oe.utils.ifelse("${ECC_FULL}" == "1"," \
+	file://0001-usb-add-dma-mempool-for-EHCI-and-OHCI.patch \
+	file://0002-arm64-dts-renesas-add-mempool-for-EHCI-and-OHCI-devi.patch \
+	", "")} \
+"
