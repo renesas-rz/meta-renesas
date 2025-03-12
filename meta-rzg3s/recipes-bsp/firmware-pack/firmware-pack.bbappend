@@ -11,6 +11,8 @@ do_compile () {
 	cat ${S}/bp.bin ${RECIPE_SYSROOT}/boot/bl2-${MACHINE}.bin > ${S}/bl2_bp_spi.bin
 	bptool ${RECIPE_SYSROOT}/boot/bl2-${MACHINE}.bin ${S}/bp.bin 0xA3000 mmc
 	cat ${S}/bp.bin ${RECIPE_SYSROOT}/boot/bl2-${MACHINE}.bin > ${S}/bl2_bp_emmc.bin
+	bptool ${RECIPE_SYSROOT}/boot/bl2-${MACHINE}.bin ${S}/bp.bin 0xA3000 esd
+	cat ${S}/bp.bin ${RECIPE_SYSROOT}/boot/bl2-${MACHINE}.bin > ${S}/bl2_bp_esd.bin
 
 	# Create fip.bin
 	fiptool create --align 16 --soc-fw ${RECIPE_SYSROOT}/boot/bl31-${MACHINE}.bin --nt-fw ${RECIPE_SYSROOT}/boot/u-boot.bin ${S}/fip.bin
@@ -18,6 +20,7 @@ do_compile () {
 	# Convert to srec
 	objcopy -I binary -O srec --adjust-vma=0xA1E00 --srec-forceS3 ${S}/bl2_bp_spi.bin ${S}/bl2_bp_spi.srec
 	objcopy -I binary -O srec --adjust-vma=0xA1E00 --srec-forceS3 ${S}/bl2_bp_emmc.bin ${S}/bl2_bp_emmc.srec
+	objcopy -I binary -O srec --adjust-vma=0xA1E00 --srec-forceS3 ${S}/bl2_bp_esd.bin ${S}/bl2_bp_esd.srec
 	objcopy -I binary -O srec --adjust-vma=0x00000 --srec-forceS3 ${S}/fip.bin ${S}/fip.srec
 }
 
@@ -30,6 +33,8 @@ do_deploy () {
 	install -m 0644  ${S}/bl2_bp_spi.srec ${DEPLOYDIR}/bl2_bp_spi-${MACHINE}.srec
 	install -m 0644  ${S}/bl2_bp_emmc.bin ${DEPLOYDIR}/bl2_bp_emmc-${MACHINE}.bin
 	install -m 0644  ${S}/bl2_bp_emmc.srec ${DEPLOYDIR}/bl2_bp_emmc-${MACHINE}.srec
+	install -m 0644  ${S}/bl2_bp_esd.bin ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}.bin
+	install -m 0644  ${S}/bl2_bp_esd.srec ${DEPLOYDIR}/bl2_bp_esd-${MACHINE}.srec
 
 	install -m 0644  ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
 	install -m 0644  ${S}/fip.srec ${DEPLOYDIR}/fip-${MACHINE}.srec
