@@ -171,9 +171,10 @@ export KERNELSRC="$SDKTARGETSYSROOT/usr/src/kernel"
 export KERNELDIR="$SDKTARGETSYSROOT/usr/src/kernel"
 export HOST_EXTRACFLAGS="-I${OECORE_NATIVE_SYSROOT}/usr/include/ -L${OECORE_NATIVE_SYSROOT}/usr/lib"
 
-# Default WKS is eMMC, except rzg2l devices which can support eSD boot
+# Default WKS is eMMC, except rzg2l/rzg3s devices which can support eSD boot
 WKS_DEFAULT_FILE = "rz-image-bootpart-mmc.wks"
 WKS_DEFAULT_FILE_rzg2l ?= "${@oe.utils.conditional("PMIC_SUPPORT", "1", "rz-image-bootpart-esd-pmic.wks", "rz-image-bootpart-esd.wks", d)}"
+WKS_DEFAULT_FILE_rzg3s ?= "rz-image-bootpart-esd-rzg3s.wks"
 
 WKS_FILE ?= "${@oe.utils.conditional("WKS_SUPPORT", "1", "${WKS_DEFAULT_FILE}", "", d)}"
 
