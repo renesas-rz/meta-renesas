@@ -1,0 +1,68 @@
+From 5010ff473c8ed2cf0b8d458eb7b84ccbab1798ad Mon Sep 17 00:00:00 2001
+From: binhnmt <binhnmt@fpt.com>
+Date: Mon, 10 Mar 2025 15:17:21 +0700
+Subject: [PATCH 2/2] mmngrbuf: Update functions to adapt with new kernel 6.12.
+
+ On kernel 6.12, there are some compilation errors.
+
+ Compiling error are fixed:
+
+	[1] On kernel 6.12, 'vm_flags' is used as a read-only property. error assignment of read-only member ‘vm_flags’
+	-> Solution: ‘vm_flags’ should be replaced with vm_flags_set()
+	Reference:
+	https://lore.kernel.org/lkml/ZA7D54vwYXThZG3U@kroah.com/T/
+
+	[2] the function mm_remove() has been changed to return an void. 
+	-> Solution: Change 'static int mm_remove(struct platform_device *pdev)' to
+		'static void mm_remove(struct platform_device *pdev)'
+
+---
+ .../mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c      | 6 +++---
+ .../files/mmngrbuf/include/mmngr_buf_private.h              | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+index 5b4dde7..4315477 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/drv/mmngr_buf_drv.c
+@@ -236,7 +236,7 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
+ 	pgprot_t prot = vm_get_page_prot(vma->vm_flags);
+ 	struct MM_BUF_PRIVATE *priv = buf->priv;
+ 
+-	vma->vm_flags |= (VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
++	vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
+ 	vma->vm_private_data = priv;
+ 	vma->vm_page_prot = pgprot_writecombine(prot);
+ 
+@@ -404,13 +404,13 @@ static int mm_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int mm_remove(struct platform_device *pdev)
++static void mm_remove(struct platform_device *pdev)
+ {
+ 	misc_deregister(&misc);
+ 
+ 	kfree(mm_buf_drvdata);
+ 
+-	return 0;
++	return;
+ }
+ 
+ static const struct of_device_id mm_of_match[] = {
+diff --git a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+index 3d5292e..0594c41 100644
+--- a/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
++++ b/mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf/include/mmngr_buf_private.h
+@@ -102,7 +102,7 @@ static int dmabuf_mmap(struct dma_buf *buf, struct vm_area_struct *vma);
+ static int dmabuf_vmap(struct dma_buf *buf, struct iosys_map *map);
+ static void dmabuf_vunmap(struct dma_buf *buf, struct iosys_map *map);
+ static int mm_probe(struct platform_device *pdev);
+-static int mm_remove(struct platform_device *pdev);
++static void mm_remove(struct platform_device *pdev);
+ static int mm_init(void);
+ static void mm_exit(void);
+ static int mm_ioc_export_start(int __user *arg, struct MM_BUF_PRIVATE *priv);
+-- 
+2.34.1
+

@@ -46,6 +46,7 @@ SRC_URI:append:rzg2l-family = " \
 	file://0014-ISU-remove-csc-mode-in-struct-isu_csc_t.patch \
 	file://0015-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
 	file://0016-Update-the-copyright-year-for-changed-files.patch \
+	file://0017-Update-following-kernel-6.12.patch \
 "
 
 S = "${WORKDIR}/git"

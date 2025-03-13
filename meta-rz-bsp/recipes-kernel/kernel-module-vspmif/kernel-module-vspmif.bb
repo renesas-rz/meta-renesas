@@ -31,6 +31,7 @@ SRC_URI:append:rzg2l-family = " \
 	file://0004-Remove-unused-memory.patch \
 	file://0005-Correction-32bit-variable.patch \
 	file://0006-Update-copyright-year-for-these-changed-files.patch \
+	file://0007-Update-following-kernel-6.12.patch \
 "
 
 S = "${WORKDIR}/git"

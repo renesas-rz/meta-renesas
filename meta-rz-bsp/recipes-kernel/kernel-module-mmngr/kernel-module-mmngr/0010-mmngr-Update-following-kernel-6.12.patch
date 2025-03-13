@@ -1,0 +1,106 @@
+From c9bc3ccb29056716d380299819a2286285320232 Mon Sep 17 00:00:00 2001
+From: binhnmt <binhnmt@fpt.com>
+Date: Mon, 10 Mar 2025 15:13:22 +0700
+Subject: [PATCH 1/2] mmngr: Update functions to adapt with new kernel 6.12.
+
+ On kernel 6.12, there are some compilation errors.
+
+ Compiling error are fixed:
+
+	[1] follow_pfn() has been replaced with follow_pfnmap()
+	-> Solution: Change 'follow_pfn()' to 'follow_pfnmap()'
+	Reference:
+	1. commit 07956b6269d3ed05d854233d5bb776dca91751dd replaced follow_pfn() with follow_pte().
+	2. commit cb10c28ac82c9b7a5e9b3b1dc7157036c20c36dd removed follow_pfn().
+	3. commit b0a1c0d0edcd75a0f8ec5fd19dbd64b8d097f534 removed follow_pte() and replaced it with follow_pfnmap*().
+	4. commit a77f9489f1d7873a56e1d6640cc0c4865f64176b refer to how to convert follow_pte() to follow_pfnmap().
+
+	[2] On kernel 6.12, 'vm_flags' is used as a read-only property. error assignment of read-only member ‘vm_flags’
+	-> Solution: ‘vm_flags’ should be replaced with vm_flags_set()
+	Reference:
+	https://lore.kernel.org/lkml/ZA7D54vwYXThZG3U@kroah.com/T/
+
+	[3] the function mm_remove() has been changed to return an void. 
+	-> Solution: Change 'static int mm_remove(struct platform_device *pdev)' to
+		'static void mm_remove(struct platform_device *pdev)'
+
+
+---
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c      | 15 ++++++++++-----
+ .../files/mmngr/include/mmngr_private.h           |  2 +-
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index 80d9718..d7c0df5 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -845,6 +845,7 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ {
+ 	struct vm_area_struct *vma;
+ 	struct mm_struct *mm = current->mm;
++	struct follow_pfnmap_args args = { };
+ 	unsigned long start;
+ 	unsigned long pfn;
+ 	int ret = 0;
+@@ -852,10 +853,14 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ 	mmap_read_lock(mm);
+ 	vma = find_vma(mm, tmp->user_virt_addr);
+ 	start = tmp->user_virt_addr & PAGE_MASK;
+-	ret = follow_pfn(vma, start, &pfn);
++	args.vma = vma;
++	args.address = start;
++	ret = follow_pfnmap_start(&args);
+ 	if(ret != 0)
+ 		 pr_warn("Could not convert virt[0x%lx] addr", tmp->user_virt_addr);
++	pfn = args.pfn;
+ 	tmp->hard_addr = pfn << PAGE_SHIFT;
++	follow_pfnmap_end(&args);
+ 	mmap_read_unlock(mm);
+ 
+ 	return;
+@@ -1044,9 +1049,9 @@ static int mmap(struct file *filp, struct vm_area_struct *vma)
+ 
+ 	if (p->flag != MM_KERNELHEAP_CACHED) {
+ 		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+-		vma->vm_flags |= (VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
++		vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
+ 	} else {
+-		vma->vm_flags |= (VM_DONTEXPAND | VM_DONTDUMP);
++		vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+ 	}
+ 
+ 	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+@@ -1785,7 +1790,7 @@ err_alloc:
+ 	return -1;
+ }
+ 
+-static int mm_remove(struct platform_device *pdev)
++static void mm_remove(struct platform_device *pdev)
+ {
+ 	u32 i;
+ 
+@@ -1818,7 +1823,7 @@ static int mm_remove(struct platform_device *pdev)
+ 
+ 	kfree(mm_drvdata);
+ 
+-	return 0;
++	return;
+ }
+ 
+ static const struct of_device_id mm_of_match[] = {
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+index aa4753b..1b75cfe 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
+@@ -176,7 +176,7 @@ static int close(struct inode *inode, struct file *file);
+ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+ static int mmap(struct file *filp, struct vm_area_struct *vma);
+ static int mm_probe(struct platform_device *pdev);
+-static int mm_remove(struct platform_device *pdev);
++static void mm_remove(struct platform_device *pdev);
+ static int mm_init(void);
+ static void mm_exit(void);
+ 
+-- 
+2.34.1
+

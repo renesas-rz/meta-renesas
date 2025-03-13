@@ -1,0 +1,49 @@
+From 8b1f852684ae9edc2da5aa77290dfcc9b2b89239 Mon Sep 17 00:00:00 2001
+From: binhnmt <binhnmt@fpt.com>
+Date: Mon, 10 Mar 2025 15:26:46 +0700
+Subject: [PATCH] Update functions return type and include header file to adapt
+ with new kernel 6.12.
+
+ On kernel 6.12, there are some compilation errors.
+
+ Compiling error are fixed:
+
+	[1] The header file containing the definition of struct 'of_device_id' is missing. 
+	-> Solution: Include '<linux/of.h>' header file.
+
+	[2] the function vspm_if_remove() has been changed to return an void. 
+	-> Solution: Change 'static int vspm_if_remove(struct platform_device *pdev)' to
+		'static void vspm_if_remove(struct platform_device *pdev)'
+
+---
+ vspm_if-module/files/vspm_if/drv/vspm_if_main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+index 9b4b436..083fda7 100644
+--- a/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
++++ b/vspm_if-module/files/vspm_if/drv/vspm_if_main.c
+@@ -65,6 +65,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/fs.h>
+ #include <linux/ioctl.h>
++#include <linux/of.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_if.h"
+@@ -1018,10 +1019,10 @@ static int vspm_if_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_if_remove(struct platform_device *pdev)
++static void vspm_if_remove(struct platform_device *pdev)
+ {
+ 	g_vspmif_pdev = NULL;
+-	return 0;
++	return;
+ }
+ 
+ static const struct of_device_id vspm_if_of_match[] = {
+-- 
+2.34.1
+

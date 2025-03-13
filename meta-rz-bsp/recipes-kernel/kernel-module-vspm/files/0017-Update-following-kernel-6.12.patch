@@ -1,0 +1,86 @@
+From 30284f928366e8584d2b995fc61a3046bddf8e06 Mon Sep 17 00:00:00 2001
+From: binhnmt <binhnmt@fpt.com>
+Date: Mon, 10 Mar 2025 15:23:52 +0700
+Subject: [PATCH] Update functions return type to adapt with new kernel 6.12.
+
+ On kernel 6.12, there are some compilation errors.
+
+ Compiling error are fixed:
+
+	[1] the function vspm_vsp_remove() has been changed to return an void. 
+	-> Solution: Change 'static int vspm_vsp_remove(struct platform_device *pdev)' to
+		'static void vspm_vsp_remove(struct platform_device *pdev)'
+
+	[2] the function vspm_fdp_remove() has been changed to return an void. 
+	-> Solution: Change 'static int vspm_fdp_remove(struct platform_device *pdev)' to
+		'static void vspm_fdp_remove(struct platform_device *pdev)'
+
+	[3] the function vspm_isu_remove() has been changed to return an void. 
+	-> Solution: Change 'static int vspm_isu_remove(struct platform_device *pdev)' to
+		'static void vspm_isu_remove(struct platform_device *pdev)'
+
+---
+ vspm-module/files/vspm/drv/vspm_main.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 92f567f..cdbca61 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -343,7 +343,7 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_vsp_remove(struct platform_device *pdev)
++static void vspm_vsp_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -365,7 +365,7 @@ static int vspm_vsp_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->vsp_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ static int vspm_fdp_probe(struct platform_device *pdev)
+@@ -419,7 +419,7 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_fdp_remove(struct platform_device *pdev)
++static void vspm_fdp_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -441,7 +441,7 @@ static int vspm_fdp_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->fdp_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ static int vspm_isu_probe(struct platform_device *pdev)
+@@ -504,7 +504,7 @@ static int vspm_isu_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_isu_remove(struct platform_device *pdev)
++static void vspm_isu_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -526,7 +526,7 @@ static int vspm_isu_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->isu_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ 
+-- 
+2.34.1
+

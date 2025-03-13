@@ -18,6 +18,7 @@ SRC_URI:append = " \
     file://0007-mmngr-Update-following-kernel-6.1.patch \
     file://0008-mmngr-Do-not-parse-and-init-lossy-memory-area-for-RZ.patch \
     file://0009-mmngr-Fix-compilation-warnings-to-avoid-build-failur.patch \
+    file://0010-mmngr-Update-following-kernel-6.12.patch \
 "
 
 MMNGR_CFG:rzg3e-family ?= "MMNGR_RZG3E"
