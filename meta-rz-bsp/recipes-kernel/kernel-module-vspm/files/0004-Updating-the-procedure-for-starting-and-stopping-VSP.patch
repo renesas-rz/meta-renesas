@@ -1,0 +1,454 @@
+From d26e21e65eb02e68be7f32b99be817d548ae4b8d Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Mon, 17 Mar 2025 17:14:20 +0700
+Subject: [PATCH] Updating the procedure for starting and stopping VSP
+
+VSP maybe unstable on some RZ/G3E boards that cause hang board.
+It's necessary to de-assert reset signals after enable clocks
+in starting and assert reset signals before disable clocks in
+stopping VSP to prevent this issue.
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+---
+ .../files/vspm/drv/manager/vspm_common.h      |  5 +-
+ .../files/vspm/drv/manager/vspm_control.c     |  6 +-
+ .../files/vspm/drv/manager/vspm_drv_vsp.c     | 16 +++--
+ vspm-module/files/vspm/drv/vsp/vsp_drv.c      | 25 ++++++--
+ .../files/vspm/drv/vsp/vsp_drv_local.h        |  6 +-
+ vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c  | 58 ++++++++++++++++++-
+ vspm-module/files/vspm/drv/vsp_drv_public.h   | 12 +++-
+ vspm-module/files/vspm/drv/vspm_main.c        | 13 +++--
+ vspm-module/files/vspm/drv/vspm_main.h        |  3 +-
+ 9 files changed, 120 insertions(+), 24 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_common.h b/vspm-module/files/vspm/drv/manager/vspm_common.h
+index 0965c81..db5c341 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_common.h
++++ b/vspm-module/files/vspm/drv/manager/vspm_common.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -229,7 +229,8 @@ long vspm_ins_vsp_execute(
+ 	unsigned short module_id, struct vsp_start_t *vsp_par);
+ long vspm_ins_vsp_exec_complete(unsigned short module_id);
+ long vspm_ins_vsp_cancel(unsigned short module_id);
+-long vspm_ins_vsp_quit(struct vspm_usable_res_info *usable);
++long vspm_ins_vsp_quit(struct vspm_usable_res_info *usable,
++	struct vspm_drvdata *pdrv);
+ long vspm_ins_vsp_execute_low_delay(
+ 	unsigned short module_id,
+ 	struct vspm_api_param_entry *entry);
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_control.c b/vspm-module/files/vspm/drv/manager/vspm_control.c
+index 4ffa6a0..b822ff1 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_control.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_control.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -182,7 +182,7 @@ long vspm_ins_ctrl_initialize(struct vspm_drvdata *pdrv)
+ 	if (ercd != R_VSPM_OK) {
+ 		EPRINT("failed to vspm_ins_fdp_initialize %ld\n", ercd);
+ 		/* forced quit */
+-		(void)vspm_ins_vsp_quit(usable);
++		(void)vspm_ins_vsp_quit(usable, pdrv);
+ 		return ercd;
+ 	}
+ 
+@@ -202,7 +202,7 @@ long vspm_ins_ctrl_quit(struct vspm_drvdata *pdrv)
+ 	long ercd;
+ 
+ 	/* Finalize VSP driver */
+-	ercd = vspm_ins_vsp_quit(usable);
++	ercd = vspm_ins_vsp_quit(usable, pdrv);
+ 	if (ercd != R_VSPM_OK) {
+ 		EPRINT("failed to vspm_ins_vsp_quit %ld\n", ercd);
+ 		return ercd;
+diff --git a/vspm-module/files/vspm/drv/manager/vspm_drv_vsp.c b/vspm-module/files/vspm/drv/manager/vspm_drv_vsp.c
+index 517178e..44ea9d1 100644
+--- a/vspm-module/files/vspm/drv/manager/vspm_drv_vsp.c
++++ b/vspm-module/files/vspm/drv/manager/vspm_drv_vsp.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -235,6 +235,9 @@ long vspm_ins_vsp_initialize(
+ 		return R_VSPM_NG;
+ 	}
+ 
++	/* set resets */
++	open_param.rsts = (void *)pdrv->vsp_rsts;
++
+ 	ch = VSPM_VSP_IP_MAX - 1;
+ 	for (i = 0; i < VSPM_VSP_IP_MAX; i++) {
+ 		if (pdrv->vsp_pdev[ch]) {
+@@ -247,7 +250,7 @@ long vspm_ins_vsp_initialize(
+ 				EPRINT("%s: failed to open!! (%d, %ld)\n",
+ 				       __func__, ch, ercd);
+ 				/* forced quit */
+-				(void)vsp_lib_quit();
++				(void)vsp_lib_quit(&open_param);
+ 				return R_VSPM_NG;
+ 			}
+ 
+@@ -257,7 +260,7 @@ long vspm_ins_vsp_initialize(
+ 				EPRINT("%s: failed to get!! (%d, %ld)\n",
+ 				       __func__, ch, ercd);
+ 				/* forced quit */
+-				(void)vsp_lib_quit();
++				(void)vsp_lib_quit(&open_param);
+ 				return R_VSPM_NG;
+ 			}
+ 
+@@ -367,15 +370,18 @@ long vspm_ins_vsp_cancel(unsigned short module_id)
+  * Description:	Finalize VSP driver.
+  * Returns:		R_VSPM_OK/R_VSPM_NG
+  ******************************************************************************/
+-long vspm_ins_vsp_quit(struct vspm_usable_res_info *usable)
++long vspm_ins_vsp_quit(struct vspm_usable_res_info *usable,
++	struct vspm_drvdata *pdrv)
+ {
+ 	long ercd;
+ 
++	vsp_quit_t quit_param;
+ 	unsigned int usable_bits = 0;
+ 	int i;
+ 
+ 	/* quit driver with close all channels */
+-	ercd = vsp_lib_quit();
++	quit_param.rsts = (void *)pdrv->vsp_rsts;
++	ercd = vsp_lib_quit(&quit_param);
+ 	if (ercd) {
+ 		EPRINT("%s: failed to quit!!() ercd=%ld\n",
+ 		       __func__, ercd);
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv.c b/vspm-module/files/vspm/drv/vsp/vsp_drv.c
+index 60d69d4..12ae549 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv.c
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -116,7 +116,7 @@ err_exit:
+  *	return of vsp_lib_abort()
+  *	return of vsp_lib_close()
+  ******************************************************************************/
+-long vsp_lib_quit(void)
++long vsp_lib_quit(vsp_quit_t *param)
+ {
+ 	struct vsp_prv_data **prv = &g_vsp_obj[0];
+ 
+@@ -137,7 +137,7 @@ long vsp_lib_quit(void)
+ 
+ 			if (((*prv)->ch_info[0].status == VSP_STAT_READY) &&
+ 			    ((*prv)->ch_info[1].status == VSP_STAT_READY)) {
+-				ercd = vsp_lib_close((unsigned char)i);
++				ercd = vsp_lib_close((unsigned char)i, param);
+ 				if (ercd)
+ 					return ercd;
+ 			}
+@@ -193,6 +193,9 @@ long vsp_lib_open(unsigned char ch, struct vsp_open_t *param)
+ 
+ 	prv->pdev = param->pdev;
+ 
++	/* set resets */
++	prv->rsts = (struct reset_control **)param->rsts;
++
+ 	/* set open parameter */
+ 	ercd = vsp_ins_get_vsp_resource(prv);
+ 	if (ercd)
+@@ -203,6 +206,13 @@ long vsp_lib_open(unsigned char ch, struct vsp_open_t *param)
+ 	if (ercd)
+ 		goto err_exit1;
+ 
++	/* deassert resets */
++	ercd = vsp_ins_deassert_reset(prv, ch);
++	if (ercd) {
++		(void)vsp_ins_disable_clock(prv);
++		goto err_exit1;
++	}
++
+ 	/* initialize register */
+ 	ercd = vsp_ins_init_reg(prv);
+ 	if (ercd)
+@@ -223,6 +233,7 @@ err_exit3:
+ 	(void)vsp_ins_quit_reg(prv);
+ 
+ err_exit2:
++	(void)vsp_ins_assert_reset(prv, ch);
+ 	(void)vsp_ins_disable_clock(prv);
+ 
+ err_exit1:
+@@ -237,7 +248,7 @@ err_exit1:
+  *	return of vsp_ins_quit_reg()
+  *	return of vsp_ins_disable_clock()
+  ******************************************************************************/
+-long vsp_lib_close(unsigned char ch)
++long vsp_lib_close(unsigned char ch, vsp_quit_t *param)
+ {
+ 	struct vsp_prv_data *prv;
+ 
+@@ -267,6 +278,12 @@ long vsp_lib_close(unsigned char ch)
+ 	if (ercd)
+ 		return ercd;
+ 
++	/* assert resets */
++	prv->rsts = (struct reset_control **)param->rsts;
++	ercd = vsp_ins_assert_reset(prv, ch);
++	if (ercd)
++		return ercd;
++
+ 	/* disable clock */
+ 	ercd = vsp_ins_disable_clock(prv);
+ 	if (ercd)
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h b/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h
+index f575f90..b6750c1 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv_local.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -760,6 +760,7 @@ struct vsp_prv_data {
+ 	void __iomem *vsp_reg;
+ 	void __iomem *fcp_reg;
+ 	int irq;
++	struct reset_control **rsts;
+ 	struct vsp_res_data {
+ 		unsigned int usable_rpf;
+ 		unsigned int usable_rpf_clut;
+@@ -794,6 +795,9 @@ long vsp_ins_get_vsp_resource(struct vsp_prv_data *prv);
+ long vsp_ins_enable_clock(struct vsp_prv_data *prv);
+ long vsp_ins_disable_clock(struct vsp_prv_data *prv);
+ 
++long vsp_ins_deassert_reset(struct vsp_prv_data *prv, unsigned char ch);
++long vsp_ins_assert_reset(struct vsp_prv_data *prv, unsigned char ch);
++
+ long vsp_ins_init_reg(struct vsp_prv_data *prv);
+ long vsp_ins_quit_reg(struct vsp_prv_data *prv);
+ 
+diff --git a/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c b/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
+index 4c009e0..f639eb1 100644
+--- a/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
++++ b/vspm-module/files/vspm/drv/vsp/vsp_drv_phy.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -63,6 +63,7 @@
+ #include <linux/slab.h>
+ #include <linux/delay.h>
+ #include <linux/pm_runtime.h>
++#include <linux/reset.h>
+ 
+ #include "vspm_public.h"
+ #include "vspm_ip_ctrl.h"
+@@ -2541,6 +2542,61 @@ long vsp_ins_disable_clock(struct vsp_prv_data *prv)
+ 	return 0;
+ }
+ 
++/******************************************************************************
++ * Function:		vsp_ins_deassert_reset
++ * Description:	Deassert VSP/FCP resets.
++ * Returns:		0
++ ******************************************************************************/
++long vsp_ins_deassert_reset(struct vsp_prv_data *prv, unsigned char ch)
++{
++	int i, loopcnt;
++
++	/* deassert reset controllers to start VSP */
++	for (i = (RSTNUM * ch); i < ((RSTNUM * ch) + RSTNUM); i++) {
++		if (reset_control_deassert(prv->rsts[i])) {
++			EPRINT("%s: failed to deassert resets!! \n", __func__);
++			return E_VSP_NO_RST;
++		}
++
++		/* waiting deassert process */
++		loopcnt = VSP_STATUS_LOOP_CNT;
++		do {
++			/* sleep */
++			msleep(VSP_STATUS_LOOP_TIME);
++		} while ((reset_control_status(prv->rsts[i])) &&
++			(--loopcnt > 0));
++
++		if (loopcnt == 0) {
++			EPRINT("%s: happen to timeout after deassert resets!! \n",
++				__func__);
++		}
++	}
++
++	return 0;
++}
++
++/******************************************************************************
++ * Function:		vsp_ins_assert_reset
++ * Description:	Aassert VSP/FCP resets.
++ * Returns:		0
++ ******************************************************************************/
++long vsp_ins_assert_reset(struct vsp_prv_data *prv, unsigned char ch)
++{
++	int i;
++
++	/* assert reset controllers to stop VSP */
++	for (i = ((RSTNUM * ch) + RSTNUM - 1); i >= (RSTNUM * ch); i--) {
++		if (prv->rsts[i]) {
++			if (reset_control_assert(prv->rsts[i])) {
++				EPRINT("%s: failed to assert resets!! \n", __func__);
++				return E_VSP_NO_RST;
++			}
++		}
++	}
++
++	return 0;
++}
++
+ /******************************************************************************
+  * Function:		vsp_ins_init_vsp_reg
+  * Description:	Initialize VSP hardware.
+diff --git a/vspm-module/files/vspm/drv/vsp_drv_public.h b/vspm-module/files/vspm/drv/vsp_drv_public.h
+index d8f6305..d022045 100644
+--- a/vspm-module/files/vspm/drv/vsp_drv_public.h
++++ b/vspm-module/files/vspm/drv/vsp_drv_public.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -65,6 +65,7 @@
+ #define E_VSP_NO_INIT			(-103)
+ #define E_VSP_INVALID_STATE		(-105)
+ #define E_VSP_NO_CLK			(-107)
++#define E_VSP_NO_RST			(-108)
+ #define E_VSP_PARA_CH			(-150)
+ 
+ /* define channel bits */
+@@ -85,8 +86,13 @@ struct vsp_init_t {
+ 
+ struct vsp_open_t {
+ 	struct platform_device *pdev;
++
++	/* reset controllers */
++	void *rsts;
+ };
+ 
++typedef struct vsp_open_t vsp_quit_t;
++
+ struct vsp_status_t {
+ 	unsigned int module_bits;
+ 	unsigned int rpf_bits;
+@@ -96,9 +102,9 @@ struct vsp_status_t {
+ 
+ /* public functions */
+ long vsp_lib_init(struct vsp_init_t *param);
+-long vsp_lib_quit(void);
++long vsp_lib_quit(vsp_quit_t *param);
+ long vsp_lib_open(unsigned char ch, struct vsp_open_t *param);
+-long vsp_lib_close(unsigned char ch);
++long vsp_lib_close(unsigned char ch, vsp_quit_t *param);
+ long vsp_lib_start(
+ 	unsigned char ch,
+ 	void *callback,
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 056f757..36f753f 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -334,16 +334,17 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 		pdrv->vsp_clks[ch][i] = clk;
+ 	}
+ 
++	/* set reset controls */
+ 	for (i = 0; i < RSTNUM; i++) {
+ 		rstc = devm_reset_control_get(&pdev->dev, reset_names[i]);
+ 		if (IS_ERR(rstc)) {
+ 			APRINT("Failed to get cpg reset (%s)!! ch=%d\n",
+ 					reset_names[i], ch);
++			for (; i > 0; i--)
++				pdrv->vsp_rsts[ch][i] = NULL;
+ 			return -1;
+ 		}
+-		else {
+-			reset_control_deassert(rstc);
+-		}
++		pdrv->vsp_rsts[ch][i] = rstc;
+ 	}
+ 
+ 	/* set driver data */
+@@ -379,6 +380,10 @@ static int vspm_vsp_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->vsp_clks[ch][i] = NULL;
+ 
++	/* unset resets */
++	for (i = 0; i < RSTNUM; i++)
++		pdrv->vsp_rsts[ch][i] = NULL;
++
+ 	return 0;
+ }
+ 
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 6545496..08cf3a7 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -89,6 +89,7 @@ struct vspm_drvdata {
+ 	struct platform_device *fdp_pdev[VSPM_FDP_IP_MAX];
+ 	struct clk *fdp_clks[VSPM_FDP_IP_MAX][CLKNUM];
+ 	struct reset_control *fdp_rsts[VSPM_FDP_IP_MAX][RSTNUM];
++	struct reset_control *vsp_rsts[VSPM_VSP_IP_MAX][RSTNUM];
+ 	struct task_struct *task;
+ 	atomic_t counter;
+ 	atomic_t suspend;
+-- 
+2.25.1
+

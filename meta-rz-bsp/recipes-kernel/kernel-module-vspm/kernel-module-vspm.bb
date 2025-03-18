@@ -27,6 +27,7 @@ SRC_URI:append:rzg3e-family = " \
 	file://0001-Update-clocks-and-reset-controls-for-RZ-G3E.patch \
 	file://0002-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
 	file://0003-Restarting-FDP-after-stopping-with-CPG-software-rese.patch \
+	file://0004-Updating-the-procedure-for-starting-and-stopping-VSP.patch \
 "
 
 SRC_URI:append:rzg2l-family = " \
