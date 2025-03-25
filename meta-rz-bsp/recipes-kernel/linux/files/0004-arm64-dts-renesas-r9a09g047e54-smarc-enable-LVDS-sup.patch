@@ -1,0 +1,30 @@
+From a97e2474b3860c9d10f3a15aaa8eb3e5fd79efa2 Mon Sep 17 00:00:00 2001
+From: Nghia Vo <nghia.vo.zn@renesas.com>
+Date: Fri, 14 Mar 2025 10:18:49 +0700
+Subject: [PATCH 4/4] arm64: dts: renesas: r9a09g047e54-smarc: enable LVDS
+ support
+
+Enable LVDS support for RZ/G3E smarc.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+Signed-off-by: Nghia Vo <nghia.vo.zn@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+index 2d72e9c8afcd..aa4bc9656e57 100644
+--- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
++++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
+@@ -34,7 +34,7 @@
+  * - Parallel RGB: SW_LCD_EN from above switch selection settings
+  */
+ #define RZG3E_SMARC_MIPI_DSI_ENABLE	1
+-#define RZG3E_SMARC_LVDS_ENABLE		0
++#define RZG3E_SMARC_LVDS_ENABLE		1
+ 
+ /* Only maximum 2 display selections are enabled at the same time */
+ #if (RZG3E_SMARC_MIPI_DSI_ENABLE & RZG3E_SMARC_LVDS_ENABLE & SW_LCD_EN)
+-- 
+2.25.1
+

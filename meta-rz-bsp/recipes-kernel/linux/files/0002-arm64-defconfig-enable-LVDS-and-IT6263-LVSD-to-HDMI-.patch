@@ -1,0 +1,31 @@
+From 226a1242abd657727efaf5daeada21813039185c Mon Sep 17 00:00:00 2001
+From: Nghia Vo <nghia.vo.zn@renesas.com>
+Date: Tue, 3 Dec 2024 08:43:24 +0700
+Subject: [PATCH 2/4] arm64: defconfig: enable LVDS and IT6263 LVSD to HDMI
+ bridge
+
+Enable LVDS and IT6263 LVSD to HDMI bridge configs for RZ/G3E.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+Signed-off-by: Nghia Vo <nghia.vo.zn@renesas.com>
+---
+ arch/arm64/configs/defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index e1ec723c300e..7aef94bca575 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -230,6 +230,9 @@ CONFIG_DRM_RCAR_DW_HDMI=y
+ CONFIG_DRM_RCAR_MIPI_DSI=y
+ CONFIG_DRM_RZG2L_MIPI_DSI=y
+ CONFIG_DRM_RZG2L_DU=y
++CONFIG_DRM_RZG3E_USE_LVDS=y
++CONFIG_DRM_RZG3E_LVDS=y
++CONFIG_DRM_ITE_IT6263=y
+ CONFIG_DRM_PANEL_LVDS=y
+ CONFIG_DRM_PANEL_SIMPLE=y
+ CONFIG_DRM_PANEL_EDP=y
+-- 
+2.25.1
+

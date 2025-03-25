@@ -1,0 +1,86 @@
+From 921efee6a02bd9b36da482b4cc8df254fad373c3 Mon Sep 17 00:00:00 2001
+From: Nghia Vo <nghia.vo.zn@renesas.com>
+Date: Fri, 14 Mar 2025 10:17:35 +0700
+Subject: [PATCH 3/4] arm64: dts: renesas: rzg3e-smarc-lvds: add macro to
+ select lvds multi channels support
+
+Add macro option to select LVDS multi channels support for RZ/G3E smarc:
+- 0: single link channel from LVDS0.
+- 1: dual link channels from LVDS0/1 (default).
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+Signed-off-by: Nghia Vo <nghia.vo.zn@renesas.com>
+---
+ .../arm64/boot/dts/renesas/rzg3e-smarc-lvds.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-lvds.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-lvds.dtsi
+index e70759780a5e..416c1650e13f 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-lvds.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-lvds.dtsi
+@@ -6,6 +6,13 @@
+  * Copyright (C) 2024 Renesas Electronics Corp.
+  */
+ 
++/*
++ * Enable LVDS Dual link support:
++ * - 0: Single link channel from LVDS0
++ * - 1: Dual link channels from LVDS0/1
++ */
++#define LVDS_DUAL_LINK		1
++
+ / {
+ 	lvds-to-hdmi-out {
+ 		compatible = "hdmi-connector";
+@@ -23,7 +30,9 @@ &i2c7 {
+ 	it6263: it6263@4c {
+ 		compatible = "ite,it6263";
+ 		reg = <0x4c>;
++#if (LVDS_DUAL_LINK)
+ 		ite,dual-link;
++#endif
+ 
+ 		ports {
+ 			#address-cells = <1>;
+@@ -37,6 +46,7 @@ lvds0_in0: endpoint@0 {
+ 				};
+ 			};
+ 
++#if (LVDS_DUAL_LINK)
+ 			port@1 {
+ 				reg = <1>;
+ 				dual-lvds-even-pixels;
+@@ -44,6 +54,7 @@ lvds0_in1: endpoint@1 {
+ 					remote-endpoint = <&lvds1_out>;
+ 				};
+ 			};
++#endif
+ 
+ 			port@2 {
+ 				reg = <2>;
+@@ -60,6 +71,9 @@ &lvds {
+ };
+ 
+ &lvds0 {
++#if !(LVDS_DUAL_LINK)
++	/delete-property/ renesas,companion;
++#endif
+ 	status = "okay";
+ 
+ 	ports {
+@@ -71,6 +85,7 @@ lvds0_out: endpoint {
+ 	};
+ };
+ 
++#if (LVDS_DUAL_LINK)
+ &lvds1 {
+ 	clocks = <&cpg CPG_MOD 416>,
+ 		 <&cpg CPG_MOD 418>;
+@@ -85,3 +100,4 @@ lvds1_out: endpoint {
+ 		};
+ 	};
+ };
++#endif
+-- 
+2.25.1
+
