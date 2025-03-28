@@ -1,6 +1,12 @@
 header:
   version: 14
 
+repos:
+  meta-openembedded:
+    layers:
+      meta-python:
+      meta-multimedia:
+
 local_conf_header:
   license_flag: |
     LICENSE_FLAGS_ACCEPTED = "commercial_gstreamer1.0-plugins-ugly commercial_mpeg2dec \
