@@ -9,3 +9,5 @@ UBOOT_REV ?= "b62f152cc83a6519c0e6cd24b62d922ce956d04a"
 PV="2023.10+git${SRCPV}"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
+
+SRC_URI:append = " file://0001-configs-rzg3e-dev.h-Set-default-u-boot-env-variables.patch"
