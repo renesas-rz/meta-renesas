@@ -80,28 +80,28 @@ endmenu
 menu "Targets"
 choice
 	prompt "Select target:"
-	default IMAGE_RENESAS_IMAGE_MINIMAL
+	default IMAGE_CORE_IMAGE_MINIMAL
 
-	config IMAGE_RENESAS_IMAGE_MINIMAL
+	config IMAGE_CORE_IMAGE_MINIMAL
 	bool "core-image-minimal"
 	help
 		A small image just capable of allowing a device to boot.
 
-	config KAS_INCLUDE_IMAGE_RENESAS_IMAGE_MINIMAL
+	config KAS_INCLUDE_IMAGE_CORE_IMAGE_MINIMAL
 	string
-	depends on IMAGE_RENESAS_IMAGE_MINIMAL
+	depends on IMAGE_CORE_IMAGE_MINIMAL
 	default "kas/images/core-image-minimal.yml"
 
-	config IMAGE_RENESAS_IMAGE_WESTON
+	config IMAGE_CORE_IMAGE_WESTON
 	bool "core-image-weston"
 	help
 		A very basic Wayland image with a terminal.
 		This image provides the Wayland protocol libraries and the reference Weston compositor.
 		It also contains GStreamer 1.0 framework, tools, and multimedia support packages.
 
-	config KAS_INCLUDE_IMAGE_RENESAS_IMAGE_WESTON
+	config KAS_INCLUDE_IMAGE_CORE_IMAGE_WESTON
 	string
-	depends on IMAGE_RENESAS_IMAGE_WESTON
+	depends on IMAGE_CORE_IMAGE_WESTON
 	default "kas/images/core-image-weston.yml"
 
 endchoice
