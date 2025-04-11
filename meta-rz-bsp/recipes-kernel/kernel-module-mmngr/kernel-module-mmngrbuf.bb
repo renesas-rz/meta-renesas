@@ -2,7 +2,6 @@ DESCRIPTION = "Memory Manager Buffer Kernel module for Renesas RZG2L/RZG3E"
 
 require mmngr_drv.inc
 
-DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngrbuf"
 PR = "r0"
 

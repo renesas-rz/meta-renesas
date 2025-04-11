@@ -2,7 +2,6 @@ DESCRIPTION = "Memory Manager Kernel module for Renesas RZG2L/RZG3E"
 
 require mmngr_drv.inc
 
-DEPENDS = "linux-renesas"
 PN = "kernel-module-mmngr"
 PR = "r0"
 

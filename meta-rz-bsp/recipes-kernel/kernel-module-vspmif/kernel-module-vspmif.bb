@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = " \
 inherit module
 require include/rz-modules-common.inc
 
-DEPENDS = "linux-renesas kernel-module-vspm"
+DEPENDS = "kernel-module-vspm"
 PN = "kernel-module-vspmif"
 PR = "r0"
 
