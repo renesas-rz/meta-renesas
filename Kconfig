@@ -106,3 +106,29 @@ choice
 
 endchoice
 endmenu
+
+menu "Features"
+	config FEATURE_GRAPHICS
+	bool "Graphics"
+	default n
+	help
+		Enable support for the GPU using meta-rz-graphics.
+		Note that the meta-rz-features/meta-rz-graphics directory should be extracted to the working directory.
+
+	config KAS_INCLUDE_FEATURE_GRAPHICS
+	string
+	depends on FEATURE_GRAPHICS
+	default "kas/features/graphics.yml"
+
+	config FEATURE_CODECS
+	bool "Codecs"
+	default n
+	help
+		Enable support for the Renesas codec libraries using meta-rz-multimedia.
+		Note that the meta-rz-features/meta-rz-codecs directory should be extracted to the working directory.
+
+	config KAS_INCLUDE_FEATURE_CODECS
+	string
+	depends on FEATURE_CODECS
+	default "kas/features/codecs.yml"
+endmenu

@@ -1,0 +1,9 @@
+header:
+  version: 14
+
+repos:
+  # Needs to be manually added to the working directory
+  meta-rz-features:
+    path: meta-rz-features
+    layers:
+      meta-rz-graphics:
