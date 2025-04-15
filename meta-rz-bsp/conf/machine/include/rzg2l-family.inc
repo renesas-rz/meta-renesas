@@ -18,7 +18,6 @@ EXTRA_IMAGEDEPENDS += " firmware-pack"
 # U-boot
 PREFERRED_VERSION_u-boot ?= "2023.10%"
 
-
 # Linux kernel configuration
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
 PREFERRED_VERSION_linux-renesas ?= "6.1%"
