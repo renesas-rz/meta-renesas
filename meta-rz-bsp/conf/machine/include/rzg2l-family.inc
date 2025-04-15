@@ -15,7 +15,16 @@ EXTRA_IMAGEDEPENDS += " flash-writer"
 # Firmware-pack
 EXTRA_IMAGEDEPENDS += " firmware-pack"
 
+# U-boot
 PREFERRED_VERSION_u-boot ?= "2023.10%"
+
+
+# Linux kernel configuration
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
 PREFERRED_VERSION_linux-renesas ?= "6.1%"
-#PREFERRED_VERSION_linux-libc-headers ?= "6.1%"
+KERNEL_IMAGETYPE ?= "Image"
+KERNEL_DEVICETREE ?= " \
+	renesas/r9a07g044l2-smarc.dtb \
+	renesas/r9a07g044c2-smarc.dtb \
+	renesas/r9a07g043u11-smarc.dtb \
+"
