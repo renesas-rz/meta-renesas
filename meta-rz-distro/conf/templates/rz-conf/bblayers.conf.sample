@@ -15,5 +15,5 @@ BBLAYERS ?= " \
   ${TOPDIR}/../meta-arm/meta-arm-toolchain \
   ${TOPDIR}/../meta-arm/meta-arm \
   ${TOPDIR}/../meta-renesas/meta-rz-bsp \
-  ${TOPDIR}/../meta-renesas/meta-rz-boards \
+  ${TOPDIR}/../meta-renesas/meta-rz-distro \
   "

@@ -302,5 +302,5 @@ CONF_VERSION = "2"
 # Un-comment a following line to enable the Docker Engine.
 # DISTRO_FEATURES:append = " virtualization docker"
 
-# Set RT BSP. IS_RT_BSP variable is to select RTLinux.
-# IS_RT_BSP ="1"
+# Un-comment a following line to select RTLinux.
+# PREFERRED_PROVIDER_virtual/kernel = "linux-renesas-rt"
