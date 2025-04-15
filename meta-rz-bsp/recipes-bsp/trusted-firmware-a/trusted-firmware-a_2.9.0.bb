@@ -25,6 +25,7 @@ ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", "DDR_ECC_DETECT=
 ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT_CORRECT", "DDR_ECC_DETECT_CORRECT=1", "",d)}"
 EXTRA_OEMAKE += "${@oe.utils.conditional("USE_ECC", "1", " ${ECC_FLAGS} ", "",d)}"
 TFA_PMIC_EXTRA_OEMAKE:append = "${@oe.utils.conditional("USE_ECC", "1", " ${ECC_FLAGS} ", "",d)}"
+EXTRA_OEMAKE += "FIP_ALIGN=16"
 
 do_compile:prepend() {
 	# This is still needed to have the native tools executing properly by
