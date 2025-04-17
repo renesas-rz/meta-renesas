@@ -8,27 +8,27 @@ build_system: openembedded
 repos:
   meta-renesas:
     layers:
-      meta-rz-boards:
+      meta-rz-distro:
       meta-rz-bsp:
   poky:
     url: "https://git.yoctoproject.org/git/poky"
-    # scarthgap 8637aa34f
-    commit: 8637aa34f0009421eb6c51a93588fe879950e1f4
+    # scarthgap-5.0.8
+    commit: dc4827b3660bc1a03a2bc3b0672615b50e9137ff
     layers:
       meta:
       meta-poky:
       meta-yocto-bsp:
   meta-arm:
     url: https://git.yoctoproject.org/meta-arm
-    # yocto-5.0
-    commit: 313ad2a0e600655d9bfbe53646e356372ff02644
+    # yocto-5.0.1
+    commit: 950a4afce46a359def2958bd9ae33fc08ff9bb0d
     layers:
       meta-arm-toolchain:
       meta-arm:
   meta-openembedded:
     url: https://git.openembedded.org/meta-openembedded
     # scarthgap HEAD
-    commit: 1235dd4ed4a57e67683c045ad76b6a0f9e896b45
+    commit: 67ad83dd7c2485dae0c90eac345007af6195b84d
     layers:
       meta-oe:
 
