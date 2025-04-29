@@ -1,6 +1,6 @@
-From 5bcf47fc2390009eaad10c26cfcf230cbe830b2e Mon Sep 17 00:00:00 2001
-From: hienhuynh <hien.huynh.px@renesas.com>
-Date: Wed, 12 Jun 2024 22:05:45 +0700
+From ae4133d04361dc1bc5e5ea3b624a57eac0dac839 Mon Sep 17 00:00:00 2001
+From: Tai Huynh <tai.huynh.cp@renesas.com>
+Date: Tue, 1 Apr 2025 09:23:08 +0700
 Subject: [PATCH 1/2] usb: xhci: add code to extend memory access to over 32
  bits memory region for RZ/V2M
 
@@ -13,25 +13,26 @@ bank 1 address (0x1_0000_0000 - 0x1_FFFF_FFFF) by SYS that was set
 before.
 
 Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+Signed-off-by: Tai Huynh <tai.huynh.cp@renesas.com>
 ---
  drivers/usb/host/xhci-rcar.c |  9 ++++++++-
- drivers/usb/host/xhci-ring.c |  7 +++++++
+ drivers/usb/host/xhci-ring.c |  6 ++++++
  drivers/usb/host/xhci.c      | 17 +++++++++++++++++
  drivers/usb/host/xhci.h      |  3 +++
- 4 files changed, 35 insertions(+), 1 deletion(-)
+ 4 files changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/usb/host/xhci-rcar.c b/drivers/usb/host/xhci-rcar.c
-index 25ce3d78bba8..c7715bbbd4a4 100644
+index 25ce3d78bba8..cb9c1e2f8ebf 100644
 --- a/drivers/usb/host/xhci-rcar.c
 +++ b/drivers/usb/host/xhci-rcar.c
 @@ -257,6 +257,13 @@ static const struct xhci_plat_priv xhci_plat_renesas_rcar_gen3 = {
  };
  
  static const struct xhci_plat_priv xhci_plat_renesas_rzv2m = {
-+	.quirks = XHCI_USE_EXTENDED_ADDR | XHCI_TRUST_TX_LENGTH |
-+		  XHCI_SLOW_SUSPEND,
-+	.init_quirk = xhci_rzv2m_init_quirk,
-+	.plat_start = xhci_rzv2m_start,
++       .quirks = XHCI_USE_EXTENDED_ADDR | XHCI_TRUST_TX_LENGTH |
++       		 XHCI_SLOW_SUSPEND,
++       .init_quirk = xhci_rzv2m_init_quirk,
++       .plat_start = xhci_rzv2m_start,
 +};
 +
 +static const struct xhci_plat_priv xhci_plat_renesas_rzv2ma = {
@@ -48,7 +49,7 @@ index 25ce3d78bba8..c7715bbbd4a4 100644
  	{ },
  };
 diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
-index 5ee095a5d38a..c07797c8f3d4 100644
+index 32c039027d7f..f55e4d69fb36 100644
 --- a/drivers/usb/host/xhci-ring.c
 +++ b/drivers/usb/host/xhci-ring.c
 @@ -608,6 +608,8 @@ void xhci_find_new_dequeue_state(struct xhci_hcd *xhci,
@@ -60,7 +61,7 @@ index 5ee095a5d38a..c07797c8f3d4 100644
  	new_seg = ep_ring->deq_seg;
  	new_deq = ep_ring->dequeue;
  
-@@ -1580,12 +1582,15 @@ static void handle_cmd_completion(struct xhci_hcd *xhci,
+@@ -1578,6 +1580,8 @@ static void handle_cmd_completion(struct xhci_hcd *xhci,
  	u32 cmd_type;
  
  	cmd_dma = le64_to_cpu(event->cmd_trb);
@@ -69,14 +70,7 @@ index 5ee095a5d38a..c07797c8f3d4 100644
  	cmd_trb = xhci->cmd_ring->dequeue;
  
  	trace_xhci_handle_command(xhci->cmd_ring, &cmd_trb->generic);
- 
- 	cmd_dequeue_dma = xhci_trb_virt_to_dma(xhci->cmd_ring->deq_seg,
- 			cmd_trb);
-+
- 	/*
- 	 * Check whether the completion event is for our internal kept
- 	 * command.
-@@ -2434,6 +2439,8 @@ static int handle_tx_event(struct xhci_hcd *xhci,
+@@ -2448,6 +2452,8 @@ static int handle_tx_event(struct xhci_hcd *xhci,
  	ep_index = TRB_TO_EP_ID(le32_to_cpu(event->flags)) - 1;
  	trb_comp_code = GET_COMP_CODE(le32_to_cpu(event->transfer_len));
  	ep_trb_dma = le64_to_cpu(event->buffer);
@@ -86,10 +80,10 @@ index 5ee095a5d38a..c07797c8f3d4 100644
  	ep = xhci_get_virt_ep(xhci, slot_id, ep_index);
  	if (!ep) {
 diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
-index b069fe3f8ab0..48e507fd88cc 100644
+index 19914d08fc0d..9126fcb582d5 100644
 --- a/drivers/usb/host/xhci.c
 +++ b/drivers/usb/host/xhci.c
-@@ -5329,6 +5329,23 @@ int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
+@@ -5331,6 +5331,23 @@ int xhci_gen_setup(struct usb_hcd *hcd, xhci_get_quirks_t get_quirks)
  	if (xhci->quirks & XHCI_NO_64BIT_SUPPORT)
  		xhci->hcc_params &= ~BIT(0);
  
@@ -101,36 +95,36 @@ index b069fe3f8ab0..48e507fd88cc 100644
 +	 * the controller can access to over 32-bit address memory region.
 +	 */
 +	if (xhci->quirks & XHCI_USE_EXTENDED_ADDR) {
-+		xhci->hcc_params |= BIT(0);
-+		retval = of_property_read_u64(dev->of_node, "32-bit-extended-addr",
-+					      &xhci->extended_addr);
-+		if (retval) {
-+			xhci_err(xhci, "Miss 32-bit-extended-addr property\n");
-+			return retval;
-+		}
++	        xhci->hcc_params |= BIT(0);
++	        retval = of_property_read_u64(dev->of_node, "32-bit-extended-addr",
++	                                      &xhci->extended_addr);
++	        if (retval) {
++	                xhci_err(xhci, "Miss 32-bit-extended-addr property\n");
++	                return retval;
++	        }
 +	}
 +
  	/* Set dma_mask and coherent_dma_mask to 64-bits,
  	 * if xHC supports 64-bit addressing */
  	if (HCC_64BIT_ADDR(xhci->hcc_params) &&
 diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
-index bb3c362a194b..48aeacac5d8e 100644
+index 6304e9b00ecc..f6f190a0e9ff 100644
 --- a/drivers/usb/host/xhci.h
 +++ b/drivers/usb/host/xhci.h
-@@ -1896,6 +1896,8 @@ struct xhci_hcd {
+@@ -1899,6 +1899,8 @@ struct xhci_hcd {
  #define XHCI_RESET_TO_DEFAULT	BIT_ULL(44)
  #define XHCI_ZHAOXIN_TRB_FETCH	BIT_ULL(45)
  #define XHCI_ZHAOXIN_HOST	BIT_ULL(46)
 +/* For controller needs to use 64 bits extended addresses */
-+#define XHCI_USE_EXTENDED_ADDR	BIT_ULL(47)
++#define XHCI_USE_EXTENDED_ADDR BIT_ULL(47)
  
  	unsigned int		num_active_eps;
  	unsigned int		limit_active_eps;
-@@ -1924,6 +1926,7 @@ struct xhci_hcd {
+@@ -1927,6 +1929,7 @@ struct xhci_hcd {
  	struct list_head	regset_list;
  
  	void			*dbc;
-+	u64			extended_addr;
++	u64                     extended_addr;
  	/* platform-specific data -- must come last */
  	unsigned long		priv[] __aligned(sizeof(s64));
  };

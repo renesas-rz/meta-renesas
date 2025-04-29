@@ -1,7 +1,7 @@
-From cc430129567a3f0d2f2acca1596e2f1a81c6611c Mon Sep 17 00:00:00 2001
+From a67b0746ede6f734daf53f7a07c95c519b4cdf1d Mon Sep 17 00:00:00 2001
 From: Tai Huynh <tai.huynh.cp@renesas.com>
-Date: Fri, 25 Oct 2024 14:53:42 +0700
-Subject: [PATCH 2/3] net: ethernet: renesas: ravb: add code to access over 32
+Date: Tue, 1 Apr 2025 09:46:19 +0700
+Subject: [PATCH 2/2] net: ethernet: renesas: ravb: add code to access over 32
  bits memory region for RZ/V2M
 
 RZ/V2M only supports over 32 bits memory region in Linux.
@@ -15,14 +15,14 @@ before.
 Signed-off-by: Tai Huynh <tai.huynh.cp@renesas.com>
 ---
  drivers/net/ethernet/renesas/ravb.h      |  2 +
- drivers/net/ethernet/renesas/ravb_main.c | 90 ++++++++++++++++++++----
- 2 files changed, 80 insertions(+), 12 deletions(-)
+ drivers/net/ethernet/renesas/ravb_main.c | 86 +++++++++++++++++++++---
+ 2 files changed, 78 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/net/ethernet/renesas/ravb.h b/drivers/net/ethernet/renesas/ravb.h
-index 1abb541a6829..88d47cfd7a37 100644
+index 328a12ec5146..233aa99ec5aa 100644
 --- a/drivers/net/ethernet/renesas/ravb.h
 +++ b/drivers/net/ethernet/renesas/ravb.h
-@@ -1057,6 +1057,8 @@ struct ravb_hw_info {
+@@ -1063,6 +1063,8 @@ struct ravb_hw_info {
  	u32 rx_max_desc_use;
  	u32 rx_desc_size;
  	unsigned aligned_tx: 1;
@@ -32,10 +32,10 @@ index 1abb541a6829..88d47cfd7a37 100644
  	/* hardware features */
  	unsigned internal_delay:1;	/* AVB-DMAC has internal delays */
 diff --git a/drivers/net/ethernet/renesas/ravb_main.c b/drivers/net/ethernet/renesas/ravb_main.c
-index e01f933ff74e..de51534bc965 100644
+index b3838c556060..1d71630c046e 100644
 --- a/drivers/net/ethernet/renesas/ravb_main.c
 +++ b/drivers/net/ethernet/renesas/ravb_main.c
-@@ -210,6 +210,7 @@ ravb_rx_get_desc(struct ravb_private *priv, unsigned int q,
+@@ -292,6 +292,7 @@ ravb_rx_get_desc(struct ravb_private *priv, unsigned int q,
  static int ravb_tx_free(struct net_device *ndev, int q, bool free_txed_only)
  {
  	struct ravb_private *priv = netdev_priv(ndev);
@@ -43,7 +43,7 @@ index e01f933ff74e..de51534bc965 100644
  	struct net_device_stats *stats = &priv->stats[q];
  	unsigned int num_tx_desc = priv->num_tx_desc;
  	struct ravb_tx_desc *desc;
-@@ -231,6 +232,10 @@ static int ravb_tx_free(struct net_device *ndev, int q, bool free_txed_only)
+@@ -313,6 +314,10 @@ static int ravb_tx_free(struct net_device *ndev, int q, bool free_txed_only)
  		size = le16_to_cpu(desc->ds_tagl) & TX_DS;
  		/* Free the original skb. */
  		if (priv->tx_skb[q][entry / num_tx_desc]) {
@@ -54,7 +54,7 @@ index e01f933ff74e..de51534bc965 100644
  			dma_unmap_single(ndev->dev.parent, le32_to_cpu(desc->dptr),
  					 size, DMA_TO_DEVICE);
  			/* Last packet descriptor? */
-@@ -253,6 +258,7 @@ static int ravb_tx_free(struct net_device *ndev, int q, bool free_txed_only)
+@@ -335,6 +340,7 @@ static int ravb_tx_free(struct net_device *ndev, int q, bool free_txed_only)
  static void ravb_rx_ring_free(struct net_device *ndev, int q)
  {
  	struct ravb_private *priv = netdev_priv(ndev);
@@ -62,40 +62,37 @@ index e01f933ff74e..de51534bc965 100644
  	unsigned int ring_size;
  	unsigned int i;
  
-@@ -263,11 +269,19 @@ static void ravb_rx_ring_free(struct net_device *ndev, int q)
- 		struct ravb_rx_desc *desc = ravb_rx_get_desc(priv, q, i);
+@@ -346,10 +352,17 @@ static void ravb_rx_ring_free(struct net_device *ndev, int q)
  
  		if (!dma_mapping_error(ndev->dev.parent,
--				       le32_to_cpu(desc->dptr)))
+ 				       le32_to_cpu(desc->dptr)))
 -			dma_unmap_single(ndev->dev.parent,
 -					 le32_to_cpu(desc->dptr),
 -					 priv->info->rx_max_frame_size,
 -					 DMA_FROM_DEVICE);
-+				       le32_to_cpu(desc->dptr))) {
 +			if (info->use_64_bit_dma)
-+				/* Try 64-bit mask if hardware is capable of it */
-+				dma_unmap_single(ndev->dev.parent,
-+						 info->extended_addr | le32_to_cpu(desc->dptr),
-+						 priv->info->rx_max_frame_size,
-+						 DMA_FROM_DEVICE);
++			        /* Try 64-bit mask if hardware is capable of it */
++			        dma_unmap_single(ndev->dev.parent,
++			                         info->extended_addr | le32_to_cpu(desc->dptr),
++			                         priv->info->rx_max_frame_size,
++			                         DMA_FROM_DEVICE);
 +			else
 +				dma_unmap_single(ndev->dev.parent,
 +						 le32_to_cpu(desc->dptr),
 +						 priv->info->rx_max_frame_size,
 +						 DMA_FROM_DEVICE);
-+		}
  	}
  	ring_size = priv->info->rx_desc_size * (priv->num_rx_ring[q] + 1);
  	dma_free_coherent(ndev->dev.parent, ring_size, priv->rx_ring[q].raw,
-@@ -879,6 +893,7 @@ static int ravb_rx_gbeth(struct net_device *ndev, int budget, int q)
+@@ -981,6 +994,7 @@ static int ravb_rx_gbeth(struct net_device *ndev, int budget, int q)
  static int ravb_rx_rcar(struct net_device *ndev, int budget, int q)
  {
  	struct ravb_private *priv = netdev_priv(ndev);
 +	const struct ravb_hw_info *info = priv->info;
- 	int entry;
  	struct net_device_stats *stats = &priv->stats[q];
  	struct ravb_ex_rx_desc *desc;
-@@ -924,9 +939,14 @@ static int ravb_rx_rcar(struct net_device *ndev, int budget, int q)
+ 	unsigned int limit, i;
+@@ -1026,9 +1040,14 @@ static int ravb_rx_rcar(struct net_device *ndev, int budget, int q)
  
  			skb = priv->rx_skb[q][entry];
  			priv->rx_skb[q][entry] = NULL;
@@ -107,22 +104,13 @@ index e01f933ff74e..de51534bc965 100644
 +			                         priv->info->rx_max_frame_size,
 +			                         DMA_FROM_DEVICE);
 +			else
-+			        dma_unmap_single(ndev->dev.parent, le32_to_cpu(desc->dptr),
-+			                         priv->info->rx_max_frame_size,
-+			                         DMA_FROM_DEVICE);
++				dma_unmap_single(ndev->dev.parent, le32_to_cpu(desc->dptr),
++						 priv->info->rx_max_frame_size,
++						 DMA_FROM_DEVICE);
  			get_ts &= (q == RAVB_NC) ?
  					RAVB_RXTSTAMP_TYPE_V2_L2_EVENT :
  					~RAVB_RXTSTAMP_TYPE_V2_L2_EVENT;
-@@ -1923,7 +1943,7 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	struct ravb_tstamp_skb *ts_skb;
- 	struct ravb_tx_desc *desc;
- 	unsigned long flags;
--	u32 dma_addr;
-+	dma_addr_t dma_addr;
- 	void *buffer;
- 	u32 entry;
- 	u32 len;
-@@ -1977,6 +1997,9 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+@@ -2224,6 +2243,9 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
  
  		desc = &priv->tx_ring[q][entry];
  		desc->ds_tagl = cpu_to_le16(len);
@@ -132,7 +120,7 @@ index e01f933ff74e..de51534bc965 100644
  		desc->dptr = cpu_to_le32(dma_addr);
  
  		buffer = skb->data + len;
-@@ -2045,8 +2068,12 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+@@ -2292,8 +2314,12 @@ static netdev_tx_t ravb_start_xmit(struct sk_buff *skb, struct net_device *ndev)
  	return NETDEV_TX_OK;
  
  unmap:
@@ -140,14 +128,14 @@ index e01f933ff74e..de51534bc965 100644
 -			 le16_to_cpu(desc->ds_tagl), DMA_TO_DEVICE);
 +	if (info->use_64_bit_dma) /* Try 64-bit mask if hardware is capable of it */
 +	        dma_unmap_single(ndev->dev.parent, info->extended_addr | le32_to_cpu(desc->dptr),
-+			le16_to_cpu(desc->ds_tagl), DMA_TO_DEVICE);
++	                le16_to_cpu(desc->ds_tagl), DMA_TO_DEVICE);
 +	else
 +	        dma_unmap_single(ndev->dev.parent, le32_to_cpu(desc->dptr),
-+			le16_to_cpu(desc->ds_tagl), DMA_TO_DEVICE);
++	                le16_to_cpu(desc->ds_tagl), DMA_TO_DEVICE);
  drop:
  	dev_kfree_skb_any(skb);
  	priv->tx_skb[q][entry / num_tx_desc] = NULL;
-@@ -2511,6 +2538,30 @@ static const struct ravb_hw_info ravb_rzv2m_hw_info = {
+@@ -2800,6 +2826,31 @@ static const struct ravb_hw_info ravb_rzv2m_hw_info = {
  	.gptp_ref_clk = 1,
  	.nc_queues = 1,
  	.magic_pkt = 1,
@@ -157,6 +145,7 @@ index e01f933ff74e..de51534bc965 100644
 +static const struct ravb_hw_info ravb_rzv2ma_hw_info = {
 +        .receive = ravb_rx_rcar,
 +        .set_rate = ravb_set_rate_rcar,
++        .set_flowctrl = ravb_set_flowctrl_rcar,
 +        .set_feature = ravb_set_features_rcar,
 +        .dmac_init = ravb_dmac_init_rcar,
 +        .emac_init = ravb_emac_init_rcar,
@@ -178,7 +167,7 @@ index e01f933ff74e..de51534bc965 100644
  };
  
  static const struct ravb_hw_info gbeth_hw_info = {
-@@ -2546,7 +2597,7 @@ static const struct of_device_id ravb_match_table[] = {
+@@ -2836,7 +2887,7 @@ static const struct of_device_id ravb_match_table[] = {
  	{ .compatible = "renesas,etheravb-r8a7795", .data = &ravb_gen3_hw_info },
  	{ .compatible = "renesas,etheravb-rcar-gen3", .data = &ravb_gen3_hw_info },
  	{ .compatible = "renesas,etheravb-rzv2m", .data = &ravb_rzv2m_hw_info },
@@ -187,7 +176,7 @@ index e01f933ff74e..de51534bc965 100644
  	{ .compatible = "renesas,rzg2l-gbeth", .data = &gbeth_hw_info },
  	{ }
  };
-@@ -2674,6 +2725,21 @@ static int ravb_probe(struct platform_device *pdev)
+@@ -2956,6 +3007,21 @@ static int ravb_probe(struct platform_device *pdev)
  
  	info = of_device_get_match_data(&pdev->dev);
  
