@@ -6,7 +6,7 @@ UBOOT_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https"
 UBOOT_BRANCH = "v2021.10/rz"
 UBOOT_REV ?= "5141064c1552accaf69c6f509bf21b2063b9cff5"
 
-PV = "v2021.10+git${SRCPV}"
+PV = "2021.10+git${SRCPV}"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
