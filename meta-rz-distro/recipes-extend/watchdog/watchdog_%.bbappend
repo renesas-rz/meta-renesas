@@ -1,0 +1,2 @@
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/:"
+SYSTEMD_AUTO_ENABLE = "enable"
