@@ -1,7 +1,7 @@
 header:
   version: 14
 
-distro: rz-vlp
+distro: rz-bsp-plus
 
 build_system: openembedded
 
@@ -58,3 +58,6 @@ local_conf_header:
 
     # Additional image features
     USER_CLASSES ?= "buildstats"
+
+    # Kernel version 6.12 for bsp plus
+    PREFERRED_VERSION_linux-renesas = "6.12%"
