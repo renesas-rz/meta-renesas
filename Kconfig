@@ -132,3 +132,28 @@ menu "Features"
 	depends on FEATURE_CODECS
 	default "kas/features/codecs.yml"
 endmenu
+
+menu "Misc"
+	config KERNEL_REALTIME
+	bool "Kernel-realtime"
+	default n
+	help
+		Choose realtime characteristic of Linux kernel to build with.
+
+	config KAS_INCLUDE_KERNEL_REALTIME
+	string
+	depends on KERNEL_REALTIME
+	default "kas/misc/kernel-rt.yml"
+
+	config DOCKER
+	bool "Docker"
+	depends on !KERNEL_REALTIME
+	default n
+	help
+		Enable the Docker Engine to build with.
+
+	config KAS_INCLUDE_DOCKER
+	string
+	depends on DOCKER
+	default "kas/misc/docker.yml"
+endmenu

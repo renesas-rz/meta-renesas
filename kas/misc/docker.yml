@@ -1,0 +1,16 @@
+header:
+  version: 14
+
+repos:
+  meta-virtualization:
+    url: https://git.yoctoproject.org/meta-virtualization/
+    # scarthgap
+    commit: 9287a355b338361e42027ce371444111a791d64f
+  meta-openembedded:
+    layers:
+      meta-filesystems:
+      meta-networking:
+
+local_conf_header:
+  docker_config: |
+    DISTRO_FEATURES:append = " virtualization docker"
