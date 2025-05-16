@@ -9,7 +9,7 @@ KCONFIG_MODE ?= "alldefconfig"
 
 KERNEL_URL ?= "git://github.com/renesas-rz/rz_linux-cip.git"
 KERNEL_BRANCH ?= "rz-6.1-cip28-rt15"
-KERNEL_REV ?= "31afb5c0b41f7ea3580ee6614d6a88e1e3bb7317"
+KERNEL_REV ?= "915f71bde65016eca8604fe8e9cf3b75bd42923c"
 
 # These patches are for reference only. They are preliminary.
 SRC_URI:append = " \
