@@ -4,7 +4,7 @@ COMPATIBLE_MACHINE = "(rzg2l-family)"
 
 UBOOT_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https"
 UBOOT_BRANCH = "v2021.10/rz"
-UBOOT_REV ?= "5141064c1552accaf69c6f509bf21b2063b9cff5"
+UBOOT_REV ?= "b105c304da659417de099e50af1a0fce7aa85164"
 
 PV = "2021.10+git${SRCPV}"
 
