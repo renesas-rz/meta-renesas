@@ -6,7 +6,7 @@ SRC_URI:append = " \
     file://gstpbfilter.conf \
     git://github.com/renesas-rz/gst-plugins-base.git;branch=RZ/1.22.12;protocol=https \
 "
-SRCREV = "974ad5fc46b36290a4da979b2424ce61d6b5ad78"
+SRCREV = "d3c3dbadd270621c3b1cc9df5d4e6c98f8c135ff"
 
 S  = "${WORKDIR}/git"
 
