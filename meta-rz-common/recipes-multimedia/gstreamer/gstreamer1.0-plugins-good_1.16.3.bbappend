@@ -8,6 +8,7 @@ SRC_URI_append = " \
 SRCREV_base = "34a8bf145506eca37291c8e72ab09fa0b5eb6149"
 
 DEPENDS += "mmngrbuf-user-module"
+RDEPENDS_${PN} += "mmngrbuf-user-module"
 
 S = "${WORKDIR}/git"
 

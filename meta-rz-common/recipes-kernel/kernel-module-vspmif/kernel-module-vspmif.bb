@@ -12,6 +12,7 @@ require include/rz-modules-common.inc
 DEPENDS = "linux-renesas kernel-module-vspm"
 PN = "kernel-module-vspmif"
 PR = "r0"
+RDEPENDS_${PN} = "kernel-module-vspm"
 
 VSPMIF_DRV_URL = " \
     git://github.com/renesas-rcar/vspmif_drv.git"

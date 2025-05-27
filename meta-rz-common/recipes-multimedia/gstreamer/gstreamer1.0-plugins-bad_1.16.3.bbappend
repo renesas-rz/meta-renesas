@@ -33,6 +33,7 @@ do_configure_prepend() {
     cd ${B}
 }
 
+RDEPENDS_${PN} += "mmngr-user-module mmngrbuf-user-module"
 RDEPENDS_gstreamer1.0-plugins-bad-bayersink += "bayer2raw"
 RDEPENDS_gstreamer1.0-plugins-bad-bayerconvert += "bayer2raw"
 

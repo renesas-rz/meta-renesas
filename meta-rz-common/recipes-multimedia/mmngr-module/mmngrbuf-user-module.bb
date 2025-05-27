@@ -5,6 +5,7 @@ require include/rz-path-common.inc
 DEPENDS = "kernel-module-mmngrbuf"
 PN = "mmngrbuf-user-module"
 PR = "r0"
+RDEPENDS_${PN} = "kernel-module-mmngrbuf"
 
 S = "${WORKDIR}/git/libmmngr/mmngrbuf"
 

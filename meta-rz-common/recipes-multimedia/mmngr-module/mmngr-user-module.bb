@@ -5,6 +5,7 @@ require include/rz-path-common.inc
 DEPENDS = "kernel-module-mmngr"
 PN = "mmngr-user-module"
 PR = "r0"
+RDEPENDS_${PN} = "kernel-module-mmngr"
 
 S = "${WORKDIR}/git/libmmngr/mmngr"
 
