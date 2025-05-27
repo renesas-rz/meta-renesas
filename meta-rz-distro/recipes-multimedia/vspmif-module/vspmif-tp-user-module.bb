@@ -5,6 +5,7 @@ require vspmif.inc
 DEPENDS = "vspmif-user-module mmngr-user-module"
 PN = "vspmif-tp-user-module"
 PR = "r0"
+RDEPENDS:${PN} = "vspmif-user-module mmngr-user-module"
 
 S = "${WORKDIR}/git"
 VSPMIF_TP_DIR = "vspm_if-tp-user/files/vspm_if"

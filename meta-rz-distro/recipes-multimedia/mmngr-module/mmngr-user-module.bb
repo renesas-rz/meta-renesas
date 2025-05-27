@@ -4,6 +4,7 @@ require mmngr_lib.inc
 DEPENDS = "kernel-module-mmngr"
 PN = "mmngr-user-module"
 PR = "r0"
+RDEPENDS:${PN} = "kernel-module-mmngr"
 
 S = "${WORKDIR}/git/libmmngr/mmngr"
 

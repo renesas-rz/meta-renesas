@@ -5,6 +5,7 @@ require vspmif.inc
 DEPENDS = "kernel-module-vspmif mmngr-user-module"
 PN = "vspmif-user-module"
 PR = "r0"
+RDEPENDS:${PN} = "kernel-module-vspmif mmngr-user-module"
 
 S = "${WORKDIR}/git"
 VSPMIF_LIB_DIR = "vspm_if-module/files/vspm_if"
