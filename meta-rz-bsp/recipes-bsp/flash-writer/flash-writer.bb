@@ -5,6 +5,7 @@ LIC_FILES_CHKSUM ?= "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0e
 
 PV:rzg2l-family = "1.08+git${SRCPV}"
 PV:rzg3s-family = "0127"
+PV:rzg3l-family = "1.0"
 PV ?= "0.90"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -32,6 +33,8 @@ SRC_URI:rzt2h-family = " \
 	file://HDR_NM \
 "
 
+SRC_URI:smarc-rzg3l = "file://Flash_Writer_SCIF_RZG3L_SMARC_LPDDR4.mot"
+
 inherit deploy
 
 S:rzg2l-family = "${WORKDIR}/git"
@@ -40,6 +43,7 @@ S:rzv2h-family = "${WORKDIR}"
 S:rzv2n-family = "${WORKDIR}"
 S:rzg3s-family = "${WORKDIR}/${BPN}"
 S:rzt2h-family = "${WORKDIR}"
+S:rzg3l-family = "${WORKDIR}"
 PMIC_BUILD_DIR = "${S}/build_pmic"
 
 do_compile:rzg2l-family() {
@@ -93,6 +97,11 @@ do_deploy:append:rzt2h-family() {
 	# Copy Flash-writer binaries to deploy folder
 	install -m 0644  ${S}/Flash_Programmer_SCIF_CR52_RZT2H_EVK.mot ${DEPLOYDIR}
 	install -m 0644  ${S}/HDR_NM ${DEPLOYDIR}
+}
+
+do_deploy:append:rzg3l-family() {
+	install -d ${DEPLOYDIR}
+	install -m 755 ${S}/Flash_Writer_SCIF_RZG3L_SMARC_LPDDR4.mot ${DEPLOYDIR}
 }
 
 PARALLEL_MAKE = "-j 1"
