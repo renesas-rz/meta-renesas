@@ -1,0 +1,54 @@
+From 36eddaa81bbd958c97271b457ec69de3735f2dc5 Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 3 Jun 2025 22:59:28 +0700
+Subject: [PATCH] mmngr-module: mmngr_drv: Change return type of mm_cnv_addr
+ from void to int
+
+This commit allows user space to detect errors when converting virtual
+addresses to physical addresses.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ .../mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c    | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+index d7c0df5..698c31f 100644
+--- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
++++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
+@@ -841,7 +841,7 @@ static int mm_ioc_share(int __user *in, struct MM_PARAM *out)
+ }
+ 
+ /* change virtual address to physical address */
+-static void mm_cnv_addr(struct MM_PARAM *tmp)
++static int mm_cnv_addr(struct MM_PARAM *tmp)
+ {
+ 	struct vm_area_struct *vma;
+ 	struct mm_struct *mm = current->mm;
+@@ -863,7 +863,7 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
+ 	follow_pfnmap_end(&args);
+ 	mmap_read_unlock(mm);
+ 
+-	return;
++	return ret;
+ }
+ 
+ static void mmngr_dev_set_cma_area(struct device *dev, struct cma *cma)
+@@ -1004,8 +1004,13 @@ static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 			struct MM_PARAM temp;
+ 
+ 			mm_ioc_set((int __user *) arg, &temp);
+-			mm_cnv_addr(&temp);
++			ercd = mm_cnv_addr(&temp);
+ 			mm_ioc_get(&temp, (int __user *)arg);
++			if (ercd) {
++				dev_err(mm_dev, "MMD CONVERT error %d\n", ercd);
++				ret = ercd;
++				goto exit;
++			}
+ 			break;
+ 		}
+ 	default:
+-- 
+2.25.1
+
