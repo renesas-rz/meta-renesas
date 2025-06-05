@@ -1,0 +1,8 @@
+[Unit]
+Description=CRU initializing setting
+
+[Service]
+ExecStart=/root/v4l2-init.sh
+
+[Install]
+WantedBy=multi-user.target
