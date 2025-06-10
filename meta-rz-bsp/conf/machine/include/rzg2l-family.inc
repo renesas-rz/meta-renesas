@@ -2,7 +2,7 @@ require conf/machine/include/soc-family.inc
 SOC_FAMILY = "rzg2l-family:mali-family"
 
 # Machine configuration
-MACHINE_FEATURES = "opengles opencl"
+MACHINE_FEATURES = "opengles opencl can alsa"
 
 IMAGE_FSTYPES:append = " tar.bz2 ext4"
 
