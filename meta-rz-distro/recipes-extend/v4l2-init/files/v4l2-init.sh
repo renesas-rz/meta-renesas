@@ -49,17 +49,10 @@ if [ -z "$csi2" ]; then
     exit 1
 fi
 
-if [ -z "$ip" ]; then
-    media-ctl -d /dev/media0 -l "'${csi2}':1 -> 'CRU output':0 [1]"
-    media-ctl -d /dev/media0 -V "'${csi2}':1 [fmt:UYVY8_2X8/$ov5645_res field:none]"
-    media-ctl -d /dev/media0 -V "'ov5645 0-003c':0 [fmt:UYVY8_2X8/$ov5645_res field:none]"
-    echo "Linked CRU/CSI2 to ov5645 0-003c with format UYVY8_2X8 and resolution $ov5645_res"
-else
     media-ctl -d /dev/media0 -l "'${csi2}':1 -> '${ip}':0 [1]"
     media-ctl -d /dev/media0 -l "'${ip}':1 -> 'CRU output':0 [1]"
-    media-ctl -d /dev/media0 -V "'${csi2}':1 [fmt:UYVY8_2X8/$ov5645_res field:none]"
-    media-ctl -d /dev/media0 -V "'ov5645 0-003c':0 [fmt:UYVY8_2X8/$ov5645_res field:none]"
-    media-ctl -d /dev/media0 -V "'${ip}':0 [fmt:UYVY8_2X8/$ov5645_res field:none]"
-    media-ctl -d /dev/media0 -V "'${ip}':1 [fmt:UYVY8_2X8/$ov5645_res field:none]"
-    echo "Linked CRU/CSI2 to ov5645 0-003c with format UYVY8_2X8 and resolution $ov5645_res"
-fi
+    media-ctl -d /dev/media0 -V "'${csi2}':1 [fmt:UYVY8_1X16/$ov5645_res field:none]"
+    media-ctl -d /dev/media0 -V "'ov5645 0-003c':0 [fmt:UYVY8_1X16/$ov5645_res field:none]"
+    media-ctl -d /dev/media0 -V "'${ip}':0 [fmt:UYVY8_1X16/$ov5645_res field:none]"
+    media-ctl -d /dev/media0 -V "'${ip}':1 [fmt:UYVY8_1X16/$ov5645_res field:none]"
+    echo "Linked CRU/CSI2 to ov5645 0-003c with format UYVY8_1X16 and resolution $ov5645_res"
