@@ -13,3 +13,6 @@ KERNEL_DEVICETREE ?= " \
 	renesas/r9a09g047e57-smarc.dtb \
 	renesas/r9a09g047e57-dev.dtb \
 "
+
+# flash writer
+EXTRA_IMAGEDEPENDS += " flash-writer"
