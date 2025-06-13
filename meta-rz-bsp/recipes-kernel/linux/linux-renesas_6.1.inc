@@ -14,4 +14,5 @@ SRC_URI:append = " \
 	file://0002-arm64-defconfig-enable-LVDS-and-IT6263-LVSD-to-HDMI-.patch \
 	file://0003-arm64-dts-renesas-rzg3e-smarc-lvds-add-macro-to-sele.patch \
 	file://0004-arm64-dts-renesas-r9a09g047e54-smarc-enable-LVDS-sup.patch \
+	file://0005-gpu-drm-bridge-Support-S2R-ITE-it6263.patch \
 "

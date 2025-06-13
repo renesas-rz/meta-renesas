@@ -1,0 +1,125 @@
+From 85e26992512b19919e6f3660494b00181a4ce387 Mon Sep 17 00:00:00 2001
+From: Nghia Vo <nghia.vo.zn@renesas.com>
+Date: Tue, 20 May 2025 19:23:55 +0700
+Subject: [PATCH 5/5] gpu: drm: bridge: Support S2R ITE it6263
+
+Adds PM suspend/resume callbacks.
+
+Signed-off-by: Nghia Vo <nghia.vo.zn@renesas.com>
+---
+ drivers/gpu/drm/bridge/ite-it6263.c | 75 ++++++++++++++++++++---------
+ 1 file changed, 53 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/gpu/drm/bridge/ite-it6263.c b/drivers/gpu/drm/bridge/ite-it6263.c
+index 216e7665f996..84f3e43e3bf1 100644
+--- a/drivers/gpu/drm/bridge/ite-it6263.c
++++ b/drivers/gpu/drm/bridge/ite-it6263.c
+@@ -622,6 +622,38 @@ static inline u8 it6263_out_map(struct device_node *np)
+ 	return ret;
+ }
+ 
++static int it6263_init(struct it6263 *it6263)
++{
++	int ret;
++
++	it6263_reset(it6263);
++
++	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_SW_RST, HDMI_RST_ALL);
++	if (ret)
++		return ret;
++
++	usleep_range(1000, 2000);
++
++	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_LVDS_PORT,
++			   LVDS_INPUT_CTRL_I2C_ADDR << 1);
++	if (ret)
++		return ret;
++
++	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_LVDS_PORT_EN, 0x01);
++	if (ret)
++		return ret;
++
++	/* select HDMI bank0 */
++	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_BANK_CTRL, BANK_SEL(0));
++	if (ret)
++		return ret;
++
++	it6263_lvds_config(it6263);
++	it6263_hdmi_config(it6263);
++
++	return 0;
++}
++
+ static int it6263_probe(struct i2c_client *client,
+ 			const struct i2c_device_id *id)
+ {
+@@ -667,31 +699,10 @@ static int it6263_probe(struct i2c_client *client,
+ 		goto unregister_lvds_i2c;
+ 	}
+ 
+-	it6263_reset(it6263);
+-
+-	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_SW_RST, HDMI_RST_ALL);
++	ret = it6263_init(it6263);
+ 	if (ret)
+ 		goto unregister_lvds_i2c;
+ 
+-	usleep_range(1000, 2000);
+-
+-	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_LVDS_PORT,
+-			   LVDS_INPUT_CTRL_I2C_ADDR << 1);
+-	if (ret)
+-		goto unregister_lvds_i2c;
+-
+-	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_LVDS_PORT_EN, 0x01);
+-	if (ret)
+-		goto unregister_lvds_i2c;
+-
+-	/* select HDMI bank0 */
+-	ret = regmap_write(it6263->hdmi_regmap, HDMI_REG_BANK_CTRL, BANK_SEL(0));
+-	if (ret)
+-		goto unregister_lvds_i2c;
+-
+-	it6263_lvds_config(it6263);
+-	it6263_hdmi_config(it6263);
+-
+ 	it6263->bridge.funcs = &it6263_bridge_funcs;
+ 	it6263->bridge.of_node = np;
+ 	it6263->bridge.ops = DRM_BRIDGE_OP_DETECT | DRM_BRIDGE_OP_EDID;
+@@ -716,6 +727,25 @@ static void it6263_remove(struct i2c_client *client)
+ 	i2c_unregister_device(it6263->lvds_i2c);
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int it6263_pm_suspend(struct device *dev)
++{
++	return 0;
++}
++
++static int it6263_pm_resume(struct device *dev)
++{
++	struct i2c_client *i2c = to_i2c_client(dev);
++	struct it6263 *it6263 = i2c_get_clientdata(i2c);
++
++	return it6263_init(it6263);
++}
++#endif
++
++static const struct dev_pm_ops it6263_pm_ops = {
++	SET_SYSTEM_SLEEP_PM_OPS(it6263_pm_suspend, it6263_pm_resume)
++};
++
+ static const struct of_device_id it6263_dt_ids[] = {
+ 	{ .compatible = "ite,it6263" },
+ 	{ }
+@@ -732,6 +762,7 @@ static struct i2c_driver it6263_driver = {
+ 	.driver = {
+ 		.name = "it6263",
+ 		.of_match_table = it6263_dt_ids,
++		.pm = &it6263_pm_ops,
+ 	},
+ 	.probe = it6263_probe,
+ 	.remove = it6263_remove,
+-- 
+2.25.1
+
