@@ -34,7 +34,7 @@ index 7ea5b6d..8b26633 100644
  
  	/* Do exit kthread */
 -	do_exit(FW_OK);
-+	kthread_complete_and_exit(&rcv_msg->reply.comp, FW_OK);
++	kthread_complete_and_exit(NULL, FW_OK);
  	return FW_OK;
  }
  
