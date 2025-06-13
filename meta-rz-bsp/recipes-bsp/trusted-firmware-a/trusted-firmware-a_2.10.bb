@@ -7,11 +7,10 @@ PV = "2.10+git${SRCPV}"
 
 S = "${WORKDIR}/git"
 
-TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=https"
-TFA_REV ?= "1388d7f30cc76fdfc2adc17bea35cba20f03a322"
-TFA_BRANCH ?= "2.10.5/rz_main"
+TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=https;nobranch=1"
+TFA_REV ?= "14edb76fc287f360812eb0cc820a2a60265bebcc"
 
-SRC_URI = "${TFA_URI};branch=${TFA_BRANCH}"
+SRC_URI = "${TFA_URI}"
 SRCREV = "${TFA_REV}"
 
 BUILD_DIR = "${B}/${TFA_PLATFORM}"
