@@ -4,7 +4,6 @@ This is a Yocto build layer(version:scarthgap) that provides support for the RZ/
 Currently the following boards and MPUs are supported:
 
 - Board: RZG2L SMARC Evaluation Kit / MPU: R9A07G044L (RZ/G2L)
-- Board: RZG2LC SMARC Evaluation Kit / MPU: R9A07G044C (RZ/G2LC)
 
 ## Patches
 
@@ -53,13 +52,13 @@ Graphic drivers are required for Wayland. Multimedia drivers are optional.
 After downloading the proprietary package, please decompress them then put meta-rz-features folder at $WORK directory,
 alongside poky, meta-arm, etc. (e.g., $WORK/meta-rz-features).
 
-Below is an example of VLP (Verified Linux Package) versions and their corresponding tags in the meta-renesas repository.
+Below is an example of BSP (Board Support Package Plus) versions and their corresponding tags in the meta-renesas repository.
 
-| VLP Version | Tag        | Notes           |
-| :---------- | :--------- | :-------------- |
-| 4.0.0       | BSP-v4.0.0 | Initial version |
+| BSP-Plus Version | Tag            | Notes           |
+| :--------------- | :------------- | :-------------- |
+| 1.0.0            | BSP-Plus-1.0.0 | Initial version |
 
-**Note on Versioning:** The VLP versioning scheme indicates that higher numbers represent newer releases (e.g., VLP v4.2.0 is newer than VLP v4.0.0).
+**Note on Versioning:** The BSP versioning scheme indicates that higher numbers represent newer releases (e.g., BSP-Plus-1.0.1 is newer than BSP-Plus-1.0.0)
 
 
 You can obtain the complete Yocto build environment from Renesas, or download the public Yocto Project source layers to prepare the build environment as shown below. Ensure you checkout the specific revisions listed in the "Dependencies" section.
@@ -93,20 +92,16 @@ You can obtain the complete Yocto build environment from Renesas, or download th
 
 Replace the \<tag\> with the latest tag. 
 
-The BSP can be built default normally: copy the template files to build folder, manually modifying *bblayer.conf*, *local.conf*
+The BSP can be built default normally: copy the template files to build folder, manually modifying *bblayer.conf.sample*, *local.conf.sample* and remove ".sample" suffix
 files then using bitbake to build the image. Or you can do the steps below:
 
 - Initialize a build using the 'oe-init-build-env' script in Poky and point TEMPLATECONF to platform conf path. e.g.:
    ```bash
-   $ TEMPLATECONF=$PWD/meta-renesas/meta-rz-distro/conf/templates/rz-conf/ source poky/oe-init-build-env build
+   $ TEMPLATECONF=$PWD/meta-renesas/meta-rz-distro/conf/templates/rz-bsp-plus-conf/ source poky/oe-init-build-env build
    ```
 
-- To build optional features (Docker, Codec, or Graphics), you can use "bitbake-layers add-layer" from within the build directory:
+- To build optional features (Codec, or Graphics), you can use "bitbake-layers add-layer" from within the build directory:
    ```bash
-   # For Docker
-   $ bitbake-layers add-layer ../meta-openembedded/meta-networking
-   $ bitbake-layers add-layer ../meta-openembedded/meta-filesystems
-   $ bitbake-layers add-layer ../meta-virtualization
 
    # For Codec (requires meta-rz-features, see "Download Proprietary Drivers")
    $ bitbake-layers add-layer ../meta-rz-features/meta-rz-codecs
@@ -128,7 +123,6 @@ Example: MACHINE=smarc-rzg2l bitbake core-image-weston
 | Renesas MPU | Platform |    Board     |
 | :---------: | :------: | :----------: |
 |   RZ/G2L    |  rzg2l   | smarc-rzg2l  |
-|   RZ/G2LC   |  rzg2lc  | smarc-rzg2lc |
 
 After completing the images for the target machine will be available in the output
 directory _'tmp/deploy/images/\<board name\>'_.
@@ -151,13 +145,13 @@ Use bitbake -c populate_sdk for generating the toolchain SDK. For example, to bu
 ```
 The SDK installer script can be found in the output directory _'tmp/deploy/sdk'_
 
-It will be named similarly to: _'rz-vlp-glibc-x86_64-core-image-weston-cortexa55-<board-name>-toolchain-<version>.sh'_
+It will be named similarly to: _'rz-bsp-plus-glibc-x86_64-core-image-weston-cortexa55-smarc-rzg2l-toolchain-5.0.8.sh'_
 
 **Usage of toolchain SDK:**
 Install the SDK to the default location: _/opt/poky/<version>_
 For 64-bit target SDK:
 ```bash
-    $ sh rz-vlp-glibc-x86_64-core-image-weston-cortexa55-smarc-rzg2l-toolchain-5.0.8.sh
+    $ sh rz-bsp-plus-glibc-x86_64-core-image-weston-cortexa55-smarc-rzg2l-toolchain-5.0.8.sh
 ```
 
 To use the 64-bit application development environment, source the environment script (adjust path if you installed elsewhere or if <version> differs):
@@ -167,16 +161,7 @@ To use the 64-bit application development environment, source the environment sc
 
 ### Build configs
 
-It is possible to change some build configs by modifying your _local.conf_ file (usually $WORK/build/conf/local.conf):
-* **Realtime Linux:** To build with the PREEMPT_RT Linux kernel, add or modify the following line in _local.conf_:
-  ```
-  PREFERRED_PROVIDER_virtual/kernel = "linux-renesas-rt"
-  ```
-
-* **Docker:** To include Docker support in your image, ensure the following line is present and uncommented in _local.conf_:
-  ```
-  DISTRO_FEATURES:append = " virtualization docker"
-  ```
+Currently, No build configuration has been added.
 
 ## Using kas tool to build BSP
 
@@ -255,7 +240,7 @@ The kas menu command targets a _Kconfig_ file in the folder _meta-renesas_.
     $ kas menu meta-renesas/Kconfig
 ```
 
-When the menu appears, continue to select the expected configuration(machine, image, docker option...).
+When the menu appears, continue to select the expected configuration(machine, image, multimedia package option...).
 Then push "Save & Build" button to save the current configuration and build the image. The defaut build folder is
 *${KAS_WORK_DIR}/build*.
 
