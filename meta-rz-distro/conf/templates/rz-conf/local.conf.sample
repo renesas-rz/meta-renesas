@@ -281,6 +281,7 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 LICENSE_FLAGS_ACCEPTED = " \
         commercial_gstreamer1.0-plugins-ugly commercial_mpeg2dec \
         commercial_gst-plugins-bad commercial_faad2 commercial_faac \
+        commercial_gstreamer1.0-omx \
 "
 
 #
