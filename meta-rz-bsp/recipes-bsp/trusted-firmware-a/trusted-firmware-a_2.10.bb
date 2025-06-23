@@ -16,12 +16,6 @@ SRCREV = "${TFA_REV}"
 BUILD_DIR = "${B}/${TFA_PLATFORM}"
 BUILD_DIR .= "/${@'debug' if d.getVar("TFA_DEBUG") == '1' else 'release'}"
 
-do_compile:prepend() {
-	# This is still needed to have the native tools executing properly by
-	# setting the RPATH
-	sed -i '/^LDLIBS/ s,$, \$\{BUILD_LDFLAGS},' ${S}/tools/fiptool/Makefile
-}
-
 do_deploy[noexec] = "1"
 
 EXTRA_OEMAKE:append = " PLAT_SYSTEM_SUSPEND=1"
