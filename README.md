@@ -3,29 +3,30 @@
 This is a Yocto build layer(version:dunfell) that provides support for the RZ/G1 Group of 32bit Arm-based MPUs; RZ/G2, RZ/G3 Groups of 64bit Arm-based MPUs and RZ/Five 64bit RISC-V based MPU from Renesas Electronics.
 Currently the following boards and MPUs are supported:
 
-- Board: iWave RZ/G1H-PF Qseven Development Platform R2.1 / MPU: R8A7742 (RZ/G1H)
-- Board: iWave RZ/G1M-PF Qseven Development Platform R2.0 / MPU: R8A7743 (RZ/G1M)
-- Board: iWave RZ/G1N-PF Qseven Development Platform R3.4 / MPU: R8A7744 (RZ/G1N)
-- Board: iWave RZ/G1E-PF SODIMM Development Platform R3.1 / MPU: R8A7745 (RZ/G1E)
-- Board: iWave RZ/G1C-PF Pi SBC Development Platform R2.0 / MPU: R8A77470 (RZ/G1C)
-- Board: EK874 / MPU: R8A774C0 (RZ/G2E)
-- Board: HIHOPE-RZG2M / MPU: R8A774A1 (RZ/G2M v1.3) and R8A774A3 (RZ/G2M v3.0)
-- Board: HIHOPE-RZG2N / MPU: R8A774B1 (RZG2N)
-- Board: HIHOPE-RZG2H / MPU: R8A774E1 (RZG2H)
-- Board: RZG2L SMARC Evaluation Kit / MPU: R9A07G044L (RZ/G2L)
-- Board: RZG2L Development Evaluation Kit / MPU: R9A07G044L (RZ/G2L)
-- Board: RZG2LC SMARC Evaluation Kit / MPU: R9A07G044C (RZ/G2LC)
-- Board: RZG2LC Development Evaluation Kit / MPU: R9A07G044C (RZ/G2L)
-- Board: RZG2UL SMARC Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
-- Board: RZG2UL Development Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
-- Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
-- Board: RZV2L Development Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
-- Board: CSM Solution RZV2M Evaluation Board Kit / MPU: R9A09G011GBG (RZ/V2M)
-- Board: Shimafuji Electric RZV2MA Evaluation Board Kit / MPU: R9A09G055MA3GBG (RZ/V2MA)
-- Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
-- Board: RZFive SMARC Evaluation Kit / MPU: R9A07G043F (RZ/Five)
-- Board: RZG3S SMARC Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
-- Board: RZG3S Development Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
+| **Board**                                            | **MPU**                                        |
+|------------------------------------------------------|------------------------------------------------|
+| iWave RZ/G1H-PF Qseven Development Platform R2.1     | R8A7742 (RZ/G1H)                               |
+| iWave RZ/G1M-PF Qseven Development Platform R2.0     | R8A7743 (RZ/G1M)                               |
+| iWave RZ/G1N-PF Qseven Development Platform R3.4     | R8A7744 (RZ/G1N)                               |
+| iWave RZ/G1E-PF SODIMM Development Platform R3.1     | R8A7745 (RZ/G1E)                               |
+| iWave RZ/G1C-PF Pi SBC Development Platform R2.0     | R8A77470 (RZ/G1C)                              |
+| EK874                                                | R8A774C0 (RZ/G2E)                              |
+| HIHOPE-RZG2M                                         | R8A774A1 (RZ/G2M v1.3), R8A774A3 (RZ/G2M v3.0) |
+| HIHOPE-RZG2N                                         | R8A774B1 (RZ/G2N)                              |
+| HIHOPE-RZG2H                                         | R8A774E1 (RZ/G2H)                              |
+| RZ/G2L SMARC Evaluation Kit                          | R9A07G044L (RZ/G2L)                            |
+| RZ/G2L Development Evaluation Kit                    | R9A07G044L (RZ/G2L)                            |
+| RZ/G2LC SMARC Evaluation Kit                         | R9A07G044C (RZ/G2LC)                           |
+| RZ/G2LC Development Evaluation Kit                   | R9A07G044C (RZ/G2LC)                           |
+| RZ/G2UL SMARC Evaluation Kit                         | R9A07G043U (RZ/G2UL)                           |
+| RZ/G2UL Development Evaluation Kit                   | R9A07G043U (RZ/G2UL)                           |
+| RZ/V2L SMARC Evaluation Kit                          | R9A07G054L (RZ/V2L)                            |
+| RZ/V2L Development Evaluation Kit                    | R9A07G054L (RZ/V2L)                            |
+| CSM Solution RZ/V2M Evaluation Board Kit             | R9A09G011GBG (RZ/V2M)                          |
+| Shimafuji Electric RZ/V2MA Evaluation Board Kit      | R9A09G055MA3GBG (RZ/V2MA)                      |
+| RZ/Five SMARC Evaluation Kit                         | R9A07G043F (RZ/Five)                           |
+| RZ/G3S SMARC Evaluation Kit                          | R9A08G045 (RZ/G3S)                             |
+| RZ/G3S Development Evaluation Kit                    | R9A08G045 (RZ/G3S)                             |
 
 ## Patches
 
@@ -77,8 +78,12 @@ Below git configuration is required:
 Download proprietary graphics and multimedia drivers from Renesas.
 To download Multimedia and Graphics library and related Linux drivers, please use the following link:
 
-    English: https://www.renesas.com/us/en/products/microcontrollers-microprocessors/rz-mpus/rzg-linux-platform/rzg-marketplace/verified-linux-package/rzg-verified-linux-package
-    Japanese: https://www.renesas.com/jp/ja/products/microcontrollers-microprocessors/rz-mpus/rzg-linux-platform/rzg-marketplace/verified-linux-package/rzg-verified-linux-package
+- **English**:
+  https://www.renesas.com/en/software-tool/rzv-verified-linux-package#Download
+
+- **Japanese**:
+  https://www.renesas.com/ja/software-tool/rzv-verified-linux-package#Download
+
 
 Please choose correct packages that matches with your MPU.
 Graphic drivers are required for Wayland. Multimedia drivers are optional.
@@ -91,9 +96,9 @@ Below is the combination of Codec/Graphics library with BSP released versions:
 |BSP Version|Codec Version|Graphics Version|
 |:---------:|:-----------:|:--------------:|
 |3.0.0 - 3.0.2|1.0|1.0|
-|3.0.3|1.0.1|1.0.1|
+|3.0.3 - 3.0.4|1.0.1|1.0.1|
 |3.0.5|1.0.1|1.0.2|
-|3.0.6|1.0.2|1.0.2|
+|3.0.6 - 3.0.7|1.0.2|1.0.2|
 
 **2. RZ/G2{L,LC,UL} and RZ/V2L:**
 
@@ -107,6 +112,7 @@ Below is the combination of Codec/Graphics library with BSP released versions:
 |3.0.5|1.1.0|1.1.0|
 |3.0.5-update2|1.2.0|1.2.0|
 |3.0.6|1.2.1|1.2.2|
+|3.0.7|3.1.3.0|3.1.2.3|
 
 (\*1) Please note that the naming rule of version is changed from the release.
 v1.0.5 is newer version of v1.4.
@@ -133,13 +139,13 @@ You can get all Yocto build environment from Renesas, or download all Yocto rela
     $ git checkout <tag>
     $ cd ..
     $
-    $ git clone  https://github.com/meta-qt5/meta-qt5.git
+    $ git clone https://github.com/meta-qt5/meta-qt5.git
     $ cd meta-qt5
     $ git checkout -b tmp c1b0c9f546289b1592d7a895640de103723a0305
     $ git cherry-pick 77b6060cef9337b184100083746c2e35f531be74
     $ cd ..
     $
-    $ git clone  https://git.yoctoproject.org/git/meta-virtualization -b dunfell
+    $ git clone https://git.yoctoproject.org/git/meta-virtualization -b dunfell
     $ cd meta-virtualization
     $ git checkout 77af3345cb99ae08b04a354b37c4afebd8b36981
     $ cd ..
