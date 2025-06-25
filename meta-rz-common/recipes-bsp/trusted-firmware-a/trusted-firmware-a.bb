@@ -17,7 +17,7 @@ SRC_URI = " \
 	git://github.com/renesas-rz/rzg_trusted-firmware-a.git;branch=${BRANCH};protocol=https \
 "
 
-SRCREV = "cc18695622e5637ec70ee3ae8eb5e83b09d13804"
+SRCREV = "69ad8fc4d38f31cddbfd9dfc8cccfb6b8609dcb9"
 
 PV = "v2.9+git"
 
