@@ -1,6 +1,6 @@
 require u-boot-renesas.inc
 
-COMPATIBLE_MACHINE = "(rzg2l-family)"
+COMPATIBLE_MACHINE = "(rzg2l-family|rzg3s-family)"
 
 UBOOT_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https"
 UBOOT_BRANCH = "v2021.10/rz"
