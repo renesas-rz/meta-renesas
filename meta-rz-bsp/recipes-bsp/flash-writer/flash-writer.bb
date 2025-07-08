@@ -1,10 +1,13 @@
-LIC_FILES_CHKSUM:rzg2l-family= "file://LICENSE.md;md5=1fb5dca04b27614d6d04abca6f103d8d"
+LIC_FILES_CHKSUM:rzg2l-family = "file://LICENSE.md;md5=1fb5dca04b27614d6d04abca6f103d8d"
 LICENSE="BSD-3-Clause"
 
 LIC_FILES_CHKSUM:rzg3e-family = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
 
-PV:rzg2l-family= "1.06+git${SRCPV}"
+LIC_FILES_CHKSUM:rzv2h-evk = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
+
+PV:rzg2l-family = "1.06+git${SRCPV}"
 PV:rzg3e-family = "0.90"
+PV:rzv2h-evk = "0.90"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -17,10 +20,13 @@ SRCREV:rzg2l-family = "ff167b676547f3997906c82c9be504eb5cff8ef0"
 SRC_URI:smarc-rzg3e = "file://Flash_Writer_SCIF_RZG3E_EVK_LPDDR4X.mot"
 SRC_URI:rzg3e-dev = "file://Flash_Writer_SCIF_RZG3E_DEV_LPDDR4X_0117.mot"
 
+SRC_URI:rzv2h-evk = "file://Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot"
+
 inherit deploy
 
 S:rzg2l-family= "${WORKDIR}/git"
 S:rzg3e-family = "${WORKDIR}"
+S:rzv2h-evk = "${WORKDIR}"
 PMIC_BUILD_DIR = "${S}/build_pmic"
 
 do_compile:rzg2l-family() {
@@ -48,6 +54,10 @@ do_deploy:rzg2l-family:append() {
 }
 
 do_deploy:rzg3e-family:append() {
+	install -m 755 ${S}/*mot ${DEPLOYDIR}
+}
+
+do_deploy:rzv2h-evk:append() {
 	install -m 755 ${S}/*mot ${DEPLOYDIR}
 }
 
