@@ -17,7 +17,7 @@ do_compile () {
 	# Create bl2_bp.bin
 	for bl2boot in ${BL2_BOOT_TARGET}; do
 		# Create bl2_bp.bin
-		bptool ${SYSROOT_TFA}/bl2.bin ${S}/bp.bin 0x08004000 $bl2boot
+		bptool ${SYSROOT_TFA}/bl2.bin ${S}/bp.bin ${BL2_BASE_ADDR} $bl2boot
 		cat ${S}/bp.bin ${SYSROOT_TFA}/bl2.bin > ${S}/bl2_bp_$bl2boot.bin
 
 		# Conver BL2 to S-Record
@@ -32,7 +32,7 @@ do_compile () {
 		# Create bl2_bp.bin
 		for bl2boot in ${BL2_BOOT_TARGET}; do
 			# Create bl2_bp.bin
-			bptool ${SYSROOT_TFA}/bl2-${TFA_PLATFORM}_pmic.bin ${S}/bp-${TFA_PLATFORM}_pmic.bin 0x08004000 $bl2boot
+			bptool ${SYSROOT_TFA}/bl2-${TFA_PLATFORM}_pmic.bin ${S}/bp-${TFA_PLATFORM}_pmic.bin ${BL2_BASE_ADDR} $bl2boot
 			cat ${S}/bp-${TFA_PLATFORM}_pmic.bin ${SYSROOT_TFA}/bl2-${TFA_PLATFORM}_pmic.bin > ${S}/bl2_bp_${bl2boot}_pmic.bin
 
 			# Conver BL2 to S-Record

@@ -21,7 +21,7 @@ do_configure () {
         sed -i '/^INCLUDE_PATHS/ s,$, \$\{BUILD_CFLAGS},' ${S}/tools/renesas/rz_boot_param/Makefile
 }
 
-EXTRA_OEMAKE = "DEST_OFFSET_ADR=0x08004000"
+EXTRA_OEMAKE = "DEST_OFFSET_ADR=${BL2_BASE_ADDR}"
 
 do_compile () {
 	cd ${S}/tools/renesas/rz_boot_param
