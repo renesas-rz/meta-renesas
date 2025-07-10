@@ -14,6 +14,9 @@ bool
 config FAMILY_G3E
 bool
 
+config FAMILY_G3S
+bool
+
 menu "Machines"
 choice
 	prompt "Select machine:"
@@ -73,6 +76,17 @@ choice
 	string
 	depends on MACHINE_SMARC-RZG3E
 	default "kas/machines/smarc-rzg3e.yml"
+
+	config MACHINE_SMARC-RZG3S
+	bool "smarc-rzg3s"
+	select FAMILY_G3S
+	help
+		Select the Renesas RZ/G3S reference platform.
+
+	config KAS_INCLUDE_MACHINE_SMARC-RZG3S
+	string
+	depends on MACHINE_SMARC-RZG3S
+	default "kas/machines/smarc-rzg3s.yml"
 
 endchoice
 endmenu
