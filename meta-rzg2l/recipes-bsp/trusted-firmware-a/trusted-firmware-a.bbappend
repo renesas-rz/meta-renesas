@@ -30,11 +30,6 @@ PMIC_BUILD_DIR = "${S}/build_pmic"
 FILES_${PN} = "/boot "
 SYSROOT_DIRS += "/boot"
 
-FILESEXTRAPATHS_append := "${THISDIR}/files"
-SRC_URI += " \
-	file://0001-plat-renesas-rz-Disable-unused-CRYPTO_SUPPORT.patch \
-"
-
 ECC_FLAGS = " DDR_ECC_ENABLE=1 "
 ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", "DDR_ECC_DETECT=1", "",d)}"
 ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT_CORRECT", "DDR_ECC_DETECT_CORRECT=1", "",d)}"
