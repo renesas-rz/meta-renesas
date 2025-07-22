@@ -3,11 +3,14 @@ LICENSE="BSD-3-Clause"
 
 LIC_FILES_CHKSUM:rzg3e-family = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
 
-LIC_FILES_CHKSUM:rzv2h-evk = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
+LIC_FILES_CHKSUM:rzv2h-family = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
+
+LIC_FILES_CHKSUM:rzg3s-family = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
 
 PV:rzg2l-family = "1.06+git${SRCPV}"
 PV:rzg3e-family = "0.90"
-PV:rzv2h-evk = "0.90"
+PV:rzv2h-family = "0.90"
+PV:rzg3s-family = "0127"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -20,13 +23,19 @@ SRCREV:rzg2l-family = "ff167b676547f3997906c82c9be504eb5cff8ef0"
 SRC_URI:smarc-rzg3e = "file://Flash_Writer_SCIF_RZG3E_EVK_LPDDR4X.mot"
 SRC_URI:rzg3e-dev = "file://Flash_Writer_SCIF_RZG3E_DEV_LPDDR4X_0117.mot"
 
-SRC_URI:rzv2h-evk = "file://Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot"
+SRC_URI:rzv2h-family = "file://Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot"
+
+SRC_URI:rzg3s-family = " \
+	file://FlashWriter.bin;subdir=${BPN} \
+	file://FlashWriter.mot;subdir=${BPN} \
+"
 
 inherit deploy
 
-S:rzg2l-family= "${WORKDIR}/git"
+S:rzg2l-family = "${WORKDIR}/git"
 S:rzg3e-family = "${WORKDIR}"
-S:rzv2h-evk = "${WORKDIR}"
+S:rzv2h-family = "${WORKDIR}"
+S:rzg3s-family = "${WORKDIR}/${BPN}"
 PMIC_BUILD_DIR = "${S}/build_pmic"
 
 do_compile:rzg2l-family() {
@@ -38,6 +47,11 @@ do_compile:rzg2l-family() {
 		oe_runmake OUTPUT_DIR=${PMIC_BUILD_DIR} clean;
 		oe_runmake BOARD=${FLASH_WRITER_PMIC_BOARD} OUTPUT_DIR=${PMIC_BUILD_DIR};
 	fi
+}
+
+do_compile:rzg3s-family() {
+	# Convert to srec
+	objcopy -I binary -O srec --adjust-vma=0xA1E00 --srec-forceS3 ${S}/FlashWriter.bin ${S}/FlashWriter.srec
 }
 
 do_install[noexec] = "1"
@@ -57,8 +71,14 @@ do_deploy:rzg3e-family:append() {
 	install -m 755 ${S}/*mot ${DEPLOYDIR}
 }
 
-do_deploy:rzv2h-evk:append() {
+do_deploy:rzv2h-family:append() {
 	install -m 755 ${S}/*mot ${DEPLOYDIR}
+}
+
+do_deploy:append:rzg3s-family() {
+	# Copy Flash-writer binaries to deploy folder
+	install -m 0644  ${S}/FlashWriter.srec ${DEPLOYDIR}/FlashWriter-${MACHINE}.srec
+	install -m 0644  ${S}/FlashWriter.mot ${DEPLOYDIR}/FlashWriter-${MACHINE}.mot
 }
 
 PARALLEL_MAKE = "-j 1"
