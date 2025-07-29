@@ -1,4 +1,4 @@
-DESCRIPTION = "VSP Manager Interface driver for the RZG2L/RZG3E"
+DESCRIPTION = "VSP manager interface kernel module for the Renesas MPUs"
 
 LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
@@ -25,7 +25,7 @@ SRC_URI:append = " \
 	file://0001-Use-macro-task_is_running-over-reading-task_struct.patch \
 "
 
-SRC_URI:append:rzg2l-family = " \
+ISU_PATCHES = " \
 	file://0001-Add-ISU-to-vspmif.patch \
 	file://0002-Remove-width-height-in-isu_dst_t.patch \
 	file://0003-Correcting-variable-type.patch \
@@ -33,6 +33,10 @@ SRC_URI:append:rzg2l-family = " \
 	file://0005-Correction-32bit-variable.patch \
 	file://0006-Update-copyright-year-for-these-changed-files.patch \
 "
+
+SRC_URI:append:rzg2l-family = "${ISU_PATCHES}"
+
+SRC_URI:append:rzv2h-family = "${ISU_PATCHES}"
 
 S = "${WORKDIR}/git"
 VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"

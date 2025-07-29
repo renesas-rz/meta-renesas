@@ -1,4 +1,4 @@
-DESCRIPTION = "VSP Manager for the RZG2L/RZG3E"
+DESCRIPTION = "VSP manager kernel module for the Renesas MPUs"
 
 LICENSE = "GPL-2.0-only & MIT"
 LIC_FILES_CHKSUM = " \
@@ -30,7 +30,7 @@ SRC_URI:append:rzg3e-family = " \
 	file://0004-Updating-the-procedure-for-starting-and-stopping-VSP.patch \
 "
 
-SRC_URI:append:rzg2l-family = " \
+ISU_PATCHES = " \
 	file://0001-Add-ISU-driver.patch \
 	file://0002-Add-option-ISU_CSC_RAW.patch \
 	file://0003-Add-ISU-to-VSPM.patch \
@@ -47,6 +47,13 @@ SRC_URI:append:rzg2l-family = " \
 	file://0014-ISU-remove-csc-mode-in-struct-isu_csc_t.patch \
 	file://0015-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
 	file://0016-Update-the-copyright-year-for-changed-files.patch \
+"
+
+SRC_URI:append:rzg2l-family = "${ISU_PATCHES}"
+
+SRC_URI:append:rzv2h-family = " \
+	${ISU_PATCHES} \
+	file://0017-Support-vspm-isu-driver-for-V2H.patch \
 "
 
 S = "${WORKDIR}/git"
@@ -86,9 +93,17 @@ do_install () {
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${D}/${includedir}/
 }
 
-do_install:append:rzg2l-family () {
+isu_header_install () {
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${D}/${includedir}/
+}
+
+do_install:append:rzg2l-family () {
+    isu_header_install
+}
+
+do_install:append:rzv2h-family () {
+    isu_header_install
 }
 
 # Should also clean deploy/licenses directory

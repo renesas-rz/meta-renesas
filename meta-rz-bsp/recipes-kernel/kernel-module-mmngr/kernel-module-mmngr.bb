@@ -1,4 +1,4 @@
-DESCRIPTION = "Memory Manager Kernel module for Renesas RZG2L/RZG3E"
+DESCRIPTION = "Memory manager kernel module for the Renesas MPUs"
 
 require mmngr_drv.inc
 
@@ -11,18 +11,18 @@ MMNGR_DRV_DIR = "mmngr_drv/mmngr/mmngr-module/files/mmngr"
 SRC_URI:append = " \
     file://0001-Add-physical-address-translating-feature.patch \
     file://0002-mmngr-Get-start-address-of-MMP-area-from-DT.patch \
-    file://0003-Do-not-parse-and-init-lossy-mem-area-for-RZ-G2L-Seri.patch \
-    file://0004-mmngr-Add-MM_OMXBUF_SIZE-for-RZG2L-and-RZG3E-OMX.patch \
+    file://0003-Do-not-parse-and-init-lossy-mem-area-for-G2L-G3E-V2H.patch \
+    file://0004-mmngr-Add-MM_OMXBUF_SIZE-for-RZG2L-RZG3E-and-RZV2H-O.patch \
     file://0005-mmngr_drv-mmngr-module-drv-Update-physical-convert-f.patch \
     file://0006-mmngr-lock-mm-read-before-finding-VMA.patch \
     file://0007-mmngr-Update-following-kernel-6.1.patch \
-    file://0008-mmngr-Do-not-parse-and-init-lossy-memory-area-for-RZ.patch \
-    file://0009-mmngr-Fix-compilation-warnings-to-avoid-build-failur.patch \
-    file://0010-mmngr-module-mmngr_drv-Change-return-type-of-mm_cnv_.patch \
+    file://0008-mmngr-Fix-compilation-warnings-to-avoid-build-failur.patch \
+    file://0009-mmngr-module-mmngr_drv-Change-return-type-of-mm_cnv_.patch \
 "
 
 MMNGR_CFG:rzg3e-family ?= "MMNGR_RZG3E"
 MMNGR_CFG:rzg2l-family ?= "MMNGR_RZG2L"
+MMNGR_CFG:rzv2h-family ?= "MMNGR_RZV2H"
 
 includedir = "/usr/local/include"
 SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"

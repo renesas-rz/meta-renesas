@@ -1,4 +1,4 @@
-DESCRIPTION = "Memory Manager Buffer Kernel module for Renesas RZG2L/RZG3E"
+DESCRIPTION = "Memory manager buffer kernel module for the Renesas MPUs"
 
 require mmngr_drv.inc
 

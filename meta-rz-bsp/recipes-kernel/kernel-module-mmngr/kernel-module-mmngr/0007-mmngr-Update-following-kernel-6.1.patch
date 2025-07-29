@@ -1,7 +1,7 @@
-From 8cefce237ae120d9375216af61329102ca353e2c Mon Sep 17 00:00:00 2001
+From af824eaa92a85bc3082261ecdb98ff08a29a982d Mon Sep 17 00:00:00 2001
 From: trungvanle <trung.le.xk@renesas.com>
 Date: Thu, 25 Apr 2024 17:24:48 +0700
-Subject: [PATCH 7/8] mmngr: Update following kernel 6.1
+Subject: [PATCH 7/9] mmngr: Update following kernel 6.1
 
 compat_alloc_user_space() is no longer available from kernel 5.15 [1],
 which causes build error. So, we will remove all config compat on kernel 6.1.
@@ -16,7 +16,7 @@ Signed-off-by: trungvanle <trung.le.xk@renesas.com>
  2 files changed, 110 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index 2806fc7..6ba2aac 100644
+index 2022cb6..5d16e40 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 @@ -1016,91 +1016,6 @@ exit:
@@ -111,7 +111,7 @@ index 2806fc7..6ba2aac 100644
  static int mmap(struct file *filp, struct vm_area_struct *vma)
  {
  	phys_addr_t	start;
-@@ -1740,9 +1655,6 @@ static const struct file_operations fops = {
+@@ -1752,9 +1667,6 @@ static const struct file_operations fops = {
  	.open		= open,
  	.release	= close,
  	.unlocked_ioctl	= ioctl,
@@ -122,7 +122,7 @@ index 2806fc7..6ba2aac 100644
  };
  
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
-index e7c9d18..e862507 100644
+index 2ccf084..aa3377a 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
 @@ -142,28 +142,6 @@ struct rcar_ipmmu_data {
@@ -155,5 +155,5 @@ index e7c9d18..e862507 100644
  #define DRVNAME		DEVNAME
  #define CLSNAME		DEVNAME
 -- 
-2.17.1
+2.25.1
 

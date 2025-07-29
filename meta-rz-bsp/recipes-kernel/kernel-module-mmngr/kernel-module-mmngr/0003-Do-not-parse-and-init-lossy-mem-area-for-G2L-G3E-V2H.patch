@@ -1,35 +1,47 @@
-From 54d328371656d4c8e8162f2d20210cab4d0bd322 Mon Sep 17 00:00:00 2001
+From 24986e3eedcb9b6bdccfb593c7c1fe00da638b20 Mon Sep 17 00:00:00 2001
 From: hienhuynh <hien.huynh.px@renesas.com>
 Date: Tue, 8 Mar 2022 14:38:38 +0700
-Subject: [PATCH 3/8] Do not parse and init lossy mem area for RZ/G2L Series
+Subject: [PATCH 3/9] Do not parse and init lossy mem area for G2L/G3E/V2H
+ Series
 
-RZ/G2L Series do not support lossy mem area.
+RZ/G2L, RZ/G3E and RZ/V2H series do not support lossy mem area.
 So this commit is created to let mmngr not parse and init
-lossy mem area for RZ/G2L Series (RZ/G2{L/LC/UL}).
+lossy mem area for them.
 
-Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
 ---
- .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 37 ++++++++++++-------
- 1 file changed, 24 insertions(+), 13 deletions(-)
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 41 ++++++++++++-------
+ 1 file changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index 5d31aa6..2eabed1 100644
+index 5d31aa6..b9c01a5 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-@@ -1255,6 +1255,12 @@ static int parse_legacy_memory_node(struct device_node *np)
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  MMNGR
+ 
+- Copyright (C) 2015-2019 Renesas Electronics Corporation
++ Copyright (C) 2015-2025 Renesas Electronics Corporation
+ 
+  License        Dual MIT/GPLv2
+ 
+@@ -1255,6 +1255,14 @@ static int parse_legacy_memory_node(struct device_node *np)
  }
  #endif
  
-+static const struct soc_device_attribute rzg2l_match[] = {
++static const struct soc_device_attribute rz_matches[] = {
 +	{ .family = "RZ/G2L" },
 +	{ .family = "RZ/G2UL" },
++	{ .family = "RZ/G3E" },
++	{ .family = "RZ/V2H" },
 +	{ /* sentinel*/ }
 +};
 +
  static int parse_reserved_mem_dt(struct device_node *np)
  {
  	int ret = 0;
-@@ -1269,15 +1275,18 @@ static int parse_reserved_mem_dt(struct device_node *np)
+@@ -1269,15 +1277,18 @@ static int parse_reserved_mem_dt(struct device_node *np)
  			 "(linux,multimedia) from DT\n");
  		return ret;
  	}
@@ -43,7 +55,7 @@ index 5d31aa6..2eabed1 100644
 -			"(linux,lossy_decompress) from DT\n");
 -		ret = 0; /* Let MMNGR support other features */
 +
-+	if (!soc_device_match(rzg2l_match)) {
++	if (!soc_device_match(rz_matches)) {
 +		/* Parse reserved memory for lossy compression feature */
 +		ret = _parse_reserved_mem_dt(np, "memory-region",
 +					     "linux,lossy_decompress",
@@ -57,7 +69,7 @@ index 5d31aa6..2eabed1 100644
  	}
  	return ret;
  }
-@@ -1787,10 +1796,12 @@ static int mm_probe(struct platform_device *pdev)
+@@ -1787,10 +1798,12 @@ static int mm_probe(struct platform_device *pdev)
  	}
  #endif
  
@@ -65,7 +77,7 @@ index 5d31aa6..2eabed1 100644
 -	if (ret) {
 -		pr_err("MMD mm_init ERROR\n");
 -		return -1;
-+	if (!soc_device_match(rzg2l_match)) {
++	if (!soc_device_match(rz_matches)) {
 +		ret = init_lossy_info();
 +		if (ret) {
 +			pr_err("MMD mm_init ERROR\n");
@@ -75,5 +87,5 @@ index 5d31aa6..2eabed1 100644
  
  	p = kzalloc(sizeof(struct MM_DRVDATA), GFP_KERNEL);
 -- 
-2.17.1
+2.25.1
 

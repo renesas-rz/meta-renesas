@@ -1,7 +1,7 @@
-From a78e20ae162b35069445f4b368f7b164a16d0b0f Mon Sep 17 00:00:00 2001
+From bd11dadd551a08ce0593244ed76dded9cb378c68 Mon Sep 17 00:00:00 2001
 From: trungvanle <trung.le.xk@renesas.com>
 Date: Tue, 22 Oct 2024 16:15:32 +0700
-Subject: [PATCH 1/2] mmngr: Fix compilation warnings to avoid build failures
+Subject: [PATCH 8/9] mmngr: Fix compilation warnings to avoid build failures
 
 On kernel 6.1.x-cip28, compiling warnings are change to errors to avoid
 any warnings occur. This commit will fix all compiling warnings.
@@ -26,7 +26,7 @@ Signed-off-by: trungvanle <trung.le.xk@renesas.com>
  1 file changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index 5b66d3b..80d9718 100644
+index 5d16e40..630c12d 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 @@ -847,7 +847,6 @@ static void mm_cnv_addr(struct MM_PARAM *tmp)
@@ -67,5 +67,5 @@ index 5b66d3b..80d9718 100644
  			if (regaddr_p)
  				memory_addr = of_translate_address(node, regaddr_p);
 -- 
-2.17.1
+2.25.1
 
