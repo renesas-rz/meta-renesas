@@ -36,3 +36,6 @@ RDEPENDS_adduser_append_debian = "perl"
 # Using the package versions provided in the security update mirror
 # is now necessary to pull updates by Debian LTS
 DEBIAN_SECURITY_UPDATE_MIRROR ?= "https://security.debian.org/debian-security/pool/updates"
+
+# ELTS (Extended LTS) mirror for packages with long-term maintenance
+DEBIAN_ELTS_MIRROR ?= "https://deb.freexian.com/extended-lts/pool"
