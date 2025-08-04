@@ -1,4 +1,4 @@
-DESCRIPTION = "VSP Manager Interface library for RZG2L/RZG3E"
+DESCRIPTION = "VSP manager interface user module for the Renesas MPUs"
 
 require vspmif.inc
 
@@ -17,7 +17,7 @@ includedir = "${RENESAS_DATADIR}/include"
 WS_aarch64 = ""
 WS_virtclass-multilib-lib32 = "32"
 
-SRC_URI:append:rzg2l-family = " \
+SUPPORT_ISU_PATCHES = " \
     file://0001-Modify-vspm_public.h-for-ISUM.patch \
     file://0002-Modify-Makefile-for-building-vspm_api_isu.patch \
     file://0003-Add-vspm_api_isu.c-for-ISUM.patch \
@@ -26,10 +26,21 @@ SRC_URI:append:rzg2l-family = " \
     file://0006-Update-copyright-year-for-changed-files.patch \
 "
 
-do_compile:prepend:rzg2l-family() {
+SRC_URI:append:rzg2l-family = "${SUPPORT_ISU_PATCHES}"
+SRC_URI:append:rzv2h-family = "${SUPPORT_ISU_PATCHES}"
+
+vspm32_compile_export() {
     if [ X${WS} = "X32" ]; then
         export VSPM32="1"
     fi
+}
+
+do_compile:prepend:rzg2l-family() {
+    vspm32_compile_export
+}
+
+do_compile:prepend:rzv2h-family() {
+    vspm32_compile_export
 }
 
 do_compile() {
