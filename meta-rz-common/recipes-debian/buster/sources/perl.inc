@@ -5,10 +5,10 @@ REPACK_PV = "5.28.1"
 PV = "5.28.1"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/p/perl/perl_5.28.1-6+deb10u1.dsc;name=perl_5.28.1-6+deb10u1.dsc \
-    ${DEBIAN_MIRROR}/main/p/perl/perl_5.28.1.orig-regen-configure.tar.xz;name=perl_5.28.1.orig-regen-configure.tar.xz \
-    ${DEBIAN_MIRROR}/main/p/perl/perl_5.28.1.orig.tar.xz;name=perl_5.28.1.orig.tar.xz \
-    ${DEBIAN_MIRROR}/main/p/perl/perl_5.28.1-6+deb10u1.debian.tar.xz;name=perl_5.28.1-6+deb10u1.debian.tar.xz \
+    ${DEBIAN_ELTS_MIRROR}/main/p/perl/perl_5.28.1-6+deb10u1.dsc;name=perl_5.28.1-6+deb10u1.dsc \
+    ${DEBIAN_ELTS_MIRROR}/main/p/perl/perl_5.28.1.orig-regen-configure.tar.xz;name=perl_5.28.1.orig-regen-configure.tar.xz \
+    ${DEBIAN_ELTS_MIRROR}/main/p/perl/perl_5.28.1.orig.tar.xz;name=perl_5.28.1.orig.tar.xz \
+    ${DEBIAN_ELTS_MIRROR}/main/p/perl/perl_5.28.1-6+deb10u1.debian.tar.xz;name=perl_5.28.1-6+deb10u1.debian.tar.xz \
 "
 
 SRC_URI[perl_5.28.1-6+deb10u1.dsc.md5sum] = "f075eeb566d92f3a03eba415889991d4"

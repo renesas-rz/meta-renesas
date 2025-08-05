@@ -5,9 +5,9 @@ REPACK_PV = "8.3.0"
 PV = "8.3.0"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/g/gcc-8/gcc-8_8.3.0-6.dsc;name=gcc-8_8.3.0-6.dsc \
-    ${DEBIAN_MIRROR}/main/g/gcc-8/gcc-8_8.3.0.orig.tar.gz;name=gcc-8_8.3.0.orig.tar.gz \
-    ${DEBIAN_MIRROR}/main/g/gcc-8/gcc-8_8.3.0-6.diff.gz;name=gcc-8_8.3.0-6.diff.gz;apply=no \
+    ${DEBIAN_ELTS_MIRROR}/main/g/gcc-8/gcc-8_8.3.0-6.dsc;name=gcc-8_8.3.0-6.dsc \
+    ${DEBIAN_ELTS_MIRROR}/main/g/gcc-8/gcc-8_8.3.0.orig.tar.gz;name=gcc-8_8.3.0.orig.tar.gz \
+    ${DEBIAN_ELTS_MIRROR}/main/g/gcc-8/gcc-8_8.3.0-6.diff.gz;name=gcc-8_8.3.0-6.diff.gz;apply=no \
 "
 
 SRC_URI[gcc-8_8.3.0-6.dsc.md5sum] = "15e19a0b8b3dbe56437618f78edcc0b3"

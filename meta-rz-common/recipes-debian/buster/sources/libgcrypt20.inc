@@ -5,10 +5,10 @@ REPACK_PV = "1.8.4"
 PV = "1.8.4"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4-5+deb10u1.dsc;name=libgcrypt20_1.8.4-5+deb10u1.dsc \
-    ${DEBIAN_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4.orig.tar.bz2;name=libgcrypt20_1.8.4.orig.tar.bz2 \
-    ${DEBIAN_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4.orig.tar.bz2.asc;name=libgcrypt20_1.8.4.orig.tar.bz2.asc \
-    ${DEBIAN_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4-5+deb10u1.debian.tar.xz;name=libgcrypt20_1.8.4-5+deb10u1.debian.tar.xz \
+    ${DEBIAN_ELTS_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4-5+deb10u1.dsc;name=libgcrypt20_1.8.4-5+deb10u1.dsc \
+    ${DEBIAN_ELTS_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4.orig.tar.bz2;name=libgcrypt20_1.8.4.orig.tar.bz2 \
+    ${DEBIAN_ELTS_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4.orig.tar.bz2.asc;name=libgcrypt20_1.8.4.orig.tar.bz2.asc \
+    ${DEBIAN_ELTS_MIRROR}/main/libg/libgcrypt20/libgcrypt20_1.8.4-5+deb10u1.debian.tar.xz;name=libgcrypt20_1.8.4-5+deb10u1.debian.tar.xz \
 "
 
 SRC_URI[libgcrypt20_1.8.4-5+deb10u1.dsc.md5sum] = "815ccee6590f9806ea1ceaad608e4bb3"

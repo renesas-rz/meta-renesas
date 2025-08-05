@@ -5,9 +5,9 @@ REPACK_PV = "0.29"
 PV = "0.29"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/p/pkg-config/pkg-config_0.29-6.dsc;name=pkg-config_0.29-6.dsc \
-    ${DEBIAN_MIRROR}/main/p/pkg-config/pkg-config_0.29.orig.tar.gz;name=pkg-config_0.29.orig.tar.gz \
-    ${DEBIAN_MIRROR}/main/p/pkg-config/pkg-config_0.29-6.diff.gz;name=pkg-config_0.29-6.diff.gz;apply=no \
+    ${DEBIAN_ELTS_MIRROR}/main/p/pkg-config/pkg-config_0.29-6.dsc;name=pkg-config_0.29-6.dsc \
+    ${DEBIAN_ELTS_MIRROR}/main/p/pkg-config/pkg-config_0.29.orig.tar.gz;name=pkg-config_0.29.orig.tar.gz \
+    ${DEBIAN_ELTS_MIRROR}/main/p/pkg-config/pkg-config_0.29-6.diff.gz;name=pkg-config_0.29-6.diff.gz;apply=no \
 "
 
 SRC_URI[pkg-config_0.29-6.dsc.md5sum] = "f40a3ea1c3cb1b7c514213395740634c"

@@ -5,10 +5,10 @@ REPACK_PV = "2.4.48"
 PV = "2.4.48"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/a/attr/attr_2.4.48-4.dsc;name=attr_2.4.48-4.dsc \
-    ${DEBIAN_MIRROR}/main/a/attr/attr_2.4.48.orig.tar.gz;name=attr_2.4.48.orig.tar.gz \
-    ${DEBIAN_MIRROR}/main/a/attr/attr_2.4.48.orig.tar.gz.asc;name=attr_2.4.48.orig.tar.gz.asc \
-    ${DEBIAN_MIRROR}/main/a/attr/attr_2.4.48-4.debian.tar.xz;name=attr_2.4.48-4.debian.tar.xz \
+    ${DEBIAN_ELTS_MIRROR}/main/a/attr/attr_2.4.48-4.dsc;name=attr_2.4.48-4.dsc \
+    ${DEBIAN_ELTS_MIRROR}/main/a/attr/attr_2.4.48.orig.tar.gz;name=attr_2.4.48.orig.tar.gz \
+    ${DEBIAN_ELTS_MIRROR}/main/a/attr/attr_2.4.48.orig.tar.gz.asc;name=attr_2.4.48.orig.tar.gz.asc \
+    ${DEBIAN_ELTS_MIRROR}/main/a/attr/attr_2.4.48-4.debian.tar.xz;name=attr_2.4.48-4.debian.tar.xz \
 "
 
 SRC_URI[attr_2.4.48-4.dsc.md5sum] = "6572c0f8d4a184962e026faf399afded"

@@ -5,9 +5,9 @@ REPACK_PV = "1.9.0+git20180920"
 PV = "1.9.0+git20180920"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/p/pseudo/pseudo_1.9.0+git20180920-1.dsc;name=pseudo_1.9.0+git20180920-1.dsc \
-    ${DEBIAN_MIRROR}/main/p/pseudo/pseudo_1.9.0+git20180920.orig.tar.gz;name=pseudo_1.9.0+git20180920.orig.tar.gz \
-    ${DEBIAN_MIRROR}/main/p/pseudo/pseudo_1.9.0+git20180920-1.debian.tar.xz;name=pseudo_1.9.0+git20180920-1.debian.tar.xz \
+    ${DEBIAN_ELTS_MIRROR}/main/p/pseudo/pseudo_1.9.0+git20180920-1.dsc;name=pseudo_1.9.0+git20180920-1.dsc \
+    ${DEBIAN_ELTS_MIRROR}/main/p/pseudo/pseudo_1.9.0+git20180920.orig.tar.gz;name=pseudo_1.9.0+git20180920.orig.tar.gz \
+    ${DEBIAN_ELTS_MIRROR}/main/p/pseudo/pseudo_1.9.0+git20180920-1.debian.tar.xz;name=pseudo_1.9.0+git20180920-1.debian.tar.xz \
 "
 
 SRC_URI[pseudo_1.9.0+git20180920-1.dsc.md5sum] = "1a224e4fe7b891dde34b96a115d4ff9f"

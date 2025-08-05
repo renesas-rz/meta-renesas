@@ -5,9 +5,9 @@ REPACK_PV = "3.42.1"
 PV = "3.42.1"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/n/nss/nss_3.42.1-1+deb10u3.dsc;name=nss_3.42.1-1+deb10u3.dsc \
-    ${DEBIAN_MIRROR}/main/n/nss/nss_3.42.1.orig.tar.gz;name=nss_3.42.1.orig.tar.gz \
-    ${DEBIAN_MIRROR}/main/n/nss/nss_3.42.1-1+deb10u3.debian.tar.xz;name=nss_3.42.1-1+deb10u3.debian.tar.xz \
+    ${DEBIAN_ELTS_MIRROR}/main/n/nss/nss_3.42.1-1+deb10u3.dsc;name=nss_3.42.1-1+deb10u3.dsc \
+    ${DEBIAN_ELTS_MIRROR}/main/n/nss/nss_3.42.1.orig.tar.gz;name=nss_3.42.1.orig.tar.gz \
+    ${DEBIAN_ELTS_MIRROR}/main/n/nss/nss_3.42.1-1+deb10u3.debian.tar.xz;name=nss_3.42.1-1+deb10u3.debian.tar.xz \
 "
 
 SRC_URI[nss_3.42.1-1+deb10u3.dsc.md5sum] = "171dc93a591104f6180adcf112e20d39"
