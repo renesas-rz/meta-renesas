@@ -8,7 +8,7 @@ inherit autotools pkgconfig
 
 GST_PLUGIN_VSPMFILTER_URL = "git://github.com/renesas-rz/rzg_gstreamer_vspmfilter"
 
-BRANCH:rzg2l-family = "rz_g2l"
+BRANCH ?= "rz_g2l"
 BRANCH:rzg3e-family = "rz_g2"
 
 SRC_URI = " \
@@ -20,7 +20,7 @@ SRC_URI:append:rzg3e-family = " \
     file://0002-Update-find_physical_address-functions-following-MM_.patch \
 "
 
-SRCREV:rzg2l-family = "e4e24c82272d0227f2288d4a471b4939699cade7"
+SRCREV ?= "e4e24c82272d0227f2288d4a471b4939699cade7"
 SRCREV:rzg3e-family = "3bad93c42be267f909cf2b98bf8b18ebe48a764f"
 
 S = "${WORKDIR}/git"
