@@ -34,6 +34,7 @@ RDEPENDS:packagegroup-gstreamer1.0-plugins = " \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugin-vspmfilter \
 "
 
 RDEPENDS:packagegroup-gstreamer1.0-plugins-base = " \
