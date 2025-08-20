@@ -1,21 +1,48 @@
 require trusted-firmware-a-renesas.inc
 
-COMPATIBLE_MACHINE = "(rzg3e-family)"
+COMPATIBLE_MACHINE = "(rzg3e-family|rzv2h-family|rzg2l-family)"
 
 LIC_FILES_CHKSUM = "file://${WORKDIR}/git/docs/license.rst;md5=b2c740efedc159745b9b31f88ff03dde"
 PV = "2.10+git${SRCPV}"
 
 S = "${WORKDIR}/git"
 
-TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=https;nobranch=1"
-TFA_REV ?= "14edb76fc287f360812eb0cc820a2a60265bebcc"
+TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=https"
+TFA_REV:rzg3e-family = "14edb76fc287f360812eb0cc820a2a60265bebcc"
+TFA_REV:rzv2h-family = "4426ded3bae4d82eae1107e8f94dbc58d7203cd0"
+TFA_REV:rzg2l-family = "2530c2fedba0815301a26ba2079c35dfc2a1e8b5"
 
-SRC_URI = "${TFA_URI}"
+SRC_URI = "${TFA_URI};nobranch=1"
 SRCREV = "${TFA_REV}"
 
 BUILD_DIR = "${B}/${TFA_PLATFORM}"
 BUILD_DIR .= "/${@'debug' if d.getVar("TFA_DEBUG") == '1' else 'release'}"
 
-do_deploy[noexec] = "1"
+EXTRA_OEMAKE:append:rzg2l-family = " FIP_ALIGN=16"
+EXTRA_OEMAKE:append:rzg3e-family = " PLAT_SYSTEM_SUSPEND=1"
 
-EXTRA_OEMAKE:append = " PLAT_SYSTEM_SUSPEND=1"
+PMIC_BUILD_DIR = "${S}/build_pmic"
+
+do_compile:append:rzg2l-family() {
+	if [ "${PMIC_SUPPORT}" = "1" ]; then
+		for T in ${TFA_BUILD_TARGET}; do
+			oe_runmake PLAT=${TFA_PLATFORM} ${TFA_PMIC_EXTRA_OEMAKE} BUILD_PLAT=${PMIC_BUILD_DIR} -C ${S} $T
+		done
+	fi
+}
+
+do_install:append:rzg2l-family() {
+	if [ "${PMIC_SUPPORT}" = "1" ]; then
+		install -m 0644 ${PMIC_BUILD_DIR}/bl2.bin ${D}/firmware/bl2-${TFA_PLATFORM}_pmic.bin
+		install -m 0644 ${PMIC_BUILD_DIR}/bl31.bin ${D}/firmware/bl31-${TFA_PLATFORM}_pmic.bin
+		install -m 0644 ${PMIC_BUILD_DIR}/fip.bin ${D}/firmware/fip-${TFA_PLATFORM}_pmic.bin
+	fi
+}
+
+do_deploy:append:rzg2l-family() {
+	if [ "${PMIC_SUPPORT}" = "1" ]; then
+		cp -rf ${D}/firmware/*pmic.bin ${DEPLOYDIR}/
+	fi
+}
+addtask deploy before do_build after do_compile
+
