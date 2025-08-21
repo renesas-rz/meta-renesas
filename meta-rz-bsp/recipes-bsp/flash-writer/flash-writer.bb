@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM:rzv2h-family = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=5
 
 LIC_FILES_CHKSUM:rzg3s-family = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
 
-PV:rzg2l-family = "1.06+git${SRCPV}"
+PV:rzg2l-family = "1.08+git${SRCPV}"
 PV:rzg3e-family = "0.90"
 PV:rzv2h-family = "0.90"
 PV:rzg3s-family = "0127"
@@ -18,7 +18,7 @@ FLASH_WRITER_URL ?= "git://github.com/renesas-rz/rzg2_flash_writer"
 BRANCH ?= "rz_g2l"
 
 SRC_URI:rzg2l-family = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
-SRCREV:rzg2l-family = "ff167b676547f3997906c82c9be504eb5cff8ef0"
+SRCREV:rzg2l-family = "43509f2b268b0ce86288cf3c37e668d64c5d5d12"
 
 SRC_URI:smarc-rzg3e = "file://Flash_Writer_SCIF_RZG3E_EVK_LPDDR4X.mot"
 SRC_URI:rzg3e-dev = "file://Flash_Writer_SCIF_RZG3E_DEV_LPDDR4X_0117.mot"
