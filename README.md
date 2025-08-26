@@ -5,6 +5,9 @@ Currently the following boards and MPUs are supported:
 
 - Board: RZG2L SMARC Evaluation Kit / MPU: R9A07G044L (RZ/G2L)
 - Board: RZG2LC SMARC Evaluation Kit / MPU: R9A07G044C (RZ/G2LC)
+- Board: RZG2UL SMARC Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
+- Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
+- Board: RZG3S SMARC Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
 
 ## Patches
 
@@ -16,19 +19,19 @@ This layer (for the Scarthgap release) depends on the following specific revisio
 **poky:**
 - URL: `https://git.yoctoproject.org/poky`
 - Branch: `scarthgap`
-- Revision: `dc4827b3660bc1a03a2bc3b0672615b50e9137ff`
-- (Tag: `scarthgap-5.0.8`)
+- Revision: `ae2d52758fc2fcb0ed996aa234430464ebf4b310`
+- (Tag: `scarthgap-5.0.11`)
 
 **meta-arm:**
 - URL: `https://git.yoctoproject.org/meta-arm`
 - Branch: `scarthgap`
-- Revision: `950a4afce46a359def2958bd9ae33fc08ff9bb0d`
-- (Tag: `yocto-5.0.1`)
+- Revision: `8e0f8af90fefb03f08cd2228cde7a89902a6b37c`
+- (Tag: `yocto-5.0.2`)
 
 **meta-openembedded:**
 - URL: `https://github.com/openembedded/meta-openembedded.git`
 - Branch: `scarthgap`
-- Revision: `67ad83dd7c2485dae0c90eac345007af6195b84d`
+- Revision: `c29a18fa39ede952f3f6108ec007c1906e2d9a0d`
 
 **meta-virtualization (for Docker):**
 - URL: `https://git.yoctoproject.org/git/meta-virtualization`
@@ -58,8 +61,9 @@ Below is an example of VLP (Verified Linux Package) versions and their correspon
 | VLP Version | Tag        | Notes           |
 | :---------- | :--------- | :-------------- |
 | 4.0.0       | BSP-v4.0.0 | Initial version |
+| 4.0.1       | BSP-v4.0.1 |                 |
 
-**Note on Versioning:** The VLP versioning scheme indicates that higher numbers represent newer releases (e.g., VLP v4.2.0 is newer than VLP v4.0.0).
+**Note on Versioning:** The VLP versioning scheme indicates that higher numbers represent newer releases (e.g., VLP v4.0.2 is newer than VLP v4.0.0).
 
 
 You can obtain the complete Yocto build environment from Renesas, or download the public Yocto Project source layers to prepare the build environment as shown below. Ensure you checkout the specific revisions listed in the "Dependencies" section.
@@ -67,17 +71,17 @@ You can obtain the complete Yocto build environment from Renesas, or download th
     $ cd $WORK # Ensure you are in your working directory
     $ git clone https://git.yoctoproject.org/poky
     $ cd poky
-    $ git checkout dc4827b3660bc1a03a2bc3b0672615b50e9137ff
+    $ git checkout ae2d52758fc2fcb0ed996aa234430464ebf4b310
     $ cd ..
     $
     $ git clone https://git.yoctoproject.org/meta-arm
     $ cd meta-arm
-    $ git checkout 950a4afce46a359def2958bd9ae33fc08ff9bb0d
+    $ git checkout 8e0f8af90fefb03f08cd2228cde7a89902a6b37c
     $ cd ..
     $
     $ git clone https://github.com/openembedded/meta-openembedded.git
     $ cd meta-openembedded
-    $ git checkout 67ad83dd7c2485dae0c90eac345007af6195b84d
+    $ git checkout c29a18fa39ede952f3f6108ec007c1906e2d9a0d
     $ cd ..
     $
     $ git clone  https://github.com/renesas-rz/meta-renesas.git
