@@ -25,6 +25,13 @@ RDEPENDS:packagegroup-rz-vlp-tools-base = " \
 	busybox \
 	ckermit \
 	dosfstools \
+	e2fsprogs-badblocks \
+	e2fsprogs-dumpe2fs \
+	e2fsprogs-e2fsck \
+	e2fsprogs-e2scrub \
+	e2fsprogs-mke2fs \
+	e2fsprogs-resize2fs \
+	e2fsprogs-tune2fs \
 	ethtool \
 	i2c-tools \
 	minicom \
