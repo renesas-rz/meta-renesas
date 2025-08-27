@@ -17,6 +17,9 @@ bool
 config FAMILY_G3S
 bool
 
+config FAMILY_V2H
+bool
+
 menu "Machines"
 choice
 	prompt "Select machine:"
@@ -65,6 +68,17 @@ choice
 	string
 	depends on MACHINE_SMARC-RZV2L
 	default "kas/machines/smarc-rzv2l.yml"
+
+	config MACHINE_RZV2H-EVK
+	bool "rzv2h-evk"
+	select FAMILY_V2H
+	help
+		Select the Renesas RZ/V2H reference platform.
+
+	config KAS_INCLUDE_MACHINE_RZV2H-EVK
+	string
+	depends on MACHINE_RZV2H-EVK
+	default "kas/machines/rzv2h-evk.yml"
 
 	config MACHINE_RZG3E-DEV
 	bool "rzg3e-dev"
