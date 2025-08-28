@@ -5,7 +5,7 @@ repos:
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization/
     # scarthgap
-    commit: 9287a355b338361e42027ce371444111a791d64f
+    commit: 02f72c96bf9acd0bd3ae0463f482bce8feabe749
   meta-openembedded:
     layers:
       meta-filesystems:
