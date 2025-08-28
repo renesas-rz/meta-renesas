@@ -36,7 +36,7 @@ This layer (for the Scarthgap release) depends on the following specific revisio
 **meta-virtualization (for Docker):**
 - URL: `https://git.yoctoproject.org/git/meta-virtualization`
 - Branch: `scarthgap`
-- Revision: `9287a355b338361e42027ce371444111a791d64f`
+- Revision: `02f72c96bf9acd0bd3ae0463f482bce8feabe749`
 
 ## Build Instructions
 
