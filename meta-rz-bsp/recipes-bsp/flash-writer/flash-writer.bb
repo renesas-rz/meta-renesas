@@ -3,7 +3,7 @@ LICENSE="BSD-3-Clause"
 
 LIC_FILES_CHKSUM:rzg3s-family = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec5312d6919e203a55f9"
 
-PV:rzg2l-family = "1.06+git${SRCPV}"
+PV:rzg2l-family = "1.08+git${SRCPV}"
 PV:rzg3s-family = "0127"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -12,7 +12,7 @@ FLASH_WRITER_URL = "git://github.com/renesas-rz/rzg2_flash_writer"
 BRANCH = "rz_g2l"
 
 SRC_URI:rzg2l-family = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
-SRCREV:rzg2l-family = "ff167b676547f3997906c82c9be504eb5cff8ef0"
+SRCREV:rzg2l-family = "43509f2b268b0ce86288cf3c37e668d64c5d5d12"
 
 SRC_URI:rzg3s-family = " \
 	file://FlashWriter.bin;subdir=${BPN} \
