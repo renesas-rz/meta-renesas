@@ -20,6 +20,8 @@ SRC_URI:rzg3e-dev = "file://Flash_Writer_SCIF_RZG3E_DEV_LPDDR4X_0117.mot"
 
 SRC_URI:rzv2h-family = "file://Flash_Writer_SCIF_RZV2H_DEV_INTERNAL_MEMORY.mot"
 
+SRC_URI:rzv2n-family = "file://Flash_Writer_SCIF_RZV2N_DEV_LPDDR4X.mot"
+
 SRC_URI:rzg3s-family = " \
 	file://FlashWriter.bin;subdir=${BPN} \
 	file://FlashWriter.mot;subdir=${BPN} \
@@ -35,6 +37,7 @@ inherit deploy
 S:rzg2l-family = "${WORKDIR}/git"
 S:rzg3e-family = "${WORKDIR}"
 S:rzv2h-family = "${WORKDIR}"
+S:rzv2n-family = "${WORKDIR}"
 S:rzg3s-family = "${WORKDIR}/${BPN}"
 S:rzt2h-family = "${WORKDIR}"
 PMIC_BUILD_DIR = "${S}/build_pmic"
@@ -73,6 +76,10 @@ do_deploy:rzg3e-family:append() {
 }
 
 do_deploy:rzv2h-family:append() {
+	install -m 755 ${S}/*mot ${DEPLOYDIR}
+}
+
+do_deploy:rzv2n-family:append() {
 	install -m 755 ${S}/*mot ${DEPLOYDIR}
 }
 
