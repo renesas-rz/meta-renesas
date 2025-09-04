@@ -10,3 +10,6 @@ KERNEL_IMAGETYPE ?= "Image"
 
 # flash writer
 EXTRA_IMAGEDEPENDS += " flash-writer"
+
+# Wic image offset
+FIP_WIC_OFFSET = "--offset 768s"
