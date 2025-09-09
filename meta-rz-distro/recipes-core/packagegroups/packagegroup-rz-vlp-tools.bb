@@ -24,6 +24,8 @@ RDEPENDS:packagegroup-rz-vlp-tools-base = " \
 	packagegroup-base \
 	busybox \
 	ckermit \
+	can-utils \
+	alsa-utils \
 	dosfstools \
 	e2fsprogs-badblocks \
 	e2fsprogs-dumpe2fs \
@@ -38,6 +40,8 @@ RDEPENDS:packagegroup-rz-vlp-tools-base = " \
 	mtd-utils \
 	tcf-agent \
 	watchdog \
+	iproute2 \
+	kernel-module-uas \
 	"
 
 RDEPENDS:packagegroup-rz-vlp-tools-multimedia = " \
@@ -54,4 +58,5 @@ RDEPENDS:packagegroup-rz-vlp-tools-benchmark = " \
 	bonnie++ \
 	iperf3 \
 	memtester \
+	fio \
 	"
