@@ -59,4 +59,5 @@ RDEPENDS:packagegroup-rz-vlp-tools-benchmark = " \
 	iperf3 \
 	memtester \
 	fio \
+	${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-renesas-rt', 'rt-tests', '', d)} \
 	"
