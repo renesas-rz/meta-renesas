@@ -1,0 +1,72 @@
+From 5e59da175f0ca895a57b73cf83dd6acf82550029 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Fri, 12 Sep 2025 09:22:45 +0700
+Subject: [PATCH] include: configs: correct extra environment setting config
+
+Correct extra environment setting config CFG_EXTRA_ENV_SETTINGS
+for RZG2L family and RZG3S.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+Signed-off-by: Nhan Nguyen <nhan.nguyen.uf@bp.renesas.com>
+---
+ include/configs/smarc-rzg2l.h  | 2 +-
+ include/configs/smarc-rzg2lc.h | 2 +-
+ include/configs/smarc-rzg2ul.h | 2 +-
+ include/configs/smarc-rzg3s.h  | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/configs/smarc-rzg2l.h b/include/configs/smarc-rzg2l.h
+index 32afdf8782..fc7182c682 100644
+--- a/include/configs/smarc-rzg2l.h
++++ b/include/configs/smarc-rzg2l.h
+@@ -45,7 +45,7 @@
+ 
+ /* ENV setting */
+ 
+-#define CONFIG_EXTRA_ENV_SETTINGS \
++#define CFG_EXTRA_ENV_SETTINGS \
+ 	"usb_pgood_delay=2000\0" \
+ 	"bootm_size=0x10000000 \0" \
+ 	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p2 \0" \
+diff --git a/include/configs/smarc-rzg2lc.h b/include/configs/smarc-rzg2lc.h
+index 4ad910fa33..47eb6157e4 100644
+--- a/include/configs/smarc-rzg2lc.h
++++ b/include/configs/smarc-rzg2lc.h
+@@ -45,7 +45,7 @@
+ 
+ /* ENV setting */
+ 
+-#define CONFIG_EXTRA_ENV_SETTINGS \
++#define CFG_EXTRA_ENV_SETTINGS \
+ 	"usb_pgood_delay=2000\0" \
+ 	"bootm_size=0x10000000 \0" \
+ 	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p2 \0" \
+diff --git a/include/configs/smarc-rzg2ul.h b/include/configs/smarc-rzg2ul.h
+index ef070fdcb7..2db57e9547 100644
+--- a/include/configs/smarc-rzg2ul.h
++++ b/include/configs/smarc-rzg2ul.h
+@@ -45,7 +45,7 @@
+ 
+ /* ENV setting */
+ 
+-#define CONFIG_EXTRA_ENV_SETTINGS \
++#define CFG_EXTRA_ENV_SETTINGS \
+ 	"usb_pgood_delay=2000\0" \
+ 	"bootm_size=0x10000000 \0" \
+ 	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p2 \0" \
+diff --git a/include/configs/smarc-rzg3s.h b/include/configs/smarc-rzg3s.h
+index 473c5071fc..96795b4a54 100644
+--- a/include/configs/smarc-rzg3s.h
++++ b/include/configs/smarc-rzg3s.h
+@@ -63,7 +63,7 @@
+ 
+ /* ENV setting */
+ 
+-#define CONFIG_EXTRA_ENV_SETTINGS \
++#define CFG_EXTRA_ENV_SETTINGS \
+ 	"usb_pgood_delay=2000\0" \
+ 	"bootm_size=0x10000000 \0" \
+ 	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk1p2 \0" \
+-- 
+2.25.1
+

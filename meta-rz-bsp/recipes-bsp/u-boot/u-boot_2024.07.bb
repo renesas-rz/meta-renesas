@@ -9,6 +9,11 @@ PV="2024.07+git${SRCPV}"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 
+SRC_URI:append = " \
+	file://0001-include-configs-correct-extra-environment-setting-co.patch \
+	file://0002-board-renesas-update-SPI-NOR-NVCR-setting.patch \
+"
+
 do_deploy:append() {
     if [ -n "${UBOOT_CONFIG}" ]
     then
