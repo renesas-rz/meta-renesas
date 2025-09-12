@@ -4,7 +4,7 @@ COMPATIBLE_MACHINE = "(rzg3e-family|rzv2h-family|rzg2l-family|rzg3s-family)"
 
 UBOOT_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https;nobranch=1"
 UBOOT_REV:rzg3e-family = "deef73d62a080ba09180fefe3c8b8d08b050c076"
-UBOOT_REV:rzv2h-family = "70599f5d6cd779a890da2f31a0b9285fdda7b055"
+UBOOT_REV:rzv2h-family = "8e0b7870026f1c7debdc503435fa51bfa3ae7006"
 UBOOT_REV:rzg2l-family = "e21e6059a46d1c496f328663c3d12dfc79ba7b45"
 UBOOT_REV:rzg3s-family = "e21e6059a46d1c496f328663c3d12dfc79ba7b45"
 
