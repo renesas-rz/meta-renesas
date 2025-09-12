@@ -3,7 +3,7 @@ require u-boot-renesas.inc
 COMPATIBLE_MACHINE = "(rzg2l-family|rzg3s-family)"
 
 UBOOT_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https;nobranch=1"
-UBOOT_REV = "e21e6059a46d1c496f328663c3d12dfc79ba7b45"
+UBOOT_REV = "59e91110066c6b2ee8a79585e3d643bb35ccf376"
 
 PV="2024.07+git${SRCPV}"
 
