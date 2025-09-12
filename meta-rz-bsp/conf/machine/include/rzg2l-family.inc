@@ -4,8 +4,6 @@ SOC_FAMILY = "rzg2l-family:mali-family"
 # Machine configuration
 MACHINE_FEATURES = "opengles opencl"
 
-IMAGE_FSTYPES:append = " tar.bz2 ext4"
-
 # Configuration for ARM Trusted Firmware
 EXTRA_IMAGEDEPENDS += " trusted-firmware-a"
 

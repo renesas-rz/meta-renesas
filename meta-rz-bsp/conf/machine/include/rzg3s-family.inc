@@ -1,8 +1,6 @@
 require conf/machine/include/soc-family.inc
 SOC_FAMILY = "rzg3s-family"
 
-IMAGE_FSTYPES:append = " tar.bz2 ext4"
-
 # Configuration for ARM Trusted Firmware
 EXTRA_IMAGEDEPENDS += " trusted-firmware-a"
 
