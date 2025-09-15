@@ -21,7 +21,8 @@ SRC_URI = " \
 "
 
 SRC_URI_append = " \
-    file://asr/0001-fip-base-address-align-with-64k-erase-sector-size.patch       \
+    file://asr/0001-fip-base-address-align-with-64k-erase-sector-size.patch         \
+    file://asr/0002-rzg2l_add_reset_from_tfa.patch                                  \
 "
 
 SRCREV = "203c78323b50059ea38eceb09f6bfda5d5934b55"

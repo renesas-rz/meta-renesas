@@ -1,0 +1,363 @@
+diff --git a/plat/renesas/rz/common/bl31_plat_setup.c b/plat/renesas/rz/common/bl31_plat_setup.c
+index 84ee7917b..9f34550d5 100755
+--- a/plat/renesas/rz/common/bl31_plat_setup.c
++++ b/plat/renesas/rz/common/bl31_plat_setup.c
+@@ -10,7 +10,8 @@
+ #include <common/bl_common.h>
+ #include <lib/xlat_tables/xlat_tables_compat.h>
+ #include <plat/common/common_def.h>
+-
++#include <drivers/generic_delay_timer.h>
++#include <syc.h>
+ #include <scifa.h>
+ #include <plat_tzc_def.h>
+ #include <rz_private.h>
+@@ -48,6 +49,11 @@ void bl31_early_platform_setup2(u_register_t arg0,
+ 	console_set_scope(&rzg2l_bl31_console,
+ 			CONSOLE_FLAG_BOOT | CONSOLE_FLAG_RUNTIME | CONSOLE_FLAG_CRASH);
+ 
++	syc_init(RZG2L_SYC_INCK_HZ);
++
++	/* initialize Timer */
++	generic_delay_timer_init();
++
+ 	/* copy bl2_to_bl31_params_mem_t*/
+ 	memcpy(&from_bl2, (void *)arg0, sizeof(from_bl2));
+ }
+diff --git a/plat/renesas/rz/common/drivers/cpg.c b/plat/renesas/rz/common/drivers/cpg.c
+index 1820c52b9..d7697880f 100644
+--- a/plat/renesas/rz/common/drivers/cpg.c
++++ b/plat/renesas/rz/common/drivers/cpg.c
+@@ -17,6 +17,24 @@
+ #define CPG_T_CLK		(0)
+ #define CPG_T_RST		(1)
+ 
++#define	CPG_PLL2_INDEX					(0)
++#define	CPG_PLL3_INDEX					(1)
++#define	CPG_PLL5_INDEX					(2)
++
++#define CPG_SEL_PLL1_ON_OFF					(0)
++#define CPG_SEL_PLL2_1_ON_OFF				(1)
++#define CPG_SEL_PLL2_2_ON_OFF				(2)
++#define CPG_SEL_PLL3_1_ON_OFF				(3)
++#define CPG_SEL_PLL3_2_ON_OFF				(4)
++#define CPG_SEL_PLL3_3_ON_OFF				(5)
++#define CPG_SEL_PLL5_1_ON_OFF				(6)
++#define CPG_SEL_PLL5_3_ON_OFF				(7)
++#define CPG_SEL_PLL5_4_ON_OFF				(8)
++#define CPG_SEL_PLL6_1_ON_OFF				(9)
++#define CPG_SEL_GPU1_1_ON_OFF				(10)
++#define CPG_SEL_GPU1_2_ON_OFF				(11)
++#define CPG_SEL_GPU2_ON_OFF					(12)
++
+ typedef struct {
+ 	uintptr_t reg;
+ 	uintptr_t mon;
+@@ -63,10 +81,6 @@ static CPG_PLL_SETDATA_146 cpg_pll6_setdata = {
+ 	{ CPG_PLL6_STBY, 0x00010001 }, /* SSC OFF */
+ };
+ 
+-#define	CPG_PLL2_INDEX					(0)
+-#define	CPG_PLL3_INDEX					(1)
+-#define	CPG_PLL5_INDEX					(2)
+-
+ static const CPG_SETUP_DATA early_setup_tbl[] = {
+ 	{
+ 		(uintptr_t)CPG_CLKON_SYC,
+@@ -82,6 +96,38 @@ static const CPG_SETUP_DATA early_setup_tbl[] = {
+ 	}
+ };
+ 
++static CPG_SETUP_DATA cpg_clk_rst_wdt_on_tbl[] = {
++	{		/* WDT */
++		(uintptr_t)CPG_CLKON_WDT,
++		(uintptr_t)CPG_CLKMON_WDT,
++		0x00030003,
++		CPG_T_CLK
++	},
++
++	{		/* WDT */
++		(uintptr_t)CPG_RST_WDT,
++		(uintptr_t)CPG_RSTMON_WDT,
++		0x00010001,
++		CPG_T_RST
++	}
++};
++
++static CPG_SETUP_DATA cpg_clk_rst_wdt_off_tbl[] = {
++	{		/* WDT */
++		(uintptr_t)CPG_CLKON_WDT,
++		(uintptr_t)CPG_CLKMON_WDT,
++		0x00030000,
++		CPG_T_CLK
++	},
++
++	{		/* WDT */
++		(uintptr_t)CPG_RST_WDT,
++		(uintptr_t)CPG_RSTMON_WDT,
++		0x00010001,
++		CPG_T_RST
++	}
++};
++
+ static CPG_SETUP_DATA cpg_clk_on_tbl[] = {
+ 	{		/* CM33 */
+ 		(uintptr_t)CPG_CLKON_CM33,
+@@ -512,20 +558,6 @@ static CPG_REG_SETTING cpg_dynamic_select_tbl[] = {
+ 	{ (uintptr_t)CPG_PL2SDHI_DSEL, 		0x00110022 },
+ };
+ 
+-#define CPG_SEL_PLL1_ON_OFF					(0)
+-#define CPG_SEL_PLL2_1_ON_OFF				(1)
+-#define CPG_SEL_PLL2_2_ON_OFF				(2)
+-#define CPG_SEL_PLL3_1_ON_OFF				(3)
+-#define CPG_SEL_PLL3_2_ON_OFF				(4)
+-#define CPG_SEL_PLL3_3_ON_OFF				(5)
+-#define CPG_SEL_PLL5_1_ON_OFF				(6)
+-#define CPG_SEL_PLL5_3_ON_OFF				(7)
+-#define CPG_SEL_PLL5_4_ON_OFF				(8)
+-#define CPG_SEL_PLL6_1_ON_OFF				(9)
+-#define CPG_SEL_GPU1_1_ON_OFF				(10)
+-#define CPG_SEL_GPU1_2_ON_OFF				(11)
+-#define CPG_SEL_GPU2_ON_OFF					(12)
+-
+ static CPG_REG_SETTING cpg_sel_pll1_on_off[] = {
+ 	{(uintptr_t)CPG_CLKON_CA55, 0x00010001 }
+ };
+@@ -908,6 +940,21 @@ void cpg_wdtrst_sel_setup(void)
+ 	mmio_write_32(CPG_WDTRST_SEL, reg);
+ }
+ 
++void cpg_reset_wdt0(void)
++{
++	/* WDT reset apply */
++	cpg_ctrl_clkrst(&cpg_clk_rst_wdt_off_tbl[0], ARRAY_SIZE(cpg_clk_rst_wdt_off_tbl));
++	udelay(1);
++
++	cpg_ctrl_clkrst(&cpg_clk_rst_wdt_on_tbl[0], ARRAY_SIZE(cpg_clk_rst_wdt_on_tbl));
++	udelay(1);
++}
++
++void cpg_setup_wdt0(void)
++{
++	mmio_write_32(CPG_WDTRST_SEL, mmio_read_32(CPG_WDTRST_SEL) | WDTRST_SEL_WDTRSTSEL0);
++}
++
+ void cpg_setup(void)
+ {
+ 	cpg_selector_on_off(CPG_SEL_PLL3_3_ON_OFF, CPG_OFF);
+diff --git a/plat/renesas/rz/common/drivers/wdt.c b/plat/renesas/rz/common/drivers/wdt.c
+new file mode 100644
+index 000000000..075da666c
+--- /dev/null
++++ b/plat/renesas/rz/common/drivers/wdt.c
+@@ -0,0 +1,15 @@
++/*
++ * Copyright (c) 2025, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++#include <stdint.h>
++#include <lib/mmio.h>
++#include <common/debug.h>
++#include <wdt.h>
++
++/* Use the WDT to perform a system reset */
++void wdt_system_reset(void)
++{
++	mmio_write_32(WDT0_BASE + WDT_PEEN_OFFSET, 0x00000001);
++}
+diff --git a/plat/renesas/rz/common/include/cpg.h b/plat/renesas/rz/common/include/cpg.h
+index 9b9678969..9e4bc4ae8 100644
+--- a/plat/renesas/rz/common/include/cpg.h
++++ b/plat/renesas/rz/common/include/cpg.h
+@@ -12,4 +12,7 @@ void cpg_setup(void);
+ void cpg_active_ddr(void (*disable_phy)(void));
+ void cpg_reset_ddr_mc(void);
+ 
++void cpg_reset_wdt0(void);
++void cpg_setup_wdt0(void);
++
+ #endif /* __CPG_H__ */
+diff --git a/plat/renesas/rz/common/include/wdt.h b/plat/renesas/rz/common/include/wdt.h
+new file mode 100644
+index 000000000..ea0558e40
+--- /dev/null
++++ b/plat/renesas/rz/common/include/wdt.h
+@@ -0,0 +1,26 @@
++/*
++ * Copyright (c) 2025, Renesas Electronics Corporation. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef __WDT_H__
++#define __WDT_H__
++
++#define WDT0_BASE		(0x12800800)
++#define WDT1_BASE		(0x12800C00)
++#define WDT2_BASE		(0x12800400)
++
++#define WDT_CNT_OFFSET			(0x00)	/* Control Register */
++#define WDT_SET_OFFSET			(0x04)	/* Period Setting Register */
++#define WDT_TIM_OFFSET			(0x08)	/* Elapsed Time Register */
++#define WDT_INT_OFFSET			(0x0C)	/* Interrupt Control Register */
++#define WDT_PECR_OFFSET			(0x10)	/* Parity Error Control Register */
++#define WDT_PEEN_OFFSET			(0x14)	/* Parity Error Forced Enable Register */
++#define WDT_PESR_OFFSET			(0x18)	/* Parity Error Status Register */
++#define WDT_PEER_OFFSET			(0x1C)	/* Parity Error Enable Register */
++#define WDT_PEPO_OFFSET			(0x20)	/* Parity Error Polarity Setting Register */
++
++void wdt_system_reset(void);
++
++#endif /* __WDT_H__ */
+diff --git a/plat/renesas/rz/common/plat_pm.c b/plat/renesas/rz/common/plat_pm.c
+index 811998a82..57cca1865 100644
+--- a/plat/renesas/rz/common/plat_pm.c
++++ b/plat/renesas/rz/common/plat_pm.c
+@@ -13,19 +13,22 @@
+ #include <plat/common/platform.h>
+ 
+ #include <cpg_regs.h>
++#include <cpg.h>
+ #include <sys_regs.h>
+ #include <rz_private.h>
+ #include <rzg2l_def.h>
+ #include <common/bl_common.h>
++#include <wdt.h>
+ 
+ uintptr_t	gp_warm_ep;
+ 
+-static int rzg2l_pwr_domain_on(u_register_t mpidr)
+-{
+-	const uint32_t rval[2][2] = {
++const uint32_t cores_reset_vector[2][2] = {
+ 		{ SYS_CA55_CFG_RVAL0, SYS_CA55_CFG_RVAH0 },
+ 		{ SYS_CA55_CFG_RVAL1, SYS_CA55_CFG_RVAH1 }
+ 	};
++
++static int rzg2l_pwr_domain_on(u_register_t mpidr)
++{
+ 	const uint32_t pch[2][2] = {
+ 		{ CPG_CORE0_PCHCTL, CPG_CORE0_PCHMON },
+ 		{ CPG_CORE1_PCHCTL, CPG_CORE1_PCHMON }
+@@ -46,8 +49,8 @@ static int rzg2l_pwr_domain_on(u_register_t mpidr)
+ 	}
+ 
+ 	/*  Start the core */
+-	mmio_write_32(rval[coreid][0], (uint32_t)(gp_warm_ep & 0xFFFFFFFC));
+-	mmio_write_32(rval[coreid][1], (uint32_t)((gp_warm_ep >> 32) & 0xFF));
++	mmio_write_32(cores_reset_vector[coreid][0], (uint32_t)(gp_warm_ep & 0xFFFFFFFC));
++	mmio_write_32(cores_reset_vector[coreid][1], (uint32_t)((gp_warm_ep >> 32) & 0xFF));
+ 
+ 	/* Assert PORESET */
+ 	mmio_write_32(CPG_RST_CA55, (0x00010000 << coreid));
+@@ -111,11 +114,42 @@ static void __dead2 rzg2l_system_off(void)
+         panic();
+ }
+ 
++static void __dead2 rzg2l_system_reset(void)
++{
++	INFO("RZ/G2L System Reset\n");
++
++	cpg_reset_wdt0();
++
++	for (int i = 0; i < PLATFORM_CORE_COUNT; i++) {
++		mmio_write_32(cores_reset_vector[i][0], 0x00000000);
++		mmio_write_32(cores_reset_vector[i][1], 0x00000000);
++	}
++
++	cpg_setup_wdt0();
++
++	console_flush();
++
++	/* Issue Barrier instruction */
++	isb();
++	dsb();
++
++	wdt_system_reset();
++
++	for (;;) {
++
++	}
++
++	panic();
++}
++
+ const plat_psci_ops_t rzg2l_plat_psci_ops = {
+ 	.pwr_domain_on						= rzg2l_pwr_domain_on,
+ 	.pwr_domain_on_finish				= rzg2l_pwr_domain_on_finish,
+ 	.pwr_domain_off						= rzg2l_pwr_domain_off,
+-	.system_off                                     = rzg2l_system_off,
++	/*****PSCI_SYSTEM_OFF*****/
++	.system_off							= rzg2l_system_off,
++	/*****PSCI_SYSTEM_RESET*****/
++	.system_reset						= rzg2l_system_reset,
+ };
+ 
+ int plat_setup_psci_ops(uintptr_t sec_entrypoint,
+diff --git a/plat/renesas/rz/common/rz_common.mk b/plat/renesas/rz/common/rz_common.mk
+index 969883751..cda6f6b4c 100755
+--- a/plat/renesas/rz/common/rz_common.mk
++++ b/plat/renesas/rz/common/rz_common.mk
+@@ -57,7 +57,6 @@ SD_SOURCES		:= plat/renesas/rz/common/drivers/sd/boot_esddev.c		\
+ 
+ 
+ BL2_SOURCES		+=	lib/cpus/aarch64/cortex_a55.S						\
+-					${RZ_TIMER_SOURCES}									\
+ 					${DYN_CFG_SOURCES}									\
+ 					common/desc_image_load.c							\
+ 					drivers/io/io_storage.c								\
+@@ -79,7 +78,6 @@ BL2_SOURCES		+=	lib/cpus/aarch64/cortex_a55.S						\
+ 					plat/renesas/rz/common/aarch64/plat_helpers.S		\
+ 					plat/renesas/rz/common/drivers/syc.c				\
+ 					plat/renesas/rz/common/drivers/pfc.c				\
+-					plat/renesas/rz/common/drivers/cpg.c				\
+ 					${DDR_SOURCES}										\
+ 					${SPI_MULTI_SOURCE}									\
+ 					${SD_SOURCES}
+@@ -105,13 +103,44 @@ BL31_SOURCES	+=	lib/cpus/aarch64/cortex_a55.S					\
+ 
+ include lib/xlat_tables_v2/xlat_tables.mk
+ PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
++							plat/renesas/rz/common/drivers/cpg.c	\
+ 							plat/renesas/rz/common/plat_rz_common.c	\
++							${RZ_TIMER_SOURCES}						\
+ 							plat/renesas/rz/common/drivers/scifa.S
+ 
+ ifneq (${ENABLE_STACK_PROTECTOR},0)
+ PLAT_BL_COMMON_SOURCES	+=	plat/renesas/rz/common/rz_stack_protector.c
+ endif
+ 
++BL2_SOURCES				+=	common/desc_image_load.c								\
++							drivers/io/io_storage.c									\
++							drivers/io/io_memmap.c									\
++							drivers/io/io_fip.c										\
++							plat/renesas/rz/common/drivers/io/io_emmcdrv.c			\
++							plat/renesas/rz/common/drivers/io/io_sddrv.c			\
++							plat/renesas/rz/common/bl2_plat_setup.c					\
++							plat/renesas/rz/common/bl2_plat_mem_params_desc.c		\
++							plat/renesas/rz/common/plat_image_load.c				\
++							plat/renesas/rz/common/plat_storage.c					\
++							plat/renesas/rz/common/drivers/pfc.c					\
++							${EMMC_SOURCES}											\
++							${SPI_MULTI_SOURCE}										\
++							${SD_SOURCES}
++
++# Include GICv3 driver files
++include drivers/arm/gic/v3/gicv3.mk
++
++BL31_SOURCES			+=	plat/common/plat_gicv3.c								\
++							plat/common/plat_psci_common.c							\
++							plat/renesas/rz/common/bl31_plat_setup.c				\
++							plat/renesas/rz/common/plat_pm.c						\
++							plat/renesas/rz/common/plat_topology.c					\
++							plat/renesas/rz/common/plat_gic.c						\
++							plat/renesas/rz/common/rz_plat_sip_handler.c			\
++							plat/renesas/rz/common/rz_sip_svc.c						\
++							plat/renesas/rz/common/drivers/wdt.c					\
++							${GICV3_SOURCES}
++
+ ifneq (${TRUSTED_BOARD_BOOT},0)
+ 
+ 	# Include common TBB sources
