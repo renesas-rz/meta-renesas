@@ -1,0 +1,201 @@
+diff --cc plat/renesas/rz/common/plat_pm.c
+index 811998a82,2b480c2f3..000000000
+--- a/plat/renesas/rz/common/plat_pm.c
++++ b/plat/renesas/rz/common/plat_pm.c
+@@@ -13,10 -13,12 +13,12 @@@
+  #include <plat/common/platform.h>
+  
+  #include <cpg_regs.h>
++ #include <cpg.h>
+  #include <sys_regs.h>
+  #include <rz_private.h>
+ -#include <rz_soc_def.h>
+ +#include <rzg2l_def.h>
+  #include <common/bl_common.h>
++ #include <wdt.h>
+  
+  uintptr_t	gp_warm_ep;
+  
+@@@ -106,11 -108,39 +109,39 @@@ static void rzg2l_pwr_domain_off(const 
+  
+  static void __dead2 rzg2l_system_off(void)
+  {
+ -	wfi();
+ -	ERROR("RZG System Off: operation not handled.\n");
+ -	panic();
+ +        wfi();
+ +        ERROR("RZG System Off: operation not handled.\n");
+ +        panic();
+  }
+  
++ static void __dead2 rzg2l_system_reset(void)
++ {
++ 	INFO("RZ/G2L System Reset\n");
++ 
++ 	cpg_reset_wdt0();
++ 
++ 	for (int i = 0; i < PLATFORM_CORE_COUNT; i++) {
++ 		mmio_write_32(cores_reset_vector[i][0], 0x00000000);
++ 		mmio_write_32(cores_reset_vector[i][1], 0x00000000);
++ 	}
++ 
++ 	cpg_setup_wdt0();
++ 
++ 	console_flush();
++ 
++ 	/* Issue Barrier instruction */
++ 	isb();
++ 	dsb();
++ 
++ 	wdt_system_reset();
++ 
++ 	for (;;) {
++ 
++ 	}
++ 
++ 	panic();
++ }
++ 
+  const plat_psci_ops_t rzg2l_plat_psci_ops = {
+  	.pwr_domain_on						= rzg2l_pwr_domain_on,
+  	.pwr_domain_on_finish				= rzg2l_pwr_domain_on_finish,
+diff --cc plat/renesas/rz/common/rz_common.mk
+index 969883751,6040c0191..000000000
+mode 100755,100644..100755
+--- a/plat/renesas/rz/common/rz_common.mk
++++ b/plat/renesas/rz/common/rz_common.mk
+@@@ -27,86 -46,54 +27,86 @@@ ifndef SPI_FLAS
+    SPI_FLASH = MT25QU512ABB
+  endif
+  
+ -PLAT_INCLUDES			:=	-Iplat/renesas/rz/common/include						\
+ -							-Iplat/renesas/rz/common/drivers/emmc					\
+ -							-Iplat/renesas/rz/common/drivers/io						\
+ -							-Idrivers/renesas/common/io								\
+ -							-Iplat/renesas/rz/common/include/drivers/spi_multi		\
+ -							-Iplat/renesas/rz/common/include/drivers/spi_multi/${SPI_FLASH} \
+ -							-Iplat/renesas/rz/common/drivers/sd
+ -
+ -RZ_TIMER_SOURCES		:=	drivers/delay_timer/generic_delay_timer.c				\
+ -							drivers/delay_timer/delay_timer.c
+ -
+ -DDR_SOURCES				:=	plat/renesas/rz/common/drivers/ddr/ddr.c
+ -
+ -EMMC_SOURCES			:=	plat/renesas/rz/common/drivers/emmc/emmc_interrupt.c	\
+ -							plat/renesas/rz/common/drivers/emmc/emmc_utility.c		\
+ -							plat/renesas/rz/common/drivers/emmc/emmc_mount.c		\
+ -							plat/renesas/rz/common/drivers/emmc/emmc_init.c			\
+ -							plat/renesas/rz/common/drivers/emmc/emmc_read.c			\
+ -							plat/renesas/rz/common/drivers/emmc/emmc_cmd.c			\
+ -							plat/renesas/rz/common/drivers/emmc/emmc_write.c
+ -
+ -SPI_MULTI_SOURCE 		:=	plat/renesas/rz/common/drivers/spi_multi/spi_multi.c	\
+ -							plat/renesas/rz/common/drivers/spi_multi/${SPI_FLASH}/spi_multi_device.c
+ -
+ -SD_SOURCES				:=	plat/renesas/rz/common/drivers/sd/sd_init.c				\
+ -							plat/renesas/rz/common/drivers/sd/sd_mount.c			\
+ -							plat/renesas/rz/common/drivers/sd/sd_util.c				\
+ -							plat/renesas/rz/common/drivers/sd/sd_cd.c				\
+ -							plat/renesas/rz/common/drivers/sd/sd_cmd.c				\
+ -							plat/renesas/rz/common/drivers/sd/sd_int.c				\
+ -							plat/renesas/rz/common/drivers/sd/sd_trns.c				\
+ -							plat/renesas/rz/common/drivers/sd/sd_read.c				\
+ -							plat/renesas/rz/common/drivers/sd/sd_write.c			\
+ -							plat/renesas/rz/common/drivers/sd/sd_dev_low.c
+ -
+ -BL_COMMON_SOURCES		+=	lib/cpus/aarch64/cortex_a55.S							\
+ -							drivers/arm/tzc/tzc400.c
+ +PLAT_INCLUDES		:=	-Iplat/renesas/rz/common/include								\
+ +						-Iplat/renesas/rz/common/drivers/emmc							\
+ +						-Iplat/renesas/rz/common/drivers/io								\
+ +						-Idrivers/renesas/common/io										\
+ +						-Iplat/renesas/rz/common/include/drivers/spi_multi              \
+ +						-Iplat/renesas/rz/common/include/drivers/spi_multi/${SPI_FLASH} \
+ +						-Iplat/renesas/rz/common/drivers/sd								\
+ +
+ +RZ_TIMER_SOURCES	:=	drivers/delay_timer/generic_delay_timer.c		\
+ +						drivers/delay_timer/delay_timer.c
+ +
+ +DDR_SOURCES		:= plat/renesas/rz/common/drivers/ddr/ddr.c
+ +
+ +SPI_MULTI_SOURCE := plat/renesas/rz/common/drivers/spi_multi/spi_multi.c					\
+ +					plat/renesas/rz/common/drivers/spi_multi/${SPI_FLASH}/spi_multi_device.c
+ +
+ +SD_SOURCES		:= plat/renesas/rz/common/drivers/sd/boot_esddev.c		\
+ +				   plat/renesas/rz/common/drivers/sd/sd_init.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_mount.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_util.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_cd.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_cmd.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_int.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_trns.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_read.c			\
+ +				   plat/renesas/rz/common/drivers/sd/sd_main.c			\
+ +				   plat/renesas/rz/common/drivers/io/io_sddrv.c
+ +
+ +
+ +BL2_SOURCES		+=	lib/cpus/aarch64/cortex_a55.S						\
+- 					${RZ_TIMER_SOURCES}									\
+ +					${DYN_CFG_SOURCES}									\
+ +					common/desc_image_load.c							\
+ +					drivers/io/io_storage.c								\
+ +					drivers/io/io_memmap.c								\
+ +					drivers/io/io_fip.c									\
+ +					drivers/arm/tzc/tzc400.c							\
+ +					plat/renesas/rz/common/drivers/io/io_emmcdrv.c		\
+ +					plat/renesas/rz/common/drivers/emmc/emmc_interrupt.c\
+ +					plat/renesas/rz/common/drivers/emmc/emmc_utility.c	\
+ +					plat/renesas/rz/common/drivers/emmc/emmc_mount.c	\
+ +					plat/renesas/rz/common/drivers/emmc/emmc_init.c		\
+ +					plat/renesas/rz/common/drivers/emmc/emmc_read.c		\
+ +					plat/renesas/rz/common/drivers/emmc/emmc_cmd.c		\
+ +					plat/renesas/rz/common/bl2_plat_setup.c				\
+ +					plat/renesas/rz/common/bl2_plat_mem_params_desc.c	\
+ +					plat/renesas/rz/common/plat_image_load.c			\
+ +					plat/renesas/rz/common/plat_storage.c				\
+ +					plat/renesas/rz/common/plat_security.c				\
+ +					plat/renesas/rz/common/aarch64/plat_helpers.S		\
+ +					plat/renesas/rz/common/drivers/syc.c				\
+ +					plat/renesas/rz/common/drivers/pfc.c				\
+- 					plat/renesas/rz/common/drivers/cpg.c				\
+ +					${DDR_SOURCES}										\
+ +					${SPI_MULTI_SOURCE}									\
+ +					${SD_SOURCES}
+ +
+ +# Include GICv3 driver files
+ +GICV3_IMPL		:= GIC600
+ +include drivers/arm/gic/v3/gicv3.mk
+ +
+ +BL31_SOURCES	+=	lib/cpus/aarch64/cortex_a55.S					\
+ +					${GICV3_SOURCES}								\
+ +					drivers/arm/tzc/tzc400.c						\
+ +					plat/common/plat_gicv3.c						\
+ +					plat/common/plat_psci_common.c					\
+ +					plat/renesas/rz/common/bl31_plat_setup.c		\
+ +					plat/renesas/rz/common/plat_pm.c				\
+ +					plat/renesas/rz/common/plat_topology.c			\
+ +					plat/renesas/rz/common/plat_gic.c				\
+ +					plat/renesas/rz/common/plat_security.c			\
+ +					plat/renesas/rz/common/rz_plat_sip_handler.c	\
+ +					plat/renesas/rz/common/rz_sip_svc.c				\
+ +					plat/renesas/rz/common/aarch64/plat_helpers.S	\
+ +					plat/renesas/rz/common/drivers/syc.c
+  
+  include lib/xlat_tables_v2/xlat_tables.mk
+ -PLAT_BL_COMMON_SOURCES	:=	${XLAT_TABLES_LIB_SRCS}									\
+ -							plat/renesas/rz/common/aarch64/plat_helpers.S			\
+ -							plat/renesas/rz/common/drivers/scifa.S					\
+ -							plat/renesas/rz/common/drivers/syc.c					\
+ -							plat/renesas/rz/common/drivers/sys.c					\
+ -							plat/renesas/rz/common/drivers/cpg.c					\
+ -							plat/renesas/rz/common/plat_rz_common.c					\
+ -							${RZ_TIMER_SOURCES}										\
+ -							plat/renesas/rz/common/plat_security.c
+ +PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}					\
+++							plat/renesas/rz/common/drivers/cpg.c	\
+ +							plat/renesas/rz/common/plat_rz_common.c	\
+++							${RZ_TIMER_SOURCES}						\
+ +							plat/renesas/rz/common/drivers/scifa.S
+  
+  ifneq (${ENABLE_STACK_PROTECTOR},0)
+  PLAT_BL_COMMON_SOURCES	+=	plat/renesas/rz/common/rz_stack_protector.c
