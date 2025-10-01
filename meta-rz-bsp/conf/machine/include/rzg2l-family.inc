@@ -20,3 +20,8 @@ KERNEL_IMAGETYPE ?= "Image"
 
 # Wic image offset
 FIP_WIC_OFFSET = "--offset 256s"
+
+# ECC support
+ECC_FLAGS = "${@oe.utils.conditional("ECC_MODE", "ENABLE", " DDR_ECC_ENABLE=1 ", "",d)}"
+ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT", " DDR_ECC_ENABLE=1 DDR_ECC_DETECT=1 ", "",d)}"
+ECC_FLAGS += "${@oe.utils.conditional("ECC_MODE", "ERR_DETECT_CORRECT", " DDR_ECC_ENABLE=1 DDR_ECC_DETECT_CORRECT=1 ", "",d)}"

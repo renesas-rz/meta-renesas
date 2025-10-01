@@ -304,3 +304,13 @@ CONF_VERSION = "2"
 
 # Un-comment a following line to select RTLinux.
 # PREFERRED_PROVIDER_virtual/kernel = "linux-renesas-rt"
+
+#
+# Configuration for ECC (Only support for RZ/G2L Series and RZ/V2L)
+#
+# ECC_MODE : choose one of below values then un-comment following line when support.
+#  - ENABLE : Setting enable ECC DDR only.
+#  - ERR_DETECT : Setting enable ECC DDR and add error detection.
+#  - ERR_DETECT_CORRECT : Setting enable ECC DDR, add single bit error correction multibit detection
+#
+#ECC_MODE = "ENABLE"
