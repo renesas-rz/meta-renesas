@@ -1,0 +1,54 @@
+From 0a1d930dc95777931fa0c0fde198c2601721ff21 Mon Sep 17 00:00:00 2001
+From: Hung Tran <hung.tran.jy@renesas.com>
+Date: Tue, 14 Oct 2025 17:37:49 +0700
+Upstream-Status: Inappropriate because this only for RZ-platforms
+Subject: [PATCH] Fix issue window always appears at top left corner
+
+Originally, Weston creates every window at random position.
+Position support was introduced, but previous implement does not
+exclude the case when position is not set. Thus when client does
+not set position, its window always appears at position (0,0).
+
+Signed-off-by: Hung Tran <hung.tran.jy@renesas.com>
+---
+ libweston/desktop/xdg-shell.c | 24 ++++++++++++++----------
+ 1 file changed, 14 insertions(+), 10 deletions(-)
+
+diff --git a/libweston/desktop/xdg-shell.c b/libweston/desktop/xdg-shell.c
+index 9300203..15b16bd 100644
+--- a/libweston/desktop/xdg-shell.c
++++ b/libweston/desktop/xdg-shell.c
+@@ -1495,16 +1495,20 @@ weston_desktop_xdg_surface_committed(struct weston_desktop_surface *dsurface,
+ 						    surface->next_geometry);
+ 	}
+ 
+-        /*
+-         * Use xwayland position to set the position of xdg_surface
+-         * We double the position in xwayland because it will subtract geometry position
+-         */
+-        struct weston_coord_global pos;
+-        pos.c.x = 2 * surface->next_geometry.x;
+-        pos.c.y = 2 * surface->next_geometry.y;
+-        weston_desktop_api_set_xwayland_position(surface->desktop,
+-                                                 surface->desktop_surface,
+-                                                 pos);
++	/*
++	 * Use xwayland position to set the position of xdg_surface
++	 * We double the position in xwayland because it will subtract geometry position
++	 * Position (0,0) must excluded for the case when client does not set geometry
++	 * This exclusion makes intentionally set position (0,0) same as not set.
++	 */
++	if ((surface->next_geometry.x != 0) || (surface->next_geometry.y != 0)) {
++		struct weston_coord_global pos;
++		pos.c.x = 2 * surface->next_geometry.x;
++		pos.c.y = 2 * surface->next_geometry.y;
++		weston_desktop_api_set_xwayland_position(surface->desktop,
++							 surface->desktop_surface,
++							 pos);
++	}
+  
+ 	switch (surface->role) {
+ 	case WESTON_DESKTOP_XDG_SURFACE_ROLE_NONE:
+-- 
+2.41.0
+
