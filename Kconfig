@@ -20,6 +20,9 @@ bool
 config FAMILY_V2H
 bool
 
+config FAMILY_V2N
+bool
+
 config FAMILY_T2H
 bool
 
@@ -82,6 +85,17 @@ choice
 	string
 	depends on MACHINE_RZV2H-EVK
 	default "kas/machines/rzv2h-evk.yml"
+
+	config MACHINE_RZV2N-EVK
+	bool "rzv2n-evk"
+	select FAMILY_V2N
+	help
+		Select the Renesas RZ/V2N reference platform.
+
+        config KAS_INCLUDE_MACHINE_RZV2N-EVK
+        string
+        depends on MACHINE_RZV2N-EVK
+        default "kas/machines/rzv2n-evk.yml"
 
 	config MACHINE_RZG3E-DEV
 	bool "rzg3e-dev"
