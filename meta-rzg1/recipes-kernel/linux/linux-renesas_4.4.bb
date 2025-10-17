@@ -9,11 +9,11 @@ COMPATIBLE_MACHINE = "iwg20m-g1m|iwg20m-g1n|iwg21m|iwg22m|iwg23s"
 DEPENDS_append = " util-linux-native openssl-native"
 KERNEL_URL=" \
 	git://github.com/renesas-rz/rz_linux-cip.git"
-BRANCH = "${@bb.utils.contains("IS_RT_BSP", "1", "rzg1-cip91-rt51", "rzg1-cip91",d)}"
-SRCREV = "${@bb.utils.contains("IS_RT_BSP", "1", "f2066231519dffe3eb1028f60d43f5803a5d5ee5", "b03384e148d17040bad23850205203ba083c9587",d)}"
+BRANCH = "${@bb.utils.contains("IS_RT_BSP", "1", "rzg1-cip102-rt57", "rzg1-cip102",d)}"
+SRCREV = "${@bb.utils.contains("IS_RT_BSP", "1", "2072aaab7861228946346229b41aeec34fc3f4f1", "a6e2e06c37645977643b18874a64db3046123d67",d)}"
 SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
 
-LINUX_VERSION ?= "${@bb.utils.contains("IS_RT_BSP", "1", "4.4.302-cip91-rt51", "4.4.302-cip91",d)}"
+LINUX_VERSION ?= "${@bb.utils.contains("IS_RT_BSP", "1", "4.4.302-cip102-rt57", "4.4.302-cip102",d)}"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 PR = "r1"
