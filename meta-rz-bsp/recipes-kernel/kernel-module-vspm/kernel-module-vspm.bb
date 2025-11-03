@@ -56,6 +56,15 @@ SRC_URI:append:rzv2h-family = " \
 	file://0017-Support-vspm-isu-driver-for-V2H.patch \
 "
 
+# In RZ BSP for yocto v5.x, the supported kernel version are
+# v6.1 and v6.12. These patch files are for kernel v6.12.
+KERNEL_V6.12_PATCHES = " \
+    file://0017-rcar_gen3-Fix-compile-error-for-kernel-v6.12.patch \
+"
+SRC_URI:append = " \
+	${@oe.utils.conditional("PREFERRED_VERSION_linux-renesas", "6.12%", "${KERNEL_V6.12_PATCHES}" , "",d)} \
+"
+
 S = "${WORKDIR}/git"
 VSPM_DRV_DIR = "vspm-module/files/vspm"
 includedir = "/usr/local/include"

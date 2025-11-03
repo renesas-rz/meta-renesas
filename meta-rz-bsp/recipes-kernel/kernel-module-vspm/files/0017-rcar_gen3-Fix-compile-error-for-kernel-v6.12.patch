@@ -1,0 +1,74 @@
+From 753093cbf40627868a0eccfdd46bf5372f33f31e Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Fri, 24 Oct 2025 15:59:12 +0700
+Subject: [PATCH] rcar_gen3: Fix compile error for kernel v6.12
+
+On kernel 6.12, there are some compilation errors.
+The error is fixed by change the return an `void` intead of `int`
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ vspm-module/files/vspm/drv/vspm_main.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 92f567f..cdbca61 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -343,7 +343,7 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_vsp_remove(struct platform_device *pdev)
++static void vspm_vsp_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -365,7 +365,7 @@ static int vspm_vsp_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->vsp_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ static int vspm_fdp_probe(struct platform_device *pdev)
+@@ -419,7 +419,7 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_fdp_remove(struct platform_device *pdev)
++static void vspm_fdp_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -441,7 +441,7 @@ static int vspm_fdp_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->fdp_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ static int vspm_isu_probe(struct platform_device *pdev)
+@@ -504,7 +504,7 @@ static int vspm_isu_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vspm_isu_remove(struct platform_device *pdev)
++static void vspm_isu_remove(struct platform_device *pdev)
+ {
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -526,7 +526,7 @@ static int vspm_isu_remove(struct platform_device *pdev)
+ 	for (i = 0; i < CLKNUM; i++)
+ 		pdrv->isu_clks[ch][i] = NULL;
+ 
+-	return 0;
++	return;
+ }
+ 
+ 
+-- 
+2.34.1
+
