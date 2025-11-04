@@ -38,6 +38,8 @@ SRC_URI:append:rzg2l-family = "${ISU_PATCHES}"
 
 SRC_URI:append:rzv2h-family = "${ISU_PATCHES}"
 
+SRC_URI:append:rzv2n-family = "${ISU_PATCHES}"
+
 # In RZ BSP for yocto v5.x, the supported kernel version are
 # v6.1 and v6.12. These patch files are for kernel v6.12.
 KERNEL_V6.12_PATCHES = " \

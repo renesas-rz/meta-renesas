@@ -1,20 +1,20 @@
-From 24986e3eedcb9b6bdccfb593c7c1fe00da638b20 Mon Sep 17 00:00:00 2001
+From 980d0444de6c0a68aa520fd4cd1f12dc407bf6a8 Mon Sep 17 00:00:00 2001
 From: hienhuynh <hien.huynh.px@renesas.com>
 Date: Tue, 8 Mar 2022 14:38:38 +0700
-Subject: [PATCH 3/9] Do not parse and init lossy mem area for G2L/G3E/V2H
+Subject: [PATCH 3/9] Do not parse and init lossy mem area for G2L/G3E/V2H/V2N
  Series
 
-RZ/G2L, RZ/G3E and RZ/V2H series do not support lossy mem area.
+RZ/G2L, RZ/G3E, RZ/V2H and RZ/V2N series do not support lossy mem area.
 So this commit is created to let mmngr not parse and init
 lossy mem area for them.
 
 Signed-off-by: trungvanle <trung.le.xk@renesas.com>
 ---
- .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 41 ++++++++++++-------
- 1 file changed, 27 insertions(+), 14 deletions(-)
+ .../mmngr-module/files/mmngr/drv/mmngr_drv.c  | 42 ++++++++++++-------
+ 1 file changed, 28 insertions(+), 14 deletions(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
-index 5d31aa6..b9c01a5 100644
+index 5d31aa6..7dee970 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/drv/mmngr_drv.c
 @@ -1,7 +1,7 @@
@@ -26,7 +26,7 @@ index 5d31aa6..b9c01a5 100644
  
   License        Dual MIT/GPLv2
  
-@@ -1255,6 +1255,14 @@ static int parse_legacy_memory_node(struct device_node *np)
+@@ -1255,6 +1255,15 @@ static int parse_legacy_memory_node(struct device_node *np)
  }
  #endif
  
@@ -35,13 +35,14 @@ index 5d31aa6..b9c01a5 100644
 +	{ .family = "RZ/G2UL" },
 +	{ .family = "RZ/G3E" },
 +	{ .family = "RZ/V2H" },
++	{ .family = "RZ/V2N" },
 +	{ /* sentinel*/ }
 +};
 +
  static int parse_reserved_mem_dt(struct device_node *np)
  {
  	int ret = 0;
-@@ -1269,15 +1277,18 @@ static int parse_reserved_mem_dt(struct device_node *np)
+@@ -1269,15 +1278,18 @@ static int parse_reserved_mem_dt(struct device_node *np)
  			 "(linux,multimedia) from DT\n");
  		return ret;
  	}
@@ -69,7 +70,7 @@ index 5d31aa6..b9c01a5 100644
  	}
  	return ret;
  }
-@@ -1787,10 +1798,12 @@ static int mm_probe(struct platform_device *pdev)
+@@ -1787,10 +1799,12 @@ static int mm_probe(struct platform_device *pdev)
  	}
  #endif
  

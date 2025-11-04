@@ -32,6 +32,7 @@ SRC_URI:append = " \
 MMNGR_CFG:rzg3e-family ?= "MMNGR_RZG3E"
 MMNGR_CFG:rzg2l-family ?= "MMNGR_RZG2L"
 MMNGR_CFG:rzv2h-family ?= "MMNGR_RZV2H"
+MMNGR_CFG:rzv2n-family ?= "MMNGR_RZV2H"
 
 includedir = "/usr/local/include"
 SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
