@@ -20,6 +20,15 @@ SRC_URI:append = " \
     file://0009-mmngr-module-mmngr_drv-Change-return-type-of-mm_cnv_.patch \
 "
 
+# In RZ BSP for yocto v5.x, the supported kernel version are
+# v6.1 and v6.12. These patch files are for kernel v6.12.
+KERNEL_V6.12_PATCHES = " \
+    file://0010-mmngr-Update-functions-to-adapt-with-new-kernel-6.12.patch \
+"
+SRC_URI:append = " \
+	${@oe.utils.conditional("PREFERRED_VERSION_linux-renesas", "6.12%", "${KERNEL_V6.12_PATCHES}" , "",d)} \
+"
+
 MMNGR_CFG:rzg3e-family ?= "MMNGR_RZG3E"
 MMNGR_CFG:rzg2l-family ?= "MMNGR_RZG2L"
 MMNGR_CFG:rzv2h-family ?= "MMNGR_RZV2H"
