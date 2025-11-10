@@ -1,0 +1,6 @@
+header:
+  version: 14
+
+local_conf_header:
+   kernel_version_config:
+      PREFERRED_VERSION_linux-renesas = "6.12%"
