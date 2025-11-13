@@ -173,6 +173,27 @@ menu "Features"
 endmenu
 
 menu "Misc"
+choice
+	prompt "Select kernel version"
+	default KERNEL_V6_1
+
+	config KERNEL_V6_1
+	bool "Kernel version 6.1"
+	help
+		Use kernel 6.1 version for build.
+
+	config KERNEL_V6_12
+	bool "Kernel version 6.12"
+	help
+		Use kernel 6.12 version for build.
+
+endchoice
+
+	config KAS_INCLUDE_KERNEL_VERSION
+	string
+	default "kas/misc/kernel-v6.1.yml" if KERNEL_V6_1
+	default "kas/misc/kernel-v6.12.yml" if KERNEL_V6_12
+
 	config KERNEL_REALTIME
 	bool "Kernel-realtime"
 	default n
