@@ -20,6 +20,9 @@ bool
 config FAMILY_V2H
 bool
 
+config FAMILY_T2H
+bool
+
 menu "Machines"
 choice
 	prompt "Select machine:"
@@ -112,6 +115,28 @@ choice
 	string
 	depends on MACHINE_SMARC-RZG3S
 	default "kas/machines/smarc-rzg3s.yml"
+
+	config MACHINE_RZT2H-DEV
+	bool "rzt2h-dev"
+	select FAMILY_T2H
+	help
+		Select the Renesas RZ/T2H reference platform
+
+	config KAS_INCLUDE_MACHINE_RZT2H-DEV
+	string
+	depends on MACHINE_RZT2H-DEV
+	default "kas/machines/rzt2h-dev.yml"
+
+	config MACHINE_RZN2H-DEV
+	bool "rzn2h-dev"
+	select FAMILY_T2H
+	help
+		Select the Renesas RZ/N2H reference platform
+
+	config KAS_INCLUDE_MACHINE_RZN2H-DEV
+	string
+	depends on MACHINE_RZN2H-DEV
+	default "kas/machines/rzn2h-dev.yml"
 
 endchoice
 endmenu
