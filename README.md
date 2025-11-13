@@ -7,14 +7,19 @@ Currently the following boards and MPUs are supported:
 - Board: RZG2LC SMARC Evaluation Kit / MPU: R9A07G044C (RZ/G2LC)
 - Board: RZG2UL SMARC Evaluation Kit / MPU: R9A07G043U (RZ/G2UL)
 - Board: RZV2L SMARC Evaluation Kit / MPU: R9A07G054L (RZ/V2L)
+- Board: RZV2H Development Evaluation Kit / MPU: R9A09G057H (RZ/V2H)
+- Board: RZG3E Evaluation Board Kit / MPU: R9A09G047E57 (RZ/G3E)
 - Board: RZG3S SMARC Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
+- Board: RZT2H Evaluation Board Kit / MPU: R9A09G077 (RZ/T2H)
+- Board: RZN2H Evaluation Board Kit / MPU: R9A09G087 (RZ/N2H)
 
 ## Patches
 
 To contribute to this layer you should email patches to renesas-rz@renesas.com. Please send .patch files as email attachments, not embedded in the email body.
 
 ## Dependencies
-This layer (for the Scarthgap release) depends on the following specific revisions:
+
+This layer (compatible with Yocto Scarthgap) depends on the following specific revisions:
 
 **poky:**
 - URL: `https://git.yoctoproject.org/poky`
@@ -56,15 +61,28 @@ Graphic drivers are required for Wayland. Multimedia drivers are optional.
 After downloading the proprietary package, please decompress them then put meta-rz-features folder at $WORK directory,
 alongside poky, meta-arm, etc. (e.g., $WORK/meta-rz-features).
 
-Below is an example of VLP (Verified Linux Package) versions and their corresponding tags in the meta-renesas repository.
+Currently, Scarthgap can support 3 different versions is VLP v4.0.x, VLP v5.0.x and BSP Plus with below information.
 
-| VLP Version | Tag        | Notes           |
-| :---------- | :--------- | :-------------- |
-| 4.0.0       | BSP-v4.0.0 | Initial version |
-| 4.0.1       | BSP-v4.0.1 |                 |
+**1. VLP v4.0.x (kernel v6.1-cip):**
+| VLP Version | Tag        | Target                        |Notes           |
+| :---------- | :--------- | :---------                    |:-------------- |
+| 4.0.0       | BSP-v4.0.0 | RZ/G2L,LC                     |Initial version |
+| 4.0.1       | BSP-v4.0.1 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S  |                |
+
+In the branch "scarthgap/rz", RZ/G3E, RZ/V2H devices are also supported.
+
+**2. VLP v5.0.x (kernel v6.12-cip):**
+| VLP Version | Tag        | Target          |Notes           |
+| :---------- | :--------- | :---------      |:-------------- |
+| 5.0.0       | BSP-v5.0.0 | RZ/T2H, RZ/N2H  |                |
+
+**3. BSP Plus (kernel v6.12-cip):**
+| BSP Plus Version | Tag                 | Target                                           |Notes           |
+| :--------------- | :------------------ | :------------------------------------------------|:-------------- |
+| 3.0              | BSP-v5.0.0          | RZ/G2L, RZ/G2LC, RZ/G2UL, RZ/G3S, RZ/T2H, RZ/N2H |                |
+
 
 **Note on Versioning:** The VLP versioning scheme indicates that higher numbers represent newer releases (e.g., VLP v4.0.2 is newer than VLP v4.0.0).
-
 
 You can obtain the complete Yocto build environment from Renesas, or download the public Yocto Project source layers to prepare the build environment as shown below. Ensure you checkout the specific revisions listed in the "Dependencies" section.
 ```bash
@@ -129,10 +147,17 @@ files then using bitbake to build the image. Or you can do the steps below:
 Example: MACHINE=smarc-rzg2l bitbake core-image-weston
 \<platform\>  (often synonymous with MPU series for configuration) and \<board\> can be selected from below table:
 
-| Renesas MPU | Platform |    Board     |
-| :---------: | :------: | :----------: |
-|   RZ/G2L    |  rzg2l   | smarc-rzg2l  |
-|   RZ/G2LC   |  rzg2lc  | smarc-rzg2lc |
+| Renesas MPU | Platform |    Board     | Target         |
+| :---------: | :------: | :----------: |:----------:    |
+|   RZ/G2L    |  rzg2l   | smarc-rzg2l  |minimal, weston |
+|   RZ/G2LC   |  rzg2l   | smarc-rzg2lc |minimal, weston |
+|   RZ/G2UL   |  rzg2l   | smarc-rzg2ul |minimal, weston |
+|   RZ/V2L    |  rzv2l   | smarc-rzv2l  |minimal, weston |
+|   RZ/G3S    |  rzg3s   | smarc-rzg3s  |minimal         |
+|   RZ/V2H    |  rzv2h   | rzv2h-evk    |minimal, weston |
+|   RZ/G3E    |  rzg3e   | rzg3e-dev    |minimal, weston |
+|   RZ/T2H    |  rzt2h   | rzt2h-dev    |minimal         |
+|   RZ/N2H    |  rzt2h   | rzn2h-dev    |minimal         |
 
 After completing the images for the target machine will be available in the output
 directory _'tmp/deploy/images/\<board name\>'_.
@@ -237,6 +262,8 @@ This method uses a containerized environment for the build.
 ```bash
     $ kas-container build meta-renesas/kas/base.yml:meta-renesas/kas/machines/smarc-rzg2l.yml:meta-renesas/kas/images/core-image-weston.yml
 ```
+Note: Some devices are supported in many BSP version. For example, RZ/G2L board are supported in both VLP v4 and BSP Plus, but with different
+kernel version. Please select the proper kernel version with yml files in kas/misc folder!
 
 ### How to buid with kas menu
 
