@@ -17,7 +17,7 @@ KERNEL_BRANCH:rzg3e-family = "rz-6.1-cip28"
 KERNEL_REV:rzg3e-family = "2a3b0840b41348bd98c6179fffa1a6707c1bacf6"
 
 KERNEL_BRANCH:rzv2n-family = "rzv2n-6.1-cip43"
-KERNEL_REV:rzv2n-family = "dc9ee1801eda881de2a63084d347396d22ebae06"
+KERNEL_REV:rzv2n-family = "b4077903742edb26822b5207dd58e356fd378b6a"
 
 # These patches are for reference only. They are preliminary.
 SRC_URI:append:rzg3e-family = " \
