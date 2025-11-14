@@ -1,7 +1,7 @@
 DESCRIPTION = "Linux kernel from the Renesas RZ BSP based on linux-6.12"
 
 require recipes-kernel/linux/linux-yocto.inc
-require linux-renesas_6.1.inc
+require linux-renesas.inc
 
 LINUX_VERSION ?= "6.12.43-cip7"
 KBUILD_DEFCONFIG ?= "defconfig"

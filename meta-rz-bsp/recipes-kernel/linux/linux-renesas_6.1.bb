@@ -1,7 +1,7 @@
 DESCRIPTION = "Linux kernel from the Renesas RZ BSP based on linux-6.1.y-cip"
 
 require recipes-kernel/linux/linux-yocto.inc
-require linux-renesas_6.1.inc
+require linux-renesas.inc
 
 LINUX_VERSION ?= "6.1.141-cip43"
 LINUX_VERSION:rzg3e-family = "6.1.107-cip28"
