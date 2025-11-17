@@ -1,6 +1,6 @@
 require u-boot-renesas.inc
 
-COMPATIBLE_MACHINE = "(rzg2l-family|rzv2h-evk|rzv2n-evk)"
+COMPATIBLE_MACHINE = "(rzg2l-family|rzv2h-evk)"
 
 UBOOT_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https"
 UBOOT_BRANCH:rzg2l-family = "v2021.10/rz"
@@ -8,9 +8,6 @@ UBOOT_REV:rzg2l-family = "5141064c1552accaf69c6f509bf21b2063b9cff5"
 
 UBOOT_BRANCH:rzv2h-evk = "v2021.10/rzv2h"
 UBOOT_REV:rzv2h-evk = "31d53b8f6fdc1d9055a8c226643f4ed61570e017"
-
-UBOOT_BRANCH:rzv2n-evk = "v2021.10/rzv2n"
-UBOOT_REV:rzv2n-evk = "e1f6b8f5509055a5df05c2345e5f901c4bacfd5c"
 
 PV = "2021.10+git${SRCPV}"
 
