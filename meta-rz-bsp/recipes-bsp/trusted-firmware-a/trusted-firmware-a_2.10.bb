@@ -13,7 +13,7 @@ TFA_REV:rzv2h-family = "3c83dd6f498574d7e8d029c4b1545f36c6d6e083"
 TFA_REV:rzg2l-family = "f59ed5a31ef6b28200e9ba35fc78a607fdeda6dd"
 TFA_REV:rzg3s-family = "f59ed5a31ef6b28200e9ba35fc78a607fdeda6dd"
 TFA_REV:rzt2h-family = "e94828433edd49f9cddf06a6bf45a685b8f84343"
-TFA_REV:rzv2n-family = "19bc34cd1c4aeb4b391c6ab462fff4beeca01b59"
+TFA_REV:rzv2n-family = "4092464fa906c7149590ac09338715f2533e3d1d"
 
 SRC_URI = "${TFA_URI};nobranch=1"
 SRCREV = "${TFA_REV}"
