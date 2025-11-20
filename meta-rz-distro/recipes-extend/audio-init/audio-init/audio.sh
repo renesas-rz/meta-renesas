@@ -12,7 +12,7 @@ set_common_g3e_g3s_v2h() {
     amixer cset name='ADC Switch' on
     amixer cset name='Mixout Right Mixin Right Switch' off
     amixer cset name='Mixout Left Mixin Left Switch' off
-    amixer cset name='Headphone Volume' 70%
+    amixer cset name='Headphone Volume' 80%
     amixer cset name='Headphone Switch' on
     amixer cset name='Mixout Left DAC Left Switch' on
     amixer cset name='Mixout Right DAC Right Switch' on
@@ -23,10 +23,9 @@ set_common_g3e_g3s_v2h() {
     amixer sset 'Mic 2 Amp Source MUX' 'MIC_P'
     amixer sset 'Mixin Left Mic 1' on
     amixer sset 'Mixin Right Mic 2' on
-    amixer sset 'Mic 1' 90% on
-    amixer sset 'Mic 2' 90% on
+    amixer sset 'Mic 1' 80% on
+    amixer sset 'Mic 2' 80% on
     amixer sset 'Lineout' 80% on
-    amixer sset 'Headphone' 100% on
     amixer sset 'Mixin PGA' 40% on
 }
 
