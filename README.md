@@ -120,8 +120,9 @@ files then using bitbake to build the image. Or you can do the steps below:
 
 - Initialize a build using the 'oe-init-build-env' script in Poky and point TEMPLATECONF to platform conf path. e.g.:
    ```bash
-   $ TEMPLATECONF=$PWD/meta-renesas/meta-rz-distro/conf/templates/rz-conf/ source poky/oe-init-build-env build
+   $ TEMPLATECONF=$PWD/meta-renesas/meta-rz-distro/conf/templates/<bsp-template>/ source poky/oe-init-build-env build
    ```
+<bsp-template> is the specific template folder for each type of BSP.
 
 - To build optional features (Docker, Codec, or Graphics), you can use "bitbake-layers add-layer" from within the build directory:
    ```bash

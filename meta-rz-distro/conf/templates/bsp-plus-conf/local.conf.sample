@@ -305,8 +305,6 @@ CONF_VERSION = "2"
 # Un-comment a following line to select RTLinux.
 # PREFERRED_PROVIDER_virtual/kernel = "linux-renesas-rt"
 
-# Select the linux version: v6.1 or v6.12
-#PREFERRED_VERSION_linux-renesas = "6.1%"
 PREFERRED_VERSION_linux-renesas = "6.12%"
 
 # Configuration for ECC (Only support for RZ/G2L Series and RZ/V2L)
