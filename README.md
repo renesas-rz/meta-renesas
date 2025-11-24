@@ -12,6 +12,7 @@ Currently the following boards and MPUs are supported:
 - Board: RZG3S SMARC Evaluation Kit / MPU: R9A08G045 (RZ/G3S)
 - Board: RZT2H Evaluation Board Kit / MPU: R9A09G077 (RZ/T2H)
 - Board: RZN2H Evaluation Board Kit / MPU: R9A09G087 (RZ/N2H)
+- Board: RZV2N Evaluation Kit / MPU: R9A09G056 (RZ/V2N)
 
 ## Patches
 
@@ -159,6 +160,7 @@ Example: MACHINE=smarc-rzg2l bitbake core-image-weston
 |   RZ/G3E    |  rzg3e   | rzg3e-dev    |minimal, weston |
 |   RZ/T2H    |  rzt2h   | rzt2h-dev    |minimal         |
 |   RZ/N2H    |  rzt2h   | rzn2h-dev    |minimal         |
+|   RZ/V2N    |  rzv2n   | rzv2n-evk    |minimal, weston |
 
 After completing the images for the target machine will be available in the output
 directory _'tmp/deploy/images/\<board name\>'_.
