@@ -1,0 +1,65 @@
+From a2fa34eb9be678da1618f1ef1e5e743a520d00a6 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 27 Nov 2025 17:32:20 +0700
+Upstream-Status: Inappropriate because this only for RZ-platforms
+Subject: [PATCH] Add support for setting position on xdg_surface
+
+This change introduces the ability to set the position of an xdg_surface
+using the set_window_geometry API. It ensures that window geometry can
+be explicitly configured for better control over surface placement.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ desktop-shell/shell.c         |  3 +++
+ libweston/desktop/xdg-shell.c | 14 ++++++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/desktop-shell/shell.c b/desktop-shell/shell.c
+index 084e602..f568560 100644
+--- a/desktop-shell/shell.c
++++ b/desktop-shell/shell.c
+@@ -2728,6 +2728,9 @@ desktop_surface_set_xwayland_position(struct weston_desktop_surface *surface,
+ 	struct shell_surface *shsurf =
+ 		weston_desktop_surface_get_user_data(surface);
+ 
++	if (!shsurf)
++		return;
++
+ 	shsurf->xwayland.pos = pos;
+ 	shsurf->xwayland.is_set = true;
+ }
+diff --git a/libweston/desktop/xdg-shell.c b/libweston/desktop/xdg-shell.c
+index 0ec57c7..83ccd0f 100644
+--- a/libweston/desktop/xdg-shell.c
++++ b/libweston/desktop/xdg-shell.c
+@@ -1481,6 +1481,7 @@ weston_desktop_xdg_surface_committed(struct weston_desktop_surface *dsurface,
+ 	struct weston_desktop_xdg_surface *surface = user_data;
+ 	struct weston_surface *wsurface =
+ 		weston_desktop_surface_get_surface (dsurface);
++	struct weston_coord_global pos;
+ 
+ 	if (weston_surface_has_content(wsurface) && !surface->configured) {
+ 		wl_resource_post_error(surface->resource,
+@@ -1493,6 +1494,19 @@ weston_desktop_xdg_surface_committed(struct weston_desktop_surface *dsurface,
+ 		surface->has_next_geometry = false;
+ 		weston_desktop_surface_set_geometry(surface->desktop_surface,
+ 						    surface->next_geometry);
++		/*
++		 * Use the Xwayland position to determine the position of the xdg_surface.
++		 * We double the Xwayland position because it accounts for subtracting
++		 * the geometry offset later.
++		 */
++		pos.c.x = (double)(2 * surface->next_geometry.x);
++		pos.c.y = (double)(2 * surface->next_geometry.y);
++		/* Ensure configuration uses only positive positions */
++		if (pos.c.x >= 0 && pos.c.y >= 0) {
++			weston_desktop_api_set_xwayland_position(surface->desktop,
++				surface->desktop_surface,
++				pos);
++		}
+ 	}
+ 
+ 	switch (surface->role) {
+-- 
+2.25.1
+
