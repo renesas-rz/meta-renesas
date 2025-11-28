@@ -20,7 +20,7 @@ SRC_URI:append:rzg3e-family = " \
     file://0002-Update-find_physical_address-functions-following-MM_.patch \
 "
 
-SRCREV ?= "e4e24c82272d0227f2288d4a471b4939699cade7"
+SRCREV ?= "221c5349b88bc0ae0fb06283015b006affa8aaed"
 SRCREV:rzg3e-family = "3bad93c42be267f909cf2b98bf8b18ebe48a764f"
 
 S = "${WORKDIR}/git"
