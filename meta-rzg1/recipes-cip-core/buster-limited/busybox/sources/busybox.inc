@@ -5,9 +5,9 @@ REPACK_PV = "1.30.1"
 PV = "1.30.1"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/b/busybox/busybox_1.30.1-4.dsc;name=busybox_1.30.1-4.dsc \
-    ${DEBIAN_MIRROR}/main/b/busybox/busybox_1.30.1.orig.tar.bz2;name=busybox_1.30.1.orig.tar.bz2 \
-    ${DEBIAN_MIRROR}/main/b/busybox/busybox_1.30.1-4.debian.tar.xz;name=busybox_1.30.1-4.debian.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/b/busybox/busybox_1.30.1-4.dsc;name=busybox_1.30.1-4.dsc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/b/busybox/busybox_1.30.1.orig.tar.bz2;name=busybox_1.30.1.orig.tar.bz2 \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/b/busybox/busybox_1.30.1-4.debian.tar.xz;name=busybox_1.30.1-4.debian.tar.xz \
 "
 
 SRC_URI[busybox_1.30.1-4.dsc.md5sum] = "2a32c3f30073f7cd529901368c9f7240"

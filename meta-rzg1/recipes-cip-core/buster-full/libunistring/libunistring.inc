@@ -5,10 +5,10 @@ REPACK_PV = "0.9.10"
 PV = "0.9.10"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/libu/libunistring/libunistring_0.9.10-1.dsc;name=libunistring_0.9.10-1.dsc \
-    ${DEBIAN_MIRROR}/main/libu/libunistring/libunistring_0.9.10.orig.tar.xz;name=libunistring_0.9.10.orig.tar.xz \
-    ${DEBIAN_MIRROR}/main/libu/libunistring/libunistring_0.9.10.orig.tar.xz.asc;name=libunistring_0.9.10.orig.tar.xz.asc \
-    ${DEBIAN_MIRROR}/main/libu/libunistring/libunistring_0.9.10-1.debian.tar.xz;name=libunistring_0.9.10-1.debian.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/libu/libunistring/libunistring_0.9.10-1.dsc;name=libunistring_0.9.10-1.dsc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/libu/libunistring/libunistring_0.9.10.orig.tar.xz;name=libunistring_0.9.10.orig.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/libu/libunistring/libunistring_0.9.10.orig.tar.xz.asc;name=libunistring_0.9.10.orig.tar.xz.asc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/libu/libunistring/libunistring_0.9.10-1.debian.tar.xz;name=libunistring_0.9.10-1.debian.tar.xz \
 "
 
 SRC_URI[libunistring_0.9.10-1.dsc.md5sum] = "cc121928372051a9b24fa3e4c4588214"

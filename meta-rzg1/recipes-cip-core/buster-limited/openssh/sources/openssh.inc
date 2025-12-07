@@ -5,10 +5,10 @@ REPACK_PV = "7.9p1"
 PV = "7.9p1"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/o/openssh/openssh_7.9p1-10+deb10u2.dsc;name=openssh_7.9p1-10+deb10u2.dsc \
-    ${DEBIAN_MIRROR}/main/o/openssh/openssh_7.9p1.orig.tar.gz;name=openssh_7.9p1.orig.tar.gz \
-    ${DEBIAN_MIRROR}/main/o/openssh/openssh_7.9p1.orig.tar.gz.asc;name=openssh_7.9p1.orig.tar.gz.asc \
-    ${DEBIAN_MIRROR}/main/o/openssh/openssh_7.9p1-10+deb10u2.debian.tar.xz;name=openssh_7.9p1-10+deb10u2.debian.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/o/openssh/openssh_7.9p1-10+deb10u2.dsc;name=openssh_7.9p1-10+deb10u2.dsc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/o/openssh/openssh_7.9p1.orig.tar.gz;name=openssh_7.9p1.orig.tar.gz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/o/openssh/openssh_7.9p1.orig.tar.gz.asc;name=openssh_7.9p1.orig.tar.gz.asc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/o/openssh/openssh_7.9p1-10+deb10u2.debian.tar.xz;name=openssh_7.9p1-10+deb10u2.debian.tar.xz \
 "
 
 SRC_URI[openssh_7.9p1-10+deb10u2.dsc.md5sum] = "4687cc10eb11fb78972061a2e5b4c219"

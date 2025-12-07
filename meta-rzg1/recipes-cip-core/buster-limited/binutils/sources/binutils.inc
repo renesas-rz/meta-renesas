@@ -5,9 +5,9 @@ REPACK_PV = "2.31.1"
 PV = "2.31.1"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/b/binutils/binutils_2.31.1-16.dsc;name=binutils_2.31.1-16.dsc \
-    ${DEBIAN_MIRROR}/main/b/binutils/binutils_2.31.1.orig.tar.xz;name=binutils_2.31.1.orig.tar.xz \
-    ${DEBIAN_MIRROR}/main/b/binutils/binutils_2.31.1-16.debian.tar.xz;name=binutils_2.31.1-16.debian.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/b/binutils/binutils_2.31.1-16.dsc;name=binutils_2.31.1-16.dsc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/b/binutils/binutils_2.31.1.orig.tar.xz;name=binutils_2.31.1.orig.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/b/binutils/binutils_2.31.1-16.debian.tar.xz;name=binutils_2.31.1-16.debian.tar.xz \
 "
 
 DEBIAN_UNPACK_DIR = "${WORKDIR}/${BPN}-${PV}"

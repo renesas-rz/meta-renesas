@@ -5,9 +5,9 @@ REPACK_PV = "1.3.1"
 PV = "1.3.1"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/p/pam/pam_1.3.1-5.dsc;name=pam_1.3.1-5.dsc \
-    ${DEBIAN_MIRROR}/main/p/pam/pam_1.3.1.orig.tar.xz;name=pam_1.3.1.orig.tar.xz \
-    ${DEBIAN_MIRROR}/main/p/pam/pam_1.3.1-5.debian.tar.xz;name=pam_1.3.1-5.debian.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/p/pam/pam_1.3.1-5.dsc;name=pam_1.3.1-5.dsc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/p/pam/pam_1.3.1.orig.tar.xz;name=pam_1.3.1.orig.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/p/pam/pam_1.3.1-5.debian.tar.xz;name=pam_1.3.1-5.debian.tar.xz \
 "
 
 SRC_URI[pam_1.3.1-5.dsc.md5sum] = "33eef1b802edc45e78482d6ac36996e9"

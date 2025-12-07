@@ -5,9 +5,9 @@ REPACK_PV = "8.30"
 PV = "8.30"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/c/coreutils/coreutils_8.30-3.dsc;name=coreutils_8.30-3.dsc \
-    ${DEBIAN_MIRROR}/main/c/coreutils/coreutils_8.30.orig.tar.xz;name=coreutils_8.30.orig.tar.xz \
-    ${DEBIAN_MIRROR}/main/c/coreutils/coreutils_8.30-3.debian.tar.xz;name=coreutils_8.30-3.debian.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/c/coreutils/coreutils_8.30-3.dsc;name=coreutils_8.30-3.dsc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/c/coreutils/coreutils_8.30.orig.tar.xz;name=coreutils_8.30.orig.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/c/coreutils/coreutils_8.30-3.debian.tar.xz;name=coreutils_8.30-3.debian.tar.xz \
 "
 
 SRC_URI[coreutils_8.30-3.dsc.md5sum] = "8e7167ff50149c83192535df18eee396"

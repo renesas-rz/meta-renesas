@@ -5,10 +5,10 @@ REPACK_PV = "2.5.2"
 PV = "2.5.2"
 
 DEBIAN_SRC_URI = " \
-    ${DEBIAN_MIRROR}/main/liba/libassuan/libassuan_2.5.2-1.dsc;name=libassuan_2.5.2-1.dsc \
-    ${DEBIAN_MIRROR}/main/liba/libassuan/libassuan_2.5.2.orig.tar.bz2;name=libassuan_2.5.2.orig.tar.bz2 \
-    ${DEBIAN_MIRROR}/main/liba/libassuan/libassuan_2.5.2.orig.tar.bz2.asc;name=libassuan_2.5.2.orig.tar.bz2.asc \
-    ${DEBIAN_MIRROR}/main/liba/libassuan/libassuan_2.5.2-1.debian.tar.xz;name=libassuan_2.5.2-1.debian.tar.xz \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/liba/libassuan/libassuan_2.5.2-1.dsc;name=libassuan_2.5.2-1.dsc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/liba/libassuan/libassuan_2.5.2.orig.tar.bz2;name=libassuan_2.5.2.orig.tar.bz2 \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/liba/libassuan/libassuan_2.5.2.orig.tar.bz2.asc;name=libassuan_2.5.2.orig.tar.bz2.asc \
+    ${DEBIAN_SECURITY_UPDATE_MIRROR_ELTS}/main/liba/libassuan/libassuan_2.5.2-1.debian.tar.xz;name=libassuan_2.5.2-1.debian.tar.xz \
 "
 
 SRC_URI[libassuan_2.5.2-1.dsc.md5sum] = "b698bc02f2e9c5a6228b8876106909c8"
