@@ -20,8 +20,8 @@ This layer depends on:
   * revision: 342fbd6a3e57021c8e28b124b3adb241936f3d9d
 
 * meta-linaro
-  * URI: git://git.linaro.org/openembedded/meta-linaro.git
-  * layers: meta-optee
+  * URI: https://gitlab.com/Linaro/openembedded/meta-linaro.git
+  * layers: meta-optee, meta-linaro-toolchain
   * branch: rocko
   * revision: 75dfb67bbb14a70cd47afda9726e2e1c76731885
 
