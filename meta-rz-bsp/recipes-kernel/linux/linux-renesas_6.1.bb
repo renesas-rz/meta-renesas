@@ -11,13 +11,10 @@ KCONFIG_MODE ?= "alldefconfig"
 
 KERNEL_URL ?= "git://github.com/renesas-rz/rz_linux-cip.git"
 KERNEL_BRANCH ?= "rz-6.1-cip43"
-KERNEL_REV ?= "f12a03d8f2cf971734190c35aeaac98dde815b2d"
+KERNEL_REV ?= "6717c06c72df7430323d0d48258ae4090f2d76aa"
 
 KERNEL_BRANCH:rzg3e-family = "rz-6.1-cip28"
 KERNEL_REV:rzg3e-family = "2a3b0840b41348bd98c6179fffa1a6707c1bacf6"
-
-KERNEL_BRANCH:rzv2n-family = "rzv2n-6.1-cip43"
-KERNEL_REV:rzv2n-family = "b4077903742edb26822b5207dd58e356fd378b6a"
 
 # These patches are for reference only. They are preliminary.
 SRC_URI:append:rzg3e-family = " \
