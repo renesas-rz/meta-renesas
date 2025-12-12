@@ -1,0 +1,104 @@
+From 0fab73bb7888b7785472077d3335aa259e72664d Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 3 Nov 2020 15:42:09 +0700
+Subject: [PATCH 1/4] Remove empty output surface and use glTexSubImage2D for
+ re-draw
+
+This patch will change below points:
+* Remove empty output surface part, it is useless.
+* Take the same code of 2 functions into one function and re-use.
+* Check input pointer before assign value to it.
+* Use glTexSubImage2D when re-draw the new frame to improve the
+    performance
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ bayer2raw.c | 54 +++++++++++++++++++++++++++--------------------------
+ 1 file changed, 28 insertions(+), 26 deletions(-)
+
+diff --git a/bayer2raw.c b/bayer2raw.c
+index 070b9f2..3224f24 100644
+--- a/bayer2raw.c
++++ b/bayer2raw.c
+@@ -10,6 +10,7 @@
+
+ #define PRINT_OGL_ERROR() print_opengl_error(__FILE__, __LINE__)
+
++static int re_paint = 0;
+ /* opengl screen_vertices for texture mapping */
+ static const GLfloat screen_vertices[][2] = {
+   {-1.0f, -1.0f},
+@@ -223,25 +224,36 @@ init_bayer_rgb_conversion (struct context_bayer2rgb *ctx)
+ }
+
+ void
+-do_bayer_rgb_conversion (struct context_bayer2rgb *ctx, void *in_buf,
+-    void *out_buf)
++bayer_rgb_conversion(struct context_bayer2rgb *ctx, void *in_buf)
+ {
+-  /* Empty the RGB texture */
+-  glBindTexture (GL_TEXTURE_2D, ctx->rgb_texture);
+-  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, ctx->width, ctx->height,
+-      0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+-
+-  /* Map the bayer buffer */
++    /* Map the bayer buffer */
+   glBindTexture (GL_TEXTURE_2D, ctx->bayer_texture);
+-  glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, ctx->width, ctx->height,
+-      0, GL_LUMINANCE, GL_UNSIGNED_BYTE, in_buf);
++
++  if (!re_paint) {
++    glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, ctx->width, ctx->height,
++        0, GL_LUMINANCE, GL_UNSIGNED_BYTE, in_buf);
++    /* This step for cover the case that we won't use external output buffer*/
++    re_paint++;
++  } else {
++     glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, ctx->width, ctx->height,
++        GL_LUMINANCE, GL_UNSIGNED_BYTE, in_buf);
++  }
+
+   /* Draw on framebufer */
+   glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
++}
+
+-  /* Get back the buffer */
+-  glReadPixels (0, 0, ctx->width, ctx->height, GL_RGBA,
+-      GL_UNSIGNED_BYTE, out_buf);
++void
++do_bayer_rgb_conversion (struct context_bayer2rgb *ctx, void *in_buf,
++    void *out_buf)
++{
++  bayer_rgb_conversion (ctx, in_buf);
++
++  if (out_buf) {
++    /* Get back the buffer */
++    glReadPixels (0, 0, ctx->width, ctx->height, GL_RGBA,
++        GL_UNSIGNED_BYTE, out_buf);
++  }
+   PRINT_OGL_ERROR ();
+ }
+
+@@ -249,18 +261,8 @@ void
+ do_bayer_rgb_conversion_texture(struct context_bayer2rgb *ctx, void *in_buf,
+     GLuint *texture)
+ {
+-  /* Empty the RGB texture */
+-  glBindTexture (GL_TEXTURE_2D, ctx->rgb_texture);
+-  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, ctx->width, ctx->height,
+-      0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+-
+-  /* Map the bayer buffer */
+-  glBindTexture (GL_TEXTURE_2D, ctx->bayer_texture);
+-  glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, ctx->width, ctx->height,
+-      0, GL_LUMINANCE, GL_UNSIGNED_BYTE, in_buf);
+-
+-  /* Draw on framebufer */
+-  glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
++  bayer_rgb_conversion (ctx, in_buf);
+
+-  *texture = ctx->rgb_texture;
++  if (texture)
++    *texture = ctx->rgb_texture;
+ }
+--
+2.43.0

@@ -1,0 +1,177 @@
+From 1ca11c8b1d95bd77e064be5e5475bb42cd68fe54 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Fri, 12 Dec 2025 11:05:17 +0700
+Subject: [PATCH] bayer2raw: Add DMA-BUF input support
+
+This patch adds functions to import DMA-BUF input buffers as EGLImages
+and binding them to texture, enables a zero-copy path.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ bayer2raw.c | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ bayer2raw.h |  7 +++++
+ 2 files changed, 94 insertions(+)
+
+diff --git a/bayer2raw.c b/bayer2raw.c
+index 85116fd..dfcdc32 100644
+--- a/bayer2raw.c
++++ b/bayer2raw.c
+@@ -17,6 +17,8 @@ typedef EGLImageKHR (*EGLCREATEIMAGEKHR)(EGLDisplay dpy, EGLContext ctx,
+ typedef EGLBoolean (*EGLDESTROYIMAGEKHR)(EGLDisplay dpy, EGLImageKHR image);
+ typedef void (*PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC)(GLenum target,
+                                                               GLeglImageOES image);
++typedef void (*PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) (GLenum target,
++                                                     GLeglImageOES image);
+ int import_extern_outbuf(struct context_bayer2rgb *ctx,
+                          struct extern_buffer *buffer);
+
+@@ -24,6 +26,8 @@ static EGLCREATEIMAGEKHR eglCreateImageKHR  = 0;
+ static EGLDESTROYIMAGEKHR eglDestroyImageKHR = 0;
+ static PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC
+          glEGLImageTargetRenderbufferStorage = 0;
++static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC
++         glEGLImageTargetTexture2D = 0;
+
+ /* opengl screen_vertices for texture mapping */
+ static const GLfloat screen_vertices[][2] = {
+@@ -260,12 +264,74 @@ init_bayer_rgb_conversion_extern_output(struct context_bayer2rgb *ctx)
+   glEGLImageTargetRenderbufferStorage =
+                    (PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC)
+                    eglGetProcAddress("glEGLImageTargetRenderbufferStorageOES");
++  glEGLImageTargetTexture2D = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)
++                              eglGetProcAddress("glEGLImageTargetTexture2DOES");
+   /* When using external output buffer, the read/write memory order is different
+    * with internal GLES, so that we need to use the other vertices*/
+   vertices_data = &flip_screen_vertices[0][0];
+   return init_bayer_rgb_conversion(ctx);
+ }
+
++static struct extern_buffer *create_eglImage_from_dmabuf(struct context_bayer2rgb *ctx, int dma_fd)
++{
++  struct extern_buffer *tmp;
++  EGLImageKHR pEGLImage;
++
++  if (dma_fd <= 0) {
++    printf("%s: The input FD is invalid \n", __FUNCTION__);
++    return NULL;
++  }
++
++  for (int i = 0; i < ctx->num_inbuf; i++) {
++    if (ctx->in_buf[i].dma_fd == dma_fd)
++      return &(ctx->in_buf[i]);
++  }
++
++  int attrib[] = {
++              EGL_WIDTH, ctx->width,
++              EGL_HEIGHT, ctx->height,
++              EGL_LINUX_DRM_FOURCC_EXT, DRM_FORMAT_R8,
++              EGL_DMA_BUF_PLANE0_FD_EXT, dma_fd,
++              EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
++              EGL_DMA_BUF_PLANE0_PITCH_EXT, ctx->width,
++              EGL_NONE
++    };
++
++  pEGLImage = eglCreateImageKHR(ctx->display, EGL_NO_CONTEXT,
++                                          EGL_LINUX_DMA_BUF_EXT, NULL, attrib);
++  if (pEGLImage == EGL_NO_IMAGE_KHR) {
++    printf("%s: Can not init eglImageKHR. %x\n", __FUNCTION__, eglGetError());
++    return NULL;
++  }
++
++  tmp = (struct extern_buffer *)realloc(ctx->in_buf,
++                                        sizeof(struct extern_buffer) * (ctx->num_inbuf + 1));
++  if (!tmp) {
++    printf("Out of memory \n");
++    eglDestroyImageKHR(ctx->display, pEGLImage);
++    return NULL;
++  }
++
++  ctx->in_buf = tmp;
++  ctx->num_inbuf++;
++  ctx->in_buf[ctx->num_inbuf - 1].dma_fd = dma_fd;
++  ctx->in_buf[ctx->num_inbuf - 1].pEGLImage = pEGLImage;
++
++  return &(ctx->in_buf[ctx->num_inbuf - 1]);
++}
++
++void bayer2raw_free_all_inbuf(struct context_bayer2rgb *ctx)
++{
++  for (int i = 0; i < ctx->num_inbuf; i++) {
++    if (ctx->in_buf[i].pEGLImage != EGL_NO_IMAGE_KHR)
++      eglDestroyImageKHR(ctx->display, ctx->in_buf[i].pEGLImage);
++  }
++
++  ctx->num_inbuf = 0;
++  if (ctx->in_buf)
++    free(ctx->in_buf);
++}
++
+ int bayer2raw_create_outbuf(struct context_bayer2rgb *ctx,
+                             unsigned long address)
+ {
+@@ -462,3 +528,24 @@ do_bayer_rgb_conversion_texture(struct context_bayer2rgb *ctx, void *in_buf,
+   if (texture)
+     *texture = ctx->rgb_texture;
+ }
++
++int do_bayer_rgb_conversion_texture_dmabuf(struct context_bayer2rgb *ctx, int dma_fd,
++    GLuint *texture)
++{
++  struct extern_buffer *in_buf = create_eglImage_from_dmabuf(ctx, dma_fd);
++
++  if (!in_buf || in_buf->pEGLImage == EGL_NO_IMAGE_KHR)
++    return -1;
++
++  /* Attach EGLImage to texture */
++  glBindTexture(GL_TEXTURE_2D, ctx->bayer_texture);
++  glEGLImageTargetTexture2D(GL_TEXTURE_2D, in_buf->pEGLImage);
++
++  /* Draw on framebuffer */
++  glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
++
++  if (texture)
++    *texture = ctx->rgb_texture;
++
++  return 0;
++}
+\ No newline at end of file
+diff --git a/bayer2raw.h b/bayer2raw.h
+index 2f881b2..f8ede37 100644
+--- a/bayer2raw.h
++++ b/bayer2raw.h
+@@ -12,6 +12,7 @@
+ struct extern_buffer {
+   int repaint;
+   int fb, rb;
++  int dma_fd;
+   EGLImageKHR pEGLImage;
+ };
+
+@@ -34,6 +35,8 @@ struct context_bayer2rgb
+
+   int num_outbuf;
+   struct extern_buffer *out_buf;
++  int num_inbuf;
++  struct extern_buffer *in_buf;
+ };
+
+ /* Required: all public members */
+@@ -48,6 +51,8 @@ int bayer2raw_create_outbuf_dmabuf(struct context_bayer2rgb *ctx,
+                                    int dma_fd);
+ /* Select framebuffer in out_buf list that GLES will render to */
+ int bayer2raw_attach_render_outbuf(struct context_bayer2rgb *ctx, int index);
++/* Release all DMA-BUF input buffer */
++void bayer2raw_free_all_inbuf(struct context_bayer2rgb *ctx);
+ /* Free/release all framebuffer that created by external memory */
+ void bayer2raw_free_all_outbuf(struct context_bayer2rgb *ctx);
+ /* Get the bayer to RGB conversion done */
+@@ -55,5 +60,7 @@ void do_bayer_rgb_conversion(struct context_bayer2rgb *ctx, void *in_buf,
+     void *out_buf);
+ void do_bayer_rgb_conversion_texture(struct context_bayer2rgb *ctx, void *in_buf,
+     GLuint *texture);
++int do_bayer_rgb_conversion_texture_dmabuf(struct context_bayer2rgb *ctx, int dma_fd,
++    GLuint *texture);
+
+ #endif // _BAYER2RAW_H
+--
+2.43.0

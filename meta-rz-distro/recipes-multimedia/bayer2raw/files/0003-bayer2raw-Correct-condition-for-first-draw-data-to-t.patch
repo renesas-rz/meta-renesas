@@ -1,0 +1,29 @@
+From 8a54943095666cd2315096e6f68d98ce42841fcb Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Mon, 6 Feb 2023 14:00:53 +0700
+Subject: [PATCH 3/4] bayer2raw: Correct condition for first draw data to
+ texture
+
+Wrong condition make the texture have wrong drawing sequence so the
+output texture may not have data.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ bayer2raw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bayer2raw.c b/bayer2raw.c
+index ec2ebde..85116fd 100644
+--- a/bayer2raw.c
++++ b/bayer2raw.c
+@@ -425,7 +425,7 @@ bayer_rgb_conversion(struct context_bayer2rgb *ctx, void *in_buf)
+     /* Map the bayer buffer */
+   glBindTexture (GL_TEXTURE_2D, ctx->bayer_texture);
+
+-  if (ctx->re_paint) {
++  if (!ctx->re_paint) {
+     glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, ctx->width, ctx->height,
+         0, GL_LUMINANCE, GL_UNSIGNED_BYTE, in_buf);
+     /* This step for cover the case that we won't use external output buffer*/
+--
+2.43.0
