@@ -18,6 +18,11 @@ This layer depends on:
   * layers: meta, meta-yocto, meta-yocto-bsp
   * branch: rocko
   * revision: 342fbd6a3e57021c8e28b124b3adb241936f3d9d
+  * cherry-pick commit: 9794119e0ed4df68dced57101c3ffebfd2d44c2d
+  * cherry-pick commit: b47cc35280e1d8ad13ea07c16dd4546de1a6aaa5
+  * cherry-pick commit: b8c9cd7d964c04dc8f84141d16660bf7247b4845
+  * cherry-pick commit: 11929c1f5b176719897552ebddf5035278d65b52
+  * cherry-pick commit: d1a90797828b7de6c8b2628db9edfbb4c05bf1b3
 
 * meta-linaro
   * URI: https://gitlab.com/Linaro/openembedded/meta-linaro.git
