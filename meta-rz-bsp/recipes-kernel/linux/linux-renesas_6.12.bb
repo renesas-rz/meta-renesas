@@ -4,6 +4,10 @@ require recipes-kernel/linux/linux-yocto.inc
 require linux-renesas.inc
 
 LINUX_VERSION ?= "6.12.43-cip7"
+LINUX_VERSION:rzg3l-family = "6.12.46-cip8"
+
+PV = "${LINUX_VERSION}+git"
+
 KBUILD_DEFCONFIG ?= "defconfig"
 KCONFIG_MODE ?= "alldefconfig"
 
@@ -11,4 +15,8 @@ KERNEL_URL ?= "git://github.com/renesas-rz/rz_linux-cip.git"
 
 KERNEL_BRANCH ?= "rz-6.12-cip7"
 KERNEL_REV ?= "03d16609f9f970a5c1af057dff88d475a26328fc"
+
+KERNEL_BRANCH:rzg3l-family = "rzg3l-6.12-cip8"
+KERNEL_REV:rzg3l-family = "8287bbc97c8ed449ab24b0f18c118ab1cb569ea9"
+
 SRC_URI:append = "${@bb.utils.contains('DISTRO_FEATURES','docker', ' file://docker.cfg', '', d)}"
