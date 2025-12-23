@@ -1,6 +1,6 @@
 require trusted-firmware-a-renesas.inc
 
-COMPATIBLE_MACHINE = "(rzg3e-family|rzv2h-family|rzg2l-family|rzg3s-family|rzt2h-family|rzv2n-family)"
+COMPATIBLE_MACHINE = "(rzg3e-family|rzv2h-family|rzg2l-family|rzg3s-family|rzt2h-family|rzv2n-family|rzg3l-family)"
 
 LIC_FILES_CHKSUM = "file://${WORKDIR}/git/docs/license.rst;md5=b2c740efedc159745b9b31f88ff03dde"
 PV = "2.10+git${SRCPV}"
@@ -10,6 +10,7 @@ S = "${WORKDIR}/git"
 TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=https"
 TFA_REV ?= "48a19531cb4be030f97716b180c1ad45a2f27e2d"
 TFA_REV:rzt2h-family = "e94828433edd49f9cddf06a6bf45a685b8f84343"
+TFA_REV:rzg3l-family = "c06209f12ff5d3a94e674a7f46fd01ec76356928"
 
 SRC_URI = "${TFA_URI};nobranch=1"
 SRCREV = "${TFA_REV}"
@@ -19,6 +20,7 @@ BUILD_DIR .= "/${@'debug' if d.getVar("TFA_DEBUG") == '1' else 'release'}"
 
 EXTRA_OEMAKE:append:rzg2l-family = " FIP_ALIGN=16 ${ECC_FLAGS}"
 EXTRA_OEMAKE:append:rzg3e-family = " PLAT_SYSTEM_SUSPEND=1"
+EXTRA_OEMAKE:append:rzg3l-family = " PLAT_SYSTEM_SUSPEND=vbat"
 
 PMIC_BUILD_DIR = "${S}/build_pmic"
 
