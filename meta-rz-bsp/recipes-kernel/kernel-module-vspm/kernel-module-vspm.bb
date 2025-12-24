@@ -61,6 +61,11 @@ SRC_URI:append:rzv2n-family = " \
 	file://0017-Support-vspm-isu-driver-for-V2H.patch \
 "
 
+SRC_URI:append:rzg3l-family = " \
+	${ISU_PATCHES} \
+	file://0017-Support-vspm-isu-driver-for-G3L.patch \
+"
+
 # In RZ BSP for yocto v5.x, the supported kernel version are
 # v6.1 and v6.12. These patch files are for kernel v6.12.
 KERNEL_V6.12_PATCHES = " \
@@ -121,6 +126,10 @@ do_install:append:rzv2h-family () {
 }
 
 do_install:append:rzv2n-family () {
+    isu_header_install
+}
+
+do_install:append:rzg3l-family () {
     isu_header_install
 }
 

@@ -1,0 +1,250 @@
+From 6cc420c1f430f86b91c9c581ffb73e4931372c29 Mon Sep 17 00:00:00 2001
+From: duytruong <duy.truong.yw@renesas.com>
+Date: Wed, 23 Jul 2025 14:48:30 +0700
+Subject: [PATCH] Support vspm/isu driver for G3L
+
+Update 1:  Add new RAW format supported by ISU2
+
+- Added support for RAW6. RAW7, RAW14, RAW16, RAW20
+
+Update 2: Update ISU2 input/output size
+
+- Update ISU2 maximum size of 2048x2048 to input/output size
+
+Update 3: Add upscale support up to 2x in resizer with updated ratio validation
+
+-  Update the scaling ratio check in isu_ins_check_rs_param to support upscaling.
+This extends the old bitmask (&0xF000) to include bit 11 (&0xF800) for fractional
+validation during upscale, ensuring compliance with hardware constraints
+(FRAC 0x800-0xFFF when integer=0).
+
+- Cap maximum ratio at 0xF000 to prevent integer overflow (max 15) and match 1/15
+downscale spec. Fix fractional masking (&0x00000FFF) for both x and y scales to
+ensure clean register values, preventing corruption from high bits.
+
+Update 4: Added ISU_FM_INT_FREC register
+
+- Added ISU_FM_INT_FREC register but not used
+
+Update 5: Support End frame interrupt for G3L
+- Removed ISU_FM_INT_STA.FREND bit due to G3L board is not supported (End frame
+interrupt on G3L is Edge type instead of Level type on G2L)
+
+Signed-off-by: Duy Truong <duy.truong.yw@renesas.com>
+---
+ .../files/vspm/drv/isu/isu_drv_local.h        |  4 +--
+ vspm-module/files/vspm/drv/isu/isu_drv_par.c  | 29 +++++++++++++------
+ vspm-module/files/vspm/drv/isu/isu_drv_phy.c  | 13 +++------
+ vspm-module/files/vspm/include/isu_drv.h      |  7 ++++-
+ 4 files changed, 32 insertions(+), 21 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_local.h b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+index a92c88b..fa34646 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_local.h
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_local.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2024 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -68,6 +68,7 @@
+ #define ISU_FM_STOP		0x000C  /* FM Module Stop Registers */
+ #define ISU_FM_INT_EN		0x0010  /* FM Interrupt Enable Registers */
+ #define ISU_FM_INT_STA		0x0014  /* FM Interrupt Status Registers */
++#define ISU_FM_INT_FREC 	0x0018  /* FM Frame End Interrupt Control Registers */
+ #define ISU_AXI_ERAC		0x0020  /* AXI Error Action Registers */
+ #define ISU_AXI_FIFO_CAP	0x002C  /* AXI FIFO Capability Registers */
+ 
+@@ -135,7 +136,6 @@ Sets input/ouput, reduction ratio and color conversion coefficient
+ #define ISU_INT_LISTERR		0x00010000	/* Displays the status of "Descriptor List" format violations */
+ #define ISU_INT_SRSTEND		0x00000100	/* Displays the status of the emergency stop completion */
+ #define ISU_INT_DESEND		0x00000002	/* Displays the status of the descriptor footer read completion */
+-#define ISU_INT_FREND		0x00000001	/* Displays the status of the frame processing end */
+ 
+ #define ISU_RPF_TD_USE		(0x80000000)
+ #define ISU_RPF_AEXT		(0x00010000)
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_par.c b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+index 7f7b011..13fc5a1 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_par.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_par.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2024 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -132,9 +132,14 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+ 	case ISU_ARGB8888:
+ 	case ISU_RGBA8888:
+ 	case ISU_ABGR8888:
++	case ISU_RAW6:
++	case ISU_RAW7:
+ 	case ISU_RAW8:
+ 	case ISU_RAW10:
+ 	case ISU_RAW12:
++	case ISU_RAW14:
++	case ISU_RAW16:
++	case ISU_RAW20:
+ 		break;
+ 	case ISU_YUV422_UYVY:
+ 	case ISU_YUV422_YUY2:
+@@ -178,13 +183,13 @@ static long isu_ins_check_rpf_param(struct isu_ch_info *ch_info,
+ 	rpf_info->swap = (unsigned int)(src_par->swap);
+ 
+ 	/* check basic area */
+-	if ((src_par->width < 1) || (src_par->width > 2800) || ((fmt_yuv)&&(src_par->width%2)))
++	if ((src_par->width < 1) || (src_par->width > 2048) || ((fmt_yuv)&&(src_par->width % 2)))
+ 		return E_ISU_PARA_IN_WIDTH;
+ 	else {
+ 		rpf_info->width = src_par->width;
+ 	}
+ 
+-	if ((src_par->height < 1) || (src_par->height > 2047) || ((fmt_yuv)&&(src_par->height%2)))
++	if ((src_par->height < 1) || (src_par->height > 2048) || ((fmt_yuv)&&(src_par->height % 2)))
+ 		return E_ISU_PARA_IN_HEIGHT;
+ 	else {
+ 		rpf_info->height = src_par->height;
+@@ -239,7 +244,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		}
+ 
+ 		/* Check output size */
+-		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 1920))
++		if ((rs_param->crop_w < 1)||(rs_param->crop_w > 2048))
+ 			return E_ISU_PARA_RS_CROP_WIDTH;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+@@ -254,7 +259,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		else
+ 			rs_info->crop_w = rs_param->crop_w;
+ 
+-		if ((rs_param->crop_h < 1) ||(rs_param->crop_h > 1080))
++		if ((rs_param->crop_h < 1) ||(rs_param->crop_h > 2048))
+ 			return E_ISU_PARA_RS_CROP_HEIGHT;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+@@ -281,9 +286,10 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 			return E_ISU_PARA_RS_PAD;
+ 		}
+ 		/* Check ratio scale */
+-		if((rs_param->x_ratio & 0x0000F000)&&(rs_param->y_ratio & 0x0000F000)) {
++		if (((rs_param->x_ratio & 0x0000F800) && (rs_param->y_ratio & 0x0000F800)) &&
++		((rs_param->x_ratio <= 0xF000) && (rs_param->y_ratio <= 0xF000))) {
+ 			rs_info->x_scale = ((unsigned int)rs_param->x_ratio >> 12) << 16;
+-			rs_info->x_scale |= ((unsigned int)rs_param->x_ratio);
++			rs_info->x_scale |= ((unsigned int)rs_param->x_ratio & 0x00000FFF);
+ 			rs_info->y_scale = ((unsigned int)rs_param->y_ratio >> 12) << 16;
+ 			rs_info->y_scale |= ((unsigned int)rs_param->y_ratio & 0x00000FFF);
+ 		} else
+@@ -294,7 +300,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		rs_info->tune_x = 0;
+ 		rs_info->tune_y = 0;
+ 
+-		if ((rpf_info->width < 1)||(rpf_info->width > 1920))
++		if ((rpf_info->width < 1)||(rpf_info->width > 2048))
+ 			return E_ISU_PARA_RS_CROP_WIDTH;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+@@ -309,7 +315,7 @@ static long isu_ins_check_rs_param(struct isu_ch_info *ch_info,
+ 		else
+ 			rs_info->crop_w = rpf_info->width;
+ 
+-		if ((rpf_info->height < 1) ||(rpf_info->height > 1080))
++		if ((rpf_info->height < 1) ||(rpf_info->height > 2048))
+ 			return E_ISU_PARA_RS_CROP_HEIGHT;
+ 		else if ((dst_par->format ==
+ 					ISU_YUV422_UYVY ||
+@@ -392,9 +398,14 @@ static long isu_ins_check_wpf_param( struct isu_ch_info *ch_info,
+ 	case ISU_ARGB8888:
+ 	case ISU_RGBA8888:
+ 	case ISU_ABGR8888:
++	case ISU_RAW6:
++	case ISU_RAW7:
+ 	case ISU_RAW8:
+ 	case ISU_RAW10:
+ 	case ISU_RAW12:
++	case ISU_RAW14:
++	case ISU_RAW16:
++	case ISU_RAW20:
+ 	case ISU_YUV422_UYVY:
+ 	case ISU_YUV422_YUY2:
+ 		break;
+diff --git a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+index f2b78f3..15ff65d 100755
+--- a/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
++++ b/vspm-module/files/vspm/drv/isu/isu_drv_phy.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2024 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -597,17 +597,14 @@ static irqreturn_t isu_ins_ih(int irq, void *dev)
+ 		/* read control register */
+ 		status = isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 		if (!(ch_info->dl_info)){
+-			if ((status & ISU_INT_FREND) == ISU_INT_FREND) {
+-			/* clear interrupt */
+-			isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
+ 
++			/* Frame end interruption by rising edge detection */
+ 			/* dummy read */
+ 			isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 			isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 
+ 			/* callback function */
+ 			isu_ins_cb_function(prv, R_VSPM_OK);
+-			}
+ 		} else {
+ 			if ((status & ISU_INT_LISTERR)==ISU_INT_LISTERR){
+ 				/* clear interrupt */
+@@ -615,10 +612,8 @@ static irqreturn_t isu_ins_ih(int irq, void *dev)
+ 
+ 				/* callback function */
+ 				isu_ins_cb_function(prv, E_ISU_DL_FORMAT);
+-			} else if ((status&ISU_INT_FREND)==ISU_INT_FREND){
+-				/* clear interrupt */
+-				isu_write_reg(0, prv->isu_reg, ISU_FM_INT_STA);
+-
++			} else {
++				/* Frame end interruption by rising edge detection */
+ 				/* dummy read */
+ 				isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+ 				isu_read_reg(prv->isu_reg, ISU_FM_INT_STA);
+diff --git a/vspm-module/files/vspm/include/isu_drv.h b/vspm-module/files/vspm/include/isu_drv.h
+index 514dfe9..830b503 100644
+--- a/vspm-module/files/vspm/include/isu_drv.h
++++ b/vspm-module/files/vspm/include/isu_drv.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * ISUM
+  *
+- * Copyright (C) 2015-2024 Renesas Electronics Corporation
++ * Copyright (C) 2015-2025 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -119,6 +119,11 @@
+ #define ISU_RAW8			(0x30)
+ #define ISU_RAW10			(0x31)
+ #define ISU_RAW12			(0x32)
++#define ISU_RAW14			(0x33)
++#define ISU_RAW16			(0x34)
++#define ISU_RAW20			(0x35)
++#define ISU_RAW6			(0x36)
++#define ISU_RAW7			(0x37)
+ 
+ /* swap setting */
+ #define ISU_SWAP_NO			(0x00)	/* disable */
+-- 
+2.34.1
+

@@ -1,19 +1,20 @@
-From a3735dc13635dc16666aa901b8bee64612921306 Mon Sep 17 00:00:00 2001
+From 3c1a1ccdc4d4dcc1e698041c8c4c1e3bd27d5cef Mon Sep 17 00:00:00 2001
 From: hienhuynh <hien.huynh.px@renesas.com>
 Date: Tue, 8 Mar 2022 14:24:23 +0700
-Subject: [PATCH 4/9] mmngr: Add MM_OMXBUF_SIZE for RZG2L, RZG3E and RZV2H OMX
+Subject: [PATCH] mmngr: Add MM_OMXBUF_SIZE for RZG2L, RZG3L, RZG3E and RZV2H
+ OMX
 
 This commit adds:
-    MM_OMXBUF_SIZE (128 MB) for RZ/G2L Series
+    MM_OMXBUF_SIZE (128 MB) for RZ/G2L Series and RZ/G3L
     MM_OMXBUF_SIZE (256 MB) for RZ/G3E and RZ/V2H
 
 Signed-off-by: trungvanle <trung.le.xk@renesas.com>
 ---
- .../files/mmngr/include/mmngr_private.h            | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ .../files/mmngr/include/mmngr_private.h        | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
-index 56ab1f6..dd93fa3 100644
+index 56ab1f6..0409591 100644
 --- a/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
 +++ b/mmngr_drv/mmngr/mmngr-module/files/mmngr/include/mmngr_private.h
 @@ -1,7 +1,7 @@
@@ -25,13 +26,17 @@ index 56ab1f6..dd93fa3 100644
  
   License        Dual MIT/GPLv2
  
-@@ -204,6 +204,18 @@ static void mm_exit(void);
+@@ -204,6 +204,22 @@ static void mm_exit(void);
  
  static int validate_memory_map(void);
  
 +#ifdef MMNGR_RZG2L
 +#define MM_OMXBUF_SIZE		(128 * 1024 * 1024)
 +#endif /* MMNGR_RZG2L */
++
++#ifdef MMNGR_RZG3L
++#define MM_OMXBUF_SIZE		(128 * 1024 * 1024)
++#endif /* MMNGR_RZG3L */
 +
 +#ifdef MMNGR_RZG3E
 +#define MM_OMXBUF_SIZE		(256 * 1024 * 1024)
@@ -45,5 +50,5 @@ index 56ab1f6..dd93fa3 100644
  #define MM_OMXBUF_SIZE		(256 * 1024 * 1024)
  #endif /* MMNGR_SALVATORX */
 -- 
-2.25.1
+2.34.1
 
