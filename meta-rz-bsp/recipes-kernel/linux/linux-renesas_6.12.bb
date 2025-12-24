@@ -17,7 +17,7 @@ KERNEL_BRANCH ?= "rz-6.12-cip7"
 KERNEL_REV ?= "03d16609f9f970a5c1af057dff88d475a26328fc"
 
 KERNEL_BRANCH:rzg3l-family = "rzg3l-6.12-cip8"
-KERNEL_REV:rzg3l-family = "8287bbc97c8ed449ab24b0f18c118ab1cb569ea9"
+KERNEL_REV:rzg3l-family = "da2cea272c2be6f78df6a45f166a8f27074c4c69"
 
 SRC_URI:append = "${@bb.utils.contains('DISTRO_FEATURES','docker', ' file://docker.cfg', '', d)}"
 SRC_URI:append:rzg3l-family = " \
