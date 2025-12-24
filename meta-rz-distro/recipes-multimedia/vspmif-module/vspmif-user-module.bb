@@ -29,6 +29,7 @@ SUPPORT_ISU_PATCHES = " \
 SRC_URI:append:rzg2l-family = "${SUPPORT_ISU_PATCHES}"
 SRC_URI:append:rzv2h-family = "${SUPPORT_ISU_PATCHES}"
 SRC_URI:append:rzv2n-family = "${SUPPORT_ISU_PATCHES}"
+SRC_URI:append:rzg3l-family = "${SUPPORT_ISU_PATCHES}"
 
 vspm32_compile_export() {
     if [ X${WS} = "X32" ]; then
@@ -45,6 +46,10 @@ do_compile:prepend:rzv2h-family() {
 }
 
 do_compile:prepend:rzv2n-family() {
+    vspm32_compile_export
+}
+
+do_compile:prepend:rzg3l-family() {
     vspm32_compile_export
 }
 
