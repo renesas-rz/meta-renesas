@@ -13,6 +13,7 @@ Currently the following boards and MPUs are supported:
 - Board: RZT2H Evaluation Board Kit / MPU: R9A09G077 (RZ/T2H)
 - Board: RZN2H Evaluation Board Kit / MPU: R9A09G087 (RZ/N2H)
 - Board: RZV2N Evaluation Kit / MPU: R9A09G056 (RZ/V2N)
+- Board: RZG3L SMARC Evaluation Kit / MPU: R9A08G046 (RZ/G3L)
 
 ## Patches
 
@@ -70,7 +71,7 @@ Currently, Scarthgap can support 3 different versions is VLP v4.0.x, VLP v5.0.x 
 | 4.0.0       | BSP-v4.0.0 | RZ/G2L,LC                     |Initial version |
 | 4.0.1       | BSP-v4.0.1 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S  |                |
 
-In the branch "scarthgap/rz", RZ/G3E, RZ/V2H devices are also supported.
+In the branch "scarthgap/rz", RZ/G3E, RZ/V2H devices and RZ/G3L (kernel v6.12-cip) devices are also supported.
 
 **2. VLP v5.0.x (kernel v6.12-cip):**
 | VLP Version | Tag        | Target          |Notes           |
@@ -161,6 +162,7 @@ Example: MACHINE=smarc-rzg2l bitbake core-image-weston
 |   RZ/T2H    |  rzt2h   | rzt2h-dev    |minimal         |
 |   RZ/N2H    |  rzt2h   | rzn2h-dev    |minimal         |
 |   RZ/V2N    |  rzv2n   | rzv2n-evk    |minimal, weston |
+|   RZ/G3L    |  rzg3l   | smarc-rzg3l  |minimal, weston |
 
 After completing the images for the target machine will be available in the output
 directory _'tmp/deploy/images/\<board name\>'_.
