@@ -25,8 +25,8 @@ This layer (compatible with Yocto Scarthgap) depends on the following specific r
 **poky:**
 - URL: `https://git.yoctoproject.org/poky`
 - Branch: `scarthgap`
-- Revision: `ae2d52758fc2fcb0ed996aa234430464ebf4b310`
-- (Tag: `scarthgap-5.0.11`)
+- Revision: `7e8674996b0164b07e56bc066d0fba790e627061`
+- (Tag: `scarthgap-5.0.14`)
 
 **meta-arm:**
 - URL: `https://git.yoctoproject.org/meta-arm`
@@ -37,12 +37,12 @@ This layer (compatible with Yocto Scarthgap) depends on the following specific r
 **meta-openembedded:**
 - URL: `https://github.com/openembedded/meta-openembedded.git`
 - Branch: `scarthgap`
-- Revision: `c29a18fa39ede952f3f6108ec007c1906e2d9a0d`
+- Revision: `89a01c3d9ad1f8fce6aeb4dd0e694cfa28d42099`
 
 **meta-virtualization (for Docker):**
 - URL: `https://git.yoctoproject.org/git/meta-virtualization`
 - Branch: `scarthgap`
-- Revision: `02f72c96bf9acd0bd3ae0463f482bce8feabe749`
+- Revision: `17ac21e7d7f6f40a87618b22278b63bcfa14dbf2`
 
 ## Build Instructions
 
@@ -69,8 +69,7 @@ Currently, Scarthgap can support 3 different versions is VLP v4.0.x, VLP v5.0.x 
 | :---------- | :--------- | :---------                    |:-------------- |
 | 4.0.0       | BSP-v4.0.0 | RZ/G2L,LC                     |Initial version |
 | 4.0.1       | BSP-v4.0.1 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S  |                |
-
-In the branch "scarthgap/rz", RZ/G3E, RZ/V2H devices are also supported.
+| 4.0.2       | BSP-v4.0.2 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S, RZ/V2H, RZ/V2N, RZ/G3E  |                |
 
 **2. VLP v5.0.x (kernel v6.12-cip):**
 | VLP Version | Tag        | Target          |Notes           |
@@ -90,7 +89,7 @@ You can obtain the complete Yocto build environment from Renesas, or download th
     $ cd $WORK # Ensure you are in your working directory
     $ git clone https://git.yoctoproject.org/poky
     $ cd poky
-    $ git checkout ae2d52758fc2fcb0ed996aa234430464ebf4b310
+    $ git checkout 7e8674996b0164b07e56bc066d0fba790e627061
     $ cd ..
     $
     $ git clone https://git.yoctoproject.org/meta-arm
@@ -100,7 +99,7 @@ You can obtain the complete Yocto build environment from Renesas, or download th
     $
     $ git clone https://github.com/openembedded/meta-openembedded.git
     $ cd meta-openembedded
-    $ git checkout c29a18fa39ede952f3f6108ec007c1906e2d9a0d
+    $ git checkout 89a01c3d9ad1f8fce6aeb4dd0e694cfa28d42099
     $ cd ..
     $
     $ git clone  https://github.com/renesas-rz/meta-renesas.git
@@ -157,7 +156,7 @@ Example: MACHINE=smarc-rzg2l bitbake core-image-weston
 |   RZ/V2L    |  rzv2l   | smarc-rzv2l  |minimal, weston |
 |   RZ/G3S    |  rzg3s   | smarc-rzg3s  |minimal         |
 |   RZ/V2H    |  rzv2h   | rzv2h-evk    |minimal, weston |
-|   RZ/G3E    |  rzg3e   | rzg3e-dev    |minimal, weston |
+|   RZ/G3E    |  rzg3e   | smarc-rzg3e  |minimal, weston |
 |   RZ/T2H    |  rzt2h   | rzt2h-dev    |minimal         |
 |   RZ/N2H    |  rzt2h   | rzn2h-dev    |minimal         |
 |   RZ/V2N    |  rzv2n   | rzv2n-evk    |minimal, weston |
