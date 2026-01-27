@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if ! grep -qE '^[[:space:]]*[0-9]+' /proc/asound/cards 2>/dev/null; then
+	echo "No soundcard detected."
+	return 0
+fi
+
 hostname=$(cat /etc/hostname 2>/dev/null)
 
 set_common_g3e_g3s_v2h() {
@@ -42,12 +47,7 @@ case "$hostname" in
     set_common_g3e_g3s_v2h
     ;;
 
-  smarc-rzg3e)
-    set_common_g3e_g3s_v2h
-    amixer sset 'DVC In',0 10%
-    ;;
-
-  rzv2h-evk)
+  smarc-rzg3e | rzv2h-evk)
     set_common_g3e_g3s_v2h
     amixer sset 'DVC In',0 10%
     amixer sset 'DVC Out',0 20%
