@@ -12,6 +12,7 @@ S  = "${WORKDIR}/git"
 
 do_install:append() {
     install -Dm 644 ${WORKDIR}/gstpbfilter.conf ${D}${sysconfdir}/gstpbfilter.conf
+    sed -i "s/videoconvert/vspmfilter/g" ${D}/etc/gstpbfilter.conf
 }
 
 FILES:${PN}:append = " ${sysconfdir}/gstpbfilter.conf"
