@@ -5,7 +5,7 @@ SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plug
 SRC_URI:append = " \
     git://github.com/renesas-rz/gst-plugins-bad.git;branch=RZ/1.22.12;protocol=https \
 "
-SRCREV = "e07995fa6e7c24868008826f177d9eaf9c1f88e1"
+SRCREV = "87016cd5868939f82e4b504030917aafcc6a3614"
 
 S  = "${WORKDIR}/git"
 

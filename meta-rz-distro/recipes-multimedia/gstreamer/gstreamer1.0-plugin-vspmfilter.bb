@@ -21,7 +21,7 @@ SRC_URI:append:rzg3e-family = " \
 "
 
 SRCREV ?= "221c5349b88bc0ae0fb06283015b006affa8aaed"
-SRCREV:rzg3e-family = "3bad93c42be267f909cf2b98bf8b18ebe48a764f"
+SRCREV:rzg3e-family = "cf1295623ab01e551be0a08ab52a70814bec425a"
 
 S = "${WORKDIR}/git"
 PV = "1.22.12"
