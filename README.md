@@ -209,6 +209,17 @@ It is possible to change some build configs by modifying your _local.conf_ file 
   DISTRO_FEATURES:append = " virtualization docker"
   ```
 
+* **ARMv8 Crypto:** Some SoCs enable/disable the ARMv8 crypto extension in `TUNE_FEATURES` by default.
+
+  To include crypto support, ensure the following line is present and uncommented in _local.conf_:
+  ```
+  TUNE_FEATURES:append = " crypto"
+  ```
+  Or remove crypto support, ensure the following line is present and uncommented in _local.conf_:
+  ```
+  TUNE_FEATURES:remove = " crypto"
+  ```
+
 ## Using kas tool to build BSP
 
 Kas provides an easy mechanism to set up and build Yocto BSP projects.
