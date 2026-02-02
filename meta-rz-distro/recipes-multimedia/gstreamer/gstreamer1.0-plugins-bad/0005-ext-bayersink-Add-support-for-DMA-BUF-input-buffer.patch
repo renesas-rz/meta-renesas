@@ -1,0 +1,93 @@
+From 5c9920bececa673e45ce557895afd64497c37e7d Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 25 Dec 2025 18:37:20 +0700
+Subject: [PATCH] ext: bayersink: Add support for DMA-BUF input buffer
+
+This commit updates gst_bayersink_show_frame() to properly handle
+DMA-BUF input buffers without CPU mapping, achieving a zero-copy path.
+For non-DMA-BUF inputs, the fallback CPU mapping path is preserved.
+
+Upstream-Status: Inappropriate because this only for RZ-platforms
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ ext/bayersink/gstbayersink.c | 25 ++++++++++++++++++-------
+ ext/bayersink/meson.build    |  1 +
+ 2 files changed, 19 insertions(+), 7 deletions(-)
+
+diff --git a/ext/bayersink/gstbayersink.c b/ext/bayersink/gstbayersink.c
+index f92995c69..6f05e6479 100644
+--- a/ext/bayersink/gstbayersink.c
++++ b/ext/bayersink/gstbayersink.c
+@@ -34,6 +34,7 @@
+
+ #include <gst/gst.h>
+ #include <gst/video/gstvideosink.h>
++#include <gst/allocators/gstdmabuf.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <stdio.h>
+@@ -457,7 +458,7 @@ gst_bayersink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+     return FALSE;
+   }
+
+-  ret = init_bayer_rgb_conversion (&bayersink->conv);
++  ret = init_bayer_rgb_conversion_extern_output (&bayersink->conv);
+   if (ret == -1) {
+     GST_ELEMENT_ERROR (bayersink, CORE, FAILED,
+         ("Can not init byer2rgb lib"), (NULL));
+@@ -472,24 +473,34 @@ gst_bayersink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
+ {
+   GstBayersink *bayersink = GST_BAYERSINK (vsink);
+   struct context_bayer2rgb *ctx = &bayersink->conv;
+-  GstMapInfo *info_in = malloc (sizeof (GstMapInfo));
++  GstMapInfo info_in;
++  GstMemory *mem;
+   GLuint tex;
+
+   if (wait_for_configure) {
+     printf ("Wait for configure event from compositor\n");
+-    free (info_in);
+     return GST_FLOW_OK;
+   }
+
+-  gst_buffer_map (buffer, info_in, GST_MAP_READ);
++  mem = gst_buffer_peek_memory (buffer, 0);
++  if (gst_is_dmabuf_memory (mem)) {
++    int dma_buf = gst_dmabuf_memory_get_fd (mem);
++
++    if (do_bayer_rgb_conversion_texture_dmabuf (ctx, dma_buf, &tex) == 0) {
++      draw (ctx, tex);
++      refresh_window (ctx);
++      return GST_FLOW_OK;
++    }
++  }
++
++  gst_buffer_map (buffer, &info_in, GST_MAP_READ);
+
+   wl_display_dispatch_pending (wl_display);
+-  do_bayer_rgb_conversion_texture (ctx, info_in->data, &tex);
++  do_bayer_rgb_conversion_texture (ctx, info_in.data, &tex);
+   draw (ctx, tex);
+   refresh_window (ctx);
+
+-  gst_buffer_unmap (buffer, info_in);
+-  free (info_in);
++  gst_buffer_unmap (buffer, &info_in);
+   return GST_FLOW_OK;
+ }
+
+diff --git a/ext/bayersink/meson.build b/ext/bayersink/meson.build
+index 677708faf..e36208d97 100644
+--- a/ext/bayersink/meson.build
++++ b/ext/bayersink/meson.build
+@@ -25,6 +25,7 @@ bayersink_deps = [
+   gst_dep,
+   gstbase_dep,
+   gstvideo_dep,
++  gstallocators_dep,
+   wl_client_dep,
+   declare_dependency(
+     link_args : [
+--
+2.43.0

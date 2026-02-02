@@ -1,0 +1,70 @@
+From caeb0ee3e5071da428d1a201862b58a6e659910f Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Fri, 12 Dec 2025 11:15:49 +0700
+Subject: [PATCH] ext: bayerconvert: Add support for DMA-BUF input buffer
+
+This commit updates gst_bayerconvert_transform() to properly handle
+DMA-BUF input buffers without CPU mapping, achieving a zero-copy path.
+For non-DMA-BUF inputs, the fallback CPU mapping path is preserved.
+
+Upstream-Status: Inappropriate because this only for RZ-platforms
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ ext/bayerconvert/gstbayerconvert.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/ext/bayerconvert/gstbayerconvert.c b/ext/bayerconvert/gstbayerconvert.c
+index fb6cf9079..b0c7b80ac 100644
+--- a/ext/bayerconvert/gstbayerconvert.c
++++ b/ext/bayerconvert/gstbayerconvert.c
+@@ -170,6 +170,7 @@ gst_bayerconvert_finalize (GObject * obj)
+   struct mmngr_API *mmngr;
+   int i;
+
++  bayer2raw_free_all_inbuf (&bayerconvert->conv);
+   bayer2raw_free_all_outbuf (&bayerconvert->conv);
+   for (i = 0; i < NUM_BUF; i++) {
+     buffer = &bayerconvert->buffer[i];
+@@ -465,10 +466,6 @@ gst_bayerconvert_transform (GstBaseTransform * trans,
+   GstMemory *mem;
+   int i;
+
+-
+-  if (!gst_buffer_map (in_buf, &map, GST_MAP_READ))
+-    goto map_failed;
+-
+   /* We should select the framebuffer here to ensure attach right framebuffer
+    * match with gst output buffer.
+    */
+@@ -481,14 +478,25 @@ gst_bayerconvert_transform (GstBaseTransform * trans,
+     }
+   }
+
++  mem = gst_buffer_peek_memory (in_buf, 0);
++  if (gst_is_dmabuf_memory (mem)) {
++    int dma_fd = gst_dmabuf_memory_get_fd (mem);
++
++    if (do_bayer_rgb_conversion_texture_dmabuf (ctx, dma_fd, NULL) == 0) {
++      glFinish ();
++      return GST_FLOW_OK;
++    }
++  }
++
++  /* CPU fallback */
++  if (!gst_buffer_map (in_buf, &map, GST_MAP_READ))
++    return GST_FLOW_ERROR;
++
+   do_bayer_rgb_conversion_texture (ctx, map.data, NULL);
+   glFinish ();
+-
+   gst_buffer_unmap (in_buf, &map);
+
+   return GST_FLOW_OK;
+-map_failed:
+-  return GST_FLOW_ERROR;
+ }
+
+ static GstStateChangeReturn
+--
+2.43.0
