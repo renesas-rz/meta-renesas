@@ -7,6 +7,11 @@ SRC_URI:append = " \
     file://0001-New-libbayersink-Bayer-to-RAW-converter-and-display-.patch \
     file://0002-ext-bayerconvert-add-bayerconvert-plugin.patch \
 "
+
+SRC_URI:append:mali-family = " \
+    ${@bb.utils.contains('BBFILE_COLLECTIONS', 'meta-rz-graphics', 'file://0003-ext-bayersink-Remove-EGL_PIXMAP_BIT-while-using-mali.patch', '', d)} \
+"
+
 SRCREV = "87016cd5868939f82e4b504030917aafcc6a3614"
 
 S  = "${WORKDIR}/git"

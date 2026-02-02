@@ -1,0 +1,31 @@
+From bda0c04e0c733b8e8a51026ec5bdc808de16fb40 Mon Sep 17 00:00:00 2001
+From: trungvanle <trung.le.xk@renesas.com>
+Date: Wed, 24 Jan 2024 09:28:39 +0700
+Subject: [PATCH] ext: bayersink: Remove EGL_PIXMAP_BIT while using mali
+
+This commit is added to remove EGL_PIXMAP_BIT to support bayersink
+for G2L (mali) due to unsupported egl pixmap.
+
+Upstream-Status: Inappropriate because this only for RZ-platforms
+
+Signed-off-by: trungvanle <trung.le.xk@renesas.com>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ ext/bayersink/gstbayersink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/bayersink/gstbayersink.c b/ext/bayersink/gstbayersink.c
+index 6f05e6479..ced42ef37 100644
+--- a/ext/bayersink/gstbayersink.c
++++ b/ext/bayersink/gstbayersink.c
+@@ -344,7 +344,7 @@ create_egl_context (struct context_bayer2rgb *ctx)
+   };
+
+   EGLint const fb_attribs[] = {
+-    EGL_SURFACE_TYPE, EGL_PBUFFER_BIT | EGL_PIXMAP_BIT,
++    EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+     EGL_CONFORMANT, EGL_OPENGL_ES2_BIT,
+     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+     EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+--
+2.43.0
