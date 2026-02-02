@@ -309,6 +309,9 @@ CONF_VERSION = "2"
 #PREFERRED_VERSION_linux-renesas = "6.1%"
 PREFERRED_VERSION_linux-renesas = "6.12%"
 
+# Select the linux-libc-headers version: v6.12
+PREFERRED_VERSION_linux-libc-headers = "6.12"
+
 #
 # ARM crypto extension control (generic, vendor-neutral)
 #

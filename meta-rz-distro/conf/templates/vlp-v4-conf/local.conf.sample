@@ -309,6 +309,9 @@ CONF_VERSION = "2"
 #PREFERRED_VERSION_linux-renesas = "6.1%"
 #PREFERRED_VERSION_linux-renesas = "6.12%"
 
+# Select the linux-libc-headers version: v6.1
+PREFERRED_VERSION_linux-libc-headers = "6.1"
+
 # Configuration for ECC (Only support for RZ/G2L Series and RZ/V2L)
 #
 # ECC_MODE : choose one of below values then un-comment following line when support.
