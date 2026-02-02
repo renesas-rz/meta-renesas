@@ -1,0 +1,61 @@
+From e451f36e6450e8980a682a45c386ddeb1c67e8de Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Mon, 2 Feb 2026 11:05:45 +0700
+Upstream-Status: Backport [from commit 0a76cb86]
+Subject: [PATCH 3/3] compositor: Upgrade repaint timer precision to nsec
+
+We can now use 1ns as the minimum timer duration instead of 1ms.
+
+Signed-off-by: Derek Foreman <derek.foreman@collabora.com>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ libweston/compositor.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index 3b6c935..768a78c 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -3574,20 +3574,20 @@ output_repaint_timer_arm(struct weston_compositor *compositor)
+ 	bool any_should_repaint = false;
+ 	struct timespec now;
+ 	struct itimerspec next_time_its = { 0 };
+-	int64_t msec_to_next = INT64_MAX;
++	int64_t nsec_to_next = INT64_MAX;
+ 
+ 	weston_compositor_read_presentation_clock(compositor, &now);
+ 
+ 	wl_list_for_each(output, &compositor->output_list, link) {
+-		int64_t msec_to_this;
++		int64_t nsec_to_this;
+ 
+ 		if (output->repaint_status != REPAINT_SCHEDULED)
+ 			continue;
+ 
+-		msec_to_this = timespec_sub_to_msec(&output->next_repaint,
++		nsec_to_this = timespec_sub_to_nsec(&output->next_repaint,
+ 						    &now);
+-		if (!any_should_repaint || msec_to_this < msec_to_next)
+-			msec_to_next = msec_to_this;
++		if (!any_should_repaint || nsec_to_this < nsec_to_next)
++			nsec_to_next = nsec_to_this;
+ 
+ 		any_should_repaint = true;
+ 	}
+@@ -3601,10 +3601,10 @@ output_repaint_timer_arm(struct weston_compositor *compositor)
+ 	 * into the same call, which would not happen if we called
+ 	 * output_repaint_timer_handler() directly.
+ 	 */
+-	if (msec_to_next < 1)
+-		msec_to_next = 1;
++	if (nsec_to_next < 1)
++		nsec_to_next = 1;
+ 
+-	timespec_from_msec(&next_time_its.it_value, msec_to_next);
++	timespec_from_nsec(&next_time_its.it_value, nsec_to_next);
+ 	timerfd_settime(compositor->repaint_timer_fd, 0, &next_time_its, NULL);
+ }
+ 
+-- 
+2.25.1
+

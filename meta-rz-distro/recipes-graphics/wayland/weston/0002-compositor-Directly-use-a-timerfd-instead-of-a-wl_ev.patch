@@ -1,0 +1,109 @@
+From e4f01b8bb17cc5f2cc81bb42bdfc9b6268b2fddf Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Mon, 2 Feb 2026 11:04:03 +0700
+Upstream-Status: Backport [from commit 37acb0c0]
+Subject: [PATCH 2/3] compositor: Directly use a timerfd instead of a
+ wl_event_source
+
+In the near future commit-timing + VRR combined will want to have better
+than the 1ms precision we're allowed now.
+
+Signed-off-by: Derek Foreman <derek.foreman@collabora.com>
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ include/libweston/libweston.h |  3 ++-
+ libweston/compositor.c        | 23 +++++++++++++++++------
+ 2 files changed, 19 insertions(+), 7 deletions(-)
+
+diff --git a/include/libweston/libweston.h b/include/libweston/libweston.h
+index 077c16b..df038e7 100644
+--- a/include/libweston/libweston.h
++++ b/include/libweston/libweston.h
+@@ -1430,7 +1430,8 @@ struct weston_compositor {
+ 	struct wl_event_source *idle_source;
+ 	uint32_t idle_inhibit;
+ 	int idle_time;			/* timeout, s */
+-	struct wl_event_source *repaint_timer;
++	int repaint_timer_fd;
++	struct wl_event_source *repaint_timer_source;
+ 
+ 	const struct weston_pointer_grab_interface *default_pointer_grab;
+ 
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index 41459eb..3b6c935 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -38,6 +38,7 @@
+ #include <assert.h>
+ #include <sys/ioctl.h>
+ #include <sys/mman.h>
++#include <sys/timerfd.h>
+ #include <sys/wait.h>
+ #include <sys/socket.h>
+ #include <sys/utsname.h>
+@@ -3572,6 +3573,7 @@ output_repaint_timer_arm(struct weston_compositor *compositor)
+ 	struct weston_output *output;
+ 	bool any_should_repaint = false;
+ 	struct timespec now;
++	struct itimerspec next_time_its = { 0 };
+ 	int64_t msec_to_next = INT64_MAX;
+ 
+ 	weston_compositor_read_presentation_clock(compositor, &now);
+@@ -3602,7 +3604,8 @@ output_repaint_timer_arm(struct weston_compositor *compositor)
+ 	if (msec_to_next < 1)
+ 		msec_to_next = 1;
+ 
+-	wl_event_source_timer_update(compositor->repaint_timer, msec_to_next);
++	timespec_from_msec(&next_time_its.it_value, msec_to_next);
++	timerfd_settime(compositor->repaint_timer_fd, 0, &next_time_its, NULL);
+ }
+ 
+ static void
+@@ -3620,13 +3623,16 @@ weston_output_schedule_repaint_restart(struct weston_output *output)
+ }
+ 
+ static int
+-output_repaint_timer_handler(void *data)
++output_repaint_timer_handler(int fd, uint32_t mask, void *data)
+ {
+ 	struct weston_compositor *compositor = data;
+ 	struct weston_backend *backend;
+ 	struct weston_output *output;
+ 	struct timespec now;
+ 	int ret = 0;
++	uint64_t e;
++
++	read(compositor->repaint_timer_fd, &e, sizeof e);
+ 
+ 	weston_compositor_read_presentation_clock(compositor, &now);
+ 	compositor->last_repaint_start = now;
+@@ -9118,9 +9124,13 @@ weston_compositor_create(struct wl_display *display,
+ 
+ 	loop = wl_display_get_event_loop(ec->wl_display);
+ 	ec->idle_source = wl_event_loop_add_timer(loop, idle_handler, ec);
+-	ec->repaint_timer =
+-		wl_event_loop_add_timer(loop, output_repaint_timer_handler,
+-					ec);
++	ec->repaint_timer_fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
++	if (ec->repaint_timer_fd < 0)
++		goto fail;
++	ec->repaint_timer_source =
++		wl_event_loop_add_fd(loop, ec->repaint_timer_fd,
++				     WL_EVENT_READABLE,
++				     output_repaint_timer_handler, ec);
+ 
+ 	weston_layer_init(&ec->fade_layer, ec);
+ 	weston_layer_init(&ec->cursor_layer, ec);
+@@ -9163,7 +9173,8 @@ weston_compositor_shutdown(struct weston_compositor *ec)
+ 	ec->shutting_down = true;
+ 
+ 	wl_event_source_remove(ec->idle_source);
+-	wl_event_source_remove(ec->repaint_timer);
++	wl_event_source_remove(ec->repaint_timer_source);
++	close(ec->repaint_timer_fd);
+ 
+ 	if (ec->touch_calibration)
+ 		weston_compositor_destroy_touch_calibrator(ec);
+-- 
+2.25.1
+
