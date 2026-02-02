@@ -1,0 +1,141 @@
+From 76a2f1d95e6e1a238d972bcf51805a7916f84a0d Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Thu, 25 Dec 2025 18:42:31 +0700
+Subject: [PATCH] ext: bayerconvert: Add GBM fallback when Wayland/Weston is
+ disabled
+
+This commit adds a DRM + GBM fallback using EGL_PLATFORM_GBM_KHR,
+allowing bayerconvert to function correctly without Wayland/Weston.
+
+Upstream-Status: Inappropriate because this only for RZ-platforms
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ ext/bayerconvert/gstbayerconvert.c | 45 +++++++++++++++++++++++++-----
+ ext/bayerconvert/gstbayerconvert.h |  3 ++
+ ext/bayerconvert/meson.build       |  3 +-
+ 3 files changed, 43 insertions(+), 8 deletions(-)
+
+diff --git a/ext/bayerconvert/gstbayerconvert.c b/ext/bayerconvert/gstbayerconvert.c
+index b0c7b80ac..f24408a76 100644
+--- a/ext/bayerconvert/gstbayerconvert.c
++++ b/ext/bayerconvert/gstbayerconvert.c
+@@ -37,6 +37,7 @@
+ #include <string.h>
+ #include <stdio.h>
+ #include <sys/time.h>
++#include <fcntl.h>
+ #include "gstbayerconvert.h"
+
+ #include "mmngr_user_public.h"
+@@ -160,6 +161,22 @@ gst_bayerconvert_init (GstBayerConvert * bayerconvert)
+     mmngr->dmabuf_id = -1;
+     mmngr->dmabuf_fd = -1;
+   }
++
++  bayerconvert->drm_fd = open ("/dev/dri/card0", O_RDWR | O_CLOEXEC);
++  if (bayerconvert->drm_fd < 0) {
++    GST_DEBUG_OBJECT ((GstBaseTransform *) bayerconvert,
++        "Failed to open DRM device \n");
++    return;
++  }
++
++  bayerconvert->gbm = gbm_create_device (bayerconvert->drm_fd);
++  if (!bayerconvert->gbm) {
++    GST_DEBUG_OBJECT ((GstBaseTransform *) bayerconvert,
++        "Failed to create GBM device\n");
++    close (bayerconvert->drm_fd);
++    bayerconvert->drm_fd = -1;
++    return;
++  }
+ }
+
+ static void
+@@ -180,6 +197,10 @@ gst_bayerconvert_finalize (GObject * obj)
+     if (mmngr->mmngr_id > 0)
+       mmngr_free_in_user (mmngr->mmngr_id);
+   }
++  if (bayerconvert->gbm)
++    gbm_device_destroy (bayerconvert->gbm);
++  if (bayerconvert->drm_fd > 0)
++    close (bayerconvert->drm_fd);
+   if (bayerconvert->allocator)
+     gst_object_unref (bayerconvert->allocator);
+ }
+@@ -224,6 +245,7 @@ create_egl_context (GstBayerConvert * bayerconvert)
+   EGLContext context;
+   EGLSurface surface = EGL_NO_SURFACE;
+   EGLConfig config;
++  gboolean display_init = FALSE;
+
+   EGLint const psurface_attrib[] = {
+     EGL_WIDTH, ctx->width,
+@@ -253,15 +275,24 @@ create_egl_context (GstBayerConvert * bayerconvert)
+   };
+
+   EGLDisplay display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
+-  if (display == EGL_NO_DISPLAY) {
+-    GST_DEBUG_OBJECT ((GstBaseTransform *) bayerconvert, "No EGL Display\n");
+-    return -1;
++  if (display != EGL_NO_DISPLAY) {
++    if (eglInitialize (display, NULL, NULL)) {
++      display_init = TRUE;
++    }
+   }
+
+-  if (!eglInitialize (display, NULL, NULL)) {
+-    GST_DEBUG_OBJECT ((GstBaseTransform *) bayerconvert,
+-        "EGL was not initialized \n");
+-    return -1;
++  if (!display_init) {
++    display = eglGetPlatformDisplay (EGL_PLATFORM_GBM_KHR, bayerconvert->gbm, NULL);
++    if (display == EGL_NO_DISPLAY) {
++      GST_DEBUG_OBJECT ((GstBaseTransform *) bayerconvert, "No EGL Display\n");
++      return -1;
++    }
++
++    if (!eglInitialize (display, NULL, NULL)) {
++      GST_DEBUG_OBJECT ((GstBaseTransform *) bayerconvert,
++          "EGL was not initialized \n");
++      return -1;
++    }
+   }
+
+   if ((eglChooseConfig (display, fb_attribs, &config, 1,
+diff --git a/ext/bayerconvert/gstbayerconvert.h b/ext/bayerconvert/gstbayerconvert.h
+index 913fd2d4a..969602967 100644
+--- a/ext/bayerconvert/gstbayerconvert.h
++++ b/ext/bayerconvert/gstbayerconvert.h
+@@ -27,6 +27,7 @@
+ #include <GLES2/gl2ext.h>
+ #include <EGL/egl.h>
+ #include <EGL/eglext.h>
++#include <gbm.h>
+
+ G_BEGIN_DECLS
+
+@@ -91,6 +92,8 @@ struct _GstBayerConvert
+   int current_index;
+   GstAllocator *allocator;
+   GstBufferPool *out_pool;
++  int drm_fd;
++  struct gbm_device *gbm;
+ };
+
+ struct _GstBayerConvertClass
+diff --git a/ext/bayerconvert/meson.build b/ext/bayerconvert/meson.build
+index cc42b2c74..643bbec31 100644
+--- a/ext/bayerconvert/meson.build
++++ b/ext/bayerconvert/meson.build
+@@ -14,7 +14,8 @@ bayerconvert_deps = [
+       '-lEGL',
+       '-lGLESv2',
+       '-lmmngr',
+-      '-lmmngrbuf'
++      '-lmmngrbuf',
++      '-lgbm'
+     ]
+   )
+ ]
+--
+2.43.0

@@ -12,6 +12,7 @@ SRC_URI:append:mali-family = " \
     ${@bb.utils.contains('BBFILE_COLLECTIONS', 'meta-rz-graphics', 'file://0003-ext-bayersink-Remove-EGL_PIXMAP_BIT-while-using-mali.patch', '', d)} \
     ${@bb.utils.contains('BBFILE_COLLECTIONS', 'meta-rz-graphics', 'file://0004-ext-bayerconvert-Add-support-for-DMA-BUF-input-buffe.patch', '', d)} \
     ${@bb.utils.contains('BBFILE_COLLECTIONS', 'meta-rz-graphics', 'file://0005-ext-bayersink-Add-support-for-DMA-BUF-input-buffer.patch', '', d)} \
+    ${@bb.utils.contains('BBFILE_COLLECTIONS', 'meta-rz-graphics', 'file://0006-ext-bayerconvert-Add-GBM-fallback-when-Wayland-Westo.patch', '', d)} \
 "
 
 SRCREV = "87016cd5868939f82e4b504030917aafcc6a3614"
