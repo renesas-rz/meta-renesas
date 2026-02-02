@@ -15,6 +15,7 @@ EXTRA_IMAGEDEPENDS += " firmware-pack"
 # Linux kernel configuration
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
 PREFERRED_VERSION_linux-renesas ?= "6.12%"
+PREFERRED_VERSION_linux-renesas-rt ?= "6.12%"
 KERNEL_IMAGETYPE ?= "Image"
 
 # Wic image offset
