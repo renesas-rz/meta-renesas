@@ -1,0 +1,286 @@
+From e4e928252e71103ceb3b4d2757d30e9c3103d54b Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 3 Feb 2026 14:55:30 +0700
+Subject: [PATCH 19/22] vspm_main: Introduce structure vspm_device and move
+ reset to PM function
+
+This structure will store the clock, reset, and other related properties
+for future implementations. Additionally, the reset signal should be
+asserted or deasserted whenever the clock is disabled or enabled, since
+the driver rewrites all registers.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ vspm-module/files/vspm/drv/vspm_main.c | 89 +++++++++++++++++---------
+ vspm-module/files/vspm/drv/vspm_main.h | 16 ++++-
+ 2 files changed, 72 insertions(+), 33 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index c72da33..3657c73 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -303,6 +303,7 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 
+ 	int i;
+ 	int ch;
++	struct vspm_device *vdev = NULL;
+ 
+ 	/* get channel */
+ 	of_property_read_u32(np, "renesas,#ch", &ch);
+@@ -321,6 +322,10 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 		return -1;
+ 	}
+ 
++	vdev = &pdrv->vsp_vdev[ch];
++	/* Clear all information */
++	memset(vdev, 0, sizeof(struct vspm_device));
++
+ 	/* set clocks */
+ 	for (i = 0; i < CLKNUM; i++) {
+ 		clk = devm_clk_get(&pdev->dev, clk_names[i]);
+@@ -328,11 +333,13 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 			APRINT("Cannot get %s clock!! ch=%d\n",
+ 			       clk_names[i], ch);
+ 			for (; i > 0; i--)
+-				pdrv->vsp_clks[ch][i - 1] = NULL;
++				vdev->clks[i - 1] = NULL;
+ 			return -1;
+ 		}
+-		pdrv->vsp_clks[ch][i] = clk;
++		vdev->clks[i] = clk;
++		strcpy(vdev->clks_names[i], clk_names[i]);
+ 	}
++	vdev->num_clks = CLKNUM;
+ 
+ 	for (i = 0; i < RSTNUM; i++) {
+ 		rstc = devm_reset_control_get(&pdev->dev, reset_names[i]);
+@@ -342,12 +349,14 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 			return -1;
+ 		}
+ 		else {
+-			reset_control_deassert(rstc);
++			vdev->rsts[i] = rstc;
++			strcpy(vdev->rsts_names[i], reset_names[i]);
+ 		}
+ 	}
++	vdev->num_rsts = CLKNUM;
+ 
+ 	/* set driver data */
+-	platform_set_drvdata(pdev, &pdrv->vsp_clks[ch]);
++	platform_set_drvdata(pdev, vdev);
+ 	pdrv->vsp_pdev[ch] = pdev;
+ 
+ 	/* set runtime PM */
+@@ -362,7 +371,6 @@ static int vspm_vsp_remove(struct platform_device *pdev)
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+ 
+-	int i;
+ 	int ch;
+ 
+ 	/* unset runtime PM */
+@@ -374,10 +382,7 @@ static int vspm_vsp_remove(struct platform_device *pdev)
+ 	/* unset driver data */
+ 	platform_set_drvdata(pdev, NULL);
+ 	pdrv->vsp_pdev[ch] = NULL;
+-
+-	/* unset clocks */
+-	for (i = 0; i < CLKNUM; i++)
+-		pdrv->vsp_clks[ch][i] = NULL;
++	memset(&pdrv->vsp_vdev[ch], 0, sizeof(struct vspm_device));
+ 
+ 	return 0;
+ }
+@@ -393,6 +398,7 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 
+ 	int i;
+ 	int ch;
++	struct vspm_device *vdev = NULL;
+ 
+ 	/* get channel */
+ 	of_property_read_u32(np, "renesas,#ch", &ch);
+@@ -411,6 +417,10 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 		return -1;
+ 	}
+ 
++	vdev = &pdrv->fdp_vdev[ch];
++	/* Clear all information */
++	memset(vdev, 0, sizeof(struct vspm_device));
++
+ 	/* set clocks */
+ 	for (i = 0; i < CLKNUM; i++) {
+ 		clk = devm_clk_get(&pdev->dev, clk_names[i]);
+@@ -418,11 +428,13 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 			APRINT("Cannot get %s clock!! ch=%d\n",
+ 			       clk_names[i], ch);
+ 			for (; i > 0; i--)
+-				pdrv->fdp_clks[ch][i - 1] = NULL;
++				vdev->clks[i - 1] = NULL;
+ 			return -1;
+ 		}
+-		pdrv->fdp_clks[ch][i] = clk;
++		vdev->clks[i] = clk;
++		strcpy(vdev->clks_names[i], clk_names[i]);
+ 	}
++	vdev->num_clks = CLKNUM;
+ 
+ 	for (i = 0; i < RSTNUM; i++) {
+ 		rstc = devm_reset_control_get(&pdev->dev, reset_names[i]);
+@@ -432,12 +444,14 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 			return -1;
+ 		}
+ 		else {
+-			reset_control_deassert(rstc);
++			vdev->rsts[i] = rstc;
++			strcpy(vdev->rsts_names[i], reset_names[i]);
+ 		}
+ 	}
++	vdev->num_rsts = RSTNUM;
+ 
+ 	/* set driver data */
+-	platform_set_drvdata(pdev, &pdrv->fdp_clks[ch]);
++	platform_set_drvdata(pdev, vdev);
+ 	pdrv->fdp_pdev[ch] = pdev;
+ 
+ 	/* set runtime PM */
+@@ -452,7 +466,6 @@ static int vspm_fdp_remove(struct platform_device *pdev)
+ 	struct vspm_drvdata *pdrv = p_vspm_drvdata;
+ 	struct device_node *np = pdev->dev.of_node;
+ 
+-	int i;
+ 	int ch;
+ 
+ 	/* unset runtime PM */
+@@ -464,10 +477,7 @@ static int vspm_fdp_remove(struct platform_device *pdev)
+ 	/* unset driver data */
+ 	platform_set_drvdata(pdev, NULL);
+ 	pdrv->fdp_pdev[ch] = NULL;
+-
+-	/* unset clocks */
+-	for (i = 0; i < CLKNUM; i++)
+-		pdrv->fdp_clks[ch][i] = NULL;
++	memset(&pdrv->fdp_vdev[ch], 0, sizeof(struct vspm_device));
+ 
+ 	return 0;
+ }
+@@ -509,13 +519,21 @@ static int vspm_pm_resume(struct device *dev)
+ static int vspm_pm_runtime_suspend(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	struct clk **clk = platform_get_drvdata(pdev);
+-
++	struct vspm_device *vdev = platform_get_drvdata(pdev);
++	int ret = -1;
+ 	int i;
+ 
+-	for (i = 0; i < CLKNUM; i++) {
+-		if (clk[i])
+-			clk_disable_unprepare(clk[i]);
++	for (i = 0; i < vdev->num_rsts; i++) {
++		if (vdev->rsts[i]) {
++			ret = reset_control_assert(vdev->rsts[i]);
++			if (ret) {
++				EPRINT("%s: Fail to assert reset %d \n", __func__, i);
++			}
++		}
++	}
++	for (i = 0; i < vdev->num_clks; i++) {
++		if (vdev->clks[i])
++			clk_disable_unprepare(vdev->clks[i]);
+ 	}
+ 
+ 	return 0;
+@@ -524,15 +542,26 @@ static int vspm_pm_runtime_suspend(struct device *dev)
+ static int vspm_pm_runtime_resume(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	struct clk **clk = platform_get_drvdata(pdev);
+-
++	struct vspm_device *vdev = platform_get_drvdata(pdev);
++	int ret = -1;
+ 	int i;
+ 
+-	for (i = 0; i < CLKNUM; i++) {
+-		if (clk[i])
+-			clk_prepare_enable(clk[i]);
++	for (i = 0; i < vdev->num_clks; i++) {
++		if (vdev->clks[i]) {
++			ret = clk_prepare_enable(vdev->clks[i]);
++			if (ret) {
++				EPRINT("%s: Fail to enable clock %d \n", __func__, i);
++			}
++		}
++	}
++	for (i = 0; i < vdev->num_rsts; i++) {
++		if (vdev->rsts[i]) {
++			ret = reset_control_deassert(vdev->rsts[i]);
++			if (ret) {
++				EPRINT("%s: Fail to deassert reset %d \n", __func__, i);
++			}
++		}
+ 	}
+-
+ 	return 0;
+ }
+ 
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 0fcc9e8..1bed786 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSPM
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -61,6 +61,7 @@
+ #include <linux/cdev.h>
+ #include <linux/fs.h>
+ #include <linux/clk.h>
++#include <linux/reset.h>
+ 
+ #define DEVNAME				"vspm"
+ #define DEVNUM				1
+@@ -82,16 +83,25 @@
+ #define CLKNUM				3
+ #define RSTNUM				3
+ 
++struct vspm_device {
++	struct clk *clks[CLKNUM];
++	char clks_names[255][CLKNUM];
++	struct reset_control *rsts[RSTNUM];
++	char rsts_names[255][RSTNUM];
++	int num_clks;
++	int num_rsts;
++};
++
+ /* vspm driver data structure */
+ struct vspm_drvdata {
+ 	struct platform_device *vsp_pdev[VSPM_VSP_IP_MAX];
+-	struct clk *vsp_clks[VSPM_VSP_IP_MAX][CLKNUM];
+ 	struct platform_device *fdp_pdev[VSPM_FDP_IP_MAX];
+-	struct clk *fdp_clks[VSPM_FDP_IP_MAX][CLKNUM];
+ 	struct task_struct *task;
+ 	atomic_t counter;
+ 	atomic_t suspend;
+ 	struct semaphore init_sem;
++	struct vspm_device vsp_vdev[VSPM_VSP_IP_MAX];
++	struct vspm_device fdp_vdev[VSPM_FDP_IP_MAX];
+ };
+ 
+ /* FDP process information structure */
+-- 
+2.25.1
+

@@ -26,8 +26,11 @@ SRC_URI:append = " \
 SRC_URI:append:rzg3e-family = " \
 	file://0001-Update-clocks-and-reset-controls-for-RZ-G3E.patch \
 	file://0002-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
-	file://0003-Restarting-FDP-after-stopping-with-CPG-software-rese.patch \
-	file://0004-Updating-the-procedure-for-starting-and-stopping-VSP.patch \
+	file://0018-vspm_main-Force-runtime-suspend-resume-when-system.patch \
+	file://0019-vspm_main-Introduce-structure-vspm_device-and-move-r.patch \
+	file://0020-vspm_main-Introduce-vspm_device_ops.patch \
+	file://0021-r9a09g047-Add-FDP-special-power-on-off-configuration.patch \
+	file://0022-r9a09g047-add-VSP-special-power-on-off-procedure.patch \
 "
 
 ISU_PATCHES = " \
@@ -59,6 +62,7 @@ SRC_URI:append:rzv2h-family = " \
 SRC_URI:append:rzv2n-family = " \
 	${ISU_PATCHES} \
 	file://0017-Support-vspm-isu-driver-for-V2H.patch \
+	file://0018-vspm_main-Force-runtime-suspend-resume-when-system.patch \
 "
 
 # In RZ BSP for yocto v5.x, the supported kernel version are

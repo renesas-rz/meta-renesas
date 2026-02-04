@@ -1,0 +1,176 @@
+From 69259ea464fb460a25f0895ae9d107ba50e163dc Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Wed, 4 Feb 2026 10:43:38 +0700
+Subject: [PATCH 20/22] vspm_main: Introduce vspm_device_ops
+
+Some vspm device has special procedure to power on/power off and cpg
+setting with others, we need separate them by power_on/power_off ops.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ vspm-module/files/vspm/drv/vspm_main.c | 70 ++++++++++++++++++--------
+ vspm-module/files/vspm/drv/vspm_main.h |  6 +++
+ 2 files changed, 55 insertions(+), 21 deletions(-)
+
+diff --git a/vspm-module/files/vspm/drv/vspm_main.c b/vspm-module/files/vspm/drv/vspm_main.c
+index 3657c73..b4e335d 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.c
++++ b/vspm-module/files/vspm/drv/vspm_main.c
+@@ -56,6 +56,7 @@
+  */ /*************************************************************************/
+ 
+ #include <linux/module.h>
++#include <linux/sys_soc.h>
+ #include <linux/platform_device.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+@@ -73,6 +74,12 @@
+ #include "vsp_drv_public.h"
+ 
+ static struct vspm_drvdata *p_vspm_drvdata;
++static const struct soc_device_attribute rz_vsp_quirk_attrs[] = {
++	{ /* sentinel */ }
++};
++static const struct soc_device_attribute rz_fdp_quirk_attrs[] = {
++	{ /* sentinel */ }
++};
+ 
+ /******************************************************************************
+  * Function:		vspm_init_driver
+@@ -304,6 +311,7 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 	int i;
+ 	int ch;
+ 	struct vspm_device *vdev = NULL;
++	const struct soc_device_attribute *attr;
+ 
+ 	/* get channel */
+ 	of_property_read_u32(np, "renesas,#ch", &ch);
+@@ -326,6 +334,10 @@ static int vspm_vsp_probe(struct platform_device *pdev)
+ 	/* Clear all information */
+ 	memset(vdev, 0, sizeof(struct vspm_device));
+ 
++	attr = soc_device_match(rz_vsp_quirk_attrs);
++	if (attr)
++		vdev->ops = attr->data;
++
+ 	/* set clocks */
+ 	for (i = 0; i < CLKNUM; i++) {
+ 		clk = devm_clk_get(&pdev->dev, clk_names[i]);
+@@ -399,6 +411,7 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 	int i;
+ 	int ch;
+ 	struct vspm_device *vdev = NULL;
++	const struct soc_device_attribute *attr;
+ 
+ 	/* get channel */
+ 	of_property_read_u32(np, "renesas,#ch", &ch);
+@@ -421,6 +434,10 @@ static int vspm_fdp_probe(struct platform_device *pdev)
+ 	/* Clear all information */
+ 	memset(vdev, 0, sizeof(struct vspm_device));
+ 
++	attr = soc_device_match(rz_fdp_quirk_attrs);
++	if (attr)
++		vdev->ops = attr->data;
++
+ 	/* set clocks */
+ 	for (i = 0; i < CLKNUM; i++) {
+ 		clk = devm_clk_get(&pdev->dev, clk_names[i]);
+@@ -523,19 +540,24 @@ static int vspm_pm_runtime_suspend(struct device *dev)
+ 	int ret = -1;
+ 	int i;
+ 
+-	for (i = 0; i < vdev->num_rsts; i++) {
+-		if (vdev->rsts[i]) {
+-			ret = reset_control_assert(vdev->rsts[i]);
+-			if (ret) {
+-				EPRINT("%s: Fail to assert reset %d \n", __func__, i);
++	if (vdev->ops && vdev->ops->power_off) {
++		ret = vdev->ops->power_off(dev);
++		if (ret)
++			EPRINT("%s: Fail to power off device\n",__func__);
++	} else {
++		for (i = 0; i < vdev->num_rsts; i++) {
++			if (vdev->rsts[i]) {
++				ret = reset_control_assert(vdev->rsts[i]);
++				if (ret) {
++					EPRINT("%s: Fail to assert reset %d \n", __func__, i);
++				}
+ 			}
+ 		}
++		for (i = 0; i < vdev->num_clks; i++) {
++			if (vdev->clks[i])
++				clk_disable_unprepare(vdev->clks[i]);
++		}
+ 	}
+-	for (i = 0; i < vdev->num_clks; i++) {
+-		if (vdev->clks[i])
+-			clk_disable_unprepare(vdev->clks[i]);
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -546,19 +568,25 @@ static int vspm_pm_runtime_resume(struct device *dev)
+ 	int ret = -1;
+ 	int i;
+ 
+-	for (i = 0; i < vdev->num_clks; i++) {
+-		if (vdev->clks[i]) {
+-			ret = clk_prepare_enable(vdev->clks[i]);
+-			if (ret) {
+-				EPRINT("%s: Fail to enable clock %d \n", __func__, i);
++	if (vdev->ops && vdev->ops->power_on) {
++		ret = vdev->ops->power_on(dev);
++		if (ret)
++			EPRINT("%s: Fail to power on device\n",__func__);
++	} else {
++		for (i = 0; i < vdev->num_clks; i++) {
++			if (vdev->clks[i]) {
++				ret = clk_prepare_enable(vdev->clks[i]);
++				if (ret) {
++					EPRINT("%s: Fail to enable clock %d \n", __func__, i);
++				}
+ 			}
+ 		}
+-	}
+-	for (i = 0; i < vdev->num_rsts; i++) {
+-		if (vdev->rsts[i]) {
+-			ret = reset_control_deassert(vdev->rsts[i]);
+-			if (ret) {
+-				EPRINT("%s: Fail to deassert reset %d \n", __func__, i);
++		for (i = 0; i < vdev->num_rsts; i++) {
++			if (vdev->rsts[i]) {
++				ret = reset_control_deassert(vdev->rsts[i]);
++				if (ret) {
++					EPRINT("%s: Fail to deassert reset %d \n", __func__, i);
++				}
+ 			}
+ 		}
+ 	}
+diff --git a/vspm-module/files/vspm/drv/vspm_main.h b/vspm-module/files/vspm/drv/vspm_main.h
+index 1bed786..25ea2da 100644
+--- a/vspm-module/files/vspm/drv/vspm_main.h
++++ b/vspm-module/files/vspm/drv/vspm_main.h
+@@ -83,6 +83,11 @@
+ #define CLKNUM				3
+ #define RSTNUM				3
+ 
++struct vspm_device_ops {
++	int (*power_on)(struct device *dev);
++	int (*power_off)(struct device *dev);
++};
++
+ struct vspm_device {
+ 	struct clk *clks[CLKNUM];
+ 	char clks_names[255][CLKNUM];
+@@ -90,6 +95,7 @@ struct vspm_device {
+ 	char rsts_names[255][RSTNUM];
+ 	int num_clks;
+ 	int num_rsts;
++	const struct vspm_device_ops *ops;
+ };
+ 
+ /* vspm driver data structure */
+-- 
+2.25.1
+
