@@ -63,6 +63,7 @@ SRC_URI:append:rzv2n-family = " \
 	${ISU_PATCHES} \
 	file://0017-Support-vspm-isu-driver-for-V2H.patch \
 	file://0018-vspm_main-Force-runtime-suspend-resume-when-system.patch \
+	file://0019-vspm_main-Introduce-structure-vspm_device-and-move_V2N.patch \
 "
 
 # In RZ BSP for yocto v5.x, the supported kernel version are
