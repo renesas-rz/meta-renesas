@@ -11,16 +11,16 @@ python __anonymous() {
 
 # default: non-RT
 KERNEL_BRANCH ?= "rz-6.1-cip48"
-KERNEL_REV ?= "192b966668eeb6c2f8edebd4dd474d360c338f29"
+KERNEL_REV ?= "5a211ee3b0866fc92c7b444e76381e88a5a3228a"
 
 # RT override
 KERNEL_BRANCH:rt = "rz-6.1-cip48-rt26"
-KERNEL_REV:rt = "192b966668eeb6c2f8edebd4dd474d360c338f29"
+KERNEL_REV:rt = "20b7a0b095ad28a8073643e4983ccb0daab4f803"
 
 BRANCH = "${KERNEL_BRANCH}"
 SRCREV = "${KERNEL_REV}"
 
-SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
+SRC_URI = "${KERNEL_URL};branch=${BRANCH};protocol=https"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/../linux/files:"
 

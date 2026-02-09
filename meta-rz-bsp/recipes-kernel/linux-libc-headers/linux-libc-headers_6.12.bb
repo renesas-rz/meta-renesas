@@ -20,7 +20,7 @@ KERNEL_REV:rt = "be1f7505aa30da8da520b0e2fd5320eadebd851b"
 BRANCH = "${KERNEL_BRANCH}"
 SRCREV = "${KERNEL_REV}"
 
-SRC_URI = "${KERNEL_URL};branch=${BRANCH}"
+SRC_URI = "${KERNEL_URL};branch=${BRANCH};protocol=https"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/../linux/files:"
 
