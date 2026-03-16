@@ -7,7 +7,7 @@ fi
 
 hostname=$(cat /etc/hostname 2>/dev/null)
 
-set_common_g3e_g3s_v2h() {
+set_common_g3e_g3s_v2h_v2n() {
     # SSI-DA7212
     # These commands are required when Playback/Capture
 
@@ -44,11 +44,11 @@ case "$hostname" in
     ;;
 
   smarc-rzg3s)
-    set_common_g3e_g3s_v2h
+    set_common_g3e_g3s_v2h_v2n
     ;;
 
-  smarc-rzg3e | rzv2h-evk)
-    set_common_g3e_g3s_v2h
+  smarc-rzg3e | rzv2h-evk | rzv2n-evk)
+    set_common_g3e_g3s_v2h_v2n
     amixer sset 'DVC In',0 10%
     amixer sset 'DVC Out',0 20%
     ;;
