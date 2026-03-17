@@ -43,8 +43,10 @@ case "$hostname" in
     amixer cset name='Input PGA Volume' 25
     ;;
 
-  smarc-rzg3s)
+  smarc-rzg3s | smarc-rzg3l)
     set_common_g3e_g3s_v2h_v2n
+    amixer sset 'ADC' 100%
+    amixer sset 'ADC HPF' off
     ;;
 
   smarc-rzg3e | rzv2h-evk | rzv2n-evk)
