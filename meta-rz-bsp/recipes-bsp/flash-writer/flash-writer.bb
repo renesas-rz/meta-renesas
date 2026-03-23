@@ -10,8 +10,8 @@ PV ?= "0.90"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 FLASH_WRITER_URL ?= "git://github.com/renesas-rz/rzg2_flash_writer"
-BRANCH ?= "rz_g2l"
 
+BRANCH:rzg2l-family ?= "rz_g2l"
 SRC_URI:rzg2l-family = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
 SRCREV:rzg2l-family = "43509f2b268b0ce86288cf3c37e668d64c5d5d12"
 
@@ -32,9 +32,14 @@ SRC_URI:rzt2h-family = " \
 	file://HDR_NM \
 "
 
+BRANCH:rzg2h-family ?= "master"
+SRC_URI:rzg2h-family = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
+SRCREV:rzg2h-family = "ceebddab90e5ae9b100536114553af818261c660"
+
 inherit deploy
 
 S:rzg2l-family = "${WORKDIR}/git"
+S:rzg2h-family = "${WORKDIR}/git"
 S:rzg3e-family = "${WORKDIR}"
 S:rzv2h-family = "${WORKDIR}"
 S:rzv2n-family = "${WORKDIR}"
@@ -56,6 +61,15 @@ do_compile:rzg2l-family() {
 do_compile:rzg3s-family() {
 	# Convert to srec
 	objcopy -I binary -O srec --adjust-vma=0xA1E00 --srec-forceS3 ${S}/FlashWriter.bin ${S}/FlashWriter.srec
+}
+
+do_compile:rzg2h-family() {
+        if [ "${MACHINE}" = "hihope-rzg2n" -o "${MACHINE}" = "hihope-rzg2h" ]; then
+                BOARD="HIHOPE";
+        fi
+        cd ${S}
+
+       oe_runmake BOARD=${BOARD}
 }
 
 do_install[noexec] = "1"
@@ -93,6 +107,11 @@ do_deploy:append:rzt2h-family() {
 	# Copy Flash-writer binaries to deploy folder
 	install -m 0644  ${S}/Flash_Programmer_SCIF_CR52_RZT2H_EVK.mot ${DEPLOYDIR}
 	install -m 0644  ${S}/HDR_NM ${DEPLOYDIR}
+}
+
+do_deploy:append:rzg2h-family() {
+        install -d ${DEPLOYDIR}
+        install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}
 }
 
 PARALLEL_MAKE = "-j 1"
