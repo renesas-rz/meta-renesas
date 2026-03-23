@@ -33,6 +33,9 @@ EXTRA_OEMAKE:append:hihope-rzg2h = " LSI=G2H RCAR_DRAM_SPLIT=2 RCAR_DRAM_LPDDR4_
 EXTRA_OEMAKE:append:hihope-rzg2n = " LSI=G2N SPD=none"
 LOSSY_ENABLE ?= "1"
 ATFW_OPT_LOSSY = "${@oe.utils.conditional('LOSSY_ENABLE', '1', ' RCAR_LOSSY_ENABLE=1', '', d)}"
+EXTRA_OEMAKE:append:hihope-rzg2n = " ${@oe.utils.conditional('USE_ECC', '1', ' LIFEC_DBSC_PROTECT_ENABLE=0 RZG_DRAM_ECC=1', ' ${ATFW_OPT_LOSSY}', d)}"
+EXTRA_OEMAKE:append:hihope-rzg2h = " ${@oe.utils.conditional('USE_ECC', '1', ' LIFEC_DBSC_PROTECT_ENABLE=0 RCAR_DRAM_SPLIT=0 RZG_DRAM_ECC=1', ' ${ATFW_OPT_LOSSY}', d)}"
+EXTRA_OEMAKE:append:rzg2h-family = " RZG_DRAM_ECC_FULL=${ECC_FULL}"
 EXTRA_OEMAKE:append:rzg2h-family = " RCAR_RPC_HYPERFLASH_LOCKED=0"
 
 do_compile:prepend:rzg2l-family() {

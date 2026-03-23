@@ -1,4 +1,6 @@
 require conf/machine/include/soc-family.inc
+require conf/machine/include/ecc-control.inc
+
 SOC_FAMILY = "rzg2h-family"
 
 # Machine configuration

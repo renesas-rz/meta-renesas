@@ -323,3 +323,17 @@ PREFERRED_VERSION_linux-libc-headers = "6.12"
 # TUNE_FEATURES:remove = " crypto"
 # Enable crypto by un-comment below line:
 # TUNE_FEATURES:append = " crypto"
+
+# Configuration for ECC
+# Add ecc to MACHINE_FEATURES to configure DRAM for ECC usage,
+# ECC_MODE : Full, Full Dual, Full Single, Partial
+#  - Full : DRAM is configured for FULL ECC support, half of memory is reduced for storing ECC code
+#           Default is Full Single for RZ/G2N, Full Dual RZ/G2H
+#  - Full Dual : DRAM is configured for FULL ECC Dual channel support, half of memory is reduced for storing ECC code
+#                Use only for RZ/G2H
+#  - Full Single: DRAM is configured for FULL ECC Single channel support, half of memory is reduced for storing ECC code
+#                 Use only for RZ/G2N and RZ/G2H
+#  - Partial: Manual add/remove ECC area by u-boot command (Default mode)
+# Example of setting:
+#MACHINE_FEATURES:append = " ecc"
+#ECC_MODE = "Partial"
