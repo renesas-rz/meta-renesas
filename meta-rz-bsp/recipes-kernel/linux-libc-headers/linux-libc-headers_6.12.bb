@@ -10,12 +10,12 @@ python __anonymous() {
 }
 
 # default: non-RT
-KERNEL_BRANCH ?= "rz-6.12-cip7"
-KERNEL_REV ?= "03d16609f9f970a5c1af057dff88d475a26328fc"
+KERNEL_BRANCH ?= "rz-6.12-cip14"
+KERNEL_REV ?= "bbdfd56496c1079c4abfa4f50bb0989ee63e7281"
 
 # RT override
-KERNEL_BRANCH:rt = "rz-6.12-cip7-rt"
-KERNEL_REV:rt = "be1f7505aa30da8da520b0e2fd5320eadebd851b"
+KERNEL_BRANCH:rt = "rz-6.12-cip14-rt"
+KERNEL_REV:rt = "74fb6bf0be81f687d8a563cdf895b0f2d1a0684f"
 
 BRANCH = "${KERNEL_BRANCH}"
 SRCREV = "${KERNEL_REV}"
