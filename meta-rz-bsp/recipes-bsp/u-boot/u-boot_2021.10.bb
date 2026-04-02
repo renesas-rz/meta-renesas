@@ -16,6 +16,13 @@ PV = "2021.10+git${SRCPV}"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+SRC_URI:append:rzg2h-family = " \
+	${@oe.utils.ifelse("${ECC_FULL}" == "1"," \
+	file://0001-board-hihope-rzg2-reduce-memory-to-reserve-for-USB-m.patch \
+	", "")} \
+"
+
 do_deploy:append() {
     if [ -n "${UBOOT_CONFIG}" ]
     then
