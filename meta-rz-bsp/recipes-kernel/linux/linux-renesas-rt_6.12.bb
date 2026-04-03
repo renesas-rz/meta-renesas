@@ -10,4 +10,4 @@ KCONFIG_MODE ?= "alldefconfig"
 KERNEL_URL ?= "git://github.com/renesas-rz/rz_linux-cip.git"
 
 KERNEL_BRANCH ?= "rz-6.12-cip14-rt"
-KERNEL_REV ?= "74fb6bf0be81f687d8a563cdf895b0f2d1a0684f"
+KERNEL_REV ?= "5d0b4ecb2488d4cdca29c76a3be3cc40b18b6229"

@@ -1,0 +1,55 @@
+From 2fdd8242ad6fb590373ce726f82771f4fcfe26d2 Mon Sep 17 00:00:00 2001
+From: Nghia Vo <nghia.vo.zn@renesas.com>
+Date: Tue, 31 Mar 2026 13:26:00 +0700
+Subject: [PATCH 2/2] arm64: dts: renesas: add mempool for EHCI and OHCI device
+ nodes
+
+Add mempool for EHCI and OHCI device nodes for RZ/G2H.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+Signed-off-by: Nghia Vo <nghia.vo.zn@renesas.com>
+---
+ .../boot/dts/renesas/r8a774e1-hihope-rzg2h.dts   | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts b/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts
+index 615a1126dcb1..5aacbf5f0f22 100644
+--- a/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts
++++ b/arch/arm64/boot/dts/renesas/r8a774e1-hihope-rzg2h.dts
+@@ -58,17 +58,33 @@ &xhci0 {
+ };
+ 
+ &ehci0 {
++	reg = <0 0xee080100 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci0 {
++	reg = <0 0xee080000 0 0x100>,
++	      <0 0xBE000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ehci1 {
++	reg = <0 0xee0a0100 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+ 
+ &ohci1 {
++	reg = <0 0xee0a0000 0 0x100>,
++	      <0 0xBF000000 0 0x1000000>;
++	reg-names = "io_regs", "mem_pool";
++
+ 	memory-region = <&global_cma>;
+ };
+-- 
+2.25.1
+
