@@ -4,7 +4,7 @@ require conf/machine/include/ecc-control.inc
 SOC_FAMILY = "rzg2h-family"
 
 # Machine configuration
-MACHINE_FEATURES = "opengles opencl"
+MACHINE_FEATURES = "opengles opencl usb3"
 
 # Linux kernel configuration
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
