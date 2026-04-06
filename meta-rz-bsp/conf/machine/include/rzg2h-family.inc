@@ -10,3 +10,12 @@ MACHINE_FEATURES = "opengles opencl usb3"
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
 PREFERRED_VERSION_linux-renesas ?= "6.12%"
 KERNEL_IMAGETYPE ?= "Image"
+
+# U-boot configuration
+EXTRA_IMAGEDEPENDS += " u-boot"
+
+# Configuration for ARM Trusted Firmware
+EXTRA_IMAGEDEPENDS += " trusted-firmware-a"
+
+# flash writer
+EXTRA_IMAGEDEPENDS += " flash-writer"
