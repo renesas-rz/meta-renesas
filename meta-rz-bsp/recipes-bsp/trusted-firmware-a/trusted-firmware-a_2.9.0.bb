@@ -75,10 +75,14 @@ do_deploy:append:rzg2l-family() {
 }
 
 do_deploy:append:rzg2h-family() {
+	install -m 0644 ${B}/${TFA_PLATFORM}/release/bl2.bin ${DEPLOYDIR}/bl2-${MACHINE}.bin
 	install -m 0644 ${B}/${TFA_PLATFORM}/release/bl2.srec ${DEPLOYDIR}/bl2-${MACHINE}.srec
 	install -m 0644 ${B}/${TFA_PLATFORM}/release/bl31.srec ${DEPLOYDIR}/bl31-${MACHINE}.srec
+	install -m 0644 ${B}/${TFA_PLATFORM}/release/bl31.bin ${DEPLOYDIR}/bl31-${MACHINE}.bin
 	install -m 0644 ${S}/tools/renesas/rzg_layout_create/bootparam_sa0.srec ${DEPLOYDIR}/bootparam_sa0.srec
+	install -m 0644 ${S}/tools/renesas/rzg_layout_create/bootparam_sa0.bin ${DEPLOYDIR}/bootparam_sa0.bin
 	install -m 0644 ${S}/tools/renesas/rzg_layout_create/cert_header_sa6.srec ${DEPLOYDIR}/cert_header_sa6.srec
+	install -m 0644 ${S}/tools/renesas/rzg_layout_create/cert_header_sa6.bin ${DEPLOYDIR}/cert_header_sa6.bin
 }
 
 addtask deploy before do_build after do_compile
