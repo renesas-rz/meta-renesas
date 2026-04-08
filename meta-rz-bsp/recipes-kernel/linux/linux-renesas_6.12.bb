@@ -17,6 +17,3 @@ KERNEL_BRANCH:rzg3l-family = "rz-6.12-cip8"
 KERNEL_REV:rzg3l-family = "5d171f88f035ad2066008e9b8c41c6b45076e153"
 
 SRC_URI:append = "${@bb.utils.contains('DISTRO_FEATURES','docker', ' file://docker.cfg', '', d)}"
-SRC_URI:append:rzg3l-family = " \
-	${@bb.utils.contains('IMAGE_INSTALL', 'linux-firmware-bcm4373', 'file://bcm.cfg', '',d)} \
-"

@@ -299,6 +299,12 @@ LICENSE_FLAGS_ACCEPTED = " \
 # this doesn't mean anything to you.
 CONF_VERSION = "2"
 
+# Uncomment the following lines to support Broadcom/Cypress BCM4373 Wi-Fi module
+# on the RZ/G3L Smarc EVK via M.2 PCIe/SDIO slot on the SMARC Carrier-II
+#IMAGE_INSTALL:append = " linux-firmware-bcm4373"
+#IMAGE_INSTALL:append = " kernel-module-brcmfmac kernel-module-brcmutil kernel-module-brcmfmac-cyw"
+#MACHINE_FEATURES:append = " wifi bluetooth"
+
 # Un-comment a following line to enable the Docker Engine.
 # DISTRO_FEATURES:append = " virtualization docker"
 
