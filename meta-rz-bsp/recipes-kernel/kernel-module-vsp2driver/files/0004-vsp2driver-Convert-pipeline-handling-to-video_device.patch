@@ -1,0 +1,57 @@
+From 06f15416255393c3b78f808d605e29824ebcf796 Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 21 Apr 2026 10:17:37 +0700
+Subject: [PATCH 4/9] vsp2driver: Convert pipeline handling to video_device
+ start/stop
+
+Start and stop the media pipeline using the video_device pipeline
+helpers instead of managing the pipeline directly from the driver.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_video.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index 02bbc79..2af9f1a 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -1013,7 +1013,11 @@ static void vsp2_video_stop_streaming(struct vb2_queue *vq)
+ 	}
+ 	mutex_unlock(&pipe->lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
+ 	media_pipeline_stop(&video->video.entity);
++#else
++	video_device_pipeline_stop(&video->video);
++#endif
+ 	vsp2_video_pipeline_put(pipe);
+ 
+ 	/* Remove all buffers from the IRQ queue. */
+@@ -1139,7 +1143,11 @@ vsp2_video_streamon(struct file *file, void *fh, enum v4l2_buf_type type)
+ 		return PTR_ERR(pipe);
+ 	}
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
+ 	ret = __media_pipeline_start(&video->video.entity, &pipe->pipe);
++#else
++	ret = __video_device_pipeline_start(&video->video, &pipe->pipe);
++#endif
+ 	if (ret < 0) {
+ 		mutex_unlock(&mdev->graph_mutex);
+ 		goto err_pipe;
+@@ -1162,7 +1170,11 @@ vsp2_video_streamon(struct file *file, void *fh, enum v4l2_buf_type type)
+ 	return 0;
+ 
+ err_stop:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
+ 	media_pipeline_stop(&video->video.entity);
++#else
++	video_device_pipeline_stop(&video->video);
++#endif
+ err_pipe:
+ 	vsp2_video_pipeline_put(pipe);
+ 	return ret;
+-- 
+2.25.1
+

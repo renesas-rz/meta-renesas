@@ -1,0 +1,54 @@
+From f23db3437f4316632ab6e69dd2dbb57257139893 Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 21 Apr 2026 10:26:56 +0700
+Subject: [PATCH 5/9] vsp2driver: Stop using entity->pipe, use
+ media_entity_pipeline()
+
+Drivers should not access struct media_entity::pipe directly. The media
+core provides media_entity_pipeline() and the entity->pipe
+member has been removed. Update the code accordingly.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_pipe.h | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/vsp2driver/vsp2_pipe.h b/vsp2driver/vsp2_pipe.h
+index 2267b57..eb1ba59 100644
+--- a/vsp2driver/vsp2_pipe.h
++++ b/vsp2driver/vsp2_pipe.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -62,6 +62,7 @@
+ #include <linux/list.h>
+ #include <linux/spinlock.h>
+ #include <linux/wait.h>
++#include <linux/version.h>
+ 
+ #include <media/media-entity.h>
+ 
+@@ -152,8 +153,14 @@ struct vsp2_pipeline {
+ 
+ static inline struct vsp2_pipeline *to_vsp2_pipeline(struct media_entity *e)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
+ 	if (likely(e->pipe))
+ 		return container_of(e->pipe, struct vsp2_pipeline, pipe);
++#else
++	struct media_pipeline *pipe = media_entity_pipeline(e);
++	if (likely(pipe))
++		return container_of(pipe, struct vsp2_pipeline, pipe);
++#endif
+ 	else
+ 		return NULL;
+ }
+-- 
+2.25.1
+

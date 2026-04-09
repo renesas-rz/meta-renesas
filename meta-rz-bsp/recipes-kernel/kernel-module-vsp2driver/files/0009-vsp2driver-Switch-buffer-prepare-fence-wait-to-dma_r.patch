@@ -1,0 +1,62 @@
+From 99ea60442457ab90c15287f3cff77c8d39f4b981 Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 21 Apr 2026 19:40:19 +0700
+Subject: [PATCH 9/9] vsp2driver: Switch buffer prepare fence wait to
+ dma_resv_iter
+
+dma_resv_get_excl_rcu() has been removed in upstream kernel.
+Replace it with dma_resv_for_each_fence_unlocked() using
+DMA_RESV_USAGE_WRITE to iterate over all KERNEL and WRITE
+fences instead of only the exclusive fence.
+
+This also removes the need for manual dma_fence_put() since
+the iterator manages the fence lifetime internally.
+dma_resv_iter_end() is called explicitly before returning
+on error to ensure proper cleanup.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_video.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index 02d248a..ba920a0 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -765,7 +765,12 @@ static int vsp2_video_buffer_prepare(struct vb2_buffer *vb)
+ 		if (resv) {
+ 			struct dma_fence *fence;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0))
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			fence = dma_resv_get_excl_rcu(resv);
++#else
++			fence = dma_resv_get_excl_unlocked(resv);
++#endif
+ 			if (fence) {
+ 				int ret = dma_fence_wait(fence, true);
+ 
+@@ -773,6 +778,20 @@ static int vsp2_video_buffer_prepare(struct vb2_buffer *vb)
+ 					return ret;
+ 				dma_fence_put(fence);
+ 			}
++#else
++			struct dma_resv_iter cursor;
++			dma_resv_iter_begin(&cursor, resv,
++						DMA_RESV_USAGE_WRITE);
++			dma_resv_for_each_fence_unlocked(&cursor, fence) {
++				int ret = dma_fence_wait(fence, true);
++				if (ret) {
++					dma_resv_iter_end(&cursor);
++					return ret;
++				}
++			}
++
++			dma_resv_iter_end(&cursor);
++#endif
+ 		}
+ 	}
+ 
+-- 
+2.25.1
+

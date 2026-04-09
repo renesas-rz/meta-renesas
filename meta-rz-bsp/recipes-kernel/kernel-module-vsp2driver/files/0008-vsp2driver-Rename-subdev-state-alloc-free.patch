@@ -1,0 +1,71 @@
+From 96b4077a83715b170fcf3db2795447b82f8a5500 Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 21 Apr 2026 19:16:03 +0700
+Subject: [PATCH 8/9] vsp2driver: Rename subdev-state alloc & free
+
+v4l2_subdev_alloc_state() and v4l2_subdev_free_state() are not supposed
+to be used by the drivers. However, we do have a few drivers that use
+those at the moment, so we need to expose these functions for the time
+being.
+
+Prefix the functions with __ to mark the functions as internal.
+
+At the same time, rename them to v4l2_subdev_state_alloc and
+v4l2_subdev_state_free to match the style used for other functions like
+video_device_alloc() and media_request_alloc().
+
+Upstream-commit: 40aaab9d773b07e9b106eac4256bb50fb1ba8cff
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_entity.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/vsp2driver/vsp2_entity.c b/vsp2driver/vsp2_entity.c
+index 59d074c..ef0f1c4 100644
+--- a/vsp2driver/vsp2_entity.c
++++ b/vsp2driver/vsp2_entity.c
+@@ -559,6 +559,9 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 		     const char *name, unsigned int num_pads,
+ 		     const struct v4l2_subdev_ops *ops, u32 function)
+ {
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 19, 0))
++	static struct lock_class_key key;
++#endif
+ 	struct v4l2_subdev *subdev;
+ 	unsigned int i;
+ 	bool flag = false;
+@@ -620,8 +623,17 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 	/* Allocate the pad configuration to store formats and selection
+ 	 * rectangles.
+ 	 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	entity->config = v4l2_subdev_alloc_pad_config(&entity->subdev);
+ 	if (!entity->config) {
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 0))
++	entity->state = v4l2_subdev_alloc_state(&entity->subdev);
++	if (entity->state == NULL) {
++#else
++	entity->state = __v4l2_subdev_state_alloc(&entity->subdev,
++						"vsp1:state->lock", &key);
++	if (!entity->state) {
++#endif
+ 		media_entity_cleanup(&entity->subdev.entity);
+ 		return -ENOMEM;
+ 	}
+@@ -635,6 +647,12 @@ void vsp2_entity_destroy(struct vsp2_entity *entity)
+ 		entity->ops->destroy(entity);
+ 	if (entity->subdev.ctrl_handler)
+ 		v4l2_ctrl_handler_free(entity->subdev.ctrl_handler);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	v4l2_subdev_free_pad_config(entity->config);
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(5, 19, 0))
++	v4l2_subdev_alloc_state(entity->state);
++#else
++	__v4l2_subdev_state_free(entity->state);
++#endif
+ 	media_entity_cleanup(&entity->subdev.entity);
+ }
+-- 
+2.25.1
+

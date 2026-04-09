@@ -1,0 +1,208 @@
+From 89289bd70d109ad76b54f764139b3d2164d7a16d Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 21 Apr 2026 15:52:35 +0700
+Subject: [PATCH 7/9] vsp2driver: Rename subdev init_cfg operation to
+ init_state
+
+Update sub-device initialization to use the state-based initialization
+callback.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_brs.c    |  2 ++
+ vsp2driver/vsp2_bru.c    |  2 ++
+ vsp2driver/vsp2_clu.c    |  2 ++
+ vsp2driver/vsp2_entity.c | 35 +++++++++++++++++++++++++++++++----
+ vsp2driver/vsp2_entity.h |  5 +++++
+ vsp2driver/vsp2_lut.c    |  2 ++
+ vsp2driver/vsp2_rwpf.c   |  2 ++
+ vsp2driver/vsp2_uds.c    |  2 ++
+ 8 files changed, 48 insertions(+), 4 deletions(-)
+
+diff --git a/vsp2driver/vsp2_brs.c b/vsp2driver/vsp2_brs.c
+index 1a7125a..426949d 100644
+--- a/vsp2driver/vsp2_brs.c
++++ b/vsp2driver/vsp2_brs.c
+@@ -405,7 +405,9 @@ done:
+  */
+ 
+ static const struct v4l2_subdev_pad_ops brs_pad_ops = {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	.init_cfg = vsp2_entity_init_cfg,
++#endif
+ 	.enum_mbus_code = brs_enum_mbus_code,
+ 	.enum_frame_size = brs_enum_frame_size,
+ 	.get_fmt = vsp2_subdev_get_pad_format,
+diff --git a/vsp2driver/vsp2_bru.c b/vsp2driver/vsp2_bru.c
+index ab9129e..e675ce0 100644
+--- a/vsp2driver/vsp2_bru.c
++++ b/vsp2driver/vsp2_bru.c
+@@ -403,7 +403,9 @@ done:
+  */
+ 
+ static const struct v4l2_subdev_pad_ops bru_pad_ops = {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	.init_cfg = vsp2_entity_init_cfg,
++#endif
+ 	.enum_mbus_code = bru_enum_mbus_code,
+ 	.enum_frame_size = bru_enum_frame_size,
+ 	.get_fmt = vsp2_subdev_get_pad_format,
+diff --git a/vsp2driver/vsp2_clu.c b/vsp2driver/vsp2_clu.c
+index d4fcbbb..b57606f 100644
+--- a/vsp2driver/vsp2_clu.c
++++ b/vsp2driver/vsp2_clu.c
+@@ -224,7 +224,9 @@ static const struct v4l2_subdev_core_ops clu_core_ops = {
+ };
+ 
+ static const struct v4l2_subdev_pad_ops clu_pad_ops = {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	.init_cfg = vsp2_entity_init_cfg,
++#endif
+ 	.enum_mbus_code     = clu_enum_mbus_code,
+ 	.enum_frame_size    = clu_enum_frame_size,
+ 	.get_fmt = vsp2_subdev_get_pad_format,
+diff --git a/vsp2driver/vsp2_entity.c b/vsp2driver/vsp2_entity.c
+index fe73db8..59d074c 100644
+--- a/vsp2driver/vsp2_entity.c
++++ b/vsp2driver/vsp2_entity.c
+@@ -268,15 +268,21 @@ vsp2_entity_get_pad_selection(struct vsp2_entity *entity,
+ }
+ 
+ /*
+- * vsp2_entity_init_cfg - Initialize formats on all pads
++ * vsp2_entity_init_cfg/vsp2_entity_init_state - Initialize formats on all pads
+  * @subdev: V4L2 subdevice
+- * @cfg: V4L2 subdev pad configuration
++ * @cfg/sd_state: V4L2 subdev pad configuration/state information
+  *
+- * Initialize all pad formats with default values in the given pad config. This
+- * function can be used as a handler for the subdev pad::init_cfg operation.
++ * Initialize all pad formats with default values in the given pad config/state 
++ * information. This function can be used as a handler for the subdev 
++ * pad::init_cfg/init_state operation.
+  */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ int vsp2_entity_init_cfg(struct v4l2_subdev *subdev,
+ 			 struct v4l2_subdev_pad_config *cfg)
++#else
++int vsp2_entity_init_state(struct v4l2_subdev *subdev,
++			 struct v4l2_subdev_state *sd_state)
++#endif
+ {
+ 	struct v4l2_subdev_format format;
+ 	unsigned int pad;
+@@ -285,15 +291,29 @@ int vsp2_entity_init_cfg(struct v4l2_subdev *subdev,
+ 		memset(&format, 0, sizeof(format));
+ 
+ 		format.pad = pad;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format.which = cfg ? V4L2_SUBDEV_FORMAT_TRY
++#else
++		format.which = sd_state ? V4L2_SUBDEV_FORMAT_TRY
++#endif
+ 			     : V4L2_SUBDEV_FORMAT_ACTIVE;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		v4l2_subdev_call(subdev, pad, set_fmt, cfg, &format);
++#else
++		v4l2_subdev_call(subdev, pad, set_fmt, sd_state, &format);
++#endif
+ 	}
+ 
+ 	return 0;
+ }
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++static const struct v4l2_subdev_internal_ops vsp2_entity_internal_ops = {
++	.init_state = vsp2_entity_init_state,
++};
++#endif
++
+ /*
+  * vsp2_subdev_get_pad_format - Subdev pad get_fmt handler
+  * @subdev: V4L2 subdevice
+@@ -581,6 +601,9 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 	subdev = &entity->subdev;
+ 	v4l2_subdev_init(subdev, ops);
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++	subdev->internal_ops = &vsp2_entity_internal_ops;
++#endif
+ 	subdev->entity.function = function;
+ 	subdev->entity.ops = &vsp2->media_ops;
+ 	subdev->flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
+@@ -588,7 +611,11 @@ int vsp2_entity_init(struct vsp2_device *vsp2, struct vsp2_entity *entity,
+ 	snprintf(subdev->name, sizeof(subdev->name), "%s %s",
+ 		 dev_name(vsp2->dev), name);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	vsp2_entity_init_cfg(subdev, NULL);
++#else
++	vsp2_entity_init_state(subdev, NULL);
++#endif
+ 
+ 	/* Allocate the pad configuration to store formats and selection
+ 	 * rectangles.
+diff --git a/vsp2driver/vsp2_entity.h b/vsp2driver/vsp2_entity.h
+index 4982d35..8854627 100644
+--- a/vsp2driver/vsp2_entity.h
++++ b/vsp2driver/vsp2_entity.h
+@@ -168,8 +168,13 @@ vsp2_entity_get_pad_selection(struct vsp2_entity *entity,
+ 			      struct v4l2_subdev_state *sd_state,
+ #endif
+ 			      unsigned int pad, unsigned int target);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ int vsp2_entity_init_cfg(struct v4l2_subdev *subdev,
+ 			 struct v4l2_subdev_pad_config *cfg);
++#else
++int vsp2_entity_init_state(struct v4l2_subdev *subdev,
++			 struct v4l2_subdev_state *sd_state);
++#endif
+ 
+ void vsp2_entity_route_setup(struct vsp2_entity *source);
+ 
+diff --git a/vsp2driver/vsp2_lut.c b/vsp2driver/vsp2_lut.c
+index dca72de..250be25 100644
+--- a/vsp2driver/vsp2_lut.c
++++ b/vsp2driver/vsp2_lut.c
+@@ -221,7 +221,9 @@ static const struct v4l2_subdev_core_ops lut_core_ops = {
+ };
+ 
+ static const struct v4l2_subdev_pad_ops lut_pad_ops = {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	.init_cfg = vsp2_entity_init_cfg,
++#endif
+ 	.enum_mbus_code = lut_enum_mbus_code,
+ 	.enum_frame_size = lut_enum_frame_size,
+ 	.get_fmt = vsp2_subdev_get_pad_format,
+diff --git a/vsp2driver/vsp2_rwpf.c b/vsp2driver/vsp2_rwpf.c
+index 0f504c0..0cb7312 100644
+--- a/vsp2driver/vsp2_rwpf.c
++++ b/vsp2driver/vsp2_rwpf.c
+@@ -576,7 +576,9 @@ done:
+ }
+ 
+ const struct v4l2_subdev_pad_ops vsp2_rwpf_pad_ops = {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	.init_cfg = vsp2_entity_init_cfg,
++#endif
+ 	.enum_mbus_code = vsp2_rwpf_enum_mbus_code,
+ 	.enum_frame_size = vsp2_rwpf_enum_frame_size,
+ 	.get_fmt = vsp2_subdev_get_pad_format,
+diff --git a/vsp2driver/vsp2_uds.c b/vsp2driver/vsp2_uds.c
+index 964ed52..7ae2072 100644
+--- a/vsp2driver/vsp2_uds.c
++++ b/vsp2driver/vsp2_uds.c
+@@ -358,7 +358,9 @@ done:
+  */
+ 
+ static const struct v4l2_subdev_pad_ops uds_pad_ops = {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	.init_cfg = vsp2_entity_init_cfg,
++#endif
+ 	.enum_mbus_code = uds_enum_mbus_code,
+ 	.enum_frame_size = uds_enum_frame_size,
+ 	.get_fmt = vsp2_subdev_get_pad_format,
+-- 
+2.25.1
+

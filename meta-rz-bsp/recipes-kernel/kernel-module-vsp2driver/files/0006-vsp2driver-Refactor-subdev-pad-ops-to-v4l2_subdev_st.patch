@@ -1,0 +1,2162 @@
+From 763324af069faa9c29048f07e12500d8d730d3fc Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 21 Apr 2026 15:31:11 +0700
+Subject: [PATCH 6/9] vsp2driver: Refactor subdev pad ops to v4l2_subdev_state
+
+Refactor sub-device pad operations to use the subdev state-based API.
+
+All pad operations now operate on struct v4l2_subdev_state instead of
+v4l2_subdev_pad_config. Format and selection handling is routed through
+the state helpers.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_brs.c    | 112 ++++++++++++++++++++++++++++++-
+ vsp2driver/vsp2_bru.c    | 108 +++++++++++++++++++++++++++++-
+ vsp2driver/vsp2_clu.c    |  45 ++++++++++++-
+ vsp2driver/vsp2_entity.c | 129 ++++++++++++++++++++++++++++++------
+ vsp2driver/vsp2_entity.h |  38 ++++++++++-
+ vsp2driver/vsp2_hgo.c    |   4 ++
+ vsp2driver/vsp2_hgt.c    |   4 ++
+ vsp2driver/vsp2_lut.c    |  43 +++++++++++-
+ vsp2driver/vsp2_rpf.c    |  26 +++++++-
+ vsp2driver/vsp2_rwpf.c   | 140 ++++++++++++++++++++++++++++++++++++++-
+ vsp2driver/vsp2_rwpf.h   |   8 ++-
+ vsp2driver/vsp2_uds.c    |  82 ++++++++++++++++++++++-
+ vsp2driver/vsp2_video.c  |  12 ++++
+ vsp2driver/vsp2_wpf.c    |  34 +++++++++-
+ 14 files changed, 753 insertions(+), 32 deletions(-)
+
+diff --git a/vsp2driver/vsp2_brs.c b/vsp2driver/vsp2_brs.c
+index 059ca1e..1a7125a 100644
+--- a/vsp2driver/vsp2_brs.c
++++ b/vsp2driver/vsp2_brs.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-20226 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -57,6 +57,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/gfp.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -103,7 +104,11 @@ static const struct v4l2_ctrl_ops brs_ctrl_ops = {
+  */
+ 
+ static int brs_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			      struct v4l2_subdev_pad_config *cfg,
++#else
++			      struct v4l2_subdev_state *sd_state,
++#endif
+ 			      struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+@@ -111,12 +116,20 @@ static int brs_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_mbus_code(subdev, cfg, code, codes,
++#else
++	return vsp2_subdev_enum_mbus_code(subdev, sd_state, code, codes,
++#endif
+ 					  ARRAY_SIZE(codes));
+ }
+ 
+ static int brs_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_frame_size_enum *fse)
+ {
+ 	if (fse->index)
+@@ -135,14 +148,26 @@ static int brs_enum_frame_size(struct v4l2_subdev *subdev,
+ }
+ 
+ static struct v4l2_rect *brs_get_compose(struct vsp2_brs *brs,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 					 struct v4l2_subdev_pad_config *cfg,
++#else
++					 struct v4l2_subdev_state *sd_state,
++#endif
+ 					 unsigned int pad)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return v4l2_subdev_get_try_compose(&brs->entity.subdev, cfg, pad);
++#else
++	return v4l2_subdev_state_get_compose(sd_state, pad);
++#endif
+ }
+ 
+ static void brs_try_format(struct vsp2_brs *brs,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			   struct v4l2_subdev_pad_config *config,
++#else
++			   struct v4l2_subdev_state *sd_state,
++#endif
+ 			   unsigned int pad, struct v4l2_mbus_framefmt *fmt)
+ {
+ 	struct v4l2_mbus_framefmt *format;
+@@ -157,7 +182,11 @@ static void brs_try_format(struct vsp2_brs *brs,
+ 
+ 	default:
+ 		/* The BRS can't perform format conversion. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(&brs->entity, config,
++#else
++		format = vsp2_entity_get_pad_format(&brs->entity, sd_state,
++#endif
+ 						    BRS_PAD_SINK(0));
+ 		fmt->code = format->code;
+ 		break;
+@@ -170,32 +199,55 @@ static void brs_try_format(struct vsp2_brs *brs,
+ }
+ 
+ static int brs_set_format(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			  struct v4l2_subdev_pad_config *cfg,
++#else
++			  struct v4l2_subdev_state *sd_state,
++#endif
+ 			  struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_brs *brs = to_brs(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&brs->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&brs->entity, cfg, fmt->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&brs->entity, sd_state, fmt->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	brs_try_format(brs, config, fmt->pad, &fmt->format);
+ 
+ 	format = vsp2_entity_get_pad_format(&brs->entity, config, fmt->pad);
++#else
++	brs_try_format(brs, state, fmt->pad, &fmt->format);
++
++	format = vsp2_entity_get_pad_format(&brs->entity, state, fmt->pad);
++#endif
+ 	*format = fmt->format;
+ 
+ 	/* Reset the compose rectangle */
+ 	if (fmt->pad != BRS_PAD_SOURCE) {
+ 		struct v4l2_rect *compose;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		compose = brs_get_compose(brs, config, fmt->pad);
++#else
++		compose = brs_get_compose(brs, state, fmt->pad);
++#endif
+ 		compose->left = 0;
+ 		compose->top = 0;
+ 		compose->width = format->width;
+@@ -208,7 +260,11 @@ static int brs_set_format(struct v4l2_subdev *subdev,
+ 
+ 		for (i = 0; i <= BRS_PAD_SOURCE; ++i) {
+ 			format = vsp2_entity_get_pad_format(&brs->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 							    config, i);
++#else
++							    state, i);
++#endif
+ 			format->code = fmt->format.code;
+ 		}
+ 	}
+@@ -219,11 +275,19 @@ done:
+ }
+ 
+ static int brs_get_selection(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			     struct v4l2_subdev_pad_config *cfg,
++#else
++			     struct v4l2_subdev_state *sd_state,
++#endif
+ 			     struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_brs *brs = to_brs(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 
+ 	if (sel->pad == BRS_PAD_SOURCE)
+ 		return -EINVAL;
+@@ -237,13 +301,25 @@ static int brs_get_selection(struct v4l2_subdev *subdev,
+ 		return 0;
+ 
+ 	case V4L2_SEL_TGT_COMPOSE:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		config = vsp2_entity_get_pad_config(&brs->entity, cfg,
++#else
++		state = vsp2_entity_get_state(&brs->entity, sd_state,
++#endif
+ 						    sel->which);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		if (!config)
++#else
++		if (!state)
++#endif
+ 			return -EINVAL;
+ 
+ 		mutex_lock(&brs->entity.lock);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		sel->r = *brs_get_compose(brs, config, sel->pad);
++#else
++		sel->r = *brs_get_compose(brs, state, sel->pad);
++#endif
+ 		mutex_unlock(&brs->entity.lock);
+ 		return 0;
+ 
+@@ -253,11 +329,19 @@ static int brs_get_selection(struct v4l2_subdev *subdev,
+ }
+ 
+ static int brs_set_selection(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			     struct v4l2_subdev_pad_config *cfg,
++#else
++			     struct v4l2_subdev_state *sd_state,
++#endif
+ 			     struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_brs *brs = to_brs(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	struct v4l2_rect *compose;
+ 	int ret = 0;
+@@ -270,8 +354,13 @@ static int brs_set_selection(struct v4l2_subdev *subdev,
+ 
+ 	mutex_lock(&brs->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&brs->entity, cfg, sel->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&brs->entity, sd_state, sel->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+@@ -279,7 +368,11 @@ static int brs_set_selection(struct v4l2_subdev *subdev,
+ 	/* The compose rectangle top left corner must be inside the output
+ 	 * frame.
+ 	 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&brs->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&brs->entity, state,
++#endif
+ 					    BRS_PAD_SOURCE);
+ 	sel->r.left = clamp_t(unsigned int, sel->r.left, 0, format->width - 1);
+ 	sel->r.top = clamp_t(unsigned int, sel->r.top, 0, format->height - 1);
+@@ -287,11 +380,19 @@ static int brs_set_selection(struct v4l2_subdev *subdev,
+ 	/* Scaling isn't supported, the compose rectangle size must be identical
+ 	 * to the sink format size.
+ 	 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&brs->entity, config, sel->pad);
++#else
++	format = vsp2_entity_get_pad_format(&brs->entity, state, sel->pad);
++#endif
+ 	sel->r.width = format->width;
+ 	sel->r.height = format->height;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	compose = brs_get_compose(brs, config, sel->pad);
++#else
++	compose = brs_get_compose(brs, state, sel->pad);
++#endif
+ 	*compose = sel->r;
+ 
+ done:
+@@ -322,6 +423,9 @@ static const struct v4l2_subdev_ops brs_ops = {
+  */
+ 
+ static void brs_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_brs *brs = to_brs(&entity->subdev);
+@@ -332,8 +436,12 @@ static void brs_configure(struct vsp2_entity *entity,
+ 		brs->entity.vsp2->vspm->ip_par.par.vsp;
+ 	struct vsp_brs_t *vsp_brs = vsp_par->ctrl_par->brs;
+ 	u32 inctrl;
+-
++	
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&brs->entity, brs->entity.config,
++#else
++	format = vsp2_entity_get_pad_format(&brs->entity, state,
++#endif
+ 					    BRS_PAD_SOURCE);
+ 
+ 	/* The hardware is extremely flexible but we have no userspace API to
+diff --git a/vsp2driver/vsp2_bru.c b/vsp2driver/vsp2_bru.c
+index d43d8b2..ab9129e 100644
+--- a/vsp2driver/vsp2_bru.c
++++ b/vsp2driver/vsp2_bru.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -57,6 +57,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/gfp.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -103,7 +104,11 @@ static const struct v4l2_ctrl_ops bru_ctrl_ops = {
+  */
+ 
+ static int bru_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			      struct v4l2_subdev_pad_config *cfg,
++#else
++			      struct v4l2_subdev_state *sd_state,
++#endif
+ 			      struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+@@ -111,12 +116,20 @@ static int bru_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_mbus_code(subdev, cfg, code, codes,
++#else
++	return vsp2_subdev_enum_mbus_code(subdev, sd_state, code, codes,
++#endif
+ 					  ARRAY_SIZE(codes));
+ }
+ 
+ static int bru_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_frame_size_enum *fse)
+ {
+ 	if (fse->index)
+@@ -135,14 +148,26 @@ static int bru_enum_frame_size(struct v4l2_subdev *subdev,
+ }
+ 
+ static struct v4l2_rect *bru_get_compose(struct vsp2_bru *bru,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 					 struct v4l2_subdev_pad_config *cfg,
++#else
++					 struct v4l2_subdev_state *sd_state,
++#endif
+ 					 unsigned int pad)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return v4l2_subdev_get_try_compose(&bru->entity.subdev, cfg, pad);
++#else
++	return v4l2_subdev_state_get_compose(sd_state, pad);
++#endif
+ }
+ 
+ static void bru_try_format(struct vsp2_bru *bru,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			   struct v4l2_subdev_pad_config *config,
++#else
++			   struct v4l2_subdev_state *sd_state,
++#endif
+ 			   unsigned int pad, struct v4l2_mbus_framefmt *fmt)
+ {
+ 	struct v4l2_mbus_framefmt *format;
+@@ -157,7 +182,11 @@ static void bru_try_format(struct vsp2_bru *bru,
+ 
+ 	default:
+ 		/* The BRU can't perform format conversion. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(&bru->entity, config,
++#else
++		format = vsp2_entity_get_pad_format(&bru->entity, sd_state,
++#endif
+ 						    BRU_PAD_SINK(0));
+ 		fmt->code = format->code;
+ 		break;
+@@ -170,32 +199,55 @@ static void bru_try_format(struct vsp2_bru *bru,
+ }
+ 
+ static int bru_set_format(
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
++#else
++	struct v4l2_subdev *subdev, struct v4l2_subdev_state *sd_state,
++#endif
+ 	struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_bru *bru = to_bru(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&bru->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&bru->entity, cfg, fmt->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&bru->entity, sd_state, fmt->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	bru_try_format(bru, config, fmt->pad, &fmt->format);
+ 
+ 	format = vsp2_entity_get_pad_format(&bru->entity, config, fmt->pad);
++#else
++	bru_try_format(bru, state, fmt->pad, &fmt->format);
++
++	format = vsp2_entity_get_pad_format(&bru->entity, state, fmt->pad);
++#endif
+ 	*format = fmt->format;
+ 
+ 	/* Reset the compose rectangle */
+ 	if (fmt->pad != BRU_PAD_SOURCE) {
+ 		struct v4l2_rect *compose;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		compose = bru_get_compose(bru, config, fmt->pad);
++#else
++		compose = bru_get_compose(bru, state, fmt->pad);
++#endif
+ 		compose->left = 0;
+ 		compose->top = 0;
+ 		compose->width = format->width;
+@@ -208,7 +260,11 @@ static int bru_set_format(
+ 
+ 		for (i = 0; i <= BRU_PAD_SOURCE; ++i) {
+ 			format = vsp2_entity_get_pad_format(&bru->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 							    config, i);
++#else
++							    state, i);
++#endif
+ 			format->code = fmt->format.code;
+ 		}
+ 	}
+@@ -219,11 +275,19 @@ done:
+ }
+ 
+ static int bru_get_selection(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			     struct v4l2_subdev_pad_config *cfg,
++#else
++			     struct v4l2_subdev_state *sd_state,
++#endif
+ 			     struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_bru *bru = to_bru(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 
+ 	if (sel->pad == BRU_PAD_SOURCE)
+ 		return -EINVAL;
+@@ -237,13 +301,23 @@ static int bru_get_selection(struct v4l2_subdev *subdev,
+ 		return 0;
+ 
+ 	case V4L2_SEL_TGT_COMPOSE:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		config = vsp2_entity_get_pad_config(&bru->entity, cfg,
+ 						    sel->which);
+ 		if (!config)
++#else
++		state = vsp2_entity_get_state(&bru->entity, sd_state,
++						    sel->which);
++		if (!state)
++#endif
+ 			return -EINVAL;
+ 
+ 		mutex_lock(&bru->entity.lock);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		sel->r = *bru_get_compose(bru, config, sel->pad);
++#else
++		sel->r = *bru_get_compose(bru, state, sel->pad);
++#endif
+ 		mutex_unlock(&bru->entity.lock);
+ 		return 0;
+ 
+@@ -253,11 +327,19 @@ static int bru_get_selection(struct v4l2_subdev *subdev,
+ }
+ 
+ static int bru_set_selection(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			     struct v4l2_subdev_pad_config *cfg,
++#else
++			     struct v4l2_subdev_state *sd_state,
++#endif
+ 			     struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_bru *bru = to_bru(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	struct v4l2_rect *compose;
+ 	int ret = 0;
+@@ -270,8 +352,13 @@ static int bru_set_selection(struct v4l2_subdev *subdev,
+ 
+ 	mutex_lock(&bru->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&bru->entity, cfg, sel->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&bru->entity, sd_state, sel->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+@@ -279,7 +366,11 @@ static int bru_set_selection(struct v4l2_subdev *subdev,
+ 	/* The compose rectangle top left corner must be inside the output
+ 	 * frame.
+ 	 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&bru->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&bru->entity, state,
++#endif
+ 					    BRU_PAD_SOURCE);
+ 	sel->r.left = clamp_t(unsigned int, sel->r.left, 0, format->width - 1);
+ 	sel->r.top = clamp_t(unsigned int, sel->r.top, 0, format->height - 1);
+@@ -287,11 +378,19 @@ static int bru_set_selection(struct v4l2_subdev *subdev,
+ 	/* Scaling isn't supported, the compose rectangle size must be identical
+ 	 * to the sink format size.
+ 	 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&bru->entity, config, sel->pad);
++#else
++	format = vsp2_entity_get_pad_format(&bru->entity, state, sel->pad);
++#endif
+ 	sel->r.width = format->width;
+ 	sel->r.height = format->height;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	compose = bru_get_compose(bru, config, sel->pad);
++#else
++	compose = bru_get_compose(bru, state, sel->pad);
++#endif
+ 	*compose = sel->r;
+ 
+ done:
+@@ -322,6 +421,9 @@ static const struct v4l2_subdev_ops bru_ops = {
+  */
+ 
+ static void bru_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_bru *bru = to_bru(&entity->subdev);
+@@ -333,7 +435,11 @@ static void bru_configure(struct vsp2_entity *entity,
+ 	struct vsp_bru_t *vsp_bru = vsp_par->ctrl_par->bru;
+ 	u32 inctrl;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&bru->entity, bru->entity.config,
++#else
++	format = vsp2_entity_get_pad_format(&bru->entity, state,
++#endif
+ 					    BRU_PAD_SOURCE);
+ 
+ 	/* The hardware is extremely flexible but we have no userspace API to
+diff --git a/vsp2driver/vsp2_clu.c b/vsp2driver/vsp2_clu.c
+index 700f2f4..d4fcbbb 100644
+--- a/vsp2driver/vsp2_clu.c
++++ b/vsp2driver/vsp2_clu.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -57,6 +57,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/gfp.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -100,7 +101,11 @@ static long clu_ioctl(struct v4l2_subdev *subdev, unsigned int cmd, void *arg)
+  */
+ 
+ static int clu_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			      struct v4l2_subdev_pad_config *cfg,
++#else
++			      struct v4l2_subdev_state *sd_state,
++#endif
+ 			      struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+@@ -109,32 +114,57 @@ static int clu_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_mbus_code(subdev, cfg, code, codes,
++#else
++	return vsp2_subdev_enum_mbus_code(subdev, sd_state, code, codes,
++#endif
+ 					  ARRAY_SIZE(codes));
+ }
+ 
+ static int clu_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_frame_size_enum *fse)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_frame_size(subdev, cfg, fse, CLU_MIN_SIZE,
++#else
++	return vsp2_subdev_enum_frame_size(subdev, sd_state, fse, CLU_MIN_SIZE,
++#endif
+ 					   CLU_MIN_SIZE, CLU_MAX_SIZE,
+ 					   CLU_MAX_SIZE);
+ }
+ 
+ static int clu_set_format(
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
++#else
++	struct v4l2_subdev *subdev, struct v4l2_subdev_state *sd_state,
++#endif
+ 	struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_clu *clu = to_clu(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&clu->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&clu->entity, cfg, fmt->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&clu->entity, sd_state, fmt->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+@@ -144,7 +174,11 @@ static int clu_set_format(
+ 	    fmt->format.code != MEDIA_BUS_FMT_AYUV8_1X32)
+ 		fmt->format.code = MEDIA_BUS_FMT_AYUV8_1X32;
+ 
+-	format = vsp2_entity_get_pad_format(&clu->entity, config, fmt->pad);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
++		format = vsp2_entity_get_pad_format(&clu->entity, config, fmt->pad);
++#else
++		format = vsp2_entity_get_pad_format(&clu->entity, state, fmt->pad);
++#endif
+ 
+ 	if (fmt->pad == CLU_PAD_SOURCE) {
+ 		/* The CLU output format can't be modified. */
+@@ -168,7 +202,11 @@ static int clu_set_format(
+ 
+ 	/* Propagate the format to the source pad. */
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&clu->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&clu->entity, state,
++#endif
+ 					    CLU_PAD_SOURCE);
+ 	*format = fmt->format;
+ 
+@@ -208,6 +246,9 @@ static struct vsp_start_t *to_vsp_par(struct vsp2_entity *entity)
+ }
+ 
+ static void clu_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_clu     *clu     = to_clu(&entity->subdev);
+diff --git a/vsp2driver/vsp2_entity.c b/vsp2driver/vsp2_entity.c
+index bae100d..fe73db8 100644
+--- a/vsp2driver/vsp2_entity.c
++++ b/vsp2driver/vsp2_entity.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -57,6 +57,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/gfp.h>
++#include <linux/version.h>
+ 
+ #include <media/media-entity.h>
+ #include <media/v4l2-ctrls.h>
+@@ -155,71 +156,112 @@ void vsp2_entity_route_setup(struct vsp2_entity *source)
+  */
+ 
+ /**
+- * vsp2_entity_get_pad_config - Get the pad configuration for an entity
++ * vsp2_entity_get_pad_config/vsp2_entity_get_state - Get the pad configuration/
++ * subdev state for an entity
+  * @entity: the entity
+- * @cfg: the TRY pad configuration
+- * @which: configuration selector (ACTIVE or TRY)
++ * @cfg/sd_state: the TRY pad configuration/subdev state
++ * @which: configuration/state selector (ACTIVE or TRY)
+  *
+  * When called with which set to V4L2_SUBDEV_FORMAT_ACTIVE the caller must hold
+- * the entity lock to access the returned configuration.
++ * the entity lock to access the returned configuration/state.
+  *
+- * Return the pad configuration requested by the which argument. The TRY
+- * configuration is passed explicitly to the function through the cfg argument
+- * and simply returned when requested. The ACTIVE configuration comes from the
+- * entity structure.
++ * Return the pad configuration/ subdev state requested by the which argument. 
++ * The TRY configuration/state is passed explicitly to the function through 
++ * the cfg/sd_state argument and simply returned when requested. The ACTIVE 
++ * configuration/state comes from the entity structure.
+  */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ struct v4l2_subdev_pad_config *
+ vsp2_entity_get_pad_config(struct vsp2_entity *entity,
+ 			   struct v4l2_subdev_pad_config *cfg,
++#else
++struct v4l2_subdev_state *
++vsp2_entity_get_state(struct vsp2_entity *entity,
++			   struct v4l2_subdev_state *sd_state,
++#endif
+ 			   enum v4l2_subdev_format_whence which)
+ {
+ 	switch (which) {
+ 	case V4L2_SUBDEV_FORMAT_ACTIVE:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		return entity->config;
++#else
++		return entity->state;
++#endif
+ 	case V4L2_SUBDEV_FORMAT_TRY:
+ 	default:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		return cfg;
++#else
++		return sd_state;
++#endif
+ 	}
+ }
+ 
+ /**
+  * vsp2_entity_get_pad_format - Get a pad format from storage for an entity
+  * @entity: the entity
+- * @cfg: the configuration storage
++ * @cfg/sd_state: the configuration/state storage
+  * @pad: the pad number
+  *
+- * Return the format stored in the given configuration for an entity's pad. The
+- * configuration can be an ACTIVE or TRY configuration.
++ * Return the format stored in the given configuration/state for an entity's 
++ * pad. The configuration/state can be an ACTIVE or TRY configuration.
+  */
+ struct v4l2_mbus_framefmt *
+ vsp2_entity_get_pad_format(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			   struct v4l2_subdev_pad_config *cfg,
++#else
++			   struct v4l2_subdev_state *sd_state,
++#endif
+ 			   unsigned int pad)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return v4l2_subdev_get_try_format(&entity->subdev, cfg, pad);
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0))
++	return v4l2_subdev_get_try_format(&entity->subdev, sd_state, pad);
++#else
++	return v4l2_subdev_state_get_format(sd_state, pad);
++#endif
+ }
+ 
+ /**
+  * vsp2_entity_get_pad_selection - Get a pad selection from storage for entity
+  * @entity: the entity
+- * @cfg: the configuration storage
++ * @cfg: the configuration/state storage
+  * @pad: the pad number
+  * @target: the selection target
+  *
+- * Return the selection rectangle stored in the given configuration for an
+- * entity's pad. The configuration can be an ACTIVE or TRY configuration. The
+- * selection target can be COMPOSE or CROP.
++ * Return the selection rectangle stored in the given configuration/state 
++ * for an entity's pad. The configuration/state can be an ACTIVE or TRY sate. 
++ * The selection target can be COMPOSE or CROP.
+  */
+ struct v4l2_rect *
+ vsp2_entity_get_pad_selection(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			      struct v4l2_subdev_pad_config *cfg,
++#else
++				  struct v4l2_subdev_state *sd_state,
++#endif
+ 			      unsigned int pad, unsigned int target)
+ {
+ 	switch (target) {
+ 	case V4L2_SEL_TGT_COMPOSE:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		return v4l2_subdev_get_try_compose(&entity->subdev, cfg, pad);
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0))
++		return v4l2_subdev_get_try_compose(&entity->subdev, sd_state, pad);
++#else
++		return v4l2_subdev_state_get_compose(sd_state, pad);
++#endif
+ 	case V4L2_SEL_TGT_CROP:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		return v4l2_subdev_get_try_crop(&entity->subdev, cfg, pad);
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(6, 8, 0))
++		return v4l2_subdev_get_try_crop(&entity->subdev, sd_state, pad);
++#else
++		return v4l2_subdev_state_get_crop(sd_state, pad);
++#endif
+ 	default:
+ 		return NULL;
+ 	}
+@@ -255,26 +297,41 @@ int vsp2_entity_init_cfg(struct v4l2_subdev *subdev,
+ /*
+  * vsp2_subdev_get_pad_format - Subdev pad get_fmt handler
+  * @subdev: V4L2 subdevice
+- * @cfg: V4L2 subdev pad configuration
++ * @cfg: V4L2 subdev pad configuration/state
+  * @fmt: V4L2 subdev format
+  *
+  * This function implements the subdev get_fmt pad operation. It can be used as
+  * a direct drop-in for the operation handler.
+  */
+ int vsp2_subdev_get_pad_format(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_entity *entity = to_vsp2_entity(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
+ 
+ 	config = vsp2_entity_get_pad_config(entity, cfg, fmt->which);
+ 	if (!config)
++#else
++	struct v4l2_subdev_state *state;
++
++	state = vsp2_entity_get_state(entity, sd_state, fmt->which);
++	if (!state)
++#endif
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&entity->lock);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	fmt->format = *vsp2_entity_get_pad_format(entity, config, fmt->pad);
++#else
++	fmt->format = *vsp2_entity_get_pad_format(entity, state, fmt->pad);
+ 	mutex_unlock(&entity->lock);
++#endif
+ 
+ 	return 0;
+ }
+@@ -282,7 +339,7 @@ int vsp2_subdev_get_pad_format(struct v4l2_subdev *subdev,
+ /*
+  * vsp2_subdev_enum_mbus_code - Subdev pad enum_mbus_code handler
+  * @subdev: V4L2 subdevice
+- * @cfg: V4L2 subdev pad configuration
++ * @cfg/sd_state: V4L2 subdev pad configuration/state
+  * @code: Media bus code enumeration
+  * @codes: Array of supported media bus codes
+  * @ncodes: Number of supported media bus codes
+@@ -293,7 +350,11 @@ int vsp2_subdev_get_pad_format(struct v4l2_subdev *subdev,
+  * the sink pad.
+  */
+ int vsp2_subdev_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_mbus_code_enum *code,
+ 			       const unsigned int *codes, unsigned int ncodes)
+ {
+@@ -305,7 +366,11 @@ int vsp2_subdev_enum_mbus_code(struct v4l2_subdev *subdev,
+ 
+ 		code->code = codes[code->index];
+ 	} else {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		struct v4l2_subdev_pad_config *config;
++#else
++		struct v4l2_subdev_state *state;
++#endif
+ 		struct v4l2_mbus_framefmt *format;
+ 
+ 		/* The entity can't perform format conversion, the sink format
+@@ -314,12 +379,21 @@ int vsp2_subdev_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		if (code->index)
+ 			return -EINVAL;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		config = vsp2_entity_get_pad_config(entity, cfg, code->which);
+ 		if (!config)
++#else
++		state = vsp2_entity_get_state(entity, sd_state, code->which);
++		if (!state)
++#endif
+ 			return -EINVAL;
+ 
+ 		mutex_lock(&entity->lock);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(entity, config, 0);
++#else
++		format = vsp2_entity_get_pad_format(entity, state, 0);
++#endif
+ 		code->code = format->code;
+ 		mutex_unlock(&entity->lock);
+ 	}
+@@ -330,7 +404,7 @@ int vsp2_subdev_enum_mbus_code(struct v4l2_subdev *subdev,
+ /*
+  * vsp2_subdev_enum_frame_size - Subdev pad enum_frame_size handler
+  * @subdev: V4L2 subdevice
+- * @cfg: V4L2 subdev pad configuration
++ * @cfg/sd_state: V4L2 subdev pad configuration/state
+  * @fse: Frame size enumeration
+  * @min_width: Minimum image width
+  * @min_height: Minimum image height
+@@ -343,21 +417,38 @@ int vsp2_subdev_enum_mbus_code(struct v4l2_subdev *subdev,
+  * source pad size identical to the sink pad.
+  */
+ int vsp2_subdev_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				struct v4l2_subdev_pad_config *cfg,
++#else
++				struct v4l2_subdev_state *sd_state,
++#endif
+ 				struct v4l2_subdev_frame_size_enum *fse,
+ 				unsigned int min_width, unsigned int min_height,
+ 				unsigned int max_width, unsigned int max_height)
+ {
+ 	struct vsp2_entity *entity = to_vsp2_entity(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(entity, cfg, fse->which);
+ 	if (!config)
++#else
++	state = vsp2_entity_get_state(entity, sd_state, fse->which);
++	if (!state)
++#endif
+ 		return -EINVAL;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(entity, config, fse->pad);
++#else
++	format = vsp2_entity_get_pad_format(entity, state, fse->pad);
++#endif
+ 
+ 	mutex_lock(&entity->lock);
+ 	if (fse->index || fse->code != format->code) {
+diff --git a/vsp2driver/vsp2_entity.h b/vsp2driver/vsp2_entity.h
+index d4ab746..4982d35 100644
+--- a/vsp2driver/vsp2_entity.h
++++ b/vsp2driver/vsp2_entity.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -60,6 +60,7 @@
+ 
+ #include <linux/list.h>
+ #include <linux/mutex.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -90,7 +91,11 @@ enum vsp2_entity_type {
+ struct vsp2_entity_operations {
+ 	void (*destroy)(struct vsp2_entity *);
+ 	void (*set_memory)(struct vsp2_entity *);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	void (*configure)(struct vsp2_entity *, struct vsp2_pipeline *);
++#else
++	void (*configure)(struct vsp2_entity *, struct v4l2_subdev_state *state, struct vsp2_pipeline *);
++#endif
+ };
+ 
+ struct vsp2_entity {
+@@ -111,7 +116,11 @@ struct vsp2_entity {
+ 	unsigned int sink_pad;
+ 
+ 	struct v4l2_subdev subdev;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 
+ 	struct mutex lock;	/* Protects the pad config */
+ };
+@@ -132,17 +141,32 @@ int vsp2_entity_link_setup(struct media_entity *entity,
+ 			   const struct media_pad *local,
+ 			   const struct media_pad *remote, u32 flags);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ struct v4l2_subdev_pad_config *
+ vsp2_entity_get_pad_config(struct vsp2_entity *entity,
+ 			   struct v4l2_subdev_pad_config *cfg,
++#else
++struct v4l2_subdev_state *
++vsp2_entity_get_state(struct vsp2_entity *entity,
++			   struct v4l2_subdev_state *sd_state,
++#endif
+ 			   enum v4l2_subdev_format_whence which);
+ struct v4l2_mbus_framefmt *
+ vsp2_entity_get_pad_format(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			   struct v4l2_subdev_pad_config *cfg,
++#else
++			   struct v4l2_subdev_state *sd_state,
++#endif
+ 			   unsigned int pad);
+ struct v4l2_rect *
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ vsp2_entity_get_pad_selection(struct vsp2_entity *entity,
+ 			      struct v4l2_subdev_pad_config *cfg,
++#else
++vsp2_entity_get_pad_selection(struct vsp2_entity *entity,
++			      struct v4l2_subdev_state *sd_state,
++#endif
+ 			      unsigned int pad, unsigned int target);
+ int vsp2_entity_init_cfg(struct v4l2_subdev *subdev,
+ 			 struct v4l2_subdev_pad_config *cfg);
+@@ -150,14 +174,26 @@ int vsp2_entity_init_cfg(struct v4l2_subdev *subdev,
+ void vsp2_entity_route_setup(struct vsp2_entity *source);
+ 
+ int vsp2_subdev_get_pad_format(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_format *fmt);
+ int vsp2_subdev_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_mbus_code_enum *code,
+ 			       const unsigned int *codes, unsigned int ncodes);
+ int vsp2_subdev_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				struct v4l2_subdev_pad_config *cfg,
++#else
++				struct v4l2_subdev_state *sd_state,
++#endif
+ 				struct v4l2_subdev_frame_size_enum *fse,
+ 				unsigned int min_w, unsigned int min_h,
+ 				unsigned int max_w, unsigned int max_h);
+diff --git a/vsp2driver/vsp2_hgo.c b/vsp2driver/vsp2_hgo.c
+index 66cfcc5..269c0b6 100644
+--- a/vsp2driver/vsp2_hgo.c
++++ b/vsp2driver/vsp2_hgo.c
+@@ -58,6 +58,7 @@
+ #include <linux/device.h>
+ #include <linux/gfp.h>
+ #include <linux/vsp2.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -119,6 +120,9 @@ static const struct v4l2_subdev_ops hgo_ops = {
+  */
+ 
+ static void hgo_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_hgo *hgo = to_hgo(&entity->subdev);
+diff --git a/vsp2driver/vsp2_hgt.c b/vsp2driver/vsp2_hgt.c
+index 9bab707..cbb1a0a 100644
+--- a/vsp2driver/vsp2_hgt.c
++++ b/vsp2driver/vsp2_hgt.c
+@@ -58,6 +58,7 @@
+ #include <linux/device.h>
+ #include <linux/gfp.h>
+ #include <linux/vsp2.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -119,6 +120,9 @@ static const struct v4l2_subdev_ops hgt_ops = {
+  */
+ 
+ static void hgt_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_hgt *hgt = to_hgt(&entity->subdev);
+diff --git a/vsp2driver/vsp2_lut.c b/vsp2driver/vsp2_lut.c
+index 1e8f225..dca72de 100644
+--- a/vsp2driver/vsp2_lut.c
++++ b/vsp2driver/vsp2_lut.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -57,6 +57,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/gfp.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -100,7 +101,11 @@ static long lut_ioctl(struct v4l2_subdev *subdev, unsigned int cmd, void *arg)
+  */
+ 
+ static int lut_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			      struct v4l2_subdev_pad_config *cfg,
++#else
++			      struct v4l2_subdev_state *sd_state,
++#endif
+ 			      struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+@@ -109,32 +114,57 @@ static int lut_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_mbus_code(subdev, cfg, code, codes,
++#else
++	return vsp2_subdev_enum_mbus_code(subdev, sd_state, code, codes,
++#endif
+ 					  ARRAY_SIZE(codes));
+ }
+ 
+ static int lut_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_frame_size_enum *fse)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_frame_size(subdev, cfg, fse, LUT_MIN_SIZE,
++#else
++	return vsp2_subdev_enum_frame_size(subdev, sd_state, fse, LUT_MIN_SIZE,
++#endif
+ 					   LUT_MIN_SIZE, LUT_MAX_SIZE,
+ 					   LUT_MAX_SIZE);
+ }
+ 
+ static int lut_set_format(
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
++#else
++	struct v4l2_subdev *subdev, struct v4l2_subdev_state *sd_state,
++#endif
+ 	struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_lut *lut = to_lut(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&lut->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&lut->entity, cfg, fmt->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&lut->entity, sd_state, fmt->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+@@ -144,7 +174,11 @@ static int lut_set_format(
+ 	    fmt->format.code != MEDIA_BUS_FMT_AYUV8_1X32)
+ 		fmt->format.code = MEDIA_BUS_FMT_AYUV8_1X32;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&lut->entity, config, fmt->pad);
++#else
++		format = vsp2_entity_get_pad_format(&lut->entity, sd_state, fmt->pad);
++#endif
+ 
+ 	if (fmt->pad == LUT_PAD_SOURCE) {
+ 		/* The LUT output format can't be modified. */
+@@ -165,7 +199,11 @@ static int lut_set_format(
+ 	fmt->format = *format;
+ 
+ 	/* Propagate the format to the source pad. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&lut->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&lut->entity, sd_state,
++#endif
+ 					    LUT_PAD_SOURCE);
+ 	*format = fmt->format;
+ 
+@@ -204,6 +242,9 @@ static struct vsp_start_t *to_vsp_par(struct vsp2_entity *entity)
+ }
+ 
+ static void lut_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_lut       *lut     = to_lut(&entity->subdev);
+diff --git a/vsp2driver/vsp2_rpf.c b/vsp2driver/vsp2_rpf.c
+index bd24795..8c2a9f7 100644
+--- a/vsp2driver/vsp2_rpf.c
++++ b/vsp2driver/vsp2_rpf.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -56,6 +56,7 @@
+  */ /*************************************************************************/
+ 
+ #include <linux/device.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -108,6 +109,9 @@ static void rpf_set_memory(struct vsp2_entity *entity)
+ }
+ 
+ static void rpf_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_rwpf *rpf = to_rwpf(&entity->subdev);
+@@ -137,7 +141,11 @@ static void rpf_configure(struct vsp2_entity *entity,
+ 	 * left corner in the plane buffer. Only two offsets are needed, as
+ 	 * planes 2 and 3 always have identical strides.
+ 	 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	crop = vsp2_rwpf_get_crop(rpf, rpf->entity.config);
++#else
++	crop = vsp2_rwpf_get_crop(rpf, state);
++#endif
+ 
+ 	stride_y = format->plane_fmt[0].bytesperline;
+ 	if (format->num_planes > 1)
+@@ -166,10 +174,18 @@ static void rpf_configure(struct vsp2_entity *entity,
+ 
+ 	/* Format */
+ 	sink_format = vsp2_entity_get_pad_format(&rpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						 rpf->entity.config,
++#else
++						 state,
++#endif
+ 						 RWPF_PAD_SINK);
+ 	source_format = vsp2_entity_get_pad_format(&rpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						   rpf->entity.config,
++#else
++						   state,
++#endif
+ 						   RWPF_PAD_SOURCE);
+ 
+ 	infmt = VI6_RPF_INFMT_CIPM
+@@ -213,7 +229,11 @@ static void rpf_configure(struct vsp2_entity *entity,
+ 		const struct v4l2_rect *compose;
+ 
+ 		compose = vsp2_entity_get_pad_selection(pipe->bru,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 							pipe->bru->config,
++#else
++							state,
++#endif
+ 							rpf->bru_input,
+ 							V4L2_SEL_TGT_COMPOSE);
+ 		left = compose->left;
+@@ -224,7 +244,11 @@ static void rpf_configure(struct vsp2_entity *entity,
+ 		const struct v4l2_rect *compose;
+ 
+ 		compose = vsp2_entity_get_pad_selection(pipe->brs,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 							pipe->brs->config,
++#else
++							state,
++#endif
+ 							rpf->brs_input,
+ 							V4L2_SEL_TGT_COMPOSE);
+ 		left = compose->left;
+diff --git a/vsp2driver/vsp2_rwpf.c b/vsp2driver/vsp2_rwpf.c
+index 531508c..0f504c0 100644
+--- a/vsp2driver/vsp2_rwpf.c
++++ b/vsp2driver/vsp2_rwpf.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -56,6 +56,7 @@
+  */ /*************************************************************************/
+ 
+ #include <media/v4l2-subdev.h>
++#include <linux/version.h>
+ 
+ #include "vsp2_device.h"
+ #include "vsp2_rwpf.h"
+@@ -66,17 +67,33 @@
+ #define RWPF_MIN_HEIGHT				1
+ 
+ struct v4l2_rect *vsp2_rwpf_get_crop(struct vsp2_rwpf *rwpf,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				     struct v4l2_subdev_pad_config *config)
++#else
++				     struct v4l2_subdev_state *sd_state)
++#endif
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return v4l2_subdev_get_try_crop(&rwpf->entity.subdev, config,
++#else
++	return v4l2_subdev_state_get_crop(sd_state,
++#endif
+ 					RWPF_PAD_SINK);
+ }
+ 
+ static struct v4l2_rect *vsp2_rwpf_get_compose(
+ 	struct vsp2_rwpf *rwpf,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config)
++#else
++	struct v4l2_subdev_state *sd_state)
++#endif
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return v4l2_subdev_get_try_compose(&rwpf->entity.subdev, config,
++#else
++	return v4l2_subdev_state_get_compose(sd_state,
++#endif
+ 					   RWPF_PAD_SOURCE);
+ }
+ 
+@@ -90,11 +107,19 @@ int vsp2_rwpf_check_compose_size(struct vsp2_entity *entity)
+ 	if (entity->type != VSP2_ENTITY_WPF)
+ 		return 0;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(entity, entity->config,
+ 					    RWPF_PAD_SINK);
+ 
+ 	compose = vsp2_entity_get_pad_selection(entity,
+ 						entity->config,
++#else
++	format = vsp2_entity_get_pad_format(entity, wpf->entity.state,
++					    RWPF_PAD_SINK);
++
++	compose = vsp2_entity_get_pad_selection(entity,
++						wpf->entity.state,
++#endif
+ 						RWPF_PAD_SOURCE,
+ 						V4L2_SEL_TGT_COMPOSE);
+ 
+@@ -135,7 +160,11 @@ void vsp2_rwpf_set_csc_mode(struct vsp2_entity *entity, int csc_mode)
+  */
+ 
+ static int vsp2_rwpf_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				    struct v4l2_subdev_pad_config *cfg,
++#else
++				    struct v4l2_subdev_state *sd_state,
++#endif
+ 				    struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+@@ -152,30 +181,51 @@ static int vsp2_rwpf_enum_mbus_code(struct v4l2_subdev *subdev,
+ }
+ 
+ static int vsp2_rwpf_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				     struct v4l2_subdev_pad_config *cfg,
++#else
++				     struct v4l2_subdev_state *sd_state,
++#endif
+ 				     struct v4l2_subdev_frame_size_enum *fse)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_frame_size(subdev, cfg, fse, RWPF_MIN_WIDTH,
++#else
++	return vsp2_subdev_enum_frame_size(subdev, sd_state, fse, RWPF_MIN_WIDTH,
++#endif
+ 					   RWPF_MIN_HEIGHT, rwpf->max_width,
+ 					   rwpf->max_height);
+ }
+ 
+ static int vsp2_rwpf_set_format(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				struct v4l2_subdev_pad_config *cfg,
++#else
++				struct v4l2_subdev_state *sd_state,
++#endif
+ 				struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
+-	struct v4l2_subdev_pad_config *config;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
++struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	struct v4l2_rect *compose;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&rwpf->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&rwpf->entity, cfg, fmt->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&rwpf->entity, sd_state, fmt->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+@@ -185,7 +235,11 @@ static int vsp2_rwpf_set_format(struct v4l2_subdev *subdev,
+ 	    fmt->format.code != MEDIA_BUS_FMT_AYUV8_1X32)
+ 		fmt->format.code = MEDIA_BUS_FMT_AYUV8_1X32;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&rwpf->entity, config, fmt->pad);
++#else
++	format = vsp2_entity_get_pad_format(&rwpf->entity, state, fmt->pad);
++#endif
+ 
+ 	if (fmt->pad == RWPF_PAD_SOURCE) {
+ 		/* for WPF compose */
+@@ -198,7 +252,11 @@ static int vsp2_rwpf_set_format(struct v4l2_subdev *subdev,
+ 					RWPF_MIN_WIDTH, rwpf->max_width);
+ 			height = clamp_t(unsigned int, fmt->format.height,
+ 					 RWPF_MIN_HEIGHT, rwpf->max_height);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			sink = vsp2_entity_get_pad_format(&rwpf->entity, config,
++#else
++			sink = vsp2_entity_get_pad_format(&rwpf->entity, state,
++#endif
+ 							  RWPF_PAD_SINK);
+ 			if (width == sink->width && height == sink->height) {
+ 				/*
+@@ -221,7 +279,11 @@ static int vsp2_rwpf_set_format(struct v4l2_subdev *subdev,
+ 				format->width = width;
+ 				format->height = height;
+ 			}
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			compose = vsp2_rwpf_get_compose(rwpf, config);
++#else
++			compose = vsp2_rwpf_get_compose(rwpf, state);
++#endif
+ 			compose->left = 0;
+ 			compose->top = 0;
+ 			compose->width = format->width;
+@@ -250,7 +312,11 @@ static int vsp2_rwpf_set_format(struct v4l2_subdev *subdev,
+ 		struct v4l2_rect *crop;
+ 
+ 		/* Update the sink crop rectangle. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		crop = vsp2_rwpf_get_crop(rwpf, config);
++#else
++		crop = vsp2_rwpf_get_crop(rwpf, state);
++#endif
+ 		crop->left = 0;
+ 		crop->top = 0;
+ 		crop->width = fmt->format.width;
+@@ -258,7 +324,11 @@ static int vsp2_rwpf_set_format(struct v4l2_subdev *subdev,
+ 	}
+ 
+ 	/* Propagate the format to the source pad. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&rwpf->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&rwpf->entity, state,
++#endif
+ 					    RWPF_PAD_SOURCE);
+ 	*format = fmt->format;
+ 	if (rwpf->rotinfo.swap_sizes) {
+@@ -267,7 +337,11 @@ static int vsp2_rwpf_set_format(struct v4l2_subdev *subdev,
+ 	}
+ 	if (rwpf->entity.type == VSP2_ENTITY_WPF) {
+ 		/* Propagate the format to the compose size. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		compose = vsp2_rwpf_get_compose(rwpf, config);
++#else
++		compose = vsp2_rwpf_get_compose(rwpf, state);
++#endif
+ 		compose->left = 0;
+ 		compose->top = 0;
+ 		compose->width = format->width;
+@@ -280,11 +354,19 @@ done:
+ }
+ 
+ static int vsp2_rwpf_get_selection(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				   struct v4l2_subdev_pad_config *cfg,
++#else
++				   struct v4l2_subdev_state *sd_state,
++#endif
+ 				   struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
+@@ -309,19 +391,32 @@ static int vsp2_rwpf_get_selection(struct v4l2_subdev *subdev,
+ 
+ 	mutex_lock(&rwpf->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&rwpf->entity, cfg, sel->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&rwpf->entity, sd_state, sel->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+ 
+ 	switch (sel->target) {
+ 	case V4L2_SEL_TGT_CROP:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		sel->r = *vsp2_rwpf_get_crop(rwpf, config);
++#else
++		sel->r = *vsp2_rwpf_get_crop(rwpf, sd_state);
++#endif
+ 		break;
+ 
+ 	case V4L2_SEL_TGT_CROP_BOUNDS:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(&rwpf->entity, config,
++#else
++		format = vsp2_entity_get_pad_format(&rwpf->entity, sd_state,
++#endif
+ 						    RWPF_PAD_SINK);
+ 		sel->r.left = 0;
+ 		sel->r.top = 0;
+@@ -330,11 +425,19 @@ static int vsp2_rwpf_get_selection(struct v4l2_subdev *subdev,
+ 		break;
+ 
+ 	case V4L2_SEL_TGT_COMPOSE:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		sel->r = *vsp2_rwpf_get_compose(rwpf, config);
++#else
++		sel->r = *vsp2_rwpf_get_compose(rwpf, sd_state);
++#endif
+ 		break;
+ 
+ 	case V4L2_SEL_TGT_COMPOSE_BOUNDS:
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(&rwpf->entity, config,
++#else
++		format = vsp2_entity_get_pad_format(&rwpf->entity, sd_state,
++#endif
+ 						    RWPF_PAD_SOURCE);
+ 		sel->r.left = 0;
+ 		sel->r.top = 0;
+@@ -353,11 +456,19 @@ done:
+ }
+ 
+ static int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				   struct v4l2_subdev_pad_config *cfg,
++#else
++				   struct v4l2_subdev_state *sd_state,
++#endif
+ 				   struct v4l2_subdev_selection *sel)
+ {
+ 	struct vsp2_rwpf *rwpf = to_rwpf(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	struct v4l2_rect *crop;
+ 	int ret = 0;
+@@ -381,8 +492,13 @@ static int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+ 
+ 	mutex_lock(&rwpf->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&rwpf->entity, cfg, sel->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&rwpf->entity, sd_state, sel->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+@@ -392,7 +508,11 @@ static int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+ 		struct v4l2_rect *compose;
+ 
+ 		/* check size, not adjust size */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(&rwpf->entity, config,
++#else
++		format = vsp2_entity_get_pad_format(&rwpf->entity, state,
++#endif
+ 						    RWPF_PAD_SOURCE);
+ 		if (sel->r.left + sel->r.width > format->width) {
+ 			ret = -EINVAL;
+@@ -402,13 +522,21 @@ static int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+ 			ret = -EINVAL;
+ 			goto done;
+ 		}
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		compose = vsp2_rwpf_get_compose(rwpf, config);
++#else
++		compose = vsp2_rwpf_get_compose(rwpf, state);
++#endif
+ 		*compose = sel->r;
+ 		goto done;
+ 	}
+ 
+ 	/* Make sure the crop rectangle is entirely contained in the image. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&rwpf->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&rwpf->entity, state,
++#endif
+ 					    RWPF_PAD_SINK);
+ 
+ 	if (format->code == MEDIA_BUS_FMT_AYUV8_1X32) {
+@@ -425,11 +553,19 @@ static int vsp2_rwpf_set_selection(struct v4l2_subdev *subdev,
+ 	sel->r.height = min_t(unsigned int, sel->r.height,
+ 			      format->height - sel->r.top);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	crop = vsp2_rwpf_get_crop(rwpf, config);
++#else
++	crop = vsp2_rwpf_get_crop(rwpf, state);
++#endif
+ 	*crop = sel->r;
+ 
+ 	/* Propagate the format to the source pad. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&rwpf->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&rwpf->entity, state,
++#endif
+ 					    RWPF_PAD_SOURCE);
+ 	format->width = crop->width;
+ 	format->height = crop->height;
+diff --git a/vsp2driver/vsp2_rwpf.h b/vsp2driver/vsp2_rwpf.h
+index be25944..7a84f12 100644
+--- a/vsp2driver/vsp2_rwpf.h
++++ b/vsp2driver/vsp2_rwpf.h
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -58,6 +58,8 @@
+ #ifndef __VSP2_RWPF_H__
+ #define __VSP2_RWPF_H__
+ 
++#include <linux/version.h>
++
+ #include <media/media-entity.h>
+ #include <media/v4l2-ctrls.h>
+ #include <media/v4l2-subdev.h>
+@@ -135,7 +137,11 @@ int vsp2_rwpf_init_ctrls(struct vsp2_rwpf *rwpf);
+ extern const struct v4l2_subdev_pad_ops vsp2_rwpf_pad_ops;
+ 
+ struct v4l2_rect *vsp2_rwpf_get_crop(struct vsp2_rwpf *rwpf,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 				     struct v4l2_subdev_pad_config *config);
++#else
++				     struct v4l2_subdev_state *sd_state);
++#endif
+ int vsp2_rwpf_check_compose_size(struct vsp2_entity *entity);
+ void vsp2_rwpf_get_csc_element(struct vsp2_entity *entity, unsigned int *mbus,
+ 			       unsigned char *ycbcr_enc,
+diff --git a/vsp2driver/vsp2_uds.c b/vsp2driver/vsp2_uds.c
+index ebb5f76..964ed52 100644
+--- a/vsp2driver/vsp2_uds.c
++++ b/vsp2driver/vsp2_uds.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -57,6 +57,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/gfp.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -138,9 +139,17 @@ int vsp2_uds_check_ratio(struct vsp2_entity *entity)
+ 	unsigned int hscale;
+ 	unsigned int vscale;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	input = vsp2_entity_get_pad_format(&uds->entity, uds->entity.config,
++#else
++	input = vsp2_entity_get_pad_format(&uds->entity, uds->entity.state,
++#endif
+ 					   UDS_PAD_SINK);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	output = vsp2_entity_get_pad_format(&uds->entity, uds->entity.config,
++#else
++	output = vsp2_entity_get_pad_format(&uds->entity, uds->entity.state,
++#endif
+ 					    UDS_PAD_SOURCE);
+ 
+ 	hscale = uds_compute_ratio(input->width, output->width);
+@@ -158,7 +167,11 @@ int vsp2_uds_check_ratio(struct vsp2_entity *entity)
+  */
+ 
+ static int uds_enum_mbus_code(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			      struct v4l2_subdev_pad_config *cfg,
++#else
++			      struct v4l2_subdev_state *sd_state,
++#endif
+ 			      struct v4l2_subdev_mbus_code_enum *code)
+ {
+ 	static const unsigned int codes[] = {
+@@ -166,24 +179,45 @@ static int uds_enum_mbus_code(struct v4l2_subdev *subdev,
+ 		MEDIA_BUS_FMT_AYUV8_1X32,
+ 	};
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	return vsp2_subdev_enum_mbus_code(subdev, cfg, code, codes,
++#else
++	return vsp2_subdev_enum_mbus_code(subdev, sd_state, code, codes,
++#endif
+ 					  ARRAY_SIZE(codes));
+ }
+ 
+ static int uds_enum_frame_size(struct v4l2_subdev *subdev,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			       struct v4l2_subdev_pad_config *cfg,
++#else
++			       struct v4l2_subdev_state *sd_state,
++#endif
+ 			       struct v4l2_subdev_frame_size_enum *fse)
+ {
+ 	struct vsp2_uds *uds = to_uds(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&uds->entity, cfg, fse->which);
+ 	if (!config)
++#else
++	state = vsp2_entity_get_state(&uds->entity, sd_state, fse->which);
++	if (!state)
++#endif
+ 		return -EINVAL;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	format = vsp2_entity_get_pad_format(&uds->entity, config,
++#else
++	format = vsp2_entity_get_pad_format(&uds->entity, state,
++#endif
+ 					    UDS_PAD_SINK);
+ 
+ 	mutex_lock(&uds->entity.lock);
+@@ -211,7 +245,11 @@ done:
+ }
+ 
+ static void uds_try_format(struct vsp2_uds *uds,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			   struct v4l2_subdev_pad_config *config,
++#else
++			   struct v4l2_subdev_state *sd_state,
++#endif
+ 			   unsigned int pad, struct v4l2_mbus_framefmt *fmt)
+ {
+ 	struct v4l2_mbus_framefmt *format;
+@@ -233,7 +271,11 @@ static void uds_try_format(struct vsp2_uds *uds,
+ 
+ 	case UDS_PAD_SOURCE:
+ 		/* The UDS scales but can't perform format conversion. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(&uds->entity, config,
++#else
++		format = vsp2_entity_get_pad_format(&uds->entity, sd_state,
++#endif
+ 						    UDS_PAD_SINK);
+ 		fmt->code = format->code;
+ 
+@@ -249,34 +291,61 @@ static void uds_try_format(struct vsp2_uds *uds,
+ }
+ 
+ static int uds_set_format(
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev *subdev, struct v4l2_subdev_pad_config *cfg,
++#else
++	struct v4l2_subdev *subdev, struct v4l2_subdev_state *sd_state,
++#endif
+ 	struct v4l2_subdev_format *fmt)
+ {
+ 	struct vsp2_uds *uds = to_uds(subdev);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	struct v4l2_subdev_pad_config *config;
++#else
++	struct v4l2_subdev_state *state;
++#endif
+ 	struct v4l2_mbus_framefmt *format;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&uds->entity.lock);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	config = vsp2_entity_get_pad_config(&uds->entity, cfg, fmt->which);
+ 	if (!config) {
++#else
++	state = vsp2_entity_get_state(&uds->entity, sd_state, fmt->which);
++	if (!state) {
++#endif
+ 		ret = -EINVAL;
+ 		goto done;
+ 	}
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	uds_try_format(uds, config, fmt->pad, &fmt->format);
+ 
+ 	format = vsp2_entity_get_pad_format(&uds->entity, config, fmt->pad);
++#else
++	uds_try_format(uds, state, fmt->pad, &fmt->format);
++
++	format = vsp2_entity_get_pad_format(&uds->entity, state, fmt->pad);
++#endif
+ 	*format = fmt->format;
+ 
+ 	if (fmt->pad == UDS_PAD_SINK) {
+ 		/* Propagate the format to the source pad. */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		format = vsp2_entity_get_pad_format(&uds->entity, config,
++#else
++		format = vsp2_entity_get_pad_format(&uds->entity, state,
++#endif
+ 						    UDS_PAD_SOURCE);
+ 		*format = fmt->format;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 		uds_try_format(uds, config, UDS_PAD_SOURCE, format);
++#else
++		uds_try_format(uds, state, UDS_PAD_SOURCE, format);
++#endif
+ 	}
+ 
+ done:
+@@ -305,6 +374,9 @@ static const struct v4l2_subdev_ops uds_ops = {
+  */
+ 
+ static void uds_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_uds *uds = to_uds(&entity->subdev);
+@@ -317,9 +389,17 @@ static void uds_configure(struct vsp2_entity *entity,
+ 		uds->entity.vsp2->vspm->ip_par.par.vsp;
+ 	struct vsp_uds_t *vsp_uds = vsp_par->ctrl_par->uds;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	input = vsp2_entity_get_pad_format(&uds->entity, uds->entity.config,
++#else
++	input = vsp2_entity_get_pad_format(&uds->entity, state,
++#endif
+ 					   UDS_PAD_SINK);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 	output = vsp2_entity_get_pad_format(&uds->entity, uds->entity.config,
++#else
++	output = vsp2_entity_get_pad_format(&uds->entity, state,
++#endif
+ 					    UDS_PAD_SOURCE);
+ 
+ 	hscale = uds_compute_ratio(input->width, output->width);
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index 2af9f1a..02d248a 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -885,7 +885,11 @@ static int vsp2_video_setup_pipeline(struct vsp2_pipeline *pipe,
+ 		}
+ 
+ 		if (entity->ops->configure)
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			entity->ops->configure(entity, pipe);
++#else
++			entity->ops->configure(entity, entity->state, pipe);
++#endif
+ 
+ 		if (entity->type == VSP2_ENTITY_RPF) {
+ 			if ((int)entity->index > max_index_rpf)
+@@ -910,7 +914,11 @@ static int vsp2_video_setup_pipeline(struct vsp2_pipeline *pipe,
+ 	entity = &video->vsp2->hgo->entity;
+ 	if (entity) {
+ 		if (entity->ops->configure)
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			entity->ops->configure(entity, pipe);
++#else
++			entity->ops->configure(entity, entity->state, pipe);
++#endif
+ 	}
+ 
+ 	/* - HGT */
+@@ -918,7 +926,11 @@ static int vsp2_video_setup_pipeline(struct vsp2_pipeline *pipe,
+ 	entity = &video->vsp2->hgt->entity;
+ 	if (entity) {
+ 		if (entity->ops->configure)
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 			entity->ops->configure(entity, pipe);
++#else
++			entity->ops->configure(entity, entity->state, pipe);
++#endif
+ 	}
+ 
+ 	/* We know that the WPF s_stream operation never fails. */
+diff --git a/vsp2driver/vsp2_wpf.c b/vsp2driver/vsp2_wpf.c
+index 0f64ef5..cfe005d 100644
+--- a/vsp2driver/vsp2_wpf.c
++++ b/vsp2driver/vsp2_wpf.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -56,6 +56,7 @@
+  */ /*************************************************************************/
+ 
+ #include <linux/device.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -169,7 +170,11 @@ static void wpf_set_memory(struct vsp2_entity *entity)
+ 	struct vsp_dst_t *vsp_out = vsp_par->dst_par;
+ 
+ 	compose = vsp2_entity_get_pad_selection(&wpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						wpf->entity.config,
++#else
++						wpf->entity.state,
++#endif
+ 						RWPF_PAD_SOURCE,
+ 						V4L2_SEL_TGT_COMPOSE);
+ 	vsp_out->addr = ((unsigned int)wpf->mem.addr[0])
+@@ -196,6 +201,9 @@ static void wpf_set_memory(struct vsp2_entity *entity)
+ }
+ 
+ static void wpf_configure(struct vsp2_entity *entity,
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0))
++			  struct v4l2_subdev_state *state,
++#endif
+ 			  struct vsp2_pipeline *pipe)
+ {
+ 	struct vsp2_rwpf *wpf = to_rwpf(&entity->subdev);
+@@ -223,14 +231,26 @@ static void wpf_configure(struct vsp2_entity *entity,
+ 
+ 	/* Format */
+ 	sink_format = vsp2_entity_get_pad_format(&wpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						 wpf->entity.config,
++#else
++						 state,
++#endif
+ 						 RWPF_PAD_SINK);
+ 	source_format = vsp2_entity_get_pad_format(&wpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						   wpf->entity.config,
++#else
++						   state,
++#endif
+ 						   RWPF_PAD_SOURCE);
+ 
+ 	compose = vsp2_entity_get_pad_selection(&wpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						wpf->entity.config,
++#else
++						state,
++#endif
+ 						RWPF_PAD_SOURCE,
+ 						V4L2_SEL_TGT_COMPOSE);
+ 	vsp_out->width		= compose->width;
+@@ -313,10 +333,18 @@ static void set_rotation(struct vsp2_rwpf *wpf, bool hflip,
+ 
+ 	swap_work = wpf->rotinfo.swap_sizes;
+ 	sink_format = vsp2_entity_get_pad_format(&wpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						 wpf->entity.config,
++#else
++						 wpf->entity.state,
++#endif
+ 						 RWPF_PAD_SINK);
+ 	source_format = vsp2_entity_get_pad_format(&wpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						   wpf->entity.config,
++#else
++						   wpf->entity.state,
++#endif
+ 						   RWPF_PAD_SOURCE);
+ 	switch (wpf->rotinfo.rotation) {
+ 	case VSP_ROT_90:
+@@ -345,7 +373,11 @@ static void set_rotation(struct vsp2_rwpf *wpf, bool hflip,
+ 
+ 	mutex_lock(&wpf->entity.lock);
+ 	compose = vsp2_entity_get_pad_selection(&wpf->entity,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0))
+ 						wpf->entity.config,
++#else
++						wpf->entity.state,
++#endif
+ 						RWPF_PAD_SOURCE,
+ 						V4L2_SEL_TGT_COMPOSE);
+ 	if (wpf->rotinfo.swap_sizes) {
+-- 
+2.25.1
+

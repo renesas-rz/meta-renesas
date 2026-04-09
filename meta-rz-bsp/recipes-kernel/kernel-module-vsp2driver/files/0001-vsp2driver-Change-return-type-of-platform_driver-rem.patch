@@ -1,0 +1,62 @@
+From 6d44d27c4cdd67cada7e2a80134f2d51a5364389 Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 17 Mar 2026 10:43:20 +0700
+Subject: [PATCH 1/9] vsp2driver: Change return type of platform_driver::remove
+
+From Linux kernel 6.11, platform_driver::remove() returns void
+instead of int, as the driver core does not use the return value.
+
+The return type of vsp2_remove has been changed to void to match
+struct platform_driver::remove
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_drv.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/vsp2driver/vsp2_drv.c b/vsp2driver/vsp2_drv.c
+index a4d0297..c8d19c3 100644
+--- a/vsp2driver/vsp2_drv.c
++++ b/vsp2driver/vsp2_drv.c
+@@ -1,7 +1,7 @@
+ /*************************************************************************/ /*
+  * VSP2
+  *
+- * Copyright (C) 2015-2017 Renesas Electronics Corporation
++ * Copyright (C) 2015-2026 Renesas Electronics Corporation
+  *
+  * License        Dual MIT/GPLv2
+  *
+@@ -62,6 +62,7 @@
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+ #include <linux/videodev2.h>
++#include <linux/version.h>
+ 
+ #include <media/v4l2-subdev.h>
+ 
+@@ -670,7 +671,11 @@ static int vsp2_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0))
+ static int vsp2_remove(struct platform_device *pdev)
++#else
++static void vsp2_remove(struct platform_device *pdev)
++#endif
+ {
+ 	struct vsp2_device *vsp2 = platform_get_drvdata(pdev);
+ 
+@@ -681,7 +686,9 @@ static int vsp2_remove(struct platform_device *pdev)
+ 
+ 	vsp2_vspm_exit(vsp2);
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0))
+ 	return 0;
++#endif
+ }
+ 
+ static const struct of_device_id vsp2_of_match[] = {
+-- 
+2.25.1
+

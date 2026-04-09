@@ -1,0 +1,66 @@
+From 8615ff54c64f4e784abd5709fed222fd6e230901 Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Tue, 21 Apr 2026 10:10:27 +0700
+Subject: [PATCH 3/9] vsp2driver: Rename media_entity_remote_pad() to
+ media_pad_remote_pad_first()
+
+The media_entity_remote_pad() is misnamed, as it operates on a pad and
+not an entity. Rename it to media_pad_remote_pad_first() to clarify its
+behaviour.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_video.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index c85c76c..02bbc79 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -64,6 +64,7 @@
+ #include <linux/slab.h>
+ #include <linux/v4l2-mediabus.h>
+ #include <linux/videodev2.h>
++#include <linux/version.h>
+ 
+ #include <media/media-entity.h>
+ #include <media/v4l2-dev.h>
+@@ -106,7 +107,11 @@ vsp2_video_remote_subdev(struct media_pad *local, u32 *pad)
+ {
+ 	struct media_pad *remote;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0))
+ 	remote = media_entity_remote_pad(local);
++#else
++	remote = media_pad_remote_pad_first(local);
++#endif
+ 	if (!remote || !is_media_entity_v4l2_subdev(remote->entity))
+ 		return NULL;
+ 
+@@ -499,7 +504,11 @@ static int vsp2_video_pipeline_build_branch(struct vsp2_pipeline *pipe,
+ 	if (ret < 0)
+ 		return ret;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0))
+ 	pad = media_entity_remote_pad(&input->entity.pads[RWPF_PAD_SOURCE]);
++#else
++	pad = media_pad_remote_pad_first(&input->entity.pads[RWPF_PAD_SOURCE]);
++#endif
+ 
+ 	while (1) {
+ 		if (!pad) {
+@@ -564,7 +573,11 @@ static int vsp2_video_pipeline_build_branch(struct vsp2_pipeline *pipe,
+ 		 * activated.
+ 		 */
+ 		pad = &entity->pads[entity->source_pad];
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0))
+ 		pad = media_entity_remote_pad(pad);
++#else
++		pad = media_pad_remote_pad_first(pad);
++#endif
+ 	}
+ 
+ 	/* The last entity must be the output WPF. */
+-- 
+2.25.1
+
