@@ -61,3 +61,8 @@ RDEPENDS:packagegroup-gstreamer1.0-plugins-bad = " \
     gstreamer1.0-plugins-bad-faac \
     gstreamer1.0-plugins-bad-faad \
 "
+
+RDEPENDS:packagegroup-gstreamer1.0-plugins:append:rzg2h-family = " \
+    gstreamer1.0-plugin-vspfilter \
+    vspfilter-init \
+"

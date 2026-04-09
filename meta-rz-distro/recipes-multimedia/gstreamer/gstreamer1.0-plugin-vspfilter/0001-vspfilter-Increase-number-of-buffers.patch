@@ -1,0 +1,29 @@
+From 75025411913cc7bd27b062b1dc489442b5e759e5 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Fri, 21 Jun 2019 15:25:04 +0700
+Subject: [PATCH] vspfilter; Increase number of buffers.
+
+Increase number of buffer in our environment in order to reduce flick
+phenom when using dmabuf on low display rendering.
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ gst/vspfilter/gstvspfilter.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gst/vspfilter/gstvspfilter.c b/gst/vspfilter/gstvspfilter.c
+index c886188..71fbeab 100644
+--- a/gst/vspfilter/gstvspfilter.c
++++ b/gst/vspfilter/gstvspfilter.c
+@@ -1195,7 +1195,7 @@ gst_vsp_filter_configure_device_pool (GstVspFilterDeviceInfo * device,
+ {
+   GstBufferPool *pool;
+   GstStructure *structure;
+-  guint buf_cnt = MAX (3, num_buf);
++  guint buf_cnt = MAX (5, num_buf);
+   guint align;
+
+   if (device->pool) {
+-- 
+2.7.4
+
