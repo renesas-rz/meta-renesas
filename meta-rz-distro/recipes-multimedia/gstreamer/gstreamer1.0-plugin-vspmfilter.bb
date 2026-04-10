@@ -10,18 +10,16 @@ GST_PLUGIN_VSPMFILTER_URL = "git://github.com/renesas-rz/rzg_gstreamer_vspmfilte
 
 BRANCH ?= "rz_g2l"
 BRANCH:rzg3e-family = "rz_g2"
+BRANCH:rzg2h-family = "rz_g2"
 
 SRC_URI = " \
     ${GST_PLUGIN_VSPMFILTER_URL};protocol=https;branch=${BRANCH} \
     file://0001-Update-correct-base-number-of-VTOP-ioctl.patch \
 "
 
-SRC_URI:append:rzg3e-family = " \
-    file://0002-Update-find_physical_address-functions-following-MM_.patch \
-"
-
 SRCREV ?= "221c5349b88bc0ae0fb06283015b006affa8aaed"
-SRCREV:rzg3e-family = "cf1295623ab01e551be0a08ab52a70814bec425a"
+SRCREV:rzg3e-family = "bdf95b989066ea841b1ee406c9761e7b89c00421"
+SRCREV:rzg2h-family = "bdf95b989066ea841b1ee406c9761e7b89c00421"
 
 S = "${WORKDIR}/git"
 PV = "1.22.12"
