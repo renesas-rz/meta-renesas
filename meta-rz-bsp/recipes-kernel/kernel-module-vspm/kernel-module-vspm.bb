@@ -12,68 +12,11 @@ require include/rz-modules-common.inc
 PN = "kernel-module-vspm"
 PR = "r0"
 
-VSPM_DRV_URL = "git://github.com/renesas-rcar/vspm_drv.git"
-BRANCH = "rcar_gen3"
-SRCREV = "07787fc1168e7fe37c305aca151a6f756f35874f"
+VSPM_DRV_URL = "git://github.com/renesas-rz/vspm_drv"
+BRANCH = "main"
+SRCREV = "1c184a8dafb2a95df89ce6cdcb1218a99252db42"
 
 SRC_URI = "${VSPM_DRV_URL};branch=${BRANCH};protocol=https"
-
-SRC_URI:append = " \
-	file://0001-Use-kthread_complete_and_exit-instead-do_exit.patch \
-	file://0002-Fix-compilation-warning-to-avoid-build-failure.patch \
-"
-
-SRC_URI:append:rzg3e-family = " \
-	file://0001-Update-clocks-and-reset-controls-for-RZ-G3E.patch \
-	file://0002-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
-	file://0018-vspm_main-Force-runtime-suspend-resume-when-system.patch \
-	file://0019-vspm_main-Introduce-structure-vspm_device-and-move-r.patch \
-	file://0020-vspm_main-Introduce-vspm_device_ops.patch \
-	file://0021-r9a09g047-Add-FDP-special-power-on-off-configuration.patch \
-	file://0022-r9a09g047-add-VSP-special-power-on-off-procedure.patch \
-"
-
-ISU_PATCHES = " \
-	file://0001-Add-ISU-driver.patch \
-	file://0002-Add-option-ISU_CSC_RAW.patch \
-	file://0003-Add-ISU-to-VSPM.patch \
-	file://0004-Modify-Makefile.patch \
-	file://0005-remove-work-around-clock-reset-supply.patch \
-	file://0006-Support-MUTUAL-mode-for-ISU.patch \
-	file://0007-Update-and-fix-some-small-bugs-of-ISU-driver.patch \
-	file://0008-Correcting-variable-type.patch \
-	file://0009-Wrong-initialize-value-of-clip.patch \
-	file://0010-Fix-wrong-output-size-in-setting-case-rs_par-is-NULL.patch \
-	file://0011-Fix-error-cannot-detect-NOOUT-in-case-rs_par-NULL.patch \
-	file://0012-vspm_main-Update-isu-clock-enable.patch \
-	file://0013-vspm-isu-Check-addr-of-1st-plane-in-parameter-for-RP.patch \
-	file://0014-ISU-remove-csc-mode-in-struct-isu_csc_t.patch \
-	file://0015-Get-IRQ-by-using-platform_get_irq-instead-of-platfor.patch \
-	file://0016-Update-the-copyright-year-for-changed-files.patch \
-"
-
-SRC_URI:append:rzg2l-family = "${ISU_PATCHES}"
-
-SRC_URI:append:rzv2h-family = " \
-	${ISU_PATCHES} \
-	file://0017-Support-vspm-isu-driver-for-V2H.patch \
-"
-
-SRC_URI:append:rzv2n-family = " \
-	${ISU_PATCHES} \
-	file://0017-Support-vspm-isu-driver-for-V2H.patch \
-	file://0018-vspm_main-Force-runtime-suspend-resume-when-system.patch \
-	file://0019-vspm_main-Introduce-structure-vspm_device-and-move_V2N.patch \
-"
-
-# In RZ BSP for yocto v5.x, the supported kernel version are
-# v6.1 and v6.12. These patch files are for kernel v6.12.
-KERNEL_V6.12_PATCHES = " \
-    file://0017-rcar_gen3-Fix-compile-error-for-kernel-v6.12.patch \
-"
-SRC_URI:append = " \
-	${@oe.utils.conditional("PREFERRED_VERSION_linux-renesas", "6.12%", "${KERNEL_V6.12_PATCHES}" , "",d)} \
-"
 
 S = "${WORKDIR}/git"
 VSPM_DRV_DIR = "vspm-module/files/vspm"
@@ -105,28 +48,13 @@ do_install () {
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_cmn.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${KERNELSRC}/include/
+    install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${KERNELSRC}/include/
 
     # Install shared header files
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vspm_cmn.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/vsp_drv.h ${D}/${includedir}/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/fdp_drv.h ${D}/${includedir}/
-}
-
-isu_header_install () {
-    install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${KERNELSRC}/include/
     install -m 644 ${S}/${VSPM_DRV_DIR}/include/isu_drv.h ${D}/${includedir}/
-}
-
-do_install:append:rzg2l-family () {
-    isu_header_install
-}
-
-do_install:append:rzv2h-family () {
-    isu_header_install
-}
-
-do_install:append:rzv2n-family () {
-    isu_header_install
 }
 
 # Should also clean deploy/licenses directory

@@ -5,20 +5,6 @@ require mmngr_drv.inc
 PN = "kernel-module-mmngrbuf"
 PR = "r0"
 
-SRC_URI:append = " \
-	file://0001-mmngrbuf-Add-support-dmabuf_vmap-api.patch \
-	file://0002-mmngrbuf-Update-following-kernel-6.1.patch \
-"
-
-# In RZ BSP for yocto v5.x, the supported kernel version are
-# v6.1 and v6.12. These patch files are for kernel v6.12.
-KERNEL_V6.12_PATCHES = " \
-    file://0003-mmngrbuf-Update-functions-to-adapt-with-new-kernel-6.patch \
-"
-SRC_URI:append = " \
-	${@oe.utils.conditional("PREFERRED_VERSION_linux-renesas", "6.12%", "${KERNEL_V6.12_PATCHES}" , "",d)} \
-"
-
 S = "${WORKDIR}/git"
 MMNGRBUF_DRV_DIR = "mmngr_drv/mmngrbuf/mmngrbuf-module/files/mmngrbuf"
 

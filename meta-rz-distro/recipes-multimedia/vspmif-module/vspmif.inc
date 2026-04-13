@@ -5,9 +5,9 @@ LIC_FILES_CHKSUM = " \
 
 require include/rz-distro-common.inc
 
-VSPMIF_LIB_URL = "git://github.com/renesas-rcar/vspmif_lib.git"
-BRANCH = "rcar_gen3"
-SRCREV = "06fe8b1341801079f8a2b964ea95980967dcf789"
+VSPMIF_LIB_URL = "git://github.com/renesas-rz/vspmif_lib"
+BRANCH = "main"
+SRCREV = "e50531758a672f7454feb76733343afdfbabe9bc"
 
 SRC_URI = "${VSPMIF_LIB_URL};branch=${BRANCH};protocol=https"
 

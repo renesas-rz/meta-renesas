@@ -15,39 +15,11 @@ PR = "r0"
 RDEPENDS:${PN} = "kernel-module-vspm"
 
 VSPMIF_DRV_URL = " \
-    git://github.com/renesas-rcar/vspmif_drv.git"
-BRANCH = "rcar_gen3"
-SRCREV = "2fdb2838a5625e4231f1cff5d10079acc4954952"
+    git://github.com/renesas-rz/vspmif_drv"
+BRANCH = "main"
+SRCREV = "ddafe5d6f0ac0a6924da5bb3d613672cc8416dc5"
 
 SRC_URI = "${VSPMIF_DRV_URL};branch=${BRANCH};protocol=https"
-
-SRC_URI:append = " \
-	file://0001-Use-macro-task_is_running-over-reading-task_struct.patch \
-"
-
-ISU_PATCHES = " \
-	file://0001-Add-ISU-to-vspmif.patch \
-	file://0002-Remove-width-height-in-isu_dst_t.patch \
-	file://0003-Correcting-variable-type.patch \
-	file://0004-Remove-unused-memory.patch \
-	file://0005-Correction-32bit-variable.patch \
-	file://0006-Update-copyright-year-for-these-changed-files.patch \
-"
-
-SRC_URI:append:rzg2l-family = "${ISU_PATCHES}"
-
-SRC_URI:append:rzv2h-family = "${ISU_PATCHES}"
-
-SRC_URI:append:rzv2n-family = "${ISU_PATCHES}"
-
-# In RZ BSP for yocto v5.x, the supported kernel version are
-# v6.1 and v6.12. These patch files are for kernel v6.12.
-KERNEL_V6.12_PATCHES = " \
-    file://0007-rcar_gen3-Fix-compile-error-for-kernel-v6.12.patch \
-"
-SRC_URI:append = " \
-	${@oe.utils.conditional("PREFERRED_VERSION_linux-renesas", "6.12%", "${KERNEL_V6.12_PATCHES}" , "",d)} \
-"
 
 S = "${WORKDIR}/git"
 VSPMIF_DRV_DIR = "vspm_if-module/files/vspm_if"
