@@ -9,7 +9,7 @@ CLEANBROKEN = "1"
 
 SRCREV = "3aa1d75f3c2ae77f6e4d36194e3d281b899ab149"
 BRANCH = "master"
-SRC_URI = "git://git.ti.com/ti-bt/service-packs.git;branch=${BRANCH};protocol=https"
+SRC_URI = "git://git.ti.com/git/ti-bt/service-packs.git;branch=${BRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
 
