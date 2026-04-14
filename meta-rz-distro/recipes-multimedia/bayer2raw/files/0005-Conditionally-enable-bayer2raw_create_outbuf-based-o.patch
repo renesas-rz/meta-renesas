@@ -1,0 +1,92 @@
+From 721c20c7760fd590fafeb3d2e941f1be5f677ab3 Mon Sep 17 00:00:00 2001
+From: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+Date: Tue, 14 Apr 2026 10:54:09 +0700
+Subject: [PATCH] Conditionally enable bayer2raw_create_outbuf based on
+ eglext_REL.h
+
+The bayer2raw_create_outbuf function relies on symbols defined in
+eglext_REL.h. Guard its usage with a preprocessor macro that is
+defined by the Makefile during header availability checks.
+
+This ensures the function is only compiled the implement when the required EGL
+extensions are present, otherwise will always return -1;
+
+Signed-off-by: Huynh Thanh Hung <hung.huynh.wz@renesas.com>
+---
+ Makefile    | 12 +++++++++++-
+ bayer2raw.c |  4 ++++
+ bayer2raw.h |  2 ++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 5038433..3c2f50b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -19,7 +19,8 @@ RM ?= rm -rfv
+ LINKFLAGS ?= -lEGL -lGLESv2
+ LDLIBS ?=
+ 
+-.PHONY: $(TARGET)
++EGLEXT_REL := EGL/eglext_REL.h
++
+ .PHONY: clean
+ 
+ # Path for .c , .h and .o Files
+@@ -28,9 +29,18 @@ OBJ_PATH ?= ./
+ OUT_PATH ?= ./
+ INC_PATH ?= -I ./
+ 
++define check_header
++	$(if $(filter 0, $(shell echo "#include <$(1)>" | $(CC) -x c -M - 2>/dev/null | grep -c "$(1)")),\
++		no, yes)
++endef
++
++ifeq ($(strip $(call check_header,$(EGLEXT_REL))), yes)
++CFLAGS += -DEGLEXT_REL=1
++endif
+ # Executable Name
+ TARGET := $(OUT_PATH)/libbayer2raw.so
+ 
++
+ # Files to compile
+ # ./src/main.c ./src/dlist.c
+ SOURCES_FILES := $(wildcard $(SRC_PATH)*.c)
+diff --git a/bayer2raw.c b/bayer2raw.c
+index 5e3a83c..bc7d461 100644
+--- a/bayer2raw.c
++++ b/bayer2raw.c
+@@ -269,6 +269,7 @@ init_bayer_rgb_conversion_extern_output(struct context_bayer2rgb *ctx)
+ int bayer2raw_create_outbuf(struct context_bayer2rgb *ctx,
+                             unsigned long address)
+ {
++#if defined(EGLEXT_REL) && EGLEXT_REL
+   struct extern_buffer buffer;
+   EGLNativePixmapTypeREL  sNativePixmap;
+   NativePixmapType eglPixmap;
+@@ -292,6 +293,9 @@ int bayer2raw_create_outbuf(struct context_bayer2rgb *ctx,
+   }
+ 
+   return import_extern_outbuf(ctx, &buffer);
++#else /* Not support */
++  return -1;
++#endif
+ }
+ 
+ int bayer2raw_create_outbuf_dmabuf(struct context_bayer2rgb *ctx, int dma_fd)
+diff --git a/bayer2raw.h b/bayer2raw.h
+index 2f881b2..5a4225b 100644
+--- a/bayer2raw.h
++++ b/bayer2raw.h
+@@ -3,7 +3,9 @@
+ 
+ #include <EGL/egl.h>
+ #include <EGL/eglext.h>
++#if defined(EGLEXT_REL) && EGLEXT_REL
+ #include <EGL/eglext_REL.h>
++#endif
+ #include <EGL/eglplatform.h>
+ #include <GLES2/gl2.h>
+ #include <GLES2/gl2ext.h>
+-- 
+2.25.1
+
