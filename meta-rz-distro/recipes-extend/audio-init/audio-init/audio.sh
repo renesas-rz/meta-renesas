@@ -1,16 +1,18 @@
 #!/bin/sh
 
 if ! grep -qE '^[[:space:]]*[0-9]+' /proc/asound/cards 2>/dev/null; then
-	echo "No soundcard detected."
-	return 0
+  echo "No soundcard detected."
+  return 0
 fi
 
 hostname=$(cat /etc/hostname 2>/dev/null)
+codec_name="da7213"
 
 set_common_g3e_g3s_v2h_v2n() {
+  if aplay -l 2>/dev/null | grep -i "$codec_name" >/dev/null || \
+     arecord -l 2>/dev/null | grep -i "$codec_name" >/dev/null; then
     # SSI-DA7212
     # These commands are required when Playback/Capture
-
     amixer cset name='Aux Switch' on
     amixer cset name='Mixin Left Aux Left Switch' on
     amixer cset name='Mixin Right Aux Right Switch' on
@@ -32,6 +34,11 @@ set_common_g3e_g3s_v2h_v2n() {
     amixer sset 'Mic 2' 80% on
     amixer sset 'Lineout' 80% on
     amixer sset 'Mixin PGA' 40% on
+    return 0
+  else
+    echo "Codec $codec_name not found. Skip amixer settings."
+    return 1
+  fi
 }
 
 case "$hostname" in
