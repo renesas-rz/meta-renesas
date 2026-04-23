@@ -13,7 +13,7 @@ KERNEL_URL ?= "git://github.com/renesas-rz/rz_linux-cip.git"
 
 KERNEL_BRANCH ?= "rz-6.12-cip14"
 KERNEL_REV ?= "ecafe317091236136b9c71840cd2fb8f4538d9cc"
-KERNEL_BRANCH:rzg3l-family = "rzg3l-6.12-cip8"
+KERNEL_BRANCH:rzg3l-family = "rz-6.12-cip8"
 KERNEL_REV:rzg3l-family = "5d171f88f035ad2066008e9b8c41c6b45076e153"
 
 SRC_URI:append = "${@bb.utils.contains('DISTRO_FEATURES','docker', ' file://docker.cfg', '', d)}"
