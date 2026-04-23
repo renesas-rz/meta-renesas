@@ -5,6 +5,7 @@ LIC_FILES_CHKSUM ?= "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0e
 
 PV:rzg2l-family = "1.08+git${SRCPV}"
 PV:rzg3s-family = "0127"
+PV:rzg3l-family = "1.0"
 PV ?= "0.90"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -36,6 +37,8 @@ BRANCH:rzg2h-family ?= "master"
 SRC_URI:rzg2h-family = "${FLASH_WRITER_URL};protocol=https;branch=${BRANCH}"
 SRCREV:rzg2h-family = "ceebddab90e5ae9b100536114553af818261c660"
 
+SRC_URI:smarc-rzg3l = "file://Flash_Writer_SCIF_RZG3L_SMARC_LPDDR4.mot"
+
 inherit deploy
 
 S:rzg2l-family = "${WORKDIR}/git"
@@ -45,6 +48,7 @@ S:rzv2h-family = "${WORKDIR}"
 S:rzv2n-family = "${WORKDIR}"
 S:rzg3s-family = "${WORKDIR}/${BPN}"
 S:rzt2h-family = "${WORKDIR}"
+S:rzg3l-family = "${WORKDIR}"
 PMIC_BUILD_DIR = "${S}/build_pmic"
 
 do_compile:rzg2l-family() {
@@ -112,6 +116,11 @@ do_deploy:append:rzt2h-family() {
 do_deploy:append:rzg2h-family() {
         install -d ${DEPLOYDIR}
         install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}
+}
+
+do_deploy:append:rzg3l-family() {
+	install -d ${DEPLOYDIR}
+	install -m 755 ${S}/Flash_Writer_SCIF_RZG3L_SMARC_LPDDR4.mot ${DEPLOYDIR}
 }
 
 PARALLEL_MAKE = "-j 1"
