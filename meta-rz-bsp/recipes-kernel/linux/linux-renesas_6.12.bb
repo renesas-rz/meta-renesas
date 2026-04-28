@@ -10,5 +10,5 @@ KCONFIG_MODE ?= "alldefconfig"
 KERNEL_URL ?= "git://github.com/renesas-rz/rz_linux-cip.git"
 
 KERNEL_BRANCH ?= "rz-6.12-cip14"
-KERNEL_REV ?= "4d7c5823a574a71329ea6fdea973cb1f242ad4f1"
+KERNEL_REV ?= "01278ce5ac02af3d5529f692e458e9d39d8d67d4"
 SRC_URI:append = "${@bb.utils.contains('DISTRO_FEATURES','docker', ' file://docker.cfg', '', d)}"
