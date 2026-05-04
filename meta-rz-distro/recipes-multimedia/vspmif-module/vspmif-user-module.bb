@@ -17,26 +17,14 @@ includedir = "${RENESAS_DATADIR}/include"
 WS_aarch64 = ""
 WS_virtclass-multilib-lib32 = "32"
 
-vspm32_compile_export() {
+ISU_FAMILIES = "rzg2l-family rzv2h-family rzv2n-family"
+HAS_ISU = "${@bb.utils.contains_any('ISU_FAMILIES', d.getVar('SOC_FAMILY').split(':'), '1', '0', d)}"
+
+do_compile() {
     if [ X${WS} = "X32" ]; then
         export VSPM32="1"
     fi
-    export VSPM_ISU="1"
-}
-
-do_compile:prepend:rzg2l-family() {
-    vspm32_compile_export
-}
-
-do_compile:prepend:rzv2h-family() {
-    vspm32_compile_export
-}
-
-do_compile:prepend:rzv2n-family() {
-    vspm32_compile_export
-}
-
-do_compile() {
+    export VSPM_ISU=${HAS_ISU}
     export VSPM_LEGACY_IF="1"
 
     # Build shared library
