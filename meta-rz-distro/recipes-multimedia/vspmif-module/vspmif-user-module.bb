@@ -2,7 +2,7 @@ DESCRIPTION = "VSP manager interface user module for the Renesas MPUs"
 
 require vspmif.inc
 
-DEPENDS = "kernel-module-vspmif mmngr-user-module"
+DEPENDS = "kernel-module-vspm kernel-module-vspmif mmngr-user-module"
 PN = "vspmif-user-module"
 PR = "r0"
 RDEPENDS:${PN} = "kernel-module-vspmif mmngr-user-module"
