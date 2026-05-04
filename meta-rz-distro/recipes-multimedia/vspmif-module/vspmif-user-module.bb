@@ -17,7 +17,7 @@ includedir = "${RENESAS_DATADIR}/include"
 WS_aarch64 = ""
 WS_virtclass-multilib-lib32 = "32"
 
-ISU_FAMILIES = "rzg2l-family rzv2h-family rzv2n-family"
+ISU_FAMILIES = "rzg2l-family rzv2h-family rzv2n-family rzg3l-family"
 HAS_ISU = "${@bb.utils.contains_any('ISU_FAMILIES', d.getVar('SOC_FAMILY').split(':'), '1', '0', d)}"
 
 do_compile() {

@@ -13,6 +13,7 @@ MMNGR_CFG:rzg2l-family ?= "MMNGR_RZG2L"
 MMNGR_CFG:rzv2h-family ?= "MMNGR_RZV2H"
 MMNGR_CFG:rzv2n-family ?= "MMNGR_RZV2N"
 MMNGR_CFG:rzg2h-family ?= "MMNGR_RZG2H"
+MMNGR_CFG:rzg3l-family ?= "MMNGR_RZG3L"
 
 includedir = "/usr/local/include"
 SSTATE_ALLOW_OVERLAP_FILES += "${STAGING_INCDIR}"
