@@ -1,6 +1,6 @@
 SUMMARY = "GStreamer VSP filter plugin"
 SECTION = "multimedia"
-LICENSE = "GPLv2+"
+LICENSE = "LGPL-2.1-or-later"
 LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=4fbd65380cdd255951079008b364516c"
 
 COMPATIBLE_MACHINE = "(hihope-rzg2h|hihope-rzg2n)"
