@@ -1,5 +1,5 @@
 DESCRIPTION = "Bayer2Raw conversion Library"
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://GPL-COPYING;md5=9450224a11928f85794c948d3539a882"
 
 SRC_URI = " \
