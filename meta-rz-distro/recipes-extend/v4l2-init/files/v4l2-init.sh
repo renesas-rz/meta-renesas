@@ -1,6 +1,14 @@
 #!/bin/bash
 set -uo pipefail
 
+model=$(cat /sys/devices/soc0/soc_id)
+if [[ "$model" = *r9a07g04* ]] || [[ "$model" = *r9a07g054* ]]; then
+# List of valid resolutions
+valid_resolutions=("2592x1944" "1920x1080" "1280x960")
+elif [[ "$model" = *r9a09g057* ]] || [[ "$model" = *r9a09g047* ]] || [[ "$model" = *r9a08g046* ]]; then
+valid_resolutions=("1920x1080" "1280x960")
+fi
+
 DEFAULT_RES="1280x960"
 PIXFMT="UYVY8_1X16"
 FIELD="none"
