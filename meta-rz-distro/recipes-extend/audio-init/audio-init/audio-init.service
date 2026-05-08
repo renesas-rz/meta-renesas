@@ -1,0 +1,11 @@
+[Unit]
+Description=Audio initializing setting
+After=sound.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/audio.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
