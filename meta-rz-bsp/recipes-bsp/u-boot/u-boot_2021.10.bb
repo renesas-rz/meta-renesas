@@ -10,7 +10,7 @@ UBOOT_BRANCH:rzv2h-evk = "v2021.10/rzv2h"
 UBOOT_REV:rzv2h-evk = "31d53b8f6fdc1d9055a8c226643f4ed61570e017"
 
 UBOOT_BRANCH:rzg2h-family = "v2021.10/rz"
-UBOOT_REV:rzg2h-family = "e2e7e6716ed845adf420f3bd8d955ae2be8a78b3"
+UBOOT_REV:rzg2h-family = "9bf02ad38dd332f9dd349d9b0fe8fa47ba7b8d5c"
 
 PV = "2021.10+git${SRCPV}"
 
