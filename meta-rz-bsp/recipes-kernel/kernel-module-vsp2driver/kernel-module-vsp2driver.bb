@@ -31,6 +31,7 @@ SRC_URI:append = " \
     file://0007-vsp2driver-Rename-subdev-init_cfg-operation-to-init_.patch \
     file://0008-vsp2driver-Rename-subdev-state-alloc-free.patch \
     file://0009-vsp2driver-Switch-buffer-prepare-fence-wait-to-dma_r.patch \
+    file://0010-vsp2driver-Implement-.link_validate-for-video-device.patch \
 "
 
 # Build VSP2 driver kernel module without suffix

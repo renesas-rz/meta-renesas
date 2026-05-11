@@ -1,0 +1,72 @@
+From 5b02adac8d9444504a74de3c503d7eba0cdeb90c Mon Sep 17 00:00:00 2001
+From: Son Trinh <son.trinh.fz@renesas.com>
+Date: Mon, 11 May 2026 18:05:42 +0700
+Subject: [PATCH] vsp2driver: Implement .link_validate() for video devices
+
+The v4l2_subdev_link_validate() helper prints a warning when the
+.link_validate() operation is missing for video devices connected
+to subdevices. Implement the operation to silence the warning.
+
+Ideally, validation of the link between the video device and the
+subdevice should be performed in this callback. However, enforcing
+such validation would break existing userspace applications that
+start streaming without configuring formats on all video devices
+first.
+
+While this mode of operation may not be considered
+valid by the V4L2 API specification (interpretation differ), it is
+nonetheless supported by the vsp2 driver at the moment and possibly
+other userspace applications. Removing it would be a regression.
+
+This implementation is based on commit
+a3d44f011c6b7a87c9ad0d5be2f5fa092fa419bf, adapted for the vsp2 driver.
+
+Signed-off-by: Son Trinh <son.trinh.fz@renesas.com>
+---
+ vsp2driver/vsp2_video.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/vsp2driver/vsp2_video.c b/vsp2driver/vsp2_video.c
+index ba920a0..c8b1401 100644
+--- a/vsp2driver/vsp2_video.c
++++ b/vsp2driver/vsp2_video.c
+@@ -1382,6 +1382,28 @@ static const struct v4l2_file_operations vsp2_video_fops = {
+ 	.mmap = vb2_fop_mmap,
+ };
+ 
++/* -----------------------------------------------------------------------------
++ * Media entity operations
++ */
++
++static int vsp2_video_link_validate(struct media_link *link)
++{
++	/*
++	 * Ideally, link validation should be implemented here instead of
++	 * calling vsp2_video_verify_format() in vsp2_video_streamon()
++	 * manually. That would however break userspace that start one video
++	 * device before configures formats on other video devices in the
++	 * pipeline. This operation is just a no-op to silence the warnings
++	 * from v4l2_subdev_link_validate().
++	 */
++	return 0;
++}
++
++static const struct media_entity_operations vsp2_video_media_ops = {
++	.link_validate = vsp2_video_link_validate,
++};
++
++
+ /* -----------------------------------------------------------------------------
+  * Initialization and Cleanup
+  */
+@@ -1435,6 +1457,7 @@ struct vsp2_video *vsp2_video_create(struct vsp2_device *vsp2,
+ 
+ 	/* ... and the video node... */
+ 	video->video.v4l2_dev = &video->vsp2->v4l2_dev;
++	video->video.entity.ops = &vsp2_video_media_ops;
+ 	video->video.fops = &vsp2_video_fops;
+ 	snprintf(video->video.name, sizeof(video->video.name), "%s %s",
+ 		 rwpf->entity.subdev.name, direction);
+-- 
+2.25.1
+
