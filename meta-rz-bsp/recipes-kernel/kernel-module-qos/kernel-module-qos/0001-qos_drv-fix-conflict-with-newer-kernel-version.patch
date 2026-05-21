@@ -1,0 +1,58 @@
+From 2ecf10d29d1ffc28762f65a6ec06da89f86ab8c4 Mon Sep 17 00:00:00 2001
+From: Hien Huynh <hien.huynh.px@renesas.com>
+Date: Wed, 20 May 2026 16:54:20 +0700
+Subject: [PATCH] qos_drv: fix conflict with newer kernel version
+
+Fix conflict with newer kernel version:
+- Add missing header for of_match_table.
+- Update to use remove_new instead of remove.
+- Add missing MODULE_TABLE.
+
+Signed-off-by: Hien Huynh <hien.huynh.px@renesas.com>
+---
+ qos-module/files/qos/drv/qos_drv.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/qos-module/files/qos/drv/qos_drv.c b/qos-module/files/qos/drv/qos_drv.c
+index d18ffab..23f1d43 100644
+--- a/qos-module/files/qos/drv/qos_drv.c
++++ b/qos-module/files/qos/drv/qos_drv.c
+@@ -64,6 +64,7 @@
+ #include <linux/errno.h>
+ #include <linux/fs.h>
+ #include <linux/miscdevice.h>
++#include <linux/of.h>
+ #include <linux/of_device.h>
+ #include <linux/platform_device.h>
+ #include <linux/ioctl.h>
+@@ -178,16 +179,16 @@ static int qos_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int qos_remove(struct platform_device *pdev)
++static void qos_remove(struct platform_device *pdev)
+ {
+ 	g_qos_pdev = NULL;
+-	return 0;
+ }
+ 
+ static const struct of_device_id qos_of_match[] = {
+ 	{ .compatible = "renesas,qos" },
+ 	{ },
+ };
++MODULE_DEVICE_TABLE(of, qos_of_match);
+ 
+ static struct platform_driver qos_driver = {
+ 	.driver = {
+@@ -196,7 +197,7 @@ static struct platform_driver qos_driver = {
+ 		.pm	= &qos_pm_ops,
+ 	},
+ 	.probe = qos_probe,
+-	.remove = qos_remove,
++	.remove_new = qos_remove,
+ };
+ 
+ static int __init qos_init(void)
+-- 
+2.34.1
+
