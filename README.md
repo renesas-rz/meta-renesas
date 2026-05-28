@@ -157,7 +157,7 @@ Example: MACHINE=smarc-rzg2l bitbake core-image-weston
 |   RZ/G3S    |  rzg3s   | smarc-rzg3s  |minimal         |
 |   RZ/V2H    |  rzv2h   | rzv2h-evk    |minimal, weston |
 |   RZ/G3E    |  rzg3e   | smarc-rzg3e  |minimal, weston |
-|   RZ/T2H    |  rzt2h   | rzt2h-dev    |minimal         |
+|   RZ/T2H    |  rzt2h   | rzt2h-evk    |minimal         |
 |   RZ/N2H    |  rzt2h   | rzn2h-evk    |minimal         |
 |   RZ/V2N    |  rzv2n   | rzv2n-evk    |minimal, weston |
 
