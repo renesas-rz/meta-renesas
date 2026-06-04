@@ -142,7 +142,7 @@ choice
 	default "kas/machines/rzt2h-dev.yml"
 
 	config MACHINE_RZN2H-DEV
-	bool "rzn2h-dev"
+	bool "rzn2h-evk"
 	select FAMILY_T2H
 	help
 		Select the Renesas RZ/N2H reference platform
@@ -150,7 +150,7 @@ choice
 	config KAS_INCLUDE_MACHINE_RZN2H-DEV
 	string
 	depends on MACHINE_RZN2H-DEV
-	default "kas/machines/rzn2h-dev.yml"
+	default "kas/machines/rzn2h-evk.yml"
 
 endchoice
 endmenu
