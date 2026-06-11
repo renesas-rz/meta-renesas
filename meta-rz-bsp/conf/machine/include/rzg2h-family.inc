@@ -8,7 +8,6 @@ MACHINE_FEATURES = "opengles opencl usb3"
 
 # Linux kernel configuration
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
-PREFERRED_VERSION_linux-renesas ?= "6.12%"
 KERNEL_IMAGETYPE ?= "Image"
 
 # U-boot configuration

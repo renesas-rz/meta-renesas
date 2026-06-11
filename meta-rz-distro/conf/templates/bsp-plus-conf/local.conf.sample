@@ -302,9 +302,11 @@ CONF_VERSION = "2"
 # Un-comment a following line to enable the Docker Engine.
 # DISTRO_FEATURES:append = " virtualization docker"
 
-# Un-comment a following line to select RTLinux.
+# Un-comment following lines to select RTLinux.
 # PREFERRED_PROVIDER_virtual/kernel = "linux-renesas-rt"
+# PREFERRED_VERSION_linux-renesas-rt = "6.12%"
 
+# Select the linux version: v6.12
 PREFERRED_VERSION_linux-renesas = "6.12%"
 
 # Select the linux-libc-headers version: v6.12
