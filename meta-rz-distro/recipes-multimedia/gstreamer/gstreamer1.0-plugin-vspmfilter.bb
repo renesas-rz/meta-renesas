@@ -17,7 +17,7 @@ SRC_URI = " \
     file://0001-Update-correct-base-number-of-VTOP-ioctl.patch \
 "
 
-SRCREV ?= "221c5349b88bc0ae0fb06283015b006affa8aaed"
+SRCREV ?= "f8966fd8d5e43806626e983499f83e381e9d9056"
 SRCREV:rzg3e-family = "bdf95b989066ea841b1ee406c9761e7b89c00421"
 SRCREV:rzg2h-family = "bdf95b989066ea841b1ee406c9761e7b89c00421"
 
