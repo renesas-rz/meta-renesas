@@ -5,7 +5,7 @@ model=$(cat /sys/devices/soc0/soc_id)
 if [[ "$model" = *r9a07g04* ]] || [[ "$model" = *r9a07g054* ]]; then
 # List of valid resolutions
 valid_resolutions=("2592x1944" "1920x1080" "1280x960")
-elif [[ "$model" = *r9a09g057* ]] || [[ "$model" = *r9a09g047* ]] || [[ "$model" = *r9a08g046* ]]; then
+elif [[ "$model" = *r9a09g057* ]] || [[ "$model" = *r9a09g047* ]]; then
 valid_resolutions=("1920x1080" "1280x960")
 fi
 
@@ -36,7 +36,7 @@ CAMERA_BACKEND=$(detect_camera_backend)
 # List of valid resolutions
 if [[ "$model" = *r9a07g04* ]] || [[ "$model" = *r9a07g054* ]] || [[ "$model" = *r8a774* ]]; then
 valid_resolutions=("2592x1944" "1920x1080" "1280x960")
-elif [[ "$model" = *r9a09g057* ]] || [[ "$model" = *r9a09g047* ]] || [[ "$model" = *r9a09g056* ]]; then
+elif [[ "$model" = *r9a09g057* ]] || [[ "$model" = *r9a09g047* ]] || [[ "$model" = *r9a09g056* ]] || [[ "$model" = *r9a08g046* ]]; then
 valid_resolutions=("1920x1080" "1280x960")
 fi
 
