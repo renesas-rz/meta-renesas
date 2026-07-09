@@ -1,7 +1,7 @@
 require conf/machine/include/soc-family.inc
 SOC_FAMILY = "rzg3e-family:mali-family"
 
-MACHINE_FEATURES = "opengles opencl mali-g52"
+MACHINE_FEATURES = "opengles opencl mali-g52 hwh264dec hwh264enc hwh265dec hwh265enc"
 
 # Linux kernel configuration
 PREFERRED_PROVIDER_virtual/kernel ?= "linux-renesas"
