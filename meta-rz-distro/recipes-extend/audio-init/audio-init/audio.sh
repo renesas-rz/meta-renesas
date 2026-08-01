@@ -2,15 +2,21 @@
 
 if ! grep -qE '^[[:space:]]*[0-9]+' /proc/asound/cards 2>/dev/null; then
   echo "No soundcard detected."
-  return 0
+  exit 0
 fi
 
 hostname=$(cat /etc/hostname 2>/dev/null)
-codec_name="da7213"
+
+is_codec_present() {
+  if aplay -l 2>/dev/null | grep -iq "$1" || \
+     arecord -l 2>/dev/null | grep -iq "$1"; then
+       return 0
+  fi
+  echo "Codec $1 not enabled on $hostname. Skip codec settings."
+  return 1
+}
 
 set_common_g3e_g3s_v2h_v2n() {
-  if aplay -l 2>/dev/null | grep -i "$codec_name" >/dev/null || \
-     arecord -l 2>/dev/null | grep -i "$codec_name" >/dev/null; then
     # SSI-DA7212
     # These commands are required when Playback/Capture
     amixer cset name='Aux Switch' on
@@ -34,30 +40,34 @@ set_common_g3e_g3s_v2h_v2n() {
     amixer sset 'Mic 2' 80% on
     amixer sset 'Lineout' 80% on
     amixer sset 'Mixin PGA' 40% on
-    return 0
-  else
-    echo "Codec $codec_name not found. Skip amixer settings."
-    return 1
-  fi
 }
 
 case "$hostname" in
   smarc-rzg2ul | smarc-rzg2l | smarc-rzg2lc | smarc-rzv2l)
-    amixer cset name='Left Input Mixer L2 Switch' on
-    amixer cset name='Right Input Mixer R2 Switch' on
-    amixer cset name='Headphone Playback Volume' 100
-    amixer cset name='PCM Volume' 100%
-    amixer cset name='Input PGA Volume' 25
+    codec_name="wm8978"
+    if is_codec_present "$codec_name"; then
+      amixer cset name='Left Input Mixer L2 Switch' on
+      amixer cset name='Right Input Mixer R2 Switch' on
+      amixer cset name='Headphone Playback Volume' 100
+      amixer cset name='PCM Volume' 100%
+      amixer cset name='Input PGA Volume' 25
+    fi
     ;;
 
   smarc-rzg3s | smarc-rzg3l)
-    set_common_g3e_g3s_v2h_v2n
-    amixer sset 'ADC' 100%
-    amixer sset 'ADC HPF' off
+    codec_name="da7213"
+    if is_codec_present "$codec_name"; then
+      set_common_g3e_g3s_v2h_v2n
+      amixer sset 'ADC' 100%
+      amixer sset 'ADC HPF' off
+    fi
     ;;
 
   smarc-rzg3e | rzv2h-evk | rzv2n-evk)
-    set_common_g3e_g3s_v2h_v2n
+    codec_name="da7213"
+    if is_codec_present "$codec_name"; then
+      set_common_g3e_g3s_v2h_v2n
+    fi
     amixer sset 'DVC In',0 10%
     amixer sset 'DVC Out',0 20%
     ;;
