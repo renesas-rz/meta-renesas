@@ -230,7 +230,7 @@ For command-line usage and kas environment variables, please also refer to the u
 
 Assume $KAS_WORK_DIR is the path of the kas working directory (defaults to the current working directory if not set).
 
-### How to buid with kas command
+### How to build with kas command
 
 **Step 1: Clone meta-renesas in KAS_WORK_DIR**
 
@@ -258,7 +258,7 @@ To specify a download directory, you can use this command instead:
     $ DL_DIR=<download-directory-path> kas build meta-renesas/kas/base.yml:meta-renesas/kas/machines/smarc-rzg2l.yml:meta-renesas/kas/images/core-image-weston.yml
 ```
 
-### How to buid with kas-container command
+### How to build with kas-container command
 
 This method uses a containerized environment for the build.
 
@@ -280,7 +280,7 @@ This method uses a containerized environment for the build.
 Note: Some devices are supported in many BSP version. For example, RZ/G2L board are supported in both VLP v4 and BSP Plus, but with different
 kernel version. Please select the proper kernel version with yml files in kas/misc folder!
 
-### How to buid with kas menu
+### How to build with kas menu
 
 The kas menu command allows for interactive configuration, typically based on _Kconfig_ files if provided by the kas setup.
 
@@ -302,7 +302,7 @@ The kas menu command targets a _Kconfig_ file in the folder _meta-renesas_.
 ```
 
 When the menu appears, continue to select the expected configuration(machine, image, docker option...).
-Then push "Save & Build" button to save the current configuration and build the image. The defaut build folder is
+Then push "Save & Build" button to save the current configuration and build the image. The default build folder is
 *${KAS_WORK_DIR}/build*.
 
 With kas menu, you also can use it to change the configuration when building with kas or kas container.
