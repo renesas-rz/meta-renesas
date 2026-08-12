@@ -8,7 +8,7 @@ PV = "2.10+git${SRCPV}"
 S = "${WORKDIR}/git"
 
 TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=https"
-TFA_REV ?= "48a19531cb4be030f97716b180c1ad45a2f27e2d"
+TFA_REV ?= "181ce7f954bdb34cf913a22744074faed5a0f8df"
 TFA_REV:rzt2h-family = "e94828433edd49f9cddf06a6bf45a685b8f84343"
 TFA_REV:rzg3l-family = "c06209f12ff5d3a94e674a7f46fd01ec76356928"
 
