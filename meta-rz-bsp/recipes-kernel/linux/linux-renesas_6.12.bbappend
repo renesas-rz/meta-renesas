@@ -40,7 +40,13 @@ addtask do_download_firmware after do_configure before do_compile
 
 SRC_URI:append:rzg2h-family = " \
 	${@oe.utils.ifelse("${ECC_FULL}" == "1"," \
-	file://0001-usb-add-dma-mempool-for-EHCI-and-OHCI.patch \
-	file://0002-arm64-dts-renesas-add-mempool-for-EHCI-and-OHCI-devi.patch \
+	file://v6.12/usb/0001-usb-add-dma-mempool-for-EHCI-and-OHCI.patch \
+	file://v6.12/usb/0002-arm64-dts-renesas-add-mempool-for-EHCI-and-OHCI-devi.patch \
 	", "")} \
+"
+
+# These patches are for reference only. They are preliminary.
+SRC_URI:append = " \
+	file://v6.12/display/0001-drm-bridge-adv7511-Clear-HPD-IRQ-before-powering-on-.patch \
+	file://v6.12/display/0002-drm-bridge-ite-it6263-Support-S2R-ITE-it6263.patch \
 "

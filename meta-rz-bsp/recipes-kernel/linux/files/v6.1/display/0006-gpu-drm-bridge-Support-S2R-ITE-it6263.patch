@@ -1,7 +1,7 @@
-From 85e26992512b19919e6f3660494b00181a4ce387 Mon Sep 17 00:00:00 2001
+From 8b38a895e681c020b48969fc621290501001d5b5 Mon Sep 17 00:00:00 2001
 From: Nghia Vo <nghia.vo.zn@renesas.com>
 Date: Tue, 20 May 2025 19:23:55 +0700
-Subject: [PATCH 5/5] gpu: drm: bridge: Support S2R ITE it6263
+Subject: [PATCH 6/7] gpu: drm: bridge: Support S2R ITE it6263
 
 Adds PM suspend/resume callbacks.
 
@@ -11,7 +11,7 @@ Signed-off-by: Nghia Vo <nghia.vo.zn@renesas.com>
  1 file changed, 53 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/gpu/drm/bridge/ite-it6263.c b/drivers/gpu/drm/bridge/ite-it6263.c
-index 216e7665f996..84f3e43e3bf1 100644
+index 216e7665f9965..84f3e43e3bf1f 100644
 --- a/drivers/gpu/drm/bridge/ite-it6263.c
 +++ b/drivers/gpu/drm/bridge/ite-it6263.c
 @@ -622,6 +622,38 @@ static inline u8 it6263_out_map(struct device_node *np)

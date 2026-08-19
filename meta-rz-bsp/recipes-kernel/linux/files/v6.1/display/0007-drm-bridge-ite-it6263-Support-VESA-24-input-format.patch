@@ -1,0 +1,236 @@
+From 87321cfdf540ea005069dab3b35fb3c0a59e7d3d Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 13 Feb 2026 16:30:47 +0700
+Subject: [PATCH 7/7] drm/bridge: ite-it6263: Support VESA-24 input format
+
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/gpu/drm/bridge/ite-it6263.c | 123 +++++++++++++++++++++++++---
+ 1 file changed, 113 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/bridge/ite-it6263.c b/drivers/gpu/drm/bridge/ite-it6263.c
+index 84f3e43e3bf1f..189cb66a267bc 100644
+--- a/drivers/gpu/drm/bridge/ite-it6263.c
++++ b/drivers/gpu/drm/bridge/ite-it6263.c
+@@ -13,6 +13,7 @@
+ #include <drm/drm_edid.h>
+ #include <drm/drm_probe_helper.h>
+ #include <drm/drm_print.h>
++#include <drm/drm_of.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/i2c.h>
+ #include <linux/media-bus-format.h>
+@@ -112,6 +113,11 @@
+ #define HDMI_REG_INPUT_MODE		0x70
+ #define IN_RGB				0x00
+ 
++/* LVDS system configuration registers */
++/* 0x0b */
++#define LVDS_REG_0B			0x0b
++#define REG_LVDS_IN_SWAP		BIT(1)
++
+ /* HDMI general control registers */
+ #define HDMI_REG_HDMI_MODE		0xC0
+ #define TX_HDMI_MODE			1
+@@ -150,15 +156,18 @@ enum {
+ };
+ 
+ struct it6263 {
++	struct device *dev;
+ 	struct i2c_client *hdmi_i2c;
+ 	struct i2c_client *lvds_i2c;
+ 	struct regmap *hdmi_regmap;
+ 	struct regmap *lvds_regmap;
+ 	struct drm_bridge bridge;
++	struct drm_bridge *next_bridge;
+ 	struct drm_connector connector;
+ 	struct gpio_desc *reset_gpio;
+-	u8 out_map;
+ 	bool dual_link;
++	int lvds_data_mapping;
++	bool lvds_link12_swap;
+ };
+ 
+ struct it6263_minimode {
+@@ -236,12 +245,30 @@ static void it6263_lvds_reset(struct it6263 *it6263)
+ 	usleep_range(1000, 2000);
+ }
+ 
++static inline bool it6263_is_input_bus_fmt_valid(int input_fmt)
++{
++	switch (input_fmt) {
++	case MEDIA_BUS_FMT_RGB888_1X7X4_JEIDA:
++	case MEDIA_BUS_FMT_RGB888_1X7X4_SPWG:
++		return true;
++	}
++
++	return false;
++}
++
+ static void it6263_lvds_set_interface(struct it6263 *it6263)
+ {
++	u8 fmt;
++
+ 	/* color depth */
+ 	lvds_update_bits(it6263, LVDS_REG_MODE, LVDS_COLOR_DEPTH, LVDS_COLOR_DEPTH_24);
+ 
+-	lvds_update_bits(it6263, LVDS_REG_MODE, LVDS_OUT_MAP, it6263->out_map);
++	if (it6263->lvds_data_mapping == MEDIA_BUS_FMT_RGB888_1X7X4_SPWG)
++		fmt = ITE_LVDS_VESA;
++	else
++		fmt = ITE_LVDS_JEIDA;
++
++	lvds_update_bits(it6263, LVDS_REG_MODE, LVDS_OUT_MAP, fmt);
+ 
+ 	if (it6263->dual_link) {
+ 		lvds_update_bits(it6263, LVDS_REG_MODE, DMODE, SPLIT_MODE);
+@@ -265,11 +292,18 @@ static void it6263_lvds_set_afe(struct it6263 *it6263)
+ 	lvds_update_bits(it6263, LVDS_REG_PLL, 0x07, 0);
+ }
+ 
++static inline void it6263_lvds_sys_cfg(struct it6263 *it6263)
++{
++	regmap_write_bits(it6263->lvds_regmap, LVDS_REG_0B, REG_LVDS_IN_SWAP,
++			  it6263->lvds_link12_swap ? REG_LVDS_IN_SWAP : 0);
++}
++
+ static void it6263_lvds_config(struct it6263 *it6263)
+ {
+ 	it6263_lvds_reset(it6263);
+ 	it6263_lvds_set_interface(it6263);
+ 	it6263_lvds_set_afe(it6263);
++	it6263_lvds_sys_cfg(it6263);
+ }
+ 
+ static void it6263_hdmi_config(struct it6263 *it6263)
+@@ -559,6 +593,32 @@ static struct edid *it6263_bridge_get_edid(struct drm_bridge *bridge,
+ 	return drm_do_get_edid(connector, it6263_read_edid, it6263);
+ }
+ 
++static u32 *
++it6263_bridge_atomic_get_input_bus_fmts(struct drm_bridge *bridge,
++					struct drm_bridge_state *bridge_state,
++					struct drm_crtc_state *crtc_state,
++					struct drm_connector_state *conn_state,
++					u32 output_fmt,
++					unsigned int *num_input_fmts)
++{
++	struct it6263 *it6263 = bridge_to_it6263(bridge);
++	u32 *input_fmts;
++
++	*num_input_fmts = 0;
++
++	if (!it6263_is_input_bus_fmt_valid(it6263->lvds_data_mapping))
++		return NULL;
++
++	input_fmts = kmalloc(sizeof(*input_fmts), GFP_KERNEL);
++	if (!input_fmts)
++		return NULL;
++
++	input_fmts[0] = it6263->lvds_data_mapping;
++	*num_input_fmts = 1;
++
++	return input_fmts;
++}
++
+ static enum drm_connector_status it6263_bridge_detect(struct drm_bridge *bridge)
+ {
+ 	struct it6263 *it6263 = bridge_to_it6263(bridge);
+@@ -570,12 +630,16 @@ static enum drm_connector_status it6263_bridge_detect(struct drm_bridge *bridge)
+ }
+ 
+ static const struct drm_bridge_funcs it6263_bridge_funcs = {
++	.atomic_duplicate_state = drm_atomic_helper_bridge_duplicate_state,
++	.atomic_destroy_state = drm_atomic_helper_bridge_destroy_state,
++	.atomic_reset = drm_atomic_helper_bridge_reset,
+ 	.attach = it6263_bridge_attach,
+ 	.mode_set = it6263_bridge_mode_set,
+ 	.disable = it6263_bridge_disable,
+ 	.enable = it6263_bridge_enable,
+ 	.get_edid = it6263_bridge_get_edid,
+ 	.detect = it6263_bridge_detect,
++	.atomic_get_input_bus_fmts = it6263_bridge_atomic_get_input_bus_fmts,
+ };
+ 
+ static const struct regmap_range it6263_hdmi_volatile_ranges[] = {
+@@ -610,14 +674,50 @@ static const struct regmap_config it6263_lvds_regmap_config = {
+ 	.cache_type = REGCACHE_NONE,
+ };
+ 
+-static inline u8 it6263_out_map(struct device_node *np)
++static int it6263_parse_dt(struct it6263 *it6263)
+ {
+-	u8 ret = ITE_LVDS_VESA;
+-	const char *name;
++	struct device *dev = it6263->dev;
++	struct device_node *port0, *port1;
++	int ret = 0;
++
++	it6263->lvds_data_mapping = drm_of_lvds_get_data_mapping(dev->of_node);
++	if (it6263->lvds_data_mapping < 0) {
++		dev_err(dev, "%pOF: invalid or missing %s DT property: %d\n",
++			dev->of_node, "data-mapping", it6263->lvds_data_mapping);
++		return it6263->lvds_data_mapping;
++	}
++
++	it6263->next_bridge = devm_drm_of_get_bridge(dev, dev->of_node, 2, 0);
++
++	if (IS_ERR(it6263->next_bridge))
++		return dev_err_probe(dev, PTR_ERR(it6263->next_bridge),
++				     "failed to get next bridge\n");
++
++	port0 = of_graph_get_port_by_id(dev->of_node, 0);
++	port1 = of_graph_get_port_by_id(dev->of_node, 1);
++	if (port0 && port1) {
++		int order;
++
++		it6263->dual_link = true;
++		order = drm_of_lvds_get_dual_link_pixel_order_sink(port0, port1);
++		if (order < 0) {
++			dev_err(dev,
++				"failed to get dual link pixel order: %d\n",
++				order);
++			ret = order;
++		} else if (order == DRM_LVDS_DUAL_LINK_EVEN_ODD_PIXELS) {
++			it6263->lvds_link12_swap = true;
++		}
++	} else if (port1) {
++		ret = -EINVAL;
++		dev_err(dev, "single input LVDS port1 is not supported\n");
++	} else if (!port0) {
++		ret = -EINVAL;
++		dev_err(dev, "no input LVDS port\n");
++	}
+ 
+-	if (!of_property_read_string(np, "ite,data-mapping", &name) &&
+-	    (strncmp(name, "jeida", 5) == 0))
+-		ret = ITE_LVDS_JEIDA;
++	of_node_put(port0);
++	of_node_put(port1);
+ 
+ 	return ret;
+ }
+@@ -666,8 +766,7 @@ static int it6263_probe(struct i2c_client *client,
+ 	if (!it6263)
+ 		return -ENOMEM;
+ 
+-	it6263->dual_link = of_property_read_bool(np, "ite,dual-link");
+-	it6263->out_map = it6263_out_map(np);
++	it6263->dev = dev;
+ 
+ 	it6263->hdmi_i2c = client;
+ 	it6263->lvds_i2c = i2c_new_dummy_device(client->adapter,
+@@ -699,6 +798,10 @@ static int it6263_probe(struct i2c_client *client,
+ 		goto unregister_lvds_i2c;
+ 	}
+ 
++	ret = it6263_parse_dt(it6263);
++	if (ret)
++		return ret;
++
+ 	ret = it6263_init(it6263);
+ 	if (ret)
+ 		goto unregister_lvds_i2c;
+-- 
+2.25.1
+

@@ -1,0 +1,95 @@
+From 93d77eec8f62aae0c316c17a7bdc31fd030a999d Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Tue, 30 Jun 2026 15:00:54 +0700
+Subject: [PATCH 1/2] drm/bridge: adv7511: Clear HPD IRQ before powering on
+ device during resume()
+
+On RZ/G3E SMARC EVK using PSCI, s2ram powers down the SoC. Testing ADV7535
+IRQ configured as edge-triggered interrupt on RZ/G3E SMARC EVK shows that
+it is missing HPD IRQ during system resume, as the status change occurs
+before the IRQ/pincontrol resume. Once the status bit is set, there won't
+be any further IRQ unless the status bit is cleared.
+
+Clear any pending HPD IRQs before powering on the ADV7535 device to
+deliver HPD interrupts after resume().
+
+Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
+Link: https://patchwork.kernel.org/project/linux-renesas-soc/patch/20251219104659.114032-1-biju.das.jz@bp.renesas.com/
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ drivers/gpu/drm/bridge/adv7511/adv7511.h     |  1 +
+ drivers/gpu/drm/bridge/adv7511/adv7511_drv.c | 32 ++++++++++++++++++++
+ 2 files changed, 33 insertions(+)
+
+diff --git a/drivers/gpu/drm/bridge/adv7511/adv7511.h b/drivers/gpu/drm/bridge/adv7511/adv7511.h
+index ec0b7f3d889c4..ddcd564ea2c84 100644
+--- a/drivers/gpu/drm/bridge/adv7511/adv7511.h
++++ b/drivers/gpu/drm/bridge/adv7511/adv7511.h
+@@ -397,6 +397,7 @@ struct adv7511 {
+ 	bool cec_enabled_adap;
+ 	struct clk *cec_clk;
+ 	u32 cec_clk_freq;
++	bool suspended;
+ };
+ 
+ #ifdef CONFIG_DRM_I2C_ADV7511_CEC
+diff --git a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+index a13b3d8ab6ac6..678d334bb9789 100644
+--- a/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
++++ b/drivers/gpu/drm/bridge/adv7511/adv7511_drv.c
+@@ -914,6 +914,25 @@ static void adv7511_bridge_enable(struct drm_bridge *bridge)
+ {
+ 	struct adv7511 *adv = bridge_to_adv7511(bridge);
+ 
++	if (adv->i2c_main->irq && adv->suspended) {
++		unsigned int irq;
++
++		/*
++		 * If ADV7511 IRQ is configured as edge triggered interrupt, it
++		 * will miss the IRQ during system resume as the status change
++		 * happens before IRQ/pincontrol resume. Once the status bit is
++		 * set there won't be any further IRQ unless the status bit is
++		 * cleared. So, clear the IRQ status bit for further delivery
++		 * of HPD IRQ.
++		 */
++		regmap_read(adv->regmap, ADV7511_REG_INT(0), &irq);
++		if (irq & ADV7511_INT0_HPD)
++			regmap_write(adv->regmap, ADV7511_REG_INT(0),
++				     ADV7511_INT0_HPD);
++
++		adv->suspended = false;
++	}
++
+ 	adv7511_power_on(adv);
+ }
+ 
+@@ -1419,6 +1438,18 @@ static const struct adv7511_chip_info adv7535_chip_info = {
+ 	.hpd_override_enable = true,
+ };
+ 
++static int adv7511_suspend(struct device *dev)
++{
++	struct i2c_client *i2c = to_i2c_client(dev);
++	struct adv7511 *adv7511 = i2c_get_clientdata(i2c);
++
++	adv7511->suspended = true;
++
++	return 0;
++}
++
++static DEFINE_SIMPLE_DEV_PM_OPS(adv7511_pm_ops, adv7511_suspend, NULL);
++
+ static const struct i2c_device_id adv7511_i2c_ids[] = {
+ 	{ "adv7511", (kernel_ulong_t)&adv7511_chip_info },
+ 	{ "adv7511w", (kernel_ulong_t)&adv7511_chip_info },
+@@ -1447,6 +1478,7 @@ static struct i2c_driver adv7511_driver = {
+ 	.driver = {
+ 		.name = "adv7511",
+ 		.of_match_table = adv7511_of_ids,
++		.pm = pm_sleep_ptr(&adv7511_pm_ops),
+ 	},
+ 	.id_table = adv7511_i2c_ids,
+ 	.probe = adv7511_probe,
+-- 
+2.25.1
+

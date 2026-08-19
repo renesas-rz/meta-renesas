@@ -1,0 +1,80 @@
+From 3ef07ca61afb8e00f4c3b89a4488708e799120ab Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Fri, 6 Feb 2026 15:50:14 +0700
+Subject: [PATCH 4/7] arm64: dts: renesas: rzg3e-smarc-lvds: add macro to
+ select lvds multi channels support
+
+Add macro option to select LVDS multi channels support for RZ/G3E smarc:
+- 0: single link channel from LVDS0.
+- 1: dual link channels from LVDS0/1 (default).
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+Signed-off-by: Nghia Vo <nghia.vo.zn@renesas.com>
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
+---
+ .../dts/renesas/renesas-smarc2-dual-lvds-hdmi.dtsi  | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2-dual-lvds-hdmi.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2-dual-lvds-hdmi.dtsi
+index 0131a7a48b050..dd69af483031e 100644
+--- a/arch/arm64/boot/dts/renesas/renesas-smarc2-dual-lvds-hdmi.dtsi
++++ b/arch/arm64/boot/dts/renesas/renesas-smarc2-dual-lvds-hdmi.dtsi
+@@ -6,6 +6,13 @@
+  * Copyright (C) 2026 Renesas Electronics Corp.
+  */
+ 
++/*
++ * Enable LVDS Dual link support:
++ * - 0: Single link channel from LVDS0
++ * - 1: Dual link channels from LVDS0/1
++ */
++#define LVDS_DUAL_LINK		1
++
+ / {
+ 	lvds-to-hdmi-out {
+ 		compatible = "hdmi-connector";
+@@ -38,7 +45,9 @@ du0_out_lvds1: endpoint {
+ 
+ &lvds0 {
+ 	status = "okay";
++#if (LVDS_DUAL_LINK)
+ 	renesas,companion = <&lvds1>;
++#endif
+ 
+ 	ports {
+ 		port@0 {
+@@ -57,6 +66,7 @@ lvds_ch0: endpoint {
+ 	};
+ };
+ 
++#if (LVDS_DUAL_LINK)
+ &lvds1 {
+ 	status = "okay";
+ 
+@@ -75,6 +85,7 @@ lvds_ch1: endpoint {
+ 		};
+ 	};
+ };
++#endif
+ 
+ &i2c7 {
+ 	pinctrl-0 = <&i2c7_pins>;
+@@ -98,6 +109,7 @@ bridge_in_odd: endpoint {
+ 				};
+ 			};
+ 
++#if (LVDS_DUAL_LINK)
+ 			port@1 {
+ 				reg = <1>;
+ 				dual-lvds-even-pixels;
+@@ -105,6 +117,7 @@ bridge_in_even: endpoint {
+ 					remote-endpoint = <&lvds_ch1>;
+ 				};
+ 			};
++#endif
+ 
+ 			port@2 {
+ 				reg = <2>;
+-- 
+2.25.1
+

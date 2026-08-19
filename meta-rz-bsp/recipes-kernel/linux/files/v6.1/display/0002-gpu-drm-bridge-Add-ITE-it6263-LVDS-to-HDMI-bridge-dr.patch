@@ -1,7 +1,7 @@
-From a6aa68ae17fb467acf9357edd80fbef32f7fcff1 Mon Sep 17 00:00:00 2001
-From: hienhuynh <hien.huynh.px@renesas.com>
-Date: Fri, 10 May 2024 19:11:25 +0700
-Subject: [PATCH 1/4] gpu: drm: bridge: Add ITE it6263 LVDS to HDMI bridge
+From ef6e3124f3793461f54d7e943a46186d92b58bc5 Mon Sep 17 00:00:00 2001
+From: Hiep Pham <hiep.pham.zy@renesas.com>
+Date: Thu, 29 Jan 2026 21:28:28 +0700
+Subject: [PATCH 2/7] gpu: drm: bridge: Add ITE it6263 LVDS to HDMI bridge
  driver
 
 The IT6263 is a high-performance single-chip De-SSC LVDS to HDMI
@@ -14,6 +14,7 @@ Add support for ITE it6263 LVDS to HDMI bridge driver.
 
 Signed-off-by: Biju Das <biju.das.jz@bp.renesas.com>
 Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+Signed-off-by: Hiep Pham <hiep.pham.zy@renesas.com>
 ---
  drivers/gpu/drm/bridge/Kconfig      |   8 +
  drivers/gpu/drm/bridge/Makefile     |   1 +
@@ -22,7 +23,7 @@ Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
  create mode 100644 drivers/gpu/drm/bridge/ite-it6263.c
 
 diff --git a/drivers/gpu/drm/bridge/Kconfig b/drivers/gpu/drm/bridge/Kconfig
-index 12baf9ba03c9..9f30312bb6ce 100644
+index 12baf9ba03c96..a562e8fe8f9a6 100644
 --- a/drivers/gpu/drm/bridge/Kconfig
 +++ b/drivers/gpu/drm/bridge/Kconfig
 @@ -380,6 +380,14 @@ config DRM_TI_TPD12S015
@@ -35,13 +36,13 @@ index 12baf9ba03c9..9f30312bb6ce 100644
 +	select DRM_KMS_HELPER
 +	select REGMAP_I2C
 +	help
-+	  ITE IT6263 bridge chip driver.
++	  ITE IT6263 bridge chip driver
 +
  source "drivers/gpu/drm/bridge/analogix/Kconfig"
  
  source "drivers/gpu/drm/bridge/adv7511/Kconfig"
 diff --git a/drivers/gpu/drm/bridge/Makefile b/drivers/gpu/drm/bridge/Makefile
-index 1884803c6860..8e08284040f3 100644
+index 1884803c6860d..8e08284040f3d 100644
 --- a/drivers/gpu/drm/bridge/Makefile
 +++ b/drivers/gpu/drm/bridge/Makefile
 @@ -33,6 +33,7 @@ obj-$(CONFIG_DRM_TI_TFP410) += ti-tfp410.o
@@ -54,7 +55,7 @@ index 1884803c6860..8e08284040f3 100644
  obj-y += cadence/
 diff --git a/drivers/gpu/drm/bridge/ite-it6263.c b/drivers/gpu/drm/bridge/ite-it6263.c
 new file mode 100644
-index 000000000000..216e7665f996
+index 0000000000000..216e7665f9965
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/ite-it6263.c
 @@ -0,0 +1,744 @@

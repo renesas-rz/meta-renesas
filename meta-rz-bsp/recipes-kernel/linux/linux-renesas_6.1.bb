@@ -13,3 +13,14 @@ KERNEL_BRANCH ?= "rz-6.1-cip48"
 KERNEL_REV ?= "e5672c09babe69b072963cdf8e51b5568200b0d4"
 
 SRC_URI:append = "${@bb.utils.contains('DISTRO_FEATURES','docker', ' file://docker.cfg', '', d)}"
+
+# These patches are for reference only. They are preliminary.
+SRC_URI:append = " \
+	file://v6.1/display/0001-drm-bridge-adv7511-Clear-HPD-IRQ-before-powering-on-.patch \
+	file://v6.1/display/0002-gpu-drm-bridge-Add-ITE-it6263-LVDS-to-HDMI-bridge-dr.patch \
+	file://v6.1/display/0003-arm64-defconfig-enable-LVDS-and-IT6263-LVSD-to-HDMI-.patch \
+	file://v6.1/display/0004-arm64-dts-renesas-rzg3e-smarc-lvds-add-macro-to-sele.patch \
+	file://v6.1/display/0005-arm64-dts-renesas-r9a09g047e57-smarc-enable-LVDS-sup.patch \
+	file://v6.1/display/0006-gpu-drm-bridge-Support-S2R-ITE-it6263.patch \
+	file://v6.1/display/0007-drm-bridge-ite-it6263-Support-VESA-24-input-format.patch \
+"
