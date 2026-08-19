@@ -28,6 +28,7 @@ This layer (compatible with Yocto Scarthgap) depends on the following specific r
 - Branch: `scarthgap`
 - Revision: `7e8674996b0164b07e56bc066d0fba790e627061`
 - (Tag: `scarthgap-5.0.14`)
+- Cherry-pick commit 80593d0ce1 e6cbef9080 e380eea705 bf7d623729 3bcac51eb2 fb693aab03
 
 **meta-arm:**
 - URL: `https://git.yoctoproject.org/meta-arm`
@@ -91,6 +92,7 @@ You can obtain the complete Yocto build environment from Renesas, or download th
     $ git clone https://git.yoctoproject.org/poky
     $ cd poky
     $ git checkout 7e8674996b0164b07e56bc066d0fba790e627061
+    $ git cherry-pick 80593d0ce1 e6cbef9080 e380eea705 bf7d623729 3bcac51eb2 fb693aab03
     $ cd ..
     $
     $ git clone https://git.yoctoproject.org/meta-arm
