@@ -1,6 +1,6 @@
 require trusted-firmware-a-renesas.inc
 
-COMPATIBLE_MACHINE = "(rzg3e-family|rzv2h-family|rzg2l-family|rzg3s-family|rzt2h-family|rzv2n-family|rzg3l-family)"
+COMPATIBLE_MACHINE = "(rzg2l-family|rzv2h-family|rzv2n-family|rzt2h-family|rzt2n-family|rzg3e-family|rzg3s-family|rzg3l-family)"
 
 LIC_FILES_CHKSUM = "file://${WORKDIR}/git/docs/license.rst;md5=b2c740efedc159745b9b31f88ff03dde"
 PV = "2.10+git${SRCPV}"
@@ -11,6 +11,7 @@ TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=http
 TFA_REV ?= "181ce7f954bdb34cf913a22744074faed5a0f8df"
 TFA_REV:rzt2h-family = "e94828433edd49f9cddf06a6bf45a685b8f84343"
 TFA_REV:rzg3l-family = "c06209f12ff5d3a94e674a7f46fd01ec76356928"
+TFA_REV:rzt2n-family = "808a958d96fc6c2a3bef9a5c7e1d4aea83222f41"
 
 SRC_URI = "${TFA_URI};nobranch=1"
 SRCREV = "${TFA_REV}"
