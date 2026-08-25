@@ -50,3 +50,9 @@ SRC_URI:append = " \
 	file://v6.12/display/0001-drm-bridge-adv7511-Clear-HPD-IRQ-before-powering-on-.patch \
 	file://v6.12/display/0002-drm-bridge-ite-it6263-Support-S2R-ITE-it6263.patch \
 "
+
+# Remove these patches for RZ/T2N as the IT6263 driver do not exist in the kernel tree.
+SRC_URI:remove:rzt2n-family = " \
+	file://v6.12/display/0001-drm-bridge-adv7511-Clear-HPD-IRQ-before-powering-on-.patch \
+	file://v6.12/display/0002-drm-bridge-ite-it6263-Support-S2R-ITE-it6263.patch \
+"
