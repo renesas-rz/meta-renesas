@@ -29,6 +29,9 @@ bool
 config FAMILY_T2H
 bool
 
+config FAMILY_T2N
+bool
+
 menu "Machines"
 choice
 	prompt "Select machine:"
@@ -165,6 +168,17 @@ choice
 	string
 	depends on MACHINE_RZN2H-DEV
 	default "kas/machines/rzn2h-evk.yml"
+
+	config MACHINE_RZT2N-DEV
+	bool "rzt2n-dev"
+	select FAMILY_T2N
+	help
+		Select the Renesas RZ/T2H reference platform
+
+	config KAS_INCLUDE_MACHINE_RZT2N-DEV
+	string
+	depends on MACHINE_RZT2N-DEV
+	default "kas/machines/rzt2n-dev.yml"
 
 endchoice
 endmenu
