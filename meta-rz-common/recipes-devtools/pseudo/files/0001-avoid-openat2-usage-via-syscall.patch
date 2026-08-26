@@ -1,0 +1,47 @@
+From 472c8977e0238e5a1ed4d29d7c41de699646ceff Mon Sep 17 00:00:00 2001
+From: Richard Purdie <richard.purdie@linuxfoundation.org>
+Date: Mon, 12 Jan 2026 22:10:32 +0000
+Subject: ports/linux/pseudo_wrappers: Avoid openat2 usage via syscall
+
+There is a CVE patch (CVE-2025-45582) to tar 1.34 in Centos Stream which
+uses syscall to access openat2() and breaks builds if we don't redirect using
+a NOSYS error code.
+
+As per the other entries here, there is also concern about trying
+to parse syscall arguments in this function too.
+
+We still need to add a wrapper for openat2 itself which is in the new
+upcoming glibc release.
+
+Signed-off-by: Richard Purdie <richard.purdie@linuxfoundation.org>
+---
+ ports/linux/pseudo_wrappers.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/ports/linux/pseudo_wrappers.c b/ports/linux/pseudo_wrappers.c
+index c39cf20..6b54083 100644
+--- a/ports/linux/pseudo_wrappers.c
++++ b/ports/linux/pseudo_wrappers.c
+@@ -92,6 +92,19 @@ syscall(long number, ...) {
+ 	}
+ #endif
+ 
++#ifdef SYS_openat2
++	/* concerns exist about trying to parse arguments because syscall(2)
++	 * specifies strange ABI behaviors. If we can get better clarity on
++	 * that, it could make sense to redirect to wrap_openat2().
++	 * There is a CVE patch (CVE-2025-45582) to tar 1.34 in Centos Stream which
++	 * uses syscall to access openat2() and breaks builds if we don't redirect.
++	 */
++	if (number == SYS_openat2) {
++		errno = ENOSYS;
++		return -1;
++	}
++#endif
++
+ 	/* gcc magic to attempt to just pass these args to syscall. we have to
+ 	 * guess about the number of args; the docs discuss calling conventions
+ 	 * up to 7, so let's try that?
+-- 
+cgit 1.2.3-korg
+
