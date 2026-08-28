@@ -9,6 +9,9 @@ do_install:append() {
 	# Set the idle timeout to 0. (A value of 0 effectively disables the timeout.) and add log weston
 	sed -e "/^ExecStart/s/$/ --idle-time=0/g" \
 		-i ${D}/${systemd_system_unitdir}/weston.service
+	# Select card0 as the primary display with Weston.
+	sed -e "/^ExecStart/s/$/ --drm-device=card0/g" \
+		-i ${D}/${systemd_system_unitdir}/weston.service
 	# Add the additional card for multiple display support
 	sed -e "/^ExecStart/s/$/ --additional-devices=card1/g" \
 		-i ${D}/${systemd_system_unitdir}/weston.service
