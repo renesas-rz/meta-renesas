@@ -67,22 +67,21 @@ alongside poky, meta-arm, etc. (e.g., $WORK/meta-rz-features).
 Currently, Scarthgap can support 3 different versions is VLP v4.0.x, VLP v5.0.x and BSP Plus with below information.
 
 **1. VLP v4.0.x (kernel v6.1-cip):**
-| VLP Version | Tag        | Target                        |Notes           |
-| :---------- | :--------- | :---------                    |:-------------- |
-| 4.0.0       | BSP-v4.0.0 | RZ/G2L,LC                     |Initial version |
-| 4.0.1       | BSP-v4.0.1 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S  |                |
-| 4.0.2       | BSP-v4.0.2 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S, RZ/V2H, RZ/V2N, RZ/G3E  |                |
+| VLP Version | Tag       | Target                        |Notes           |
+| :---------- | :-------- | :---------                    |:-------------- |
+| 4.0.0       | BSP-4.0.0 | RZ/G2L,LC                     |Initial version |
+| 4.0.1       | BSP-4.0.1 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S  |                |
+| 4.0.2       | BSP-4.0.2 | RZ/G2L,LC,UL, RZ/V2L, RZ/G3S, RZ/V2H, RZ/V2N, RZ/G3E  |                |
 
 **2. VLP v5.0.x (kernel v6.12-cip):**
-| VLP Version | Tag        | Target          |Notes           |
-| :---------- | :--------- | :---------      |:-------------- |
-| 5.0.0       | BSP-v5.0.0 | RZ/T2H, RZ/N2H  |                |
+| VLP Version | Tag       | Target          |Notes           |
+| :---------- | :-------- | :---------      |:-------------- |
+| 5.0.0       | BSP-5.0.0 | RZ/T2H, RZ/N2H  |                |
 
 **3. BSP Plus (kernel v6.12-cip):**
-| BSP Plus Version | Tag                 | Target                                           |Notes           |
-| :--------------- | :------------------ | :------------------------------------------------|:-------------- |
-| 3.0              | BSP-v5.0.0          | RZ/G2L, RZ/G2LC, RZ/G2UL, RZ/G3S, RZ/T2H, RZ/N2H, RZ/G3L |                |
-
+| BSP Plus Version | Tag                | Target                                           |Notes           |
+| :--------------- | :----------------- | :------------------------------------------------|:-------------- |
+| 3.0              | BSP-5.0.0          | RZ/G2L, RZ/G2LC, RZ/G2UL, RZ/G3S, RZ/T2H, RZ/N2H, RZ/G3L |                |
 
 **Note on Versioning:** The VLP versioning scheme indicates that higher numbers represent newer releases (e.g., VLP v4.0.2 is newer than VLP v4.0.0).
 
