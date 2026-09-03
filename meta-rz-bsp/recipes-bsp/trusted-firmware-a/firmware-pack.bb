@@ -10,11 +10,12 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 DEPENDS = "trusted-firmware-a u-boot"
 DEPENDS:append = " bptool-native"
 DEPENDS:append:rzt2h-family = " parameter-block-generator-native"
+DEPENDS:append:rzt2n-family = " parameter-block-generator-native"
 
 SYSROOT_TFA="${RECIPE_SYSROOT}/firmware"
 
 do_configure[noexec] = "1"
-do_compile () {
+do_compile_common () {
 	# Create bl2_bp.bin
 	for bl2boot in ${BL2_BOOT_TARGET}; do
 		# Create bl2_bp.bin
@@ -46,7 +47,7 @@ do_compile () {
 	fi
 }
 
-do_compile:rzt2h-family() {
+do_compile_rzt2h_rzt2n() {
 	BL2_FILE="${SYSROOT_TFA}/bl2.bin"
 	# Get BL2 filesize and align to 0x200 (512) bytes
 	BL2_SIZE=$(wc -c < "${BL2_FILE}")
@@ -94,6 +95,14 @@ do_compile:rzt2h-family() {
 	# Convert FIP to S-Record
 	cp ${SYSROOT_TFA}/fip.bin ${S}/fip-${MACHINE}.bin
 	objcopy -I binary -O srec --adjust-vma=${FIP_ADJUST_VMA} --srec-forceS3 ${SYSROOT_TFA}/fip.bin ${S}/fip-${MACHINE}.srec
+}
+
+do_compile() {
+	if [ "${SOC_FAMILY}" = "rzt2h-family" ] || [ "${SOC_FAMILY}" = "rzt2n-family" ]; then
+		do_compile_rzt2h_rzt2n
+	else
+		do_compile_common
+	fi
 }
 
 do_deploy () {
