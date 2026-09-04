@@ -111,7 +111,7 @@ You can obtain the complete Yocto build environment from Renesas, or download th
     $
     $ git clone  https://git.yoctoproject.org/git/meta-virtualization
     $ cd meta-virtualization
-    $ git checkout 9287a355b338361e42027ce371444111a791d64f
+    $ git checkout 17ac21e7d7f6f40a87618b22278b63bcfa14dbf2
     $ cd ..
 ```
 
