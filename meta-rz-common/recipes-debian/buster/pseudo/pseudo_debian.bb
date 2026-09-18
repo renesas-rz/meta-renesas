@@ -24,4 +24,5 @@ SRC_URI += " \
 	file://0002-Fix-build-with-gcc-10.patch \
 	file://0003-ports-linux-Add-wrapper-for-fstatat-fstatat64-in-gli.patch \
 	file://0004-makewrappers-Fix-glibc-2.33-fstatat-usage-issues.patch \
+	file://0001-avoid-openat2-usage-via-syscall.patch \
 "

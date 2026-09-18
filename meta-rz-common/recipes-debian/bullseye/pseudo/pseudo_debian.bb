@@ -19,4 +19,5 @@ SRC_URI += " \
 	file://0001-linux-portdefs.h-Fix-pseudo-to-work-with-glibc-2.33.patch \
 	file://0002-ports-linux-Add-wrapper-for-fstatat-fstatat64-in-gli.patch \
 	file://0003-makewrappers-Fix-glibc-2.33-fstatat-usage-issues.patch \
+	file://0001-avoid-openat2-usage-via-syscall.patch \
 "
