@@ -11,7 +11,7 @@ TFA_URI ?= "git://github.com/renesas-rz/rzg_trusted-firmware-a.git;protocol=http
 TFA_REV ?= "181ce7f954bdb34cf913a22744074faed5a0f8df"
 TFA_REV:rzt2h-family = "e94828433edd49f9cddf06a6bf45a685b8f84343"
 TFA_REV:rzg3l-family = "c06209f12ff5d3a94e674a7f46fd01ec76356928"
-TFA_REV:rzt2n-family = "27dd73f3fcbe45297dcf66bdbc81ae71f327666a"
+TFA_REV:rzt2n-family = "a2024b4caaf1451bd40c88d123b4febc0b3b39a9"
 
 SRC_URI = "${TFA_URI};nobranch=1"
 SRCREV = "${TFA_REV}"
