@@ -42,6 +42,7 @@ SRC_URI:smarc-rzg3l = "file://Flash_Writer_SCIF_RZG3L_SMARC_LPDDR4.mot"
 SRC_URI:rzt2n-family = " \
 	file://Flash_Programmer_SCIF_CR52_RZT2N_EVK.mot \
 	file://HDR_NM \
+	file://USB_OPEN \
 "
 
 inherit deploy
@@ -133,6 +134,7 @@ do_deploy:append:rzt2n-family() {
 	# Copy Flash-writer binaries to deploy folder
 	install -m 0644 ${S}/Flash_Programmer_SCIF_CR52_RZT2N_EVK.mot ${DEPLOYDIR}
 	install -m 0644 ${S}/HDR_NM ${DEPLOYDIR}
+	install -m 0644 ${S}/USB_OPEN ${DEPLOYDIR}
 }
 
 PARALLEL_MAKE = "-j 1"
