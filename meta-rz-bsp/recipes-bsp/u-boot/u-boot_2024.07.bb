@@ -6,7 +6,7 @@ UBOOT_URI = "git://github.com/renesas-rz/renesas-u-boot-cip.git;protocol=https;n
 UBOOT_REV ?= "0d91af5bb0c3e5f85c6938417c49e4ab5f2dd0ea"
 UBOOT_REV:rzt2h-family = "b39b4cf21a79b8b02bdbe5633cc9d469f6f1cf00"
 UBOOT_REV:rzg3l-family = "16e6324c9125c6c99e762214137c47d9d7b3ea7f"
-UBOOT_REV:rzt2n-family = "8d0ffb29b68a314505aeccf71ef502f348dff132"
+UBOOT_REV:rzt2n-family = "31c1863dae0ad16fb0adb847dbb193cdac3b545b"
 
 PV="2024.07+git${SRCPV}"
 
