@@ -1,0 +1,67 @@
+From bcf1313723f7f96ad57c8f98b99fefec0e064a17 Mon Sep 17 00:00:00 2001
+From: ductrinh <duc.trinh.wz@renesas.com>
+Date: Fri, 23 Oct 2026 12:46:17 +0700
+Subject: [PATCH] phy: renesas: rcar-gen3-usb2: Add support for RZ/T2N SoC
+
+Add driver data and the "renesas,rzt2-usb2-phy" compatible for the
+RZ/T2N USB2 PHY.
+
+RZ/T2N reuses the RZ/T2H VBUS level control (vblvl_ctrl) but has no
+ADPCTRL register. Set no_adp_ctrl so that init_otg() skips the ADPCTRL
+accesses, and make check_id() use the ADPCTRL based detection only on
+SoCs that have it. On RZ/T2N the role is detected through
+LINECTRL1.IDMON; without this check_id() always reports peripheral.
+
+The SUSPM setting is already done by usbhs power_ctrl, so no extra
+register access from the PHY driver is needed.
+
+This replaces the previous RZ/T2N support (reverted), which moved the
+IRQ request and INIT_WORK back to phy_init and dropped the locking and
+runtime PM fixes, causing a random oops in rcar_gen3_phy_usb2_work.
+
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index d4dd1da3653d..d442f2cc5e83 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -294,7 +294,7 @@ static void rcar_gen3_init_from_a_peri_to_a_host(struct rcar_gen3_chan *ch)
+ 
+ static bool rcar_gen3_check_id(struct rcar_gen3_chan *ch)
+ {
+-	if (ch->phy_data->vblvl_ctrl) {
++	if (ch->phy_data->vblvl_ctrl && !ch->phy_data->no_adp_ctrl) {
+ 		u32 val = readl(ch->base + USB2_ADPCTRL);
+ 		bool vbus_valid = val & USB2_ADPCTRL_VBUSVALID;
+ 		bool device = val & USB2_ADPCTRL_IDDIG;
+@@ -674,6 +674,13 @@ static const struct rcar_gen3_phy_drv_data rz_t2h_phy_usb2_data = {
+ 	.obint_enable_bits = USB2_OBINT_IDCHG_EN | USB2_OBINT_VBSTAINT,
+ };
+ 
++static const struct rcar_gen3_phy_drv_data rz_t2n_phy_usb2_data = {
++	.phy_usb2_ops = &rcar_gen3_phy_usb2_ops,
++	.no_adp_ctrl = true,
++	.vblvl_ctrl = true,
++	.obint_enable_bits = USB2_OBINT_IDCHG_EN | USB2_OBINT_VBSTAINT,
++};
++
+ static const struct rcar_gen3_phy_drv_data rz_v2h_phy_usb2_data = {
+ 	.phy_usb2_ops = &rcar_gen3_phy_usb2_ops,
+ 	.no_adp_ctrl = true,
+@@ -710,6 +717,10 @@ static const struct of_device_id rcar_gen3_phy_usb2_match_table[] = {
+ 		.compatible = "renesas,usb2-phy-r9a09g077",
+ 		.data = &rz_t2h_phy_usb2_data,
+ 	},
++	{
++		.compatible = "renesas,rzt2-usb2-phy",
++		.data = &rz_t2n_phy_usb2_data,
++	},
+ 	{
+ 		.compatible = "renesas,rzg2l-usb2-phy",
+ 		.data = &rz_g2l_phy_usb2_data,
+-- 
+2.25.1
+

@@ -56,3 +56,21 @@ SRC_URI:remove:rzt2n-family = " \
 	file://v6.12/display/0001-drm-bridge-adv7511-Clear-HPD-IRQ-before-powering-on-.patch \
 	file://v6.12/display/0002-drm-bridge-ite-it6263-Support-S2R-ITE-it6263.patch \
 "
+
+SRC_URI:append:rzt2n-family = " \
+	file://v6.12/t2n/0001-Revert-drivers-phy-renesas-phy-rcar-gen3-usb2-Suppor.patch \
+	file://v6.12/t2n/0002-phy-renesas-rcar-gen3-usb2-store-drvdata-pointer-in-.patch \
+	file://v6.12/t2n/0003-phy-renesas-rcar-gen3-usb2-Allow-SoC-specific-OBINT-.patch \
+	file://v6.12/t2n/0004-phy-renesas-rcar-gen3-usb2-Add-support-for-RZ-T2H-So.patch \
+	file://v6.12/t2n/0005-phy-renesas-rcar-gen3-usb2-Move-debug-print-after-re.patch \
+	file://v6.12/t2n/0006-phy-renesas-rcar-gen3-usb2-Fix-ID-check-logic-with-V.patch \
+	file://v6.12/t2n/0007-phy-renesas-rcar-gen3-usb2-Remove-redundant-ternary-.patch \
+	file://v6.12/t2n/0008-phy-renesas-rcar-gen3-usb2-Simplify-ID-VBUS-detectio.patch \
+	file://v6.12/t2n/0009-phy-renesas-rcar-gen3-usb2-Add-support-for-RZ-T2N-So.patch \
+	file://v6.12/t2n/0010-usb-renesas_usbhs-Fix-a-resource-leak-in-usbhs_pipe_.patch \
+	file://v6.12/t2n/0011-usb-renesas_usbhs-use-proper-DMAENGINE-API-for-termi.patch \
+	file://v6.12/t2n/0012-usb-renesas_usbhs-fix-use-after-free-in-ISR-during-d.patch \
+	file://v6.12/t2n/0013-usb-renesas_usbhs-Fix-power-off-ordering-on-unbind.patch \
+	file://v6.12/t2n/0014-phy-renesas-rcar-gen3-usb2-Select-RZ-T2N-role-from-V.patch \
+	file://v6.12/t2n/0015-arm64-dts-renesas-r9a07g076m48-dev-Add-renesas-no-ot.patch \
+"

@@ -1,0 +1,41 @@
+From 3f0000bed12ee05179d3ea8b28ec9eb21acc27d3 Mon Sep 17 00:00:00 2001
+From: ductrinh <duc.trinh.wz@renesas.com>
+Date: Fri, 23 Oct 2026 19:01:50 +0700
+Subject: [PATCH] arm64: dts: renesas: r9a07g076m48-dev: Add
+ renesas,no-otg-pins when SEL_OTG is 0
+
+With SEL_OTG set to 0 the board uses separate host (J2) and function
+(J3) connectors and the OTG ID pin is not used. Describe this with
+renesas,no-otg-pins so the USB2 PHY driver selects the role from VBUS.
+
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ arch/arm64/boot/dts/renesas/r9a07g076m48-dev.dts | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/renesas/r9a07g076m48-dev.dts b/arch/arm64/boot/dts/renesas/r9a07g076m48-dev.dts
+index 13af1122bc0a..3c37a60a0676 100644
+--- a/arch/arm64/boot/dts/renesas/r9a07g076m48-dev.dts
++++ b/arch/arm64/boot/dts/renesas/r9a07g076m48-dev.dts
+@@ -39,7 +39,7 @@
+  * SEL_OTG = 1 use OTG with J4
+  * SEL_OTG = 0 use USB host with J2 and USB function with J3 (default)
+  */
+-#define SEL_OTG                0
++#define SEL_OTG			0
+ 
+ /*
+  * Set the marco SEL_I2C0_ADC12 to the values below to select the usage of:
+@@ -897,6 +897,9 @@ &hsusb {
+ &usb2_phy {
+ 	pinctrl-0 = <&usb_pins>;
+ 	pinctrl-names = "default";
++#if !(SEL_OTG)
++	renesas,no-otg-pins;
++#endif
+ 
+ 	status = "okay";
+ };
+-- 
+2.25.1
+

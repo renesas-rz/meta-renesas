@@ -1,0 +1,43 @@
+From 8921383606f54e14ee5225f993a30aa44e973b19 Mon Sep 17 00:00:00 2001
+From: ductrinh <duc.trinh.wz@renesas.com>
+Date: Fri, 23 Oct 2026 19:01:50 +0700
+Subject: [PATCH] phy: renesas: rcar-gen3-usb2: Select RZ/T2N role from VBUS
+ without OTG pins
+
+On RZ/T2N boards with separate host and function connectors the OTG ID
+pin is not connected, so LINECTRL1.IDMON always reads 1 and the role
+defaulted to peripheral, leaving the host connector unusable.
+
+When the board does not use the OTG pins (renesas,no-otg-pins), follow
+VBCTRL.VBSTA instead: VBUS present selects peripheral, otherwise host.
+Boards using the OTG pins keep detecting the role through IDMON.
+
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index d442f2cc5e83..bf16552f540f 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -302,6 +302,16 @@ static bool rcar_gen3_check_id(struct rcar_gen3_chan *ch)
+ 		return device == vbus_valid;
+ 	}
+ 
++	/*
++	 * RZ/T2N has no ADPCTRL. If the board does not use the OTG ID pin
++	 * (separate host and function connectors), follow VBUS instead.
++	 */
++	if (ch->phy_data->vblvl_ctrl && !ch->uses_otg_pins) {
++		u32 val = readl(ch->base + USB2_VBCTRL);
++
++		return FIELD_GET(USB2_VBCTRL_VBSTA_MASK, val) == USB2_VBCTRL_VBSTA_DEFAULT;
++	}
++
+ 	if (!ch->uses_otg_pins)
+ 		return ch->dr_mode != USB_DR_MODE_HOST;
+ 
+-- 
+2.25.1
+

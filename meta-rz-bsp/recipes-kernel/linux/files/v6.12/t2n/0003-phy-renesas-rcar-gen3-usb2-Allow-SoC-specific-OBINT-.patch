@@ -1,0 +1,148 @@
+From 4e84ff3304b457d5fedcfe1f1faec5821075b9c9 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 8 Aug 2025 22:52:07 +0100
+Subject: [PATCH] phy: renesas: rcar-gen3-usb2: Allow SoC-specific OBINT bits
+ via phy_data
+
+Update the PHY driver to support SoC-specific OBINT enable bits by
+introducing the `obint_enable_bits` field in the `rcar_gen3_phy_drv_data`
+structure. This allows each SoC to specify bits required.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+Link: https://lore.kernel.org/r/20250808215209.3692744-4-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+(cherry picked from commit e51062c616bbef16a8fc998534f43ce9cfaa8fac)
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 27 ++++++++++++------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index 004b36bddad0..eca118e597e6 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -71,8 +71,7 @@
+ /* OBINTSTA and OBINTEN */
+ #define USB2_OBINT_SESSVLDCHG		BIT(12)
+ #define USB2_OBINT_IDDIGCHG		BIT(11)
+-#define USB2_OBINT_BITS			(USB2_OBINT_SESSVLDCHG | \
+-					 USB2_OBINT_IDDIGCHG)
++#define USB2_OBINT_IDCHG_EN		BIT(0) /*  RZ/G2L specific */
+ 
+ /* VBCTRL */
+ #define USB2_VBCTRL_OCCLREN		BIT(16)
+@@ -93,7 +92,6 @@
+ #define USB2_ADPCTRL_DRVVBUS		BIT(4)
+ 
+ /*  RZ/G2L specific */
+-#define USB2_OBINT_IDCHG_EN		BIT(0)
+ #define USB2_LINECTRL1_USB2_IDMON	BIT(0)
+ 
+ #define NUM_OF_PHYS			4
+@@ -129,7 +127,6 @@ struct rcar_gen3_chan {
+ 	struct work_struct work;
+ 	spinlock_t lock;	/* protects access to hardware and driver data structure. */
+ 	enum usb_dr_mode dr_mode;
+-	u32 obint_enable_bits;
+ 	bool extcon_host;
+ 	bool is_otg_channel;
+ 	bool uses_otg_pins;
+@@ -140,6 +137,7 @@ struct rcar_gen3_phy_drv_data {
+ 	bool no_adp_ctrl;
+ 	bool init_bus;
+ 	bool utmi_ctrl;
++	u32 obint_enable_bits;
+ };
+ 
+ /*
+@@ -224,9 +222,9 @@ static void rcar_gen3_control_otg_irq(struct rcar_gen3_chan *ch, int enable)
+ 	u32 val = readl(usb2_base + USB2_OBINTEN);
+ 
+ 	if (ch->uses_otg_pins && enable)
+-		val |= ch->obint_enable_bits;
++		val |= ch->phy_data->obint_enable_bits;
+ 	else
+-		val &= ~ch->obint_enable_bits;
++		val &= ~ch->phy_data->obint_enable_bits;
+ 	writel(val, usb2_base + USB2_OBINTEN);
+ }
+ 
+@@ -429,7 +427,7 @@ static void rcar_gen3_init_otg(struct rcar_gen3_chan *ch)
+ 	mdelay(20);
+ 
+ 	writel(0xffffffff, usb2_base + USB2_OBINTSTA);
+-	writel(ch->obint_enable_bits, usb2_base + USB2_OBINTEN);
++	writel(ch->phy_data->obint_enable_bits, usb2_base + USB2_OBINTEN);
+ 
+ 	rcar_gen3_device_recognition(ch);
+ }
+@@ -449,9 +447,9 @@ static irqreturn_t rcar_gen3_phy_usb2_irq(int irq, void *_ch)
+ 
+ 	scoped_guard(spinlock, &ch->lock) {
+ 		status = readl(usb2_base + USB2_OBINTSTA);
+-		if (status & ch->obint_enable_bits) {
++		if (status & ch->phy_data->obint_enable_bits) {
+ 			dev_vdbg(dev, "%s: %08x\n", __func__, status);
+-			writel(ch->obint_enable_bits, usb2_base + USB2_OBINTSTA);
++			writel(ch->phy_data->obint_enable_bits, usb2_base + USB2_OBINTSTA);
+ 			rcar_gen3_device_recognition(ch);
+ 			ret = IRQ_HANDLED;
+ 		}
+@@ -590,28 +588,35 @@ static const struct phy_ops rz_g1c_phy_usb2_ops = {
+ static const struct rcar_gen3_phy_drv_data rcar_gen3_phy_usb2_data = {
+ 	.phy_usb2_ops = &rcar_gen3_phy_usb2_ops,
+ 	.no_adp_ctrl = false,
++	.obint_enable_bits = USB2_OBINT_SESSVLDCHG |
++			     USB2_OBINT_IDDIGCHG,
+ };
+ 
+ static const struct rcar_gen3_phy_drv_data rz_g1c_phy_usb2_data = {
+ 	.phy_usb2_ops = &rz_g1c_phy_usb2_ops,
+ 	.no_adp_ctrl = false,
++	.obint_enable_bits = USB2_OBINT_SESSVLDCHG |
++			     USB2_OBINT_IDDIGCHG,
+ };
+ 
+ static const struct rcar_gen3_phy_drv_data rz_g2l_phy_usb2_data = {
+ 	.phy_usb2_ops = &rcar_gen3_phy_usb2_ops,
+ 	.no_adp_ctrl = true,
++	.obint_enable_bits = USB2_OBINT_IDCHG_EN,
+ };
+ 
+ static const struct rcar_gen3_phy_drv_data rz_g3s_phy_usb2_data = {
+ 	.phy_usb2_ops = &rcar_gen3_phy_usb2_ops,
+ 	.no_adp_ctrl = true,
+ 	.init_bus = true,
++	.obint_enable_bits = USB2_OBINT_IDCHG_EN,
+ };
+ 
+ static const struct rcar_gen3_phy_drv_data rz_v2h_phy_usb2_data = {
+ 	.phy_usb2_ops = &rcar_gen3_phy_usb2_ops,
+ 	.no_adp_ctrl = true,
+ 	.utmi_ctrl = true,
++	.obint_enable_bits = USB2_OBINT_IDCHG_EN,
+ };
+ 
+ static const struct of_device_id rcar_gen3_phy_usb2_match_table[] = {
+@@ -756,7 +761,6 @@ static int rcar_gen3_phy_usb2_probe(struct platform_device *pdev)
+ 	if (IS_ERR(channel->base))
+ 		return PTR_ERR(channel->base);
+ 
+-	channel->obint_enable_bits = USB2_OBINT_BITS;
+ 	channel->dr_mode = rcar_gen3_get_dr_mode(dev->of_node);
+ 	if (channel->dr_mode != USB_DR_MODE_UNKNOWN) {
+ 		channel->is_otg_channel = true;
+@@ -795,9 +799,6 @@ static int rcar_gen3_phy_usb2_probe(struct platform_device *pdev)
+ 			goto error;
+ 	}
+ 
+-	if (channel->phy_data->no_adp_ctrl)
+-		channel->obint_enable_bits = USB2_OBINT_IDCHG_EN;
+-
+ 	spin_lock_init(&channel->lock);
+ 	for (i = 0; i < NUM_OF_PHYS; i++) {
+ 		channel->rphys[i].phy = devm_phy_create(dev, NULL,
+-- 
+2.25.1
+

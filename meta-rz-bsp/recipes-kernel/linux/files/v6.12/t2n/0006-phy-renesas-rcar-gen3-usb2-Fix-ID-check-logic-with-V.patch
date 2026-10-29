@@ -1,0 +1,49 @@
+From 45fea2fb346384dbada14cf81fdb81a9d1f7538b Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Thu, 21 Aug 2025 16:59:57 +0100
+Subject: [PATCH] phy: renesas: rcar-gen3-usb2: Fix ID check logic with VBUS
+ valid
+
+The existing ID detection logic returned false when both IDDIG and
+VBUSVALID were set, which caused incorrect role determination in some
+cases. The condition:
+
+    !(device && !vbus_valid)
+
+did not properly reflect the intended relationship between IDDIG and
+VBUSVALID signals.
+
+Update the logic to:
+
+    return vbus_valid ? device : !device;
+
+This ensures that when VBUS is valid, the role follows the IDDIG value,
+and when VBUS is not valid, the role is inverted, matching the expected
+OTG behavior.
+
+Fixes: b725741f1c21 ("phy: renesas: rcar-gen3-usb2: Add support for RZ/T2H SoC")
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Link: https://lore.kernel.org/r/20250821155957.1088337-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+(cherry picked from commit 1c18273ac04c5e30f3e486ee1cc03fccddc73b3f)
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index 5659ac22511d..4e8cf7527439 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -301,7 +301,7 @@ static bool rcar_gen3_check_id(struct rcar_gen3_chan *ch)
+ 		device = !!(readl(ch->base + USB2_ADPCTRL) & USB2_ADPCTRL_IDDIG);
+ 		vbus_valid = !!(readl(ch->base + USB2_ADPCTRL) & USB2_ADPCTRL_VBUSVALID);
+ 
+-		return !(device && !vbus_valid);
++		return vbus_valid ? device : !device;
+ 	}
+ 
+ 	if (!ch->uses_otg_pins)
+-- 
+2.25.1
+

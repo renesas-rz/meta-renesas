@@ -1,0 +1,34 @@
+From 41e296945ab383db19676305b3288405ae67adc7 Mon Sep 17 00:00:00 2001
+From: Liao Yuanhong <liaoyuanhong@vivo.com>
+Date: Thu, 28 Aug 2025 20:23:56 +0800
+Subject: [PATCH] phy: renesas: rcar-gen3-usb2: Remove redundant ternary
+ operators
+
+Remove redundant ternary operators to clean up the code.
+
+Signed-off-by: Liao Yuanhong <liaoyuanhong@vivo.com>
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Link: https://lore.kernel.org/r/20250828122401.17441-3-liaoyuanhong@vivo.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+(cherry picked from commit 3e7604758eb2068e9ae9b4ba674496d958861360)
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index 4e8cf7527439..9374befe9005 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -305,7 +305,7 @@ static bool rcar_gen3_check_id(struct rcar_gen3_chan *ch)
+ 	}
+ 
+ 	if (!ch->uses_otg_pins)
+-		return (ch->dr_mode == USB_DR_MODE_HOST) ? false : true;
++		return ch->dr_mode != USB_DR_MODE_HOST;
+ 
+ 	if (ch->phy_data->no_adp_ctrl)
+ 		return !!(readl(ch->base + USB2_LINECTRL1) & USB2_LINECTRL1_USB2_IDMON);
+-- 
+2.25.1
+

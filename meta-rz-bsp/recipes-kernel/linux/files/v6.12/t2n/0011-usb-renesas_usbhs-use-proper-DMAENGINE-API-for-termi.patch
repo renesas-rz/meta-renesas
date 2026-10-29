@@ -1,0 +1,36 @@
+From 567e7bf927e9344469e8f31a209e2efbec58e3a4 Mon Sep 17 00:00:00 2001
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Date: Tue, 3 Jun 2025 19:58:54 +0200
+Subject: [PATCH] usb: renesas_usbhs: use proper DMAENGINE API for termination
+
+dmaengine_terminate_all() is deprecated in favor of explicitly saying if
+it should be sync or async. Here, we want dmaengine_terminate_sync()
+because there is no other synchronization code in the driver to handle
+an async case.
+
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Link: https://lore.kernel.org/r/20250603180131.14579-4-wsa+renesas@sang-engineering.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+(cherry picked from commit 3737d504ca901626c255787e9f3a499af29eda5e)
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/usb/renesas_usbhs/fifo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/renesas_usbhs/fifo.c b/drivers/usb/renesas_usbhs/fifo.c
+index 10607e273879..bac6f8fd0055 100644
+--- a/drivers/usb/renesas_usbhs/fifo.c
++++ b/drivers/usb/renesas_usbhs/fifo.c
+@@ -123,7 +123,7 @@ struct usbhs_pkt *usbhs_pkt_pop(struct usbhs_pipe *pipe, struct usbhs_pkt *pkt)
+ 		if (fifo)
+ 			chan = usbhsf_dma_chan_get(fifo, pkt);
+ 		if (chan) {
+-			dmaengine_terminate_all(chan);
++			dmaengine_terminate_sync(chan);
+ 			usbhsf_dma_unmap(pkt);
+ 		} else {
+ 			if (usbhs_pipe_is_dir_in(pipe))
+-- 
+2.25.1
+

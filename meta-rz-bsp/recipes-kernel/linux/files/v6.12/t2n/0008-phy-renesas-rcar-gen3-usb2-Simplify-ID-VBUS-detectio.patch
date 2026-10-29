@@ -1,0 +1,52 @@
+From 23b92f3a635ca69a01486daee82b3cec06f3ac4e Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Wed, 25 Mar 2026 11:20:39 +0000
+Subject: [PATCH] phy: renesas: rcar-gen3-usb2: Simplify ID/VBUS detection
+ logic
+
+Read USB2_ADPCTRL once in rcar_gen3_check_id() instead of issuing
+multiple MMIO reads, and derive both IDDIG and VBUSVALID from the same
+value.
+
+Drop the redundant !! operator, as assigning a masked u32 value to a
+bool already performs the required normalization. Simplify the logic by
+comparing the ID and VBUS status directly, which is equivalent to the
+previous conditional but easier to follow.
+
+Reported-by: Pavel Machek <pavel@nabladev.com>
+Closes: https://lore.kernel.org/all/acJVCOdlchLiSe5n@duo.ucw.cz/
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Link: https://patch.msgid.link/20260325112039.464992-1-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+(cherry picked from commit 98553f75c0a31efc821262a69750f415521359ea)
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index 9374befe9005..d4dd1da3653d 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -295,13 +295,11 @@ static void rcar_gen3_init_from_a_peri_to_a_host(struct rcar_gen3_chan *ch)
+ static bool rcar_gen3_check_id(struct rcar_gen3_chan *ch)
+ {
+ 	if (ch->phy_data->vblvl_ctrl) {
+-		bool vbus_valid;
+-		bool device;
++		u32 val = readl(ch->base + USB2_ADPCTRL);
++		bool vbus_valid = val & USB2_ADPCTRL_VBUSVALID;
++		bool device = val & USB2_ADPCTRL_IDDIG;
+ 
+-		device = !!(readl(ch->base + USB2_ADPCTRL) & USB2_ADPCTRL_IDDIG);
+-		vbus_valid = !!(readl(ch->base + USB2_ADPCTRL) & USB2_ADPCTRL_VBUSVALID);
+-
+-		return vbus_valid ? device : !device;
++		return device == vbus_valid;
+ 	}
+ 
+ 	if (!ch->uses_otg_pins)
+-- 
+2.25.1
+

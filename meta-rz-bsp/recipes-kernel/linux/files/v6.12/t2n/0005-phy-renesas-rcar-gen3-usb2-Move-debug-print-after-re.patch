@@ -1,0 +1,44 @@
+From 88817e9588deb44576bc7d023244de190c5f0198 Mon Sep 17 00:00:00 2001
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Date: Fri, 8 Aug 2025 22:52:09 +0100
+Subject: [PATCH] phy: renesas: rcar-gen3-usb2: Move debug print after register
+ value is updated
+
+Relocate the debug print in rcar_gen3_enable_vbus_ctrl() to appear after
+the `val` variable is assigned and updated based on the VBUS state. This
+ensures that the debug log reflects the actual register value being
+written, improving debugging accuracy.
+
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+Link: https://lore.kernel.org/r/20250808215209.3692744-6-prabhakar.mahadev-lad.rj@bp.renesas.com
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+(cherry picked from commit 95d146d8a23a7a5e9c776e7cd59dad065511b37a)
+Signed-off-by: ductrinh <duc.trinh.wz@renesas.com>
+---
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-usb2.c b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+index d039eca7d888..5659ac22511d 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-usb2.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-usb2.c
+@@ -210,7 +210,6 @@ static void rcar_gen3_enable_vbus_ctrl(struct rcar_gen3_chan *ch, int vbus)
+ 	u32 vbus_ctrl_val = USB2_ADPCTRL_DRVVBUS;
+ 	u32 val;
+ 
+-	dev_vdbg(ch->dev, "%s: %08x, %d\n", __func__, val, vbus);
+ 	if (ch->phy_data->no_adp_ctrl || ch->phy_data->vblvl_ctrl) {
+ 		if (ch->vbus)
+ 			regulator_hardware_enable(ch->vbus, vbus);
+@@ -224,6 +223,7 @@ static void rcar_gen3_enable_vbus_ctrl(struct rcar_gen3_chan *ch, int vbus)
+ 		val |= vbus_ctrl_val;
+ 	else
+ 		val &= ~vbus_ctrl_val;
++	dev_vdbg(ch->dev, "%s: %08x, %d\n", __func__, val, vbus);
+ 	writel(val, usb2_base + vbus_ctrl_reg);
+ }
+ 
+-- 
+2.25.1
+
